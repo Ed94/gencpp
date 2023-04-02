@@ -1,0 +1,164 @@
+#include "gen.hpp"
+#include "bloat.hpp"
+
+#if tt 
+	#define gen_array( Type_ ) gen__array( #Type_ )
+	Code* gen__array( char const* type )
+	{
+		Code codegen;
+
+		Code 
+		data;
+		data.add( "%type* data" );
+
+		Code header;
+		header.define_struct( "Header", 
+			"uw        Num;"
+			"uw        Capacity;"
+			"allocator Allocator;"
+		);
+		
+		Code grow_formula;
+		grow_formula.define_function( "grow_formula", "static", "forceinline",
+			"return 2 * value * 8"
+		);
+
+		codegen.define_struct( "Array",
+			data
+		,	header
+		,	grow_formula 	
+		);
+
+		codegen.define
+		
+			R"(
+				%type* data;
+
+				struct Header
+				{
+					uw        Num;
+					uw        Capacity;
+					allocator Allocator;
+				};
+
+				static forceinline
+				sw grow_formula ( sw value )
+				{
+					return 2 * value * 8;
+				}
+
+				static
+				bool init ( %Array& array, allocator mem_handler )
+				{
+					return init_reserve( array, mem_handler, grow_formula(0) );
+				}
+
+				static
+				bool init_reserve( %Array& array, allocator mem_handler, uw capacity )
+				{
+					Header* 
+					header = nullptr;
+					header = rcast( Header*, alloc( mem_handler, size_of( Header ) + sizeof(type) * capacity ));
+
+					if (header == nullptr)
+						return false;
+
+					header->Num       = 0;
+					header->Capacity  = capacity;
+					header->Allocator = mem_handler;
+
+					array.data = rcast( %type*, header + 1 );
+
+					return true;
+				}
+
+				void append( %type value )
+				{
+
+				}
+
+				type back()
+				{
+					Header& header = get_header();
+					return data[ header.Num - 1 ];
+				}
+
+				void clear()
+				{
+					get_header().Num = 0;
+				}
+
+				void fill( uw begin, uw end, type value )
+				{
+					Header& header = get_header();
+					
+					if ( begin < 0 || end >= header.Num )
+					{
+						fatal( "Range out of bounds" );
+					}
+				}
+
+				void free()
+				{
+					Header& header = get_header();
+					::free( header.Allocator, & get_header() );
+				}
+
+				bool grow( uw min_capacity )
+				{
+					Header& header = get_header();
+					
+					uw new_capacity = grow_formula( header.Capacity );
+
+					if ( new_capacity < min_capacity )
+						new_capacity = min_capacity;
+
+					return set_capacity( new_capacity );
+				}
+
+				forceinline
+				Header& get_header()
+				{
+					return vcast( Header, data - 1 );
+				}
+
+				void pop()
+				{
+
+				}
+
+				void reserve()
+				{
+
+				}
+
+				void resize()
+				{
+
+				}
+
+				bool set_capacity( uw capacity )
+				{
+					Header& header = get_header();
+
+					if ( capacity == header.Capacity )
+					{
+
+					}
+				}
+			)"
+		,	type
+		);
+	};
+	#endif
+
+	void tt_run()
+	{
+		gen_array( u32 );
+	}
+#endif tt
+
+
+#if !tt
+	#include "array.gen.manual.hpp"
+#endif

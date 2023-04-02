@@ -1,0 +1,11 @@
+{
+	"files.associations": {
+		"*.rmd": "markdown",
+		"array": "cpp",
+		"compare": "cpp",
+		"type_traits": "cpp",
+		"utility": "cpp",
+		"xtr1common": "cpp",
+		"xutility": "cpp"
+	}
+}
