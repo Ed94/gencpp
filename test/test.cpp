@@ -12,6 +12,8 @@ int gen_main()
 	zpl_printf("\nPress any key after attaching to process\n");
 	getchar();
 
+	gen::init()
+
 	int result = gen_math();
 
 	Memory::cleanup();

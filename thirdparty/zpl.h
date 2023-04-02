@@ -3948,24 +3948,28 @@ License:
          }                                                                                                              \
      } while (0)
      
-     ZPL_IMPL_INLINE b8 zpl__array_set_capacity(void **a_array, sw capacity) {
-         array_header *h = ZPL_ARRAY_HEADER(*a_array);
-         if (capacity == h->capacity) return true;
-         if (capacity < h->count) h->count = capacity;
-         sw size = size_of(array_header) + h->elem_size * capacity;
-         array_header *nh = zpl_cast(array_header *) alloc(h->allocator, size);
-         if (!nh) return false;
-         zpl_memmove(nh, h, size_of(array_header) + h->elem_size * h->count);
-         nh->allocator = h->allocator;
-         nh->elem_size = h->elem_size;
-         nh->count = h->count;
-         nh->capacity = capacity;
-         free(h->allocator, h);
-         *a_array = nh + 1;
-         return true;
-     }
-     
-     #define array_set_capacity(x, capacity) zpl__array_set_capacity(zpl_cast(void **) & (x), (capacity))
+   ZPL_IMPL_INLINE b8 zpl__array_set_capacity( void** a_array, sw capacity )
+   {
+   	array_header* h = ZPL_ARRAY_HEADER( *a_array );
+   	if ( capacity == h->capacity )
+   		return true;
+   	if ( capacity < h->count )
+   		h->count = capacity;
+   	sw            size = size_of( array_header ) + h->elem_size * capacity;
+   	array_header* nh   = zpl_cast( array_header* ) alloc( h->allocator, size );
+   	if ( ! nh )
+   		return false;
+   	zpl_memmove( nh, h, size_of( array_header ) + h->elem_size * h->count );
+   	nh->allocator = h->allocator;
+   	nh->elem_size = h->elem_size;
+   	nh->count     = h->count;
+   	nh->capacity  = capacity;
+   	free( h->allocator, h );
+   	*a_array = nh + 1;
+   	return true;
+   }
+   
+   #define array_set_capacity( x, capacity ) zpl__array_set_capacity( zpl_cast( void** ) & ( x ), ( capacity ) )
      
      ZPL_IMPL_INLINE b8 zpl__array_grow(void **x, sw min_capacity) {
          sw new_capacity = ZPL_ARRAY_GROW_FORMULA(array_capacity(*x));
@@ -3982,7 +3986,14 @@ License:
          return true;
      }
      
-     #define array_append(x, item) (zpl__array_append_helper(zpl_cast(void **) & (x)) && (((x)[array_count(x)++] = (item)), true))
+     #define array_append(x, item) \
+     ( \
+        zpl__array_append_helper(zpl_cast(void **) & (x)) \
+    &&  ( \
+            ((x)[array_count(x)++] = (item)) \
+            , true \
+        ) \
+    )
      
      ZPL_IMPL_INLINE b8 zpl__array_append_at_helper(void **x, sw ind) {
          if (ind >= array_count(*x)) ind = array_count(*x) - 1;

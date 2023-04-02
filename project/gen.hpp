@@ -20,6 +20,7 @@ namespace gen
 		API_Export,         // Vendor specific way to dynamic export
 		External_Linkage,   // extern
 		Internal_Linkage,   // static (within unit file)
+		Static_Member,      // static (within sturct/class)
 		Local_Persist,      // static (within function)
 		Thread_Local,       // thread_local
 
@@ -62,7 +63,9 @@ namespace gen
 			Decl_Function,
 			Parameters,  // Used with functions.
 			Struct,     
+			Struct_Body,
 			Function,
+			Function_Body,
 			Specifiers,
 			Variable,
 			Typename,
@@ -172,7 +175,11 @@ namespace gen
 		Using_Code_POD;
 	};
 
-	Code decl_type( char const* name, Code specifiers, Code type);
+	constexpr Code UnusedCode = { Code::Unused, nullptr, nullptr, { nullptr }  };
+
+	void init();
+
+	Code decl_type( char const* name, Code type, Code specifiers = UnusedCode );
 
 	Code decl_fn( char const* name
 		, Code specifiers
@@ -180,26 +187,33 @@ namespace gen
 		, Code ret_type
 	);
 
-	Code make_parameters( s32 num, ... );
-	
-	Code make_fmt( char const* fmt, ... );
+	Code def_parameters( s32 num, ... );
 
-	Code make_function( char const* name
+	Code def_function( char const* name
 		, Code specifiers
 		, Code params
 		, Code ret_type
 		, Code body 
 	);
+	Code def_function_body( u32 num, ... );
 
-	Code make_specifiers( u32 num , ... );
+	Code def_namespace( char const* name, Code body );
+	Code def_namespace_body( u32 num, ... );
 
-	// Code make_variable( char const* name, char const* type );
+	Code def_specifiers( u32 num , ... );
 
-	// Code make_template( Code subject, u32 num_dependents, ... );
+	Code def_struct( char const* name, Code body, Code parent = UnusedCode, Code specifiers = UnusedCode );
+	Code def_struct_body( u32 num, ... );
 
-	Code make_type( char const* name );
+	Code def_variable( char const* name, Code type, Code value = UnusedCode, Code specifiers = UnusedCode );
 
-	// Code make_using( char const* name, char const* type );
+	Code def_type( char const* name );
+
+	Code def_using( char const* name, Code type );
+
+	Code untyped_fmt( char const* fmt, ... );
+
+	Code token_fmt( char const* fmt, ... );
 
 
 	struct Builder

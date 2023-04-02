@@ -1,15 +1,21 @@
 #include "Bloat.hpp"
 #include "gen.hpp"
+#define gen_time
 
 #ifdef gen_time
 namespace gen
 {
+	void init()
+	{
+
+	}
+
 	ct Code make()
 	{
 		return { Code::Invalid, nullptr, nullptr, { nullptr } };
 	}
 
-	Code decl_type( char const* name, Code specifiers, Code type )
+	Code decl_type( char const* name, Code type, Code specifiers )
 	{
 		Code 
 		result      = make();
@@ -47,7 +53,7 @@ namespace gen
 		return result;
 	}
 
-	Code make_parameters( s32 num, ... )
+	Code def_parameters( s32 num, ... )
 	{
 		if (num <= 0)
 			fatal("TT::make_paramters: num is %d", num);
@@ -85,30 +91,12 @@ namespace gen
 		return result;
 	}
 
-	Code make_fmt(char const* fmt, ...)
-	{
-		local_persist thread_local 
-		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
-
-		va_list va;
-		va_start(va, fmt);
-		zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
-		va_end(va);
-         
-		Code 
-		result         = make();
-		result.Name    = string_make( g_allocator, fmt );
-		result.Type    = Code::Untyped;
-		result.Content = string_make( g_allocator, buf );
-
-		return result;
-	}
-
-	Code make_function( char const* name
+	Code def_function( char const* name
 		, Code specifiers
 		, Code params
 		, Code ret_type
-		, Code body )
+		, Code body 
+	)
 	{
 		Code 
 		result      = make();
@@ -130,7 +118,22 @@ namespace gen
 		return result;
 	}
 
-	Code make_specifiers( u32 num, ... )
+	Code def_function_body( u32 num, ... )
+	{
+
+	}
+
+	Code def_namespace( char const* name, Code body )
+	{
+
+	}
+
+	Code def_namespace_body( u32 num, ... )
+	{
+
+	}
+
+	Code def_specifiers( u32 num, ... )
 	{
 		if ( num <= 0 )
 			fatal("gen::make_specifier: num cannot be zero.");
@@ -165,7 +168,22 @@ namespace gen
 		return result;
 	}
 
-	Code make_type( char const* name )
+	Code def_struct( char const* name, Code body, Code parent, Code specifiers )
+	{
+
+	}
+
+	Code def_struct_body( u32 num, ... )
+	{
+
+	}
+
+	Code def_variable( char const* name, Code type, Code value, Code specifiers )
+	{
+		
+	}
+
+	Code def_type( char const* name )
 	{
 		Code 
 		result      = make();
@@ -174,6 +192,33 @@ namespace gen
 
 		return result;
 	}
+
+
+	Code untyped_fmt(char const* fmt, ...)
+	{
+		local_persist thread_local 
+		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
+
+		va_list va;
+		va_start(va, fmt);
+		zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
+		va_end(va);
+         
+		Code 
+		result         = make();
+		result.Name    = string_make( g_allocator, fmt );
+		result.Type    = Code::Untyped;
+		result.Content = string_make( g_allocator, buf );
+
+		return result;
+	}
+	
+	Code token_fmt( char const* fmt, ... )
+	{
+
+	}
+
+
 
 	string Code::to_string()
 	{
@@ -232,6 +277,9 @@ namespace gen
 			}
 			break;
 
+			case Function_Body:
+			break;
+
 			case Parameters: 
 			{
 				result = string_append_fmt( result, "%s %s", Entries[0].to_string(), Name );
@@ -245,10 +293,6 @@ namespace gen
 						, Entries[index].Name 
 					);
 			}
-			break;
-
-			case Struct:
-				fatal("NOT SUPPORTED YET");
 			break;
 
 			case Function:
@@ -288,8 +332,16 @@ namespace gen
 				result = string_append_fmt( result, "%s", Content );
 			break;
 
+			case Struct:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Struct_Body:
+				fatal("NOT SUPPORTED YET");
+			break;
+
 			case Variable:
-				// result = string_append_fmt( result, "%s", )
+				fatal("NOT SUPPORTED YET");
 			break;
 
 			case Typename:
@@ -299,6 +351,8 @@ namespace gen
 
 		return result;
 	}
+
+
 
 	void Builder::print( Code code )
 	{

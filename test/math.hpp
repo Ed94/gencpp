@@ -12,7 +12,7 @@
 		What it should generate:
 		
 		inline
-		type square_#type( type value )
+		type square( type value )
 		{
 			return value * value;
 		}
@@ -20,19 +20,18 @@
 	#define gen_square( Type_ ) gen__square( #Type_ )
 	Code gen__square( char const* type )
 	{
-		Code integral_type = make_type( type );
+		Code integral_type = def_type( type );
 
-		string name       = string_sprintf( g_allocator, (char*)sprintf_buf, ZPL_PRINTF_MAXLEN, "square", type );
-		Code   specifiers = make_specifiers( 1, Specifier::Inline );
-		Code   params     = make_parameters( 1, "value", integral_type );
-		Code   ret_stmt   = make_fmt( "\treturn value * value;" );
+		string name = string_sprintf( g_allocator, (char*)sprintf_buf, ZPL_PRINTF_MAXLEN, "square", type );
 
-		Code result = make_function( name, 
-			specifiers,
-			params,
-			integral_type, 
-			ret_stmt 
-		);
+		Code result;
+		{
+			Code params     = def_parameters( 1, "value", integral_type );
+			Code specifiers = def_specifiers( 1, Specifier::Inline );
+			Code ret_stmt   = untyped_fmt( "\treturn value * value;" );
+
+			result = def_function( name, specifiers, params, integral_type, ret_stmt );
+		}
 
 		if ( ! result )
 			fatal( "Failed to generate square function for: %s", type );
@@ -60,7 +59,7 @@
 #endif
 
 #ifndef gen_time
-	#include "math.gen.hpp"
-	#undef square
+#	include "math.gen.hpp"
+#	undef square
 
 #endif

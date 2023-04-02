@@ -57,6 +57,7 @@
 #define scast( Type_, Value_ )			   static_cast< Type_ >( Value_ )
 #define rcast( Type_, Value_ )			   reinterpret_cast< Type_ >( Value_ )
 #define pcast( Type_, Value_ )             ( * (Type_*)( & Value_ ) )
+#define txt( Value_ )                      ZPL_STRINGIFY_EX( Value_ )
 
 #define do_once()      \
 do                     \
@@ -68,6 +69,19 @@ do                     \
 	Done = true;       \
 }                      \
 while(0)               \
+
+#define do_once_start  \
+do                     \
+{                      \
+	static             \
+	bool Done = false; \
+	if ( Done )        \
+		break;         \
+	Done = true;
+
+#define do_once_end    \
+}                      \
+while(0);
 
 
 using Line       = char*;
