@@ -1,9 +1,16 @@
 #include "Bloat.hpp"
+// #define gen_time
 #include "gen.hpp"
 
 #ifdef gen_time
 namespace gen
 {
+	ct Code make()
+	{
+		return { Code::Invalid, nullptr, nullptr, { nullptr } };
+	}
+
+	#if 0
 	static Code Unused()
 	{
 		static Code value = {
@@ -13,13 +20,16 @@ namespace gen
 
 		return value;
 	} 
+	#endif
 
 	Code decl_type( char const* name, Code specifiers, Code type )
 	{
 		Code 
-		result;
+		result      = make();
 		result.Type = Code::Decl_Type;
 		result.Name = string_make( g_allocator, name );
+
+		array_init( result.Entries, g_allocator );
 		result.add( specifiers );
 		result.add( type );
 
@@ -33,11 +43,11 @@ namespace gen
 	)
 	{
 		Code 
-		result;
+		result      = make();
 		result.Type = Code::Decl_Function;
 		result.Name = string_make( g_allocator, name );
 		
-		array_init( result.Content, g_allocator );
+		array_init( result.Entries, g_allocator );
 
 		if ( specifiers )
 			result.add( specifiers );
@@ -55,20 +65,28 @@ namespace gen
 		if (num <= 0)
 			fatal("TT::make_paramters: num is %d", num);
 
-		Code result;
+		Code 
+		result      = make();
+		result.Type = Code::Parameters;
 
 		va_list va;
 		va_start(va, num);
 
 		result.Name = string_make( g_allocator, va_arg(va, char const*) );
-		result.add( va_arg(va, Code) );
 
-		while( num -= 2, num % 2 )
+		array_init( result.Entries, g_allocator );
+
+		Code type = va_arg(va, Code);
+		result.add( type );
+
+		while( num -= 2, num && num % 2 == 0 )
 		{
 			Code
-			param;
+			param      = make();
 			param.Name = string_make( g_allocator, va_arg(va, char const*) );
-			param.add( va_arg(va, Code) );
+
+			type = va_arg(va, Code);
+			param.add( type );
 
 			result.add(param);
 		}
@@ -89,12 +107,12 @@ namespace gen
 		va_end(va);
          
 		Code 
-		code;
-		code.Name    = string_make( g_allocator, fmt );
-		code.Type    = Code::Untyped;
-		code.Content = string_make( g_allocator, buf );
+		result         = make();
+		result.Name    = string_make( g_allocator, fmt );
+		result.Type    = Code::Untyped;
+		result.Content = string_make( g_allocator, buf );
 
-		return code;
+		return result;
 	}
 
 	Code make_function( char const* name
@@ -104,7 +122,7 @@ namespace gen
 		, Code body )
 	{
 		Code 
-		result;
+		result      = make();
 		result.Name = string_make( g_allocator, name );
 		result.Type = Code::Function;
 		
@@ -123,33 +141,47 @@ namespace gen
 		return result;
 	}
 
-	Code make_specifier( u32 num, ... )
+	Code make_specifiers( u32 num, ... )
 	{
 		if ( num <= 0 )
 			fatal("gen::make_specifier: num cannot be zero.");
 
 		Code 
-		result;
+		result         = make();
+		result.Type    = Code::Specifiers;
+		result.Content = string_make( g_allocator, "" );
 
 		va_list va;
 		va_start(va, num);
 		do
 		{
-			Specifier type = va_arg(va, Specifier);
+			Specifier type = (Specifier)va_arg(va, int);
 
 			switch ( type )
 			{
 				case Alignas:
-					result.Content = string_sprintf_buf( g_allocator, "%s(%d)", specifier_str(type), va_arg(va, u32) );
+					result.Content = string_append_fmt( result.Content, "%s(%d)", specifier_str(type), va_arg(va, u32) );
 				break;
 
 				default:
-					result.Content = string_make( g_allocator, specifier_str(type) );
+					const char* str = specifier_str(type);
+
+					result.Content = string_append_fmt( result.Content, "%s", str );
 				break;
 			}
 		}
-		while ( num-- );
+		while ( --num, num );
 		va_end(va);
+
+		return result;
+	}
+
+	Code make_type( char const* name )
+	{
+		Code 
+		result      = make();
+		result.Name = string_make( g_allocator, name );
+		result.Type = Code::Typename;
 
 		return result;
 	}
@@ -173,12 +205,13 @@ namespace gen
 
 			case Decl_Type:
 				if ( Entries[0].Type == Specifiers )
-					result = string_append_fmt("%s\n", Entries[0].to_string());
+					result = string_append_fmt( result, "%s\n", Entries[0].to_string());
 
 				result = string_append_fmt( result, "%s %s;\n", Entries[1].to_string(), Name );
 			break;
 
 			case Decl_Function:
+			{
 				u32 index = 0;
 				u32 left  = array_count( Entries );
 
@@ -207,16 +240,22 @@ namespace gen
 				}
 
 				result = string_appendc( result, ");\n" );
+			}
 			break;
 
-			case Parameters:
-				result = string_append_fmt( result, "%s %s", Entries[0], Name );
+			case Parameters: 
+			{
+				result = string_append_fmt( result, "%s %s", Entries[0].to_string(), Name );
 
 				u32 index = 1;
 				u32 left  = array_count( Entries ) - 1;
 
 				while ( left-- )
-					result = string_append_fmt( result, ", %s %s", Entries[index].Entries[0], Entries[index].Name );
+					result = string_append_fmt( result, ", %s %s"
+						, Entries[index].Entries[0].to_string()
+						, Entries[index].Name 
+					);
+			}
 			break;
 
 			case Struct:
@@ -224,31 +263,36 @@ namespace gen
 			break;
 
 			case Function:
+			{
 				u32 index = 0;
 				u32 left  = array_count( Entries );
 
 				if ( left <= 0 )
 					fatal( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
 
-				while ( Entries[index].Type == EType::Specifiers )
+				if ( Entries[index].Type == Specifiers )
 				{
-					result = string_append_fmt( result, "%s ", Entries[index] );
+					result = string_append_fmt( result, "%s\n", Entries[index].to_string() );
 					index++;
+					left--;
 				}
 
 				if ( left <= 0 )
 					fatal( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
 
-				result = string_append_fmt( result, "\n%s %s(", Entries[index], Name );
+				result = string_append_fmt( result, "\n%s %s(", Entries[index].to_string(), Name );
 				index++;
+				left--;
 
-				while ( left && Entries[index].Type == Parameters )
+				if ( left && Entries[index].Type == Parameters )
 				{
-					result = string_append_fmt( result, "%s, ", Entries[index] );
+					result = string_append_fmt( result, "%s, ", Entries[index].to_string() );
 					index++;
+					left--;
 				}
 
-				result = string_append_fmt( result, ")\n{\n%s\n}", Entries[index] );
+				result = string_append_fmt( result, ")\n{\n%s\n}", Entries[index].to_string() );
+			}
 			break;
 
 			case Specifiers:
@@ -260,18 +304,41 @@ namespace gen
 			break;
 
 			case Typename:
+				result = string_append_fmt( result, "%s", Name );
 			break;
 		}
 
 		return result;
 	}
+
+	void Builder::print( Code code )
+	{
+		Buffer = string_append( Buffer, code.to_string() );
+	}
+
+	bool Builder::open( char const* path )
+	{
+		file_error error = file_open_mode( & File, ZPL_FILE_MODE_WRITE, path );
+
+		if ( error != ZPL_FILE_ERROR_NONE )
+		{
+			fatal( "gen::File::open - Could not open file: %s", path);
+			return false;
+		}
+
+		Buffer = string_make( g_allocator, "" );
+		
+		return true;
+	}
+
+	void Builder::write()
+	{
+		bool result = file_write( & File, Buffer, string_length(Buffer) );
+
+		if ( result == false )
+			fatal("gen::File::write - Failed to write to file: %s", file_name( & File ) );
+
+		file_close( & File );
+	}
 }
-
-
-int main()
-{
-	gen_main();
-
-	return 0;
-}
-#endif gen_time
+#endif

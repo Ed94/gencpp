@@ -14,15 +14,15 @@ foreach ( $arg in $args )
 }
 
 
-if ($false)
-{
-#region Regular Build
-write-host "Building project`n"
-
 $path_root    = git rev-parse --show-toplevel
 $path_build   = Join-Path $path_root build
 $path_scripts = Join-Path $path_root scripts
 
+
+if ($false)
+{
+#region Regular Build
+write-host "Building project`n"
 
 if ( -not( Test-Path $path_build ) ) 
 {
@@ -87,7 +87,13 @@ Pop-Location
 	$args_ninja += $path_gen_build
 
 	Push-Location $path_root
-	ninja $args_ninja
+	& ninja $args_ninja
+	Pop-Location
+
+	$gencpp = Join-Path $path_gen_build gencpp.exe
+
+	Push-location $path_gen
+	& $gencpp
 	Pop-Location
 
 

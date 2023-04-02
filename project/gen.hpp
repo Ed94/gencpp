@@ -1,8 +1,8 @@
 #pragma once
 
-#ifdef gen_time
 #include "Bloat.hpp"
 
+#ifdef gen_time
 namespace gen
 {
 	ct sw ColumnLimit = 256;
@@ -119,7 +119,7 @@ namespace gen
 		forceinline
 		operator bool()
 		{
-			return Type == Invalid;
+			return Type != Invalid;
 		}
 
 		operator char const*()
@@ -153,13 +153,13 @@ namespace gen
 	#endif
 	#pragma endregion Member API
 
-	#define Using_Code_POD           \
-		Code::EType       Type;      \
-		string            Name;      \
-		string            Comment;   \
-		union {                      \
-			array(Code)   Entries;   \
-			string        Content;   \
+	#define Using_Code_POD         \
+		Code::EType       Type;    \
+		string            Name;    \
+		string            Comment; \
+		union {                    \
+			array(Code)   Entries; \
+			string        Content; \
 		};
 
 		Using_Code_POD;
@@ -180,8 +180,8 @@ namespace gen
 		, Code ret_type
 	);
 
-	Code make_parameters( u32 num, ... );
-
+	Code make_parameters( s32 num, ... );
+	
 	Code make_fmt( char const* fmt, ... );
 
 	Code make_function( char const* name
@@ -197,20 +197,22 @@ namespace gen
 
 	// Code make_template( Code subject, u32 num_dependents, ... );
 
-	// Code make_type( char const* name );
+	Code make_type( char const* name );
 
 	// Code make_using( char const* name, char const* type );
 
 
-	struct File
+	struct Builder
 	{
-		zpl_file file;
-		string   Content;
+		zpl_file File;
+		string   Buffer;
 
-		s32 print( Code );
+		void print( Code );
 
-		bool open( char const* Path );
+		bool open( char const* path );
 		void write();
 	};
 }
+
+#define gen_main main
 #endif

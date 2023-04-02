@@ -1,9 +1,9 @@
 #pragma once
 
-#ifdef gen_time
-	#include "Bloat.hpp"
-	#include "gen.hpp"
+#include "Bloat.hpp"
+#include "gen.hpp"
 
+#ifdef gen_time
 	using namespace gen;
 
 	/*
@@ -15,8 +15,8 @@
 			return value * value;
 		}
 	*/
-	#define gen_square( Type_ ) gen__squre( #Type_ )
-	Code gen__squre( char const* type )
+	#define gen_square( Type_ ) gen__square( #Type_ )
+	Code gen__square( char const* type )
 	{
 		Code integral_type = make_type( type );
 
@@ -41,17 +41,17 @@
 	u32 gen_math()
 	{
 		Code fadd_u8  = gen_square( u8 );
-		Code fadd_u16 = gen_square( u16 );
-		Code fadd_u32 = gen_square( u32 );
-		Code fadd_u64 = gen_square( u64 );
+		// Code fadd_u16 = gen_square( u16 );
+		// Code fadd_u32 = gen_square( u32 );
+		// Code fadd_u64 = gen_square( u64 );
 
-		File 
+		Builder 
 		mathgen;
 		mathgen.open( "math.gen.hpp" );
 		mathgen.print( fadd_u8 );
-		mathgen.print( fadd_u16 );
-		mathgen.print( fadd_u32 );
-		mathgen.print( fadd_u64 );
+		// mathgen.print( fadd_u16 );
+		// mathgen.print( fadd_u32 );
+		// mathgen.print( fadd_u64 );
 		mathgen.write();
 		return 0;
 	}

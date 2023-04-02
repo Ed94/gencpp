@@ -84,7 +84,7 @@ namespace Global
 
 namespace Memory
 {
-	ct uw Initial_Reserve = megabytes(2);
+	ct uw Initial_Reserve = megabytes(10);
 
 	extern arena Global_Arena;
 	#define g_allocator arena_allocator( & Memory::Global_Arena)
