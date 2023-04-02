@@ -98,23 +98,29 @@ Pop-Location
 
 
 	# Build the program depending on generated files.
-	# if ( -not( Test-Path $path_test_build ) ) 
-	# {
-	# 	$args_meson = @()
-	# 	$args_meson += "setup"
-	# 	$args_meson += $path_test_build
+	if ( -not( Test-Path $path_test_build ) ) 
+	{
+		$args_meson = @()
+		$args_meson += "setup"
+		$args_meson += $path_test_build
 
-	# 	Push-Location $path_test
-	# 	& meson $args_meson
-	# 	Pop-Location
-	# }
+		Push-Location $path_test
+		& meson $args_meson
+		Pop-Location
+	}
 
-	# $args_ninja = @()
-	# $args_ninja += "-C"
-	# $args_ninja += $path_test_build
+	$args_ninja = @()
+	$args_ninja += "-C"
+	$args_ninja += $path_test_build
 
-	# Push-Location $path_root
-	# ninja $args_ninja
-	# Pop-Location
-	#endregion Test Build
+	Push-Location $path_root
+	ninja $args_ninja
+	Pop-Location
+
+	$testcpp = Join-Path $path_test_build testcpp.exe
+
+	Push-Location $path_test
+	& $testcpp
+	Pop-Location
+	# endregion Test Build
 # }

@@ -1,6 +1,5 @@
 #pragma once
 
-#define gen_time
 #include "Bloat.hpp"
 #include "gen.hpp"
 
@@ -23,10 +22,10 @@
 	{
 		Code integral_type = make_type( type );
 
-		string name       = string_sprintf( g_allocator, (char*)sprintf_buf, ZPL_PRINTF_MAXLEN, "square_%s", type );
+		string name       = string_sprintf( g_allocator, (char*)sprintf_buf, ZPL_PRINTF_MAXLEN, "square", type );
 		Code   specifiers = make_specifiers( 1, Specifier::Inline );
 		Code   params     = make_parameters( 1, "value", integral_type );
-		Code   ret_stmt   = make_fmt( "\treturn value * value" );
+		Code   ret_stmt   = make_fmt( "\treturn value * value;" );
 
 		Code result = make_function( name, 
 			specifiers,
@@ -64,11 +63,4 @@
 	#include "math.gen.hpp"
 	#undef square
 
-	#define sym_square( Type_, Value_ ) square_#Type_( Value_ )
-
-	template<class type>
-	type square( type value )
-	[
-		sym_square( type, value );
-	]
 #endif

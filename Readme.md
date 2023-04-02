@@ -3,7 +3,7 @@
 An attempt at simple staged metaprogramming for c/c++.
 
 This project is not minimum feature complete yet. 
-Version 1 will have a most of c and a subset of c++ features available to it.
+Version 1 will have c and a subset of c++ features available to it.
 
 ## How it works
 

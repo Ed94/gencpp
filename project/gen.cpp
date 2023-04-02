@@ -1,5 +1,4 @@
 #include "Bloat.hpp"
-#define gen_time
 #include "gen.hpp"
 
 #ifdef gen_time

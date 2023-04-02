@@ -4,14 +4,15 @@ project( 'test', 'c', 'cpp', default_options : ['buildtype=debug'] )
 
 includes = include_directories( 
   [ 
-    '../project'
-  , '../thirdparty' 
+    './gen',
+    '../project',
+    '../thirdparty' 
   ])
 
 # get_sources = files('./get_sources.ps1')
 # sources     = files(run_command('powershell', get_sources, check: true).stdout().strip().split('\n'))
 
-sources = [ 'math.hpp' ]
+sources = [ 'test.cpp' ]
 
 if get_option('buildtype').startswith('debug')
 
@@ -19,4 +20,4 @@ if get_option('buildtype').startswith('debug')
 
 endif
 
-executable( '', sources, include_directories : includes )
+executable( 'testcpp', sources, include_directories : includes )

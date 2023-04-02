@@ -25,7 +25,7 @@ int gen_main()
 
 int main()
 {
-	u32 result = square(5);
+	u32 result = square( 5U );
 
 	zpl_printf("TEST RESULT: %d", result);
 }
