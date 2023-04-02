@@ -1,5 +1,5 @@
 #include "Bloat.hpp"
-// #define gen_time
+#define gen_time
 #include "gen.hpp"
 
 #ifdef gen_time
@@ -9,18 +9,6 @@ namespace gen
 	{
 		return { Code::Invalid, nullptr, nullptr, { nullptr } };
 	}
-
-	#if 0
-	static Code Unused()
-	{
-		static Code value = {
-			Code::Unused, 
-			string_make( g_allocator, "Unused" )
-		};
-
-		return value;
-	} 
-	#endif
 
 	Code decl_type( char const* name, Code specifiers, Code type )
 	{
@@ -85,6 +73,8 @@ namespace gen
 			param      = make();
 			param.Name = string_make( g_allocator, va_arg(va, char const*) );
 
+			array_init( param.Entries, g_allocator );
+
 			type = va_arg(va, Code);
 			param.add( type );
 
@@ -126,7 +116,7 @@ namespace gen
 		result.Name = string_make( g_allocator, name );
 		result.Type = Code::Function;
 		
-		array_init( result.Content, g_allocator );
+		array_init( result.Entries, g_allocator );
 
 		if ( specifiers )
 			result.add( specifiers );
@@ -234,7 +224,7 @@ namespace gen
 
 				if ( left && Entries[index].Type == Parameters )
 				{
-					result = string_append_fmt( result, "%s, ", Entries[index].to_string() );
+					result = string_append_fmt( result, "%s", Entries[index].to_string() );
 					index++;
 					left--;
 				}
@@ -247,10 +237,10 @@ namespace gen
 			{
 				result = string_append_fmt( result, "%s %s", Entries[0].to_string(), Name );
 
-				u32 index = 1;
-				u32 left  = array_count( Entries ) - 1;
+				s32 index = 1;
+				s32 left  = array_count( Entries ) - 1;
 
-				while ( left-- )
+				while ( left--, left > 0 )
 					result = string_append_fmt( result, ", %s %s"
 						, Entries[index].Entries[0].to_string()
 						, Entries[index].Name 
@@ -272,7 +262,7 @@ namespace gen
 
 				if ( Entries[index].Type == Specifiers )
 				{
-					result = string_append_fmt( result, "%s\n", Entries[index].to_string() );
+					result = string_append_fmt( result, "%s", Entries[index].to_string() );
 					index++;
 					left--;
 				}
@@ -286,7 +276,7 @@ namespace gen
 
 				if ( left && Entries[index].Type == Parameters )
 				{
-					result = string_append_fmt( result, "%s, ", Entries[index].to_string() );
+					result = string_append_fmt( result, "%s", Entries[index].to_string() );
 					index++;
 					left--;
 				}
@@ -313,7 +303,7 @@ namespace gen
 
 	void Builder::print( Code code )
 	{
-		Buffer = string_append( Buffer, code.to_string() );
+		Buffer = string_append_fmt( Buffer, "%s\n\n", code.to_string() );
 	}
 
 	bool Builder::open( char const* path )
@@ -338,6 +328,7 @@ namespace gen
 		if ( result == false )
 			fatal("gen::File::write - Failed to write to file: %s", file_name( & File ) );
 
+		// file_seek( & File, 0 );
 		file_close( & File );
 	}
 }
