@@ -4,6 +4,28 @@
 
 #pragma once	
 
+#if defined(__GNUC__) || defined(__clang__) || 1
+  // Supports 0-10 arguments
+  #define VA_NARGS_IMPL( _0,                          \
+	 _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10, \
+	_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
+	_21, _22, _23, _24, _25, _26, _27, _28, _29, _30, \
+	  N, ...) N 
+  // ## deletes preceding comma if _VA_ARGS__ is empty (GCC, Clang)
+  #define VA_NARGS(...) VA_NARGS_IMPL(_, ## __VA_ARGS__, \
+  	30, 29, 28, 27, 26, 25, 24, 23, 22, 21,              \
+	20, 19, 18, 17, 16, 15, 14, 13, 12, 11,              \
+	10, 9, 8, 7, 6, 5, 4, 3, 2, 1,                       \
+	0)    
+	                
+#else
+  // Supports 1-10 arguments
+  #define VA_NARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
+  #define VA_NARGS(...) VA_NARGS_IMPL(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+#endif
+
+#define VA_NARGS2(...) ((int)(sizeof((int[]){ __VA_ARGS__ })/sizeof(int)))
+
 #ifdef BLOAT_IMPL
 #	define ZPL_IMPLEMENTATION
 #endif
@@ -21,7 +43,7 @@
 #		define ZPL_MODULE_ESSENTIALS
 #		define ZPL_MODULE_CORE
 #		define ZPL_MODULE_TIMER
-// #	define ZPL_MODULE_HASHING
+#		define ZPL_MODULE_HASHING
 // #	define ZPL_MODULE_REGEX
 // #	define ZPL_MODULE_EVENT
 // #	define ZPL_MODULE_DLL

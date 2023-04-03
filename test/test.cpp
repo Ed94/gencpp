@@ -1,5 +1,6 @@
 #include "Bloat.cpp"
 #include "math.hpp"
+#include "Array.hpp"
 
 
 #ifdef gen_time
@@ -12,9 +13,11 @@ int gen_main()
 	zpl_printf("\nPress any key after attaching to process\n");
 	getchar();
 
-	gen::init()
+	gen::init();
 
-	int result = gen_math();
+	int 
+	result = gen_math();
+	result = gen_array_file();
 
 	Memory::cleanup();
 	return result;

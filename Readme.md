@@ -2,8 +2,16 @@
 
 An attempt at simple staged metaprogramming for c/c++.
 
-This project is not minimum feature complete yet. 
+This library is intended for small-to midsize projects that want rapid complation times.
+for fast debugging.
+
+## Notes
+
+This project is not minimum feature complete yet.  
 Version 1 will have c and a subset of c++ features available to it.
+
+I will generate with this library a C99 or 11 variant when Version 1 is complete.  
+A single-header version will also be genrated.
 
 ## How it works
 
@@ -70,3 +78,6 @@ However, if the code being generated becomes complex, or from a datatable or dat
 
 * Need problably a better name, I found a few repos with this same one...
 * Actually get to version 1.
+* Make a test suite made up of collections based of the ZPL library templated colllection macros and the memory module.
+* Generate a single-header library.
+* Generate a C-supported single-header library.

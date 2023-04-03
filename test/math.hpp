@@ -22,21 +22,27 @@
 	{
 		Code integral_type = def_type( type );
 
+	#ifndef GEN_DEFINE_DSL
 		string name = string_sprintf( g_allocator, (char*)sprintf_buf, ZPL_PRINTF_MAXLEN, "square", type );
 
-		Code result;
+		Code square;
 		{
-			Code params     = def_parameters( 1, "value", integral_type );
+			Code params     = def_parameters( 1, integral_type, "value" );
 			Code specifiers = def_specifiers( 1, Specifier::Inline );
-			Code ret_stmt   = untyped_fmt( "\treturn value * value;" );
+			Code ret_stmt   = untyped_fmt( "return value * value;" );
 
-			result = def_function( name, specifiers, params, integral_type, ret_stmt );
+			square = def_function( name, specifiers, params, integral_type, ret_stmt );
 		}
 
-		if ( ! result )
+	#else 
+		def( square )
+		function( square, __, integral_type, params( integral_type, "value" ), untyped_str("return value * value") );
+	#endif
+	
+		if ( ! square )
 			fatal( "Failed to generate square function for: %s", type );
 
-		return result;
+		return square;
 	}
 
 	u32 gen_math()
