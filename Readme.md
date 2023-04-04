@@ -6,8 +6,12 @@ This library is intended for small-to midsize projects.
 
 ### TOC
 
-* [Notes](#Notes)
-* [Building](#Notes)
+* [Notes](#notes)
+* [Usage](#usage)
+* [Building](#notes)
+* [Outline](#outline)
+* [Why](#why)
+* [TODO](#todo)
 
 ## Notes
 
@@ -49,36 +53,30 @@ u32 gen_main()
 This is ofc entirely optional and the metaprogram can be quite separated from the runtime in file organization.
 
 The design a constructive builder of a sort of AST for the code to generate.
+The user is given `Code` typed objects that are used to build up the AST. 
 
-In the current version of the library, constructions are defined with thier paramters in one go.  
 Example:
 ```cpp
 // Get a Code AST from the CodePool.
 Code header = make_struct( "Header" );
 {
-	// Make a struct body.
-	Code body = header.body();
+    // Make a struct body.
+    Code body = header.body();
 
-	// Members
-	body->add( def_varaible( uw,        "Num") );
-	body->add( def_varaible( uw,        "Capacity") );
-	body->add( def_varaible( allocator, "Allocator") );
+    // Members
+    body->add( def_varaible( uw,        "Num") );
+    body->add( def_varaible( uw,        "Capacity") );
+    body->add( def_varaible( allocator, "Allocator") );
 }
 ```
-
-
-
-We first define a Code variable called header. We then open a stack frame for header's components.  
-Header will be a struct so we need to define its body, in this case struct acts a pure POD with only variable member symbols.  
-The components are defined first, then the struct body is constructed. Finally the body is provided the def_struct function.
 
 This will generate the following C code:
 ```cpp
 struct ArrayHeader
 {
-	uw        Num;
-	uw        Capacity;
-	allocator Allocator;
+    uw        Num;
+    uw        Capacity;
+    allocator Allocator;
 };
 ```
 **Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**
@@ -86,24 +84,27 @@ struct ArrayHeader
 ## Gen's DSL
 
 If you don't mind a low amount of macros (29 lines), a DSL may be optionally defined with:
+
 ```cpp
 GEN_DEFINE_DSL
 ```
 
 Using the previous example to show usage:
+
 ```cpp
 make( struct, ArrayHeader )
 {
-	Code 
-	body = ArrayHeader.body();
-	body->add_var( uw,        Num       );
-	body->add_var( uw,        Capacity  );
-	body->add_var( allocaotr, Allocator );
+    Code 
+    body = ArrayHeader.body();
+    body->add_var( uw,        Num       );
+    body->add_var( uw,        Capacity  );
+    body->add_var( allocaotr, Allocator );
 }
 ```
 
 The `__` represents the `UnusedCode` value constant, of unneeded varaibles.
 The DSL purposefully has no nested macros, with the follwing exceptions:
+
 * `__VA_ARGS__` for parameter expnasion 
 * `VA_NARGS( __VA_ARGS__ )` for determing number of paramters
 * `txt(Value_)` and `txt_with_length(Value_)` to serialize a value type identifier.
@@ -122,26 +123,56 @@ If in your use case, decide to have exclusive separation or partial separation o
 
 ## Outline
 
-### *WHAT IS NOT PROVIDED* :
+### *WHAT IS NOT PROVIDED*
+
 * Macro or template generation      : This library is to avoid those, 
 adding support for them adds unnecessary complexity. If you desire define them outside the gen_time scopes. 
 * Expression validation             : Execution expressions are defined using the untyped string API. There is no parse API for validating expression (possibly will add in the future)
 * Complete file parser DSL          : This isn't like the unreal header tool. Code injection to file or based off a file contents is not supported by the api. However nothing is stopping you using the library for that purpose.
 * Modern c++ (STL library) features
 
+As mentioned in [Usage](#Usage), the user is provided Code objects by calling the interface procedures to generate them or find existing matches.
 
-### There are four different of construction of Code ast's the library provides:
+The AST is managed by the library and provided the user via its interface prodedures.
 
-* Upfront construction
-* Incremental construction
-* Parse construction
+Notes:
+
+* The allocator definitions used are exposed to the user incase they want to dictate memory usage*
+* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.  
+* Both AST and Code have member symbols but their data layout is enforced to be POD types.
+
+Data layout of AST struct:
+
+```cpp
+CodeT             Type;    
+bool              Readonly;
+AST*              Parent;  
+string            Name;    
+string            Comment; 
+union {                    
+    array(AST*)   Entries;
+    string        Content;
+};
+```
+
+*`CodeT` is a typedef for `ECode::Type` which is the type of the enum.*
+
+ASTs can be set to readonly by calling Code's lock() member function.
+Adding comments is always available even if the AST is set to readonly.  
+
+### There are four sets of interfaces for Code AST generation the library provides
+
+* Upfront
+* Incremental
+* Parsing
 * Untyped
 
-### Upfront Construction:
+### Upfront Construction
+
 All component ASTs must be previously constructed, and provided on creation of the code AST.
 The construction will fail and return InvalidCode otherwise.
 
-API:
+Interface :
 
 * def_forward_decl
 * def_class
@@ -162,15 +193,18 @@ API:
 * def_using
 * def_using_namespace
 
-### Incremental construction:
+### Incremental construction
+
 A Code ast is provided but only completed upfront if all components are provided.
-Components are then added using the AST API for adding ASTs: 
+Components are then added using the AST API for adding ASTs:
 
 * code.add( AST* )         // Adds AST with validation.
 * code.add_entry( AST* )   // Adds AST entry without validation.
 * code.add_content( AST* ) // Adds AST string content without validation.
 
-API:
+Code ASTs may be explictly validated at anytime using Code's check() member function.
+
+Interface :
 
 * make_forward_decl
 * make_class
@@ -186,10 +220,11 @@ API:
 * make_using
 * make_using_namespace
 
-### Parse construction:
+### Parse construction
+
 A string provided to the API is parsed for the intended language construct.
 
-API:
+Interface :
 
 * parse_forward_decl
 * parse_class
@@ -208,10 +243,11 @@ API:
 The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
 This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
 
-Untyped constructions:
+### Untyped constructions
+
 Code ASTs are constructed using unvalidated strings.
 
-API:
+Interface :
 
 * untyped_str
 * untyped_fmt
