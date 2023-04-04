@@ -25,18 +25,34 @@
 	#ifndef GEN_DEFINE_DSL
 		string name = string_sprintf( g_allocator, (char*)sprintf_buf, ZPL_PRINTF_MAXLEN, "square", type );
 
+		#if 1
 		Code square;
 		{
-			Code params     = def_parameters( 1, integral_type, "value" );
-			Code specifiers = def_specifiers( 1, Specifier::Inline );
-			Code ret_stmt   = untyped_fmt( "return value * value;" );
+			Code params     = def_params( 1, integral_type, "value" );
+			Code specifiers = def_specifiers( 1, SpecifierT::Inline );
+			Code ret_stmt   = untyped_str( txt( return value * value; ));
 
-			square = def_function( name, specifiers, params, integral_type, ret_stmt );
+			square = def_proc( name, specifiers, params, integral_type, ret_stmt );
 		}
 
+		#else
+		// Test of token template str.
+		char const* tmpl = txt(
+			{type} square( {type} value )
+			{
+				return value * value;
+			}
+		);
+		char const* gen_code = token_fmt( tmpl, 1, type );
+
+		Code square = parse_proc(gen_code);
+		#endif
+
 	#else 
-		def( square )
-		function( square, __, integral_type, params( integral_type, "value" ), untyped_str("return value * value") );
+
+		Code proc( square, __, integral_type, params( integral_type, "value" ), 
+			untyped(return value * value) 
+		);
 	#endif
 	
 		if ( ! square )

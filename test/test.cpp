@@ -17,7 +17,7 @@ int gen_main()
 
 	int 
 	result = gen_math();
-	result = gen_array_file();
+	// result = gen_array_file();
 
 	Memory::cleanup();
 	return result;

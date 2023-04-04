@@ -1,6 +1,7 @@
 #define BLOAT_IMPL
 #include "Bloat.hpp"
 
+
 namespace Global
 {
 	bool ShouldShowDebug = false;
@@ -40,131 +41,88 @@ namespace Memory
 }
 
 
-bool opts_custom_add(opts* options, opts_entry *t, char* b)
+struct TokEntry
 {
-	if (t->type != ZPL_OPTS_STRING)
-	{
-		return false;   
-	}
+	char const* Str;
+	s32         Length;
+};
 
-	t->text = string_append_length(t->text, " ", 1);
-	t->text = string_appendc( t->text, b );
+ZPL_TABLE( static, TokMap, tokmap_, TokEntry )
 
-	return true;
-}
-
-b32 opts_custom_compile(opts *options, int argc, char **argv) 
+sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va )
 {
-	b32 had_errors = false;
+	char const* buf_begin = buf;
+	sw          remaining = buf_size;
 
-	for (int i = 1; i < argc; ++i) 
+	TokMap tok_map;
 	{
-		char* arg = argv[i];
-	
-		if (*arg) 
+		tokmap_init( & tok_map, g_allocator );
+
+		s32 left = num_tokens;
+
+		while ( left-- )
 		{
-			arg = (char*)str_trim(arg, false);
+			char const* token = va_arg( va, char const* );
+			char const* value = va_arg( va, char const* );
 
-			if (*arg == '-') 
-			{
-				opts_entry* entry = 0;
-				b32 checkln = false;
-				if ( *(arg + 1) == '-') 
-				{
-					checkln = true;
-					++arg;
-				}
+			TokEntry entry 
+			{ 
+				value,
+				zpl_strnlen(value, 128) 
+			};
 
-				char *b = arg + 1, *e = b;
+			u32 key = crc32( token, zpl_strnlen(token, 32) );
 
-				while (char_is_alphanumeric(*e) || *e == '-' || *e == '_') {
-					++e;
-				}
-
-				entry = zpl__opts_find(options, b, (e - b), checkln);
-
-				if (entry) 
-				{
-					char *ob = b;
-					b = e;
-
-					/**/ 
-					if (*e == '=') 
-					{
-						if (entry->type == ZPL_OPTS_FLAG) 
-						{
-							*e = '\0';
-							zpl__opts_push_error(options, ob, ZPL_OPTS_ERR_EXTRA_VALUE);
-							had_errors = true;
-
-							continue;
-						}
-
-						b = e = e + 1;
-					} 
-					else if (*e == '\0') 
-					{
-						char *sp = argv[i+1];
-
-						if (sp && *sp != '-' && (array_count(options->positioned) < 1  || entry->type != ZPL_OPTS_FLAG)) 
-						{
-							if (entry->type == ZPL_OPTS_FLAG) 
-							{
-								zpl__opts_push_error(options, b, ZPL_OPTS_ERR_EXTRA_VALUE);
-								had_errors = true;
-
-								continue;
-							}
-
-							arg = sp;
-							b = e = sp;
-							++i;
-						} 
-						else 
-						{
-							if (entry->type != ZPL_OPTS_FLAG) 
-							{
-								zpl__opts_push_error(options, ob, ZPL_OPTS_ERR_MISSING_VALUE);
-								had_errors = true;
-								continue;
-							}
-
-							entry->met = true;
-
-							continue;
-						}
-					}
-
-					e = (char *)str_control_skip(e, '\0');
-					zpl__opts_set_value(options, entry, b);
-
-					if ( (i + 1) < argc )
-					{
-						for ( b = argv[i + 1]; i < argc && b[0] != '-'; i++, b = argv[i + 1] )
-						{
-							opts_custom_add(options, entry, b );
-						}
-					}
-				} 
-				else 
-				{
-					zpl__opts_push_error(options, b, ZPL_OPTS_ERR_OPTION);
-					had_errors = true;
-				}
-			} 
-			else if (array_count(options->positioned)) 
-			{
-				opts_entry *l = array_back(options->positioned);
-				array_pop(options->positioned);
-				zpl__opts_set_value(options, l, arg);
-			} 
-			else 
-			{
-				zpl__opts_push_error(options, arg, ZPL_OPTS_ERR_VALUE);
-				had_errors = true;
-			}
+			tokmap_set( & tok_map, key, entry );
 		}
 	}
 
-	return !had_errors;
+	sw   result  = 0;
+	char current = *fmt;
+
+	while ( current )
+	{
+		sw len = 0;
+
+		while ( current && current != '{' && remaining ) 
+		{
+			*buf = *fmt;
+			buf++;
+			fmt++;
+
+			current = *fmt;
+		}
+
+		if ( current == '{' )
+		{
+			char const* scanner = fmt;
+
+			s32 tok_len = 0;
+
+			while ( *scanner != '}' )
+			{
+				tok_len++;
+				scanner++;
+			}
+
+			char const* token = fmt;
+
+			s32      key   = crc32( token, tok_len );
+			TokEntry value = * tokmap_get( & tok_map, key );
+			s32      left  = value.Length;
+
+			while ( left-- )
+			{
+				*buf = *value.Str;
+				buf++;
+				value.Str++;
+			}
+
+			scanner++;
+			fmt     = scanner;				
+			current = *fmt;
+		}
+	}
+
+	return result;
 }

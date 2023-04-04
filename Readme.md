@@ -2,18 +2,22 @@
 
 An attempt at simple staged metaprogramming for c/c++.
 
-This library is intended for small-to midsize projects that want rapid complation times.
-for fast debugging.
+This library is intended for small-to midsize projects.
+
+### TOC
+
+* [Notes](#Notes)
+* [Building](#Notes)
 
 ## Notes
 
 This project is not minimum feature complete yet.  
-Version 1 will have c and a subset of c++ features available to it.
+Version 1 will have C and a subset of C++ features available to it.
 
 I will generate with this library a C99 or 11 variant when Version 1 is complete.  
-A single-header version will also be genrated.
+A single-header version will also be generated.
 
-## How it works
+## Usage
 
 A metaprogram is built to generate files before the main program is built. We'll term runtime for this program as `gen_time`. The metaprogram's core implementation are within `gen.hpp` and `gen.cpp` in the project directory.
 
@@ -44,6 +48,66 @@ u32 gen_main()
 ```
 This is ofc entirely optional and the metaprogram can be quite separated from the runtime in file organization.
 
+The design a constructive builder of a sort of AST for the code to generate.
+
+In the current version of the library, constructions are defined with thier paramters in one go.  
+Example:
+```cpp
+// Get a Code AST from the CodePool.
+Code header = make_struct( "Header" );
+{
+	// Make a struct body.
+	Code body = header.body();
+
+	// Members
+	body->add( def_varaible( uw,        "Num") );
+	body->add( def_varaible( uw,        "Capacity") );
+	body->add( def_varaible( allocator, "Allocator") );
+}
+```
+
+
+
+We first define a Code variable called header. We then open a stack frame for header's components.  
+Header will be a struct so we need to define its body, in this case struct acts a pure POD with only variable member symbols.  
+The components are defined first, then the struct body is constructed. Finally the body is provided the def_struct function.
+
+This will generate the following C code:
+```cpp
+struct ArrayHeader
+{
+	uw        Num;
+	uw        Capacity;
+	allocator Allocator;
+};
+```
+**Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**
+
+## Gen's DSL
+
+If you don't mind a low amount of macros (29 lines), a DSL may be optionally defined with:
+```cpp
+GEN_DEFINE_DSL
+```
+
+Using the previous example to show usage:
+```cpp
+make( struct, ArrayHeader )
+{
+	Code 
+	body = ArrayHeader.body();
+	body->add_var( uw,        Num       );
+	body->add_var( uw,        Capacity  );
+	body->add_var( allocaotr, Allocator );
+}
+```
+
+The `__` represents the `UnusedCode` value constant, of unneeded varaibles.
+The DSL purposefully has no nested macros, with the follwing exceptions:
+* `__VA_ARGS__` for parameter expnasion 
+* `VA_NARGS( __VA_ARGS__ )` for determing number of paramters
+* `txt(Value_)` and `txt_with_length(Value_)` to serialize a value type identifier.
+
 ## Building
 
 An example of building is provided in the test directory.
@@ -55,6 +119,113 @@ Both of them build the same source file: `test.cpp`. The only differences betwee
 
 This method is setup where all the metaprogram's code are the within the same files as the regular program's code.
 If in your use case, decide to have exclusive separation or partial separation of the metaprogam's code from the program's code files then your build configuration would need to change to reflect that (specifically the sources).
+
+## Outline
+
+### *WHAT IS NOT PROVIDED* :
+* Macro or template generation      : This library is to avoid those, 
+adding support for them adds unnecessary complexity. If you desire define them outside the gen_time scopes. 
+* Expression validation             : Execution expressions are defined using the untyped string API. There is no parse API for validating expression (possibly will add in the future)
+* Complete file parser DSL          : This isn't like the unreal header tool. Code injection to file or based off a file contents is not supported by the api. However nothing is stopping you using the library for that purpose.
+* Modern c++ (STL library) features
+
+
+### There are four different of construction of Code ast's the library provides:
+
+* Upfront construction
+* Incremental construction
+* Parse construction
+* Untyped
+
+### Upfront Construction:
+All component ASTs must be previously constructed, and provided on creation of the code AST.
+The construction will fail and return InvalidCode otherwise.
+
+API:
+
+* def_forward_decl
+* def_class
+* def_global_body
+* def_proc
+* def_proc_body
+* def_namespace
+* def_namespace_body
+* def_param
+* def_params
+* def_operator
+* def_specifier
+* def_specifiers
+* def_struct
+* def_struct_body
+* def_variable
+* def_type
+* def_using
+* def_using_namespace
+
+### Incremental construction:
+A Code ast is provided but only completed upfront if all components are provided.
+Components are then added using the AST API for adding ASTs: 
+
+* code.add( AST* )         // Adds AST with validation.
+* code.add_entry( AST* )   // Adds AST entry without validation.
+* code.add_content( AST* ) // Adds AST string content without validation.
+
+API:
+
+* make_forward_decl
+* make_class
+* make_global_body
+* make_proc
+* make_namespace
+* make_params
+* make_operator
+* make_specifiers
+* make_struct
+* make_variable
+* make_type
+* make_using
+* make_using_namespace
+
+### Parse construction:
+A string provided to the API is parsed for the intended language construct.
+
+API:
+
+* parse_forward_decl
+* parse_class
+* parse_glboal_body
+* parse_proc
+* parse_namespace
+* parse_params
+* parse_operator
+* parse_specifiers
+* parse_struct
+* parse_variable
+* parse_type
+* parse_using
+* parse_using
+
+The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
+This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
+
+Untyped constructions:
+Code ASTs are constructed using unvalidated strings.
+
+API:
+
+* untyped_str
+* untyped_fmt
+* untyped_token_fmt
+
+During serialization any untyped Code AST is has its string value directly injected inline of 
+whatever context the content existed as an entry within.
+Even though thse are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that
+Untyped code can be added as any component of a Code AST:
+
+* Untyped code cannot have children, thus there cannot be recursive injection this way.
+* Untyped code can only be a child of a parent of body AST, or for values of an assignment.
+
+These restrictions help prevent abuse of untyped code to some extent.
 
 ## Why
 
@@ -81,3 +252,5 @@ However, if the code being generated becomes complex, or from a datatable or dat
 * Make a test suite made up of collections based of the ZPL library templated colllection macros and the memory module.
 * Generate a single-header library.
 * Generate a C-supported single-header library.
+* Remove full ZPL dependency, move into Bloat header/source only what is used.
+* This library has heavy string allocations, most likely will make a string flyweight for it.

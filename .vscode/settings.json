@@ -6,6 +6,7 @@
 		"type_traits": "cpp",
 		"utility": "cpp",
 		"xtr1common": "cpp",
-		"xutility": "cpp"
+		"xutility": "cpp",
+		"initializer_list": "cpp"
 	}
 }
