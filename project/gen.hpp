@@ -6,33 +6,60 @@
 	AST type checking supports only a small subset of c++. 
 	See the 'ECode' namespace and 'gen API' region to see what is supported.
 
-	WHAT IS NOT PROVIDED:
-	* Macro or template generation      : This library is to avoid those, adding support for them 
-											adds unnecessary complexity.
-											If you desire define them outside the gen_time scopes. 
-											
-	* Modern c++ (STL library) features : 
-	* Expression validation             : Execution expressions are defined using the untyped string API.
-										: There is no parse API for validating expression (possibly will add in the future)
+	### *WHAT IS NOT PROVIDED*
 
+	* Macro or template generation      : This library is to avoid those, adding support for them adds unnecessary complexity. 
+	                                      If you desire define them outside the gen_time scopes. 
+	* Expression validation             : Execution expressions are defined using the untyped string API. 
+	                                      There is no parse API for validating expression (possibly will add in the future)
 	* Complete file parser DSL          : This isn't like the unreal header tool. 
-											Code injection to file or based off a file contents is not supported by the api.
-											However nothing is stopping you using the library for that purpose.
-												
+	                                      Code injection to file or based off a file contents is not supported by the api. 
+										  However nothing is stopping you using the library for that purpose.
+	* Modern c++ (STL library) features
 
-	There are four different of construction of Code ast's the library provides:
-	* Upfront construction
-	* Incremental construction
-	* Parse construction
+	As mentioned in [Usage](#Usage), the user is provided Code objects by calling the interface procedures to generate them or find existing matches.
+
+	The AST is managed by the library and provided the user via its interface prodedures.
+
+	Notes:
+
+	* The allocator definitions used are exposed to the user incase they want to dictate memory usage*
+	* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.  
+	* Both AST and Code have member symbols but their data layout is enforced to be POD types.
+
+	Data layout of AST struct:
+
+	CodeT             Type;    
+	bool              Readonly;
+	AST*              Parent;  
+	string            Name;    
+	string            Comment; 
+	union {                    
+		array(AST*)   Entries;
+		string        Content;
+	};
+
+	*`CodeT` is a typedef for `ECode::Type` which is the type of the enum.*
+
+	ASTs can be set to readonly by calling Code's lock() member function.
+	Adding comments is always available even if the AST is set to readonly.  
+
+	### There are four sets of interfaces for Code AST generation the library provides
+
+	* Upfront
+	* Incremental
+	* Parsing
 	* Untyped
 
-	Upfront Construction:
+	### Upfront Construction
+
 	All component ASTs must be previously constructed, and provided on creation of the code AST.
 	The construction will fail and return InvalidCode otherwise.
 
-	API:
+	Interface :
+
 	* def_forward_decl
-	* def_class          
+	* def_class
 	* def_global_body
 	* def_proc
 	* def_proc_body
@@ -50,14 +77,19 @@
 	* def_using
 	* def_using_namespace
 
-	Incremental construction:
-	A Code ast is provided but only completed upfront if all components are provided.
-	Components are then added using the AST API for adding ASTs: 
-		* code.add( AST* )         // Adds AST with validation.
-		* code.add_entry( AST* )   // Adds AST entry without validation.
-		* code.add_content( AST* ) // Adds AST string content without validation.
+	### Incremental construction
 
-	API:
+	A Code ast is provided but only completed upfront if all components are provided.
+	Components are then added using the AST API for adding ASTs:
+
+	* code.add( AST* )         // Adds AST with validation.
+	* code.add_entry( AST* )   // Adds AST entry without validation.
+	* code.add_content( AST* ) // Adds AST string content without validation.
+
+	Code ASTs may be explictly validated at anytime using Code's check() member function.
+
+	Interface :
+
 	* make_forward_decl
 	* make_class
 	* make_global_body
@@ -72,10 +104,12 @@
 	* make_using
 	* make_using_namespace
 
-	Parse construction:
+	### Parse construction
+
 	A string provided to the API is parsed for the intended language construct.
 
-	API:
+	Interface :
+
 	* parse_forward_decl
 	* parse_class
 	* parse_glboal_body
@@ -93,10 +127,12 @@
 	The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
 	This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
 
-	Untyped constructions:
+	### Untyped constructions
+
 	Code ASTs are constructed using unvalidated strings.
-	
-	API:
+
+	Interface :
+
 	* untyped_str
 	* untyped_fmt
 	* untyped_token_fmt
@@ -105,8 +141,10 @@
 	whatever context the content existed as an entry within.
 	Even though thse are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that
 	Untyped code can be added as any component of a Code AST:
-		* Untyped code cannot have children, thus there cannot be recursive injection this way.
-		* Untyped code can only be a child of a parent of body AST, or for values of an assignment.
+
+	* Untyped code cannot have children, thus there cannot be recursive injection this way.
+	* Untyped code can only be a child of a parent of body AST, or for values of an assignment.
+
 	These restrictions help prevent abuse of untyped code to some extent.
 */
 

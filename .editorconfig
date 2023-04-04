@@ -18,3 +18,8 @@ indent_size  = 4
 
 [*.hpp]
 indent_style = tab
+indent_size  = 4
+
+[*.ps1]
+indent_style = tab
+indent_size  = 4
