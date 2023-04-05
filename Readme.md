@@ -2,7 +2,7 @@
 
 An attempt at simple staged metaprogramming for c/c++.
 
-This library is intended for small-to midsize projects.
+This library is intended for small-to midsized projects.
 
 ### TOC
 
@@ -174,20 +174,27 @@ The construction will fail and return InvalidCode otherwise.
 
 Interface :
 
-* def_forward_decl
 * def_class
+* def_class_body
+* def_class_fwd
+* def_enum
+* def_enum_class
+* def_enum_body
 * def_global_body
-* def_proc
-* def_proc_body
 * def_namespace
 * def_namespace_body
+* def_operator
+* def_operator_fwd
 * def_param
 * def_params
-* def_operator
+* def_proc
+* def_proc_body
+* def_proc_fwd
 * def_specifier
 * def_specifiers
 * def_struct
 * def_struct_body
+* def_struct_fwd
 * def_variable
 * def_type
 * def_using
@@ -206,19 +213,20 @@ Code ASTs may be explictly validated at anytime using Code's check() member func
 
 Interface :
 
-* make_forward_decl
 * make_class
+* make_enum
+* make_enum_class
+* make_fwd
 * make_global_body
-* make_proc
 * make_namespace
-* make_params
 * make_operator
+* make_params
+* make_proc
 * make_specifiers
 * make_struct
 * make_variable
 * make_type
 * make_using
-* make_using_namespace
 
 ### Parse construction
 
@@ -226,19 +234,29 @@ A string provided to the API is parsed for the intended language construct.
 
 Interface :
 
-* parse_forward_decl
 * parse_class
-* parse_glboal_body
-* parse_proc
+* parse_classes
+* parse_class_fwd
+* parse_classes_fwd
+* parse_enum
+* parse_enums
+* parse_global_body
 * parse_namespace
+* parse_namespaces
 * parse_params
+* parse_proc
+* parse_procs
 * parse_operator
+* parse_operators
 * parse_specifiers
 * parse_struct
+* parse_strucs
 * parse_variable
+* parse_variables
 * parse_type
+* parse_types
 * parse_using
-* parse_using
+* parse_usings
 
 The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
 This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.

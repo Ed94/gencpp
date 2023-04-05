@@ -1,0 +1,4 @@
+// Removes the genc_ namespace if desired
+
+namespace genc_
+

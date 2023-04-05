@@ -25,7 +25,7 @@
 	#ifndef GEN_DEFINE_DSL
 		string name = string_sprintf( g_allocator, (char*)sprintf_buf, ZPL_PRINTF_MAXLEN, "square", type );
 
-		#if 1
+		#if 0
 		Code square;
 		{
 			Code params     = def_params( 1, integral_type, "value" );
@@ -43,9 +43,9 @@
 				return value * value;
 			}
 		);
-		char const* gen_code = token_fmt( tmpl, 1, type );
+		char const* gen_code = token_fmt( tmpl, 1, "type", type );
 
-		Code square = parse_proc(gen_code);
+		Code square = parse_proc(gen_code, strlen(gen_code));
 		#endif
 
 	#else 

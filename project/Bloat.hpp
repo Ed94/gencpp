@@ -73,17 +73,17 @@
 #endif
 
 #define bit( Value_ )                      ( 1 << Value_ )
-#define bitfield_is_equal( Field_, Mask_ ) ( ( Mask_ & Field_ ) == Mask_ )
+#define bitfield_is_equal( Field_, Mask_ ) ( ( (Mask_) & (Field_) ) == (Mask_) )
 #define ct                                 constexpr
 #define forceinline                        ZPL_ALWAYS_INLINE
 #define print_nl( _)                       zpl_printf("\n")
-#define ccast( Type_, Value_ )             * const_cast< Type_* >( & Value_ )
+#define ccast( Type_, Value_ )             * const_cast< Type_* >( & (Value_) )
 #define scast( Type_, Value_ )			   static_cast< Type_ >( Value_ )
 #define rcast( Type_, Value_ )			   reinterpret_cast< Type_ >( Value_ )
-#define pcast( Type_, Value_ )             ( * (Type_*)( & Value_ ) )
+#define pcast( Type_, Value_ )             ( * (Type_*)( & (Value_) ) )
 #define txt_impl( Value_ )                 #Value_
 #define txt( Value_ )                      txt_impl( Value_ )
-#define txt_with_length( Value_ )		   txt_impl( Value_ ), sizeof( txt_impl( Value_) )
+#define txt_with_length( Value_ )		   txt_impl( Value_ ), sizeof( txt_impl( Value_ ) )
 
 #define do_once()      \
 do                     \
@@ -130,6 +130,8 @@ namespace Memory
 	void resize( uw new_size );
 	void cleanup();
 }
+
+sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va );
 
 inline
 char const* token_fmt( char const* fmt, sw num_tokens, ... )
@@ -185,3 +187,4 @@ sw fatal(char const *fmt, ...)
 	return -1;
 #endif
 }
+

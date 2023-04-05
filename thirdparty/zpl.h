@@ -5095,8 +5095,8 @@ License:
          
          typedef struct string_header {
              allocator allocator;
-             sw length;
              sw capacity;
+             sw length;
          } string_header;
          
          #define ZPL_STRING_HEADER(str) (zpl_cast(ZPL_NS string_header *)(str) - 1)

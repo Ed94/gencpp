@@ -16,7 +16,7 @@
 	#ifndef GEN_DEFINE_DSL
 		using namespace gen;
 
-		Code t_allocator = def_type( txt(allocator) );
+		Code t_allocator = def_type( txt(allocator)  );
 
 		Code header;
 		{
@@ -64,7 +64,6 @@
 		return ArrayBase;
 	}
 
-	#define gen_array( Type_ ) gen__array( #Type_, sizeof(Type_), a_base )
 	Code gen__array( char const* type_str, s32 type_size, Code parent )
 	{
 	#ifndef GEN_DEFINE_DSL
@@ -155,6 +154,7 @@
 			Code append = make_proc( "append" );
 			{
 				append->add( def_params( 1, type, "value") );
+				append->add( t_bool );
 
 				Code 
 				body = append.body();
@@ -172,6 +172,8 @@
 					
 					return true;
 				)));
+
+				append->check();
 			}
 
 			Code back;
@@ -295,7 +297,7 @@
 			}
 
 			Code set_capacity = parse_proc( txt_with_length(
-				bool set_capacity( new_capacity )
+				bool set_capacity( sw new_capacity )
 				{
 					Header& header = get_header();
 
@@ -305,7 +307,7 @@
 					if ( capacity < header.Num )
 						header.Num = capacity;
 
-					uw      size       = sizeof(Header) + sizeof(Type) * capacity;
+					sw      size       = sizeof(Header) + sizeof(Type) * capacity;
 					Header* new_header = rcast( Header* alloc( header.Allocator, size ));
 
 					if ( new_header == nullptr )
@@ -591,18 +593,58 @@
 		return array_def;
 	}
 
+	struct ArrayRequest
+	{
+		char const* Name;
+		sw          Size;
+	};
+
+	array(ArrayRequest) UserArrayGenQueue;
+
+	#define gen_array( Type_ ) add_gen_array_request( #Type_, sizeof(Type_) )
+
+	void add_gen_array_request( const char* type_str, sw type_size )
+	{
+		ArrayRequest request = { type_str, type_size };
+
+		array_append( UserArrayGenQueue, request );
+	}
+
 	u32 gen_array_file()
 	{
 		Code a_base = gen__array_base();
 
-		Code a_u32  = gen_array( u32 );
-		Code a_cstr = gen_array( char const* );
+		add_gen_array_request( "u32", sizeof(u32) );
+		gen_array( char const* );
+
+		array(Code) array_asts;
+		array_init( array_asts, g_allocator );
+
+		sw left  = array_count( UserArrayGenQueue );
+		sw index = 0;
+		while( left -- )
+		{
+			ArrayRequest request = UserArrayGenQueue[index];
+
+			Code result = gen__array( request.Name, request.Size, a_base );
+
+			array_append( array_asts, result );
+		}
 
 		Builder
 		arraygen;
 		arraygen.open( "Array.gen.hpp" );
-		arraygen.print( a_u32 );
-		arraygen.print( a_cstr );
+
+		left  = array_count( array_asts );
+		index = 0;
+
+		while( left-- )
+		{
+			Code code = array_asts[index];
+
+			arraygen.print( code );
+		}
+
 		arraygen.write();
 		return 0;
 	}

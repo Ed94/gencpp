@@ -4,40 +4,57 @@
 #ifdef gen_time
 namespace gen
 {
+	ZPL_TABLE_DEFINE( StringTable, str_tbl_,   string );
+	ZPL_TABLE_DEFINE( TypeTable,   type_tbl_ , Code   );
+
 	namespace StaticData
 	{
 		static array(CodePOD) CodePool = nullptr;
+
+		static array(arena) StringArenas =  nullptr;
+
+		static StringTable    StringMap;
+		static TypeTable      TypeMap;
+
+		static sw InitSize_CodePool       = megabytes(64);
+		static sw InitSize_StringArena    = megabytes(32);
+		static sw InitSize_StringTable    = megabytes(4);
+		static sw InitSize_TypeTable      = megabytes(4);
+
+		static allocator Allocator_CodePool    = zpl_heap();
+		static allocator Allocator_StringArena = zpl_heap();
+		static allocator Allocator_StringTable = zpl_heap();
+		static allocator Allocator_TypeTable   = zpl_heap();
 	}
 
 #pragma region CONSTANTS
 #	ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-	const Code t_void;
+	Code t_void;
 
-	const Code t_bool;
-	const Code t_char;
-	const Code t_char_wide;
+	Code t_bool;
+	Code t_char;
+	Code t_char_wide;
 
-	const Code t_s8;
-	const Code t_s16;
-	const Code t_s32;
-	const Code t_s64;
+	Code t_s8;
+	Code t_s16;
+	Code t_s32;
+	Code t_s64;
 
-	const Code t_u8;
-	const Code t_u16;
-	const Code t_u32;
-	const Code t_u64;
+	Code t_u8;
+	Code t_u16;
+	Code t_u32;
+	Code t_u64;
 
-	const Code t_sw;
-	const Code t_uw;
+	Code t_sw;
+	Code t_uw;
 
-	const Code t_f32;
-	const Code t_f64;
-
-	const Code spec_constexpr;
-	const Code spec_inline;
+	Code t_f32;
+	Code t_f64;
 #	endif
-#pragma endregion CONSTANTS
 
+	Code spec_constexpr;
+	Code spec_inline;
+#pragma endregion CONSTANTS
 
 	/*
 		Used internally to retireve a Code object form the CodePool.
@@ -66,10 +83,9 @@ namespace gen
 		t_bool_write = ccast( Code, t_void );
 		t_bool_write = def_type( txt(void) );
 
-	#	define def_constant_code_type( Type_ )        \
-		Code&                                         \
-		t_##Type_##_write = ccast( Code, t_##Type_ ); \
-		t_##Type_##_write = def_type( txt(Type_) )    \
+	#	define def_constant_code_type( Type_ ) \
+		Code&                                  \
+		t_##Type_ = def_type( txt(Type_) )     
 
 		def_constant_code_type( bool );
 		def_constant_code_type( char );
@@ -109,80 +125,92 @@ namespace gen
 	#endif
 	}
 
-	Code decl_type( Code type, char const* name, Code specifiers )
+	void clear_code_pool()
 	{
-		using namespace ECode;
+		array_clear( StaticData::CodePool );
 
-		if ( type->Type != Specifiers )
-		{
-			log_failure( "gen::decl_type: type is not a Typename");
-			return InvalidCode;
-		}
+		sw size = array_capacity( StaticData::CodePool );
 
-		if ( type->Type != Typename )
-		{
-			log_failure( "gen::decl_type: specifiers is not a 'Specfiers' type");
-			return InvalidCode;
-		}
-
-		Code 
-		result       = make_code();
-		result->Type = Decl_Type;
-		result->Name = string_make( g_allocator, name );
-
-		array_init( result->Entries, g_allocator );
-		result->add( specifiers );
-		result->add( type );
-		result.lock();
-
-		return result;
+		zpl_memset( StaticData::CodePool, 0, size );
 	}
 
-	Code decl_proc( char const* name
-		, Code specifiers
-		, Code params
-		, Code ret_type
-	)
+	allocator get_string_allocator( s32 str_length )
 	{
-		using namespace ECode;
+		using namespace StaticData;
 
-		if ( specifiers->Type != Specifiers )
+		if ( StringArenas->total_allocated + str_length > StringArenas->total_size )
 		{
-			log_failure( "gen::decl_fn: specifiers was not a `Specifiers` type" );
-			return InvalidCode;
+			arena new_arena;
+			arena_init_from_allocator( & new_arena, Allocator_StringArena, InitSize_StringArena );
+
+			array_append( StringArenas, new_arena );
+
+			return arena_allocator( StringArenas );
 		}
 
-		if ( params->Type != Parameters )
-		{
-			log_failure( "gen::decl_fn: params was not a `Parameters` type" );
-			return InvalidCode;
-		}
-
-		if ( ret_type->Type != Typename )
-		{
-			log_failure( "gen::decl_fn: ret_type was not a Typename" );
-			return InvalidCode;
-		}
-
-		Code
-		result       = make_code();
-		result->Type = Decl_Function;
-		result->Name = string_make( g_allocator, name );
-		
-		array_init( result->Entries, g_allocator );
-
-		if ( specifiers )
-			result->add( specifiers );
-
-		result->add( ret_type );
-
-		if ( params )
-			result->add( params );
-
-		result.lock();
-		return result;
+		return arena_allocator( StringArenas );
 	}
 
+	// Will either make or retrive a code string.
+	string code_string( char const* cstr, s32 length )
+	{
+		s32 hash_length = length > kilobytes(1) ? kilobytes(1) : length;
+
+		u32 key = crc32( cstr, hash_length );
+
+		string* result = str_tbl_get( & StaticData::StringMap, key );
+
+		if ( result )
+		{
+			return * result;
+		}
+
+		str_tbl_set( & StaticData::StringMap, key, * result );
+
+		return * result;
+	}
+
+	void set_init_reserve_code_pool( sw size )
+	{
+		StaticData::InitSize_CodePool = size;
+	}
+
+	void set_init_reserve_string_arena( sw size )
+	{
+		StaticData::InitSize_StringArena = size;
+	}
+
+	void set_init_reserve_string_table( sw size )
+	{
+		StaticData::InitSize_StringTable = size;
+	}
+
+	void set_init_reserve_type_table( sw size )
+	{
+		StaticData::InitSize_TypeTable = size;
+	}
+
+	void set_allocator_code_pool( allocator pool_allocator )
+	{
+		StaticData::Allocator_CodePool = pool_allocator;
+	}
+
+	void set_allocator_string_arena( allocator string_allocator )
+	{
+		StaticData::Allocator_StringArena = string_allocator;
+	}
+
+	void set_allocator_string_table( allocator string_allocator )
+	{
+		StaticData::Allocator_StringArena = string_allocator;
+	}
+
+	void set_allocator_type_table( allocator type_reg_allocator )
+	{
+		StaticData::Allocator_TypeTable = type_reg_allocator;
+	}
+
+#	pragma region Upfront Constructors
 	Code def_params( s32 num, ... )
 	{
 		using namespace ECode;
@@ -271,7 +299,7 @@ namespace gen
 
 		switch ( body->Type )
 		{
-			case Function_Body:
+			case Proc_Body:
 			case Untyped:
 				break;
 
@@ -285,7 +313,7 @@ namespace gen
 		Code 
 		result       = make_code();
 		result->Name = string_make( g_allocator, name );
-		result->Type = Function;
+		result->Type = Proc;
 		
 		array_init( result->Entries, g_allocator );
 
@@ -331,8 +359,7 @@ namespace gen
 
 			switch ( entry->Type )
 			{
-				case Decl_Function:
-				case Decl_Type:
+				case Proc_Forward:
 				case Namespace:
 				case Namespace_Body:
 				case Parameters:
@@ -387,8 +414,7 @@ namespace gen
 
 			switch ( entry->Type )
 			{
-				case Decl_Function:
-				case Decl_Type:
+				case Proc_Forward:
 				case Namespace:
 				case Namespace_Body:
 				case Parameters:
@@ -630,7 +656,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_type( char const* name )
+	Code def_type( char const* name,  Code specifiers )
 	{
 		Code 
 		result       = make_code();
@@ -654,57 +680,9 @@ namespace gen
 
 		return result;
 	}
+#	pragma endregion Upfront Constructors
 
-	Code untyped_str(char const* fmt)
-	{
-		Code 
-		result       = make_code();
-		result->Name = string_make( g_allocator, fmt );
-		result->Type = ECode::Untyped;
-
-		return result;
-	}
-
-	Code untyped_fmt(char const* fmt, ...)
-	{
-		local_persist thread_local 
-		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
-
-		va_list va;
-		va_start(va, fmt);
-		zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
-		va_end(va);
-         
-		Code 
-		result          = make_code();
-		result->Name    = string_make( g_allocator, fmt );
-		result->Type    = ECode::Untyped;
-		result->Content = string_make( g_allocator, buf );
-
-		return result;
-	}
-
-	Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... )
-	{
-		local_persist thread_local 
-		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
-
-		va_list va;
-		va_start(va, fmt);
-		token_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, num_tokens, va);
-		va_end(va);
-
-		Code
-		result           = make_code();
-		result->Name     = string_make( g_allocator, fmt );
-		result->Type     = ECode::Untyped;
-		result->Content  = string_make( g_allocator, buf );
-
-		result.lock();
-
-		return result;
-	}
-
+#	pragma region Incremetnal Constructors
 	Code make_proc( char const* name
 		, Code specifiers
 		, Code params
@@ -734,7 +712,7 @@ namespace gen
 		Code 
 		result       = make_code();
 		result->Name = string_make( g_allocator, name );
-		result->Type = Function;
+		result->Type = Proc;
 		
 		array_init( result->Entries, g_allocator );
 
@@ -788,12 +766,12 @@ namespace gen
 		return result;
 	}
 
-	Code make_unit( char const* name )
+	Code make_global_body( char const* name = "", s32 num = 0, ... )
 	{
 		Code
 		result = make_code();
-		result->Type = ECode::Unit;
-		result->Name = string_make( g_allocator, name );
+		result->Type = ECode::Global_Body;
+		result->Name = string_make( g_allocator, "");
 
 		array_init( result->Entries, g_allocator );
 
@@ -802,7 +780,9 @@ namespace gen
 
 		return result;
 	}
+#	pragma endregion Incremetnal Constructions
 
+#	pragma region Parsing Constructors
 	Code parse_proc( char const* def, s32 length )
 	{
 		if ( def == nullptr )
@@ -856,7 +836,7 @@ namespace gen
 			while ( left && char_is_space( * scanner ) ) \
 			{                                            \
 				left--;                                  \
-				scanner++ ;
+				scanner++ ;                              \
 			}
 
 			#define Get
@@ -947,7 +927,7 @@ namespace gen
 		Code 
 		result       = make_code();
 		result->Name = string_make( g_allocator, name );
-		result->Type = ECode::Function;
+		result->Type = ECode::Proc;
 		
 		array_init( result->Entries, g_allocator );
 
@@ -985,8 +965,124 @@ namespace gen
 
 
 	}
+#	pragma endregion Parsing Constructors
 
+#	pragma region Untyped Constructors
+	Code untyped_str(char const* fmt)
+	{
+		Code 
+		result          = make_code();
+		result->Name    = string_make( g_allocator, fmt );
+		result->Type    = ECode::Untyped;
+		result->Content = result->Name;
 
+		return result;
+	}
+
+	Code untyped_fmt(char const* fmt, ...)
+	{
+		local_persist thread_local 
+		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
+
+		va_list va;
+		va_start(va, fmt);
+		zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
+		va_end(va);
+         
+		Code 
+		result          = make_code();
+		result->Name    = string_make( g_allocator, fmt );
+		result->Type    = ECode::Untyped;
+		result->Content = string_make( g_allocator, buf );
+
+		return result;
+	}
+
+	Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... )
+	{
+		local_persist thread_local 
+		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
+
+		va_list va;
+		va_start(va, fmt);
+		token_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, num_tokens, va);
+		va_end(va);
+
+		Code
+		result           = make_code();
+		result->Name     = string_make( g_allocator, fmt );
+		result->Type     = ECode::Untyped;
+		result->Content  = string_make( g_allocator, buf );
+
+		result.lock();
+
+		return result;
+	}
+#	pragma endregion Untyped Constructors
+
+#	pragma region AST
+	bool AST::add( AST* other )
+	{
+		switch ( Type )
+		{
+			using namespace ECode;
+
+			case Untyped:
+			break;
+
+			case Global_Body:
+			break;
+
+			case Proc:
+			break;
+
+			case Proc_Body:
+			break;
+
+			case Proc_Forward:
+			break;
+
+			case Namespace:
+			break;
+
+			case Namespace_Body:
+			break;
+
+			case Parameters:
+			break;
+
+			case Specifiers:
+			break;
+
+			case Struct:
+			break;
+
+			case Struct_Body:
+			break;
+
+			case Variable:
+			break;
+
+			case Typedef:
+			break;
+
+			case Typename:
+			break;
+
+			case Using:
+			break;
+		}
+
+		array_append( Entries, other );
+
+		other->Parent = this;
+		return true;
+	}
+
+	bool AST::check()
+	{
+
+	}
 
 	string AST::to_string() const
 	{
@@ -1007,7 +1103,7 @@ namespace gen
 				result = string_append_length( result, Content, string_length(Content) );
 			break;
 
-			case Decl_Function:
+			case Proc_Forward:
 			{
 				u32 index = 0;
 				u32 left  = array_count( Entries );
@@ -1040,14 +1136,7 @@ namespace gen
 			}
 			break;
 
-			case Decl_Type:
-				if ( Entries[0]->Type == Specifiers )
-					result = string_append_fmt( result, "%s\n", Entries[0]->to_string());
-
-				result = string_append_fmt( result, "%s %s;\n", Entries[1]->to_string(), Name );
-			break;
-
-			case Function:
+			case Proc:
 			{
 				u32 index = 0;
 				u32 left  = array_count( Entries );
@@ -1080,7 +1169,7 @@ namespace gen
 			}
 			break;
 
-			case Function_Body:
+			case Proc_Body:
 				fatal("NOT SUPPORTED YET");
 			break;
 
@@ -1138,9 +1227,10 @@ namespace gen
 
 		return result;
 	}
+#	pragma endregion AST
 
 
-
+#	pragma region Builder
 	void Builder::print( Code code )
 	{
 		Buffer = string_append_fmt( Buffer, "%s\n\n", code->to_string() );
@@ -1171,5 +1261,6 @@ namespace gen
 		// file_seek( & File, 0 );
 		file_close( & File );
 	}
+#	pragma endregion Builder
 }
 #endif

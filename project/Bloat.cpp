@@ -124,5 +124,7 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 		}
 	}
 
+	tokmap_clear( & tok_map );
+
 	return result;
 }
