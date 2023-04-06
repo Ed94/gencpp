@@ -84,27 +84,27 @@ namespace gen
 
 #pragma region CONSTANTS
 #	ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-	Code t_void;
+	Code type_ns(void);
 
-	Code t_bool;
-	Code t_char;
-	Code t_char_wide;
+	Code type_ns(bool);
+	Code type_ns(char);
+	Code type_ns(char_wide);
 
-	Code t_s8;
-	Code t_s16;
-	Code t_s32;
-	Code t_s64;
+	Code type_ns(s8);
+	Code type_ns(s16);
+	Code type_ns(s32);
+	Code type_ns(s64);
 
-	Code t_u8;
-	Code t_u16;
-	Code t_u32;
-	Code t_u64;
+	Code type_ns(u8);
+	Code type_ns(u16);
+	Code type_ns(u32);
+	Code type_ns(u64);
 
-	Code t_sw;
-	Code t_uw;
+	Code type_ns(sw);
+	Code type_ns(uw);
 
-	Code t_f32;
-	Code t_f64;
+	Code type_ns(f32);
+	Code type_ns(f64);
 #	endif
 
 	Code spec_constexpr;
@@ -138,6 +138,218 @@ namespace gen
 #	endif
 	}
 
+#	pragma region AST
+	bool AST::add( AST* other )
+	{
+		switch ( Type )
+		{
+			using namespace ECode;
+
+			case Untyped:
+			break;
+
+			case Global_Body:
+			break;
+
+			case Function:
+			break;
+
+			case Function_Body:
+			break;
+
+			case Function_FwdDecl:
+			break;
+
+			case Namespace:
+			break;
+
+			case Namespace_Body:
+			break;
+
+			case Parameters:
+			break;
+
+			case Specifiers:
+			break;
+
+			case Struct:
+			break;
+
+			case Struct_Body:
+			break;
+
+			case Variable:
+			break;
+
+			case Typedef:
+			break;
+
+			case Typename:
+			break;
+
+			case Using:
+			break;
+		}
+
+		array_append( Entries, other );
+
+		other->Parent = this;
+		return true;
+	}
+
+	bool AST::check()
+	{
+
+	}
+
+	string AST::to_string() const
+	{
+		string result = string_make( g_allocator, "" );
+
+		if ( Comment )
+			result = string_append_fmt( result, "// %s\n", Comment );
+
+		switch ( Type )
+		{
+			using namespace ECode;
+
+			case Invalid:
+				fatal("Attempted to serialize invalid code! - %s", Name);
+			break;
+
+			case Untyped:
+				result = string_append_length( result, Content, string_length(Content) );
+			break;
+
+			case Function_FwdDecl:
+			{
+				u32 index = 0;
+				u32 left  = array_count( Entries );
+
+				if ( left <= 0 )
+					fatal( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
+
+				if ( Entries[index]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
+					index++;
+					left--;
+				}
+
+				if ( left <= 0 )
+					fatal( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
+
+				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
+				index++;
+				left--;
+
+				if ( left && Entries[index]->Type == Parameters )
+				{
+					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
+					index++;
+					left--;
+				}
+
+				result = string_appendc( result, ");\n" );
+			}
+			break;
+
+			case Function:
+			{
+				u32 index = 0;
+				u32 left  = array_count( Entries );
+
+				if ( left <= 0 )
+					fatal( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
+
+				if ( Entries[index]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
+					index++;
+					left--;
+				}
+
+				if ( left <= 0 )
+					fatal( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
+
+				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
+				index++;
+				left--;
+
+				if ( left && Entries[index]->Type == Parameters )
+				{
+					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
+					index++;
+					left--;
+				}
+
+				result = string_append_fmt( result, ")\n{\n%s\n}", Entries[index]->to_string() );
+			}
+			break;
+
+			case Function_Body:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Namespace:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Namespace_Body:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Parameters:
+			{
+				result = string_append_fmt( result, "%s %s", Entries[0]->to_string(), Name );
+
+				s32 index = 1;
+				s32 left  = array_count( Entries ) - 1;
+
+				while ( left--, left > 0 )
+					result = string_append_fmt( result, ", %s %s"
+						, Entries[index]->Entries[0]->to_string()
+						, Entries[index]->Name
+					);
+			}
+			break;
+
+			case Specifiers:
+				result = string_append_fmt( result, "%s", Content );
+			break;
+
+			case Struct:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Struct_Body:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Variable:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Typedef:
+				fatal("NOT SUPPORTED YET");
+			break;
+
+			case Typename:
+				result = string_append_fmt( result, "%s", Name );
+			break;
+
+			case Using:
+				fatal("NOT SUPPORTED YET");
+			break;
+		}
+
+		return result;
+	}
+
+	const Code Code::Invalid;
+#	pragma endregion AST
+
+#pragma region Gen Interface
 	void init()
 	{
 		array_init( StaticData::CodePool, StaticData::Allocator_CodePool );
@@ -285,6 +497,81 @@ namespace gen
 	}
 
 #	pragma region Upfront Constructors
+	Code def_class( s32 length, char const* name, Code parent, Code specifiers, Code body )
+	{
+		using namespace ECode;
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_class: name is null");
+			return Code::Invalid;
+		}
+
+		if ( parent && parent->Type != Class || parent->Type != Struct )
+		{
+			log_failure( "gen::def_class: parent provided is not type 'Class' or 'Struct' - Type: %s", parent->type_str() );
+			return Code::Invalid;
+		}
+
+		if ( specifiers && specifiers->Type != Specifiers )
+		{
+			log_failure( "gen::def_class: specifiers was not a 'Specifiers' type - Type: %s", specifiers->type_str() );
+			return Code::Invalid;
+		}
+
+		switch ( body->Type )
+		{
+			case Class_Body:
+			case Untyped:
+			break;
+
+			default:
+				log_failure("gen_def_class: body must be either of Function_Body or Untyped type.");
+				return Code::Invalid;
+		}
+
+		Code
+		result       = make_code();
+		result->Name = code_string( name, length );
+
+		array_init( result->Entries, StaticData::Allocator_CodePool );
+
+		if ( body )
+		{
+			result->Type = Class;
+			result->add_entry( body );
+		}
+		else
+		{
+			result->Type = Class_FwdDecl;
+		}
+
+		if ( parent )
+			result->add_entry( parent );
+
+		if ( specifiers )
+			result->add_entry( specifiers );
+
+		result.lock();
+		return result;
+	}
+
+	Code def_enum( s32 length, char const* name, Code type, Code body )
+	{
+		if ( length <= 0 )
+		{
+			log_failure( "gen_def_enum: Invalid name length provided - %d", length );
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_class: name is null");
+			return Code::Invalid;
+		}
+
+
+	}
+
 	Code def_function( char const* name
 		, Code specifiers
 		, Code params
@@ -334,15 +621,15 @@ namespace gen
 
 		array_init( result->Entries, StaticData::Allocator_CodePool );
 
-		result->add( body );
+		result->add_entry( body );
 
 		if ( specifiers )
-			result->add( specifiers );
+			result->add_entry( specifiers );
 
-		result->add( ret_type );
+		result->add_entry( ret_type );
 
 		if ( params )
-			result->add( params );
+			result->add_entry( params );
 
 		result.lock();
 		return result;
@@ -376,7 +663,7 @@ namespace gen
 
 			switch ( entry->Type )
 			{
-				case Function_Forward:
+				case Function_FwdDecl:
 				case Namespace:
 				case Namespace_Body:
 				case Parameters:
@@ -392,7 +679,7 @@ namespace gen
 					break;
 			}
 
-			result->add( entry );
+			result->add_entry( entry );
 		}
 		while ( num--, num > 0 );
 		va_end(va);
@@ -431,7 +718,7 @@ namespace gen
 
 			switch ( entry->Type )
 			{
-				case Function_Forward:
+				case Function_FwdDecl:
 				case Namespace:
 				case Namespace_Body:
 				case Parameters:
@@ -447,7 +734,7 @@ namespace gen
 					break;
 			}
 
-			result->add( entry );
+			result->add_entry( entry );
 		}
 		while ( num--, num > 0 );
 
@@ -486,7 +773,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		result->add( type );
+		result->add_entry( type );
 
 		while( num -= 2, num && num % 2 == 0 )
 		{
@@ -508,17 +795,16 @@ namespace gen
 				return Code::Invalid;
 			}
 
-			param->add( type );
+			param->add_entry( type );
 			param.lock();
 
-			result->add(param);
+			result->add_entry(param);
 		}
 		va_end(va);
 
 		result.lock();
 		return result;
 	}
-
 
 	Code def_namespace( char const* name, Code body )
 	{
@@ -536,7 +822,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		result->add( body );
+		result->add_entry( body );
 
 		return result;
 	}
@@ -575,7 +861,7 @@ namespace gen
 					break;
 			}
 
-			result->add( entry );
+			result->add_entry( entry );
 		}
 		while ( num--, num > 0 );
 		va_end(va);
@@ -648,13 +934,13 @@ namespace gen
 		array_init( result->Entries, g_allocator );
 
 		if ( body )
-			result->add( body );
+			result->add_entry( body );
 
 		if ( parent )
-			result->add( parent );
+			result->add_entry( parent );
 
 		if ( specifiers )
-			result->add( specifiers );
+			result->add_entry( specifiers );
 
 		return result;
 	}
@@ -693,7 +979,7 @@ namespace gen
 				}
 			}
 
-			result->add( entry );
+			result->add_entry( entry );
 		}
 		while ( num--, num > 0 );
 		va_end(va);
@@ -729,12 +1015,12 @@ namespace gen
 		array_init( result->Entries, g_allocator );
 
 		if ( specifiers )
-			result->add( specifiers );
+			result->add_entry( specifiers );
 
-		result->add( type );
+		result->add_entry( type );
 
 		if ( value )
-			result->add( value );
+			result->add_entry( value );
 
 		return result;
 	}
@@ -759,7 +1045,7 @@ namespace gen
 		array_init( result->Entries, g_allocator );
 
 		type->Parent = result;
-		result->add( type );
+		result->add_entry( type );
 
 		return result;
 	}
@@ -800,16 +1086,16 @@ namespace gen
 		array_init( result->Entries, g_allocator );
 
 		// Making body at entry 0.
-		result->add( make_code() );
+		result->add_entry( make_code() );
 
 		if ( specifiers )
-			result->add( specifiers );
+			result->add_entry( specifiers );
 
 		if ( ret_type )
-			result->add( ret_type );
+			result->add_entry( ret_type );
 
 		if ( params )
-			result->add( params );
+			result->add_entry( params );
 
 		return result;
 	}
@@ -838,13 +1124,13 @@ namespace gen
 		array_init( result->Entries, g_allocator );
 
 		// Making body at entry 0.
-		result->add( make_code() );
+		result->add_entry( make_code() );
 
 		if ( parent )
-			result->add( parent );
+			result->add_entry( parent );
 
 		if ( specifiers )
-			result->add( specifiers );
+			result->add_entry( specifiers );
 
 		return result;
 	}
@@ -859,7 +1145,7 @@ namespace gen
 		array_init( result->Entries, g_allocator );
 
 		// Making body at entry 0;
-		result->add( make_code() );
+		result->add_entry( make_code() );
 
 		return result;
 	}
@@ -1014,15 +1300,15 @@ namespace gen
 
 		array_init( result->Entries, g_allocator );
 
-		result->add( body );
+		result->add_entry( body );
 
 		if ( specifiers )
-			result->add( specifiers );
+			result->add_entry( specifiers );
 
-		result->add( ret_type );
+		result->add_entry( ret_type );
 
 		if ( params )
-			result->add( params );
+			result->add_entry( params );
 
 		result.lock();
 		return result;
@@ -1051,11 +1337,11 @@ namespace gen
 #	pragma endregion Parsing Constructors
 
 #	pragma region Untyped Constructors
-	Code untyped_str(char const* fmt)
+	Code untyped_str(char const* str)
 	{
 		Code
 		result          = make_code();
-		result->Name    = string_make( g_allocator, fmt );
+		result->Name    = string_make( g_allocator, str );
 		result->Type    = ECode::Untyped;
 		result->Content = result->Name;
 
@@ -1102,219 +1388,7 @@ namespace gen
 		return result;
 	}
 #	pragma endregion Untyped Constructors
-
-#	pragma region AST
-	bool AST::add( AST* other )
-	{
-		switch ( Type )
-		{
-			using namespace ECode;
-
-			case Untyped:
-			break;
-
-			case Global_Body:
-			break;
-
-			case Function:
-			break;
-
-			case Function_Body:
-			break;
-
-			case Function_Forward:
-			break;
-
-			case Namespace:
-			break;
-
-			case Namespace_Body:
-			break;
-
-			case Parameters:
-			break;
-
-			case Specifiers:
-			break;
-
-			case Struct:
-			break;
-
-			case Struct_Body:
-			break;
-
-			case Variable:
-			break;
-
-			case Typedef:
-			break;
-
-			case Typename:
-			break;
-
-			case Using:
-			break;
-		}
-
-		array_append( Entries, other );
-
-		other->Parent = this;
-		return true;
-	}
-
-	bool AST::check()
-	{
-
-	}
-
-	string AST::to_string() const
-	{
-		string result = string_make( g_allocator, "" );
-
-		if ( Comment )
-			result = string_append_fmt( result, "// %s\n", Comment );
-
-		switch ( Type )
-		{
-			using namespace ECode;
-
-			case Invalid:
-				fatal("Attempted to serialize invalid code! - %s", Name);
-			break;
-
-			case Untyped:
-				result = string_append_length( result, Content, string_length(Content) );
-			break;
-
-			case Function_Forward:
-			{
-				u32 index = 0;
-				u32 left  = array_count( Entries );
-
-				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
-
-				if ( Entries[index]->Type == Specifiers )
-				{
-					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
-					index++;
-					left--;
-				}
-
-				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
-
-				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
-				index++;
-				left--;
-
-				if ( left && Entries[index]->Type == Parameters )
-				{
-					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
-					index++;
-					left--;
-				}
-
-				result = string_appendc( result, ");\n" );
-			}
-			break;
-
-			case Function:
-			{
-				u32 index = 0;
-				u32 left  = array_count( Entries );
-
-				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
-
-				if ( Entries[index]->Type == Specifiers )
-				{
-					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
-					index++;
-					left--;
-				}
-
-				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
-
-				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
-				index++;
-				left--;
-
-				if ( left && Entries[index]->Type == Parameters )
-				{
-					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
-					index++;
-					left--;
-				}
-
-				result = string_append_fmt( result, ")\n{\n%s\n}", Entries[index]->to_string() );
-			}
-			break;
-
-			case Function_Body:
-				fatal("NOT SUPPORTED YET");
-			break;
-
-			case Namespace:
-				fatal("NOT SUPPORTED YET");
-			break;
-
-			case Namespace_Body:
-				fatal("NOT SUPPORTED YET");
-			break;
-
-			case Parameters:
-			{
-				result = string_append_fmt( result, "%s %s", Entries[0]->to_string(), Name );
-
-				s32 index = 1;
-				s32 left  = array_count( Entries ) - 1;
-
-				while ( left--, left > 0 )
-					result = string_append_fmt( result, ", %s %s"
-						, Entries[index]->Entries[0]->to_string()
-						, Entries[index]->Name
-					);
-			}
-			break;
-
-			case Specifiers:
-				result = string_append_fmt( result, "%s", Content );
-			break;
-
-			case Struct:
-				fatal("NOT SUPPORTED YET");
-			break;
-
-			case Struct_Body:
-				fatal("NOT SUPPORTED YET");
-			break;
-
-			case Variable:
-				fatal("NOT SUPPORTED YET");
-			break;
-
-			case Typedef:
-				fatal("NOT SUPPORTED YET");
-			break;
-
-			case Typename:
-				result = string_append_fmt( result, "%s", Name );
-			break;
-
-			case Using:
-				fatal("NOT SUPPORTED YET");
-			break;
-		}
-
-		return result;
-	}
-
-	const Code Code::Invalid;
-#	pragma endregion AST
-
-
+#pragma endregion Gen Interface
 
 #	pragma region Builder
 	void Builder::print( Code code )
