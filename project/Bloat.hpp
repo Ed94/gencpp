@@ -3,7 +3,7 @@
 
 	This contians all definitions not directly related to the project.
 */
-#pragma once	
+#pragma once
 
 #ifdef BLOAT_IMPL
 #	define ZPL_IMPLEMENTATION
@@ -12,7 +12,7 @@
 
 #pragma region 									ZPL INCLUDE
 #if __clang__
-#	pragma clang diagnostic push 
+#	pragma clang diagnostic push
 #	pragma clang diagnostic ignored "-Wmissing-braces"
 #	pragma clang diagnostic ignored "-Wbraced-scalar-init"
 #endif
@@ -46,31 +46,47 @@
 #	pragma clang diagnostic ignored "-Wswitch"
 #	pragma clang diagnostic ignored "-Wunused-variable"
 #   pragma clang diagnostic ignored "-Wunknown-pragmas"
+#	pragma clang diagnostic ignored "-Wvarargs"
 #endif
 
 
-#if defined(__GNUC__) || defined(__clang__) || 1
-  // Supports 0-10 arguments
-  #define VA_NARGS_IMPL( _0,                          \
-	 _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10, \
-	_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-	_21, _22, _23, _24, _25, _26, _27, _28, _29, _30, \
-	_31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-	_41, _42, _43, _44, _45, _46, _47, _48, _49, _50, \
-	  N, ...) N 
-  // ## deletes preceding comma if _VA_ARGS__ is empty (GCC, Clang)
-  #define VA_NARGS(...) VA_NARGS_IMPL(_, ## __VA_ARGS__, \
-  	50, 49, 48, 47, 46, 45, 44, 43, 42, 41,              \
-  	40, 39, 38, 37, 36, 35, 34, 33, 32, 31,              \
-  	30, 29, 28, 27, 26, 25, 24, 23, 22, 21,              \
-	20, 19, 18, 17, 16, 15, 14, 13, 12, 11,              \
-	10, 9, 8, 7, 6, 5, 4, 3, 2, 1,                       \
-	0)    
+#if defined(__GNUC__) || defined(__clang__) || true
+	// Supports 0-10 arguments
+	#define macro_num_args_impl( _0,                      \
+		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,  \
+		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
+		N, ...                                            \
+	) N
+	// _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, \
+	// _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
+	// _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,
+
+	// ## deletes preceding comma if _VA_ARGS__ is empty (GCC, Clang)
+	#define macro_num_args(...)                 \
+ 	macro_num_args_impl(_, ## __VA_ARGS__,      \
+		20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
+		10,  9,  8,  7,  6,  5,  4,  3,  2,  1, \
+		0                                       \
+	)
+  	// 50, 49, 48, 47, 46, 45, 44, 43, 42, 41,              \
+  	// 40, 39, 38, 37, 36, 35, 34, 33, 32, 31,              \
+  	// 30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
 #else
-  // Supports 1-10 arguments
-  #define VA_NARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
-  #define VA_NARGS(...) VA_NARGS_IMPL(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+	// Supports 1-10 arguments
+  	#define macro_num_args_impl(                          \
+  		 _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10, \
+		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
+ 		 N, ...                                           \
+	) N
+
+	#define macro_num_args(...)                 \
+	macro_num_args_impl( __VA_ARGS__,           \
+		20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
+		10,  9,  8,  7,  6,  5,  4,  3,  2,  1  \
+	)
 #endif
+
+#define macro_expand( Expanded_ ) Expanded_
 
 #define bit( Value_ )                      ( 1 << Value_ )
 #define bitfield_is_equal( Field_, Mask_ ) ( ( (Mask_) & (Field_) ) == (Mask_) )
@@ -83,8 +99,7 @@
 #define pcast( Type_, Value_ )             ( * (Type_*)( & (Value_) ) )
 #define txt_impl( Value_ )                 #Value_
 #define txt( Value_ )                      txt_impl( Value_ )
-#define txt_with_length( Value_ )		   txt_impl( Value_ ), sizeof( txt_impl( Value_ ) )
-
+#define txt_n_len( Value_ )		           sizeof( txt_impl( Value_ ) ), txt_impl( Value_ )
 #define do_once()      \
 do                     \
 {                      \
@@ -136,7 +151,7 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 inline
 char const* token_fmt( char const* fmt, sw num_tokens, ... )
 {
-	local_persist thread_local 
+	local_persist thread_local
 	char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 
 	va_list va;
@@ -148,25 +163,25 @@ char const* token_fmt( char const* fmt, sw num_tokens, ... )
 }
 
 inline
-sw log_fmt(char const *fmt, ...) 
+sw log_fmt(char const *fmt, ...)
 {
 	if ( Global::ShouldShowDebug == false )
 		return 0;
 
 	sw res;
 	va_list va;
-	
+
 	va_start(va, fmt);
 	res = zpl_printf_va(fmt, va);
 	va_end(va);
-	
+
 	return res;
 }
 
 inline
-sw fatal(char const *fmt, ...) 
+sw fatal(char const *fmt, ...)
 {
-	local_persist thread_local 
+	local_persist thread_local
 	char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 
 	va_list va;

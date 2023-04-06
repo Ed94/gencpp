@@ -189,7 +189,7 @@ Code make_log_failure()
 			R"(#ifdef GEN_USE_FATAL)"
 		));
 
-		result->add( proc_code(
+		result->add( function_code(
 			inline
 			sw genc_log_failure(char const *fmt, ...) 
 			{
@@ -211,32 +211,31 @@ Code make_log_failure()
 			R"(#else)"
 		));
 
-		result->add( parse_proc(
-R"(inline
-sw genc_log_failure(char const *fmt, ...) 
-{
-	local_persist thread_local 
-	char buf[ZPL_PRINTF_MAXLEN] = { 0 };
+		result->add( proc_code(
+			inline
+			sw genc_log_failure(char const *fmt, ...) 
+			{
+				local_persist thread_local 
+				char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 
-	va_list va;
+				va_list va;
 
-#if Build_Debug
-	va_start(va, fmt);
-	zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
-	va_end(va);
+			#if Build_Debug
+				va_start(va, fmt);
+				zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
+				va_end(va);
 
-	assert_crash(buf);
-	return -1;
-#else
-	va_start(va, fmt);
-	zpl_printf_err_va( fmt, va);
-	va_end(va);
+				assert_crash(buf);
+				return -1;
+			#else
+				va_start(va, fmt);
+				zpl_printf_err_va( fmt, va);
+				va_end(va);
 
-	zpl_exit(1);
-	return -1;
-#endif
-})"
-		,	372
+				zpl_exit(1);
+				return -1;
+			#endif
+			}
 		));
 
 		result->add( untyped_str(
@@ -253,32 +252,31 @@ Code make_ECode()
 {
 	Code ECode = make_global_body();
 	{
-		ECode->add( parse_enum(
-R"(enum genc_ECode
-{
-	Invalid,
-	Untyped,
-	Enum,
-	Enum_Body,
-	Global_Body,
-	Parameters,
-	Proc,           
-	Proc_Body,      
-	Proc_Forward,   
-	Specifiers,     
-	Struct,         
-	Struct_Body,    
-	Variable,       
-	Typedef,        
-	Typename,  
+		ECode->add( enum_code(
+			enum genc_ECode
+			{
+				Invalid,
+				Untyped,
+				Enum,
+				Enum_Body,
+				Global_Body,
+				Parameters,
+				Proc,           
+				Proc_Body,      
+				Proc_Forward,   
+				Specifiers,     
+				Struct,         
+				Struct_Body,    
+				Variable,       
+				Typedef,        
+				Typename,  
 
-	Num_Types
-};
-typedef u32 genc_CodeT;)" + 1
-		,	280
+				Num_Types
+			};
+			typedef u32 genc_CodeT;
 		));
 
-		ECode->add( proc_code(
+		ECode->add( function_code(
 			inline
 			char const* genc_ecode_to_str( Type type )
 			{
@@ -353,11 +351,11 @@ Code make_Code()
 		typedef genc_AST* Code;
 	));
 
-	code->add( proc_code(
+	code->add( function_code(
 		bool genc_ast_add( genc_Code other );
 	));
 
-	code->add( proc_code( 
+	code->add( function_code( 
 		genc_forceinline
 		void genc_ast_add_entry( genc_Code self,  genc_Code other )
 		{
@@ -371,7 +369,7 @@ Code make_Code()
 		R"(#define genc_code_body( AST_ ) AST->Entries[0])", 47
 	));
 
-	code->add( proc_code( 
+	code->add( function_code( 
 		genc_forceinline
 		bool genc_code_has_entries( Code self ) const
 		{
@@ -406,7 +404,7 @@ Code make_static_Data()
 	Code 
 	data = make_global_body();
 	data->add( IfDef_GENC_IMPLEMENTATION );
-	data->add( global_code(
+	data->add( global_body_code(
 		static genc_array(genc_AST) genc_CodePool = nullptr;
 
 		static genc_array(genc_arena) genc_StringArenas =  nullptr;
@@ -425,7 +423,7 @@ Code make_static_Data()
 		static allocator genc_Allocator_TypeTable   = zpl_heap();
 	));
 	data->add( untyped_str( R"(#ifdef GENC_DEFINE_LIBRARY_CODE_CONSTANTS)"));
-	data->add( global_code(
+	data->add( global_body_code(
 		Code t_void;
 
 		Code t_bool;
@@ -449,7 +447,7 @@ Code make_static_Data()
 		Code t_f64;
 	));
 	data->add( untyped_str( R"(#endif)"));
-	data->add( global_code(
+	data->add( global_body_code(
 		Code spec_inline;
 		Code spec_const;
 	));
@@ -509,11 +507,11 @@ int gen_main()
 	Memory::setup();
 	gen::init();
 	
-	IfDef_GENC_IMPLEMENTATION = untyped(
+	IfDef_GENC_IMPLEMENTATION = untyped_str(
 		R"(#ifdef GENC_IMPLEMENTATION)"
 	);
 
-	EndIf_GENC_IMPLEMENTATION = untyped(
+	EndIf_GENC_IMPLEMENTATION = untyped_str(
 		R"(#endif // GENC_IMPLEMENTATION)"
 	);
 

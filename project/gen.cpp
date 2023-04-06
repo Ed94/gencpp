@@ -9,22 +9,77 @@ namespace gen
 
 	namespace StaticData
 	{
+	#ifndef GEN_CODE_USE_SOA
 		static array(CodePOD) CodePool = nullptr;
+
+	#else
+		using DataUnion = union
+		{
+			array(AST*)   Entries;
+			string        Content;
+		};
+
+		namespace CodePool
+		{
+			array(CodeT)     Type;
+			array(bool)      Readonly;
+			array(AST*)      Parent;
+			array(string)    Name;
+			array(string)    Comment;
+			array(DataUnion) Data;
+
+			forceinline
+			CodeT& type( sw index )
+			{
+				return Type[index];
+			}
+
+			forceinline
+			bool& readonly( sw index )
+			{
+				return Readonly[index];
+			}
+
+			forceinline
+			AST*& parent( sw index )
+			{
+				return Parent[index];
+			}
+
+			forceinline
+			string& name( sw index )
+			{
+				return Name[index];
+			}
+
+			forceinline
+			string& comment( sw index )
+			{
+				return Comment[index];
+			}
+
+			forceinline
+			DataUnion& data( sw index )
+			{
+				return Data[index];
+			}
+		}
+	#endif
 
 		static array(arena) StringArenas =  nullptr;
 
-		static StringTable    StringMap;
-		static TypeTable      TypeMap;
+		static StringTable StringMap;
+		static TypeTable   TypeMap;
 
 		static sw InitSize_CodePool       = megabytes(64);
 		static sw InitSize_StringArena    = megabytes(32);
 		static sw InitSize_StringTable    = megabytes(4);
 		static sw InitSize_TypeTable      = megabytes(4);
 
-		static allocator Allocator_CodePool    = zpl_heap();
-		static allocator Allocator_StringArena = zpl_heap();
-		static allocator Allocator_StringTable = zpl_heap();
-		static allocator Allocator_TypeTable   = zpl_heap();
+		static allocator Allocator_CodePool    = heap();
+		static allocator Allocator_StringArena = heap();
+		static allocator Allocator_StringTable = heap();
+		static allocator Allocator_TypeTable   = heap();
 	}
 
 #pragma region CONSTANTS
@@ -63,29 +118,50 @@ namespace gen
 	{
 		using namespace StaticData;
 
+#	ifndef GEN_CODE_USE_SOA
 		ct CodePOD Invalid = { ECode::Invalid, false, nullptr, nullptr, nullptr, { nullptr } };
 
 		array_append( CodePool, Invalid );
 
 		return pcast( Code, array_back( CodePool ));
+#	else
+
+		array_append( CodePool::Type, ECode::Invalid );
+		array_append( CodePool::Readonly, false );
+		array_append( CodePool::Name, nullptr );
+		array_append( CodePool::Comment, nullptr );
+		array_append( CodePool::Data, { nullptr } );
+
+		Code code { array_count( CodePool::Type) - 1 };
+
+		return code;
+#	endif
 	}
 
 	void init()
 	{
-		array_init( StaticData::CodePool, g_allocator );
+		array_init( StaticData::CodePool, StaticData::Allocator_CodePool );
+		array_init( StaticData::StringArenas, heap() );
 
-		Code& 
-		InvalidCode_write = ccast( Code, InvalidCode );
+		arena string_arena;
+		arena_init_from_allocator( & string_arena, StaticData::Allocator_StringArena, StaticData::InitSize_StringArena );
+
+		str_tbl_init(  & StaticData::StringMap, StaticData::Allocator_StringTable );
+		type_tbl_init( & StaticData::TypeMap,   StaticData::Allocator_TypeTable );
+
+		Code&
+		InvalidCode_write = ccast( Code, Code::Invalid );
 		InvalidCode_write = make_code();
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-		Code& 
+		Code&
 		t_bool_write = ccast( Code, t_void );
 		t_bool_write = def_type( txt(void) );
 
 	#	define def_constant_code_type( Type_ ) \
 		Code&                                  \
-		t_##Type_ = def_type( txt(Type_) )     
+		t_##Type_ = def_type( txt(Type_) );    \
+		t_##Type_.lock()
 
 		def_constant_code_type( bool );
 		def_constant_code_type( char );
@@ -106,23 +182,21 @@ namespace gen
 
 		def_constant_code_type( f32 );
 		def_constant_code_type( f64 );
-
 	#	undef def_constant_code_type
-		
+	#endif
+
 		Code&
 		spec_constexpr_write = ccast( Code, spec_constexpr );
 		spec_constexpr_write = def_specifiers( 1, ESpecifier::Constexpr );
 
-	#	define def_constant_spec( Type_, ... ) \
-		Code& \
-		spec_##Type_##_write = ccast( Code, spec_##Type_ );                        \
-		spec_##Type_##_write = def_specifiers( VA_NARGS(__VA_ARGS__), __VA_ARGS__)
+	#	define def_constant_spec( Type_, ... )                              \
+		Code&                                                               \
+		spec_##Type_ = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
+		spec_##Type_.lock();
 
+		def_constant_spec( const, ESpecifier::Const );
 		def_constant_spec( inline, ESpecifier::Inline );
-
 	#	undef def_constant_spec
-		
-	#endif
 	}
 
 	void clear_code_pool()
@@ -211,70 +285,11 @@ namespace gen
 	}
 
 #	pragma region Upfront Constructors
-	Code def_params( s32 num, ... )
-	{
-		using namespace ECode;
-
-		if (num <= 0)
-		{
-			log_failure( "TT::make_paramters: num cannot be zero or neg" );
-			return InvalidCode;
-		}
-
-		Code
-		result       = make_code();
-		result->Type = Parameters;
-
-		va_list va;
-		va_start(va, num);
-
-		result->Name = string_make( g_allocator, va_arg(va, char const*) );
-
-		array_init( result->Entries, g_allocator );
-
-		Code type = va_arg(va, Code);
-
-		if ( type->Type != Typename )
-		{
-			log_failure( "gen::def_parameters: type of param %d is not a Typename", num - num + 1 );
-			return InvalidCode;
-		}
-
-		result->add( type );
-
-		while( num -= 2, num && num % 2 == 0 )
-		{
-			type = va_arg(va, Code);
-
-			Code
-			param       = make_code();
-			param->Type = Parameters;
-			param->Name = string_make( g_allocator, va_arg(va, char const*) );
-
-			array_init( param->Entries, g_allocator );
-
-			if ( type->Type != Typename )
-			{
-				log_failure( "gen::def_parameters: type of param %d is not a Typename", num - num + 1 );
-				return InvalidCode;
-			}
-
-			param->add( type );
-			param.lock();
-			
-			result->add(param);
-		}
-		va_end(va);
-
-		result.lock();
-		return result;
-	}
-
-	Code def_proc( char const* name
+	Code def_function( char const* name
 		, Code specifiers
 		, Code params
 		, Code ret_type
-		, Code body 
+		, Code body
 	)
 	{
 		using namespace ECode;
@@ -282,40 +297,42 @@ namespace gen
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
 			log_failure( "gen::def_function: specifiers was not a `Specifiers` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( params && params->Type != Parameters )
 		{
 			log_failure( "gen::def_function: params was not a `Parameters` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( ret_type == nullptr || ret_type->Type != Typename )
 		{
 			log_failure( "gen::def_function: ret_type was not a Typename" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		switch ( body->Type )
 		{
-			case Proc_Body:
+			case Function_Body:
 			case Untyped:
 				break;
 
 			default:
 			{
 				log_failure("gen::def_function: body must be either of Function_Body or Untyped type.");
-				return InvalidCode;
+				return Code::Invalid;
 			}
 		}
 
-		Code 
+		s32 name_length = zpl_strnlen( name, MaxNameLength );
+
+		Code
 		result       = make_code();
-		result->Name = string_make( g_allocator, name );
-		result->Type = Proc;
-		
-		array_init( result->Entries, g_allocator );
+		result->Name = code_string( name, name_length );
+		result->Type = Function;
+
+		array_init( result->Entries, StaticData::Allocator_CodePool );
 
 		result->add( body );
 
@@ -331,14 +348,14 @@ namespace gen
 		return result;
 	}
 
-	Code def_proc_body( s32 num, ... )
+	Code def_function_body( s32 num, ... )
 	{
 		using namespace ECode;
 
 		if ( num <= 0 )
 		{
 			log_failure("gen::def_function_body: num cannot zero or neg");
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		Code result = make_code();
@@ -354,12 +371,12 @@ namespace gen
 			if ( ! entry )
 			{
 				log_failure("gen::def_function_body: Provided an invalid entry!");
-				return InvalidCode;
+				return Code::Invalid;
 			}
 
 			switch ( entry->Type )
 			{
-				case Proc_Forward:
+				case Function_Forward:
 				case Namespace:
 				case Namespace_Body:
 				case Parameters:
@@ -368,7 +385,7 @@ namespace gen
 				case Typename:
 				{
 					log_failure("gen::def_function_body: Entry type is not allowed: %s", entry->type_str() );
-					return InvalidCode;
+					return Code::Invalid;
 				}
 
 				default:
@@ -376,27 +393,27 @@ namespace gen
 			}
 
 			result->add( entry );
-		} 
+		}
 		while ( num--, num > 0 );
 		va_end(va);
-		
+
 		return result;
 	}
 
-	Code def_proc_body( s32 num, Code* codes )
+	Code def_function_body( s32 num, Code* codes )
 	{
 		using namespace ECode;
 
 		if ( num <= 0 )
 		{
 			log_failure("gen::def_function_body: num cannot zero or neg");
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( codes == nullptr )
 		{
 			log_failure("gen::def_function_body: Provided a null array of codes!");
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		Code result = make_code();
@@ -409,12 +426,12 @@ namespace gen
 			if ( ! entry )
 			{
 				log_failure("gen::def_function_body: Provided an invalid entry!");
-				return InvalidCode;
+				return Code::Invalid;
 			}
 
 			switch ( entry->Type )
 			{
-				case Proc_Forward:
+				case Function_Forward:
 				case Namespace:
 				case Namespace_Body:
 				case Parameters:
@@ -423,7 +440,7 @@ namespace gen
 				case Typename:
 				{
 					log_failure("gen::def_function_body: Entry type is not allowed: %s", entry->type_str() );
-					return InvalidCode;
+					return Code::Invalid;
 				}
 
 				default:
@@ -431,17 +448,83 @@ namespace gen
 			}
 
 			result->add( entry );
-		} 
+		}
 		while ( num--, num > 0 );
-		
+
 		return result;
 	}
+
+	Code def_params( s32 num, ... )
+	{
+		using namespace ECode;
+
+		if (num <= 0)
+		{
+			log_failure( "TT::make_paramters: num cannot be zero or neg" );
+			return Code::Invalid;
+		}
+
+		Code
+		result       = make_code();
+		result->Type = Parameters;
+
+		va_list va;
+		va_start(va, num);
+
+		Code type = va_arg(va, Code);
+
+		char const* name        = va_arg(va, char const*);
+		s32         name_length = zpl_strnlen(name, MaxNameLength);
+
+		result->Name = code_string( name, name_length );
+
+		array_init( result->Entries, g_allocator );
+
+		if ( type->Type != Typename )
+		{
+			log_failure( "gen::def_parameters: type of param %d is not a Typename", num - num + 1 );
+			return Code::Invalid;
+		}
+
+		result->add( type );
+
+		while( num -= 2, num && num % 2 == 0 )
+		{
+			type = va_arg(va, Code);
+
+			name        = va_arg(va, char const*);
+			name_length = zpl_strnlen(name, MaxNameLength);
+
+			Code
+			param       = make_code();
+			param->Type = Parameters;
+			param->Name = code_string(name, name_length);
+
+			array_init( param->Entries, StaticData::Allocator_CodePool );
+
+			if ( type->Type != Typename )
+			{
+				log_failure( "gen::def_parameters: type of param %d is not a Typename", num - num + 1 );
+				return Code::Invalid;
+			}
+
+			param->add( type );
+			param.lock();
+
+			result->add(param);
+		}
+		va_end(va);
+
+		result.lock();
+		return result;
+	}
+
 
 	Code def_namespace( char const* name, Code body )
 	{
 		using namespace ECode;
 
-		Code 
+		Code
 		result       = make_code();
 		result->Type = Namespace;
 
@@ -450,7 +533,7 @@ namespace gen
 		if ( body->Type != Namespace_Body || body->Type != Untyped )
 		{
 			log_failure("gen::def_namespace: body is not of namespace or untyped type");
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		result->add( body );
@@ -465,7 +548,7 @@ namespace gen
 		if ( num <= 0 )
 		{
 			log_failure("gen::make_specifier: num cannot be zero or less");
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		Code
@@ -477,7 +560,7 @@ namespace gen
 		do
 		{
 			Code entry = va_arg(va, Code);
-			
+
 			switch ( entry->Type )
 			{
 				case Namespace_Body:
@@ -486,14 +569,14 @@ namespace gen
 				case Struct_Body:
 				case Typename:
 					log_failure("gen::def_function_body: Entry type is not allowed: %s", ECode::str(entry->Type) );
-					return InvalidCode;
+					return Code::Invalid;
 
 				default:
 					break;
 			}
 
 			result->add( entry );
-		} 
+		}
 		while ( num--, num > 0 );
 		va_end(va);
 
@@ -505,7 +588,7 @@ namespace gen
 		if ( num <= 0 )
 			fatal("gen::make_specifier: num cannot be zero or less");
 
-		Code 
+		Code
 		result          = make_code();
 		result->Type    = ECode::Specifiers;
 		result->Content = string_make( g_allocator, "" );
@@ -542,19 +625,19 @@ namespace gen
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
 			log_failure( "gen::def_struct: specifiers was not a `Specifiers` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( parent && parent->Type != Struct )
 		{
 			log_failure( "gen::def_struct: parent was not a `Struct` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( body && body->Type != Struct_Body )
 		{
 			log_failure( "gen::def_struct: body was not a Struct_Body type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		Code
@@ -583,7 +666,7 @@ namespace gen
 		if ( num == 0 )
 		{
 			log_failure("gen::def_struct_body: num cannot be zero");
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		Code result = make_code();
@@ -606,15 +689,15 @@ namespace gen
 				case Typename:
 				{
 					log_failure("gen::def_struct_body: Entry type is not allowed: %s", ECode::str(entry->Type) );
-					return InvalidCode;
+					return Code::Invalid;
 				}
 			}
 
 			result->add( entry );
-		} 
+		}
 		while ( num--, num > 0 );
 		va_end(va);
-		
+
 		return result;
 	}
 
@@ -623,26 +706,26 @@ namespace gen
 		if ( specifiers && specifiers->Type != ECode::Specifiers )
 		{
 			log_failure( "gen::def_variable: specifiers was not a `Specifiers` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( type->Type != ECode::Typename )
 		{
 			log_failure( "gen::def_variable: type was not a Typename" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( value && value->Type != ECode::Untyped )
 		{
 			log_failure( "gen::def_variable: value was not a `Untyped` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
-		Code 
+		Code
 		result       = make_code();
 		result->Name = string_make( g_allocator, name );
 		result->Type = ECode::Variable;
-		
+
 		array_init( result->Entries, g_allocator );
 
 		if ( specifiers )
@@ -658,7 +741,7 @@ namespace gen
 
 	Code def_type( char const* name,  Code specifiers )
 	{
-		Code 
+		Code
 		result       = make_code();
 		result->Name = string_make( g_allocator, name );
 		result->Type = ECode::Typename;
@@ -683,7 +766,7 @@ namespace gen
 #	pragma endregion Upfront Constructors
 
 #	pragma region Incremetnal Constructors
-	Code make_proc( char const* name
+	Code make_function( char const* name
 		, Code specifiers
 		, Code params
 		, Code ret_type
@@ -694,26 +777,26 @@ namespace gen
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
 			log_failure( "gen::def_function: specifiers was not a `Specifiers` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( params && params->Type != Parameters )
 		{
 			log_failure( "gen::def_function: params was not a `Parameters` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( ret_type == nullptr || ret_type->Type != Typename )
 		{
 			log_failure( "gen::def_function: ret_type was not a Typename" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
-		Code 
+		Code
 		result       = make_code();
 		result->Name = string_make( g_allocator, name );
-		result->Type = Proc;
-		
+		result->Type = Function;
+
 		array_init( result->Entries, g_allocator );
 
 		// Making body at entry 0.
@@ -731,20 +814,20 @@ namespace gen
 		return result;
 	}
 
-	Code make_struct( char const* name, Code parent = UnusedCode, Code specifiers = UnusedCode )
+	Code make_struct( char const* name, Code parent, Code specifiers )
 	{
 		using namespace ECode;
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
 			log_failure( "gen::def_struct: specifiers was not a `Specifiers` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		if ( parent && parent->Type != Struct )
 		{
 			log_failure( "gen::def_struct: parent was not a `Struct` type" );
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		Code
@@ -788,7 +871,7 @@ namespace gen
 		if ( def == nullptr )
 		{
 			log_failure("gen::parse_proc: def is null!");
-			return InvalidCode;
+			return Code::Invalid;
 		}
 
 		arena mem;
@@ -806,13 +889,13 @@ namespace gen
 		// Making all significant tokens have a max length of 128 for this parser.
 		ct sw LengthID = 128;
 
-		struct Param 
-		{ 
-			char const Type[LengthID]; 
-			char const Name[LengthID]; 
+		struct Param
+		{
+			char const Type[LengthID];
+			char const Name[LengthID];
 		};
 
-		static 
+		static
 		Param Params[ 64 ] { 0 };
 
 		// Zero out params before a run of this func.
@@ -848,7 +931,7 @@ namespace gen
 
 				s32         length = 0;
 				char const* spec_or_type = scanner;
-				
+
 				while ( char_is_alpha( * scanner) || * scanner == '_')
 				{
 					length++;
@@ -870,7 +953,7 @@ namespace gen
 				ret_length   = length;
 				scanner++;
 				break;
-			} 
+			}
 			while( left );
 
 			SkipWhitespace();
@@ -887,13 +970,13 @@ namespace gen
 
 			// Parameters
 			SkipWhitespace();
-			
+
 			if ( * scanner != '(' )
 			{
 				log_failure("gen::parse_proc: Error, expected a ( in %s", string_make_length( g_allocator, scanner - 4, 100) );
-				return InvalidCode;
+				return Code::Invalid;
 			}
-			
+
 			scanner++;
 
 			do
@@ -909,7 +992,7 @@ namespace gen
 
 			// get end specifiers
 
-			
+
 
 
 			if ( * scanner != '{')
@@ -919,16 +1002,16 @@ namespace gen
 		}
 
 		Code specifiers = def_specifiers( num_specifiers, specs_found );
-		
+
 		Code params   = make_code();
 		Code ret_type = def_type( ret_type_str );
-		Code body     = untyped_str( body_str, body_length );
+		Code body     = untyped_str( body_length, body_str );
 
-		Code 
+		Code
 		result       = make_code();
 		result->Name = string_make( g_allocator, name );
-		result->Type = ECode::Proc;
-		
+		result->Type = ECode::Function;
+
 		array_init( result->Entries, g_allocator );
 
 		result->add( body );
@@ -970,7 +1053,7 @@ namespace gen
 #	pragma region Untyped Constructors
 	Code untyped_str(char const* fmt)
 	{
-		Code 
+		Code
 		result          = make_code();
 		result->Name    = string_make( g_allocator, fmt );
 		result->Type    = ECode::Untyped;
@@ -981,15 +1064,15 @@ namespace gen
 
 	Code untyped_fmt(char const* fmt, ...)
 	{
-		local_persist thread_local 
+		local_persist thread_local
 		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 
 		va_list va;
 		va_start(va, fmt);
 		zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
 		va_end(va);
-         
-		Code 
+
+		Code
 		result          = make_code();
 		result->Name    = string_make( g_allocator, fmt );
 		result->Type    = ECode::Untyped;
@@ -1000,7 +1083,7 @@ namespace gen
 
 	Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... )
 	{
-		local_persist thread_local 
+		local_persist thread_local
 		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 
 		va_list va;
@@ -1033,13 +1116,13 @@ namespace gen
 			case Global_Body:
 			break;
 
-			case Proc:
+			case Function:
 			break;
 
-			case Proc_Body:
+			case Function_Body:
 			break;
 
-			case Proc_Forward:
+			case Function_Forward:
 			break;
 
 			case Namespace:
@@ -1103,7 +1186,7 @@ namespace gen
 				result = string_append_length( result, Content, string_length(Content) );
 			break;
 
-			case Proc_Forward:
+			case Function_Forward:
 			{
 				u32 index = 0;
 				u32 left  = array_count( Entries );
@@ -1136,7 +1219,7 @@ namespace gen
 			}
 			break;
 
-			case Proc:
+			case Function:
 			{
 				u32 index = 0;
 				u32 left  = array_count( Entries );
@@ -1169,7 +1252,7 @@ namespace gen
 			}
 			break;
 
-			case Proc_Body:
+			case Function_Body:
 				fatal("NOT SUPPORTED YET");
 			break;
 
@@ -1181,7 +1264,7 @@ namespace gen
 				fatal("NOT SUPPORTED YET");
 			break;
 
-			case Parameters: 
+			case Parameters:
 			{
 				result = string_append_fmt( result, "%s %s", Entries[0]->to_string(), Name );
 
@@ -1191,7 +1274,7 @@ namespace gen
 				while ( left--, left > 0 )
 					result = string_append_fmt( result, ", %s %s"
 						, Entries[index]->Entries[0]->to_string()
-						, Entries[index]->Name 
+						, Entries[index]->Name
 					);
 			}
 			break;
@@ -1227,7 +1310,10 @@ namespace gen
 
 		return result;
 	}
+
+	const Code Code::Invalid;
 #	pragma endregion AST
+
 
 
 #	pragma region Builder
@@ -1247,7 +1333,7 @@ namespace gen
 		}
 
 		Buffer = string_make( g_allocator, "" );
-		
+
 		return true;
 	}
 

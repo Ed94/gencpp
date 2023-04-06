@@ -13,7 +13,7 @@
 #ifdef gen_time
 	Code gen__array_base()
 	{
-	#ifndef GEN_DEFINE_DSL
+#	ifndef GEN_DEFINE_DSL
 		using namespace gen;
 
 		Code t_allocator = def_type( txt(allocator)  );
@@ -34,39 +34,40 @@
 			Code params = def_params(1, t_uw, "value" );
 			Code body   = untyped_str( txt( return 2 * value * 8; ) );
 
-			grow_formula = def_proc( "grow_formula", spec, params, t_sw, body );
+			grow_formula = def_function( "grow_formula", spec, params, t_sw, body );
 		}
 
 		Code body      = def_struct_body(2, header, grow_formula);
 		Code ArrayBase = def_struct( "ArrayBase", body );
-		
-	#else
-		typename( allocator, allocator );
+
+#	else
+		Code t_allocator = type( allocator );
 
 		Code Header;
 		{
-			variable( uw,        Num,      );
-			variable( uw,        Capacity  );
-			variable( allocator, Allocator );
+			Code Num       = variable( uw,        Num,      );
+			Code Capacity  = variable( uw,        Capacity  );
+			Code Allocator = variable( allocator, Allocator );
+			Code body      = struct_body( Num, Capacity, Allocator );
 
-			Code body = struct_body( Num, Capacity, Allocator );
-
-			struct( Header, __, __, body );
+			Header = struct( Header, __, __, body );
 		}
 
-		Code proc( grow_formula, spec_inline, t_uw, params( t_uw, "value" ), 
-			untyped( return 2 * value * 8 ) 
+		Code test = params( uw, value );
+
+		Code grow_formula = function( grow_formula,  params( uw, value ), uw, spec_inline,
+			code_str( return 2 * value * 8 )
 		);
 
-		Code struct( ArrayBase, __, __, struct_body( Header, grow_formula ) );
-	#endif
+		Code ArrayBase = struct( ArrayBase, __, __, struct_body( Header, grow_formula ) );
+#	endif
 
 		return ArrayBase;
 	}
 
 	Code gen__array( char const* type_str, s32 type_size, Code parent )
 	{
-	#ifndef GEN_DEFINE_DSL
+#	ifndef GEN_DEFINE_DSL
 		// Make these global consts to be accessed anywhere...
 			Code t_allocator = def_type( txt(allocator) );
 
@@ -96,7 +97,7 @@
 				Code params = def_params( 1, t_allocator, "mem_handler" );
 				Code body   = untyped_str( txt( return init_reserve( mem_handler, grow_formula(0) ); ) );
 
-				init = def_proc( "init", UnusedCode, params, t_bool, body );
+				init = def_function( "init", UnusedCode, params, t_bool, body );
 			}
 
 			Code init_reserve;
@@ -104,8 +105,8 @@
 				Code params = def_params( 2, t_allocator, "mem_handler", t_sw, "capacity" );
 				Code body;
 				{
-					Code header_value = untyped_str( txt( 
-						rcast( Header*, alloc( mem_handler, sizeof( Header ) + sizeof(Type) + capacity )) 
+					Code header_value = untyped_str( txt(
+						rcast( Header*, alloc( mem_handler, sizeof( Header ) + sizeof(Type) + capacity ))
 					));
 
 					Code header = def_variable( ptr_header, "header", header_value );
@@ -125,11 +126,11 @@
 						"Data = rcast( %s, header + 1 );", ptr_type
 					);
 
-					Code ret_true = untyped_str( txt( 
-						return true 
+					Code ret_true = untyped_str( txt(
+						return true
 					));
 
-					body = def_proc_body( 5
+					body = def_function_body( 5
 					,	header
 					,	null_check
 					,	header_init
@@ -138,7 +139,7 @@
 					);
 				}
 
-				init_reserve = def_proc( "init_reserve", UnusedCode, params, t_bool, body );
+				init_reserve = def_function( "init_reserve", UnusedCode, params, t_bool, body );
 			}
 
 			Code free;
@@ -148,17 +149,17 @@
 					::free( header.Allocator, & get_header() );
 				));
 
-				free = def_proc( "free", UnusedCode, UnusedCode, t_void, body );
+				free = def_function( "free", UnusedCode, UnusedCode, t_void, body );
 			}
 
-			Code append = make_proc( "append" );
+			Code append = make_function( "append" );
 			{
 				append->add( def_params( 1, type, "value") );
 				append->add( t_bool );
 
-				Code 
+				Code
 				body = append.body();
-				body->add( 
+				body->add(
 					untyped_str( txt(
 						if ( header.Capacity < header.Num + 1 )
 							if ( ! grow(0) )
@@ -169,7 +170,7 @@
 				body->add( untyped_str( txt(
 					Data[ header.Num ] = value;
 					header.Num++;
-					
+
 					return true;
 				)));
 
@@ -184,14 +185,14 @@
 					return data[ header.Num - 1 ];
 				));
 
-				back = def_proc( "back", UnusedCode, UnusedCode, type, body );
+				back = def_function( "back", UnusedCode, UnusedCode, type, body );
 			}
 
 			Code clear;
 			{
 				Code body = untyped_str( txt( get_header().Num = 0; ));
 
-				clear = def_proc( "clear", UnusedCode, UnusedCode, t_void, body );
+				clear = def_function( "clear", UnusedCode, UnusedCode, t_void, body );
 			}
 
 			Code fill;
@@ -209,17 +210,17 @@
 							Data[index] = vallue;
 					));
 
-					body = def_proc_body( 3, header, check, iter );
+					body = def_function_body( 3, header, check, iter );
 				}
 
-				fill = def_proc( "fill", UnusedCode, params, t_void, body );
+				fill = def_function( "fill", UnusedCode, params, t_void, body );
 			}
 
 			Code get_header;
 			{
 				Code body = untyped_str( txt( return pcast( Header, Data - 1 ); ));
 
-				get_header = def_proc( "get_header", spec_inline, UnusedCode, ref_header, body );
+				get_header = def_function( "get_header", spec_inline, UnusedCode, ref_header, body );
 			}
 
 			Code grow;
@@ -236,10 +237,10 @@
 
 					Code ret = untyped_str( "return set_capacity( new_capacity );" );
 
-					body = def_proc_body( 4, header, new_capacity, check_n_set, ret );
+					body = def_function_body( 4, header, new_capacity, check_n_set, ret );
 				}
 
-				grow = def_proc( "grow", UnusedCode, param, t_bool, body );
+				grow = def_function( "grow", UnusedCode, param, t_bool, body );
 			}
 
 			Code pop;
@@ -249,10 +250,10 @@
 					Code assertion = untyped_str( "assert( header.Num > 0 );" );
 					Code decrement = untyped_str( "header.Num--; " );
 
-					body = def_proc_body( 3, header, assertion, decrement );
+					body = def_function_body( 3, header, assertion, decrement );
 				}
 
-				pop = def_proc( "pop", UnusedCode, UnusedCode, t_void, body );
+				pop = def_function( "pop", UnusedCode, UnusedCode, t_void, body );
 			}
 
 			Code reserve;
@@ -267,10 +268,10 @@
 
 					Code ret = untyped_str( "\t" "return true" );
 
-					body = def_proc_body( 3, header, check_n_set, ret );
+					body = def_function_body( 3, header, check_n_set, ret );
 				}
 
-				reserve = def_proc( "reserve", UnusedCode, params, t_bool, body );
+				reserve = def_function( "reserve", UnusedCode, params, t_bool, body );
 			}
 
 			Code resize;
@@ -290,10 +291,10 @@
 						"\n""return true;"
 					);
 
-					body = def_proc_body( 3, header, check_n_grow, set_n_ret );
+					body = def_function_body( 3, header, check_n_grow, set_n_ret );
 				}
 
-				resize = def_proc( "resize", UnusedCode, param, t_bool, body );
+				resize = def_function( "resize", UnusedCode, param, t_bool, body );
 			}
 
 			Code set_capacity = parse_proc( txt_with_length(
@@ -350,191 +351,192 @@
 
 			array_def = def_struct( name, body, parent );
 		}
-	#else
-		typename( allocator, allocator );
-		
-		untyped( v_nullptr, nullptr );
+#	else
+		type( allocator );
 
-		typename( elem_type, type_str );
-		typename_fmt( ptr_type, "%s*", type_str );
-		typename_fmt( ref_type, "%&", type_str );
+		Code v_nullptr = code_str( nullptr );
+
+		Code t_elem_type = def_type( type_str );
+		Code t_ptr_type  = def_type( type_str, spec_ptr );
+		Code t_ref_type  = type_fmt( type_str, spec_ref );
 
 
 		// From ArrayBase
-			typename( header, Header );
-			typename( ptr_header, Header* );
-			typename( ref_header, Header& );
+			Code t_Header     = type( Header );
+			Code t_ref_Header = type( ref_Header, spec_ref );
+			Code t_ptr_Header = type( ptr_Header, spec_ptr );
 
+#		pragma push_macro("rcast")
+#		undef rcast
 		Code array_def;
 		{
-			using_type( Type, elem_type );
+			Code Type = using( Type, elem_type );
 
-			variable( ptr_type, Data );
-			variable( ref_header, header, untyped_str("get_header()") );
+			Code Data   = variable( ptr_type, Data );
+			Code header = variable( ref_Header, header, code_str(get_header()) );
 
 			Code init;
 			{
-				Code body = proc_body( untyped( 
-					return init_reserve( mem_handler, grow_formula(0) ); 
+				Code body = function_body( code_str(
+					return init_reserve( mem_handler, grow_formula(0) );
 				));
 
-				proc( init, __, t_bool, params( t_allocator, "mem_handler" ), body );
+				init = function( init, params( allocator, mem_handler ), bool, __, body );
 			}
 
-			make( proc, init_reserve, __, params( t_ref_type, "mem_handler" ), t_bool);
+			make( function, init_reserve, params( ref_type, mem_handler ), bool, __);
 			{
-				Code 
+				Code
 				body = init_reserve.body();
-				body->add_var( ptr_header, header, untyped(
-					value_str( rcast( Header*, alloc( mem_handler, sizeof(Header) + sizeof(Type) + capacity)) )
+				body->add( variable( ptr_Header, header,
+					code_str( rcast( Header*, alloc( mem_handler, sizeof(Header) + sizeof(Type) + capacity)) )
 				) );
 
-				body->add_untyped(
+				body->add( code_str(
 					if (header == nullptr)
 						return false;
-				);
+				));
 
-				body->add_untyped(
+				body->add( code_str(
 					header->Num       = 0;
 					header->Capacity  = capacity;
 					header->Allocator = mem_handler;
-				);
+				));
 
-				body->add_untyped(
+				body->add( code_str(
 					Data = rcast( Type*, header + 1 );
 					return true;
-				);
-			}
-
-			Code free;
-			{
-				proc( free, __, t_void, __, untyped( 
-					Header& header = get_header();
-					
-					free( header.Allocator, & get_header() );
 				));
 			}
 
-			make( proc, append )
-			{
-				append->add_params( t_elem_value, "value" );
-				append->add_ret_type( void );
+			Code free = function( free, __, void, __, code_str(
+				Header& header = get_header();
 
-				Code 
+				free( header.Allocator, & get_header() );
+			));
+
+			make( function, append )
+			{
+				append->add( params( elem_type, value) );
+				append->add( type( void ) );
+
+				Code
 				body = append.body();
-				body->add_untyped(
+				body->add( code_str(
 					if ( header.Capacity < header.Num + 1 )
 						if ( ! grow(0) )
 							return false;
-				);
+				));
 
-				body->add_untyped( assign,
+				body->add( code_str(
 					Data[ header.Num ] = value;
 					header.Num++;
-					
+
 					return true;
-				);
+				));
 			}
 
 			Code back;
 			{
-				Code body = untyped(
+				Code body = code_str(
 					Header& header = get_header();
 
 					return data[ header.Num - 1 ];
 				);
 
-				proc( back, __, t_elem_type, __, body );
+				back = function( back, __, elem_type, __, body );
 			}
 
 			Code clear;
-			proc( clear, __, t_void, __, untyped_str("get_header().Num = 0;") );
+			function( clear, __, t_void, __, untyped_str("get_header().Num = 0;") );
 
 			Code fill;
 			{
-				Code check = untyped(
+				Code check = code_str(
 					if ( begin < 0 || end >= header.Num )
 						fatal( "Range out of bounds" );
 				);
 
-				Code iter = untyped(
+				Code iter = code_str(
 					for ( sw index = begin; index < end; index++ )
 						Data[index] = vallue;
 				);
 
-				Code body = proc_body( header, check, iter );
+				Code body = function_body( header, check, iter );
 
-				proc( fill, __, t_void, params( t_uw, "begin", t_uw, "end", t_elem_type, "value" ), body );
+				fill = function( fill, params( uw, begin, uw, end, elem_type, value ), void, __, body );
 			}
 
 			Code get_header;
-			proc( get_header, spec_inline, t_ref_header, __, untyped_str("return pcast( Header, Data - 1);") );
+			function( get_header, __, ref_Header, spec_inline, code_str( return pcast( Header, Data - 1); ) );
+
+			Code test = function( test, __, void, __, __ );
 
 			Code grow;
 			{
 				Code body;
 				{
-					variable( uw, new_capacity, untyped( grow_formula( header.Capacity) ));
+					variable( uw, new_capacity, code_str( grow_formula( header.Capacity) ));
 
-					Code check_n_set = untyped(
+					Code check_n_set = code_str(
 						if ( new_capacity < min_capacity )
 							new_capacity = min_capacity;
 					);
 
-					Code ret = untyped( return set_capacity( new_capacity ); );
+					Code ret = code_str( return set_capacity( new_capacity ); );
 
-					body = proc_body( header, new_capacity, check_n_set, ret );
+					body = function_body( header, new_capacity, check_n_set, ret );
 				}
 
-				proc( grow, __, t_bool, params( t_uw, "min_capacity" ), body );
+				grow = function( grow, params( uw, min_capacity ), bool, body );
 			}
 
 			Code pop;
 			{
-				untyped_code( assertion,  assert( header.Num > 0 ); );
-				untyped_code( decrement,  header.Num--;  );
+				Code assertion = code_str( assert( header.Num > 0 ); );
+				Code decrement = code_str( header.Num--;  );
 
-				Code body = proc_body( header, assertion, decrement );
+				Code body = function_body( header, assertion, decrement );
 
-				proc( pop, __, t_void, __, body );
+				pop = function( pop, __, void, __, body );
 			}
 
 			Code reserve;
 			{
-				untyped_code( check_n_set,
+				Code check_n_set = code_str(
 					if ( header.Capacity < new_capacity )
 						return set_capacity( new_capacity );
 				);
 
-				Code ret = untyped_str("return true");
+				Code ret = code_str( return true );
 
-				Code body = proc_body( header, check_n_set, ret );
+				Code body = function_body( header, check_n_set, ret );
 
-				proc( reserve, __, t_bool, params( t_uw, "new_capacity" ), body );
+				reserve = function( reserve, params( uw, new_capacity ), bool, __, body );
 			}
 
 			Code resize;
 			{
 				Code body;
 				{
-					untyped_code( check_n_grow,
+					Code check_n_grow = code_str(
 						if ( header.Capacity < new_num )
 							if ( ! grow( new_num) )
 								return false;
 					);
 
-					untyped_code( set_n_ret,
+					Code set_n_ret = code_str(
 						header.Count = new_num;
 						return true;
 					);
 
-					body = proc_body( header, check_n_grow, set_n_ret );
+					body = function_body( header, check_n_grow, set_n_ret );
 				}
 
-				proc( resize, __, t_bool, params( t_uw, "new_num" ), body );
+				resize = function( resize, params( uw, new_num ), bool, __, body );
 			}
 
-			Code set_capacity = proc_code(
+			Code set_capacity = function_code(
 				bool set_capacity( new_capacity )
 				{
 					Header& header = get_header();
@@ -546,7 +548,7 @@
 						header.Num = capacity;
 
 					uw      size       = sizeof(Header) + sizeof(Type) * capacity;
-					Header* new_header = rcast( Header* alloc( header.Allocator, size ));
+					Header* new_header = rcast( Header*, alloc( header.Allocator, size ));
 
 					if ( new_header == nullptr )
 						return false;
@@ -568,7 +570,7 @@
 			char const* name = bprintf( "Array_%s", type_str );
 
 			Code body = struct_body(
-				  Type 
+				  Type
 				, Data
 
 				, init
@@ -586,9 +588,10 @@
 				, set_capacity
 			);
 
-			array_def = def_struct( name, body, parent );
+			array_def = struct( name, parent, body );
 		}
-	#endif
+#		pragma pop_macro("rcast")
+#	endif
 
 		return array_def;
 	}

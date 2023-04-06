@@ -10,7 +10,7 @@ namespace Global
 namespace Memory
 {
 	arena Global_Arena {};
-	
+
 	void setup()
 	{
 		arena_init_from_allocator( & Global_Arena, heap(), Initial_Reserve );
@@ -20,16 +20,16 @@ namespace Memory
 			assert_crash( "Failed to reserve memory for Tests:: Global_Arena" );
 		}
 	}
-	
+
 	void resize( uw new_size )
 	{
-		void* new_memory = resize( heap(), Global_Arena.physical_start, Global_Arena.total_size, new_size );		
-		
+		void* new_memory = resize( heap(), Global_Arena.physical_start, Global_Arena.total_size, new_size );
+
 		if ( new_memory == nullptr )
 		{
 			fatal("Failed to resize global arena!");
 		}
-		
+
 		Global_Arena.physical_start = new_memory;
 		Global_Arena.total_size     = new_size;
 	}
@@ -37,14 +37,14 @@ namespace Memory
 	void cleanup()
 	{
 		arena_free( & Global_Arena);
-	}	
+	}
 }
 
 
 struct TokEntry
 {
 	char const* Str;
-	s32         Length;
+	sw          Length;
 };
 
 ZPL_TABLE( static, TokMap, tokmap_, TokEntry )
@@ -65,10 +65,10 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 			char const* token = va_arg( va, char const* );
 			char const* value = va_arg( va, char const* );
 
-			TokEntry entry 
-			{ 
+			TokEntry entry
+			{
 				value,
-				zpl_strnlen(value, 128) 
+				zpl_strnlen(value, (sw)128)
 			};
 
 			u32 key = crc32( token, zpl_strnlen(token, 32) );
@@ -84,7 +84,7 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 	{
 		sw len = 0;
 
-		while ( current && current != '{' && remaining ) 
+		while ( current && current != '{' && remaining )
 		{
 			*buf = *fmt;
 			buf++;
@@ -119,7 +119,7 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 			}
 
 			scanner++;
-			fmt     = scanner;				
+			fmt     = scanner;
 			current = *fmt;
 		}
 	}
