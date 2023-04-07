@@ -18,6 +18,22 @@
 	* Modern C++ (STL library) features
 	* Modern C++ RTTI                   : This is kinda covered with the last point, but just wanted to emphasize.
 
+	Exceptions brought in from "Modern C++":
+		Specifiers:
+		* consteval
+		* constinit
+		* explicit
+		* export
+		* noexcept
+		* import
+		* final
+		* module
+		* override
+		* &&
+		* virtual
+
+	These features are in as they are just specifiers and aren't hard to implement seralization or validation.
+
 	The AST is managed by the library and provided the user via its interface prodedures.
 
 	Notes:
@@ -60,6 +76,7 @@
 	* def_class
 	* def_enum
 	* def_enum_class
+	* def_friend
 	* def_function
 	* def_namespace
 	* def_operator
@@ -113,6 +130,7 @@
 
 	* parse_class
 	* parse_enum
+	* parse_friend
 	* parse_function
 	* parse_global_body
 	* parse_namespace
@@ -173,6 +191,8 @@
 #define GEN_DEFINE_DSL
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_USE_FATAL
+#define GEN_FEATURE_EDITOR
+#define GEN_FEATURE_SCANNER
 
 
 #ifdef gen_time
@@ -192,37 +212,42 @@ namespace gen
 
 	namespace ECode
 	{
-		enum Type : u8
-		{
-			Invalid,
-			Untyped,
-			Access_Public,
-			Access_Private,
-			Access_Protected,
-			Class,
-			Class_FwdDecl,
-			Class_Body,
-			Enum,
-			Enum_FwdDecl,
-			Enum_Body,
-			Friend,
-			Global_Body,
-			Namespace,
-			Namespace_Body,
-			Parameters,
-			Function,
-			Function_FwdDecl,
-			Function_Body,
-			Specifiers,
-			Struct,
-			Struct_FwdDecl,
-			Struct_Body,
-			Variable,
-			Typedef,
-			Typename,
-			Using,
+#		define Define_Types       \
+		Entry( Untyped )          \
+		Entry( Access_Public )    \
+		Entry( Access_Private )   \
+		Entry( Access_Protected ) \
+		Entry( Class )            \
+		Entry( Class_FwdDecl )    \
+		Entry( Class_Body )       \
+		Entry( Enum )             \
+		Entry( Enum_FwdDecl )     \
+		Entry( Enum_Body )        \
+		Entry( Friend )           \
+		Entry( Global_Body )      \
+		Entry( Namespace )        \
+		Entry( Namespace_Body )   \
+		Entry( Parameters )       \
+		Entry( Function )         \
+		Entry( Function_FwdDecl ) \
+		Entry( Function_Body )    \
+		Entry( Specifiers )       \
+		Entry( Struct )           \
+		Entry( Struct_FwdDecl )   \
+		Entry( Struct_Body )      \
+		Entry( Variable )         \
+		Entry( Typedef )          \
+		Entry( Typename )         \
+		Entry( Using )
 
-			Num_Types
+		enum Type : u32
+		{
+#			define Entry( Type ) Type,
+			Define_Types
+#			undef Entry
+
+			Num_Types,
+			Invalid
 		};
 
 		inline
@@ -230,49 +255,72 @@ namespace gen
 		{
 			static
 			char const* lookup[Num_Types] = {
-				"Invalid",
-				"Untyped",
-				"Access_Public",
-				"Access_Private",
-				"Access_Protected",
-				"Class",
-				"Class_FwdDecl",
-				"Class_Body",
-				"Enum",
-				"Enum_FwdDecl",
-				"Enum_Body",
-				"Function",
-				"Function_FwdDecl",
-				"Function_Body",
-				"Global_Body",
-				"Namespace",
-				"Namespace_Body",
-				"Parameters",
-				"Specifiers",
-				"Struct",
-				"Struct_Body",
-				"Variable",
-				"Typedef",
-				"Typename",
-				"Using",
+#				define Entry( Type ) txt( Type ),
+				Define_Types
+#				undef Entry
 			};
 
 			return lookup[ type ];
 		}
+
+#		undef Define_Types
 	}
 	using CodeT = ECode::Type;
 
 	namespace EOperator
 	{
-		enum Type : u8
-		{
-			Add,
-			Subtract,
-			Multiply,
-			Divide,
-			Modulo,
+#		define Define_Operators          \
+			Entry( Assign, =  )          \
+			Entry( Assign_Add, += )      \
+			Entry( Assign_Subtract, -= ) \
+			Entry( Assgin_Multiply, *= ) \
+			Entry( Assgin_Divide, /= )   \
+			Entry( Assgin_Modulo, %= )   \
+			Entry( Assgin_BAnd, &= )     \
+			Entry( Assgin_BOr, &= )      \
+			Entry( Assign_BXOr, ^= )     \
+			Entry( Assign_LShift, <<= )  \
+			Entry( Assign_RShift, >>= )  \
+			Entry( Increment, ++ )       \
+			Entry( Decrement, -- )       \
+			Entry( Unary_Plus, + )       \
+			Entry( Unary_Minus, - )      \
+			Entry( Add, + )              \
+			Entry( Subtract, - )         \
+			Entry( Multiply, * )         \
+			Entry( Divide, / )           \
+			Entry( Modulo, % )           \
+			Entry( BNot, ~ )             \
+			Entry( BAnd, & )             \
+			Entry( BOr, | )              \
+			Entry( BXOr, ^ )             \
+			Entry( LShift, << )          \
+			Entry( RShift, >> )          \
+			Entry( LNot, ! )             \
+			Entry( LAnd, && )            \
+			Entry( LOr, || )             \
+			Entry( Equals, == )          \
+			Entry( NotEquals, != )       \
+			Entry( Lesser, < )           \
+			Entry( Greater, > )          \
+			Entry( LesserEqual, <= )     \
+			Entry( GreaterEqual, >= )    \
+			Entry( Subscript, [] )       \
+			Entry( Indirection, * )      \
+			Entry( AddressOf, & )        \
+			Entry( MemberOfPointer, -> ) \
+			Entry( PtrToMemOfPtr, ->* )  \
+			Entry( FunctionCall, () )
 
-			Num_Ops
+		enum Type : u32
+		{
+#			define Entry( Type, Token ) Type,
+			Define_Operators
+#			undef Entry
+			Comma,
+
+			Num_Ops,
+			Invalid
 		};
 
 		inline
@@ -280,41 +328,74 @@ namespace gen
 		{
 			local_persist
 			char const* lookup[ Num_Ops ] = {
-				"+",
-				"-",
-				"*",
-				"/",
+#				define Entry( Type, Token ) txt(Token),
+				Define_Operators
+#				undef Entry
+				","
 			};
 
 			return lookup[ op ];
 		}
+#		undef Define_Operators
 	}
 	using OperatorT = EOperator::Type;
 
 	namespace ESpecifier
 	{
-		enum Type : u8
+#		if defined(ZPL_SYSTEM_WINDOWS)
+#			define API_Export_Code __declspec(dllexport)
+#			define API_Import_Code __declspec(dllimport)
+#		elif defined(ZPL_SYSTEM_MACOS)
+#			define API_Export_Code __attribute__ ((visibility ("default")))
+#			define API_Import_Code __attribute__ ((visibility ("default")))
+#		endif
+
+#		if defined(ZPL_MODULE_THREADING)
+#			define Thread_Local_Code thread_local
+#		else
+#			define Thread_Local_Code "NOT DEFINED"
+#		endif
+
+		// Entry( Explicit, explicit )           \
+
+		#define Define_Specifiers                \
+		Entry( API_Import, API_Export_Code )     \
+		Entry( API_Export, API_Import_Code )     \
+		Entry( Attribute, "You cannot stringize an attribute this way" ) \
+		Entry( Alignas, alignas )                \
+		Entry( Const, const )                    \
+		Entry( C_Linkage, extern "C" )           \
+		Entry( Consteval, consteval )            \
+		Entry( Constexpr, constexpr )            \
+		Entry( Constinit, constinit )            \
+		Entry( Export, export )                  \
+		Entry( External_Linkage, extern )        \
+		Entry( Import, import )                  \
+		Entry( Inline, inline )                  \
+		Entry( Internal_Linkage, static )        \
+		Entry( Final, final )                    \
+		Entry( Local_Persist, static )           \
+		Entry( Module, module )                  \
+		Entry( Mutable, mutable )                \
+		Entry( NoExcept, noexcept )              \
+		Entry( Override, override )              \
+		Entry( Pointer, * )                      \
+		Entry( Reference, & )                    \
+		Entry( Register, register )              \
+		Entry( RValue, && )                      \
+		Entry( Static_Member, static  )          \
+		Entry( Thread_Local, Thread_Local_Code ) \
+		Entry( Virtual, virtual )                \
+		Entry( Volatile, volatile )
+
+		enum Type : u32
 		{
-			Attribute,
-			Alignas,
-			Constexpr,
-			Const,
-			Inline,
-			Pointer,
-			Reference,
-			RValue,
+#			define Entry( Specifier, Code ) Specifier,
+			Define_Specifiers
+#			undef Entry
 
-			C_Linkage,
-			API_Import,
-			API_Export,
-			External_Linkage,
-			Internal_Linkage,
-			Static_Member,
-			Local_Persist,
-			Thread_Local,
-
-			Invalid,
 			Num_Specifiers,
+			Invalid,
 		};
 
 		// Specifier to string
@@ -323,29 +404,9 @@ namespace gen
 		{
 			local_persist
 			char const* lookup[ Num_Specifiers ] = {
-				"alignas",
-				"constexpr",
-				"const",
-				"inline",
-				"*",
-				"&",
-				"&&",
-
-				"extern \"C\"",
-
-#			if defined(ZPL_SYSTEM_WINDOWS)
-				"__declspec(dllexport)",
-				"__declspec(dllimport)",
-#			elif defined(ZPL_SYSTEM_MACOS)
-				"__attribute__ ((visibility (\"default\")))",
-				"__attribute__ ((visibility (\"default\")))",
-#			endif
-
-				"extern",
-				"static",
-				"static",
-				"static",
-				"thread_local"
+#				define Entry( Spec_, Code_ ) txt(Code_),
+				Define_Specifiers
+#				undef Entry
 			};
 
 			return lookup[ specifier ];
@@ -394,11 +455,13 @@ namespace gen
 		forceinline
 		void add_entry( AST* other )
 		{
-			array_append( Entries, other );
+			Code to_add = other->Parent ?
+				other->duplicate() : other;
 
-			other->Parent = this;
+			array_append( Entries, to_add );
+
+			to_add->Parent = this;
 		}
-
 		forceinline
 		AST* body()
 		{
@@ -407,6 +470,8 @@ namespace gen
 
 		forceinline
 		bool check();
+
+		Code duplicate();
 
 		forceinline
 		bool has_entries() const
@@ -441,6 +506,27 @@ namespace gen
 		}
 
 		forceinline
+		char const* debug_str() const
+		{
+			char const* fmt = txt(
+				\nCode Debug:
+				\nType    : %s
+				\nReadonly: %s
+				\nParent  : %s
+				\nName    : %s
+				\nComment : %s
+			);
+
+			bprintf( fmt
+			,	type_str()
+			,	Readonly ? "true"       : "false"
+			,	Parent   ? Parent->Name : ""
+			,	Name     ? Name         : ""
+			,	Comment  ? Comment      : ""
+			);
+		}
+
+		forceinline
 		char const* type_str() const
 		{
 			return ECode::str( Type );
@@ -449,16 +535,18 @@ namespace gen
 		string to_string() const;
 	#pragma endregion Member Procedures
 
-	#define Using_Code_POD          \
-		CodeT             Type;     \
-		bool              Readonly; \
-		AST*              Parent;   \
-		string            Name;     \
-		string            Comment;  \
-		union {                     \
-			array(AST*)   Entries;  \
-			string        Content;  \
-		};
+	#define Using_Code_POD               \
+		AST*              Parent;        \
+		ro_string         Name;          \
+		ro_string         Comment;       \
+		union {                          \
+			array(AST*)   Entries;       \
+			ro_string     Content;       \
+		};                               \
+		CodeT             Type;          \
+		OperatorT         Op;            \
+		bool              Readonly;      \
+		u8                _64_Align[23];
 
 		Using_Code_POD;
 	};
@@ -467,6 +555,9 @@ namespace gen
 	{
 		Using_Code_POD;
 	};
+
+	ct u32 sizeof_AST = sizeof(AST);
+	ct u32 sizeof_CODE = sizeof(CodePOD);
 
 	// Its intended for the AST to have equivalent size to its POD.
 	// All extra functionality within the AST namespace should just be syntatic sugar.
@@ -594,6 +685,8 @@ namespace gen
 	*/
 	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, string );
 
+	using ro_string = char const*;
+
 	/*
 		Type registy: Used to store Typename ASTs. Types are registered by their string literal value.
 
@@ -615,6 +708,19 @@ namespace gen
 	// And rather get rid of current code asts instead of growing the pool memory.
 	void clear_code_pool();
 
+	/*
+		Used internally to retrive or make string allocations.
+		Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
+	*/
+	ro_string cached_string( char const* cstr, s32 length );
+
+	/*
+		This provides a fresh Code AST struct.
+		The gen interface use this as their method from getting a new AST object from the CodePool.
+		Use this if you want to make your own API for formatting the supported Code Types.
+	*/
+	Code make_code();
+
 	// Set these before calling gen's init() procedure.
 
 	void set_init_reserve_code_pool   ( sw size );
@@ -632,6 +738,7 @@ namespace gen
 	Code def_class          ( s32 length, char const* name, Code parent = NoCode,                         Code specifiers = NoCode, Code body = NoCode );
 	Code def_enum           (             char const* name, Code type   = NoCode,                                                   Code body = NoCode);
 	Code def_enum           ( s32 length, char const* name, Code type   = NoCode,                                                   Code body = NoCode );
+	Code def_friend         ( Code symbol );
 	Code def_function       (             char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_function       ( s32 length, char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_namespace      (             char const* name,                                                                         Code body );
@@ -695,6 +802,7 @@ namespace gen
 #	pragma region Parsing
 	Code parse_class      ( s32 length, char const* class_def     );
 	Code parse_enum       ( s32 length, char const* enum_def      );
+	Code parse_friend     ( s32 length, char const* friend_def    );
 	Code parse_function   ( s32 length, char const* fn_def        );
 	Code parse_global_body( s32 length, char const* body_def      );
 	Code parse_namespace  ( s32 length, char const* namespace_def );
@@ -705,8 +813,9 @@ namespace gen
 	Code parse_typedef    ( s32 length, char const* typedef_def   );
 	Code parse_using      ( s32 length, char const* using_def     );
 
-	s32 parse_classes   ( s32 length, char const* class_defs,     Code* out_classes );
-	s32 parse_enums     ( s32 length, char const* enum_defs,      Code* out_enums );
+	s32 parse_classes   ( s32 length, char const* class_defs,     Code* out_class_codes );
+	s32 parse_enums     ( s32 length, char const* enum_defs,      Code* out_enum_codes );
+	s32 parse_friends   ( s32 length, char const* friend_defs,    Code* out_friend_codes );
 	s32 parse_functions ( s32 length, char const* fn_defs,        Code* out_fn_codes );
 	s32 parse_namespaces( s32 length, char const* namespace_defs, Code* out_namespaces_codes );
 	s32 parse_operators ( s32 length, char const* operator_defs,  Code* out_operator_codes );
@@ -740,25 +849,10 @@ namespace gen
 
 	};
 
-	struct AddPolicy
-	{
-		// Not sure yet
-	};
-
-	struct ReplacePolicy
-	{
-
-	};
-
-	struct RemovePolicy
-	{
-
-	};
-
 	struct SymbolInfo
 	{
-		char const* File;
-		Code        Signature;
+		ro_string File;
+		Code      Signature;
 	};
 
 	struct Editor
@@ -770,27 +864,75 @@ namespace gen
 			Remove
 		};
 
-		struct RequestEntry
+		struct SymbolData
 		{
-			RequestType Type;
-			SymbolInfo  Info;
 			Policy      Policy;
+			SymbolInfo  Info;
 		};
 
+		struct RequestEntry
+		{
+			union {
+				SymbolData Symbol;
+				string     Specification;
+			};
+			RequestType    Type;
+		};
 
-		zpl_file            File;
+		struct Receipt
+		{
+			ro_string File;
+			Code      Found;
+			Code      Written;
+			bool      Result;
+		};
+
+		static allocator Allocator;
+
+		static void set_allocator( allocator mem_allocator );
+
+		array(zpl_file)     Files;
 		string              Buffer;
-		array(RequestEntry) Requestss ;
+		array(RequestEntry) Requests;
 
-		void add( SymbolInfo definition,  AddPolicy policy, Code to_inject );
-
-		void replace( SymbolInfo definiton, ReplacePolicy policy, Code to_replace);
-
-		void remove( SymbolInfo definition, RemovePolicy policy, Code to_remove );
+		void add    ( SymbolInfo definition,  Policy policy, Code to_inject );
+		void replace( SymbolInfo definition,  Policy policy, Code to_replace);
+		void remove ( SymbolInfo definition,  Policy policy, Code to_remove );
 
 #	ifdef GEN_USE_REFACTOR_LIBRARY
 		void refactor( char const* specification );
 #	endif
+
+		bool process_requests( array(Receipt) out_receipts );
+	};
+#endif
+
+#ifdef GEN_FEATURE_SCANNER
+	struct Scanner
+	{
+		struct RequestEntry
+		{
+			SymbolInfo Info;
+		};
+
+		struct Receipt
+		{
+			ro_string File;
+			Code      Defintion;
+			bool      Result;
+		};
+
+		allocator Allocator;
+
+		static void set_allocator( allocator mem_allocator );
+
+		array(zpl_file)     Files;
+		string              Buffer;
+		array(RequestEntry) Requests;
+
+		void add( SymbolInfo signature, Policy policy );
+
+		bool process_requests( array(Receipt) out_receipts );
 	};
 #endif
 #pragma endregion Gen Interface

@@ -71,10 +71,11 @@ namespace gen
 		static StringTable StringMap;
 		static TypeTable   TypeMap;
 
-		static sw InitSize_CodePool       = megabytes(64);
-		static sw InitSize_StringArena    = megabytes(32);
-		static sw InitSize_StringTable    = megabytes(4);
-		static sw InitSize_TypeTable      = megabytes(4);
+		static sw InitSize_CodePool            = megabytes(64);
+		static sw InitSize_StringTable         = megabytes(4);
+		static sw InitSize_TypeTable           = megabytes(4);
+
+		static sw SizePer_StringArena          = megabytes(32);
 
 		static allocator Allocator_CodePool    = heap();
 		static allocator Allocator_StringArena = heap();
@@ -110,33 +111,6 @@ namespace gen
 	Code spec_constexpr;
 	Code spec_inline;
 #pragma endregion CONSTANTS
-
-	/*
-		Used internally to retireve a Code object form the CodePool.
-	*/
-	static Code make_code()
-	{
-		using namespace StaticData;
-
-#	ifndef GEN_CODE_USE_SOA
-		ct CodePOD Invalid = { ECode::Invalid, false, nullptr, nullptr, nullptr, { nullptr } };
-
-		array_append( CodePool, Invalid );
-
-		return pcast( Code, array_back( CodePool ));
-#	else
-
-		array_append( CodePool::Type, ECode::Invalid );
-		array_append( CodePool::Readonly, false );
-		array_append( CodePool::Name, nullptr );
-		array_append( CodePool::Comment, nullptr );
-		array_append( CodePool::Data, { nullptr } );
-
-		Code code { array_count( CodePool::Type) - 1 };
-
-		return code;
-#	endif
-	}
 
 #	pragma region AST
 	bool AST::add( AST* other )
@@ -356,7 +330,7 @@ namespace gen
 		array_init( StaticData::StringArenas, heap() );
 
 		arena string_arena;
-		arena_init_from_allocator( & string_arena, StaticData::Allocator_StringArena, StaticData::InitSize_StringArena );
+		arena_init_from_allocator( & string_arena, StaticData::Allocator_StringArena, StaticData::SizePer_StringArena );
 
 		str_tbl_init(  & StaticData::StringMap, StaticData::Allocator_StringTable );
 		type_tbl_init( & StaticData::TypeMap,   StaticData::Allocator_TypeTable );
@@ -427,7 +401,7 @@ namespace gen
 		if ( StringArenas->total_allocated + str_length > StringArenas->total_size )
 		{
 			arena new_arena;
-			arena_init_from_allocator( & new_arena, Allocator_StringArena, InitSize_StringArena );
+			arena_init_from_allocator( & new_arena, Allocator_StringArena, SizePer_StringArena );
 
 			array_append( StringArenas, new_arena );
 
@@ -438,7 +412,7 @@ namespace gen
 	}
 
 	// Will either make or retrive a code string.
-	string code_string( char const* cstr, s32 length )
+	ro_string cached_string( char const* cstr, s32 length )
 	{
 		s32 hash_length = length > kilobytes(1) ? kilobytes(1) : length;
 
@@ -451,9 +425,38 @@ namespace gen
 			return * result;
 		}
 
+		* result = string_make( get_string_allocator( length ), cstr );
+
 		str_tbl_set( & StaticData::StringMap, key, * result );
 
 		return * result;
+	}
+
+	/*
+		Used internally to retireve a Code object form the CodePool.
+	*/
+	Code make_code()
+	{
+		using namespace StaticData;
+
+#	ifndef GEN_CODE_USE_SOA
+		ct CodePOD Invalid = { nullptr, nullptr, nullptr, nullptr, ECode::Invalid, EOperator::Invalid, false, {0} };
+
+		array_append( CodePool, Invalid );
+
+		return pcast( Code, array_back( CodePool ));
+#	else
+
+		array_append( CodePool::Type, ECode::Invalid );
+		array_append( CodePool::Readonly, false );
+		array_append( CodePool::Name, nullptr );
+		array_append( CodePool::Comment, nullptr );
+		array_append( CodePool::Data, { nullptr } );
+
+		Code code { array_count( CodePool::Type) - 1 };
+
+		return code;
+#	endif
 	}
 
 	void set_init_reserve_code_pool( sw size )
@@ -501,6 +504,12 @@ namespace gen
 	{
 		using namespace ECode;
 
+		if ( length <= 0 )
+		{
+			log_failure( "gen::def_class: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
 		if ( name == nullptr )
 		{
 			log_failure( "gen::def_class: name is null");
@@ -509,35 +518,35 @@ namespace gen
 
 		if ( parent && parent->Type != Class || parent->Type != Struct )
 		{
-			log_failure( "gen::def_class: parent provided is not type 'Class' or 'Struct' - Type: %s", parent->type_str() );
+			log_failure( "gen::def_class: parent provided is not type 'Class' or 'Struct' - Type: %s", parent->debug_str() );
 			return Code::Invalid;
 		}
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
-			log_failure( "gen::def_class: specifiers was not a 'Specifiers' type - Type: %s", specifiers->type_str() );
+			log_failure( "gen::def_class: specifiers was not a 'Specifiers' type - Type: %s", specifiers->debug_str() );
 			return Code::Invalid;
-		}
-
-		switch ( body->Type )
-		{
-			case Class_Body:
-			case Untyped:
-			break;
-
-			default:
-				log_failure("gen_def_class: body must be either of Function_Body or Untyped type.");
-				return Code::Invalid;
 		}
 
 		Code
 		result       = make_code();
-		result->Name = code_string( name, length );
+		result->Name = cached_string( name, length );
 
 		array_init( result->Entries, StaticData::Allocator_CodePool );
 
 		if ( body )
 		{
+			switch ( body->Type )
+			{
+				case Class_Body:
+				case Untyped:
+				break;
+
+				default:
+					log_failure("gen::def_class: body must be either of Class_Body or Untyped type - %s", body->debug_str());
+					return Code::Invalid;
+			}
+
 			result->Type = Class;
 			result->add_entry( body );
 		}
@@ -558,21 +567,61 @@ namespace gen
 
 	Code def_enum( s32 length, char const* name, Code type, Code body )
 	{
+		using namespace ECode;
+
 		if ( length <= 0 )
 		{
-			log_failure( "gen_def_enum: Invalid name length provided - %d", length );
+			log_failure( "gen::def_enum: Invalid name length provided - %d", length );
+			return Code::Invalid;
 		}
 
 		if ( name == nullptr )
 		{
-			log_failure( "gen::def_class: name is null");
+			log_failure( "gen::def_class: name is null" );
 			return Code::Invalid;
 		}
 
+		if ( type && type->Type != Typename )
+		{
+			log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", type->debug_str() );
+			return Code::Invalid;
+		}
 
+		Code
+		result       = make_code();
+		result->Name = cached_string( name, length );
+
+		if ( body )
+		{
+			switch ( body->Type )
+			{
+				case Enum_Body:
+				case Untyped:
+				break;
+
+				default:
+					log_failure( "gen::def_enum: body must be of Enum_Body or Untyped type %s", body->debug_str());
+					return Code::Invalid;
+			}
+
+			result->Type = Enum;
+			result->add_entry( body );
+		}
+		else
+		{
+			result->Type = Enum_FwdDecl;
+		}
+
+		if ( type )
+		{
+			result->add_entry( type );
+		}
+
+		result.lock();
+		return result;
 	}
 
-	Code def_function( char const* name
+	Code def_function( s32 length, char const* name
 		, Code specifiers
 		, Code params
 		, Code ret_type
@@ -581,58 +630,121 @@ namespace gen
 	{
 		using namespace ECode;
 
+		if ( length <= 0 )
+		{
+			log_failure( "gen::def_function: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_function: name is null" );
+			return Code::Invalid;
+		}
+
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
-			log_failure( "gen::def_function: specifiers was not a `Specifiers` type" );
+			log_failure( "gen::def_function: specifiers was not a `Specifiers` type %s", specifiers->debug_str() );
 			return Code::Invalid;
 		}
 
 		if ( params && params->Type != Parameters )
 		{
-			log_failure( "gen::def_function: params was not a `Parameters` type" );
+			log_failure( "gen::def_function: params was not a `Parameters` type %s", params->debug_str() );
 			return Code::Invalid;
 		}
 
 		if ( ret_type == nullptr || ret_type->Type != Typename )
 		{
-			log_failure( "gen::def_function: ret_type was not a Typename" );
+			log_failure( "gen::def_function: ret_type was not a Typename %s", ret_type->debug_str() );
 			return Code::Invalid;
 		}
 
-		switch ( body->Type )
-		{
-			case Function_Body:
-			case Untyped:
-				break;
-
-			default:
-			{
-				log_failure("gen::def_function: body must be either of Function_Body or Untyped type.");
-				return Code::Invalid;
-			}
-		}
-
-		s32 name_length = zpl_strnlen( name, MaxNameLength );
-
 		Code
 		result       = make_code();
-		result->Name = code_string( name, name_length );
-		result->Type = Function;
+		result->Name = cached_string( name, length );
 
 		array_init( result->Entries, StaticData::Allocator_CodePool );
 
-		result->add_entry( body );
+		if ( body )
+		{
+			switch ( body->Type )
+			{
+				case Function_Body:
+				case Untyped:
+					break;
+
+				default:
+				{
+					log_failure("gen::def_function: body must be either of Function_Body or Untyped type. %s", body->debug_str());
+					return Code::Invalid;
+				}
+			}
+
+			result->Type = Function;
+			result->add_entry( body );
+		}
+		else
+		{
+			result->Type = Function_FwdDecl;
+		}
 
 		if ( specifiers )
 			result->add_entry( specifiers );
 
-		result->add_entry( ret_type );
+		if ( ret_type )
+		{
+			result->add_entry( ret_type );
+		}
+		else
+		{
+			result->add_entry( type_ns(void) );
+		}
 
 		if ( params )
 			result->add_entry( params );
 
 		result.lock();
 		return result;
+	}
+
+	Code def_namespace( s32 length, char const* name, Code body )
+	{
+		using namespace ECode;
+
+		if ( length <= 0 )
+		{
+			log_failure( "gen::def_namespace: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_namespace: name is null" );
+			return Code::Invalid;
+		}
+
+		Code
+		result       = make_code();
+		result->Type = Namespace;
+		result->Name = cached_string( name, length );
+
+		array_init( result->Entries, g_allocator );
+
+		if ( body->Type != Namespace_Body || body->Type != Untyped )
+		{
+			log_failure("gen::def_namespace: body is not of namespace or untyped type %s", body->debug_str());
+			return Code::Invalid;
+		}
+
+		result->add_entry( body );
+
+		return result;
+	}
+
+	Code def_operator( OperatorT Op, Code params, Code ret_type, Code specifiers, Code body )
+	{
+
 	}
 
 	Code def_function_body( s32 num, ... )
@@ -763,7 +875,7 @@ namespace gen
 		char const* name        = va_arg(va, char const*);
 		s32         name_length = zpl_strnlen(name, MaxNameLength);
 
-		result->Name = code_string( name, name_length );
+		result->Name = cached_string( name, name_length );
 
 		array_init( result->Entries, g_allocator );
 
@@ -785,7 +897,7 @@ namespace gen
 			Code
 			param       = make_code();
 			param->Type = Parameters;
-			param->Name = code_string(name, name_length);
+			param->Name = cached_string(name, name_length);
 
 			array_init( param->Entries, StaticData::Allocator_CodePool );
 
@@ -803,27 +915,6 @@ namespace gen
 		va_end(va);
 
 		result.lock();
-		return result;
-	}
-
-	Code def_namespace( char const* name, Code body )
-	{
-		using namespace ECode;
-
-		Code
-		result       = make_code();
-		result->Type = Namespace;
-
-		array_init( result->Entries, g_allocator );
-
-		if ( body->Type != Namespace_Body || body->Type != Untyped )
-		{
-			log_failure("gen::def_namespace: body is not of namespace or untyped type");
-			return Code::Invalid;
-		}
-
-		result->add_entry( body );
-
 		return result;
 	}
 
@@ -874,10 +965,19 @@ namespace gen
 		if ( num <= 0 )
 			fatal("gen::make_specifier: num cannot be zero or less");
 
+		// This should be more than enough...
+		static u8 FixedSizedBuffer[kilobytes(1024)];
+
+		static arena str_arena;
+		do_once_start
+			arena_init_from_memory( & str_arena, FixedSizedBuffer, kilobytes(1024) );
+		do_once_end
+
 		Code
 		result          = make_code();
 		result->Type    = ECode::Specifiers;
-		result->Content = string_make( g_allocator, "" );
+
+		string crafted = string_make( arena_allocator( & str_arena ), "" );
 
 		va_list va;
 		va_start(va, num);
@@ -888,25 +988,41 @@ namespace gen
 			switch ( type )
 			{
 				case ESpecifier::Alignas:
-					result->Content = string_append_fmt( result->Content, "%s(%d)", ESpecifier::to_str(type), va_arg(va, u32) );
+					crafted = string_append_fmt( result->Content, "%s(%d)", ESpecifier::to_str(type), va_arg(va, u32) );
 				break;
 
 				default:
 					const char* str = ESpecifier::to_str(type);
 
-					result->Content = string_append_fmt( result->Content, "%s", str );
+					crafted = string_append_fmt( result->Content, "%s", str );
 				break;
 			}
 		}
 		while ( --num, num );
 		va_end(va);
 
+		result->Content = cached_string( crafted, string_length( crafted ) );
+
+		arena_free( & str_arena );
+
 		return result;
 	}
 
-	Code def_struct( char const* name, Code body, Code parent, Code specifiers )
+	Code def_struct( u32 length, char const* name, Code body, Code parent, Code specifiers )
 	{
 		using namespace ECode;
+
+		if ( length <= 0 )
+		{
+			log_failure( "gen::def_function: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_function: name is null" );
+			return Code::Invalid;
+		}
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
@@ -929,7 +1045,7 @@ namespace gen
 		Code
 		result       = make_code();
 		result->Type = Struct;
-		result->Name = string_make( g_allocator, name );
+		result->Name = cached_string( name, length );
 
 		array_init( result->Entries, g_allocator );
 
@@ -987,8 +1103,20 @@ namespace gen
 		return result;
 	}
 
-	Code def_variable( Code type, char const* name, Code value, Code specifiers )
+	Code def_variable( Code type, u32 length, char const* name, Code value, Code specifiers )
 	{
+		if ( length <= 0 )
+		{
+			log_failure( "gen::def_function: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_function: name is null" );
+			return Code::Invalid;
+		}
+
 		if ( specifiers && specifiers->Type != ECode::Specifiers )
 		{
 			log_failure( "gen::def_variable: specifiers was not a `Specifiers` type" );
@@ -1009,7 +1137,7 @@ namespace gen
 
 		Code
 		result       = make_code();
-		result->Name = string_make( g_allocator, name );
+		result->Name = cached_string( name, length );
 		result->Type = ECode::Variable;
 
 		array_init( result->Entries, g_allocator );
@@ -1025,21 +1153,45 @@ namespace gen
 		return result;
 	}
 
-	Code def_type( char const* name,  Code specifiers )
+	Code def_type( u32 length, char const* name,  Code specifiers )
 	{
+		if ( length <= 0 )
+		{
+			log_failure( "gen::def_function: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_function: name is null" );
+			return Code::Invalid;
+		}
+
 		Code
 		result       = make_code();
-		result->Name = string_make( g_allocator, name );
+		result->Name = cached_string( name, length );
 		result->Type = ECode::Typename;
 
 		return result;
 	}
 
-	Code def_using( char const* name, Code type )
+	Code def_using( u32 length, char const* name, Code type )
 	{
+		if ( length <= 0 )
+		{
+			log_failure( "gen::def_function: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::def_function: name is null" );
+			return Code::Invalid;
+		}
+
 		Code
 		result       = make_code();
-		result->Name = string_make( g_allocator, name );
+		result->Name = cached_string( name, length );
 		result->Type = ECode::Using;
 
 		array_init( result->Entries, g_allocator );
@@ -1295,7 +1447,7 @@ namespace gen
 
 		Code
 		result       = make_code();
-		result->Name = string_make( g_allocator, name );
+		result->Name = cached_string( name, name_length );
 		result->Type = ECode::Function;
 
 		array_init( result->Entries, g_allocator );
