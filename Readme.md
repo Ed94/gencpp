@@ -458,7 +458,16 @@ The drawback naturally is generation functions, at face value, are harder to gra
 
 Thus a rule of thumb is if its a simple definition you can get away with just the preprocessor `#define`, or if the templates being used don't break the debugger or your compile times, this is most likely not needed.
 
-However, if the code being generated becomes complex, or from a datatable or database, this will be easier to deal with.
+However, if:
+
+* The code being generated becomes complex
+* You enjoy actually *seeing* the generated code instead of just the error symbols or the pdb symbols.
+* You value your debugging expereince, and would like to debug your metaprogram, without having to step through the debug version of the compiler (if you even can)
+* You want to roll your own runtime reflection system
+* You want to maintain a series of libraries for internal use, but don't want to deal with manaual merging as often when they update.
+* Want to create tailored headers for your code or for your libraries since you usually don't need the majority of the code within them.
+
+Then this might help you boostrap a toolset todo so.
 
 # TODO:
 
