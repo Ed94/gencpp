@@ -36,6 +36,7 @@ A metaprogram is built to generate files before the main program is built. We'll
 In order to keep the locality of this code within the same files the following pattern may be used:
 
 Within `program.cpp` :
+
 ```cpp
 #include "gen.hpp"
 
@@ -45,7 +46,7 @@ Within `program.cpp` :
 
 u32 gen_main()
 {
-	...
+    ...
 }
 #endif
 
@@ -53,30 +54,90 @@ u32 gen_main()
 #ifndef gen_time
 #include "program.gen.cpp"
 
-	// Regular runtime dependent on the generated code here.
+    // Regular runtime dependent on the generated code here.
 #endif
+
 ```
-This is ofc entirely optional and the metaprogram can be quite separated from the runtime in file organization.
 
 The design a constructive builder of a sort of AST for the code to generate.
 The user is given `Code` typed objects that are used to build up the AST.
 
-Example:
+Example using each construction interface:
+
+#### Upfrontl
+
 ```cpp
+Code t_uw           = def_type( name(uw) );
+Code t_allocator    = def_type( name(allocator) );
+Code t_string_cosnt = def_type( name(char), def_specifiers( 3, ESpecifier::Const, ESpeciifer::Ptr ) );
+
+Code header;
+{
+    Code num       = def_variable( t_uw,        name(Num) );
+    Code cap       = def_variable( t_uw,        name(Capacity) );
+    Code mem_alloc = def_variable( t_allocator, name(Allocator) );
+    Code body      = make_struct_body( num, cap, mem_alloc );
+
+    header = def_struct( name(ArrayHeader), __, __, body );
+}
+```
+
+#### Incremental
+
+```cpp
+// Types are done the same with upfront. Incremental does not have a full interface replacment.
+
 // Get a Code AST from the CodePool.
-Code header = make_struct( "Header" );
+Code header = make_struct( name(ArrayHeader) );
 {
     // Make a struct body.
     Code body = header.body();
 
     // Members
-    body->add( def_varaible( uw,        "Num") );
-    body->add( def_varaible( uw,        "Capacity") );
-    body->add( def_varaible( allocator, "Allocator") );
+    body->add( def_variable( t_uw,        name(Num)) );
+    body->add( def_variable( t_uw,        name(Capacity)) );
+    body->add( def_variable( t_allocator, name(Allocator)) );
 }
 ```
 
-This will generate the following C code:
+#### Parse
+
+```cpp
+Code header = parse_struct( code(
+    struct ArrayHeader
+    {
+        uw        Num;
+        uw        Capacity;
+        allocator Allocator;
+    };
+));
+
+```
+
+Parse will automatically generate any types that have not been used previously.
+
+#### Undtyped
+
+```cpp
+Code header = untyped_str(
+    R("struct ArrayHeader
+    {
+        #define Using_ArrayHeader_Data \
+        uw        Num;                 \
+        uw        Capacity;            \
+        allocator Allocator;
+        Using_ArrayHeader_Data
+    };)"
+);
+
+```
+
+`name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.
+`code` is a helper macro for providing a string literal with its size, but intended for a code string parameters.
+
+
+All three constrcuton interfaces will generate the following C code:
+
 ```cpp
 struct ArrayHeader
 {
@@ -85,6 +146,7 @@ struct ArrayHeader
     allocator Allocator;
 };
 ```
+
 **Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**
 
 ## Gen's DSL
@@ -98,22 +160,35 @@ GEN_DEFINE_DSL
 Using the previous example to show usage:
 
 ```cpp
+Code type_ns(uw)           = type( uw );
+Code type_ns(allocator)    = type( allocator );
+Code type_ns(string_const) = type( char, specifiers( Const, Ptr ) );
+
 make( struct, ArrayHeader )
 {
     Code
     body = ArrayHeader.body();
-    body->add_var( uw,        Num       );
-    body->add_var( uw,        Capacity  );
-    body->add_var( allocaotr, Allocator );
+    body->add( variable( uw,        Num       ));
+    body->add( variable( uw,        Capacity  ));
+    body->add( variable( allocaotr, Allocator ));
 }
+
+// Or using parse!
+Code type_ns(uw)           = type_code( uw );
+Code type_ns(allocator)    = type_code( allocator );
+Code type_ns(string_const) = type_code( char const* );
+
+Code header = struct_code(
+    struct ArrayHeader
+    {
+        uw        Num;
+        uw        Capacity;
+        allocator Allocator;
+    };
+);
 ```
 
-The `__` represents the `UnusedCode` value constant, of unneeded varaibles.
-The DSL purposefully has no nested macros, with the follwing exceptions:
-
-* `__VA_ARGS__` for parameter expnasion
-* `VA_NARGS( __VA_ARGS__ )` for determing number of paramters
-* `txt(Value_)` and `txt_with_length(Value_)` to serialize a value type identifier.
+`type_ns` is a helper macro for providing refering to a typename if using the c-namespace naming convention.
 
 ## Building
 
@@ -460,11 +535,11 @@ Thus a rule of thumb is if its a simple definition you can get away with just th
 
 However, if:
 
-* The code being generated becomes complex
+* Your compile time complexity becomes large.
 * You enjoy actually *seeing* the generated code instead of just the error symbols or the pdb symbols.
 * You value your debugging expereince, and would like to debug your metaprogram, without having to step through the debug version of the compiler (if you even can)
-* You want to roll your own runtime reflection system
-* You want to maintain a series of libraries for internal use, but don't want to deal with manaual merging as often when they update.
+* Want to roll your own reflection system
+* Want to maintain a series of libraries for internal use, but don't want to deal with manaual merging as often when they update.
 * Want to create tailored headers for your code or for your libraries since you usually don't need the majority of the code within them.
 
 Then this might help you boostrap a toolset todo so.
