@@ -14,7 +14,7 @@
 	* Macro or template generation      : This library is to avoid those, adding support for them adds unnecessary complexity.
 	                                      If you desire define them outside the gen_time scopes.
 	* Expression validation             : Execution expressions are defined using the untyped string API.
-	                                      There is no parse API for validating expression (possibly will add in the future)
+	                                      There is no parse API for validating expressions (possibly will add in the future)
 	* Modern C++ (STL library) features
 	* Modern C++ RTTI                   : This is kinda covered with the last point, but just wanted to emphasize.
 
@@ -93,11 +93,21 @@
 
 	* def_class_body
 	* def_enum_body
-	* def_function_body
+	* def_function_body   NOTE: Use this for operator bodies as well.
 	* def_global_body
-	* def_operator_body
 	* def_namespace_body
 	* def_struct_body
+
+	Usage Conventions:
+	```
+	Code <name> = def_<function type>( ... );
+
+	Code <name>
+	{
+		...
+		<name> = def_<function name>( ... );
+	}
+	```
 
 	### Incremental construction
 
@@ -121,6 +131,15 @@
 	* make_params
 	* make_specifiers
 	* make_struct
+
+	Usage Conventions:
+	```
+	Code <name> = make_<function name>( ... )
+	{
+		<name>->add( ... );
+		...
+	}
+	```
 
 	### Parse construction
 
@@ -154,8 +173,24 @@
 	The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
 	This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
 
-	The plural variants provide an array of codes, its up to the user to add them to a body AST
+	The pluralvariants provide an array of codes, its up to the user to add them to a body AST
 	(they are not auto-added to a body)
+
+	Usage Conventions:
+	```
+	Code <name> = parse_<function name>( string with code );
+
+	Code <name> = def_<function name>( ..., parse_<function name>(
+		<string with code>
+	));
+
+	Code <name> = make_<function name>( ... )
+	{
+		<name>->add( parse_<function name>(
+			<string with code>
+		));
+	}
+	```
 
 	### Untyped constructions
 
@@ -163,6 +198,7 @@
 
 	Interface :
 
+	* token_fmt
 	* untyped_str
 	* untyped_fmt
 	* untyped_token_fmt
@@ -173,9 +209,114 @@
 	Untyped code can be added as any component of a Code AST:
 
 	* Untyped code cannot have children, thus there cannot be recursive injection this way.
-	* Untyped code can only be a child of a parent of body AST, or for values of an assignment.
+	* Untyped code can only be a child of a parent of body AST, or for values of an assignment (ex: variable assignment).
 
 	These restrictions help prevent abuse of untyped code to some extent.
+
+	Usage Conventions:
+	```
+	Code <name> = def_varaible( <type>, <name>, untyped_<function name>(
+		<string with code>
+	));
+	```
+
+	Template metaprogramming in the traditional sense becomes possible with the use of `token_fmt` and parse constructors:
+
+	```
+	char const* token_key, token_value;
+	char const* template = txt(
+		Code with {key value} to replace with token_values
+		...
+	);
+	char const* gen_code_str = token_fmt( template, num_tokens, token, ... );
+	Code        <name>       = parse_<function name>( gen_code_str );
+	```
+
+	## Code generation and modification
+
+	There are three provided interfaces:
+	* Builder
+	* Editor
+	* Scanner
+
+	Editor and Scanner are disabled by default, use GEN_FEATURE_EDITOR and GEN_FEATURE_SCANNER to enable them.
+
+	### Builder is a similar object to the jai language's string_builder.
+		* The purpose of it is to generate a file.
+		* A file is specified and opened for writting using the open( file_path) ) fucntion.
+		* The code is provided via print( code ) function  will be seralized to its buffer.
+		* When all seralization is finished, use the write() comamnd to write the buffer to the file.
+
+	### Editor is for editing a series of files based on a set of requests provided to it.
+		* The purpose is to overrite a specific file, it places its contents in a buffer to scan.
+		* Requests are populated using the following interface:
+			* add    : Add code.
+			* remove : Remove code.
+			* replace: Replace code.
+
+			All three have the same parameters with exception to remove which only has SymbolInfo and Policy:
+			* SymbolInfo:
+					Markers are
+				* File      : The file the symbol resides in.
+					Leave null to indicate to search all files.
+				* Marker    : #define symbol that indicates a location or following signature is valid to manipulate.
+					Leave null to indicate that the signature should only be used.
+				* Signature : Use a Code symbol to find a valid location to manipulate, can be further filtered with the marker.
+					Leave null to indicate that the marker should only be used.
+
+			* Policy : Additional policy info for completing the request (empty for now)
+			* Code   : Code to inject if adding, or replace existing code with.
+
+		Additionally if GEN_FEATURE_EDITOR_REFACTOR is defined, refactor( file_path, specification_path ) wil be made available.
+			Refactor is based of the refactor library and uses its interface.
+			It will on call add a request to the queue to run the refactor script on the file.
+
+	### Scanner allows the user to generate Code ASTs by reading files.
+		* The purpose is to grab definitions to generate metadata or generate new code from these definitions.
+		* Requests are populated using the add( SymbolInfo, Policy ) function.
+			The symbol info is the same as the one used for the editor. So is the case with Policy.
+
+		The file will only be read from, no writting supported.
+
+		One great use case is for example: generating the single-header library for gencpp!
+
+	### Additional Info (Editor and Scanner)
+
+	When all requests have been populated, call process_requests().
+	It will provide an output of receipt data of the results when it completes.
+
+	Files may be added to the Editor and Scanner additionally with add_files( num, files ).
+	This is intended for when you have requests that are for multiple files.
+
+	Request queue in both Editor and Scanner are cleared once process_requests completes.
+
+	### Notes on multi-threading:
+
+	Its intended eventually for this library to support multi-threading at some point,
+	however for now it does not.
+		The following changes would have to be made:
+		* Setup static data accesss with fences if more than one thread will generate ASTs
+		* Make sure local peristent data of functions are also thread local.
+		* The builder should be done on a per-thread basis.
+		* Due to the design of the editor and scanner, it will most likely
+			be best to make each file a job to process request entries on.
+			Receipts should have an an array to store per thread.
+			They can be combined to the final reciepts array when all files have been processed.
+
+	For now single-threaded has a bunch of optimization that most likely have done to it and will be more than capable
+	for the majority of projects this thing is intended for. (IF you use this on Unreal... well your asking for it...)
+
+	### Notes on extending with whatever features you want
+
+	This library is very small, and you can easily extend it.
+
+	The untyped codes and builder/editor/scanner can be technically be used to circumvent
+	any sort of constrictions the library has with: modern c++, templates, macros, etc.
+
+	Typical use case is for getting define constants an old C/C++ library with the scanner:
+	Code parse_defines() can emit a custom code AST with Macro_Constant type.
+
+	Another would be getting preprocessor or template metaprogramming Codes from Unreal Engine definitions.
 */
 
 #pragma once
@@ -212,32 +353,36 @@ namespace gen
 
 	namespace ECode
 	{
-#		define Define_Types       \
-		Entry( Untyped )          \
-		Entry( Access_Public )    \
-		Entry( Access_Private )   \
-		Entry( Access_Protected ) \
-		Entry( Class )            \
-		Entry( Class_FwdDecl )    \
-		Entry( Class_Body )       \
-		Entry( Enum )             \
-		Entry( Enum_FwdDecl )     \
-		Entry( Enum_Body )        \
-		Entry( Friend )           \
-		Entry( Global_Body )      \
-		Entry( Namespace )        \
-		Entry( Namespace_Body )   \
-		Entry( Parameters )       \
-		Entry( Function )         \
-		Entry( Function_FwdDecl ) \
-		Entry( Function_Body )    \
-		Entry( Specifiers )       \
-		Entry( Struct )           \
-		Entry( Struct_FwdDecl )   \
-		Entry( Struct_Body )      \
-		Entry( Variable )         \
-		Entry( Typedef )          \
-		Entry( Typename )         \
+#		define Define_Types         \
+		Entry( Untyped )            \
+		Entry( Access_Public )      \
+		Entry( Access_Private )     \
+		Entry( Access_Protected )   \
+		Entry( Class )              \
+		Entry( Class_FwdDecl )      \
+		Entry( Class_Body )         \
+		Entry( Enum )               \
+		Entry( Enum_FwdDecl )       \
+		Entry( Enum_Body )          \
+		Entry( Enum_Class )         \
+		Entry( Enum_Class_FwdDecl ) \
+		Entry( Friend )             \
+		Entry( Function )           \
+		Entry( Function_FwdDecl )   \
+		Entry( Function_Body )      \
+		Entry( Global_Body )        \
+		Entry( Namespace )          \
+		Entry( Namespace_Body )     \
+		Entry( Operator )           \
+		Entry( Operator_Fwd )       \
+		Entry( Parameters )         \
+		Entry( Specifiers )         \
+		Entry( Struct )             \
+		Entry( Struct_FwdDecl )     \
+		Entry( Struct_Body )        \
+		Entry( Variable )           \
+		Entry( Typedef )            \
+		Entry( Typename )           \
 		Entry( Using )
 
 		enum Type : u32
@@ -267,50 +412,69 @@ namespace gen
 	}
 	using CodeT = ECode::Type;
 
+	// Used to indicate if enum definitoin is an enum class or regular enum.
+	enum class EnumT : u8
+	{
+		Regular,
+		Class
+	};
+
+	ct EnumT EnumClass   = EnumT::Class;
+	ct EnumT EnumRegular = EnumT::Regular;
+
+	enum class UsingT : u8
+	{
+		Regular,
+		Namespace
+	};
+
+	ct UsingT UsingRegular   = UsingT::Regular;
+	ct UsingT UsingNamespace = UsingT::Namespace;
+
 	namespace EOperator
 	{
-#		define Define_Operators          \
-			Entry( Assign, =  )          \
-			Entry( Assign_Add, += )      \
-			Entry( Assign_Subtract, -= ) \
-			Entry( Assgin_Multiply, *= ) \
-			Entry( Assgin_Divide, /= )   \
-			Entry( Assgin_Modulo, %= )   \
-			Entry( Assgin_BAnd, &= )     \
-			Entry( Assgin_BOr, &= )      \
-			Entry( Assign_BXOr, ^= )     \
-			Entry( Assign_LShift, <<= )  \
-			Entry( Assign_RShift, >>= )  \
-			Entry( Increment, ++ )       \
-			Entry( Decrement, -- )       \
-			Entry( Unary_Plus, + )       \
-			Entry( Unary_Minus, - )      \
-			Entry( Add, + )              \
-			Entry( Subtract, - )         \
-			Entry( Multiply, * )         \
-			Entry( Divide, / )           \
-			Entry( Modulo, % )           \
-			Entry( BNot, ~ )             \
-			Entry( BAnd, & )             \
-			Entry( BOr, | )              \
-			Entry( BXOr, ^ )             \
-			Entry( LShift, << )          \
-			Entry( RShift, >> )          \
-			Entry( LNot, ! )             \
-			Entry( LAnd, && )            \
-			Entry( LOr, || )             \
-			Entry( Equals, == )          \
-			Entry( NotEquals, != )       \
-			Entry( Lesser, < )           \
-			Entry( Greater, > )          \
-			Entry( LesserEqual, <= )     \
-			Entry( GreaterEqual, >= )    \
-			Entry( Subscript, [] )       \
-			Entry( Indirection, * )      \
-			Entry( AddressOf, & )        \
-			Entry( MemberOfPointer, -> ) \
-			Entry( PtrToMemOfPtr, ->* )  \
-			Entry( FunctionCall, () )
+#		define Define_Operators           \
+			Entry( Assign,          =  )  \
+			Entry( Assign_Add,      += )  \
+			Entry( Assign_Subtract, -= )  \
+			Entry( Assgin_Multiply, *= )  \
+			Entry( Assgin_Divide,   /= )  \
+			Entry( Assgin_Modulo,   %= )  \
+			Entry( Assgin_BAnd,     &= )  \
+			Entry( Assgin_BOr,      &= )  \
+			Entry( Assign_BXOr,     ^= )  \
+			Entry( Assign_LShift,   <<= ) \
+			Entry( Assign_RShift,   >>= ) \
+			Entry( Increment,       ++ )  \
+			Entry( Decrement,       -- )  \
+			Entry( Unary_Plus,      + )   \
+			Entry( Unary_Minus,     - )   \
+			Entry( Add,             + )   \
+			Entry( Subtract,        - )   \
+			Entry( Multiply,        * )   \
+			Entry( Divide,          / )   \
+			Entry( Modulo,          % )   \
+			Entry( BNot,            ~ )   \
+			Entry( BAnd,            & )   \
+			Entry( BOr,             | )   \
+			Entry( BXOr,            ^ )   \
+			Entry( LShift,          << )  \
+			Entry( RShift,          >> )  \
+			Entry( LNot,            ! )   \
+			Entry( LAnd,            && )  \
+			Entry( LOr,             || )  \
+			Entry( Equals,          == )  \
+			Entry( NotEquals,       != )  \
+			Entry( Lesser,          < )   \
+			Entry( Greater,         > )   \
+			Entry( LesserEqual,     <= )  \
+			Entry( GreaterEqual,    >= )  \
+			Entry( Subscript,       [] )  \
+			Entry( Indirection,     * )   \
+			Entry( AddressOf,       & )   \
+			Entry( MemberOfPointer, -> )  \
+			Entry( PtrToMemOfPtr,   ->* ) \
+			Entry( FunctionCall,    () )
 
 		enum Type : u32
 		{
@@ -336,6 +500,7 @@ namespace gen
 
 			return lookup[ op ];
 		}
+
 #		undef Define_Operators
 	}
 	using OperatorT = EOperator::Type;
@@ -356,37 +521,37 @@ namespace gen
 #			define Thread_Local_Code "NOT DEFINED"
 #		endif
 
-		// Entry( Explicit, explicit )           \
 
-		#define Define_Specifiers                \
-		Entry( API_Import, API_Export_Code )     \
-		Entry( API_Export, API_Import_Code )     \
-		Entry( Attribute, "You cannot stringize an attribute this way" ) \
-		Entry( Alignas, alignas )                \
-		Entry( Const, const )                    \
-		Entry( C_Linkage, extern "C" )           \
-		Entry( Consteval, consteval )            \
-		Entry( Constexpr, constexpr )            \
-		Entry( Constinit, constinit )            \
-		Entry( Export, export )                  \
-		Entry( External_Linkage, extern )        \
-		Entry( Import, import )                  \
-		Entry( Inline, inline )                  \
-		Entry( Internal_Linkage, static )        \
-		Entry( Final, final )                    \
-		Entry( Local_Persist, static )           \
-		Entry( Module, module )                  \
-		Entry( Mutable, mutable )                \
-		Entry( NoExcept, noexcept )              \
-		Entry( Override, override )              \
-		Entry( Pointer, * )                      \
-		Entry( Reference, & )                    \
-		Entry( Register, register )              \
-		Entry( RValue, && )                      \
-		Entry( Static_Member, static  )          \
-		Entry( Thread_Local, Thread_Local_Code ) \
-		Entry( Virtual, virtual )                \
-		Entry( Volatile, volatile )
+		#define Define_Specifiers                    \
+		Entry( API_Import,       API_Export_Code )   \
+		Entry( API_Export,       API_Import_Code )   \
+		Entry( Attribute, "      You cannot stringize an attribute this way" ) \
+		Entry( Alignas,          alignas )           \
+		Entry( Const,            const )             \
+		Entry( C_Linkage,        extern "C" )        \
+		Entry( Consteval,        consteval )         \
+		Entry( Constexpr,        constexpr )         \
+		Entry( Constinit,        constinit )         \
+		Entry( Export,           export )            \
+		Entry( Explicit,         explicit )          \
+		Entry( External_Linkage, extern )            \
+		Entry( Import,           import )            \
+		Entry( Inline,           inline )            \
+		Entry( Internal_Linkage, static )            \
+		Entry( Final,            final )             \
+		Entry( Local_Persist,    static )            \
+		Entry( Module,           module )            \
+		Entry( Mutable,          mutable )           \
+		Entry( NoExcept,         noexcept )          \
+		Entry( Override,         override )          \
+		Entry( Pointer,          * )                 \
+		Entry( Reference,        & )                 \
+		Entry( Register,         register )          \
+		Entry( RValue,           && )                \
+		Entry( Static_Member,    static  )           \
+		Entry( Thread_Local,     Thread_Local_Code ) \
+		Entry( Virtual,          virtual )           \
+		Entry( Volatile,         volatile )
 
 		enum Type : u32
 		{
@@ -435,6 +600,8 @@ namespace gen
 
 			return Invalid;
 		}
+
+#		undef Define_Specifiers
 	}
 	using SpecifierT = ESpecifier::Type;
 
@@ -449,29 +616,31 @@ namespace gen
 	*/
 	struct AST
 	{
-	#pragma region Member Procedures
+#	pragma region Member Functions
 		bool add( AST* other );
 
 		forceinline
 		void add_entry( AST* other )
 		{
-			Code to_add = other->Parent ?
+			AST* to_add = other->Parent ?
 				other->duplicate() : other;
 
 			array_append( Entries, to_add );
 
 			to_add->Parent = this;
 		}
+
 		forceinline
 		AST* body()
 		{
-			return Entries[0];
+			return Entries && array_count(Entries) ?
+				Entries[0] : nullptr;
 		}
 
 		forceinline
 		bool check();
 
-		Code duplicate();
+		AST* duplicate();
 
 		forceinline
 		bool has_entries() const
@@ -517,7 +686,11 @@ namespace gen
 				\nComment : %s
 			);
 
-			bprintf( fmt
+			// These should be used immediately in a log.
+			// Thus if its desired to keep the debug str
+			// for multiple calls to bprintf,
+			// allocate this to proper string.
+			return bprintf( fmt
 			,	type_str()
 			,	Readonly ? "true"       : "false"
 			,	Parent   ? Parent->Name : ""
@@ -533,15 +706,15 @@ namespace gen
 		}
 
 		string to_string() const;
-	#pragma endregion Member Procedures
+#	pragma endregion Member Functions
 
-	#define Using_Code_POD               \
+#		define Using_Code_POD            \
 		AST*              Parent;        \
-		ro_string         Name;          \
-		ro_string         Comment;       \
+		string_const      Name;          \
+		string_const      Comment;       \
 		union {                          \
 			array(AST*)   Entries;       \
-			ro_string     Content;       \
+			string_const  Content;       \
 		};                               \
 		CodeT             Type;          \
 		OperatorT         Op;            \
@@ -554,10 +727,9 @@ namespace gen
 	struct CodePOD
 	{
 		Using_Code_POD;
+#		undef Using_CodePOD;
 	};
 
-	ct u32 sizeof_AST = sizeof(AST);
-	ct u32 sizeof_CODE = sizeof(CodePOD);
 
 	// Its intended for the AST to have equivalent size to its POD.
 	// All extra functionality within the AST namespace should just be syntatic sugar.
@@ -573,7 +745,12 @@ namespace gen
 	*/
 	struct Code
 	{
-	#pragma region Member Procedures
+#	pragma region Statics
+		// Used internally for the most part to identify invaidly generated code.
+		static const Code Invalid;
+#	pragma endregion Statics
+
+#	pragma region Member Functions
 		Code body()
 		{
 			if ( ast == nullptr )
@@ -667,12 +844,8 @@ namespace gen
 
 			return ast;
 		}
-	#pragma endregion Member Procedures
+#	pragma endregion Member Functions
 
-		// Used internally for the most part to identify invaidly generated code.
-		static const Code Invalid;
-
-		// Data
 		AST* ast;
 	};
 	static_assert( sizeof(Code) == sizeof(AST*), "ERROR: Code is not POD" );
@@ -682,17 +855,20 @@ namespace gen
 	// extern const Code InvalidCode;
 
 	/*
+		Implements basic string interning. Data structure is based off the ZPL Hashtable.
 	*/
 	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, string );
 
-	using ro_string = char const*;
+	// Represents strings cached with the string table.
+	// Should never be modified, if changed string is desired, cache_string( str ) another.
+	using string_const = char const*;
 
 	/*
-		Type registy: Used to store Typename ASTs. Types are registered by their string literal value.
+		Type Table: Used to store Typename ASTs. Types are registered by their string literal value.
 
-		Purely used as a memory optimization.
-		Strings made with the Typename ASTs are stored in thier own arena allocator.
-		TODO: Implement and replace usage of def_type.
+		Provides interning specific to Typename ASTs.
+		Interning for other types should be possible (specifiers) with this, so long as they
+		don't have an set of child AST entries (Use the content field).
 	*/
 	ZPL_TABLE_DECLARE( ZPL_EXTERN, TypeTable, type_tbl_, Code );
 #pragma endregion Data Structures
@@ -712,21 +888,28 @@ namespace gen
 		Used internally to retrive or make string allocations.
 		Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
 	*/
-	ro_string cached_string( char const* cstr, s32 length );
+	string_const cached_string( char const* cstr, s32 length );
 
 	/*
-		This provides a fresh Code AST struct.
+		This provides a fresh Code AST.
 		The gen interface use this as their method from getting a new AST object from the CodePool.
 		Use this if you want to make your own API for formatting the supported Code Types.
 	*/
 	Code make_code();
 
+	/*
+		This provides a fresh Code AST array for the entries field of the AST.
+		This is done separately from the regular CodePool allocator.
+	*/
+	array(AST*) make_code_entries();
+
 	// Set these before calling gen's init() procedure.
 
-	void set_init_reserve_code_pool   ( sw size );
-	void set_init_reserve_string_arena( sw size );
-	void set_init_reserve_string_table( sw size );
-	void set_init_reserve_type_table  ( sw size );
+	void set_init_reserve_code_pool        ( sw size );
+	void set_init_reserve_code_entries_pool( sw size );
+	void set_init_reserve_string_arena     ( sw size );
+	void set_init_reserve_string_table     ( sw size );
+	void set_init_reserve_type_table       ( sw size );
 
 	void set_allocator_code_pool   ( allocator pool_allocator );
 	void set_allocator_string_arena( allocator string_allocator );
@@ -736,8 +919,8 @@ namespace gen
 #	pragma region Upfront
 	Code def_class          (             char const* name, Code parent = NoCode,                         Code specifiers = NoCode, Code body = NoCode );
 	Code def_class          ( s32 length, char const* name, Code parent = NoCode,                         Code specifiers = NoCode, Code body = NoCode );
-	Code def_enum           (             char const* name, Code type   = NoCode,                                                   Code body = NoCode);
-	Code def_enum           ( s32 length, char const* name, Code type   = NoCode,                                                   Code body = NoCode );
+	Code def_enum           (             char const* name, Code type   = NoCode, EnumT specifier = EnumRegular,                    Code body = NoCode);
+	Code def_enum           ( s32 length, char const* name, Code type   = NoCode, EnumT specifier = EnumRegular,                    Code body = NoCode );
 	Code def_friend         ( Code symbol );
 	Code def_function       (             char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_function       ( s32 length, char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
@@ -754,10 +937,8 @@ namespace gen
 	Code def_struct         ( s32 length, char const* name, Code parent     = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_type           (             char const* name, Code specifiers = NoCode );
 	Code def_type           ( s32 length, char const* name, Code specifiers = NoCode );
-	Code def_using          (             char const* name, Code type );
-	Code def_using          ( s32 length, char const* name, Code type );
-	Code def_using_namespace(             char const* name );
-	Code def_using_namespace( s32 length, char const* name );
+	Code def_using          (             char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
+	Code def_using          ( s32 length, char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
 
 	Code def_variable       ( Code type,             char const* name, Code value = NoCode, Code specifiers = NoCode );
 	Code def_variable       ( Code type, s32 length, char const* name, Code value = NoCode, Code specifiers = NoCode );
@@ -769,7 +950,6 @@ namespace gen
 	Code def_function_body  ( s32 num, ... );
 	Code def_function_body  ( s32 num, Code* codes );
 	Code def_namespace_body ( s32 num, ... );
-	Code def_operator_body  ( s32 num, ... );
 	Code def_params         ( s32 num, ... );
 	Code def_params_macro   ( s32 num, ... );
 	Code def_params         ( s32 num, Code* params );
@@ -780,14 +960,12 @@ namespace gen
 #	pragma endregion Upfront
 
 #	pragma region Incremental
-	Code make_class       (             char const* name, Code parent = NoCode, Code specifiers = NoCode );
-	Code make_class       ( s32 length, char const* name, Code parent = NoCode, Code specifiers = NoCode );
-	Code make_enum        (             char const* name, Code type   = NoCode, Code body       = NoCode );
-	Code make_enum        ( s32 length, char const* name, Code type   = NoCode, Code body       = NoCode );
-	Code make_enum_class  (             char const* name, Code type   = NoCode, Code body       = NoCode );
-	Code make_enum_class  ( s32 length, char const* name, Code type   = NoCode, Code body       = NoCode );
-	Code make_function    (             char const* name, Code params = NoCode, Code ret_type   = NoCode, Code specifiers = NoCode );
-	Code make_function    ( s32 length, char const* name, Code params = NoCode, Code ret_type   = NoCode, Code specifiers = NoCode );
+	Code make_class       (             char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+	Code make_class       ( s32 length, char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+	Code make_enum        (             char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
+	Code make_enum        ( s32 length, char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
+	Code make_function    (             char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
+	Code make_function    ( s32 length, char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
 	Code make_global_body (             char const* name = "", s32 num = 0, ... );
 	Code make_global_body ( s32 length, char const* name = "", s32 num = 0, ... );
 	Code make_namespace   (             char const* name );
@@ -846,13 +1024,21 @@ namespace gen
 #ifdef GEN_FEATURE_EDITOR
 	struct Policy
 	{
+		// Nothing for now.
+	};
 
+	enum class SymbolType : u32
+	{
+		Code,
+		Line,
+		Marker
 	};
 
 	struct SymbolInfo
 	{
-		ro_string File;
-		Code      Signature;
+		string_const File;
+		char const*  Marker;
+		Code         Signature;
 	};
 
 	struct Editor
@@ -881,10 +1067,10 @@ namespace gen
 
 		struct Receipt
 		{
-			ro_string File;
-			Code      Found;
-			Code      Written;
-			bool      Result;
+			string_const File;
+			Code         Found;
+			Code         Written;
+			bool         Result;
 		};
 
 		static allocator Allocator;
@@ -895,12 +1081,14 @@ namespace gen
 		string              Buffer;
 		array(RequestEntry) Requests;
 
-		void add    ( SymbolInfo definition,  Policy policy, Code to_inject );
-		void replace( SymbolInfo definition,  Policy policy, Code to_replace);
-		void remove ( SymbolInfo definition,  Policy policy, Code to_remove );
+		void add_files( s32 num, char const** files );
 
-#	ifdef GEN_USE_REFACTOR_LIBRARY
-		void refactor( char const* specification );
+		void add    ( SymbolInfo definition,  Policy policy, Code to_inject );
+		void remove ( SymbolInfo definition,  Policy policy );
+		void replace( SymbolInfo definition,  Policy policy, Code to_replace);
+
+#	ifdef GEN_FEATURE_EDITOR_REFACTOR
+		void refactor( char const* file_path, char const* specification_path );
 #	endif
 
 		bool process_requests( array(Receipt) out_receipts );
@@ -917,9 +1105,9 @@ namespace gen
 
 		struct Receipt
 		{
-			ro_string File;
-			Code      Defintion;
-			bool      Result;
+			string_const File;
+			Code         Defintion;
+			bool         Result;
 		};
 
 		allocator Allocator;
@@ -929,6 +1117,8 @@ namespace gen
 		array(zpl_file)     Files;
 		string              Buffer;
 		array(RequestEntry) Requests;
+
+		void add_files( s32 num, char const** files );
 
 		void add( SymbolInfo signature, Policy policy );
 
@@ -945,8 +1135,15 @@ namespace gen
 #	define spec_alignas( Value_ ) ESpecifier::Alignas, Value
 
 // This represents the naming convention for all typename Codes generated.
-// Use this if your using the DSL if you would like a different convention.
-#	define type_ns( Name_ )       t_##Name_
+// Used by the DSL but can also be used without it.
+#	define type_ns( Name_ ) t_##Name_
+
+//	Convienence for defining any name used if desring to use library
+//  Lets you provide the length and string literal to the functions without the need for the DSL.
+#	define name( Id_ )   txt_n_len( Id_ )
+
+//  Same as name just used to indicate intention of literal for code instead of names.
+#	define code( Code_ ) txt_n_len( Code_ )
 
 /*
 	gen's Domain Specific Langauge.
@@ -1108,7 +1305,6 @@ namespace gen
 	extern Code spec_ref;
 }
 #pragma endregion Constants
-#endif
 
 #pragma region Gen Interface Inlines
 namespace gen
@@ -1120,9 +1316,9 @@ namespace gen
 	}
 
 	forceinline
-	Code def_enum( char const* name, Code type, Code body )
+	Code def_enum( char const* name, Code type, EnumT specifier, Code body )
 	{
-		return def_enum( zpl_strnlen( name, MaxNameLength ), name, type, body );
+		return def_enum( zpl_strnlen( name, MaxNameLength ), name, type, specifier, body );
 	}
 
 	forceinline
@@ -1156,15 +1352,9 @@ namespace gen
 	}
 
 	forceinline
-	Code def_using( char const* name, Code type )
+	Code def_using( char const* name, Code type, UsingT specifier )
 	{
-		return def_using( zpl_strnlen( name, MaxNameLength ), name, type );
-	}
-
-	forceinline
-	Code def_using_namespace( char const* name )
-	{
-		return def_using_namespace( zpl_strnlen( name, MaxNameLength ), name );
+		return def_using( zpl_strnlen( name, MaxNameLength ), name, type, specifier );
 	}
 
 	forceinline
@@ -1210,3 +1400,6 @@ namespace gen
 	}
 }
 #pragma endregion Gen Interface Inlines
+
+// end: gen_time
+#endif
