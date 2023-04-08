@@ -8,17 +8,23 @@ This library is intended for small-to midsized projects.
 
 * [Notes](#notes)
 * [Usage](#usage)
+* [Gen's DSL](#gens-dsl)
 * [Building](#notes)
 * [Outline](#outline)
+* [What is not provided](#what-is-not-provided)
+* [The four constructors](#there-are-four-sets-of-interfaces-for-code-ast-generation-the-library-provides)
+* [Code generation and modification](#code-generation-and-modification)
+* [On multithreading](#on-multi-threading)
+* [On extending with whatever features you want](#on-extending-with-whatever-features-you-want)
 * [Why](#why)
 * [TODO](#todo)
 
 ## Notes
 
-This project is not minimum feature complete yet.  
+This project is not minimum feature complete yet.
 Version 1 will have C and a subset of C++ features available to it.
 
-I will generate with this library a C99 or 11 variant when Version 1 is complete.  
+I will generate with this library a C99 or 11 variant when Version 1 is complete.
 A single-header version will also be generated.
 
 ## Usage
@@ -53,7 +59,7 @@ u32 gen_main()
 This is ofc entirely optional and the metaprogram can be quite separated from the runtime in file organization.
 
 The design a constructive builder of a sort of AST for the code to generate.
-The user is given `Code` typed objects that are used to build up the AST. 
+The user is given `Code` typed objects that are used to build up the AST.
 
 Example:
 ```cpp
@@ -94,7 +100,7 @@ Using the previous example to show usage:
 ```cpp
 make( struct, ArrayHeader )
 {
-    Code 
+    Code
     body = ArrayHeader.body();
     body->add_var( uw,        Num       );
     body->add_var( uw,        Capacity  );
@@ -105,7 +111,7 @@ make( struct, ArrayHeader )
 The `__` represents the `UnusedCode` value constant, of unneeded varaibles.
 The DSL purposefully has no nested macros, with the follwing exceptions:
 
-* `__VA_ARGS__` for parameter expnasion 
+* `__VA_ARGS__` for parameter expnasion
 * `VA_NARGS( __VA_ARGS__ )` for determing number of paramters
 * `txt(Value_)` and `txt_with_length(Value_)` to serialize a value type identifier.
 
@@ -113,7 +119,7 @@ The DSL purposefully has no nested macros, with the follwing exceptions:
 
 An example of building is provided in the test directory.
 
-There are two meson build files the one within test is the program's build specification.  
+There are two meson build files the one within test is the program's build specification.
 The other one in the gen directory within test is the metaprogram's build specification.
 
 Both of them build the same source file: `test.cpp`. The only differences between them is that gen need a different relative path to the include directories and defines the macro definition: `gen_time`.
@@ -125,42 +131,60 @@ If in your use case, decide to have exclusive separation or partial separation o
 
 ### *WHAT IS NOT PROVIDED*
 
-* Macro or template generation      : This library is to avoid those, 
-adding support for them adds unnecessary complexity. If you desire define them outside the gen_time scopes. 
-* Expression validation             : Execution expressions are defined using the untyped string API. There is no parse API for validating expression (possibly will add in the future)
-* Complete file parser DSL          : This isn't like the unreal header tool. Code injection to file or based off a file contents is not supported by the api. However nothing is stopping you using the library for that purpose.
-* Modern c++ (STL library) features
+* Macro or template generation      : This library is to avoid those, adding support for them adds unnecessary complexity.
+                                        If you desire define them outside the gen_time scopes.
+* Expression validation             : Execution expressions are defined using the untyped string API.
+                                        There is no parse API for validating expressions (possibly will add in the future)
+* Modern C++ (STL library) features
+* Modern C++ RTTI                   : This is kinda covered with the last point, but just wanted to emphasize.
 
-As mentioned in [Usage](#Usage), the user is provided Code objects by calling the interface procedures to generate them or find existing matches.
+Exceptions brought in from "Modern C++":
 
-The AST is managed by the library and provided the user via its interface prodedures.
+* consteval
+* constinit
+* explicit
+* export
+* noexcept
+* import
+* final
+* module
+* override
+* &&
+* virtual
+
+As mentioned in [Usage](#Usage), the user is provided Code objects by calling the constructor functions to generate them or find existing matches.
+
+The AST is managed by the library, however the user may specificy memory configuration.
 
 Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage*
-* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.  
+* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 
 Data layout of AST struct:
 
 ```cpp
-CodeT             Type;    
-bool              Readonly;
-AST*              Parent;  
-string            Name;    
-string            Comment; 
-union {                    
+AST*              Parent;
+string_const      Name;
+string_const      Comment;
+union {
     array(AST*)   Entries;
-    string        Content;
+    string_const  Content;
 };
+CodeT             Type;
+OperatorT         Op;
+bool              Readonly;
+u8                _64_Align[23];
 ```
 
-*`CodeT` is a typedef for `ECode::Type` which is the type of the enum.*
+*`CodeT` is a typedef for `ECode::Type` which has an underlying type of u32*
+*'OperatorT' is a typedef for 'EOperator::Type' which has an underlying type of u32.
 
 ASTs can be set to readonly by calling Code's lock() member function.
-Adding comments is always available even if the AST is set to readonly.  
+Adding comments is always available even if the AST is set to readonly.
 
-### There are four sets of interfaces for Code AST generation the library provides
+## There are four sets of interfaces for Code AST generation the library provides
 
 * Upfront
 * Incremental
@@ -175,39 +199,48 @@ The construction will fail and return InvalidCode otherwise.
 Interface :
 
 * def_class
-* def_class_body
-* def_class_fwd
 * def_enum
 * def_enum_class
-* def_enum_body
-* def_global_body
+* def_friend
+* def_function
 * def_namespace
-* def_namespace_body
 * def_operator
-* def_operator_fwd
 * def_param
 * def_params
-* def_proc
-* def_proc_body
-* def_proc_fwd
 * def_specifier
 * def_specifiers
 * def_struct
-* def_struct_body
-* def_struct_fwd
 * def_variable
 * def_type
+* def_typedef
 * def_using
-* def_using_namespace
+* def_class_body
+* def_enum_body
+* def_function_body   NOTE: Use this for operator bodies as well.
+* def_global_body
+* def_namespace_body
+* def_struct_body
+
+Usage:
+
+```c++
+<name> = def_<function type>( ... );
+
+Code <name>
+{
+    ...
+    <name> = def_<function name>( ... );
+}
+
+```
 
 ### Incremental construction
 
 A Code ast is provided but only completed upfront if all components are provided.
 Components are then added using the AST API for adding ASTs:
 
-* code.add( AST* )         // Adds AST with validation.
-* code.add_entry( AST* )   // Adds AST entry without validation.
-* code.add_content( AST* ) // Adds AST string content without validation.
+* code.add( AST* )                     // Adds AST with validation.
+* code.add_entry( AST* )               // Adds AST entry without validation.
 
 Code ASTs may be explictly validated at anytime using Code's check() member function.
 
@@ -216,17 +249,23 @@ Interface :
 * make_class
 * make_enum
 * make_enum_class
-* make_fwd
+* make_function
 * make_global_body
 * make_namespace
 * make_operator
 * make_params
-* make_proc
 * make_specifiers
 * make_struct
-* make_variable
-* make_type
-* make_using
+
+Usage:
+
+```cpp
+Code <name> = make_<function name>( ... )
+{
+    <name>->add( ... );
+    ...
+}
+```
 
 ### Parse construction
 
@@ -235,28 +274,43 @@ A string provided to the API is parsed for the intended language construct.
 Interface :
 
 * parse_class
-* parse_classes
-* parse_class_fwd
-* parse_classes_fwd
 * parse_enum
-* parse_enums
+* parse_friend
+* parse_function
 * parse_global_body
 * parse_namespace
-* parse_namespaces
-* parse_params
-* parse_proc
-* parse_procs
 * parse_operator
-* parse_operators
-* parse_specifiers
 * parse_struct
 * parse_strucs
 * parse_variable
-* parse_variables
 * parse_type
-* parse_types
+* parse_typedef
 * parse_using
+* parse_classes
+* parse_enums
+* parse_functions
+* parse_namespaces
+* parse_operators
+* parse_variables
+* parse_typedefs
 * parse_usings
+
+Usage:
+
+```cpp
+Code <name> = parse_<function name>( string with code );
+
+Code <name> = def_<function name>( ..., parse_<function name>(
+    <string with code>
+));
+
+Code <name> = make_<function name>( ... )
+{
+    <name>->add( parse_<function name>(
+        <string with code>
+    ));
+}
+```
 
 The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
 This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
@@ -267,19 +321,127 @@ Code ASTs are constructed using unvalidated strings.
 
 Interface :
 
+* token_fmt
 * untyped_str
 * untyped_fmt
 * untyped_token_fmt
 
-During serialization any untyped Code AST is has its string value directly injected inline of 
+During serialization any untyped Code AST is has its string value directly injected inline of
 whatever context the content existed as an entry within.
-Even though thse are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that
+Even though thesee are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that
 Untyped code can be added as any component of a Code AST:
 
 * Untyped code cannot have children, thus there cannot be recursive injection this way.
-* Untyped code can only be a child of a parent of body AST, or for values of an assignment.
+* Untyped code can only be a child of a parent of body AST, or for values of an assignment (ex: variable assignment).
 
 These restrictions help prevent abuse of untyped code to some extent.
+
+Usage Conventions:
+
+```cpp
+Code <name> = def_varaible( <type>, <name>, untyped_<function name>(
+    <string with code>
+));
+```
+
+Template metaprogramming in the traditional sense becomes possible with the use of `token_fmt` and parse constructors:
+
+```cpp
+char const* token_key, token_value;
+char const* template = txt(
+    Code with {key value} to replace with token_values
+    ...
+);
+char const* gen_code_str = token_fmt( template, num_tokens, token, ... );
+Code        <name>       = parse_<function name>( gen_code_str );
+```
+
+## Code generation and modification
+
+There are three provided interfaces:
+
+* Builder
+* Editor
+* Scanner
+
+Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FEATURE_SCANNER` to enable them.
+
+### Builder is a similar object to the jai language's string_builder.
+
+* The purpose of it is to generate a file.
+* A file is specified and opened for writting using the open( file_path) ) fucntion.
+* The code is provided via print( code ) function  will be seralized to its buffer.
+* When all seralization is finished, use the write() comamnd to write the buffer to the file.
+
+### Editor is for editing a series of files based on a set of requests provided to it.
+
+* The purpose is to overrite a specific file, it places its contents in a buffer to scan.
+* Requests are populated using the following interface:
+  * add : Add code.
+  * remove : Remove code.
+  * replace: Replace code.
+
+All three have the same parameters with exception to remove which only has SymbolInfo and Policy:
+
+* SymbolInfo:
+  * File      : The file the symbol resides in. Leave null to indicate to search all files.
+  * Marker    : #define symbol that indicates a location or following signature is valid to manipulate. Leave null to indicate that the signature should only be used.
+  * Signature : Use a Code symbol to find a valid location to manipulate, can be further filtered with the marker. Leave null to indicate that the marker should only be used.
+
+* Policy : Additional policy info for completing the request (empty for now)
+* Code   : Code to inject if adding, or replace existing code with.
+
+Additionally if `GEN_FEATURE_EDITOR_REFACTOR` is defined, refactor( file_path, specification_path ) wil be made available.
+Refactor is based of the refactor library and uses its interface.
+It will on call add a request to the queue to run the refactor script on the file.
+
+### Scanner allows the user to generate Code ASTs by reading files.
+
+* The purpose is to grab definitions to generate metadata or generate new code from these definitions.
+* Requests are populated using the add( SymbolInfo, Policy ) function. The symbol info is the same as the one used for the editor. So is the case with Policy.
+
+The file will only be read from, no writting supported.
+
+One great use case is for example: generating the single-header library for gencpp!
+
+### Additional Info (Editor and Scanner)
+
+When all requests have been populated, call process_requests().
+It will provide an output of receipt data of the results when it completes.
+
+Files may be added to the Editor and Scanner additionally with add_files( num, files ).
+This is intended for when you have requests that are for multiple files.
+
+Request queue in both Editor and Scanner are cleared once process_requests completes.
+
+## On multi-threading:
+
+Its intended eventually for this library to support multi-threading at some point,
+however for now it does not.
+
+The following changes would have to be made:
+
+* Setup static data accesss with fences if more than one thread will generate ASTs
+* Make sure local peristent data of functions are also thread local.
+* The builder should be done on a per-thread basis.
+* Due to the design of the editor and scanner, it will most likely
+        be best to make each file a job to process request entries on.
+        Receipts should have an an array to store per thread.
+        They can be combined to the final reciepts array when all files have been processed.
+
+For now single-threaded should be pretty quick even without heavy optimizations.
+
+## On extending with whatever features you want
+
+This library is relatively very small, and you can easily extend it.
+
+The untyped codes and builder/editor/scanner can be technically be used to circumvent
+any sort of constrictions the library has with: modern c++, templates, macros, etc.
+
+Typical use case is for getting define constants an old C/C++ library with the scanner:
+Code parse_defines() can emit a custom code AST with Macro_Constant type.
+
+Another would be getting preprocessor or template metaprogramming Codes from Unreal Engine definitions, etc.
 
 ## Why
 
@@ -287,7 +449,7 @@ Macros in c/c++ are usually painful to debug, and templates can be unless your o
 
 Templates also have a heavy cost to compile-times due to their recursive nature of expansion if complex code is getting generated, or if heavy type checking system is used (assertsion require expansion, etc).
 
-Unfortunately most programming langauges opt the approach of internally processing the generated code immediately within the AST or not expose it to the user in a nice way to even introspect as a text file.  
+Unfortunately most programming langauges opt the approach of internally processing the generated code immediately within the AST or not expose it to the user in a nice way to even introspect as a text file.
 
 Stage metaprogramming doesn't have this problem, since its entire purpose is to create those generated files that the final program will reference instead.
 

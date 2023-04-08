@@ -44,15 +44,17 @@
 
 	Data layout of AST struct:
 
-	CodeT             Type;
-	bool              Readonly;
 	AST*              Parent;
-	string            Name;
-	string            Comment;
+	string_const      Name;
+	string_const      Comment;
 	union {
 		array(AST*)   Entries;
-		string        Content;
+		string_const  Content;
 	};
+	CodeT             Type;
+	OperatorT         Op;
+	bool              Readonly;
+	u8                _64_Align[23];
 
 	*`CodeT` is a typedef for `ECode::Type` which is the type of the enum.*
 
@@ -89,7 +91,6 @@
 	* def_type
 	* def_typedef
 	* def_using
-	* def_using_namespace
 
 	* def_class_body
 	* def_enum_body
@@ -98,8 +99,7 @@
 	* def_namespace_body
 	* def_struct_body
 
-	Usage Conventions:
-	```
+	Usage:
 	Code <name> = def_<function type>( ... );
 
 	Code <name>
@@ -107,7 +107,6 @@
 		...
 		<name> = def_<function name>( ... );
 	}
-	```
 
 	### Incremental construction
 
@@ -132,14 +131,12 @@
 	* make_specifiers
 	* make_struct
 
-	Usage Conventions:
-	```
+	Usage:
 	Code <name> = make_<function name>( ... )
 	{
 		<name>->add( ... );
 		...
 	}
-	```
 
 	### Parse construction
 
@@ -176,8 +173,7 @@
 	The pluralvariants provide an array of codes, its up to the user to add them to a body AST
 	(they are not auto-added to a body)
 
-	Usage Conventions:
-	```
+	Usage:
 	Code <name> = parse_<function name>( string with code );
 
 	Code <name> = def_<function name>( ..., parse_<function name>(
@@ -190,7 +186,6 @@
 			<string with code>
 		));
 	}
-	```
 
 	### Untyped constructions
 
@@ -256,7 +251,6 @@
 
 			All three have the same parameters with exception to remove which only has SymbolInfo and Policy:
 			* SymbolInfo:
-					Markers are
 				* File      : The file the symbol resides in.
 					Leave null to indicate to search all files.
 				* Marker    : #define symbol that indicates a location or following signature is valid to manipulate.
