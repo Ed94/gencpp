@@ -179,7 +179,7 @@ u8                _64_Align[23];
 ```
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of u32*
-*'OperatorT' is a typedef for 'EOperator::Type' which has an underlying type of u32.
+*`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of u32.*
 
 ASTs can be set to readonly by calling Code's lock() member function.
 Adding comments is always available even if the AST is set to readonly.
@@ -236,8 +236,7 @@ Code <name>
 
 ### Incremental construction
 
-A Code ast is provided but only completed upfront if all components are provided.
-Components are then added using the AST API for adding ASTs:
+A Code AST is provided but the body is not complete.
 
 * code.add( AST* )                     // Adds AST with validation.
 * code.add_entry( AST* )               // Adds AST entry without validation.
@@ -326,9 +325,9 @@ Interface :
 * untyped_fmt
 * untyped_token_fmt
 
-During serialization any untyped Code AST is has its string value directly injected inline of
+During serialization any untyped Code AST has its string value directly injected inline of
 whatever context the content existed as an entry within.
-Even though thesee are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that
+Even though these are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that
 Untyped code can be added as any component of a Code AST:
 
 * Untyped code cannot have children, thus there cannot be recursive injection this way.
@@ -347,7 +346,7 @@ Code <name> = def_varaible( <type>, <name>, untyped_<function name>(
 Template metaprogramming in the traditional sense becomes possible with the use of `token_fmt` and parse constructors:
 
 ```cpp
-char const* token_key, token_value;
+char const* token_key, token_value, ...;
 char const* template = txt(
     Code with {key value} to replace with token_values
     ...
@@ -369,9 +368,9 @@ Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FE
 ### Builder is a similar object to the jai language's string_builder.
 
 * The purpose of it is to generate a file.
-* A file is specified and opened for writting using the open( file_path) ) fucntion.
+* A file is specified and opened for writting using the open( file_path) ) function.
 * The code is provided via print( code ) function  will be seralized to its buffer.
-* When all seralization is finished, use the write() comamnd to write the buffer to the file.
+* When all seralization is finished, use the write() command to write the buffer to the file.
 
 ### Editor is for editing a series of files based on a set of requests provided to it.
 
@@ -457,7 +456,7 @@ This is technically what the macro preprocessor does in a basic form, however a 
 
 The drawback naturally is generation functions, at face value, are harder to grasp than something following a template pattern (for simple generation). This drawback becomes less valid the more complex the code generation becomes.
 
-Thus a rule of thumb is if its a simple definition you can get away with just the preprocessor `#define`, or if the templates being used don't break the debugger or your compile times, this is most likely not neded.
+Thus a rule of thumb is if its a simple definition you can get away with just the preprocessor `#define`, or if the templates being used don't break the debugger or your compile times, this is most likely not needed.
 
 However, if the code being generated becomes complex, or from a datatable or database, this will be easier to deal with.
 
