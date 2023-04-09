@@ -64,12 +64,12 @@ The user is given `Code` typed objects that are used to build up the AST.
 
 Example using each construction interface:
 
-#### Upfrontl
+#### Upfront
 
 ```cpp
 Code t_uw           = def_type( name(uw) );
 Code t_allocator    = def_type( name(allocator) );
-Code t_string_cosnt = def_type( name(char), def_specifiers( 3, ESpecifier::Const, ESpeciifer::Ptr ) );
+Code t_string_cosnt = def_type( name(char), def_specifiers( 2, ESpecifier::Const, ESpecifier::Ptr ) );
 
 Code header;
 {
@@ -133,8 +133,7 @@ Code header = untyped_str(
 ```
 
 `name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.
-`code` is a helper macro for providing a string literal with its size, but intended for a code string parameters.
-
+`code` is a helper macro for providing a string literal with its size, but intended for code string parameters.
 
 All three constrcuton interfaces will generate the following C code:
 
@@ -151,7 +150,7 @@ struct ArrayHeader
 
 ## Gen's DSL
 
-If you don't mind a low amount of macros (29 lines), a DSL may be optionally defined with:
+If you don't mind a low amount of macros (61 sloc), a DSL may be optionally defined with:
 
 ```cpp
 GEN_DEFINE_DSL
@@ -372,7 +371,7 @@ Interface :
 Usage:
 
 ```cpp
-Code <name> = parse_<function name>( string with code );
+Code <name> = parse_<function name>( <string with code> );
 
 Code <name> = def_<function name>( ..., parse_<function name>(
     <string with code>
@@ -539,7 +538,7 @@ However, if:
 * You enjoy actually *seeing* the generated code instead of just the error symbols or the pdb symbols.
 * You value your debugging expereince, and would like to debug your metaprogram, without having to step through the debug version of the compiler (if you even can)
 * Want to roll your own reflection system
-* Want to maintain a series of libraries for internal use, but don't want to deal with manaual merging as often when they update.
+* Want to maintain a series of libraries for internal use, but don't want to deal with manual merging as often when they update.
 * Want to create tailored headers for your code or for your libraries since you usually don't need the majority of the code within them.
 
 Then this might help you boostrap a toolset todo so.
