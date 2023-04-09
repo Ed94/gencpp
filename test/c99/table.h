@@ -5,7 +5,7 @@
 typedef u64(*)(void*) HashingFn;
 
 #if gen_time
-#	define gen_table( Type_, HashingFn_ ) gen_request_table( #Type_, sizeof(Type_), HashingFn_ ) 
+#	define gen_table( Type_, HashingFn_ ) gen_request_table( #Type_, sizeof(Type_), HashingFn_ )
 
 	u64 table_default_hash_fn( void* address )
 	{

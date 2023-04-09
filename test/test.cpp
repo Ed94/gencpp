@@ -1,9 +1,7 @@
 #include "Bloat.cpp"
-#include "math.hpp"
-#include "Array.hpp"
 
 
-#ifdef gen_time
+#ifdef gentime
 #include "gen.cpp"
 
 int gen_main()
@@ -15,23 +13,15 @@ int gen_main()
 
 	gen::init();
 
-	int 
-	result = gen_math();
-	// result = gen_array_file();
-
 	Memory::cleanup();
 	return result;
 }
 #endif
 
 
-#ifndef gen_time
-#include "math.hpp"
-
+#ifdef runtime
 int main()
 {
-	u32 result = square( 5U );
-
-	zpl_printf("TEST RESULT: %d", result);
+	return 0;
 }
 #endif
