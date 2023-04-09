@@ -9,7 +9,9 @@ namespace Global
 
 namespace Memory
 {
-	arena Global_Arena {};
+	using namespace zpl;
+
+	Arena Global_Arena {};
 
 	void setup()
 	{
@@ -68,10 +70,10 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 			TokEntry entry
 			{
 				value,
-				zpl_strnlen(value, (sw)128)
+				strnlen(value, (sw)128)
 			};
 
-			u32 key = crc32( token, zpl_strnlen(token, 32) );
+			u32 key = crc32( token, strnlen(token, 32) );
 
 			tokmap_set( & tok_map, key, entry );
 		}

@@ -4,14 +4,14 @@
 #ifdef gen_time
 namespace gen
 {
-	ZPL_TABLE_DEFINE( StringTable, str_tbl_,   string );
+	ZPL_TABLE_DEFINE( StringTable, str_tbl_,   String );
 	ZPL_TABLE_DEFINE( TypeTable,   type_tbl_ , Code   );
 
 	namespace StaticData
 	{
 	#ifndef GEN_CODE_USE_SOA
-		static array(pool) CodePools;
-		static array(pool) CodeEntriesPools;
+		static Array(Pool) CodePools;
+		static Array(Pool) CodeEntriesPools;
 
 	#else
 		using DataUnion = union
@@ -67,7 +67,7 @@ namespace gen
 		}
 	#endif
 
-		static array(arena) StringArenas =  nullptr;
+		static Array(Arena) StringArenas =  nullptr;
 
 		static StringTable StringMap;
 		static TypeTable   TypeMap;
@@ -80,11 +80,11 @@ namespace gen
 
 		static sw SizePer_StringArena          = megabytes(32);
 
-		static allocator Allocator_CodePool        = heap();
-		static allocator Allocator_CodeEntriesPool = heap();
-		static allocator Allocator_StringArena     = heap();
-		static allocator Allocator_StringTable     = heap();
-		static allocator Allocator_TypeTable       = heap();
+		static AllocatorInfo Allocator_CodePool        = heap();
+		static AllocatorInfo Allocator_CodeEntriesPool = heap();
+		static AllocatorInfo Allocator_StringArena     = heap();
+		static AllocatorInfo Allocator_StringTable     = heap();
+		static AllocatorInfo Allocator_TypeTable       = heap();
 	}
 
 #pragma region CONSTANTS
@@ -124,6 +124,21 @@ namespace gen
 			using namespace ECode;
 
 			case Untyped:
+			break;
+
+			case Enum:
+			break;
+
+			case Enum_FwdDecl:
+			break;
+
+			case Enum_Body:
+			break;
+
+			case Enum_Class:
+			break;
+
+			case Enum_Class_FwdDecl:
 			break;
 
 			case Global_Body:
@@ -177,7 +192,58 @@ namespace gen
 
 	bool AST::check()
 	{
+		switch ( Type )
+		{
+			using namespace ECode;
 
+			case Untyped:
+			break;
+
+			case Global_Body:
+			break;
+
+			case Function:
+			break;
+
+			case Function_Body:
+			break;
+
+			case Function_FwdDecl:
+			break;
+
+			case Namespace:
+			break;
+
+			case Namespace_Body:
+			break;
+
+			case Parameters:
+			break;
+
+			case Specifiers:
+			break;
+
+			case Struct:
+			break;
+
+			case Struct_Body:
+			break;
+
+			case Variable:
+			break;
+
+			case Typedef:
+			break;
+
+			case Typename:
+			break;
+
+			case Using:
+			break;
+		}
+
+
+		return true;
 	}
 
 	AST* AST::duplicate()
@@ -244,9 +310,9 @@ namespace gen
 		}
 	}
 
-	string AST::to_string() const
+	String AST::to_string() const
 	{
-		string result = string_make( g_allocator, "" );
+		String result = string_make( g_allocator, "" );
 
 		if ( Comment )
 			result = string_append_fmt( result, "// %s\n", Comment );
@@ -256,44 +322,44 @@ namespace gen
 			using namespace ECode;
 
 			case Invalid:
-				fatal("Attempted to serialize invalid code! - %s", Name);
+				log_failure("Attempted to serialize invalid code! - %s", Name);
 			break;
 
 			case Untyped:
-				result = string_append_length( result, Content, string_length(Content) );
+				result = string_append_length( result, Content, string_length( ccast(String, Content)) );
 			break;
 
-			case Function_FwdDecl:
-			{
-				u32 index = 0;
-				u32 left  = array_count( Entries );
+			case Access_Public:
+			case Access_Protected:
+			case Access_Private:
+				result = string_append_length( result, Name, string_length( ccast(String, Name)) ) ;
+			break;
 
-				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
+			case Class:
+			break;
 
-				if ( Entries[index]->Type == Specifiers )
-				{
-					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
-					index++;
-					left--;
-				}
+			case Class_FwdDecl:
+			break;
 
-				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
+			case Class_Body:
+			break;
 
-				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
-				index++;
-				left--;
+			case Enum:
+			break;
 
-				if ( left && Entries[index]->Type == Parameters )
-				{
-					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
-					index++;
-					left--;
-				}
+			case Enum_FwdDecl:
+			break;
 
-				result = string_appendc( result, ");\n" );
-			}
+			case Enum_Body:
+			break;
+
+			case Enum_Class:
+			break;
+
+			case Enum_Class_FwdDecl:
+			break;
+
+			case Friend:
 			break;
 
 			case Function:
@@ -302,7 +368,7 @@ namespace gen
 				u32 left  = array_count( Entries );
 
 				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
+					log_failure( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
 
 				if ( Entries[index]->Type == Specifiers )
 				{
@@ -312,7 +378,7 @@ namespace gen
 				}
 
 				if ( left <= 0 )
-					fatal( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
+					log_failure( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
 
 				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
 				index++;
@@ -329,16 +395,58 @@ namespace gen
 			}
 			break;
 
+			case Function_FwdDecl:
+			{
+				u32 index = 0;
+				u32 left  = array_count( Entries );
+
+				if ( left <= 0 )
+					log_failure( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
+
+				if ( Entries[index]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
+					index++;
+					left--;
+				}
+
+				if ( left <= 0 )
+					log_failure( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
+
+				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
+				index++;
+				left--;
+
+				if ( left && Entries[index]->Type == Parameters )
+				{
+					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
+					index++;
+					left--;
+				}
+
+				result = string_appendc( result, ");\n" );
+			}
+			break;
+
 			case Function_Body:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
+			break;
+
+			case Global_Body:
 			break;
 
 			case Namespace:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
 			break;
 
 			case Namespace_Body:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
+			break;
+
+			case Operator:
+			break;
+
+			case Operator_FwdDecl:
 			break;
 
 			case Parameters:
@@ -361,19 +469,22 @@ namespace gen
 			break;
 
 			case Struct:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
+			break;
+
+			case Struct_FwdDecl:
 			break;
 
 			case Struct_Body:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
 			break;
 
 			case Variable:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
 			break;
 
 			case Typedef:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
 			break;
 
 			case Typename:
@@ -381,7 +492,7 @@ namespace gen
 			break;
 
 			case Using:
-				fatal("NOT SUPPORTED YET");
+				log_failure("NOT SUPPORTED YET");
 			break;
 		}
 
@@ -394,10 +505,10 @@ namespace gen
 #pragma region Gen Interface
 	void init()
 	{
-		array_init( StaticData::CodePool, StaticData::Allocator_CodePool );
+		array_init( StaticData::CodePools, StaticData::Allocator_CodePool );
 		array_init( StaticData::StringArenas, heap() );
 
-		arena string_arena;
+		Arena string_arena;
 		arena_init_from_allocator( & string_arena, StaticData::Allocator_StringArena, StaticData::SizePer_StringArena );
 
 		str_tbl_init(  & StaticData::StringMap, StaticData::Allocator_StringTable );
@@ -443,8 +554,8 @@ namespace gen
 		spec_constexpr_write = ccast( Code, spec_constexpr );
 		spec_constexpr_write = def_specifiers( 1, ESpecifier::Constexpr );
 
-	#	define def_constant_spec( Type_, ... )                              \
-		Code&                                                               \
+	#	define def_constant_spec( Type_, ... )                                    \
+		Code&                                                                     \
 		spec_##Type_ = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
 		spec_##Type_.lock();
 
@@ -461,7 +572,7 @@ namespace gen
 			s32 left = 0;
 			while (( left-- ))
 			{
-				pool* code_pool = & StaticData::CodePools[index];
+				Pool* code_pool = & StaticData::CodePools[index];
 				pool_free( code_pool );
 			}
 
@@ -474,7 +585,7 @@ namespace gen
 			s32 left = 0;
 			while (( left-- ))
 			{
-				pool* code_entries_pool = & StaticData::CodeEntriesPools[index];
+				Pool* code_entries_pool = & StaticData::CodeEntriesPools[index];
 				pool_free( code_entries_pool );
 			}
 
@@ -482,13 +593,13 @@ namespace gen
 		}
 	}
 
-	allocator get_string_allocator( s32 str_length )
+	AllocatorInfo get_string_allocator( s32 str_length )
 	{
 		using namespace StaticData;
 
 		if ( StringArenas->total_allocated + str_length > StringArenas->total_size )
 		{
-			arena new_arena;
+			Arena new_arena;
 			arena_init_from_allocator( & new_arena, Allocator_StringArena, SizePer_StringArena );
 
 			array_append( StringArenas, new_arena );
@@ -506,7 +617,7 @@ namespace gen
 
 		u32 key = crc32( cstr, hash_length );
 
-		string* result = str_tbl_get( & StaticData::StringMap, key );
+		String* result = str_tbl_get( & StaticData::StringMap, key );
 
 		if ( result )
 		{
@@ -532,11 +643,6 @@ namespace gen
 
 
 
-		array_append( CodePool, Invalid );
-
-		return pcast( Code, array_back( CodePool ));
-
-
 #	else
 
 		array_append( CodePool::Type, ECode::Invalid );
@@ -551,7 +657,7 @@ namespace gen
 #	endif
 	}
 
-	array(AST*) make_code_entries()
+	Array(AST*) make_code_entries()
 	{
 
 	}
@@ -561,14 +667,24 @@ namespace gen
 
 	}
 
+	void set_allocator_code_pool( AllocatorInfo pool_allocator )
+	{
+		StaticData::Allocator_CodePool = pool_allocator;
+	}
+
+	void set_allocator_string_arena( AllocatorInfo string_allocator )
+	{
+		StaticData::Allocator_StringArena = string_allocator;
+	}
+
+	void set_allocator_string_table( AllocatorInfo string_allocator )
+	{
+		StaticData::Allocator_StringArena = string_allocator;
+	}
+
 	void set_init_reserve_code_pool( sw size )
 	{
 		StaticData::InitSize_CodePool = size;
-	}
-
-	void set_init_reserve_string_arena( sw size )
-	{
-		StaticData::InitSize_StringArena = size;
 	}
 
 	void set_init_reserve_string_table( sw size )
@@ -581,42 +697,44 @@ namespace gen
 		StaticData::InitSize_TypeTable = size;
 	}
 
-	void set_allocator_code_pool( allocator pool_allocator )
-	{
-		StaticData::Allocator_CodePool = pool_allocator;
-	}
-
-	void set_allocator_string_arena( allocator string_allocator )
-	{
-		StaticData::Allocator_StringArena = string_allocator;
-	}
-
-	void set_allocator_string_table( allocator string_allocator )
-	{
-		StaticData::Allocator_StringArena = string_allocator;
-	}
-
-	void set_allocator_type_table( allocator type_reg_allocator )
+	void set_allocator_type_table( AllocatorInfo type_reg_allocator )
 	{
 		StaticData::Allocator_TypeTable = type_reg_allocator;
 	}
+
+	void set_size_string_arena( sw size )
+	{
+		StaticData::SizePer_StringArena = size;
+	}
+
+#	pragma region Helper Functions
+	// This snippet is required in nearly all the functions.
+#	define name_check( Context_, Length_, Name_ )                                           \
+	do                                                                                      \
+	{                                                                                       \
+		if ( Length_ <= 0 )                                                                 \
+		{                                                                                   \
+			log_failure( "gen::%s: Invalid name length provided - %d", #Context_, length ); \
+			return Code::Invalid;                                                           \
+		}                                                                                   \
+                                                                                            \
+		if ( Name_ == nullptr )                                                             \
+		{                                                                                   \
+			log_failure( "gen::%s: name is null", #Context_);                               \
+			return Code::Invalid;                                                           \
+		}                                                                                   \
+	}                                                                                       \
+	while (0)
+
+
+#	pragma endregion Helper Functions
 
 #	pragma region Upfront Constructors
 	Code def_class( s32 length, char const* name, Code parent, Code specifiers, Code body )
 	{
 		using namespace ECode;
 
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_class: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_class: name is null");
-			return Code::Invalid;
-		}
+		name_check( def_class, length, name );
 
 		if ( parent && parent->Type != Class || parent->Type != Struct )
 		{
@@ -634,8 +752,6 @@ namespace gen
 		result       = make_code();
 		result->Name = cached_string( name, length );
 
-		array_init( result->Entries, StaticData::Allocator_CodePool );
-
 		if ( body )
 		{
 			switch ( body->Type )
@@ -649,7 +765,8 @@ namespace gen
 					return Code::Invalid;
 			}
 
-			result->Type = Class;
+			result->Type    = Class;
+			result->Entries = make_code_entries();
 			result->add_entry( body );
 		}
 		else
@@ -671,17 +788,7 @@ namespace gen
 	{
 		using namespace ECode;
 
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_enum: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_class: name is null" );
-			return Code::Invalid;
-		}
+		name_check( def_enum, length, name );
 
 		if ( type && type->Type != Typename )
 		{
@@ -709,6 +816,7 @@ namespace gen
 			result->Type = specifier == EnumClass ?
 				Enum_Class : Enum;
 
+			result->Entries = make_code_entries();
 			result->add_entry( body );
 		}
 		else if ( specifier == EnumClass )
@@ -726,6 +834,37 @@ namespace gen
 		return result;
 	}
 
+	Code def_friend( Code symbol )
+	{
+		using namespace ECode;
+
+		if ( ! symbol )
+		{
+			log_failure( "gen::def_friend: symbol provided is null!" );
+		}
+
+		if ( symbol == Code::Invalid )
+		{
+			log_failure("gen::def_friend: symbol provided is invalid!" );
+			return;
+		}
+
+		switch ( symbol->Type )
+		{
+			case Class_FwdDecl:
+			case Function_FwdDecl:
+			case Operator_FwdDecl:
+			case Struct_FwdDecl:
+			break;
+
+			default:
+				log_failure("gen::def_friend: symbol cannot be used with friend, must be a forward declare - %s", symbol->debug_str());
+				return;
+		}
+
+
+	}
+
 	Code def_function( s32 length, char const* name
 		, Code specifiers
 		, Code params
@@ -735,17 +874,7 @@ namespace gen
 	{
 		using namespace ECode;
 
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_function: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_function: name is null" );
-			return Code::Invalid;
-		}
+		name_check( def_function, length, name );
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
@@ -817,17 +946,7 @@ namespace gen
 	{
 		using namespace ECode;
 
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_namespace: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_namespace: name is null" );
-			return Code::Invalid;
-		}
+		name_check( def_namespace, length, name );
 
 		Code
 		result       = make_code();
@@ -881,17 +1000,7 @@ namespace gen
 	{
 		using namespace ECode;
 
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_function: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_function: name is null" );
-			return Code::Invalid;
-		}
+		name_check( def_struct, length, name );
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
@@ -912,11 +1021,10 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Type = Struct;
-		result->Name = cached_string( name, length );
-
-		array_init( result->Entries, g_allocator );
+		result          = make_code();
+		result->Type    = Struct;
+		result->Name    = cached_string( name, length );
+		result->Entries = make_code_entries();
 
 		if ( body )
 			result->add_entry( body );
@@ -932,17 +1040,7 @@ namespace gen
 
 	Code def_variable( Code type, u32 length, char const* name, Code value, Code specifiers )
 	{
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_function: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_function: name is null" );
-			return Code::Invalid;
-		}
+		name_check( def_variable, length, name );
 
 		if ( specifiers && specifiers->Type != ECode::Specifiers )
 		{
@@ -963,11 +1061,10 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Name = cached_string( name, length );
-		result->Type = ECode::Variable;
-
-		array_init( result->Entries, g_allocator );
+		result          = make_code();
+		result->Name    = cached_string( name, length );
+		result->Type    = ECode::Variable;
+		result->Entries = make_code_entries();
 
 		if ( specifiers )
 			result->add_entry( specifiers );
@@ -982,17 +1079,7 @@ namespace gen
 
 	Code def_type( u32 length, char const* name,  Code specifiers )
 	{
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_function: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_function: name is null" );
-			return Code::Invalid;
-		}
+		name_check( def_type, length, name );
 
 		Code
 		result       = make_code();
@@ -1004,17 +1091,7 @@ namespace gen
 
 	Code def_using( u32 length, char const* name, Code type, UsingT specifier )
 	{
-		if ( length <= 0 )
-		{
-			log_failure( "gen::def_function: Invalid name length provided - %d", length );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::def_function: name is null" );
-			return Code::Invalid;
-		}
+		name_check( def_using, length, name );
 
 		Code
 		result       = make_code();
@@ -1259,7 +1336,7 @@ namespace gen
 		Code type = va_arg(va, Code);
 
 		char const* name        = va_arg(va, char const*);
-		s32         name_length = zpl_strnlen(name, MaxNameLength);
+		s32         name_length = strnlen(name, MaxNameLength);
 
 		result->Name = cached_string( name, name_length );
 
@@ -1278,7 +1355,7 @@ namespace gen
 			type = va_arg(va, Code);
 
 			name        = va_arg(va, char const*);
-			name_length = zpl_strnlen(name, MaxNameLength);
+			name_length = strnlen(name, MaxNameLength);
 
 			Code
 			param       = make_code();
@@ -1312,12 +1389,12 @@ namespace gen
 	Code def_specifiers( s32 num, ... )
 	{
 		if ( num <= 0 )
-			fatal("gen::make_specifier: num cannot be zero or less");
+			log_failure("gen::make_specifier: num cannot be zero or less");
 
 		// This should be more than enough...
 		static u8 FixedSizedBuffer[kilobytes(1024)];
 
-		static arena str_arena;
+		static Arena str_arena;
 		do_once_start
 			arena_init_from_memory( & str_arena, FixedSizedBuffer, kilobytes(1024) );
 		do_once_end
@@ -1326,7 +1403,7 @@ namespace gen
 		result          = make_code();
 		result->Type    = ECode::Specifiers;
 
-		string crafted = string_make( arena_allocator( & str_arena ), "" );
+		String crafted = string_make( arena_allocator( & str_arena ), "" );
 
 		va_list va;
 		va_start(va, num);
@@ -1337,13 +1414,13 @@ namespace gen
 			switch ( type )
 			{
 				case ESpecifier::Alignas:
-					crafted = string_append_fmt( result->Content, "%s(%d)", ESpecifier::to_str(type), va_arg(va, u32) );
+					crafted = string_append_fmt( (String)result->Content, "%s(%d)", ESpecifier::to_str(type), va_arg(va, u32) );
 				break;
 
 				default:
 					const char* str = ESpecifier::to_str(type);
 
-					crafted = string_append_fmt( result->Content, "%s", str );
+					crafted = string_append_fmt( (String)result->Content, "%s", str );
 				break;
 			}
 		}
@@ -1429,6 +1506,8 @@ namespace gen
 	{
 		using namespace ECode;
 
+		name_check( make_function, length, name );
+
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
 			log_failure( "gen::def_function: specifiers was not a `Specifiers` type" );
@@ -1472,14 +1551,15 @@ namespace gen
 		return result;
 	}
 
-	Code make_global_body( char const* name = "", s32 num = 0, ... )
+	Code make_global_body( s32 length, char const* name, s32 num, ... )
 	{
-		Code
-		result = make_code();
-		result->Type = ECode::Global_Body;
-		result->Name = string_make( g_allocator, "");
+		name_check( make_global_body, length, name );
 
-		array_init( result->Entries, g_allocator );
+		Code
+		result          = make_code();
+		result->Type    = ECode::Global_Body;
+		result->Name    = cached_string( name, length );
+		result->Entries = make_code_entries();
 
 		// Making body at entry 0;
 		result->add_entry( make_code() );
@@ -1507,9 +1587,11 @@ namespace gen
 
 	}
 
-	Code make_struct( char const* name, Code parent, Code specifiers )
+	Code make_struct( s32 length, char const* name, Code parent, Code specifiers )
 	{
 		using namespace ECode;
+
+		name_check( make_struct, length, name );
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
@@ -1527,7 +1609,7 @@ namespace gen
 		result          = make_code();
 		result->Type    = Struct;
 		result->Name    = string_make( g_allocator, name );
-		result->Entires = make_code_entries();
+		result->Entries = make_code_entries();
 
 		Code
 		body          = make_code();
@@ -1575,7 +1657,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		arena mem;
+		Arena mem;
 		do_once_start
 		{
 			arena_init_from_allocator( & mem, heap(), kilobytes( 10 ) );
@@ -1600,7 +1682,7 @@ namespace gen
 		Param Params[ 64 ] { 0 };
 
 		// Zero out params before a run of this func.
-		zpl_memset( Params, 0, sizeof( Params ));
+		memset( Params, 0, sizeof( Params ));
 
 		char const* name;
 		s32         name_length = 0;
@@ -1741,7 +1823,7 @@ namespace gen
 
 	Code parse_struct( s32 length, char const* def )
 	{
-		arena mem;
+		Arena mem;
 		do_once_start
 			arena_init_from_allocator( & mem, heap(), kilobytes( 10 ) );
 		do_once_end
@@ -1848,7 +1930,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, fmt);
-		zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
+		snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
 		va_end(va);
 
 		Code
@@ -1892,11 +1974,11 @@ namespace gen
 
 	bool Builder::open( char const* path )
 	{
-		file_error error = file_open_mode( & File, ZPL_FILE_MODE_WRITE, path );
+		FileError error = file_open_mode( & File, EFileMode_WRITE, path );
 
-		if ( error != ZPL_FILE_ERROR_NONE )
+		if ( error != EFileError_NONE )
 		{
-			fatal( "gen::File::open - Could not open file: %s", path);
+			log_failure( "gen::File::open - Could not open file: %s", path);
 			return false;
 		}
 
@@ -1910,7 +1992,7 @@ namespace gen
 		bool result = file_write( & File, Buffer, string_length(Buffer) );
 
 		if ( result == false )
-			fatal("gen::File::write - Failed to write to file: %s", file_name( & File ) );
+			log_failure("gen::File::write - Failed to write to file: %s", file_name( & File ) );
 
 		// file_seek( & File, 0 );
 		file_close( & File );

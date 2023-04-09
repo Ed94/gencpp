@@ -9,7 +9,7 @@
 #	define ZPL_IMPLEMENTATION
 #endif
 
-
+// TODO: This will be removed when making the library have zero dependencies.
 #pragma region 									ZPL INCLUDE
 #if __clang__
 #	pragma clang diagnostic push
@@ -18,6 +18,7 @@
 #endif
 
 // #   define ZPL_HEAP_ANALYSIS
+#	define ZPL_WRAP_IN_NAMESPACE
 #	define ZPL_NO_MATH_H
 #	define ZPL_CUSTOM_MODULES
 #		define ZPL_MODULE_ESSENTIALS
@@ -34,6 +35,48 @@
 // #		define ZPL_MODULE_JOBS
 // #		define ZPL_MODULE_PARSER
 #include "zpl.h"
+
+using zpl::s8;
+using zpl::s16;
+using zpl::s32;
+using zpl::s64;
+using zpl::u8;
+using zpl::u32;
+using zpl::u64;
+using zpl::uw;
+using zpl::sw;
+
+using zpl::Arena;
+using zpl::AllocatorInfo;
+using zpl::ArrayHeader;
+using zpl::FileInfo;
+using zpl::FileError;
+using zpl::Pool;
+using zpl::String;
+// using zpl::StringHeader;
+
+using zpl::EFileMode_WRITE;
+using zpl::EFileError_NONE;
+
+using zpl::arena_allocator;
+using zpl::arena_init_from_memory;
+using zpl::arena_free;
+using zpl::char_is_alpha;
+using zpl::char_is_space;
+using zpl::crc32;
+using zpl::memset;
+using zpl::pool_free;
+using zpl::printf_va;
+using zpl::printf_err_va;
+using zpl::snprintf_va;
+using zpl::string_appendc;
+using zpl::string_append_fmt;
+using zpl::string_append_length;
+using zpl::string_length;
+using zpl::string_make;
+using zpl::strnlen;
+// using zpl::
+
 
 #if __clang__
 #	pragma clang diagnostic pop
@@ -135,7 +178,7 @@ namespace Memory
 {
 	ct uw Initial_Reserve = megabytes(10);
 
-	extern arena Global_Arena;
+	extern Arena Global_Arena;
 	// #define g_allocator arena_allocator( & Memory::Global_Arena)
 
 	// Heap allocator is being used for now to isolate errors from being memory related (tech debt till ready to address)
@@ -172,7 +215,7 @@ sw log_fmt(char const *fmt, ...)
 	va_list va;
 
 	va_start(va, fmt);
-	res = zpl_printf_va(fmt, va);
+	res = printf_va(fmt, va);
 	va_end(va);
 
 	return res;
@@ -188,17 +231,17 @@ sw fatal(char const *fmt, ...)
 
 #if Build_Debug
 	va_start(va, fmt);
-	zpl_snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
+	zpl::snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
 	va_end(va);
 
 	assert_crash(buf);
 	return -1;
 #else
 	va_start(va, fmt);
-	zpl_printf_err_va( fmt, va);
+	printf_err_va( fmt, va);
 	va_end(va);
 
-	zpl_exit(1);
+	exit(1);
 	return -1;
 #endif
 }

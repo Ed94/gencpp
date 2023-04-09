@@ -368,7 +368,7 @@ namespace gen
 		Entry( Namespace )          \
 		Entry( Namespace_Body )     \
 		Entry( Operator )           \
-		Entry( Operator_Fwd )       \
+		Entry( Operator_FwdDecl )   \
 		Entry( Parameters )         \
 		Entry( Specifiers )         \
 		Entry( Struct )             \
@@ -580,7 +580,7 @@ namespace gen
 				{
 					char const* enum_str = to_str( (Type)index );
 
-					keymap[index] = crc32( enum_str, zpl_strnlen(enum_str, 42) );
+					keymap[index] = crc32( enum_str, strnlen(enum_str, 42) );
 				}
 			do_once_end
 
@@ -684,7 +684,7 @@ namespace gen
 			// Thus if its desired to keep the debug str
 			// for multiple calls to bprintf,
 			// allocate this to proper string.
-			return bprintf( fmt
+			return zpl::bprintf( fmt
 			,	type_str()
 			,	Readonly ? "true"       : "false"
 			,	Parent   ? Parent->Name : ""
@@ -699,7 +699,7 @@ namespace gen
 			return ECode::str( Type );
 		}
 
-		string to_string() const;
+		String to_string() const;
 #	pragma endregion Member Functions
 
 #		define Using_Code_POD            \
@@ -707,7 +707,7 @@ namespace gen
 		string_const      Name;          \
 		string_const      Comment;       \
 		union {                          \
-			array(AST*)   Entries;       \
+			Array(AST*)   Entries;       \
 			string_const  Content;       \
 		};                               \
 		CodeT             Type;          \
@@ -851,7 +851,7 @@ namespace gen
 	/*
 		Implements basic string interning. Data structure is based off the ZPL Hashtable.
 	*/
-	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, string );
+	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, String );
 
 	// Represents strings cached with the string table.
 	// Should never be modified, if changed string is desired, cache_string( str ) another.
@@ -895,20 +895,21 @@ namespace gen
 		This provides a fresh Code AST array for the entries field of the AST.
 		This is done separately from the regular CodePool allocator.
 	*/
-	array(AST*) make_code_entries();
+	Array(AST*) make_code_entries();
 
 	// Set these before calling gen's init() procedure.
 
+	void set_allocator_code_pool   ( AllocatorInfo pool_allocator );
+	void set_allocator_string_arena( AllocatorInfo string_allocator );
+	void set_allocator_string_table( AllocatorInfo string_allocator );
+	void set_allocator_type_table  ( AllocatorInfo type_reg_allocator );
+
 	void set_init_reserve_code_pool        ( sw size );
 	void set_init_reserve_code_entries_pool( sw size );
-	void set_init_reserve_string_arena     ( sw size );
 	void set_init_reserve_string_table     ( sw size );
 	void set_init_reserve_type_table       ( sw size );
 
-	void set_allocator_code_pool   ( allocator pool_allocator );
-	void set_allocator_string_arena( allocator string_allocator );
-	void set_allocator_string_table( allocator string_allocator );
-	void set_allocator_type_table  ( allocator type_reg_allocator );
+	void set_size_string_arena( sw size );
 
 #	pragma region Upfront
 	Code def_class          (             char const* name, Code parent = NoCode,                         Code specifiers = NoCode, Code body = NoCode );
@@ -945,7 +946,6 @@ namespace gen
 	Code def_function_body  ( s32 num, Code* codes );
 	Code def_namespace_body ( s32 num, ... );
 	Code def_params         ( s32 num, ... );
-	Code def_params_macro   ( s32 num, ... );
 	Code def_params         ( s32 num, Code* params );
 	Code def_specifiers     ( s32 num , ... );
 	Code def_specifiers     ( s32 num, SpecifierT* specs );
@@ -954,21 +954,21 @@ namespace gen
 #	pragma endregion Upfront
 
 #	pragma region Incremental
-	Code make_class       (             char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
-	Code make_class       ( s32 length, char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
-	Code make_enum        (             char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
-	Code make_enum        ( s32 length, char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
-	Code make_function    (             char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
-	Code make_function    ( s32 length, char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
-	Code make_global_body (             char const* name = "", s32 num = 0, ... );
-	Code make_global_body ( s32 length, char const* name = "", s32 num = 0, ... );
-	Code make_namespace   (             char const* name );
-	Code make_namespace   ( s32 length, char const* name );
-	Code make_operator    (              OperatorT   op,  Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode );
+	Code make_class       (                 char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+	Code make_class       ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+	Code make_enum        (                 char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
+	Code make_enum        ( s32 length,     char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
+	Code make_function    (                 char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
+	Code make_function    ( s32 length,     char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
+	Code make_global_body (                 char const* name = "", s32 num = 0, ... );
+	Code make_global_body ( s32 length = 1, char const* name = "", s32 num = 0, ... );
+	Code make_namespace   (                 char const* name );
+	Code make_namespace   ( s32 length,     char const* name );
+	Code make_operator    (                 OperatorT   op,  Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode );
 	Code make_params      ();
 	Code make_specifiers  ();
-	Code make_struct      (             char const* name, Code parent = NoCode,                         Code specifiers = NoCode );
-	Code make_struct      ( s32 length, char const* name, Code parent = NoCode,                         Code specifiers = NoCode );
+	Code make_struct      (                 char const* name, Code parent = NoCode,                         Code specifiers = NoCode );
+	Code make_struct      ( s32 length,     char const* name, Code parent = NoCode,                         Code specifiers = NoCode );
 #	pragma endregion Incremental
 
 #	pragma region Parsing
@@ -1006,8 +1006,8 @@ namespace gen
 
 	struct Builder
 	{
-		zpl_file File;
-		string   Buffer;
+		FileInfo File;
+		String   Buffer;
 
 		void print( Code );
 
@@ -1054,7 +1054,7 @@ namespace gen
 		{
 			union {
 				SymbolData Symbol;
-				string     Specification;
+				String     Specification;
 			};
 			RequestType    Type;
 		};
@@ -1067,13 +1067,13 @@ namespace gen
 			bool         Result;
 		};
 
-		static allocator Allocator;
+		static AllocatorInfo Allocator;
 
-		static void set_allocator( allocator mem_allocator );
+		static void set_allocator( AllocatorInfo  allocator );
 
-		array(zpl_file)     Files;
-		string              Buffer;
-		array(RequestEntry) Requests;
+		Array(FileInfo)     Files;
+		String              Buffer;
+		Array(RequestEntry) Requests;
 
 		void add_files( s32 num, char const** files );
 
@@ -1085,7 +1085,7 @@ namespace gen
 		void refactor( char const* file_path, char const* specification_path );
 #	endif
 
-		bool process_requests( array(Receipt) out_receipts );
+		bool process_requests( Array(Receipt) out_receipts );
 	};
 #endif
 
@@ -1104,19 +1104,19 @@ namespace gen
 			bool         Result;
 		};
 
-		allocator Allocator;
+		AllocatorInfo MemAlloc;
 
-		static void set_allocator( allocator mem_allocator );
+		static void set_allocator( AllocatorInfo allocator );
 
-		array(zpl_file)     Files;
-		string              Buffer;
-		array(RequestEntry) Requests;
+		Array(FileInfo)     Files;
+		String              Buffer;
+		Array(RequestEntry) Requests;
 
 		void add_files( s32 num, char const** files );
 
 		void add( SymbolInfo signature, Policy policy );
 
-		bool process_requests( array(Receipt) out_receipts );
+		bool process_requests( Array(Receipt) out_receipts );
 	};
 #endif
 #pragma endregion Gen Interface
@@ -1175,8 +1175,8 @@ namespace gen
 #	define macrofn_chooser(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
 #	define macrofn_recomposer(ArgsWithParentheses_) macrofn_chooser ArgsWithParentheses_
 #	define macrofn_chose_from_arg_num(F, ...)       macrofn_recomposer((__VA_ARGS__, F##_16, F##_15, F##_14, F##_13, F##_12, F##_11, F##_10, F##_9, F##_8, F##_7, F##_6, F##_5, F##_4, F##_3, F##_2, F##_1, ))
-#	define marcofn_no_arg_expander(Func)            ,,,,,,,,,,,,,,,,Func_ ## _0
-#	define macrofn_finder(Func_, ...)               macrofn_chose_from_arg_num(Func_, tbc_marcofn_no_arg_expander __VA_ARGS__ (Func_))
+#	define marcofn_no_arg_expander(Func_)           ,,,,,,,,,,,,,,,,Func_ ## _0
+#	define macrofn_finder(Func_, ...)               macrofn_chose_from_arg_num(Func_, marcofn_no_arg_expander __VA_ARGS__ (Func_))
 #	define macrofn_polymorphic(Func_, ...)          macrofn_finder(Func_, __VA_ARGS__)(__VA_ARGS__)
 
 #	define function_5( Name_, Params_, RetType_, Specifiers_, Body_ ) gen::def_function( txt_n_len( Name_ ), macro_expand( Params_ ), type_ns(RetType_), Specifiers_, Body_ )
@@ -1306,91 +1306,91 @@ namespace gen
 	forceinline
 	Code def_class( char const* name, Code parent, Code specifiers, Code body )
 	{
-		return def_class( zpl_strnlen( name, MaxNameLength ), name, parent, specifiers, body );
+		return def_class( strnlen( name, MaxNameLength ), name, parent, specifiers, body );
 	}
 
 	forceinline
 	Code def_enum( char const* name, Code type, EnumT specifier, Code body )
 	{
-		return def_enum( zpl_strnlen( name, MaxNameLength ), name, type, specifier, body );
+		return def_enum( strnlen( name, MaxNameLength ), name, type, specifier, body );
 	}
 
 	forceinline
 	Code def_function( char const* name, Code params, Code ret_type, Code specifiers, Code body )
 	{
-		return def_function( zpl_strnlen( name, MaxNameLength), name, params, ret_type, specifiers, body );
+		return def_function( strnlen( name, MaxNameLength), name, params, ret_type, specifiers, body );
 	}
 
 	forceinline
 	Code def_namespace( char const* name, Code body )
 	{
-		return def_namespace( zpl_strnlen( name, MaxNameLength), name, body );
+		return def_namespace( strnlen( name, MaxNameLength), name, body );
 	}
 
 	forceinline
 	Code def_param( Code type, char const* name )
 	{
-		return def_param( type, zpl_strnlen( name, MaxNameLength ), name );
+		return def_param( type, strnlen( name, MaxNameLength ), name );
 	}
 
 	forceinline
 	Code def_struct( char const* name, Code parent, Code specifiers, Code body )
 	{
-		return def_struct( zpl_strnlen( name, MaxNameLength), name, parent, specifiers, body );
+		return def_struct( strnlen( name, MaxNameLength), name, parent, specifiers, body );
 	}
 
 	forceinline
 	Code def_type( char const* name, Code specifiers )
 	{
-		return def_type( zpl_strnlen( name, MaxNameLength ), name, specifiers );
+		return def_type( strnlen( name, MaxNameLength ), name, specifiers );
 	}
 
 	forceinline
 	Code def_using( char const* name, Code type, UsingT specifier )
 	{
-		return def_using( zpl_strnlen( name, MaxNameLength ), name, type, specifier );
+		return def_using( strnlen( name, MaxNameLength ), name, type, specifier );
 	}
 
 	forceinline
 	Code def_variable( Code type, char const* name, Code value, Code specifiers )
 	{
-		return def_variable( type, zpl_strnlen(name, MaxNameLength ), name, value, specifiers );
+		return def_variable( type, strnlen(name, MaxNameLength ), name, value, specifiers );
 	}
 
 	forceinline
 	Code make_class( char const* name, Code parent, Code specifiers )
 	{
-		return make_class( zpl_strnlen(name, MaxNameLength), name, parent, specifiers );
+		return make_class( strnlen(name, MaxNameLength), name, parent, specifiers );
 	}
 
 	forceinline
 	Code make_enum( char const* name, Code type, Code specifiers )
 	{
-		return make_struct( zpl_strnlen(name, MaxNameLength), name, type, specifiers );
+		return make_struct( strnlen(name, MaxNameLength), name, type, specifiers );
 	}
 
 	forceinline
 	Code make_function( char const* name, Code params, Code ret_type, Code specifiers )
 	{
-		return make_function( zpl_strnlen(name, MaxNameLength), name, params, ret_type, specifiers );
+		return make_function( strnlen(name, MaxNameLength), name, params, ret_type, specifiers );
 	}
 
 	forceinline
 	Code make_namespace( char const* name )
 	{
-		return make_namespace( zpl_strnlen( name, MaxNameLength ), name );
+		return make_namespace( strnlen( name, MaxNameLength ), name );
 	}
 
 	forceinline
 	Code make_struct( char const* name, Code parent, Code specifiers )
 	{
-		return make_struct( zpl_strnlen(name, MaxNameLength), name, parent, specifiers );
+		return make_struct( strnlen(name, MaxNameLength), name, parent, specifiers );
 	}
 
 	forceinline
 	Code untyped_str( char const* str )
 	{
-		return untyped_str( zpl_strnlen( str, MaxUntypedStrLength ), str );
+		return untyped_str( strnlen( str, MaxUntypedStrLength ), str );
 	}
 }
 #pragma endregion Gen Interface Inlines
