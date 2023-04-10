@@ -53,11 +53,11 @@ using zpl::FileInfo;
 using zpl::FileError;
 using zpl::Pool;
 using zpl::String;
-// using zpl::StringHeader;
 
 using zpl::EFileMode_WRITE;
 using zpl::EFileError_NONE;
 
+using zpl::alloc;
 using zpl::arena_allocator;
 using zpl::arena_init_from_memory;
 using zpl::arena_free;
@@ -65,6 +65,8 @@ using zpl::char_is_alpha;
 using zpl::char_is_space;
 using zpl::crc32;
 using zpl::memset;
+using zpl::pool_allocator;
+using zpl::pool_init;
 using zpl::pool_free;
 using zpl::printf_va;
 using zpl::printf_err_va;
@@ -75,7 +77,7 @@ using zpl::string_append_length;
 using zpl::string_length;
 using zpl::string_make;
 using zpl::strnlen;
-// using zpl::
+using zpl::exit;
 
 
 #if __clang__

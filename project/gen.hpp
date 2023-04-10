@@ -11,45 +11,66 @@
 
 	### *WHAT IS NOT PROVIDED*
 
-	* Macro or template generation      : This library is to avoid those, adding support for them adds unnecessary complexity.
-	                                      If you desire define them outside the gen_time scopes.
-	* Expression validation             : Execution expressions are defined using the untyped string API.
-	                                      There is no parse API for validating expressions (possibly will add in the future)
-	* Modern C++ (STL library) features
-	* Modern C++ RTTI                   : This is kinda covered with the last point, but just wanted to emphasize.
+	This library aims to be used in a "orthodox" or minimal C++ workspace.
 
-	Exceptions brought in from "Modern C++":
+	* Macro or template generation                : This library is to avoid those, adding support for them adds unnecessary complexity.
+	* Vendor provided dynamic dispatch (virtuals) : Roll your own, this library might roll its own vtable/interface generation helpers in the future.
+	* RTTI                                        : This is kinda covered with the last point, but just wanted to emphasize.
+	* Exceptions                                  : Most fo the
+	* Execution statement validation              : Execution expressions are defined using the untyped string API.
+
+	Keywords in from "Modern C++":
 		Specifiers:
-		* consteval
-		* constinit
-		* explicit
-		* export
-		* noexcept
-		* import
-		* final
-		* module
-		* override
-		* &&
-		* virtual
+		* constexpr : Great to store compile-time constants, (easier to garanteed when emitted from gentime)
+		* consteval : Technically fine so long as templates are not used. Need to make sure to execute in moderation.
+		* constinit : Better than constexpr at doing its job, however, its only c++ 20.
+		* export    : Useful if c++ modules ever come around to actually being usable.
+		* import    : ^^
+		* module    : ^^
 
-	These features are in as they are just specifiers and aren't hard to implement seralization or validation.
+	These features are in as they either are not horrible when used conservatively or are a performance benefit (modules).
+
+	When it comes to expressions:
+	There is no parse API for validating expressions (possibly will add in the future).
+	This reason there isn't one: thats where the can of worms open for parsing validation.
+	For most metaprogramming (espcially for c/c++), expression validation is not necessary, it can be done by the compiler for the runtime program.
+	Most of the time, the critical complex metaprogramming conundrums are actaully producing the frame of abstractions around the expressions.
+	Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
+
+	To further this point, lets say you do have an error with an expressions composition.
+	It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
+
+	* If its not caught by the compiler, the only downside is the error appers on the generated function.
+		Those with knowledge of how that definition was generated know where to find the code that inlined that expression in that file for that definition.
+	* If its caught at runtime. The expression will be shown in a stack trace if debug symbols are enabled in the generated function body.
+		Yet again those with knowledge of how that definition was generated know where to find the code that inlined that expression.
+
+	In both these cases will get objectively better debug information than you would normally get on most c++ compilers with complex macros or templates.
+
+	### The Data & Interface:
 
 	The AST is managed by the library and provided the user via its interface prodedures.
 
 	Notes:
 
 	* The allocator definitions used are exposed to the user incase they want to dictate memory usage
+		* You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`, and `make_code_entries`.
 	* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
 	* Both AST and Code have member symbols but their data layout is enforced to be POD types.
+	* This library treats memory failures as fatal.
+	* The default setup assumes large definition sets may be provided to bodies so AST::Entires are dynamic arrays.
+		* They're allocated to arenas currently and are pretty wasteful if they go over their reserve size (its never recycled).
+		* Most likely will need to implement a dynamic-sized bucket allocation strategy for the entry arrays if memory is getting stressed.
+		* Otherwise if you are using fixed size entries and your definitions are under 128~512 entries for the body, you may be better of with a fixed-sized array.
 
 	Data layout of AST struct:
 
 	AST*              Parent;
-	string_const      Name;
-	string_const      Comment;
+	CachedString      Name;
+	CachedString      Comment;
 	union {
 		array(AST*)   Entries;
-		string_const  Content;
+		CachedString  Content;
 	};
 	CodeT             Type;
 	OperatorT         Op;
@@ -60,6 +81,19 @@
 
 	ASTs can be set to readonly by calling Code's lock() member function.
 	Adding comments is always available even if the AST is set to readonly.
+
+	Data Notes:
+
+	* The allocator definitions used are exposed to the user incase they want to dictate memory usage
+		* You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`, and `make_code_entries`.
+	* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
+	* Both AST and Code have member symbols but their data layout is enforced to be POD types.
+	* This library treats memory failures as fatal.
+	* The default setup assumes large definition sets may be provided to bodies so AST::Entires are dynamic arrays.
+		* They're allocated to arenas currently and are pretty wasteful if they go over their reserve size (its never recycled).
+		* Most likely will need to implement a dynamic-sized bucket allocation strategy for the entry arrays if memory is getting stressed.
+		* Otherwise if you are using fixed size entries and your definitions are under 128~512 entries for the body, you may be better of with a fixed-sized array.
+	* Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
 
 	### There are four sets of interfaces for Code AST generation the library provides
 
@@ -77,7 +111,7 @@
 
 	* def_class
 	* def_enum
-	* def_enum_class
+	* def_execution       NOTE: This is equivalent to untyped_str, except that its intended for use only in execution scopes.
 	* def_friend
 	* def_function
 	* def_namespace
@@ -318,19 +352,19 @@
 #include "Bloat.hpp"
 
 // Temporarily here for debugging purposes.
-#define gen_time
+#define gentime
 
 
 #define GEN_BAN_CPP_TEMPLATES
-#define GEN_ENFORCE_READONLY_AST
 #define GEN_DEFINE_DSL
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-#define GEN_USE_FATAL
+// #define GEN_DONT_USE_FATAL
+#define GEN_ENFORCE_READONLY_AST
 #define GEN_FEATURE_EDITOR
 #define GEN_FEATURE_SCANNER
 
 
-#ifdef gen_time
+#ifdef gentime
 namespace gen
 {
 	using LogFailType = sw(*)(char const*, ...);
@@ -339,10 +373,12 @@ namespace gen
 #		define template static_assert("Templates are banned within gen_time scope blocks")
 #	endif
 
-#	ifdef GEN_USE_FATAL
-	ct LogFailType log_failure = fatal;
+	// By default this library will either crash or exit if an error is detected while generating codes.
+	// Even if set to not use fatal, fatal will still be used for memory failures as the library is unusable when they occur.
+#	ifdef GEN_DONT_USE_FATAL
+		ct LogFailType log_failure = log_fmt;
 #	else
-	ct LogFailType log_failure = log_fmt;
+		ct LogFailType log_failure = fatal;
 #	endif
 
 	namespace ECode
@@ -350,8 +386,8 @@ namespace gen
 #		define Define_Types         \
 		Entry( Untyped )            \
 		Entry( Access_Public )      \
-		Entry( Access_Private )     \
 		Entry( Access_Protected )   \
+		Entry( Access_Private )     \
 		Entry( Class )              \
 		Entry( Class_FwdDecl )      \
 		Entry( Class_Body )         \
@@ -360,6 +396,7 @@ namespace gen
 		Entry( Enum_Body )          \
 		Entry( Enum_Class )         \
 		Entry( Enum_Class_FwdDecl ) \
+		Entry( Execution )          \
 		Entry( Friend )             \
 		Entry( Function )           \
 		Entry( Function_FwdDecl )   \
@@ -377,7 +414,8 @@ namespace gen
 		Entry( Variable )           \
 		Entry( Typedef )            \
 		Entry( Typename )           \
-		Entry( Using )
+		Entry( Using )              \
+		Entry( Using_Namespace )
 
 		enum Type : u32
 		{
@@ -484,6 +522,9 @@ namespace gen
 		inline
 		char const* str( Type op )
 		{
+			using something = u8;
+			typedef u8 another;
+
 			local_persist
 			char const* lookup[ Num_Ops ] = {
 #				define Entry( Type, Token ) txt(Token),
@@ -704,11 +745,11 @@ namespace gen
 
 #		define Using_Code_POD            \
 		AST*              Parent;        \
-		string_const      Name;          \
-		string_const      Comment;       \
+		StringCached      Name;          \
+		StringCached      Comment;       \
 		union {                          \
 			Array(AST*)   Entries;       \
-			string_const  Content;       \
+			StringCached  Content;       \
 		};                               \
 		CodeT             Type;          \
 		OperatorT         Op;            \
@@ -785,7 +826,7 @@ namespace gen
 		forceinline
 		operator bool() const
 		{
-			return ast && ast->is_invalid();
+			return ast;
 		}
 
 		bool operator ==( Code other ) const
@@ -848,14 +889,12 @@ namespace gen
 	ct Code NoCode = { nullptr };
 	// extern const Code InvalidCode;
 
-	/*
-		Implements basic string interning. Data structure is based off the ZPL Hashtable.
-	*/
+	// Implements basic string interning. Data structure is based off the ZPL Hashtable.
 	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, String );
 
 	// Represents strings cached with the string table.
 	// Should never be modified, if changed string is desired, cache_string( str ) another.
-	using string_const = char const*;
+	using StringCached = char const*;
 
 	/*
 		Type Table: Used to store Typename ASTs. Types are registered by their string literal value.
@@ -868,21 +907,18 @@ namespace gen
 #pragma endregion Data Structures
 
 #pragma region Gen Interface
-	/*
-		Initialize the library.
-		This currently just initializes the CodePool.
-	*/
+	// Initialize the library.
+	// This currently just initializes the CodePool.
 	void init();
 
 	// Use this only if you know you generated the code you needed to a file.
 	// And rather get rid of current code asts instead of growing the pool memory.
+	// This generally can be done everytime a file is generated
 	void clear_code_pool();
 
-	/*
-		Used internally to retrive or make string allocations.
-		Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
-	*/
-	string_const cached_string( char const* cstr, s32 length );
+	// Used internally to retrive or make string allocations.
+	// Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
+	StringCached get_cached_string( char const* cstr, s32 length );
 
 	/*
 		This provides a fresh Code AST.
@@ -891,51 +927,39 @@ namespace gen
 	*/
 	Code make_code();
 
-	/*
-		This provides a fresh Code AST array for the entries field of the AST.
-		This is done separately from the regular CodePool allocator.
-	*/
+	// This provides a fresh Code AST array for the entries field of the AST.
+	// This is done separately from the regular CodePool allocator.
 	Array(AST*) make_code_entries();
 
 	// Set these before calling gen's init() procedure.
+	// Data
 
-	void set_allocator_code_pool   ( AllocatorInfo pool_allocator );
-	void set_allocator_string_arena( AllocatorInfo string_allocator );
-	void set_allocator_string_table( AllocatorInfo string_allocator );
-	void set_allocator_type_table  ( AllocatorInfo type_reg_allocator );
-
-	void set_init_reserve_code_pool        ( sw size );
-	void set_init_reserve_code_entries_pool( sw size );
-	void set_init_reserve_string_table     ( sw size );
-	void set_init_reserve_type_table       ( sw size );
-
-	void set_size_string_arena( sw size );
+	void set_allocator_data_arrays      ( AllocatorInfo data_array_allocator );
+	void set_allocator_code_pool        ( AllocatorInfo pool_allocator );
+	void set_allocator_code_enries_arena( AllocatorInfo pool_allocator );
+	void set_allocator_string_arena     ( AllocatorInfo string_allocator );
+	void set_allocator_string_table     ( AllocatorInfo string_allocator );
+	void set_allocator_type_table       ( AllocatorInfo type_reg_allocator );
 
 #	pragma region Upfront
-	Code def_class          (             char const* name, Code parent = NoCode,                         Code specifiers = NoCode, Code body = NoCode );
 	Code def_class          ( s32 length, char const* name, Code parent = NoCode,                         Code specifiers = NoCode, Code body = NoCode );
-	Code def_enum           (             char const* name, Code type   = NoCode, EnumT specifier = EnumRegular,                    Code body = NoCode);
 	Code def_enum           ( s32 length, char const* name, Code type   = NoCode, EnumT specifier = EnumRegular,                    Code body = NoCode );
+
+	Code def_execution      ( Code untyped_code );
+
 	Code def_friend         ( Code symbol );
-	Code def_function       (             char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_function       ( s32 length, char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
-	Code def_namespace      (             char const* name,                                                                         Code body );
 	Code def_namespace      ( s32 length, char const* name,                                                                         Code body );
 	Code def_operator       (             OperatorT   op,   Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
 
-	Code def_param          ( Code type,             char const* name );
 	Code def_param          ( Code type, s32 length, char const* name );
 
 	Code def_specifier      ( SpecifierT specifier );
 
-	Code def_struct         (             char const* name, Code parent     = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_struct         ( s32 length, char const* name, Code parent     = NoCode, Code specifiers = NoCode, Code body = NoCode );
-	Code def_type           (             char const* name, Code specifiers = NoCode );
 	Code def_type           ( s32 length, char const* name, Code specifiers = NoCode );
-	Code def_using          (             char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
 	Code def_using          ( s32 length, char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
 
-	Code def_variable       ( Code type,             char const* name, Code value = NoCode, Code specifiers = NoCode );
 	Code def_variable       ( Code type, s32 length, char const* name, Code value = NoCode, Code specifiers = NoCode );
 
 	Code def_class_body     ( s32 num, ... );
@@ -954,26 +978,21 @@ namespace gen
 #	pragma endregion Upfront
 
 #	pragma region Incremental
-	Code make_class       (                 char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
 	Code make_class       ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
-	Code make_enum        (                 char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
 	Code make_enum        ( s32 length,     char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
-	Code make_function    (                 char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
-	Code make_function    ( s32 length,     char const* name, Code params = NoCode, Code ret_type   = NoCode,      Code specifiers = NoCode );
-	Code make_global_body (                 char const* name = "", s32 num = 0, ... );
+	Code make_function    ( s32 length,     char const* name, Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
 	Code make_global_body ( s32 length = 1, char const* name = "", s32 num = 0, ... );
-	Code make_namespace   (                 char const* name );
 	Code make_namespace   ( s32 length,     char const* name );
-	Code make_operator    (                 OperatorT   op,  Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode );
+	Code make_operator    (                 OperatorT   op,   Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
 	Code make_params      ();
 	Code make_specifiers  ();
-	Code make_struct      (                 char const* name, Code parent = NoCode,                         Code specifiers = NoCode );
-	Code make_struct      ( s32 length,     char const* name, Code parent = NoCode,                         Code specifiers = NoCode );
+	Code make_struct      ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
 #	pragma endregion Incremental
 
 #	pragma region Parsing
 	Code parse_class      ( s32 length, char const* class_def     );
 	Code parse_enum       ( s32 length, char const* enum_def      );
+	Code parse_execution  ( s32 length, char const* exec_def      );
 	Code parse_friend     ( s32 length, char const* friend_def    );
 	Code parse_function   ( s32 length, char const* fn_def        );
 	Code parse_global_body( s32 length, char const* body_def      );
@@ -998,7 +1017,6 @@ namespace gen
 #	pragma endregion Parsing
 
 #	pragma region Untyped text
-	Code untyped_str      (             char const* str );
 	Code untyped_str      ( s32 length, char const* str);
 	Code untyped_fmt      (             char const* fmt, ... );
 	Code untyped_token_fmt(             char const* fmt, s32 num_tokens, ... );
@@ -1030,7 +1048,7 @@ namespace gen
 
 	struct SymbolInfo
 	{
-		string_const File;
+		StringCached File;
 		char const*  Marker;
 		Code         Signature;
 	};
@@ -1061,7 +1079,7 @@ namespace gen
 
 		struct Receipt
 		{
-			string_const File;
+			StringCached File;
 			Code         Found;
 			Code         Written;
 			bool         Result;
@@ -1099,7 +1117,7 @@ namespace gen
 
 		struct Receipt
 		{
-			string_const File;
+			StringCached File;
 			Code         Defintion;
 			bool         Result;
 		};
@@ -1132,7 +1150,7 @@ namespace gen
 // Used by the DSL but can also be used without it.
 #	define type_ns( Name_ ) t_##Name_
 
-//	Convienence for defining any name used if desring to use library
+//	Convienence for defining any name used with the gen interface.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
 #	define name( Id_ )   txt_n_len( Id_ )
 
@@ -1254,9 +1272,7 @@ namespace gen
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 namespace gen
 {
-	// Predefined typename codes.
-	// These are not set until gen::init is called.
-	// This just preloads a bunch of Code types into the code pool.
+	// Predefined typename codes. Are set to readonly and are setup during gen::init()
 
 	extern Code type_ns( void );
 
@@ -1284,9 +1300,24 @@ namespace gen
 
 namespace gen
 {
+	// These constexprs are used for allocation heavior of data structurs
+	// or string handling while constructing or serializing.
+	// Change them to suit your needs.
+
+	ct s32 InitSize_DataArrays  = 16;
+	ct s32 InitSize_StringTable = megabytes(4);
+	ct s32 InitSize_TypeTable   = megabytes(4);
+
+	ct s32 CodePool_NumBlocks        = 4096;
+	ct s32 CodeEntiresPool_NumBlocks = 4096;
+	ct s32 SizePer_CodeEntriresArena = megabytes(16);
+	ct s32 SizePer_StringArena       = megabytes(32);
+
 	ct s32 MaxNameLength             = 128;
 	ct s32 MaxUntypedStrLength       = kilobytes(640);
 	ct s32 StringTable_MaxHashLength = kilobytes(1);
+
+	// Predefined Codes. Are set to readonly and are setup during gen::init()
 
 	extern Code access_public;
 	extern Code access_protected;
@@ -1299,101 +1330,6 @@ namespace gen
 	extern Code spec_ref;
 }
 #pragma endregion Constants
-
-#pragma region Gen Interface Inlines
-namespace gen
-{
-	forceinline
-	Code def_class( char const* name, Code parent, Code specifiers, Code body )
-	{
-		return def_class( strnlen( name, MaxNameLength ), name, parent, specifiers, body );
-	}
-
-	forceinline
-	Code def_enum( char const* name, Code type, EnumT specifier, Code body )
-	{
-		return def_enum( strnlen( name, MaxNameLength ), name, type, specifier, body );
-	}
-
-	forceinline
-	Code def_function( char const* name, Code params, Code ret_type, Code specifiers, Code body )
-	{
-		return def_function( strnlen( name, MaxNameLength), name, params, ret_type, specifiers, body );
-	}
-
-	forceinline
-	Code def_namespace( char const* name, Code body )
-	{
-		return def_namespace( strnlen( name, MaxNameLength), name, body );
-	}
-
-	forceinline
-	Code def_param( Code type, char const* name )
-	{
-		return def_param( type, strnlen( name, MaxNameLength ), name );
-	}
-
-	forceinline
-	Code def_struct( char const* name, Code parent, Code specifiers, Code body )
-	{
-		return def_struct( strnlen( name, MaxNameLength), name, parent, specifiers, body );
-	}
-
-	forceinline
-	Code def_type( char const* name, Code specifiers )
-	{
-		return def_type( strnlen( name, MaxNameLength ), name, specifiers );
-	}
-
-	forceinline
-	Code def_using( char const* name, Code type, UsingT specifier )
-	{
-		return def_using( strnlen( name, MaxNameLength ), name, type, specifier );
-	}
-
-	forceinline
-	Code def_variable( Code type, char const* name, Code value, Code specifiers )
-	{
-		return def_variable( type, strnlen(name, MaxNameLength ), name, value, specifiers );
-	}
-
-	forceinline
-	Code make_class( char const* name, Code parent, Code specifiers )
-	{
-		return make_class( strnlen(name, MaxNameLength), name, parent, specifiers );
-	}
-
-	forceinline
-	Code make_enum( char const* name, Code type, Code specifiers )
-	{
-		return make_struct( strnlen(name, MaxNameLength), name, type, specifiers );
-	}
-
-	forceinline
-	Code make_function( char const* name, Code params, Code ret_type, Code specifiers )
-	{
-		return make_function( strnlen(name, MaxNameLength), name, params, ret_type, specifiers );
-	}
-
-	forceinline
-	Code make_namespace( char const* name )
-	{
-		return make_namespace( strnlen( name, MaxNameLength ), name );
-	}
-
-	forceinline
-	Code make_struct( char const* name, Code parent, Code specifiers )
-	{
-		return make_struct( strnlen(name, MaxNameLength), name, parent, specifiers );
-	}
-
-	forceinline
-	Code untyped_str( char const* str )
-	{
-		return untyped_str( strnlen( str, MaxUntypedStrLength ), str );
-	}
-}
-#pragma endregion Gen Interface Inlines
 
 // end: gen_time
 #endif

@@ -27,6 +27,12 @@ Version 1 will have C and a subset of C++ features available to it.
 I will generate with this library a C99 or 11 variant when Version 1 is complete.
 A single-header version will also be generated.
 
+The size target of this library is to stay under 5000 sloc (data & interface code).
+With the dependency code being under 10000 sloc. (Containers, Memory, String handling, Language bloat)
+
+Any dependencies from the zpl library will be exposed manually with using declarations into global scope.
+They will be removed when the library is feature complete for version 1 (zero dependencies milestone).
+
 ## Usage
 
 A metaprogram is built to generate files before the main program is built. We'll term runtime for this program as `gen_time`. The metaprogram's core implementation are within `gen.hpp` and `gen.cpp` in the project directory.
@@ -205,46 +211,53 @@ If in your use case, decide to have exclusive separation or partial separation o
 
 ### *WHAT IS NOT PROVIDED*
 
-* Macro or template generation      : This library is to avoid those, adding support for them adds unnecessary complexity.
-                                        If you desire define them outside the gen_time scopes.
-* Expression validation             : Execution expressions are defined using the untyped string API.
-                                        There is no parse API for validating expressions (possibly will add in the future)
-* Modern C++ (STL library) features
-* Modern C++ RTTI                   : This is kinda covered with the last point, but just wanted to emphasize.
+* Macro or template generation                : This library is to avoid those, adding support for them adds unnecessary complexity.
+* Vendor provided dynamic dispatch (virtuals) : Roll your own, this library might roll its own vtable/interface generation helpers in the future.
+* RTTI                                        : This is kinda covered with the last point, but just wanted to emphasize.
+* Exceptions                                  : Most fo the
+* Execution statment validation               : Execution expressions are defined using the untyped string API.
 
-Exceptions brought in from "Modern C++":
+Keywords in from "Modern C++":
 
-* consteval
-* constinit
-* explicit
-* export
-* noexcept
-* import
-* final
-* module
-* override
-* &&
-* virtual
+* constexpr : Great to store compile-time constants, (easier to garanteed when emitted from gentime)
+* consteval : Technically fine so long as templates are not used. Need to make sure to execute in moderation.
+* constinit : Better than constexpr at doing its job, however, its only c++ 20.
+* export    : Useful if c++ modules ever come around to actually being usable.
+* import    : ^^
+* module    : ^^
+
+These features are in as they either are not horrible when used conservatively or are a performance benefit (modules).
+
+When it comes to excution statements:
+There is no parse API for validating excution statements (possibly will add in the future, but very limited in what it can do).
+This reason there isn't one: thats where the can of worms open for parsing validation.
+For most metaprogramming (espcially for c/c++), expression validation is not necessary, it can be done by the compiler for the runtime program.
+Most of the time, the critical complex metaprogramming conundrums are actaully producing the frame of abstractions around the expressions.
+Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
+
+To further this point, lets say you do have an error with an execution statment. It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
+
+* If its not caught by the compiler, the only downside is the error appers on the generated function. Those with knowledge of how that definition was generated know where to find the code that inlined that expression in that file for that definition.
+* If its caught at runtime. The expression will be shown in a stack trace if debug symbols are enabled in the generated function body. Yet again those with knowledge of how that definition was generated know where to find the code that inlined that expression.
+
+In both these cases will get objectively better debug information than you would normally get on most c++ compilers with complex macros or templates.
+
+### The Data & Interface
 
 As mentioned in [Usage](#Usage), the user is provided Code objects by calling the constructor functions to generate them or find existing matches.
 
-The AST is managed by the library, however the user may specificy memory configuration.
-
-Notes:
-
-* The allocator definitions used are exposed to the user incase they want to dictate memory usage*
-* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
-* Both AST and Code have member symbols but their data layout is enforced to be POD types.
+The AST is managed by the library and provided the user via its interface prodedures.
+However, the user may specificy memory configuration.
 
 Data layout of AST struct:
 
 ```cpp
 AST*              Parent;
-string_const      Name;
-string_const      Comment;
+CachedString      Name;
+CachedString      Comment;
 union {
     array(AST*)   Entries;
-    string_const  Content;
+    CachedString  Content;
 };
 CodeT             Type;
 OperatorT         Op;
@@ -252,11 +265,24 @@ bool              Readonly;
 u8                _64_Align[23];
 ```
 
-*`CodeT` is a typedef for `ECode::Type` which has an underlying type of u32*
-*`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of u32.*
+*`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*
+*`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*
 
 ASTs can be set to readonly by calling Code's lock() member function.
 Adding comments is always available even if the AST is set to readonly.
+
+Data Notes:
+
+* The allocator definitions used are exposed to the user incase they want to dictate memory usage
+  * You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`, and `make_code_entries`.
+* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
+* Both AST and Code have member symbols but their data layout is enforced to be POD types.
+* This library treats memory failures as fatal.
+* The default setup assumes large definition sets may be provided to bodies so AST::Entires are dynamic arrays.
+  * They're allocated to arenas currently and are pretty wasteful if they go over their reserve size (its never recycled).
+  * Most likely will need to implement a dynamic-sized bucket allocation strategy for the entry arrays if memory is getting stressed.
+  * Otherwise if you are using fixed size entries and your definitions are under 128~512 entries for the body, you may be better of with a fixed-sized array.
+* Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
 
 ## There are four sets of interfaces for Code AST generation the library provides
 
@@ -439,14 +465,14 @@ There are three provided interfaces:
 
 Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FEATURE_SCANNER` to enable them.
 
-### Builder is a similar object to the jai language's string_builder.
+### Builder is a similar object to the jai language's string_builder
 
 * The purpose of it is to generate a file.
 * A file is specified and opened for writting using the open( file_path) ) function.
 * The code is provided via print( code ) function  will be seralized to its buffer.
 * When all seralization is finished, use the write() command to write the buffer to the file.
 
-### Editor is for editing a series of files based on a set of requests provided to it.
+### Editor is for editing a series of files based on a set of requests provided to it
 
 * The purpose is to overrite a specific file, it places its contents in a buffer to scan.
 * Requests are populated using the following interface:
@@ -468,7 +494,7 @@ Additionally if `GEN_FEATURE_EDITOR_REFACTOR` is defined, refactor( file_path, s
 Refactor is based of the refactor library and uses its interface.
 It will on call add a request to the queue to run the refactor script on the file.
 
-### Scanner allows the user to generate Code ASTs by reading files.
+### Scanner allows the user to generate Code ASTs by reading files
 
 * The purpose is to grab definitions to generate metadata or generate new code from these definitions.
 * Requests are populated using the add( SymbolInfo, Policy ) function. The symbol info is the same as the one used for the editor. So is the case with Policy.
@@ -487,7 +513,7 @@ This is intended for when you have requests that are for multiple files.
 
 Request queue in both Editor and Scanner are cleared once process_requests completes.
 
-## On multi-threading:
+## On multi-threading
 
 Its intended eventually for this library to support multi-threading at some point,
 however for now it does not.
@@ -543,12 +569,20 @@ However, if:
 
 Then this might help you boostrap a toolset todo so.
 
-# TODO:
+# TODO
 
-* Need problably a better name, I found a few repos with this same one...
-* Actually get to version 1.
+* May be in need of a better name, I found a few repos with this same one...
 * Make a test suite made up of collections based of the ZPL library templated colllection macros and the memory module.
+* Remove full ZPL dependency, move into Bloat header/source only what is used.
 * Generate a single-header library.
 * Generate a C-supported single-header library.
-* Remove full ZPL dependency, move into Bloat header/source only what is used.
-* This library has heavy string allocations, most likely will make a string flyweight for it.
+* Actually get to version 1.
+* Review if the upfront or incremental constructors are actually a net benefit vs just using the parse constructors.
+  * They exist as a artifact of learning what was possible or not possible with staged metaprogramming in C++ (the parse interface was the last to get fleshed out)
+  * Most likely at least Incremental could possibly be removed in favor of just using the parse constructors.
+  * Possible merits are ergonomics for very dynamic generation or performance reasons.
+  * They'll most likely stay until its evident that they are not necessary.
+* Review memory handling for the AST, specifically relating to:
+  * Giving type asts a dedicated memory arenas.
+  * Giving specifier definitions a dedicated memory arenas and hashtable lookup.
+  * Possibly adding a dedicated block allocator for the dynamic arrays of AST::Entires.

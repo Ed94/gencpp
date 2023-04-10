@@ -19,7 +19,7 @@ int gen_main()
 #endif
 
 
-#ifdef runtime
+#ifdef comptime
 int main()
 {
 	return 0;
