@@ -1,7 +1,7 @@
 #include "Bloat.cpp"
 
 
-#ifdef gentime
+#ifdef gen_time
 #include "gen.cpp"
 
 int gen_main()
@@ -19,7 +19,7 @@ int gen_main()
 #endif
 
 
-#ifdef comptime
+#ifdef runtime
 int main()
 {
 	return 0;

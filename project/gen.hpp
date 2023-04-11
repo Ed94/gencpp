@@ -30,22 +30,23 @@
 
 	These features are in as they either are not horrible when used conservatively or are a performance benefit (modules).
 
-	When it comes to expressions:
-	There is no parse API for validating expressions (possibly will add in the future).
-	This reason there isn't one: thats where the can of worms open for parsing validation.
-	For most metaprogramming (espcially for c/c++), expression validation is not necessary, it can be done by the compiler for the runtime program.
-	Most of the time, the critical complex metaprogramming conundrums are actaully producing the frame of abstractions around the expressions.
-	Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
+	#### When it comes to expressions:
 
-	To further this point, lets say you do have an error with an expressions composition.
-	It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
+		There is no support for validating expressions.
+		The reason: thats where the can of worms open for parsing validation. This library would most likey more than double in size with that addition alone.
+		For most metaprogramming (espcially for C/C++), expression validation is not necessary for metaprogramming, it can be done by the compiler for the runtime program.
+		Most of the time, the critical complex metaprogramming conundrums are actaully producing the frame of abstractions around the expressions.
+		Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
 
-	* If its not caught by the compiler, the only downside is the error appers on the generated function.
-		Those with knowledge of how that definition was generated know where to find the code that inlined that expression in that file for that definition.
-	* If its caught at runtime. The expression will be shown in a stack trace if debug symbols are enabled in the generated function body.
-		Yet again those with knowledge of how that definition was generated know where to find the code that inlined that expression.
+		To further this point, lets say you do have an error with an expressions composition.
+		It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
 
-	In both these cases will get objectively better debug information than you would normally get on most c++ compilers with complex macros or templates.
+		* If its not caught by the compiler, the only downside is the error appers on the generated function.
+			Those with knowledge of how that definition was generated know where to find the code that inlined that expression in that file for that definition.
+		* If its caught at runtime. The expression will be shown in a stack trace if debug symbols are enabled in the generated function body.
+			Yet again those with knowledge of how that definition was generated know where to find the code that inlined that expression.
+
+		In both these cases the user will get objectively better debug information than you would normally get on most c++ compilers/editors using complex macros or templates.
 
 	### The Data & Interface:
 
@@ -58,31 +59,48 @@
 	* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
 	* Both AST and Code have member symbols but their data layout is enforced to be POD types.
 	* This library treats memory failures as fatal.
-	* The default setup assumes large definition sets may be provided to bodies so AST::Entires are dynamic arrays.
-		* They're allocated to arenas currently and are pretty wasteful if they go over their reserve size (its never recycled).
-		* Most likely will need to implement a dynamic-sized bucket allocation strategy for the entry arrays if memory is getting stressed.
-		* Otherwise if you are using fixed size entries and your definitions are under 128~512 entries for the body, you may be better of with a fixed-sized array.
+	* The AST's data union is can either hold a static array of AST*'s, a dynmaic array if the the static capacity is not enough, or a cached string content.
+		* The dynamic array is allocated to arenas currently and are pretty wasteful if they go over their reserve size (its never recycled).
 
 	Data layout of AST struct:
 
-	AST*              Parent;
-	CachedString      Name;
-	CachedString      Comment;
-	union {
-		array(AST*)   Entries;
-		CachedString  Content;
-	};
-	CodeT             Type;
-	OperatorT         Op;
-	bool              Readonly;
-	u8                _64_Align[23];
+		union {
+			AST*          ArrStatic[ArrS_Cap];
+			Array(AST*)   Entries;
+			StringCached  Content;
+
+		};
+		AST*              Parent;
+		StringCached      Name;
+		StringCached      Comment;
+		CodeT             Type;
+		OperatorT         Op;
+		bool              Readonly;
+		bool              DynamicEntries;
+		u8                StaticIndex;
+		u8                _Align_Pad[6];
 
 	*`CodeT` is a typedef for `ECode::Type` which is the type of the enum.*
+
+	AST widths are setup to be AST_POD_Size.
+	The width dictates how much the static array can hold before it must give way to using an allocated array:
+	constexpr static
+	u32 ArrS_Cap =
+	(	  AST_POD_Size
+		- sizeof(AST*)
+		- sizeof(StringCached) * 2
+		- sizeof(CodeT)
+		- sizeof(OperatorT)
+		- sizeof(bool) * 2
+		- sizeof(u8) * 7 )
+	/ sizeof(AST*);
+
+	Ex: If the AST_POD_Size is 256 the capacity of the static array is 26.
 
 	ASTs can be set to readonly by calling Code's lock() member function.
 	Adding comments is always available even if the AST is set to readonly.
 
-	Data Notes:
+	#### Misc
 
 	* The allocator definitions used are exposed to the user incase they want to dictate memory usage
 		* You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`, and `make_code_entries`.
@@ -261,6 +279,16 @@
 	Code        <name>       = parse_<function name>( gen_code_str );
 	```
 
+	## Extent of operator overload validation:
+
+	The AST and constructors will be able to validate that the arguments provided for the operator type match the expected form:
+	* If return type must match a parameter
+	* If number of parameters is correct
+	* If added as a member symbol to a class or struct, that operator matches the requirements for the class (types match up)
+
+	The user is responsible for making sure the code types provided are correct
+	and have the desired specifiers assigned to them beforehand.
+
 	## Code generation and modification
 
 	There are three provided interfaces:
@@ -318,12 +346,10 @@
 
 	Request queue in both Editor and Scanner are cleared once process_requests completes.
 
-	### Notes on multi-threading:
+	### On multi-threading:
 
-	Its intended eventually for this library to support multi-threading at some point,
-	however for now it does not.
-		The following changes would have to be made:
-		* Setup static data accesss with fences if more than one thread will generate ASTs
+	Currently supported but want to. The following changes would have to be made:
+		* Setup static data accesss with fences if more than one thread will generate ASTs ( or keep a different set for each thread)
 		* Make sure local peristent data of functions are also thread local.
 		* The builder should be done on a per-thread basis.
 		* Due to the design of the editor and scanner, it will most likely
@@ -352,9 +378,6 @@
 #include "Bloat.hpp"
 
 // Temporarily here for debugging purposes.
-#define gentime
-
-
 #define GEN_BAN_CPP_TEMPLATES
 #define GEN_DEFINE_DSL
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
@@ -364,7 +387,7 @@
 #define GEN_FEATURE_SCANNER
 
 
-#ifdef gentime
+#ifdef gen_time
 namespace gen
 {
 	using LogFailType = sw(*)(char const*, ...);
@@ -383,38 +406,40 @@ namespace gen
 
 	namespace ECode
 	{
-#		define Define_Types         \
-		Entry( Untyped )            \
-		Entry( Access_Public )      \
-		Entry( Access_Protected )   \
-		Entry( Access_Private )     \
-		Entry( Class )              \
-		Entry( Class_FwdDecl )      \
-		Entry( Class_Body )         \
-		Entry( Enum )               \
-		Entry( Enum_FwdDecl )       \
-		Entry( Enum_Body )          \
-		Entry( Enum_Class )         \
-		Entry( Enum_Class_FwdDecl ) \
-		Entry( Execution )          \
-		Entry( Friend )             \
-		Entry( Function )           \
-		Entry( Function_FwdDecl )   \
-		Entry( Function_Body )      \
-		Entry( Global_Body )        \
-		Entry( Namespace )          \
-		Entry( Namespace_Body )     \
-		Entry( Operator )           \
-		Entry( Operator_FwdDecl )   \
-		Entry( Parameters )         \
-		Entry( Specifiers )         \
-		Entry( Struct )             \
-		Entry( Struct_FwdDecl )     \
-		Entry( Struct_Body )        \
-		Entry( Variable )           \
-		Entry( Typedef )            \
-		Entry( Typename )           \
-		Entry( Using )              \
+#		define Define_Types          \
+		Entry( Untyped )             \
+		Entry( Access_Public )       \
+		Entry( Access_Protected )    \
+		Entry( Access_Private )      \
+		Entry( Class )               \
+		Entry( Class_Fwd )           \
+		Entry( Class_Body )          \
+		Entry( Enum )                \
+		Entry( Enum_Fwd )            \
+		Entry( Enum_Body )           \
+		Entry( Enum_Class )          \
+		Entry( Enum_Class_Fwd )      \
+		Entry( Execution )           \
+		Entry( Friend )              \
+		Entry( Function )            \
+		Entry( Function_Fwd )        \
+		Entry( Function_Body )       \
+		Entry( Global_Body )         \
+		Entry( Namespace )           \
+		Entry( Namespace_Body )      \
+		Entry( Operator )            \
+		Entry( Operator_Fwd )        \
+		Entry( Operator_Member )     \
+		Entry( Operator_Member_Fwd ) \
+		Entry( Parameters )          \
+		Entry( Specifiers )          \
+		Entry( Struct )              \
+		Entry( Struct_Fwd )          \
+		Entry( Struct_Body )         \
+		Entry( Variable )            \
+		Entry( Typedef )             \
+		Entry( Typename )            \
+		Entry( Using )               \
 		Entry( Using_Namespace )
 
 		enum Type : u32
@@ -428,7 +453,7 @@ namespace gen
 		};
 
 		inline
-		char const* str( Type type )
+		char const* to_str( Type type )
 		{
 			static
 			char const* lookup[Num_Types] = {
@@ -520,7 +545,7 @@ namespace gen
 		};
 
 		inline
-		char const* str( Type op )
+		char const* to_str( Type op )
 		{
 			using something = u8;
 			typedef u8 another;
@@ -568,24 +593,19 @@ namespace gen
 		Entry( Constexpr,        constexpr )         \
 		Entry( Constinit,        constinit )         \
 		Entry( Export,           export )            \
-		Entry( Explicit,         explicit )          \
 		Entry( External_Linkage, extern )            \
 		Entry( Import,           import )            \
 		Entry( Inline,           inline )            \
 		Entry( Internal_Linkage, static )            \
-		Entry( Final,            final )             \
 		Entry( Local_Persist,    static )            \
 		Entry( Module,           module )            \
 		Entry( Mutable,          mutable )           \
-		Entry( NoExcept,         noexcept )          \
-		Entry( Override,         override )          \
-		Entry( Pointer,          * )                 \
-		Entry( Reference,        & )                 \
+		Entry( Ptr,              * )                 \
+		Entry( Ref,              & )                 \
 		Entry( Register,         register )          \
 		Entry( RValue,           && )                \
 		Entry( Static_Member,    static  )           \
 		Entry( Thread_Local,     Thread_Local_Code ) \
-		Entry( Virtual,          virtual )           \
 		Entry( Volatile,         volatile )
 
 		enum Type : u32
@@ -641,6 +661,16 @@ namespace gen
 	using SpecifierT = ESpecifier::Type;
 
 #pragma region Data Structures
+	// Implements basic string interning. Data structure is based off the ZPL Hashtable.
+	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, String );
+
+	// Represents strings cached with the string table.
+	// Should never be modified, if changed string is desired, cache_string( str ) another.
+	using StringCached = char const*;
+
+	// Desired width of the AST data structure.
+	ct u32 AST_POD_Size = 256;
+
 	// TODO: If perf needs it, convert layout an SOA format.
 	/*
 		Simple AST POD with functionality to seralize into C++ syntax.
@@ -648,28 +678,24 @@ namespace gen
 		ASTs are currently stored as an AOS. They are always reconstructed on demand.
 		Thus redundant AST can easily occur.
 		Not sure if its better to store them in a hashmap.
+
+		Any type specific functions assume the construction of the AST was done correctly.
 	*/
 	struct AST
 	{
 #	pragma region Member Functions
+
+		// Used with incremental constructors
+		// Adds and checks entries to see if they are valid additions the type of ast.
 		bool add( AST* other );
 
-		forceinline
-		void add_entry( AST* other )
-		{
-			AST* to_add = other->Parent ?
-				other->duplicate() : other;
-
-			array_append( Entries, to_add );
-
-			to_add->Parent = this;
-		}
+		inline
+		void add_entry( AST* other );
 
 		forceinline
 		AST* body()
 		{
-			return Entries && array_count(Entries) ?
-				Entries[0] : nullptr;
+			return Entries[0];
 		}
 
 		forceinline
@@ -678,39 +704,76 @@ namespace gen
 		AST* duplicate();
 
 		forceinline
-		bool has_entries() const
+		bool has_entries()
 		{
-			static bool lookup[ ECode::Num_Types] = {
-				false, // Invalid
-				false, // Untyped
-				false,
-				false,
-				false,
-				true,  // Global_Body
-				true,  // Parameters
-				true,  // Proc
-				true,  // Proc_Body
-				true,  // Proc_Forward
-				false, // Specifies
-				true,  // Struct
-				true,  // Struct_Body
-				true,  // Variable
-				true,  // Typedef
-				true,  // Typename
-				true,  // Using
-			};
-
-			return lookup[Type];
+			return Entries[0];
 		}
 
 		forceinline
-		bool is_invalid() const
+		bool is_invalid()
 		{
 			return Type != ECode::Invalid;
 		}
 
 		forceinline
-		char const* debug_str() const
+		s32 num_entries()
+		{
+			return DynamicEntries ? array_count(Entries) : StaticIndex;
+		}
+
+		// Parameter
+
+		forceinline
+		AST* get_param( s32 index )
+		{
+			if ( index <= 0 )
+				return this;
+
+			return Entries[ index + 1 ];
+		}
+
+		forceinline
+		s32 param_count()
+		{
+			// The first entry (which holds the type) represents the first parameter.
+			return num_entries();
+		}
+
+		forceinline
+		AST* param_type()
+		{
+			return Entries[0];
+		}
+
+		// Typename
+
+		forceinline
+		bool typename_is_ptr()
+		{
+			zpl::assert_crash("not implemented");
+		}
+
+		forceinline
+		bool typename_is_ref()
+		{
+			zpl::assert_crash("not implemented");
+		}
+
+		forceinline
+		AST* typename_specifiers()
+		{
+			return Entries[0];
+		}
+
+		// AST*& operator=(AST* const& b)
+		// {
+
+		// }
+
+		// Serialization
+
+		forceinline
+		char const* debug_str()
 		{
 			char const* fmt = txt(
 				\nCode Debug:
@@ -725,7 +788,7 @@ namespace gen
 			// Thus if its desired to keep the debug str
 			// for multiple calls to bprintf,
 			// allocate this to proper string.
-			return zpl::bprintf( fmt
+			return bprintf( fmt
 			,	type_str()
 			,	Readonly ? "true"       : "false"
 			,	Parent   ? Parent->Name : ""
@@ -735,40 +798,60 @@ namespace gen
 		}
 
 		forceinline
-		char const* type_str() const
+		char const* type_str()
 		{
-			return ECode::str( Type );
+			return ECode::to_str( Type );
 		}
 
 		String to_string() const;
 #	pragma endregion Member Functions
+		constexpr
+		static uw ArrS_Cap =
+		( 	AST_POD_Size
+			- sizeof(AST*)
+			- sizeof(StringCached) * 2
+			- sizeof(CodeT)
+			- sizeof(OperatorT)
+			- sizeof(bool) * 2
+			- sizeof(u8) * 7 )
+		/ sizeof(AST*);
 
-#		define Using_Code_POD            \
-		AST*              Parent;        \
-		StringCached      Name;          \
-		StringCached      Comment;       \
-		union {                          \
-			Array(AST*)   Entries;       \
-			StringCached  Content;       \
-		};                               \
-		CodeT             Type;          \
-		OperatorT         Op;            \
-		bool              Readonly;      \
-		u8                _64_Align[23];
+			// SpecifierT    Specifiers[]               \
 
-		Using_Code_POD;
+		// Size : 256 bytes
+#		define Using_Code_POD                        \
+		union {                                      \
+			AST*          ArrStatic[AST::ArrS_Cap];  \
+			Array(AST*)   Entries;                   \
+			StringCached  Content;                   \
+		};                                           \
+		AST*              Parent;                    \
+		StringCached      Name;                      \
+		StringCached      Comment;                   \
+		CodeT             Type;                      \
+		OperatorT         Op;                        \
+		bool              Readonly;                  \
+		bool              DynamicEntries;            \
+		u8                StaticIndex;               \
+		u8                _Align_Pad[6];
+
+		Using_Code_POD
 	};
+
 
 	struct CodePOD
 	{
-		Using_Code_POD;
+		Using_Code_POD
 #		undef Using_CodePOD;
 	};
 
+	ct sw size_AST = sizeof(AST);
+	ct sw size_POD = sizeof(CodePOD);
 
 	// Its intended for the AST to have equivalent size to its POD.
 	// All extra functionality within the AST namespace should just be syntatic sugar.
-	static_assert( sizeof(AST) == sizeof(CodePOD), "ERROR: AST IS NOT POD" );
+	static_assert( sizeof(AST)     == sizeof(CodePOD), "ERROR: AST IS NOT POD" );
+	static_assert( sizeof(CodePOD) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
 
 	/*
 		AST* typedef as to not constantly have to add the '*' as this is written often..
@@ -782,7 +865,7 @@ namespace gen
 	{
 #	pragma region Statics
 		// Used internally for the most part to identify invaidly generated code.
-		static const Code Invalid;
+		static Code Invalid;
 #	pragma endregion Statics
 
 #	pragma region Member Functions
@@ -824,22 +907,37 @@ namespace gen
 		}
 
 		forceinline
-		operator bool() const
+		char const* to_string()
+		{
+			return ast->to_string();
+		}
+
+		forceinline
+		operator bool()
 		{
 			return ast;
 		}
 
-		bool operator ==( Code other ) const
+		forceinline
+		bool operator ==( Code other )
 		{
 			return ast == other.ast;
 		}
 
+		forceinline
+		bool operator !=( Code other )
+		{
+			return ast != other.ast;
+		}
+
+		forceinline
 		operator AST*()
 		{
 			return ast;
 		}
 
-		Code& operator =( Code other )
+		forceinline
+		Code& operator=( Code other )
 		{
 			if ( ast == nullptr )
 			{
@@ -861,7 +959,7 @@ namespace gen
 		}
 
 		forceinline
-		AST* operator ->()
+		AST* operator->()
 		{
 			if ( ast == nullptr )
 			{
@@ -889,13 +987,6 @@ namespace gen
 	ct Code NoCode = { nullptr };
 	// extern const Code InvalidCode;
 
-	// Implements basic string interning. Data structure is based off the ZPL Hashtable.
-	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, String );
-
-	// Represents strings cached with the string table.
-	// Should never be modified, if changed string is desired, cache_string( str ) another.
-	using StringCached = char const*;
-
 	/*
 		Type Table: Used to store Typename ASTs. Types are registered by their string literal value.
 
@@ -911,10 +1002,13 @@ namespace gen
 	// This currently just initializes the CodePool.
 	void init();
 
-	// Use this only if you know you generated the code you needed to a file.
-	// And rather get rid of current code asts instead of growing the pool memory.
-	// This generally can be done everytime a file is generated
-	void clear_code_pool();
+	/*
+		Use this only if you know you generated the code you needed to a file.
+		And rather get rid of current code asts instead of growing the pool memory.
+		This generally can be done everytime a file is generated
+		TODO: In order for this to work, the type map needs its own arenas so do specifiers.
+	*/
+	void clear_code_memory();
 
 	// Used internally to retrive or make string allocations.
 	// Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
@@ -964,11 +1058,13 @@ namespace gen
 
 	Code def_class_body     ( s32 num, ... );
 	Code def_enum_body      ( u32 num, ... );
-	Code def_enum_body      ( u32 num, Code* Values );
+	Code def_enum_body      ( u32 num, Code* codes );
 	Code def_global_body    ( s32 num, ... );
+	Code def_global_body    ( s32 num, Code* codes );
 	Code def_function_body  ( s32 num, ... );
 	Code def_function_body  ( s32 num, Code* codes );
 	Code def_namespace_body ( s32 num, ... );
+	Code def_namespace_body ( s32 num, Code* codes );
 	Code def_params         ( s32 num, ... );
 	Code def_params         ( s32 num, Code* params );
 	Code def_specifiers     ( s32 num , ... );
@@ -1274,12 +1370,6 @@ namespace gen
 {
 	// Predefined typename codes. Are set to readonly and are setup during gen::init()
 
-	extern Code type_ns( void );
-
-	extern Code type_ns( bool );
-	extern Code type_ns( char );
-	extern Code type_ns( wchar_t );
-
 	extern Code type_ns( s8 );
 	extern Code type_ns( s16 );
 	extern Code type_ns( s32 );
@@ -1309,7 +1399,7 @@ namespace gen
 	ct s32 InitSize_TypeTable   = megabytes(4);
 
 	ct s32 CodePool_NumBlocks        = 4096;
-	ct s32 CodeEntiresPool_NumBlocks = 4096;
+	ct s32 InitSize_CodeEntiresArray = 512;
 	ct s32 SizePer_CodeEntriresArena = megabytes(16);
 	ct s32 SizePer_StringArena       = megabytes(32);
 
@@ -1318,6 +1408,12 @@ namespace gen
 	ct s32 StringTable_MaxHashLength = kilobytes(1);
 
 	// Predefined Codes. Are set to readonly and are setup during gen::init()
+
+	extern Code type_ns( void );
+	extern Code type_ns( int );
+	extern Code type_ns( bool );
+	extern Code type_ns( char );
+	extern Code type_ns( wchar_t );
 
 	extern Code access_public;
 	extern Code access_protected;
@@ -1333,3 +1429,44 @@ namespace gen
 
 // end: gen_time
 #endif
+
+#pragma region Inlines
+namespace gen
+{
+	inline void AST::add_entry( AST* other )
+	{
+		AST* to_add = other->Parent ?
+			other->duplicate() : other;
+
+		if (DynamicEntries)
+			array_append( Entries, to_add );
+
+		else
+		{
+			if ( StaticIndex < ArrS_Cap )
+			{
+				ArrStatic[StaticIndex] = to_add;
+				StaticIndex++;
+			}
+			else
+			{
+				Entries = make_code_entries();
+
+				s32 index = 0;
+				do
+				{
+					array_append( Entries, ArrStatic[index] );
+				}
+				while ( StaticIndex--, StaticIndex );
+
+				array_append( Entries, to_add );
+			}
+		}
+
+		to_add->Parent = this;
+	}
+}
+#pragma endregion Inlines
+
+#pragma region Undefines
+#pragma endregion Undefines

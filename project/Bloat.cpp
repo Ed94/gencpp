@@ -109,9 +109,9 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 
 			char const* token = fmt;
 
-			s32      key   = crc32( token, tok_len );
+			u32      key   = crc32( token, tok_len );
 			TokEntry value = * tokmap_get( & tok_map, key );
-			s32      left  = value.Length;
+			sw       left  = value.Length;
 
 			while ( left-- )
 			{

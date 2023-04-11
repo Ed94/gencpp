@@ -8,7 +8,13 @@
 		"xtr1common": "cpp",
 		"xutility": "cpp",
 		"initializer_list": "cpp",
-		"table.h": "c"
+		"table.h": "c",
+		"iterator": "cpp",
+		"memory": "cpp",
+		"exception": "cpp",
+		"optional": "cpp",
+		"tuple": "cpp",
+		"xmemory": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled"
 }
