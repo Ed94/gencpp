@@ -691,19 +691,6 @@ namespace gen
 	{
 		using namespace StaticData;
 
-		ct CodePOD Invalid {
-			/* Union          */ {nullptr},
-			/* Parent         */ nullptr,
-			/* Name           */ nullptr,
-			/* Comment        */ nullptr,
-			/* Type           */ ECode::Invalid,
-			/* Op             */ EOperator::Invalid,
-			/* Readonly       */ false,
-			/* DynamicEntries */ false,
-			/* StaticIndex    */ 0,
-			/* _Align_Pad     */ {0}
-		};
-
 		AllocatorInfo allocator = { nullptr, nullptr };
 
 		s32 left = array_count( CodePools );
@@ -774,39 +761,335 @@ namespace gen
 		return entry_array;
 	}
 
-	forceinline
-	bool operator_member_symbol_check( Code entry )
+	enum class OpValidateResult : u32
 	{
-		using namespace ECode;
+		Fail,
+		Global,
+		Member
+	};
 
-		// Is assumed by the time this is called, entry has been valided to not be null or invalid.
-		switch ( entry->Type )
+	inline
+	OpValidateResult operator_validate( OperatorT op, Code params_code, Code ret_type, Code specifier )
+	{
+		using namespace EOperator;
+
+		if ( op == Invalid )
 		{
-			case Access_Public:
-			case Access_Protected:
-			case Access_Private:
-			case Class_Body:
-			case Class_Fwd:
-			case Enum_Fwd:
-			case Enum_Body:
-			case Enum_Class_Fwd:
-			case Friend:
-			case Function:
-			case Function_Fwd:
-			case Global_Body:
-			case Namespace:
-			case Namespace_Body:
-			case Operator:
-			case Operator_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Fwd:
-			case Struct_Body:
-			case Typename:
-				return false;
+			log_failure("gen::def_operator: op cannot be invalid");
+			return OpValidateResult::Fail;
 		}
 
-		return true;
+#		pragma region Helper Macros
+#		define check_params()                                                                                  \
+		if ( ! params_code )                                                                                   \
+		{                                                                                                      \
+			log_failure("gen::def_operator: params is null and operator%s requires it", to_str(op));           \
+			return OpValidateResult::Fail;                                                                     \
+		}                                                                                                      \
+		if ( params_code->Type != ECode::Parameters )                                                          \
+		{                                                                                                      \
+			log_failure("gen::def_operator: params is not of Parameters type - %s", params_code->debug_str()); \
+			return OpValidateResult::Fail;                                                                     \
+		}
+
+#		define check_param_eq_ret()                                                                    \
+		if ( ! is_member_symbol && params_code->param_type() != ret_type )                             \
+		{                                                                                              \
+			log_failure("gen_def_operator: operator%s requires first parameter to equal return type\n" \
+				"param types: %s\n"                                                                    \
+				"return type: %s",                                                                     \
+				to_str(op),                                                                            \
+				params_code->debug_str(),                                                              \
+				ret_type->debug_str()                                                                  \
+			);                                                                                         \
+			return OpValidateResult::Fail;                                                             \
+		}
+#		pragma endregion Helper Macros
+
+		if ( ! ret_type )
+		{
+			log_failure("gen::def_operator: ret_type is null but is required by operator%s", to_str(op));
+		}
+
+		if ( ret_type->Type != ECode::Typename )
+		{
+			log_failure("gen::def_operator: ret_type is not of typename type - %s", ret_type->debug_str());
+			return OpValidateResult::Fail;
+		}
+
+		bool is_member_symbol = false;
+
+		switch ( op )
+		{
+#		define specs( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
+			case Assign:
+				check_params();
+
+				if ( params_code->param_count() > 1 )
+				{
+					log_failure("gen::def_operator: "
+						"operator%s does not support non-member definition (more than one parameter provided) - %s",
+						to_str(op),
+						params_code->debug_str()
+					);
+					return OpValidateResult::Fail;
+				}
+
+				is_member_symbol = true;
+			break;
+
+			case Assign_Add:
+			case Assign_Subtract:
+			case Assgin_Multiply:
+			case Assgin_Divide:
+			case Assgin_Modulo:
+			case Assgin_BAnd:
+			case Assgin_BOr:
+			case Assign_BXOr:
+			case Assign_LShift:
+			case Assign_RShift:
+				check_params();
+
+				if ( params_code->param_count() == 1 )
+					is_member_symbol = true;
+
+				else
+					check_param_eq_ret();
+
+				if (params_code->param_count() > 2 )
+				{
+					log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
+						, to_str(op)
+						, params_code->param_count()
+						, params_code->debug_str()
+					);
+					return OpValidateResult::Fail;
+				}
+			break;
+
+			case Increment:
+			case Decrement:
+				// If its not set, it just means its a prefix member op.
+				if ( params_code )
+				{
+					if ( params_code->Type != ECode::Parameters )
+					{
+						log_failure("gen::def_operator: operator%s params code provided is not of Parameters type - %s"
+							, to_str(op)
+							, params_code->debug_str()
+						);
+						return OpValidateResult::Fail;
+					}
+
+					switch ( params_code->param_count() )
+					{
+						case 1:
+							if ( params_code->param_type() == type_ns(int) )
+								is_member_symbol = true;
+
+							else
+								check_param_eq_ret();
+						break;
+
+						case 2:
+							check_param_eq_ret();
+
+							if ( params_code->get_param(1) != type_ns(int) )
+							{
+								log_failure("gen::def_operator: "
+									"operator%s requires second parameter of non-member definition to be int for post-decrement",
+									to_str(op)
+								);
+								return OpValidateResult::Fail;
+							}
+						break;
+
+						default:
+							log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
+								, to_str(op)
+								, params_code->param_count()
+							);
+							return OpValidateResult::Fail;
+					}
+				}
+			break;
+
+			case Unary_Plus:
+			case Unary_Minus:
+			case BNot:
+				if ( ! params_code )
+					is_member_symbol = true;
+
+				else
+				{
+					if ( params_code->Type != ECode::Parameters )
+					{
+						log_failure("gen::def_operator: params is not of Parameters type - %s", params_code->debug_str());
+						return OpValidateResult::Fail;
+					}
+
+					if ( params_code->param_type() == ret_type )
+					{
+						log_failure("gen::def_operator: "
+							"operator%s is non-member symbol yet first paramter does not equal return type\n"
+							"param type: %s\n"
+							"return type: %s\n"
+							, params_code->debug_str()
+							, ret_type->debug_str()
+						);
+						return OpValidateResult::Fail;
+					}
+
+					if ( params_code->param_count() > 1 )
+					{
+						log_failure("gen::def_operator: operator%s may not have more than one parameter - param count: %d"
+							, to_str(op)
+							, params_code->param_count()
+						);
+						return OpValidateResult::Fail;
+					}
+				}
+			break;
+
+			case Add:
+			case Subtract:
+			case Multiply:
+			case Divide:
+			case Modulo:
+			case BAnd:
+			case BOr:
+			case BXOr:
+			case LShift:
+			case RShift:
+				check_params();
+
+				switch ( params_code->param_count() )
+				{
+					case 1:
+						is_member_symbol = true;
+					break;
+
+					case 2:
+						if ( params_code->param_type() != ret_type )
+						{
+							log_failure("gen::def_operator: "
+								"operator%s is non-member symbol yet first paramter does not equal return type\n"
+								"param type: %s\n"
+								"return type: %s\n"
+								, params_code->debug_str()
+								, ret_type->debug_str()
+							);
+							return OpValidateResult::Fail;
+						}
+					break;
+
+					default:
+						log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
+							, to_str(op)
+							, params_code->param_count()
+						);
+						return OpValidateResult::Fail;
+				}
+			break;
+
+			case LNot:
+				if ( ! params_code )
+					is_member_symbol = true;
+
+				else
+				{
+					if ( params_code->Type != ECode::Parameters )
+					{
+						log_failure("gen::def_operator: params is not of Parameters type - %s", params_code->debug_str());
+						return OpValidateResult::Fail;
+					}
+
+					if ( params_code->param_count() != 1 )
+					{
+						log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
+							, to_str(op)
+							, params_code->param_count()
+						);
+						return OpValidateResult::Fail;
+					}
+				}
+
+				if ( ret_type != type_ns(bool) )
+				{
+					log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
+						, to_str(op)
+						, ret_type->debug_str()
+					);
+					return OpValidateResult::Fail;
+				}
+			break;
+
+			case LAnd:
+			case LOr:
+			case Equals:
+			case NotEquals:
+			case Lesser:
+			case Greater:
+			case LesserEqual:
+			case GreaterEqual:
+				check_params();
+
+				switch ( params_code->param_count() )
+				{
+					case 1:
+						is_member_symbol = true;
+					break;
+
+					case 2:
+					break;
+
+					default:
+						log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 1-2"
+							, to_str(op)
+							, params_code->param_count()
+						);
+						return OpValidateResult::Fail;
+				}
+			break;
+
+			case Indirection:
+			case AddressOf:
+			case MemberOfPointer:
+				if ( params_code && params_code->param_count() > 1)
+				{
+					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
+						, to_str(op)
+						, params_code->param_count()
+					);
+					return OpValidateResult::Fail;
+				}
+				else
+				{
+					is_member_symbol = true;
+				}
+			break;
+
+			case PtrToMemOfPtr:
+				if ( params_code )
+				{
+					log_failure("gen::def_operator: operator%s expects no paramters - %s", to_str(op), params_code->debug_str());
+					return OpValidateResult::Fail;
+				}
+			break;
+
+			case Subscript:
+			case FunctionCall:
+			case Comma:
+				check_params();
+			break;
+#		undef specs
+		}
+
+#		undef check_params
+#		undef check_ret_type
+#		undef check_param_eq_ret
+
+		return is_member_symbol ? OpValidateResult::Member : OpValidateResult::Global;
 	}
 
 	void set_allocator_data_arrays( AllocatorInfo allocator )
@@ -851,26 +1134,26 @@ namespace gen
 		}                                                                                       \
 	}
 
-#	define null_check( Context_, Code_ )                                           \
-	if ( ! Code_ )                                                                 \
-	{                                                                              \
+#	define null_check( Context_, Code_ )                                          \
+	if ( ! Code_ )                                                                \
+	{                                                                             \
 		log_failure( "gen::%s: %s provided is null", txt(Context_), txt(Code_) ); \
-		return Code::Invalid;                                                      \
+		return Code::Invalid;                                                     \
 	}
 
-#	define null_or_invalid_check( Context_, Code_ )                                      \
-	{                                                                                    \
-		if ( ! Code_ )                                                                   \
-		{                                                                                \
+#	define null_or_invalid_check( Context_, Code_ )                                     \
+	{                                                                                   \
+		if ( ! Code_ )                                                                  \
+		{                                                                               \
 			log_failure( "gen::%s: %s provided is null", txt(Context_) );               \
-			return Code::Invalid;                                                        \
-		}                                                                                \
-                                                                                         \
-		if ( Code_->is_invalid() )                                                       \
-		{                                                                                \
+			return Code::Invalid;                                                       \
+		}                                                                               \
+                                                                                        \
+		if ( Code_->is_invalid() )                                                      \
+		{                                                                               \
 			log_failure("gen::%s: %s provided is invalid", txt(Context_), txt(Code_) ); \
-			return Code::Invalid;                                                        \
-		}                                                                                \
+			return Code::Invalid;                                                       \
+		}                                                                               \
 	}
 
 #	define not_implemented( Context_ )                              \
@@ -879,6 +1162,19 @@ namespace gen
 #	pragma endregion Helper Functions
 
 #	pragma region Upfront Constructors
+/*
+	The implementaiton of the upfront constructors involves bascially doing three things:
+	* Validate the arguments given to construct the intended type of AST is valid.
+	* Construct said AST type.
+	* Lock the AST (set to readonly) and return the valid object.
+
+	If any of the validation fails, it triggers a call to log_failure with as much info the give the user so that they can hopefully
+	identify the issue without having to debug too much (at least they can debug though...)
+
+	The largest of the functions is related to operator overload definitions.
+	I decided to validate a good protion of their form and thus the argument processing for is quite a bit.
+*/
+
 	Code def_class( s32 length, char const* name, Code parent, Code specifiers, Code body )
 	{
 		using namespace ECode;
@@ -1131,356 +1427,38 @@ namespace gen
 
 	Code def_operator( OperatorT op, Code params_code, Code ret_type, Code specifiers, Code body )
 	{
-		using namespace EOperator;
+		using namespace ECode;
 
-		if ( op == Invalid )
-		{
-			log_failure("gen::def_operator: op cannot be invalid");
-			return Code::Invalid;
-		}
-
-		if ( body && body->Type != ECode::Function_Body )
+		if ( body && body->Type != Function_Body )
 		{
 			log_failure( "gen::def_operator: Body was provided but its not of function body type - %s", body->debug_str() );
 			return Code::Invalid;
 		}
 
-#	pragma region Helper Macros
-#		define check_params()                                                                                  \
-		if ( ! params_code )                                                                                   \
-		{                                                                                                      \
-			log_failure("gen::def_operator: params is null and operator%s requires it", to_str(op));           \
-			return Code::Invalid;                                                                              \
-		}                                                                                                      \
-		if ( params_code->Type != ECode::Parameters )                                                          \
-		{                                                                                                      \
-			log_failure("gen::def_operator: params is not of Parameters type - %s", params_code->debug_str()); \
-			return Code::Invalid;                                                                              \
-		}
+		OpValidateResult check_result = operator_validate( op, params_code, ret_type, specifiers );
 
-#		define check_ret_type()                                                                             \
-		if ( ! ret_type )                                                                                   \
-		{                                                                                                   \
-			log_failure("gen::def_operator: ret_type is null but is required by operator%s", to_str(op));   \
-		}                                                                                                   \
-		if ( ret_type->Type != ECode::Typename )                                                            \
-		{                                                                                                   \
-			log_failure("gen::def_operator: ret_type is not of typename type - %s", ret_type->debug_str()); \
-			return Code::Invalid;                                                                           \
-		}
-
-#		define check_param_eq_ret()                                                                    \
-		if ( ! is_member_symbol && params_code->param_type() != ret_type )                             \
-		{                                                                                              \
-			log_failure("gen_def_operator: operator%s requires first parameter to equal return type\n" \
-				"param types: %s\n"                                                                    \
-				"return type: %s",                                                                     \
-				to_str(op),                                                                            \
-				params_code->debug_str(),                                                              \
-				ret_type->debug_str()                                                                  \
-			);                                                                                         \
-			return Code::Invalid;                                                                      \
-		}
-#	pragma endregion Helper Macros
-
-		bool is_member_symbol = false;
-
-		check_ret_type();
-
-		switch ( op )
+		if ( check_result == OpValidateResult::Fail )
 		{
-#		define specs( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
-			case Assign:
-				check_params();
-				// check_ret_type();
-
-				if ( params_code->param_count() > 1 )
-				{
-					log_failure("gen::def_operator: "
-						"operator%s does not support non-member definition (more than one parameter provided) - %s",
-						to_str(op),
-						params_code->debug_str()
-					);
-					return Code::Invalid;
-				}
-
-				is_member_symbol = true;
-			break;
-
-			case Assign_Add:
-			case Assign_Subtract:
-			case Assgin_Multiply:
-			case Assgin_Divide:
-			case Assgin_Modulo:
-			case Assgin_BAnd:
-			case Assgin_BOr:
-			case Assign_BXOr:
-			case Assign_LShift:
-			case Assign_RShift:
-				check_params();
-				// check_ret_type();
-
-				if ( params_code->param_count() == 1 )
-					is_member_symbol = true;
-
-				else
-					check_param_eq_ret();
-
-				if (params_code->param_count() > 2 )
-				{
-					log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
-						, to_str(op)
-						, params_code->param_count()
-						, params_code->debug_str()
-					);
-					return Code::Invalid;
-				}
-			break;
-
-			case Increment:
-			case Decrement:
-				// check_ret_type();
-
-				// If its not set, it just means its a prefix member op.
-				if ( params_code )
-				{
-					if ( params_code->Type != ECode::Parameters )
-					{
-						log_failure("gen::def_operator: operator%s params code provided is not of Parameters type - %s"
-							, to_str(op)
-							, params_code->debug_str()
-						);
-						return Code::Invalid;
-					}
-
-					switch ( params_code->param_count() )
-					{
-						case 1:
-							if ( params_code->param_type() == type_ns(int) )
-								is_member_symbol = true;
-
-							else
-								check_param_eq_ret();
-						break;
-
-						case 2:
-							check_param_eq_ret();
-
-							if ( params_code->get_param(1) != type_ns(int) )
-							{
-								log_failure("gen::def_operator: "
-									"operator%s requires second parameter of non-member definition to be int for post-decrement",
-									to_str(op)
-								);
-								return Code::Invalid;
-							}
-						break;
-
-						default:
-							log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
-								, to_str(op)
-								, params_code->param_count()
-							);
-							return Code::Invalid;
-					}
-				}
-			break;
-
-			case Unary_Plus:
-			case Unary_Minus:
-			case BNot:
-				// check_ret_type();
-
-				if ( ! params_code )
-					is_member_symbol = true;
-
-				else
-				{
-					if ( params_code->Type != ECode::Parameters )
-					{
-						log_failure("gen::def_operator: params is not of Parameters type - %s", params_code->debug_str());
-						return Code::Invalid;
-					}
-
-					if ( params_code->param_type() == ret_type )
-					{
-						log_failure("gen::def_operator: "
-							"operator%s is non-member symbol yet first paramter does not equal return type\n"
-							"param type: %s\n"
-							"return type: %s\n"
-							, params_code->debug_str()
-							, ret_type->debug_str()
-						);
-						return Code::Invalid;
-					}
-
-					if ( params_code->param_count() > 1 )
-					{
-						log_failure("gen::def_operator: operator%s may not have more than one parameter - param count: %d"
-							, to_str(op)
-							, params_code->param_count()
-						);
-						return Code::Invalid;
-					}
-				}
-			break;
-
-			case Add:
-			case Subtract:
-			case Multiply:
-			case Divide:
-			case Modulo:
-			case BAnd:
-			case BOr:
-			case BXOr:
-			case LShift:
-			case RShift:
-				// check_ret_type();
-				check_params();
-
-				switch ( params_code->param_count() )
-				{
-					case 1:
-						is_member_symbol = true;
-					break;
-
-					case 2:
-						if ( params_code->param_type() != ret_type )
-						{
-							log_failure("gen::def_operator: "
-								"operator%s is non-member symbol yet first paramter does not equal return type\n"
-								"param type: %s\n"
-								"return type: %s\n"
-								, params_code->debug_str()
-								, ret_type->debug_str()
-							);
-							return Code::Invalid;
-						}
-					break;
-
-					default:
-						log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
-							, to_str(op)
-							, params_code->param_count()
-						);
-						return Code::Invalid;
-				}
-			break;
-
-			case LNot:
-				if ( ! params_code )
-					is_member_symbol = true;
-
-				else
-				{
-					if ( params_code->Type != ECode::Parameters )
-					{
-						log_failure("gen::def_operator: params is not of Parameters type - %s", params_code->debug_str());
-						return Code::Invalid;
-					}
-
-					if ( params_code->param_count() != 1 )
-					{
-						log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
-							, to_str(op)
-							, params_code->param_count()
-						);
-						return Code::Invalid;
-					}
-				}
-
-				if ( ret_type != type_ns(bool) )
-				{
-					log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
-						, to_str(op)
-						, ret_type->debug_str()
-					);
-					return Code::Invalid;
-				}
-			break;
-
-			case LAnd:
-			case LOr:
-			case Equals:
-			case NotEquals:
-			case Lesser:
-			case Greater:
-			case LesserEqual:
-			case GreaterEqual:
-				check_params();
-
-				switch ( params_code->param_count() )
-				{
-					case 1:
-						is_member_symbol = true;
-					break;
-
-					case 2:
-					break;
-
-					default:
-						log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 1-2"
-							, to_str(op)
-							, params_code->param_count()
-						);
-						return Code::Invalid;
-				}
-			break;
-
-			case Indirection:
-			case AddressOf:
-			case MemberOfPointer:
-				if ( params_code && params_code->param_count() > 1)
-				{
-					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
-						, to_str(op)
-						, params_code->param_count()
-					);
-					return Code::Invalid;
-				}
-				else
-				{
-					is_member_symbol = true;
-				}
-			break;
-
-			case PtrToMemOfPtr:
-				if ( params_code )
-				{
-					log_failure("gen::def_operator: operator%s expects no paramters - %s", to_str(op), params_code->debug_str());
-					return Code::Invalid;
-				}
-			break;
-
-			case Subscript:
-			case FunctionCall:
-			case Comma:
-				check_params();
-			break;
-#		undef specs
+			return Code::Invalid;
 		}
-
-#		undef check_params
-#		undef check_ret_type
-#		undef check_param_eq_ret
 
 		char const* name = bprintf( "operator%s", to_str(op) );
 
 		Code
-		result = make_code();
+		result       = make_code();
 		result->Name = get_cached_string( name, strnlen(name, MaxNameLength) );
 
 		if ( body )
 		{
-			result->Type = is_member_symbol ?
-				ECode::Operator : ECode::Operator_Member;
+			result->Type = check_result == OpValidateResult::Global ?
+				Operator : Operator_Member;
 
 			result->add_entry( body );
 		}
 		else
 		{
-			result->Type = is_member_symbol ?
-				ECode::Operator_Fwd : ECode::Operator_Member_Fwd;
+			result->Type = check_result == OpValidateResult::Global ?
+				Operator_Fwd : Operator_Member_Fwd;
 		}
 
 		if (params_code)
@@ -1509,10 +1487,9 @@ namespace gen
 		}
 
 		Code
-		result          = make_code();
-		result->Type    = Parameters;
-		result->Name    = get_cached_string( name, length );
-		result->Entries = make_code_entries();
+		result       = make_code();
+		result->Type = Parameters;
+		result->Name = get_cached_string( name, length );
 
 		result->add_entry( type );
 
@@ -1545,9 +1522,8 @@ namespace gen
 		}
 
 		Code
-		result          = make_code();
-		result->Name    = get_cached_string( name, length );
-		result->Entries = make_code_entries();
+		result       = make_code();
+		result->Name = get_cached_string( name, length );
 
 		if ( body )
 		{
@@ -1593,10 +1569,9 @@ namespace gen
 		}
 
 		Code
-		result          = make_code();
-		result->Name    = get_cached_string( name, length );
-		result->Type    = ECode::Variable;
-		result->Entries = make_code_entries();
+		result       = make_code();
+		result->Name = get_cached_string( name, length );
+		result->Type = ECode::Variable;
 
 		if ( specifiers )
 			result->add_entry( specifiers );
@@ -1661,29 +1636,92 @@ namespace gen
 		return result;
 	}
 
+/*
+	Body related functions typically follow the same implementation pattern.
+	So I opted to use inline helper macros to get the implementaiton done.
+	I didn't want to use a macro for it since I didn't want to make half the library
+	redundancies hide behind macros.
+
+	The implementation pattern is as follows:
+	* Validate a valid parameter num was provided, or code array
+		def_body_start or def_body_code_array_start( <name of function >)
+
+	* Begin the code entry do-while loop, make sure each entry is valid processing its type in the switc
+		def_body_code_validation_start( <name of function> )
+
+	* Define the switch case statements between the macros.
+
+	* Add the code entry, finish the closing implemenation for the do-while loop.
+		def_body_code_validation_end( <name of function> )
+
+	* Lock the body AST and return it.
+
+	If a function's implementation deviates from the macros then its just writen it out.
+*/
+
+#	pragma region Helper Macros for def_**_body functions
+#	define def_body_start( Name_ )                                          \
+	using namespace ECode;                                                  \
+																            \
+	if ( num <= 0 )                                                         \
+	{                                                                       \
+		log_failure("gen::" txt(Name_) ": num cannot be zero or negative"); \
+		return Code::Invalid;                                               \
+	}
+
+#	define def_body_code_array_start( Name_ )                                \
+	using namespace ECode;                                                   \
+																             \
+	if ( num <= 0 )                                                          \
+	{                                                                        \
+		log_failure("gen::" txt(Name_) ": num cannot be zero or negative");  \
+		return Code::Invalid;                                                \
+	}                                                                        \
+                                                                             \
+	if ( codes == nullptr )                                                  \
+	{                                                                        \
+		log_failure("gen::def_class_body: Provided a null array of codes");  \
+		return Code::Invalid;                                                \
+	}
+
+#	define def_body_code_validation_start( Name_, Get_Code_Expr_ )          \
+	do                                                                      \
+	{                                                                       \
+		Code entry = Get_Code_Expr_;                                        \
+                                                                            \
+		if ( ! entry )                                                      \
+		{                                                                   \
+			log_failure("gen::" txt(Name_) ": Provided an null entry");     \
+			return Code::Invalid;                                           \
+		}                                                                   \
+                                                                            \
+		switch ( entry->Type )                                              \
+		{
+
+#	define def_body_code_validation_end( Name_ )                                                        \
+				log_failure("gen::" txt(Name_) ": Entry type is not allowed: %s", entry->debug_str() ); \
+				return Code::Invalid;                                                                   \
+                                                                                                        \
+			default:                                                                                    \
+				break;                                                                                  \
+		}                                                                                               \
+                                                                                                        \
+		result->add_entry( entry );                                                                     \
+	}                                                                                                   \
+	while ( num--, num > 0 )
+#	pragma endregion Helper Macros for def_**_body functions
+
 	Code def_class_body( s32 num, ... )
 	{
-		using namespace ECode;
-
-		if ( num == 0 )
-		{
-			log_failure("gen::def_class_body: num cannot be zero");
-			return Code::Invalid;
-		}
+		def_body_start( def_class_body );
 
 		Code
-		result          = make_code();
-		result->Type    = Class_Body;
-		result->Entries = make_code_entries();
+		result       = make_code();
+		result->Type = Class_Body;
 
 		va_list va;
 		va_start(va, num);
-		do
-		{
-			Code entry = va_arg(va, Code);
-
-			switch ( entry->Type )
-			{
+		def_body_code_validation_start( def_class_body, va_arg( va, Code ) );
 				case Enum_Body:
 				case Execution:
 				case Function_Body:
@@ -1697,60 +1735,22 @@ namespace gen
 				case Struct_Body:
 				case Typename:
 				case Using_Namespace:
-					log_failure("gen::def_class_body: Entry type is not allowed: %s", entry->debug_str() );
-					return Code::Invalid;
-
-				default:
-					break;
-			}
-
-			result->add_entry( entry );
-		}
-		while ( num--, num > 0 );
+		def_body_code_validation_end( def_class_body );
 		va_end(va);
 
 		result.lock();
 		return result;
 	}
 
-	Code def_enum_body( s32 num, ... )
+	Code def_class_body( s32 num, Code* codes )
 	{
-		not_implemented( def_enum_body );
-	}
-
-	Code def_enum_body( s32 num, Code* codes )
-	{
-		not_implemented( def_enum_body );
-	}
-
-	Code def_function_body( s32 num, ... )
-	{
-		using namespace ECode;
-
-		if ( num <= 0 )
-		{
-			log_failure("gen::def_function_body: num cannot zero or neg");
-			return Code::Invalid;
-		}
+		def_body_code_array_start( def_class_body );
 
 		Code
 		result       = make_code();
 		result->Type = Function_Body;
 
-		va_list va;
-		va_start(va, num);
-		do
-		{
-			Code entry = va_arg(va, Code);
-
-			if ( ! entry )
-			{
-				log_failure("gen::def_function_body: Provided an invalid entry!");
-				return Code::Invalid;
-			}
-
-			switch ( entry->Type )
-			{
+		def_body_code_validation_start( def_class_body, *codes; codes++ );
 				case Access_Public:
 				case Access_Protected:
 				case Access_Private:
@@ -1770,18 +1770,110 @@ namespace gen
 				case Specifiers:
 				case Struct_Body:
 				case Typename:
-				{
-					log_failure("gen::def_function_body: Entry type is not allowed: %s", entry->type_str() );
-					return Code::Invalid;
-				}
+		def_body_code_validation_end( def_class_body );
 
-				default:
-					break;
+		result.lock();
+		return result;
+	}
+
+	Code def_enum_body( s32 num, ... )
+	{
+		def_body_start( def_enum_body );
+
+		Code
+		result       = make_code();
+		result->Type = Enum_Body;
+
+		va_list va;
+		va_start(va, num);
+		do
+		{
+			Code entry = va_arg(va, Code);
+
+			if ( ! entry )
+			{
+				log_failure("gen::def_enum_body: Provided a null entry");
+				return Code::Invalid;
+			}
+
+			if ( entry->Type != Untyped )
+			{
+				log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped type.", entry->debug_str() ); \
+				return Code::Invalid;
 			}
 
 			result->add_entry( entry );
 		}
 		while ( num--, num > 0 );
+		va_end(va);
+
+		result.lock();
+		return result;
+	}
+
+	Code def_enum_body( s32 num, Code* codes )
+	{
+		def_body_code_array_start( def_enum_body );
+
+		Code
+		result       = make_code();
+		result->Type = Class_Body;
+
+		do
+		{
+			Code entry = *codes;
+
+			if ( ! entry )
+			{
+				log_failure("gen::def_enum_body: Provided a null entry");
+				return Code::Invalid;
+			}
+
+			if ( entry->Type != Untyped )
+			{
+				log_failure("gen::def_enum_body: Entry type is not allowed: %s", entry->debug_str() ); \
+				return Code::Invalid;
+			}
+
+			result->add_entry( entry );
+		}
+		while ( codes++, num--, num > 0 );
+
+		result.lock();
+		return result;
+	}
+
+	Code def_function_body( s32 num, ... )
+	{
+		def_body_start( def_function_body );
+
+		Code
+		result       = make_code();
+		result->Type = Function_Body;
+
+		va_list va;
+		va_start(va, num);
+		def_body_code_validation_start( def_function_body, va_arg(va, Code) );
+			case Access_Public:
+			case Access_Protected:
+			case Access_Private:
+			case Class_Body:
+			case Enum_Body:
+			case Friend:
+			case Function_Body:
+			case Function_Fwd:
+			case Global_Body:
+			case Namespace:
+			case Namespace_Body:
+			case Operator:
+			case Operator_Fwd:
+			case Operator_Member:
+			case Operator_Member_Fwd:
+			case Parameters:
+			case Specifiers:
+			case Struct_Body:
+			case Typename:
+		def_body_code_validation_end( def_function_body );
 		va_end(va);
 
 		result.lock();
@@ -1790,36 +1882,13 @@ namespace gen
 
 	Code def_function_body( s32 num, Code* codes )
 	{
-		using namespace ECode;
-
-		if ( num <= 0 )
-		{
-			log_failure("gen::def_function_body: num cannot zero or neg");
-			return Code::Invalid;
-		}
-
-		if ( codes == nullptr )
-		{
-			log_failure("gen::def_function_body: Provided a null array of codes!");
-			return Code::Invalid;
-		}
+		def_body_code_array_start( def_function_body );
 
 		Code
 		result       = make_code();
 		result->Type = Function_Body;
 
-		do
-		{
-			Code entry = *codes;
-
-			if ( ! entry )
-			{
-				log_failure("gen::def_function_body: Provided an invalid entry!");
-				return Code::Invalid;
-			}
-
-			switch ( entry->Type )
-			{
+		def_body_code_validation_start( def_function_body, *codes; codes++ );
 				case Access_Public:
 				case Access_Protected:
 				case Access_Private:
@@ -1839,18 +1908,7 @@ namespace gen
 				case Specifiers:
 				case Struct_Body:
 				case Typename:
-				{
-					log_failure("gen::def_function_body: Entry type is not allowed: %s", entry->type_str() );
-					return Code::Invalid;
-				}
-
-				default:
-					break;
-			}
-
-			result->add_entry( entry );
-		}
-		while ( num--, num > 0 );
+		def_body_code_validation_end( def_function_body );
 
 		result.lock();
 		return result;
@@ -1858,13 +1916,7 @@ namespace gen
 
 	Code def_global_body( s32 num, ... )
 	{
-		using namespace ECode;
-
-		if ( num <= 0 )
-		{
-			log_failure("gen::def_global_body: num cannot zero or neg");
-			return Code::Invalid;
-		}
+		def_body_start( def_global_body );
 
 		Code
 		result       = make_code();
@@ -1872,46 +1924,24 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		do
-		{
-			Code entry = va_arg(va, Code);
-
-			if ( ! entry )
-			{
-				log_failure("gen::def_global_body: Provided an invalid entry!");
-				return Code::Invalid;
-			}
-
-			switch ( entry->Type )
-			{
-				case Access_Public:
-				case Access_Protected:
-				case Access_Private:
-				case Class_Body:
-				case Enum_Body:
-				case Execution:
-				case Friend:
-				case Function_Body:
-				case Global_Body:
-				case Namespace_Body:
-				case Operator_Member:
-				case Operator_Member_Fwd:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
-				{
-					log_failure("gen::def_global_body: Entry type is not allowed: %s", entry->type_str() );
-					return Code::Invalid;
-				}
-
-				default:
-					break;
-			}
-
-			result->add_entry( entry );
-		}
-		while ( num--, num > 0 );
+		def_body_code_validation_start( def_global_body, va_arg(va, Code) );
+			case Access_Public:
+			case Access_Protected:
+			case Access_Private:
+			case Class_Body:
+			case Enum_Body:
+			case Execution:
+			case Friend:
+			case Function_Body:
+			case Global_Body:
+			case Namespace_Body:
+			case Operator_Member:
+			case Operator_Member_Fwd:
+			case Parameters:
+			case Specifiers:
+			case Struct_Body:
+			case Typename:
+		def_body_code_validation_end( def_global_body );
 		va_end(va);
 
 		result.lock();
@@ -1920,64 +1950,30 @@ namespace gen
 
 	Code def_global_body( s32 num, Code* codes )
 	{
-		using namespace ECode;
-
-		if ( num <= 0 )
-		{
-			log_failure("gen::def_global_body: num cannot zero or neg");
-			return Code::Invalid;
-		}
-
-		if ( codes == nullptr )
-		{
-			log_failure("gen::def_global_body: Provided a null array of codes!");
-			return Code::Invalid;
-		}
+		def_body_code_array_start( def_global_body );
 
 		Code
 		result       = make_code();
 		result->Type = Global_Body;
 
-		do
-		{
-			Code entry = *codes;
-
-			if ( ! entry )
-			{
-				log_failure("gen::def_global_body: Provided an invalid entry!");
-				return Code::Invalid;
-			}
-
-			switch ( entry->Type )
-			{
-				case Access_Public:
-				case Access_Protected:
-				case Access_Private:
-				case Class_Body:
-				case Enum_Body:
-				case Execution:
-				case Friend:
-				case Function_Body:
-				case Global_Body:
-				case Namespace_Body:
-				case Operator_Member:
-				case Operator_Member_Fwd:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
-				{
-					log_failure("gen::def_global_body: Entry type is not allowed: %s", entry->type_str() );
-					return Code::Invalid;
-				}
-
-				default:
-					break;
-			}
-
-			result->add_entry( entry );
-		}
-		while ( num--, num > 0 );
+		def_body_code_validation_start( def_global_body, *codes; codes++ );
+			case Access_Public:
+			case Access_Protected:
+			case Access_Private:
+			case Class_Body:
+			case Enum_Body:
+			case Execution:
+			case Friend:
+			case Function_Body:
+			case Global_Body:
+			case Namespace_Body:
+			case Operator_Member:
+			case Operator_Member_Fwd:
+			case Parameters:
+			case Specifiers:
+			case Struct_Body:
+			case Typename:
+		def_body_code_validation_end( def_global_body );
 
 		result.lock();
 		return result;
@@ -1985,13 +1981,7 @@ namespace gen
 
 	Code def_namespace_body( s32 num, ... )
 	{
-		using namespace ECode;
-
-		if ( num <= 0 )
-		{
-			log_failure("gen::def_namesapce_body: num cannot be zero or less");
-			return Code::Invalid;
-		}
+		def_body_start( def_namespace_body );
 
 		Code
 		result = make_code();
@@ -1999,38 +1989,24 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		do
-		{
-			Code entry = va_arg(va, Code);
-
-			switch ( entry->Type )
-			{
-				case Access_Public:
-				case Access_Protected:
-				case Access_Private:
-				case Class_Body:
-				case Enum_Body:
-				case Execution:
-				case Friend:
-				case Function_Body:
-				case Global_Body:
-				case Namespace_Body:
-				case Operator_Member:
-				case Operator_Member_Fwd:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
-					log_failure("gen::def_namesapce_body: Entry type is not allowed: %s", ECode::to_str(entry->Type) );
-					return Code::Invalid;
-
-				default:
-					break;
-			}
-
-			result->add_entry( entry );
-		}
-		while ( num--, num > 0 );
+		def_body_code_validation_start( def_namespace_body, va_arg(va, Code) );
+			case Access_Public:
+			case Access_Protected:
+			case Access_Private:
+			case Class_Body:
+			case Enum_Body:
+			case Execution:
+			case Friend:
+			case Function_Body:
+			case Global_Body:
+			case Namespace_Body:
+			case Operator_Member:
+			case Operator_Member_Fwd:
+			case Parameters:
+			case Specifiers:
+			case Struct_Body:
+			case Typename:
+		def_body_code_validation_end( def_namespace_body );
 		va_end(va);
 
 		result.lock();
@@ -2039,64 +2015,30 @@ namespace gen
 
 	Code def_namespace_body( s32 num, Code* codes )
 	{
-		using namespace ECode;
-
-		if ( num <= 0 )
-		{
-			log_failure("gen::def_namesapce_body: num cannot zero or neg");
-			return Code::Invalid;
-		}
-
-		if ( codes == nullptr )
-		{
-			log_failure("gen::def_namesapce_body: Provided a null array of codes!");
-			return Code::Invalid;
-		}
+		def_body_code_array_start( def_namespace_body );
 
 		Code
 		result       = make_code();
 		result->Type = Global_Body;
 
-		do
-		{
-			Code entry = *codes;
-
-			if ( ! entry )
-			{
-				log_failure("gen::def_namesapce_body: Provided an invalid entry!");
-				return Code::Invalid;
-			}
-
-			switch ( entry->Type )
-			{
-				case Access_Public:
-				case Access_Protected:
-				case Access_Private:
-				case Class_Body:
-				case Enum_Body:
-				case Execution:
-				case Friend:
-				case Function_Body:
-				case Global_Body:
-				case Namespace_Body:
-				case Operator_Member:
-				case Operator_Member_Fwd:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
-				{
-					log_failure("gen::def_namesapce_body: Entry type is not allowed: %s", entry->type_str() );
-					return Code::Invalid;
-				}
-
-				default:
-					break;
-			}
-
-			result->add_entry( entry );
-		}
-		while ( num--, num > 0 );
+		def_body_code_validation_start( def_namespace_body, *codes; codes++ );
+			case Access_Public:
+			case Access_Protected:
+			case Access_Private:
+			case Class_Body:
+			case Enum_Body:
+			case Execution:
+			case Friend:
+			case Function_Body:
+			case Global_Body:
+			case Namespace_Body:
+			case Operator_Member:
+			case Operator_Member_Fwd:
+			case Parameters:
+			case Specifiers:
+			case Struct_Body:
+			case Typename:
+		def_body_code_validation_end( def_namespace_body );
 
 		result.lock();
 		return result;
@@ -2104,11 +2046,11 @@ namespace gen
 
 	Code def_params( s32 num, ... )
 	{
-		using namespace ECode;
+		def_body_start( def_params );
 
-		if (num <= 0)
+		if ( num % 3 != 0 )
 		{
-			log_failure( "gen::def_params: num cannot be zero or neg" );
+			log_failure("gen::def_params: number of arguments must be a multiple of 3 (Code, s32, char const*) - %d", num);
 			return Code::Invalid;
 		}
 
@@ -2128,7 +2070,7 @@ namespace gen
 
 		if ( type->Type != Typename )
 		{
-			log_failure( "gen::def_parameters: type of param %d is not a Typename", num - num + 1 );
+			log_failure( "gen::def_params: type of param %d is not a Typename", num - num + 1 );
 			return Code::Invalid;
 		}
 
@@ -2141,14 +2083,13 @@ namespace gen
 			name        = va_arg(va, char const*);
 
 			Code
-			param          = make_code();
-			param->Type    = Parameters;
-			param->Name    = get_cached_string(name, name_length);
-			param->Entries = make_code_entries();
+			param       = make_code();
+			param->Type = Parameters;
+			param->Name = get_cached_string(name, name_length);
 
 			if ( type->Type != Typename )
 			{
-				log_failure( "gen::def_parameters: type of param %d is not a Typename", num - num + 1 );
+				log_failure( "gen::def_params: type of param %d is not a Typename", num - num + 1 );
 				return Code::Invalid;
 			}
 
@@ -2165,19 +2106,7 @@ namespace gen
 
 	Code def_params( s32 num, Code* codes )
 	{
-		using namespace ECode;
-
-		if (num <= 0)
-		{
-			log_failure( "gen::def_params: num cannot be zero or neg" );
-			return Code::Invalid;
-		}
-
-		if ( codes == nullptr )
-		{
-			log_failure("gen::def_params: Provided a null array of codes");
-			return Code::Invalid;
-		}
+		def_body_code_array_start( def_params );
 
 #		define check_current()                                                                                      \
 		if ( current == nullptr )                                                                                   \
@@ -2214,21 +2143,20 @@ namespace gen
 	Code def_specifiers( s32 num, ... )
 	{
 		if ( num <= 0 )
+		{
 			log_failure("gen::def_specifiers: num cannot be zero or less");
+			return Code::Invalid;
+		}
 
-		// This should be more than enough...
-		static u8 FixedSizedBuffer[kilobytes(1024)];
-
-		static Arena str_arena;
-		do_once_start
-			arena_init_from_memory( & str_arena, FixedSizedBuffer, kilobytes(1024) );
-		do_once_end
+		if ( num > AST::ArrSpecs_Cap )
+		{
+			log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
+			return Code::Invalid;
+		}
 
 		Code
 		result       = make_code();
 		result->Type = ECode::Specifiers;
-
-		String crafted = string_make( arena_allocator( & str_arena ), "" );
 
 		va_list va;
 		va_start(va, num);
@@ -2236,25 +2164,10 @@ namespace gen
 		{
 			SpecifierT type = (SpecifierT)va_arg(va, int);
 
-			switch ( type )
-			{
-				case ESpecifier::Alignas:
-					crafted = string_append_fmt( (String)result->Content, "%s(%d)", ESpecifier::to_str(type), va_arg(va, u32) );
-				break;
-
-				default:
-					const char* str = ESpecifier::to_str(type);
-
-					crafted = string_append_fmt( (String)result->Content, "%s", str );
-				break;
-			}
+			result->add_specifier( type );
 		}
 		while ( --num, num );
 		va_end(va);
-
-		result->Content = get_cached_string( crafted, string_length( crafted ) );
-
-		free_all( arena_allocator( & str_arena ) );
 
 		result.lock();
 		return result;
@@ -2262,59 +2175,58 @@ namespace gen
 
 	Code def_struct_body( s32 num, ... )
 	{
-		using namespace ECode;
-
-		if ( num <= 0 )
-		{
-			log_failure("gen::def_struct_body: num must be at least 1");
-			return Code::Invalid;
-		}
+		def_body_start( def_struct_body );
 
 		Code
-		result = make_code();
+		result       = make_code();
+		result->Type = Struct_Body;
 
 		va_list va;
 		va_start(va, num);
-		do
-		{
-			Code entry = va_arg(va, Code);
-
-			switch ( entry->Type )
-			{
-				case Enum_Body:
-				case Execution:
-				case Function_Body:
-				case Global_Body:
-				case Namespace:
-				case Namespace_Body:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
-				case Using_Namespace:
-				{
-					log_failure("gen::def_struct_body: Entry type is not allowed: %s", ECode::to_str(entry->Type) );
-					return Code::Invalid;
-				}
-
-				case Operator:
-					// If an operator is getting added, we need to verify
-					// the definition conforms to the format required for member symbols.
-					if ( ! operator_member_symbol_check( entry ) )
-					{
-						log_failure( "gen::def_struct_body: Operator entry was not a valid member symbol.");
-						return Code::Invalid;
-					}
-				break;
-
-				default:
-					break;
-			}
-
-			result->add_entry( entry );
-		}
-		while ( num--, num > 0 );
+		def_body_code_validation_start( def_struct_body, va_arg(va, Code) );
+			case Enum_Body:
+			case Execution:
+			case Function_Body:
+			case Global_Body:
+			case Namespace:
+			case Namespace_Body:
+			case Operator:
+			case Operator_Fwd:
+			case Parameters:
+			case Specifiers:
+			case Struct_Body:
+			case Typename:
+			case Using_Namespace:
+		def_body_code_validation_end( def_struct_body );
 		va_end(va);
+
+		result.lock();
+		return result;
+	}
+
+	Code def_struct_body( s32 num, Code* codes )
+	{
+		def_body_code_array_start( def_struct_body );
+
+		Code
+		result       = make_code();
+		result->Type = Struct_Body;
+
+		def_body_code_validation_start( def_struct_body, *codes; codes++ );
+			case Enum_Body:
+			case Execution:
+			case Function_Body:
+			case Global_Body:
+			case Namespace:
+			case Namespace_Body:
+			case Operator:
+			case Operator_Fwd:
+			case Parameters:
+			case Specifiers:
+			case Struct_Body:
+			case Typename:
+			case Using_Namespace:
+		def_body_code_validation_end( def_struct_body );
 
 		result.lock();
 		return result;
@@ -2347,9 +2259,9 @@ namespace gen
 
 		Code
 		body       = make_code();
-		body->Type = Function_Body;
+		body->Type = Struct_Body;
 
-		result->add_entry( make_code() );
+		result->add_entry( body );
 
 		if ( parent )
 			result->add_entry( parent );
@@ -2362,7 +2274,31 @@ namespace gen
 
 	Code make_enum( s32 length, char const* name, Code type, EnumT specifier )
 	{
-		not_implemented( make_class );
+		using namespace ECode;
+
+		name_check( make_enum, length, name );
+
+		if ( type && type != Typename )
+		{
+			log_failure("gen::make_enum: type provided is not of code type typename - %s", type->debug_str() );
+			return Code::Invalid;
+		}
+
+		Code
+		result = make_code();
+		result->Type = specifier == EnumClass ? Enum_Class : Enum;
+		result->Name = get_cached_string( name, length );
+
+		Code
+		body = make_code();
+		body->Type = Enum_Body;
+
+		result->add_entry( body );
+
+		if ( type )
+			result->add_entry( type );
+
+		return result;
 	}
 
 	Code make_function( s32 length, char const* name
@@ -2430,22 +2366,66 @@ namespace gen
 
 	Code make_namespace( s32 length, char const* name, Code parent, Code specifiers )
 	{
-		not_implemented( make_namespace );
+		name_check( make_namespace, length, name );
+
+		Code
+		result = make_code();
+		result->Type = ECode::Namespace;
+		result->Name = get_cached_string( name, length );
+
+		Code
+		body = make_code();
+		body->Type = ECode::Namespace_Body;
+
+		result->add_entry( body );
+
+		return result;
 	}
 
-	Code make_operator( OperatorT op, Code params, Code ret_type, Code specifiers )
+	Code make_operator( OperatorT op, Code params_code, Code ret_type, Code specifiers )
 	{
-		not_implemented( make_operator );
+		using namespace ECode;
+
+		OpValidateResult check_result = operator_validate( op, params_code, ret_type, specifiers );
+
+		if ( check_result == OpValidateResult::Fail )
+		{
+			return Code::Invalid;
+		}
+
+		char const* name = bprintf( "operator%s", to_str(op) );
+
+		Code
+		result       = make_code();
+		result->Name = get_cached_string( name, strnlen(name, MaxNameLength) );
+
+		if (params_code)
+			result->add_entry( params_code );
+
+		result->add_entry( ret_type );
+
+		if ( specifiers )
+			result->add_entry( specifiers );
+
+		return result;
 	}
 
 	Code make_params()
 	{
-		not_implemented( make_params );
+		Code
+		result       = make_code();
+		result->Type = ECode::Parameters;
+
+		return result;
 	}
 
 	Code make_specifiers()
 	{
-		not_implemented( make_specifiers );
+		Code
+		result       = make_code();
+		result->Type = ECode::Specifiers;
+
+		return result;
 	}
 
 	Code make_struct( s32 length, char const* name, Code parent, Code specifiers )
@@ -2762,6 +2742,9 @@ namespace gen
 	s32 parse_typedefs( s32 length, char const* typedef_def, Code* out_typedef_codes )
 	{
 		not_implemented( parse_typedefs );
+
+		Code
+		result = make_code();
 	}
 
 	s32 parse_usings( s32 length, char const* usings_def, Code* out_using_codes )

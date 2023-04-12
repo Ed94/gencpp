@@ -581,8 +581,7 @@ namespace gen
 #			define Thread_Local_Code "NOT DEFINED"
 #		endif
 
-
-		#define Define_Specifiers                    \
+#		define Define_Specifiers                     \
 		Entry( API_Import,       API_Export_Code )   \
 		Entry( API_Export,       API_Import_Code )   \
 		Entry( Attribute, "      You cannot stringize an attribute this way" ) \
@@ -632,6 +631,7 @@ namespace gen
 			return lookup[ specifier ];
 		}
 
+		inline
 		Type to_type( char const* str, s32 length )
 		{
 			local_persist
@@ -689,7 +689,6 @@ namespace gen
 		// Adds and checks entries to see if they are valid additions the type of ast.
 		bool add( AST* other );
 
-		inline
 		void add_entry( AST* other );
 
 		forceinline
@@ -723,6 +722,8 @@ namespace gen
 
 		// Parameter
 
+		bool add_param( AST* type, s32 length, char const* name );
+
 		forceinline
 		AST* get_param( s32 index )
 		{
@@ -745,6 +746,34 @@ namespace gen
 			return Entries[0];
 		}
 
+		// Specifiers
+
+		inline
+		bool add_specifier( SpecifierT spec )
+		{
+			if ( StaticIndex == AST::ArrSpecs_Cap )
+			{
+				log_failure("AST::add_specifier: Attempted to add over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
+				return false;
+			}
+
+			ArrSpecs[ StaticIndex ] = spec;
+			StaticIndex++;
+			return true;
+		}
+
+		inline
+		bool has_specifier( SpecifierT spec )
+		{
+			for ( s32 Index = 0; Index < StaticIndex; Index++ )
+			{
+				if ( ArrSpecs[StaticIndex] == spec )
+					return true;
+			}
+
+			return false;
+		}
+
 		// Typename
 
 		forceinline
@@ -764,11 +793,6 @@ namespace gen
 		{
 			return Entries[0];
 		}
-
-		// AST*& operator=(AST* const& b)
-		// {
-
-		// }
 
 		// Serialization
 
@@ -805,8 +829,8 @@ namespace gen
 
 		String to_string() const;
 #	pragma endregion Member Functions
-		constexpr
-		static uw ArrS_Cap =
+		constexpr static
+		uw ArrS_Cap =
 		( 	AST_POD_Size
 			- sizeof(AST*)
 			- sizeof(StringCached) * 2
@@ -816,28 +840,28 @@ namespace gen
 			- sizeof(u8) * 7 )
 		/ sizeof(AST*);
 
-			// SpecifierT    Specifiers[]               \
+		constexpr static
+		uw ArrSpecs_Cap = ArrS_Cap * (sizeof(AST*) / sizeof(SpecifierT));
 
-		// Size : 256 bytes
-#		define Using_Code_POD                        \
-		union {                                      \
-			AST*          ArrStatic[AST::ArrS_Cap];  \
-			Array(AST*)   Entries;                   \
-			StringCached  Content;                   \
-		};                                           \
-		AST*              Parent;                    \
-		StringCached      Name;                      \
-		StringCached      Comment;                   \
-		CodeT             Type;                      \
-		OperatorT         Op;                        \
-		bool              Readonly;                  \
-		bool              DynamicEntries;            \
-		u8                StaticIndex;               \
+#		define Using_Code_POD                          \
+		union {                                        \
+			AST*          ArrStatic[AST::ArrS_Cap];    \
+			Array(AST*)   Entries;                     \
+			StringCached  Content;                     \
+			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; \
+		};                                             \
+		AST*              Parent;                      \
+		StringCached      Name;                        \
+		StringCached      Comment;                     \
+		CodeT             Type;                        \
+		OperatorT         Op;                          \
+		bool              Readonly;                    \
+		bool              DynamicEntries;              \
+		u8                StaticIndex;                 \
 		u8                _Align_Pad[6];
 
 		Using_Code_POD
 	};
-
 
 	struct CodePOD
 	{
@@ -1051,6 +1075,7 @@ namespace gen
 	Code def_specifier      ( SpecifierT specifier );
 
 	Code def_struct         ( s32 length, char const* name, Code parent     = NoCode, Code specifiers = NoCode, Code body = NoCode );
+	Code def_typedef        ( s32 length, char const* name, Code type );
 	Code def_type           ( s32 length, char const* name, Code specifiers = NoCode );
 	Code def_using          ( s32 length, char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
 
@@ -1427,13 +1452,11 @@ namespace gen
 }
 #pragma endregion Constants
 
-// end: gen_time
-#endif
-
 #pragma region Inlines
 namespace gen
 {
-	inline void AST::add_entry( AST* other )
+	inline
+	void AST::add_entry( AST* other )
 	{
 		AST* to_add = other->Parent ?
 			other->duplicate() : other;
@@ -1465,8 +1488,48 @@ namespace gen
 
 		to_add->Parent = this;
 	}
+
+	inline
+	bool AST::add_param( AST* type, s32 length, char const* name )
+	{
+		if ( length <= 0 )
+		{
+			log_failure( "gen::AST::add_param: Invalid name length provided - %d", length );
+			return Code::Invalid;
+		}
+
+		if ( name == nullptr )
+		{
+			log_failure( "gen::AST::add_param: name is null");
+			return Code::Invalid;
+		}
+
+		s32
+		score  = 0;
+		score += Name       == nullptr;
+		score += Entries[0] == nullptr;
+
+		if ( score == 1 )
+		{
+			log_failure("gen::AST::add_param: this AST has bad data - %s", debug_str() );
+			return false;
+		}
+		else if ( score == 2)
+		{
+			Name       = name;
+			Entries[0] = type;
+			return true;
+		}
+
+		Code
+		result = make_code();
+		result->Type = ECode::Parameters;
+
+		result->add_entry( result );
+		return true;
+	}
 }
 #pragma endregion Inlines
 
-#pragma region Undefines
-#pragma endregion Undefines
+// end: gen_time
+#endif
