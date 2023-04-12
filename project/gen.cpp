@@ -769,7 +769,7 @@ namespace gen
 	};
 
 	inline
-	OpValidateResult operator_validate( OperatorT op, Code params_code, Code ret_type, Code specifier )
+	OpValidateResult operator__validate( OperatorT op, Code params_code, Code ret_type, Code specifier )
 	{
 		using namespace EOperator;
 
@@ -1119,25 +1119,25 @@ namespace gen
 
 #	pragma region Helper Functions
 	// This snippet is used in nearly all the functions.
-#	define name_check( Context_, Length_, Name_ )                                               \
-	{                                                                                           \
-		if ( Length_ <= 0 )                                                                     \
-		{                                                                                       \
-			log_failure( "gen::%s: Invalid name length provided - %d", txt(Context_), length ); \
-			return Code::Invalid;                                                               \
-		}                                                                                       \
-                                                                                                \
-		if ( Name_ == nullptr )                                                                 \
-		{                                                                                       \
-			log_failure( "gen::%s: name is null", txt(Context_) );                              \
-			return Code::Invalid;                                                               \
-		}                                                                                       \
+#	define name_check( Context_, Length_, Name_ )                                                \
+	{                                                                                            \
+		if ( Length_ <= 0 )                                                                      \
+		{                                                                                        \
+			log_failure( "gen::" txt(Context_) ": Invalid name length provided - %d",  length ); \
+			return Code::Invalid;                                                                \
+		}                                                                                        \
+                                                                                                 \
+		if ( Name_ == nullptr )                                                                  \
+		{                                                                                        \
+			log_failure( "gen::" txt(Context_) ": name is null" );                               \
+			return Code::Invalid;                                                                \
+		}                                                                                        \
 	}
 
 #	define null_check( Context_, Code_ )                                          \
 	if ( ! Code_ )                                                                \
 	{                                                                             \
-		log_failure( "gen::%s: %s provided is null", txt(Context_), txt(Code_) ); \
+		log_failure( "gen::" txt(Context_) ": " txt(Code_) " provided is null" ); \
 		return Code::Invalid;                                                     \
 	}
 
@@ -1145,13 +1145,13 @@ namespace gen
 	{                                                                                   \
 		if ( ! Code_ )                                                                  \
 		{                                                                               \
-			log_failure( "gen::%s: %s provided is null", txt(Context_) );               \
+			log_failure( "gen::" txt(Context_) ": " txt(Code_) " provided is null" );   \
 			return Code::Invalid;                                                       \
 		}                                                                               \
                                                                                         \
 		if ( Code_->is_invalid() )                                                      \
 		{                                                                               \
-			log_failure("gen::%s: %s provided is invalid", txt(Context_), txt(Code_) ); \
+			log_failure("gen::" txt(Context_) ": " txt(Code_) " provided is invalid" ); \
 			return Code::Invalid;                                                       \
 		}                                                                               \
 	}
@@ -1435,7 +1435,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		OpValidateResult check_result = operator_validate( op, params_code, ret_type, specifiers );
+		OpValidateResult check_result = operator__validate( op, params_code, ret_type, specifiers );
 
 		if ( check_result == OpValidateResult::Fail )
 		{
@@ -2386,7 +2386,7 @@ namespace gen
 	{
 		using namespace ECode;
 
-		OpValidateResult check_result = operator_validate( op, params_code, ret_type, specifiers );
+		OpValidateResult check_result = operator__validate( op, params_code, ret_type, specifiers );
 
 		if ( check_result == OpValidateResult::Fail )
 		{
@@ -2468,6 +2468,73 @@ namespace gen
 #	pragma endregion Incremetnal Constructions
 
 #	pragma region Parsing Constructors
+#	pragma region Helper Macros
+#	define check_parse_args( func, length, def )                         \
+	if ( length <= 0 )                                                   \
+	{                                                                    \
+		log_failure( "gen::" txt(func) ": length must greater than 0" ); \
+		return Code::Invalid;                                            \
+	}                                                                    \
+	if ( def == nullptr )                                                \
+	{                                                                    \
+		log_failure( "gen::" txt(func) ": def was null" );               \
+		return Code::Invalid;                                            \
+	}
+
+/*
+	These macros are used to make the parsing code more readable.
+
+	They expect the following variables to be defined withing the scope of parsing constructor:
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
+
+		char const* name        = nullptr;
+		s32         name_length = 0;
+
+		s32 	    left    = length;
+		char const* scanner = def;
+
+		Code array_expr = Code::Invalid;
+		Code type       = Code::Invalid;
+
+		char const* word        = scanner;
+		s32         word_length = 0;
+*/
+
+#	define current ( * scanner )
+
+#	define move_forward() \
+	left--;               \
+	scanner++
+
+#	define SkipWhitespace() \
+	while ( left && char_is_space( current ) ) \
+	{                                          \
+		move_forward();                        \
+	}
+
+#	define GetWord()                                                    \
+	while ( left && char_is_alphanumeric( current ) || current == '_' ) \
+	{                                                                   \
+		move_forward();                                                 \
+		word_length++;                                                  \
+	}
+
+#	define CheckForSpecifiers()                                                     \
+	GetWord();                                                                      \
+	for ( s32 index = 0; index < ESpecifier::Num_Specifiers; index++ )              \
+	{                                                                               \
+		char const* specifier_str = ESpecifier::to_str( scast(SpecifierT, index) ); \
+																					\
+		if ( str_compare( word, specifier_str, word_length ) == 0 )                 \
+		{                                                                           \
+			specs_found[num_specifiers] = (SpecifierT) index;                       \
+			num_specifiers++;                                                       \
+			continue;                                                               \
+		}                                                                           \
+	}
+#	pragma endregion Helper Macros
+
 	Code parse_class( s32 length, char const* def )
 	{
 		not_implemented( parse_class );
@@ -2475,7 +2542,148 @@ namespace gen
 
 	Code parse_enum( s32 length, char const* def )
 	{
-		not_implemented( parse_enum );
+		check_parse_args( parse_enum, length, def );
+
+		// Just in case someone gets a vulkan-level enum in here...
+		char  entries_code[ kilobytes(128) ] { 0 };
+		s32   entries_length = 0;
+
+		char const* name        = nullptr;
+		s32         name_length = 0;
+
+		s32 	    left    = length;
+		char const* scanner = def;
+
+		char const* word        = scanner;
+		s32         word_length = 0;
+
+		Code type = { nullptr };
+
+		bool is_enum_class = false;
+
+		SkipWhitespace();
+		if ( left <= 0 )
+		{
+			log_failure( "gen::parse_enum: enum definition was empty" );
+			return Code::Invalid;
+		}
+
+		GetWord();
+		if ( word_length != 4 || str_compare( word, "enum", word_length ) != 0 )
+		{
+			log_failure( "gen::parse_enum: enum definition did not start with `enum`" );
+			return Code::Invalid;
+		}
+
+		SkipWhitespace();
+		if ( left <= 0 )
+		{
+			log_failure( "gen::parse_enum: enum definition did not have a name" );
+			return Code::Invalid;
+		}
+
+		GetWord();
+		if ( word_length == 5 && str_compare( word, "class", word_length ) == 0 )
+		{
+			is_enum_class = true;
+		}
+
+		SkipWhitespace();
+		if ( left <= 0 )
+		{
+			log_failure( "gen::parse_enum: enum definition did not have a name" );
+			return Code::Invalid;
+		}
+
+		GetWord();
+		name        = word;
+		name_length = word_length;
+
+		SkipWhitespace();
+
+		if ( current == ':' )
+		{
+			move_forward();
+			SkipWhitespace();
+
+			GetWord();
+			def_type( word_length, word, type );
+		}
+
+		SkipWhitespace();
+
+		if ( current == ';' )
+		{
+			goto Finished;
+		}
+
+		if ( current != '{' )
+		{
+			log_failure( "gen::parse_enum: enum definition did not have a body" );
+			return Code::Invalid;
+		}
+		move_forward();
+
+		char const* body_start = scanner;
+		do
+		{
+			if ( current == '}' )
+			{
+				move_forward();
+				break;
+			}
+
+			SkipWhitespace();
+			if ( left <= 0 )
+			{
+				log_failure( "gen::parse_enum: enum definition did not have a body" );
+				return Code::Invalid;
+			}
+
+			GetWord();
+			if ( word_length == 0 )
+			{
+				log_failure( "gen::parse_enum: enum definition did not have a body" );
+				return Code::Invalid;
+			}
+
+			entries_length += word_length;
+
+			if ( entries_length	>= kilobytes(128) )
+			{
+				log_failure( "gen::parse_enum: enum definition had too many entries" );
+				return Code::Invalid;
+			}
+		}
+		while(1);
+
+	Finished:
+		using namespace ECode;
+
+		Code
+		result = make_code();
+
+		if ( entries_length )
+		{
+			memcopy( entries_code, body_start, entries_length );
+
+			Code body = untyped_str( entries_length, entries_code );
+
+			result->Type = is_enum_class ? Enum_Class : Enum;
+			result->add_entry( body );
+		}
+		else
+		{
+			result->Type = is_enum_class ? Enum_Class_Fwd : Enum_Fwd;
+		}
+
+		result->Name = get_cached_string( name, name_length );
+
+		if ( type )
+			result->add_entry( type );
+
+		result.lock();
+		return result;
 	}
 
 	Code parse_execution( s32 length, char const* exec_def )
@@ -2495,11 +2703,7 @@ namespace gen
 
 	Code parse_function( s32 length, char const* def )
 	{
-		if ( def == nullptr )
-		{
-			log_failure("gen::parse_proc: def is null!");
-			return Code::Invalid;
-		}
+		check_parse_args( parse_function, length, def );
 
 		Arena mem;
 		do_once_start
@@ -2523,9 +2727,6 @@ namespace gen
 		static
 		Param Params[ 64 ] { 0 };
 
-		// Zero out params before a run of this func.
-		memset( Params, 0, sizeof( Params ));
-
 		char const* name;
 		s32         name_length = 0;
 
@@ -2540,15 +2741,6 @@ namespace gen
 
 		while ( left -- )
 		{
-			#define SkipWhitespace() \
-			while ( left && char_is_space( * scanner ) ) \
-			{                                            \
-				left--;                                  \
-				scanner++ ;                              \
-			}
-
-			#define Get
-
 			// Find all specifiers (if any) and the return type
 			do
 			{
@@ -2684,14 +2876,263 @@ namespace gen
 		not_implemented( parse_variable );
 	}
 
-	Code parse_type( s32 length, char const* def )
+	inline
+	bool parse__type_helper( char const* func_name
+		, s32 length,        char const* def
+		, s32 name_length,   char const* name
+		, u8 num_specifiers, SpecifierT* specs_found
+		, Code& array_expr)
 	{
-		not_implemented( parse_type );
+		s32 	    left    = length;
+		char const* scanner = def;
+
+		char const* word        = scanner;
+		s32         word_length = 0;
+
+		// Find all left-hand specifiers and the typename.
+		do
+		{
+			// Clearing any whitespace
+			SkipWhitespace();
+
+			if ( left <= 0 )
+			{
+				log_failure( "gen::%s: Error, reached end of string before finding typename", func_name );
+				return false;
+			}
+
+			CheckForSpecifiers();
+			break;
+		}
+		while (1);
+
+		name        = scanner;
+		name_length = word_length;
+
+		// Find all right-hand specifiers.
+		do
+		{
+			SkipWhitespace();
+
+			if ( left <= 0 )
+				break;
+
+			if ( current == '*')
+			{
+				specs_found[num_specifiers] = ESpecifier::Ptr;
+				num_specifiers++;
+				move_forward();
+				continue;
+			}
+
+			if ( current == '&')
+			{
+				move_forward();
+
+				if ( current == '&')
+				{
+					specs_found[num_specifiers] = ESpecifier::RValue;
+					num_specifiers++;
+					move_forward();
+					continue;
+				}
+
+				specs_found[num_specifiers] = ESpecifier::Ref;
+				num_specifiers++;
+				continue;
+			}
+
+			if ( current == '[')
+			{
+				move_forward();
+
+				SkipWhitespace();
+
+				if ( left <= 0 )
+				{
+					log_failure( "gen::%s: Error, reached end of string before finding array expression", func_name );
+					return false;
+				}
+
+				word        = scanner;
+				word_length = 0;
+				GetWord();
+
+				array_expr = untyped_str( word_length, word );
+
+				if ( left <= 0 )
+				{
+					log_failure( "gen::%s: Error, reached end of string before finding ']' for array expression", func_name );
+					return false;
+				}
+
+				if ( current == ']')
+				{
+					move_forward();
+				}
+
+				num_specifiers++;
+				continue;
+			}
+
+			word        = scanner;
+			word_length = 0;
+
+			CheckForSpecifiers();
+			break;
+		}
+		while (1);
 	}
 
-	Code parse_typdef( s32 length, char const* def )
+	Code parse_type( s32 length, char const* def )
 	{
-		not_implemented( parse_typedef );
+		check_parse_args( parse_type, length, def );
+
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		u8         num_specifiers = 0;
+
+		char const* name        = nullptr;
+		s32         name_length = 0;
+
+		Code array_expr = { nullptr };
+
+		bool helper_result = parse__type_helper( txt(parse_type)
+			, length,         def
+			, name_length,    name
+			, num_specifiers, specs_found
+			, array_expr
+		);
+
+		if ( ! helper_result )
+			return Code::Invalid;
+
+		using namespace ECode;
+
+		Code
+		result       = make_code();
+		result->Type = Typename;
+		result->Name = get_cached_string( name, name_length );
+
+		Code specifiers = def_specifiers( num_specifiers, specs_found );
+
+		result->add_entry( specifiers );
+
+		if ( array_expr )
+			result->add_entry( array_expr );
+
+		result.lock();
+		return result;
+	}
+
+	Code parse_typedef( s32 length, char const* def )
+	{
+		check_parse_args( parse_typedef, length, def );
+
+		using namespace ECode;
+
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
+
+		char const* name        = nullptr;
+		s32         name_length = 0;
+
+		s32 	    left    = length;
+		char const* scanner = def;
+
+		Code array_expr = { nullptr };
+		Code type       = { nullptr };
+
+		char const* word        = scanner;
+		s32         word_length = 0;
+
+		do
+		{
+			SkipWhitespace();
+
+			if ( left <= 0 )
+			{
+				log_failure( "gen::parse_typedef: Error, reached end of string before finding typename" );
+				return Code::Invalid;
+			}
+
+			GetWord();
+			if ( str_compare( word, "typedef", word_length ) != 0 )
+			{
+				log_failure( "gen::parse_typedef: Error, expected 'typedef' but found '%.*s'", word_length, word );
+				return Code::Invalid;
+			}
+
+			// Determining the typename inline
+
+			bool helper_result = parse__type_helper( txt(parse_typedef)
+				, left,           scanner
+				, name_length,    name
+				, num_specifiers, specs_found
+				, array_expr
+			);
+
+			if ( ! helper_result )
+				return Code::Invalid;
+
+			type       = make_code();
+			type->Type = Typename;
+			type->Name = get_cached_string( name, name_length );
+
+			Code specifiers = def_specifiers( num_specifiers, specs_found );
+
+			type->add_entry( specifiers );
+
+			if ( array_expr )
+				type->add_entry( array_expr );
+
+			type.lock();
+
+			// End typename
+
+			SkipWhitespace();
+
+			if ( left <= 0 )
+			{
+				log_failure( "gen::parse_typedef: Error, reached end of string before finding name" );
+				return Code::Invalid;
+			}
+			word        = scanner;
+			word_length = 0;
+			GetWord();
+
+			name        = word;
+			name_length = word_length;
+
+			SkipWhitespace();
+
+			if ( left <= 0 )
+			{
+				log_failure( "gen::parse_typedef: Error, reached end of string before finding ';' for typedef" );
+				return Code::Invalid;
+			}
+
+			if ( current == ';')
+			{
+				move_forward();
+				break;
+			}
+
+			log_failure( "gen::parse_typedef: Error, expected ';' for typedef" );
+			return Code::Invalid;
+		}
+		while (1);
+
+		using namespace ECode;
+
+		Code
+		result = make_code();
+		result->Type = Typedef;
+		result->Name = get_cached_string( name, name_length );
+
+		result->add_entry( type );
+
+		result.lock();
+		return result;
 	}
 
 	Code parse_using( s32 length, char const* def )
@@ -2742,9 +3183,6 @@ namespace gen
 	s32 parse_typedefs( s32 length, char const* typedef_def, Code* out_typedef_codes )
 	{
 		not_implemented( parse_typedefs );
-
-		Code
-		result = make_code();
 	}
 
 	s32 parse_usings( s32 length, char const* usings_def, Code* out_using_codes )

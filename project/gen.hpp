@@ -584,8 +584,9 @@ namespace gen
 #		define Define_Specifiers                     \
 		Entry( API_Import,       API_Export_Code )   \
 		Entry( API_Export,       API_Import_Code )   \
-		Entry( Attribute, "      You cannot stringize an attribute this way" ) \
-		Entry( Alignas,          alignas )           \
+		Entry( Attribute,        "You cannot stringize an attribute this way" )     \
+		Entry( Alignas,          alignas )                                          \
+		Entry( Array_Decl,       "You cannot stringize an array declare this way" ) \
 		Entry( Const,            const )             \
 		Entry( C_Linkage,        extern "C" )        \
 		Entry( Consteval,        consteval )         \
