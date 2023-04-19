@@ -15,8 +15,8 @@
 
 	* Macro or template generation                : This library is to avoid those, adding support for them adds unnecessary complexity.
 	* Vendor provided dynamic dispatch (virtuals) : Roll your own, this library might roll its own vtable/interface generation helpers in the future.
-	* RTTI                                        : This is kinda covered with the last point, but just wanted to emphasize.
-	* Exceptions                                  : Most fo the
+	* RTTI
+	* Exceptions
 	* Execution statement validation              : Execution expressions are defined using the untyped string API.
 
 	Keywords in from "Modern C++":
@@ -383,6 +383,9 @@
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 // #define GEN_DONT_USE_FATAL
 #define GEN_ENFORCE_READONLY_AST
+
+#define GEN_FEATURE_INCREMENTAL
+#define GEN_FEATURE_PARSING
 #define GEN_FEATURE_EDITOR
 #define GEN_FEATURE_SCANNER
 
@@ -439,6 +442,7 @@ namespace gen
 		Entry( Variable )            \
 		Entry( Typedef )             \
 		Entry( Typename )            \
+		Entry( Union )			     \
 		Entry( Using )               \
 		Entry( Using_Namespace )
 
@@ -498,7 +502,7 @@ namespace gen
 			Entry( Assgin_Divide,   /= )  \
 			Entry( Assgin_Modulo,   %= )  \
 			Entry( Assgin_BAnd,     &= )  \
-			Entry( Assgin_BOr,      &= )  \
+			Entry( Assgin_BOr,      |= )  \
 			Entry( Assign_BXOr,     ^= )  \
 			Entry( Assign_LShift,   <<= ) \
 			Entry( Assign_RShift,   >>= ) \
@@ -535,7 +539,7 @@ namespace gen
 
 		enum Type : u32
 		{
-#			define Entry( Type, Token ) Type,
+#			define Entry( Type_, Token_ ) Type_,
 			Define_Operators
 #			undef Entry
 			Comma,
@@ -552,7 +556,7 @@ namespace gen
 
 			local_persist
 			char const* lookup[ Num_Ops ] = {
-#				define Entry( Type, Token ) txt(Token),
+#				define Entry( Type_, Token_ ) txt(Token_),
 				Define_Operators
 #				undef Entry
 				","
@@ -570,15 +574,11 @@ namespace gen
 #		if defined(ZPL_SYSTEM_WINDOWS)
 #			define API_Export_Code __declspec(dllexport)
 #			define API_Import_Code __declspec(dllimport)
+#			define API_Keyword     __declspec
 #		elif defined(ZPL_SYSTEM_MACOS)
 #			define API_Export_Code __attribute__ ((visibility ("default")))
 #			define API_Import_Code __attribute__ ((visibility ("default")))
-#		endif
-
-#		if defined(ZPL_MODULE_THREADING)
-#			define Thread_Local_Code thread_local
-#		else
-#			define Thread_Local_Code "NOT DEFINED"
+#			define API_Keyword     __attribute__
 #		endif
 
 #		define Define_Specifiers                     \
@@ -587,8 +587,8 @@ namespace gen
 		Entry( Attribute,        "You cannot stringize an attribute this way" )     \
 		Entry( Alignas,          alignas )                                          \
 		Entry( Array_Decl,       "You cannot stringize an array declare this way" ) \
-		Entry( Const,            const )             \
 		Entry( C_Linkage,        extern "C" )        \
+		Entry( Const,            const )             \
 		Entry( Consteval,        consteval )         \
 		Entry( Constexpr,        constexpr )         \
 		Entry( Constinit,        constinit )         \
@@ -605,7 +605,7 @@ namespace gen
 		Entry( Register,         register )          \
 		Entry( RValue,           && )                \
 		Entry( Static_Member,    static  )           \
-		Entry( Thread_Local,     Thread_Local_Code ) \
+		Entry( Thread_Local,     thread_local )      \
 		Entry( Volatile,         volatile )
 
 		enum Type : u32
@@ -1100,6 +1100,7 @@ namespace gen
 #	pragma endregion Upfront
 
 #	pragma region Incremental
+#	ifdef GEN_FEATURE_INCREMENTAL
 	Code make_class       ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
 	Code make_enum        ( s32 length,     char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
 	Code make_function    ( s32 length,     char const* name, Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
@@ -1109,9 +1110,11 @@ namespace gen
 	Code make_params      ();
 	Code make_specifiers  ();
 	Code make_struct      ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+#	endif
 #	pragma endregion Incremental
 
 #	pragma region Parsing
+#	ifdef GEN_FEATURE_PARSING
 	Code parse_class      ( s32 length, char const* class_def     );
 	Code parse_enum       ( s32 length, char const* enum_def      );
 	Code parse_execution  ( s32 length, char const* exec_def      );
@@ -1136,6 +1139,7 @@ namespace gen
 	s32 parse_variables ( s32 length, char const* vars_def,       Code* out_var_codes );
 	s32 parse_typedefs  ( s32 length, char const* typedef_def,    Code* out_typedef_codes );
 	s32 parse_usings    ( s32 length, char const* usings_def,     Code* out_using_codes );
+#	endif
 #	pragma endregion Parsing
 
 #	pragma region Untyped text
@@ -1364,10 +1368,13 @@ namespace gen
 #	define operator_body(   ... )        gen::def_operator_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
 #	define struct_body(     ... )        gen::def_struct_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
 
+#	ifdef GEN_FEATURE_INCREMENTAL
 // Incremental
 
 #   define make( ConstructType_, Name_, ... ) Code Name_ = make_##ConstructType_( txt_n_len(Name_), __VA_ARGS__ );
+#	endif
 
+#	ifdef GEN_FEATURE_PARSING
 // Parsing
 
 #	define class_code(       ... ) gen::parse_class      ( txt_n_len( __VA_ARGS__ ))
@@ -1381,6 +1388,7 @@ namespace gen
 #	define type_code(        ... ) gen::parse_type       ( txt_n_len( __VA_ARGS__ ))
 #	define typedef_code(     ... ) gen::parse_typedef    ( txt_n_len( __VA_ARGS__ ))
 #	define using_code(       ... ) gen::parse_code       ( txt_n_len( __VA_ARGS__ ))
+#	endif
 
 // Untyped
 

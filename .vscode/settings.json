@@ -14,7 +14,9 @@
 		"exception": "cpp",
 		"optional": "cpp",
 		"tuple": "cpp",
-		"xmemory": "cpp"
+		"xmemory": "cpp",
+		"algorithm": "cpp",
+		"limits": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled"
 }

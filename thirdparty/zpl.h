@@ -35,7 +35,7 @@ GitHub:
 
 Version History:
   19.0.0  - Check all results of zpl_alloc() when using JSON parser/writer (rheatley-pervasid)
-  
+
   18.1.5  - set parent to parsed JSON nodes (fixed)
   		- fix zpl_json/csv_write_string off-by-one issue
   18.1.4  - fix zpl_random_gen_isize/zpl_random_range_isize 32bit overflow
@@ -51,13 +51,13 @@ Version History:
   18.0.0  - removed coroutines module
           - removed timer module
           - rename zpl_adt_get -> zpl_adt_query
-  
+
   17.0.0  - ADT API changes
               zpl_adt_inset_* -> zpl_adt_append_*
               zpl_adt_node now holds a parent field, methods no longer require a pointer to the parent
               methods are now documented
           - add zpl_thread_init_nowait (gaopeng)
-  
+
   16.1.1  - fix scientific notation parsing
   16.1.0  - introduce ZPL_PARSER_DISABLE_ANALYSIS that disables extra parsing capabilities to offer better raw performance
               at a cost of lack of node metadata.
@@ -69,7 +69,7 @@ Version History:
           - fix memory leak when parsing a json array (gaopeng)
           - add zpl_strntok (gaopeng)
           - add zpl_semaphore_trywait (gaopeng)
-  
+
   15.0.3  - fix zpl_sign call in math failing to compile
               on macos devices
   15.0.2  - zpl_sign0 was introduced
@@ -77,7 +77,7 @@ Version History:
   		- zpl_sign(0) returns 0
   15.0.0  - Rework zpl ring buffer
   		- various code improvements
-  
+
   14.1.7  - fix zpl_random_range_i64
   		- set thread's is_running before we start a thread
   14.1.6  - remove windows.h dependency for header part
@@ -87,7 +87,7 @@ Version History:
   14.1.0  - add hashtable map_mut method
   14.0.1  - fix zpl_array_remove_at boundary bug
   14.0.0  - heap memory allocator analysis
-  
+
   13.4.1  - adt optimizations
   13.4.0  - new adt manipulation methods
   13.3.3  - fix zpl_str_skip_literal bug
@@ -102,7 +102,7 @@ Version History:
   13.1.1  - fix emscripten support
   13.1.0  - abstract data tree naming update
   13.0.0  - text parsers refactor
-  
+
   12.8.0  - zpl_opts improvements
   12.7.0  - math improvements
   12.6.2  - remove register usage (BeastLe9enD)
@@ -119,7 +119,7 @@ Version History:
   12.1.0  - Add rectangle partitioning
   12.0.1  - Optimize zpl_strlen
   12.0.0  - JSON API revamp + improvements
-  
+
   11.3.0  - JSON zpl_json_str_to_flt + cleanup
   11.2.5  - fix small atomics typo
   11.2.4  - JSON rewrite core parser
@@ -141,7 +141,7 @@ Version History:
   11.0.0  - New jobs system
           - Rewrite the timer module
           - zpl_ring rework
-  
+
   10.13.0 - Initial ARM threading support
   10.12.1 - Fix missing zpL_alloc_str
   10.12.0 - Add zpl_crc64
@@ -185,7 +185,7 @@ Version History:
   10.0.4 - Flush tester output to fix ordering
   10.0.3 - Fix ZPL_STATIC_ASSERT under MSVC
   10.0.0 - Major overhaul of the library
-  
+
   9.8.10 - JSON fix array-based documents with objects
   9.8.9 - JSON document structured as array now properly recognizes the root object as array.
   9.8.8 - Fixed an incorrect parsing of empty array nodes.
@@ -218,7 +218,7 @@ Version History:
   9.1.0 - get_env rework and fixes
   9.0.3 - Small fixes and removals
   9.0.0 - New documentation format, removed deprecated code, changed styles
-  
+
   8.14.1 - Fix string library
   8.14.0 - Added zpl_re_match_all
   8.13.0 - Update system command API
@@ -237,7 +237,7 @@ Version History:
   8.10.0 - Added zpl_strchr
   8.9.0  - API improvements for JSON5 parser
   8.8.4  - Add support for SJSON formatting http://bitsquid.blogspot.com/2009/10/simplified-json-notation.html
-  
+
   6.8.3  - JSON5 exp fix
   6.8.2  - Bugfixes applied from gb
   6.8.1  - Performance improvements for JSON5 parser
@@ -257,7 +257,7 @@ Version History:
   6.0.2  - Fixed warnings for json5 i64 printfs
   6.0.1  - Fixed warnings for particual win compiler in dirlist method
   6.0.0  - New build, include/ was renamed to code/
-  
+
   5.8.3  - Naming fixes
   5.8.2  - Job system now supports prioritized tasks
   5.8.1  - Renames zpl_pad to zpl_ring
@@ -285,7 +285,7 @@ Version History:
   5.0.2  - Fix segfault when using zpl_stack_memory
   5.0.1  - Small code improvements
   5.0.0  - Project structure changes
-  
+
   4.7.2  - Got rid of size arg for zpl_str_split_lines
   4.7.1  - Added an example
   4.7.0  - Added zpl_path_dirlist
@@ -310,7 +310,7 @@ Version History:
   4.0.2  - Warning fix for _LARGEFILE64_SOURCE
   4.0.1  - include stdlib.h for getenv (temp)
   4.0.0  - ARM support, coding style changes and various improvements
-  
+
   3.4.1  - zpl_memcopy now uses memcpy for ARM arch-family
   3.4.0  - Removed obsolete code
   3.3.4  - Added Travis CI config
@@ -331,7 +331,7 @@ Version History:
   3.0.2  - Fixed linux part, and removed trailing spaces
   3.0.1  - Small bugfix in zpl_file_open
   3.0.0  - Added several fixes and features
-  
+
   2.4.0  - Added remove to hash table
   2.3.3  - Removed redundant code
   2.3.2  - Eliminated extra warnings
@@ -344,7 +344,7 @@ Version History:
   2.0.8  - Small adjustments
   2.0.7  - MinGW related fixes
   2.0.0  - New NPM based version
-  
+
   1.2.2  - Small fix
   1.2.1  - Macro fixes
   1.2.0  - Added zpl_async macro
@@ -354,15 +354,15 @@ Version History:
 
 License:
   This Software is dual licensed under the following licenses:
-  
+
   Unlicense
   This is free and unencumbered software released into the public domain.
-  
+
   Anyone is free to copy, modify, publish, use, compile, sell, or
   distribute this software, either in source code form or as a compiled
   binary, for any purpose, commercial or non-commercial, and by any
   means.
-  
+
   In jurisdictions that recognize copyright laws, the author or authors
   of this software dedicate any and all copyright interest in the
   software to the public domain. We make this dedication for the benefit
@@ -370,7 +370,7 @@ License:
   successors. We intend this dedication to be an overt act of
   relinquishment in perpetuity of all present and future rights to this
   software under copyright law.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -378,15 +378,15 @@ License:
   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
   OTHER DEALINGS IN THE SOFTWARE.
-  
+
   For more information, please refer to <http://unlicense.org/>
-  
+
   BSD 3-Clause
   Copyright (c) 2016-2021 Dominik Madarász. All rights reserved.
-  
+
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
-  
+
   1. Redistributions of source code must retain the above copyright notice, this
   list of conditions and the following disclaimer.
   2. Redistributions in binary form must reproduce the above copyright notice,
@@ -395,7 +395,7 @@ License:
   3. Neither the name of the copyright holder nor the names of its contributors
   may be used to endorse or promote products derived from this software without
   specific prior written permission.
-  
+
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
   WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -8367,7 +8367,9 @@ ZPL_END_NAMESPACE
 #		endif
 
 #		if ! defined( thread_local )
-#			if defined( _MSC_VER ) && _MSC_VER >= 1300
+#			if defined( __cplusplus ) && __cplusplus >= 201103L
+#				define thread_local thread_local
+#			elif defined( _MSC_VER ) && _MSC_VER >= 1300
 #				define thread_local __declspec( thread )
 #			elif defined( __GNUC__ )
 #				define thread_local __thread
@@ -8803,7 +8805,10 @@ ZPL_END_NAMESPACE
 #		endif
 #	else
 #		if ! defined( thread_local )
-#			define thread_local
+#			if defined( __cplusplus ) && __cplusplus >= 201103L
+#				define thread_local thread_local
+#			else
+#				define thread_local
 #		endif
 #	endif
 
