@@ -606,7 +606,11 @@ namespace gen
 		Entry( RValue,           && )                \
 		Entry( Static_Member,    static  )           \
 		Entry( Thread_Local,     thread_local )      \
-		Entry( Volatile,         volatile )
+		Entry( Volatile,         volatile )          \
+		Entry( Type_Signed,      signed )            \
+		Entry( Type_Unsigned,	 unsigned )          \
+		Entry( Type_Short,       short )             \
+		Entry( Type_Long,        long )
 
 		enum Type : u32
 		{

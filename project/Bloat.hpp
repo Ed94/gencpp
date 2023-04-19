@@ -254,4 +254,3 @@ sw fatal(char const *fmt, ...)
 	return -1;
 #endif
 }
-
