@@ -268,7 +268,6 @@ namespace gen
 		switch ( Type )
 		{
 			case Invalid:
-
 			break;
 
 			case Untyped:
@@ -779,7 +778,7 @@ namespace gen
 			return OpValidateResult::Fail;
 		}
 
-#		pragma region Helper Macros
+#	pragma region Helper Macros
 #		define check_params()                                                                                  \
 		if ( ! params_code )                                                                                   \
 		{                                                                                                      \
@@ -804,7 +803,7 @@ namespace gen
 			);                                                                                         \
 			return OpValidateResult::Fail;                                                             \
 		}
-#		pragma endregion Helper Macros
+#	pragma endregion Helper Macros
 
 		if ( ! ret_type )
 		{
@@ -821,7 +820,7 @@ namespace gen
 
 		switch ( op )
 		{
-#		define specs( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
+#			define specs( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
 			case Assign:
 				check_params();
 
@@ -1082,7 +1081,7 @@ namespace gen
 			case Comma:
 				check_params();
 			break;
-#		undef specs
+#			undef specs
 		}
 
 #		undef check_params
@@ -1134,12 +1133,12 @@ namespace gen
 		}                                                                                        \
 	}
 
-#	define null_check( Context_, Code_ )                                          \
-	if ( ! Code_ )                                                                \
-	{                                                                             \
-		log_failure( "gen::" txt(Context_) ": " txt(Code_) " provided is null" ); \
-		return Code::Invalid;                                                     \
-	}
+#	define null_check( Context_, Code_ )                                              \
+		if ( ! Code_ )                                                                \
+		{                                                                             \
+			log_failure( "gen::" txt(Context_) ": " txt(Code_) " provided is null" ); \
+			return Code::Invalid;                                                     \
+		}
 
 #	define null_or_invalid_check( Context_, Code_ )                                     \
 	{                                                                                   \
@@ -1442,11 +1441,11 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		char const* name = bprintf( "operator%s", to_str(op) );
+		char const* name = str_fmt_buf( "operator%s", to_str(op) );
 
 		Code
 		result       = make_code();
-		result->Name = get_cached_string( name, strnlen(name, MaxNameLength) );
+		result->Name = get_cached_string( name, str_len(name, MaxNameLength) );
 
 		if ( body )
 		{
@@ -2502,6 +2501,7 @@ namespace gen
 
 		return result;
 	}
+#	endif // GEN_FEATURE_INCREMENTAL
 #	pragma endregion Incremetnal Constructions
 
 #	pragma region Parsing Constructors
@@ -2533,70 +2533,7 @@ namespace gen
 
 /*
 	These macros are used to make the parsing code more readable.
-
-	They expect the following variables to be defined withing the scope of parsing constructor:
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		s32        num_specifiers = 0;
-
-		char const* name        = nullptr;
-		s32         name_length = 0;
-
-		s32 	    left    = length;
-		char const* scanner = def;
-
-		Code array_expr = Code::Invalid;
-		Code type       = Code::Invalid;
-
-		char const* word        = scanner;
-		s32         word_length = 0;
 */
-
-#	define current ( * scanner )
-
-#	define move_forward() \
-	left--;               \
-	scanner++
-
-#	define SkipWhitespace()                     \
-	while ( left && char_is_space( current ) )  \
-	{                                           \
-		move_forward();                         \
-	}
-
-#	define SkipWhitespace_Checked( Context_, Msg_, ... )             \
-	while ( left && char_is_space( current ) )                       \
-	{                                                                \
-		move_forward();                                              \
-	}                                                                \
-	if ( left <= 0 )                                                 \
-	{                                                                \
-		log_failure( "gen::" txt(Context_) ": " Msg_, __VA_ARGS__ ); \
-		return Code::Invalid;                                        \
-	}
-
-#	define GetWord()                                                    \
-	word        = scanner;                                              \
-	word_length = 0;                                                    \
-	while ( left && char_is_alphanumeric( current ) || current == '_' ) \
-	{                                                                   \
-		move_forward();                                                 \
-		word_length++;                                                  \
-	}
-
-#	define CheckForSpecifiers()                                                     \
-	GetWord();                                                                      \
-	for ( s32 index = 0; index < ESpecifier::Num_Specifiers; index++ )              \
-	{                                                                               \
-		char const* specifier_str = ESpecifier::to_str( scast(SpecifierT, index) ); \
-																					\
-		if ( str_compare( word, specifier_str, word_length ) == 0 )                 \
-		{                                                                           \
-			specs_found[num_specifiers] = (SpecifierT) index;                       \
-			num_specifiers++;                                                       \
-			continue;                                                               \
-		}                                                                           \
-	}
-
 #	define curr_tok ( * tokens )
 
 #	define eat( Type_ )                                                                         \
@@ -2606,7 +2543,7 @@ namespace gen
 		log_failure( "gen::" txt(context) ": expected %s, got %s", txt(Type_), curr_tok.Type ); \
 		return Code::Invalid;                                                                   \
 	}                                                                                           \
-	tokens++;                                                                                   \
+	tokIDX++;                                                                                   \
 	left--
 #	pragma endregion Helper Macros
 
@@ -2717,6 +2654,29 @@ namespace gen
 
 	Array(Token) lex( s32 length, char const* content)
 	{
+#		define current ( * scanner )
+
+#		define move_forward() \
+		left--;               \
+		scanner++
+
+#		define SkipWhitespace()                     \
+		while ( left && char_is_space( current ) )  \
+		{                                           \
+			move_forward();                         \
+		}
+
+#		define SkipWhitespace_Checked( Context_, Msg_, ... )             \
+		while ( left && char_is_space( current ) )                       \
+		{                                                                \
+			move_forward();                                              \
+		}                                                                \
+		if ( left <= 0 )                                                 \
+		{                                                                \
+			log_failure( "gen::" txt(Context_) ": " Msg_, __VA_ARGS__ ); \
+			return Code::Invalid;                                        \
+		}
+
 		do_once_start
 			arena_init_from_allocator( & LexAllocator, heap(), megabytes(10) );
 
@@ -2746,7 +2706,7 @@ namespace gen
 		if ( Tokens )
 			array_clear( Tokens );
 
-		array_init_reserve( Tokens, LexAllocator, length / 8 );
+		array_init_reserve( Tokens, arena_allocator( & LexAllocator), length / 8 );
 
 		while (left )
 		{
@@ -3095,6 +3055,11 @@ namespace gen
 		}
 
 		return Tokens;
+
+#		undef current
+#		undef move_forward
+#		undef SkipWhitespace
+#		undef SkipWhitespace_Checked
 	}
 #	pragma endregion Lexer
 
@@ -3117,42 +3082,29 @@ namespace gen
 
 		Token& curr_token = * tokens;
 
-		s32 left = array_count( tokens );
+		s32 tokIDX = 0;
+		s32 left   = array_count( tokens );
 		do
 		{
-			Token token = tokens[ array_count(tokens) - left ];
 
-			eat( TokType::Decl_Class );
-
-			// check for api specifier...
-
-			name = curr_token;
-
-			switch ( token.Type )
-			{
-				case TokType::Identifier:
-				{
-				}
-			}
 		}
 		while ( left--, left > 0 );
 	}
 
 	Code parse_enum( s32 length, char const* def )
 	{
-#		define context parse_type
-
-		check_parse_args( parse_typedef, length, def );
+#		define context parse_enum
+		check_parse_args( parse_enum, length, def );
 
 		Array(Token) tokens = lex( length, def );
-
 		if ( tokens == nullptr )
 		{
-			log_failure( "gen::parse_typedef: no tokens found for provided definition" );
+			log_failure( "gen::parse_enum: no tokens found for provided definition" );
 			return Code::Invalid;
 		}
 
-		s32 left = array_count( tokens );
+		s32 left   = array_count( tokens );
+		s32 tokIDX = 0;
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
@@ -3188,7 +3140,9 @@ namespace gen
 		{
 			eat( TokType::Assign_Classifer );
 
-			type = parse_type( curr_tok.Length, curr_tok.Text );
+			s32 left_length = curr_tok.Length + curr_tok.Text - array_front(tokens).Text;
+
+			type = parse_type( curr_tok.Length , curr_tok.Text );
 			if ( type == Code::Invalid )
 			{
 				log_failure( "gen::parse_enum: failed to parse enum type" );
@@ -3242,6 +3196,7 @@ namespace gen
 
 		result.lock();
 		return result;
+#		undef context
 	}
 
 	Code parse_execution( s32 length, char const* exec_def )
@@ -3261,7 +3216,8 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		s32 left = array_count( tokens );
+		s32 left   = array_count( tokens );
+		s32 tokIDX = 0;
 
 		eat( TokType::Decl_Friend );
 
@@ -3269,7 +3225,16 @@ namespace gen
 		// If its a function declaration, it will have a return type, followed by a name, followed by a parameter list.
 		// If its a simple type, it will have a type, followed by a name.
 
-		return Code::Invalid;
+
+
+
+		using namespace ECode;
+
+		Code result = make_code();
+
+
+
+		return result;
 	}
 
 	Code parse_global_body( s32 length, char const* def )
@@ -3303,113 +3268,28 @@ namespace gen
 		static
 		Param Params[ 64 ] { 0 };
 
-		char const* name;
-		s32         name_length = 0;
 
-		char const* body_str     = nullptr;
-		s32         body_length  = 0;
 
-		char const* ret_type_str = nullptr;
-		s32         ret_length   = 0;
 
-		s32         left         = length;
-		char const* scanner      = def;
-
-		while ( left -- )
-		{
-			// Find all specifiers (if any) and the return type
-			do
-			{
-				SkipWhitespace();
-
-				s32         length = 0;
-				char const* spec_or_type = scanner;
-
-				while ( char_is_alpha( * scanner) || * scanner == '_')
-				{
-					length++;
-					left--;
-					scanner++;
-				}
-
-				SpecifierT type = ESpecifier::to_type( spec_or_type, length );
-
-				if ( type != ESpecifier::Invalid )
-				{
-					specs_found[num_specifiers] = type;
-					num_specifiers++;
-					continue;
-				}
-
-				// Should be return type
-				ret_type_str = scanner;
-				ret_length   = length;
-				scanner++;
-				break;
-			}
-			while( left );
-
-			SkipWhitespace();
-
-			// Next up should be the name if before there were specifiers
-			name = scanner;
-
-			while ( char_is_alpha( * scanner) || * scanner == '_')
-			{
-				ret_length++;
-				left--;
-				scanner++;
-			}
-
-			// Parameters
-			SkipWhitespace();
-
-			if ( * scanner != '(' )
-			{
-				log_failure("gen::parse_proc: Error, expected a ( in %s", string_make_length( g_allocator, scanner - 4, 100) );
-				return Code::Invalid;
-			}
-
-			scanner++;
-
-			do
-			{
-
-			}
-			while (0);
-
-			// Get past ')'
-			scanner++;
-
-			SkipWhitespace()
-
-			// get end specifiers
-
-			if ( * scanner != '{')
-			{
-
-			}
-
-			not_implemented( parse_function );
-		}
+		using namespace ECode;
 
 		Code specifiers = def_specifiers( num_specifiers, specs_found );
 
 		Code params   = make_code();
-		Code ret_type = def_type( ret_length, ret_type_str );
-		Code body     = untyped_str( body_length, body_str );
+		// Code ret_type = def_type( ret_length, ret_type_str );
+		// Code body     = untyped_str( body_length, body_str );
 
 		Code
 		result       = make_code();
-		result->Name = get_cached_string( name, name_length );
-		result->Type = ECode::Function;
+		// result->Name = get_cached_string( name, name_length );
+		result->Type = Function;
 
-		result->add_entry( body );
+		// result->add_entry( body );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
 
-		result->add_entry( ret_type );
+		// result->add_entry( ret_type );
 
 		if ( params )
 			result->add_entry( params );
@@ -3457,11 +3337,23 @@ namespace gen
 	inline
 	bool parse_type_helper( char const* func_name
 		, Token& name
-		, s32& left, Array(Token)& tokens
+		, s32& left, s32& tokIDX, Array(Token)& tokens
 		, s32& num_specifiers, SpecifierT* specs_found
 		, Code& array_expr
 	)
 	{
+#	pragma push_macro( "eat" )
+#		undef eat
+#		define eat( Type_ )                                                                         \
+		if ( curr_tok.Type != Type_ )                                                               \
+		{                                                                                           \
+			String token_str = string_make_length( g_allocator, curr_tok.Text, curr_tok.Length );   \
+			log_failure( "gen::" txt(context) ": expected %s, got %s", txt(Type_), curr_tok.Type ); \
+			return Code::Invalid;                                                                   \
+		}                                                                                           \
+		tokIDX++;                                                                                   \
+		left--
+
 		while ( left && tok_is_specifier( curr_tok ) )
 		{
 			SpecifierT spec = ESpecifier::to_type( curr_tok.Text, curr_tok.Length );
@@ -3484,8 +3376,20 @@ namespace gen
 			return false;
 		}
 
-		name = curr_tok;
-		eat( TokType::Identifier );
+		if (   curr_tok.Type == TokType::Decl_Class
+			|| curr_tok.Type == TokType::Decl_Struct )
+		{
+			name = curr_tok;
+			eat( curr_tok.Type );
+
+			name.Length += curr_tok.Length;
+			eat( TokType::Identifier );
+		}
+		else
+		{
+			name = curr_tok;
+			eat( TokType::Identifier );
+		}
 
 		while ( left && tok_is_specifier( curr_tok ) )
 		{
@@ -3547,12 +3451,11 @@ namespace gen
 		}
 
 		return true;
+#	pragma pop_macro( "eat" )
 	}
 
 	Code parse_type( s32 length, char const* def )
 	{
-#		define context parse_type
-
 		check_parse_args( parse_type, length, def );
 
 		Array(Token) tokens = lex( length, def );
@@ -3563,17 +3466,18 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		s32 left = array_count( tokens );
+		s32 left   = array_count( tokens );
+		s32 tokIDX = 0;
 
 		Token* name       = nullptr;
 		Code   array_expr = { nullptr };
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		u8         num_specifiers = 0;
+		s32        num_specifiers = 0;
 
 		bool helper_result = parse_type_helper( txt(parse_type)
 			, * name
-			, left, tokens
+			, left, tokIDX, tokens
 			, num_specifiers, specs_found
 			, array_expr
 		);
@@ -3604,8 +3508,7 @@ namespace gen
 
 	Code parse_typedef( s32 length, char const* def )
 	{
-#		define context parse_type
-
+#		define context parse_typedef
 		check_parse_args( parse_typedef, length, def );
 
 		Array(Token) tokens = lex( length, def );
@@ -3616,7 +3519,8 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		s32 left = array_count( tokens );
+		s32 left   = array_count( tokens );
+		s32 tokIDX = 0;
 
 		Token* name       = nullptr;
 		Code   array_expr = { nullptr };
@@ -3629,7 +3533,7 @@ namespace gen
 
 		bool helper_result = parse_type_helper( txt(parse_typedef)
 			, * name
-			, left, tokens
+			, left, tokIDX, tokens
 			, num_specifiers, specs_found
 			, array_expr
 		);
@@ -3661,23 +3565,24 @@ namespace gen
 
 		result.lock();
 		return result;
+#		undef context
 	}
 
 	Code parse_using( s32 length, char const* def )
 	{
-#		define context parse_type
-
-		check_parse_args( parse_typedef, length, def );
+#		define context parse_using
+		check_parse_args( parse_using, length, def );
 
 		Array(Token) tokens = lex( length, def );
 
 		if ( tokens == nullptr )
 		{
-			log_failure( "gen::parse_typedef: no tokens found for provided definition" );
+			log_failure( "gen::parse_using: no tokens found for provided definition" );
 			return Code::Invalid;
 		}
 
-		s32 left = array_count( tokens );
+		s32 left   = array_count( tokens );
+		s32 tokIDX = 0;
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
@@ -3708,7 +3613,7 @@ namespace gen
 
 			bool helper_result = parse_type_helper( txt(parse_using)
 				, * name
-				, left, tokens
+				, left, tokIDX, tokens
 				, num_specifiers, specs_found
 				, array_expr
 			);
@@ -3732,6 +3637,7 @@ namespace gen
 
 		result.lock();
 		return result;
+#		undef context
 	}
 
 
@@ -3883,7 +3789,6 @@ namespace gen
 	This is a more robust lexer than the ones used for the lexer in the parse constructors interface.
 	Its needed to scan a C++ file and have awareness to skip content unsupported by the library.
 */
-
 #endif
 #pragma endregion File Lexer
 
@@ -3894,10 +3799,8 @@ namespace gen
 
 #pragma region Scanner
 #ifdef GEN_FEATURE_SCANNER
-
-
 #endif
 #pragma endregion Scanner
 }
-// end gen_time
+// End: gen_time
 #endif

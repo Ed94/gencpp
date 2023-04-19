@@ -646,7 +646,7 @@ namespace gen
 				{
 					char const* enum_str = to_str( (Type)index );
 
-					keymap[index] = crc32( enum_str, strnlen(enum_str, 42) );
+					keymap[index] = crc32( enum_str, str_len(enum_str, 42) );
 				}
 			do_once_end
 
@@ -817,7 +817,7 @@ namespace gen
 			// Thus if its desired to keep the debug str
 			// for multiple calls to bprintf,
 			// allocate this to proper string.
-			return bprintf( fmt
+			return str_fmt_buf( fmt
 			,	type_str()
 			,	Readonly ? "true"       : "false"
 			,	Parent   ? Parent->Name : ""

@@ -62,29 +62,29 @@ using zpl::arena_allocator;
 using zpl::arena_init_from_memory;
 using zpl::arena_init_from_allocator;
 using zpl::arena_free;
-using zpl::bprintf;
+using zpl::str_fmt_buf;
 using zpl::char_is_alpha;
 using zpl::char_is_alphanumeric;
 using zpl::char_is_space;
 using zpl::crc32;
 using zpl::free_all;
-using zpl::memcopy;
-using zpl::memset;
+using zpl::mem_copy;
+using zpl::mem_set;
 using zpl::pool_allocator;
 using zpl::pool_init;
 using zpl::pool_free;
-using zpl::printf_va;
-using zpl::printf_err_va;
+using zpl::process_exit;
+using zpl::str_fmt_out_va;
+using zpl::str_fmt_out_err_va;
 using zpl::str_compare;
-using zpl::snprintf_va;
+using zpl::str_fmt_va;
 using zpl::string_appendc;
 using zpl::string_append_fmt;
 using zpl::string_append_length;
 using zpl::string_make_length;
 using zpl::string_length;
 using zpl::string_make;
-using zpl::strnlen;
-using zpl::exit;
+using zpl::str_len;
 
 
 #if __clang__
@@ -224,7 +224,7 @@ sw log_fmt(char const *fmt, ...)
 	va_list va;
 
 	va_start(va, fmt);
-	res = printf_va(fmt, va);
+	res = str_fmt_out_va(fmt, va);
 	va_end(va);
 
 	return res;
@@ -247,7 +247,7 @@ sw fatal(char const *fmt, ...)
 	return -1;
 #else
 	va_start(va, fmt);
-	printf_err_va( fmt, va);
+	str_fmt_out_err_va( fmt, va);
 	va_end(va);
 
 	exit(1);
