@@ -2429,11 +2429,11 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		char const* name = bprintf( "operator%s", to_str(op) );
+		char const* name = str_fmt_buf( "operator%s", to_str(op) );
 
 		Code
 		result       = make_code();
-		result->Name = get_cached_string( name, strnlen(name, MaxNameLength) );
+		result->Name = get_cached_string( name, str_len(name, MaxNameLength) );
 
 		if (params_code)
 			result->add_entry( params_code );
@@ -3177,7 +3177,7 @@ namespace gen
 
 		if ( body.Length )
 		{
-			memcopy( entries_code, body.Text, body.Length );
+			mem_copy( entries_code, body.Text, body.Length );
 
 			Code untyped_body = untyped_str( entries_length, entries_code );
 
@@ -3714,7 +3714,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, fmt);
-		sw length = snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
+		sw length = str_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
 		va_end(va);
 
 		Code
@@ -3739,7 +3739,7 @@ namespace gen
 
 		Code
 		result          = make_code();
-		result->Name    = get_cached_string( fmt, strnlen(fmt, MaxNameLength) );
+		result->Name    = get_cached_string( fmt, str_len(fmt, MaxNameLength) );
 		result->Type    = ECode::Untyped;
 		result->Content = get_cached_string( buf, length );
 

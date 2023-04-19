@@ -70,10 +70,10 @@ sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_lis
 			TokEntry entry
 			{
 				value,
-				strnlen(value, (sw)128)
+				str_len(value, (sw)128)
 			};
 
-			u32 key = crc32( token, strnlen(token, 32) );
+			u32 key = crc32( token, str_len(token, 32) );
 
 			tokmap_set( & tok_map, key, entry );
 		}
