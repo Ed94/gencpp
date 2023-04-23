@@ -4,6 +4,28 @@
 #ifdef gen_time
 #include "gen.cpp"
 
+
+void case_untyped()
+{
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int gen_main()
 {
 	Memory::setup();
@@ -12,6 +34,8 @@ int gen_main()
 	getchar();
 
 	gen::init();
+
+	case_untyped();
 
 	Memory::cleanup();
 	return 0;

@@ -339,6 +339,8 @@ Interface :
 * def_typedef
 * def_using
 
+Bodies:
+
 * def_class_body
 * def_enum_body
 * def_function_body   NOTE: Use this for operator bodies as well.
@@ -410,6 +412,8 @@ Interface :
 * parse_type
 * parse_typedef
 * parse_using
+
+Multiple defs:
 
 * parse_classes
 * parse_enums

@@ -330,8 +330,6 @@ namespace gen
 			return Entries[0];
 		}
 
-		bool check();
-
 		AST* duplicate();
 
 		forceinline
@@ -350,6 +348,22 @@ namespace gen
 		s32 num_entries()
 		{
 			return DynamicEntries ? array_count(Entries) : StaticIndex;
+		}
+
+		// Class/Struct
+
+		forceinline
+		AST* parent()
+		{
+			return Entries[1];
+		}
+
+		// Enum
+
+		forceinline
+		AST* underlying_type()
+		{
+			return Entries[1];
 		}
 
 		// Parameter
@@ -459,7 +473,7 @@ namespace gen
 			return ECode::to_str( Type );
 		}
 
-		String to_string() const;
+		String to_string();
 	#pragma endregion Member Functions
 
 		constexpr static
@@ -769,9 +783,9 @@ namespace gen
 	s32 parse_namespaces( s32 length, char const* namespace_defs, Code* out_namespaces_codes );
 	s32 parse_operators ( s32 length, char const* operator_defs,  Code* out_operator_codes );
 	s32 parse_structs   ( s32 length, char const* struct_defs,    Code* out_struct_codes );
-	s32 parse_variables ( s32 length, char const* vars_def,       Code* out_var_codes );
-	s32 parse_typedefs  ( s32 length, char const* typedef_def,    Code* out_typedef_codes );
-	s32 parse_usings    ( s32 length, char const* usings_def,     Code* out_using_codes );
+	s32 parse_variables ( s32 length, char const* var_defs,       Code* out_var_codes );
+	s32 parse_typedefs  ( s32 length, char const* typedef_defs,   Code* out_typedef_codes );
+	s32 parse_usings    ( s32 length, char const* using_defs,     Code* out_using_codes );
 	#endif
 	#pragma endregion Parsing
 

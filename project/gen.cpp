@@ -426,7 +426,7 @@ namespace gen
 		}
 	}
 
-	String AST::to_string() const
+	String AST::to_string()
 	{
 		String result = string_make( g_allocator, "" );
 
@@ -452,117 +452,220 @@ namespace gen
 			break;
 
 			case Class:
+			{
+				result = string_append_fmt( result, "class");
+
+				s32 idx = 1;
+
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, " %s", Name );
+
+				if ( parent() )
+					result = string_append_fmt( result, " : %s", parent()->to_string() );
+
+				result = string_append_fmt( result, "\n{\n%s\n};\n", body()->to_string() );
+			}
 			break;
 
 			case Class_Fwd:
-			break;
+			{
+				result = string_append_fmt( result, "class");
 
-			case Class_Body:
+				s32 idx = 1;
+
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, " %s;", Name );
+			}
 			break;
 
 			case Enum:
+				if ( underlying_type() )
+				{
+					result = string_append_fmt( result, "enum %s : %s\n{\n%s\n};\n"
+						, Name
+						, underlying_type()->to_string()
+						, body()->to_string()
+					);
+				}
+				else
+				{
+					result = string_append_fmt( result, "enum %s\n{\n%s\n};\n"
+						, Name
+						, body()->to_string()
+					);
+				}
 			break;
 
 			case Enum_Fwd:
-			break;
-
-			case Enum_Body:
+				result = string_append_fmt( result, "enum %s : %s;\n", Name, underlying_type()->to_string() );
 			break;
 
 			case Enum_Class:
+				if ( underlying_type() )
+				{
+					result = string_append_fmt( result, "enum class %s : %s\n{\n%s\n};\n"
+						, Name
+						, underlying_type()->to_string()
+						, body()->to_string()
+					);
+				}
+				else
+				{
+					result = string_append_fmt( result, "enum class %s\n{\n%s\n};\n"
+						, Name
+						, body()->to_string()
+					);
+				}
 			break;
 
 			case Enum_Class_Fwd:
+				result = string_append_fmt( result, "enum class %s : %s;\n", Name, underlying_type()->to_string() );
 			break;
 
 			case Friend:
+				result = string_append_fmt( result, "friend %s;\n", Entries[0]->to_string() );
 			break;
 
 			case Function:
 			{
-				u32 index = 0;
-				u32 left  = array_count( Entries );
+				u32 idx  = 1;
+				u32 left = num_entries();
 
 				if ( left <= 0 )
 					log_failure( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
 
-				if ( Entries[index]->Type == Specifiers )
+				if ( Entries[idx]->Type == Specifiers )
 				{
-					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
-					index++;
+					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					idx++;
 					left--;
 				}
 
 				if ( left <= 0 )
 					log_failure( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
 
-				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
-				index++;
+				result = string_append_fmt( result, "\n%s %s(", Entries[idx]->to_string(), Name );
+				idx++;
 				left--;
 
-				if ( left && Entries[index]->Type == Parameters )
+				if ( left && Entries[idx]->Type == Parameters )
 				{
-					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
-					index++;
+					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					idx++;
 					left--;
 				}
+				else
+				{
+					result = string_append_fmt( result, "void" );
+				}
 
-				result = string_append_fmt( result, ")\n{\n%s\n}", Entries[index]->to_string() );
+				result = string_append_fmt( result, ")\n{\n%s\n}", body()->to_string() );
 			}
 			break;
 
 			case Function_Fwd:
 			{
-				u32 index = 0;
-				u32 left  = array_count( Entries );
+				u32 idx  = 0;
+				u32 left = array_count( Entries );
 
 				if ( left <= 0 )
 					log_failure( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
 
-				if ( Entries[index]->Type == Specifiers )
+				if ( Entries[idx]->Type == Specifiers )
 				{
-					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
-					index++;
+					result = string_append_fmt( result, "%s\n", Entries[idx]->to_string() );
+					idx++;
 					left--;
 				}
 
 				if ( left <= 0 )
 					log_failure( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
 
-				result = string_append_fmt( result, "\n%s %s(", Entries[index]->to_string(), Name );
-				index++;
+				result = string_append_fmt( result, "\n%s %s(", Entries[idx]->to_string(), Name );
+				idx++;
 				left--;
 
-				if ( left && Entries[index]->Type == Parameters )
+				if ( left && Entries[idx]->Type == Parameters )
 				{
-					result = string_append_fmt( result, "%s", Entries[index]->to_string() );
-					index++;
+					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					idx++;
 					left--;
+				}
+				else
+				{
+					result = string_append_fmt( result, "void" );
 				}
 
 				result = string_appendc( result, ");\n" );
 			}
 			break;
 
-			case Function_Body:
-				log_failure("NOT SUPPORTED YET");
-			break;
-
-			case Global_Body:
-			break;
-
 			case Namespace:
-				log_failure("NOT SUPPORTED YET");
-			break;
-
-			case Namespace_Body:
-				log_failure("NOT SUPPORTED YET");
+				result = string_append_fmt( result, "namespace %s\n{\n%s\n};\n", Name, body()->to_string() );
 			break;
 
 			case Operator:
+			case Operator_Member:
+			{
+				s32 idx = 1;
+
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, "%s operator%s(", Entries[idx]->to_string(), Name );
+				idx++;
+
+				if ( Entries[idx]->Type == Parameters )
+				{
+					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					idx++;
+				}
+				else
+				{
+					result = string_append_fmt( result, "void" );
+				}
+
+				result = string_append_fmt( result, ")\n{\n%s\n}", body()->to_string() );
+			}
 			break;
 
 			case Operator_Fwd:
+			case Operator_Member_Fwd:
+			{
+				s32 idx;
+
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, "%s operator%s(", Entries[idx]->to_string(), Name );
+				idx++;
+
+				if ( Entries[idx]->Type == Parameters )
+				{
+					result = string_append_fmt( result, "%s);\n", Entries[idx]->to_string() );
+					idx++;
+				}
+				else
+				{
+					result = string_append_fmt( result, "void);\n" );
+				}
+			}
 			break;
 
 			case Parameters:
@@ -581,26 +684,70 @@ namespace gen
 			break;
 
 			case Specifiers:
-				result = string_append_fmt( result, "%s", Content );
+			{
+				s32 idx  = 0;
+				s32 left = StaticIndex;
+				while ( left--, left > 0 )
+					result = string_append_fmt( result, "%s ", ESpecifier::to_str( ArrSpecs[idx]) );
+			}
 			break;
 
 			case Struct:
-				log_failure("NOT SUPPORTED YET");
+			{
+				result = string_append_fmt( result, "struct");
+
+				s32 idx = 1;
+
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, " %s", Name );
+
+				if ( parent() )
+					result = string_append_fmt( result, " : %s", parent()->to_string() );
+
+				result = string_append_fmt( result, "\n{\n%s\n};\n", body()->to_string() );
+			}
 			break;
 
 			case Struct_Fwd:
-			break;
+			{
+				result = string_append_fmt( result, "struct");
 
-			case Struct_Body:
-				log_failure("NOT SUPPORTED YET");
+				s32 idx = 1;
+
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, " %s;", Name );
+			}
 			break;
 
 			case Variable:
-				log_failure("NOT SUPPORTED YET");
+			{
+				s32 idx = 1;
+
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, "%s %s", Entries[0]->to_string(), Name );
+
+				if ( Entries[idx] )
+					result = string_append_fmt( result, " = %s", Entries[idx]->to_string() );
+			}
 			break;
 
 			case Typedef:
-				log_failure("NOT SUPPORTED YET");
+				result = string_append_fmt( result, "typedef %s %s", Entries[0]->to_string(), Name );
 			break;
 
 			case Typename:
@@ -608,7 +755,34 @@ namespace gen
 			break;
 
 			case Using:
-				log_failure("NOT SUPPORTED YET");
+				if ( Entries[0] )
+					result = string_append_fmt( result, "using %s = %s", Name, Entries[0] );
+
+				else
+					result = string_append_fmt( result, "using %s", Name );
+			break;
+
+			case Using_Namespace:
+				result = string_append_fmt( result, "using namespace %s", Name );
+			break;
+
+
+
+			case Class_Body:
+			case Enum_Body:
+			case Function_Body:
+			case Global_Body:
+			case Namespace_Body:
+			case Struct_Body:
+			{
+				s32 index = 0;
+				s32 left  = num_entries();
+				while ( left -- )
+				{
+					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
+					index++;
+				}
+			}
 			break;
 		}
 
@@ -1326,11 +1500,11 @@ namespace gen
 			result->Type = Class_Fwd;
 		}
 
-		if ( parent )
-			result->add_entry( parent );
-
 		if ( specifiers )
 			result->add_entry( specifiers );
+
+		if ( parent )
+			result->add_entry( parent );
 
 		result.lock();
 		return result;
@@ -1351,11 +1525,6 @@ namespace gen
 		Code
 		result       = make_code();
 		result->Name = get_cached_string( name, length );
-
-		if ( type )
-		{
-			result->add_entry( type );
-		}
 
 		if ( body )
 		{
@@ -1379,6 +1548,16 @@ namespace gen
 		{
 			result->Type = specifier == EnumClass ?
 				Enum_Class_Fwd : Enum_Fwd;
+		}
+
+		if ( type )
+		{
+			result->add_entry( type );
+		}
+		else if ( result->Type == Enum_Class_Fwd || result->Type == Enum_Fwd )
+		{
+			log_failure( "gen::def_enum: enum forward declaration must have an underlying type" );
+			return Code::Invalid;
 		}
 
 		result.lock();
@@ -1569,13 +1748,13 @@ namespace gen
 				Operator_Fwd : Operator_Member_Fwd;
 		}
 
-		if (params_code)
-			result->add_entry( params_code );
+		if ( specifiers )
+			result->add_entry( specifiers );
 
 		result->add_entry( ret_type );
 
-		if ( specifiers )
-			result->add_entry( specifiers );
+		if (params_code)
+			result->add_entry( params_code );
 
 		result.lock();
 		return result;
@@ -1681,10 +1860,10 @@ namespace gen
 		result->Name = get_cached_string( name, length );
 		result->Type = ECode::Variable;
 
+		result->add_entry( type );
+
 		if ( specifiers )
 			result->add_entry( specifiers );
-
-		result->add_entry( type );
 
 		if ( value )
 			result->add_entry( value );
@@ -1770,7 +1949,8 @@ namespace gen
 			case UsingRegular:
 				result->Type = ECode::Using;
 
-				result->add_entry( type );
+				if ( type )
+					result->add_entry( type );
 			break;
 
 			case UsingNamespace:
@@ -2596,7 +2776,10 @@ namespace gen
 		inline
 		bool tok_is_specifier( Token const& tok )
 		{
-			return tok.Type >= TokType::Spec_API && tok.Type <= TokType::Spec_Volatile;
+			return tok.Type >= TokType::Spec_API && tok.Type <= TokType::Star
+				|| tok.Type == TokType::Ampersand
+				|| tok.Type == TokType::Ampersand_DBL
+			;
 		}
 
 	#	undef Define_TokType
@@ -3025,11 +3208,10 @@ namespace gen
 			}
 
 			return { 0, Tokens };
-
-		#undef current
-		#undef move_forward
-		#undef SkipWhitespace
-		#undef SkipWhitespace_Checked
+		#	undef current
+		#	undef move_forward
+		#	undef SkipWhitespace
+		#	undef SkipWhitespace_Checked
 		}
 	}
 
@@ -3397,6 +3579,7 @@ namespace gen
 			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
 
 			if (   spec != ESpecifier::Const
+			    && spec != ESpecifier::Ptr
 			    && spec != ESpecifier::Ref
 			    && spec != ESpecifier::RValue
 				&& spec < ESpecifier::Type_Signed )
