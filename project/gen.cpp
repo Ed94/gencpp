@@ -747,14 +747,18 @@ namespace gen
 			break;
 
 			case Typedef:
+				// TODO: Check for array expression
+
 				result = string_append_fmt( result, "typedef %s %s", Entries[0]->to_string(), Name );
 			break;
 
 			case Typename:
-				result = string_append_fmt( result, "%s", Name );
+				result = string_append_fmt( result, "%s %s", Name, Entries[0]->to_string() );
 			break;
 
 			case Using:
+				// TODO: Check for array expression
+
 				if ( Entries[0] )
 					result = string_append_fmt( result, "using %s = %s", Name, Entries[0] );
 
@@ -765,7 +769,6 @@ namespace gen
 			case Using_Namespace:
 				result = string_append_fmt( result, "using namespace %s", Name );
 			break;
-
 
 
 			case Class_Body:
@@ -1056,7 +1059,7 @@ namespace gen
 	{
 		using namespace EOperator;
 
-		if ( op == Invalid )
+		if ( op == EOperator::Invalid )
 		{
 			log_failure("gen::def_operator: op cannot be invalid");
 			return OpValidateResult::Fail;
@@ -1903,7 +1906,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_type( u32 length, char const* name,  Code specifiers )
+	Code def_type( u32 length, char const* name, Code specifiers, Code ArrayExpr )
 	{
 		name_check( def_type, length, name );
 
@@ -1913,8 +1916,6 @@ namespace gen
 			return Code::Invalid;
 		}
 
-
-
 		Code
 		result       = make_code();
 		result->Name = get_cached_string( name, length );
@@ -1922,6 +1923,9 @@ namespace gen
 
 		if ( specifiers )
 			result->add_entry( specifiers );
+
+		if ( ArrayExpr )
+			result->add_entry( ArrayExpr );
 
 		result.lock();
 		return result;
@@ -2306,7 +2310,7 @@ namespace gen
 	{
 		def_body_code_array_start( def_params );
 
-#		define check_current()                                                                                      \
+	#	define check_current()                                                                                      \
 		if ( current == nullptr )                                                                                   \
 		{                                                                                                           \
 			log_failure("gen::def_params: Provide a null code in codes array");                                     \
@@ -2332,7 +2336,7 @@ namespace gen
 			check_current();
 			result->add_entry( current );
 		}
-#		undef check_current
+	#	undef check_current
 
 		result.lock();
 		return result;
@@ -2739,6 +2743,7 @@ namespace gen
 			char const* Text;
 			sptr        Length;
 			TokType     Type;
+			bool 	    IsAssign;
 		};
 
 		TokType get_tok_type( char const* word, s32 length )
@@ -2760,7 +2765,7 @@ namespace gen
 			return TokType::Invalid;
 		}
 
-		char const* str_tok_ype( TokType type )
+		char const* str_tok_type( TokType type )
 		{
 			local_persist
 			char const* lookup[(u32)TokType::Num] =
@@ -2773,6 +2778,8 @@ namespace gen
 			return lookup[(u32)type];
 		}
 
+	#	undef Define_TokType
+
 		inline
 		bool tok_is_specifier( Token const& tok )
 		{
@@ -2781,8 +2788,6 @@ namespace gen
 				|| tok.Type == TokType::Ampersand_DBL
 			;
 		}
-
-	#	undef Define_TokType
 
 		Arena LexAllocator;
 
@@ -2794,10 +2799,18 @@ namespace gen
 			inline
 			bool __eat( TokType type, char const* context )
 			{
+				if ( array_count(Arr) - Idx <= 0 )
+				{
+					log_failure( "gen::%s: No tokens left", context );
+					return Code::Invalid;
+				}
+
 				if ( Arr[0].Type != type )
 				{
 					String token_str = string_make_length( g_allocator, Arr[Idx].Text, Arr[Idx].Length );
-					log_failure( "gen::%s: expected %s, got %s", context, str_tok_ype(type), str_tok_ype(Arr[Idx].Type) );
+
+					log_failure( "gen::%s: expected %s, got %s", context, str_tok_type(type), str_tok_type(Arr[Idx].Type) );
+
 					return Code::Invalid;
 				}
 
@@ -2863,7 +2876,7 @@ namespace gen
 
 			while (left )
 			{
-				Token token = { nullptr, 0, TokType::Invalid };
+				Token token = { nullptr, 0, TokType::Invalid, false };
 
 				switch ( current )
 				{
@@ -3040,12 +3053,22 @@ namespace gen
 						goto FoundToken;
 
 					// All other operators we just label as an operator and move forward.
+					case '=':
+						token.Text     = scanner;
+						token.Length   = 1;
+						token.Type     = TokType::Operator;
+						token.IsAssign = true;
+
+						if (left)
+							move_forward();
+
+						goto FoundToken;
+
 					case '+':
 					case '%':
 					case '^':
 					case '~':
 					case '!':
-					case '=':
 					case '<':
 					case '>':
 					case '|':
@@ -3059,6 +3082,7 @@ namespace gen
 						if ( current == '=' )
 						{
 							token.Length++;
+							token.IsAssign = true;
 
 							if (left)
 								move_forward();
@@ -3095,6 +3119,7 @@ namespace gen
 							else if ( current == '=' )
 							{
 								token.Length++;
+								token.IsAssign = true;
 
 								if (left)
 									move_forward();
@@ -3207,6 +3232,12 @@ namespace gen
 				}
 			}
 
+			if ( array_count(Tokens) == 0 )
+			{
+				log_failure( "Failed to lex any tokens" );
+				return { 0, nullptr };
+			}
+
 			return { 0, Tokens };
 		#	undef current
 		#	undef move_forward
@@ -3231,19 +3262,19 @@ namespace gen
 #	define currtok      toks.Arr[toks.Idx]
 #	define eat( Type_ ) toks.__eat( Type_, txt(context) )
 #	define left         array_count(toks.Arr) - toks.Idx
+
+#	define check( Type_ ) left && currtok.Type == Type_
 #pragma endregion Helper Macros
 
 	Code parse_class( s32 length, char const* def )
 	{
-	#	define context parse_class
 		using namespace Parser;
 
+	#	define context parse_class
+
 		TokArray toks = lex( length, def );
-		if ( array_count( toks.Arr ) == 0 )
-		{
-			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
 		Token name { nullptr, 0, TokType::Invalid };
 
@@ -3263,16 +3294,14 @@ namespace gen
 
 	Code parse_enum( s32 length, char const* def )
 	{
-#		define context parse_enum
-		check_parse_args( parse_enum, length, def );
 		using namespace Parser;
 
+	#	define context parse_enum
+		check_parse_args( parse_enum, length, def );
+
 		TokArray toks = lex( length, def );
-		if ( array_count( toks.Arr ) == 0 )
-		{
-			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
@@ -3359,7 +3388,7 @@ namespace gen
 
 		result.lock();
 		return result;
-#		undef context
+	#	undef context
 	}
 
 	Code parse_execution( s32 length, char const* exec_def )
@@ -3375,11 +3404,8 @@ namespace gen
 		check_parse_args( parse_friend, length, def );
 
 		TokArray toks = lex( length, def );
-		if ( array_count( toks.Arr ) == 0 )
-		{
-			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
 		eat( TokType::Decl_Friend );
 
@@ -3495,18 +3521,86 @@ namespace gen
 
 	Code parse_variable( s32 length, char const* def )
 	{
-	#	define context parse_variable
-		check_parse_args( parse_variable, length, def );
 		using namespace Parser;
 
+	#	define context parse_variable
+		check_parse_args( parse_variable, length, def );
+
 		TokArray toks = lex( length, def );
-		if ( array_count( toks.Arr ) == 0 )
-		{
-			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
 		Token* name = nullptr;
+
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
+
+		Code lang_linkage;
+		Code attributes;
+		Code array_expr = { nullptr };
+
+		if ( check( TokType::BraceSquare_Open ) )
+		{
+			eat( TokType::BraceSquare_Open );
+
+		// TODO: Need to have a parser for attributes, it gets complicated...
+		#if 0
+			Token attris_tok = currtok;
+
+			while ( left && currtok.Type != TokType::BraceSquare_Close )
+			{
+
+				eat( TokType::Identifier )
+			}
+		#endif
+
+			attributes = untyped_str( currtok.Length, currtok.Text );
+
+			eat( TokType::BraceSquare_Close );
+		}
+
+		while ( left && tok_is_specifier( currtok ) )
+		{
+			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+
+			switch ( spec )
+			{
+				case ESpecifier::Constexpr:
+				case ESpecifier::Constinit:
+				case ESpecifier::Export:
+				case ESpecifier::External_Linkage:
+				case ESpecifier::Import:
+				case ESpecifier::Local_Persist:
+				case ESpecifier::Mutable:
+				case ESpecifier::Static_Member:
+				case ESpecifier::Thread_Local:
+				case ESpecifier::Volatile:
+				break;
+
+				default:
+					log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
+					return Code::Invalid;
+			}
+
+			if ( spec == ESpecifier::External_Linkage )
+			{
+				specs_found[num_specifiers] = spec;
+				num_specifiers++;
+				eat( TokType::Spec_Extern );
+
+				if ( currtok.Type == TokType::String )
+				{
+					lang_linkage = untyped_str( currtok.Length, currtok.Text );
+					eat( TokType::String );
+				}
+
+				continue;
+			}
+
+			specs_found[num_specifiers] = spec;
+			num_specifiers++;
+			eat( currtok.Type );
+		}
 
 		Code type = parse_type( toks, txt(parse_variable) );
 
@@ -3522,20 +3616,103 @@ namespace gen
 		name = & currtok;
 		eat( TokType::Identifier );
 
+		Code expr = { nullptr };
+
+		if ( currtok.IsAssign )
+		{
+			eat( TokType::Operator );
+
+			Token expr_tok = currtok;
+
+			if ( currtok.Type == TokType::Statement_End )
+			{
+				log_failure( "gen::parse_variable: expected expression after assignment operator" );
+				return Code::Invalid;
+			}
+
+			while ( left && currtok.Type != TokType::Statement_End )
+			{
+				expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
+				eat( currtok.Type );
+			}
+
+			expr = untyped_str( expr_tok.Length, expr_tok.Text );
+		}
+
+		if ( check( TokType::BraceSquare_Open ) )
+		{
+			eat( TokType::BraceSquare_Open );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			if ( currtok.Type == TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			Token
+			untyped_tok = currtok;
+
+			while ( left && currtok.Type != TokType::BraceSquare_Close )
+			{
+				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
+			}
+
+			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			if ( currtok.Type != TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
+				return Code::Invalid;
+			}
+
+			eat( TokType::BraceSquare_Close );
+		}
+
+		eat( TokType::Statement_End );
+
+		using namespace ECode;
+
+		Code result  = make_code();
+		result->Type = Variable;
+		result->Name = get_cached_string( name->Text, name->Length );
+
+		result->add_entry( type );
+
+		if (array_expr)
+			type->add_entry( array_expr );
+
+		if ( attributes )
+			result->add_entry( attributes );
+
+		if ( expr )
+			result->add_entry( expr );
+
 		return Code::Invalid;
 	#	undef context
 	}
 
 	Code parse_type( Parser::TokArray& toks, char const* func_name )
 	{
-	#	define context parse_type
 		using namespace Parser;
+
+	#	define context parse_type
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
 
-		Token  name       = { nullptr, 0, TokType::Invalid };
-		Code   array_expr = { nullptr };
+		Token name = { nullptr, 0, TokType::Invalid };
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
@@ -3593,48 +3770,9 @@ namespace gen
 			eat( currtok.Type );
 		}
 
-		if ( left && currtok.Type == TokType::BraceSquare_Open )
-		{
-			eat( TokType::BraceSquare_Open );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of type definition", func_name );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type == TokType::BraceSquare_Close )
-			{
-				eat( TokType::BraceSquare_Close );
-				return Code::Invalid;
-			}
-
-			Token
-			untyped_tok = currtok;
-
-			while ( left && currtok.Type != TokType::BraceSquare_Close )
-			{
-				untyped_tok.Length += currtok.Length;
-			}
-
-			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of type definition", func_name );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type != TokType::BraceSquare_Close )
-			{
-				log_failure( "%s: Error, expected ] in type definition", func_name );
-				return Code::Invalid;
-			}
-
-			eat( TokType::BraceSquare_Close );
-		}
-
 		using namespace ECode;
+
+		// TODO: Need to figure out type code caching wiht the type table.
 
 		Code
 		result       = make_code();
@@ -3648,57 +3786,48 @@ namespace gen
 			result->add_entry( specifiers );
 		}
 
-		if ( array_expr )
-			result->add_entry( array_expr );
-
-		result.lock();
 		return result;
 	#	undef context
 	}
 
 	Code parse_type( s32 length, char const* def )
 	{
+		using namespace Parser;
+
 	#	define context parse_type
 		check_parse_args( parse_type, length, def );
 
-		using namespace Parser;
 		TokArray toks = lex( length, def );
-		if ( array_count( toks.Arr ) == 0 )
-		{
-			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
 		Code result = parse_type( toks, txt(parse_type) );
+
+		result.lock();
 		return result;
 	#	undef context
 	}
 
 	Code parse_typedef( s32 length, char const* def )
 	{
+		using namespace Parser;
+
 	#	define context parse_typedef
 		check_parse_args( parse_typedef, length, def );
 
-		using namespace Parser;
 		TokArray toks = lex( length, def );
-		if ( array_count( toks.Arr ) == 0 )
-		{
-			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
 		Token name       = { nullptr, 0, TokType::Invalid };
 		Code  array_expr = { nullptr };
 		Code  type       = { nullptr };
 
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		s32        num_specifiers = 0;
-
 		eat( TokType::Decl_Typedef );
 
 		type = parse_type( toks, txt(parse_typedef) );
 
-		if ( currtok.Type != TokType::Identifier )
+		if ( check( TokType::Identifier ) )
 		{
 			log_failure( "gen::parse_typedef: Error, expected identifier for typedef" );
 			return Code::Invalid;
@@ -3707,16 +3836,59 @@ namespace gen
 		name = currtok;
 		eat( TokType::Identifier );
 
+		if ( check( TokType::BraceSquare_Open ) )
+		{
+			eat( TokType::BraceSquare_Open );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			if ( currtok.Type == TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			Token untyped_tok = currtok;
+
+			while ( left && currtok.Type != TokType::BraceSquare_Close )
+			{
+				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
+			}
+
+			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			if ( currtok.Type != TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
+				return Code::Invalid;
+			}
+
+			eat( TokType::BraceSquare_Close );
+		}
+
 		eat( TokType::Statement_End );
 
 		using namespace ECode;
 
 		Code
-		result = make_code();
+		result       = make_code();
 		result->Type = Typedef;
 		result->Name = get_cached_string( name.Text, name.Length );
 
 		result->add_entry( type );
+
+		if ( array_expr )
+			type->add_entry( array_expr );
 
 		result.lock();
 		return result;
@@ -3725,16 +3897,14 @@ namespace gen
 
 	Code parse_using( s32 length, char const* def )
 	{
+		using namespace Parser;
+
 	#	define context parse_using
 		check_parse_args( parse_using, length, def );
 
-		using namespace Parser;
 		TokArray toks = lex( length, def );
-		if ( array_count( toks.Arr ) == 0 )
-		{
-			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
@@ -3755,15 +3925,52 @@ namespace gen
 
 		eat( TokType::Identifier );
 
-		if ( currtok.Type != TokType::Statement_End )
+		if ( currtok.IsAssign )
 		{
-			if ( is_namespace )
+			eat( TokType::Operator );
+
+			type = parse_type( toks, txt(parse_typedef) );
+		}
+
+		if ( ! is_namespace && check( TokType::BraceSquare_Open ) )
+		{
+			eat( TokType::BraceSquare_Open );
+
+			if ( left == 0 )
 			{
-				log_failure( "gen::parse_using: Error, expected ; after identifier for a using namespace declaration" );
+				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
 				return Code::Invalid;
 			}
 
-			type = parse_type( toks, txt(parse_using) );
+			if ( currtok.Type == TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			Token
+			untyped_tok = currtok;
+
+			while ( left && currtok.Type != TokType::BraceSquare_Close )
+			{
+				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
+			}
+
+			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			if ( currtok.Type != TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
+				return Code::Invalid;
+			}
+
+			eat( TokType::BraceSquare_Close );
 		}
 
 		eat( TokType::Statement_End );
@@ -3771,11 +3978,14 @@ namespace gen
 		using namespace ECode;
 
 		Code
-		result = make_code();
+		result       = make_code();
 		result->Type = is_namespace ? Using : Using_Namespace;
 		result->Name = get_cached_string( name->Text, name->Length );
 
 		result->add_entry( type );
+
+		if ( array_expr )
+			type->add_entry( array_expr );
 
 		result.lock();
 		return result;

@@ -212,7 +212,6 @@ namespace gen
 		#define Define_Specifiers                    \
 		Entry( API_Import,       API_Export_Code )   \
 		Entry( API_Export,       API_Import_Code )   \
-		Entry( Attribute,        "You cannot stringize an attribute this way" )     \
 		Entry( Alignas,          alignas )                                          \
 		Entry( Array_Decl,       "You cannot stringize an array declare this way" ) \
 		Entry( C_Linkage,        extern "C" )        \
@@ -724,7 +723,7 @@ namespace gen
 
 	Code def_struct         ( s32 length, char const* name, Code parent     = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_typedef        ( s32 length, char const* name, Code type );
-	Code def_type           ( s32 length, char const* name, Code specifiers = NoCode );
+	Code def_type           ( s32 length, char const* name, Code specifiers = NoCode, Code ArrayExpr = NoCode );
 	Code def_using          ( s32 length, char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
 
 	Code def_variable       ( Code type, s32 length, char const* name, Code value = NoCode, Code specifiers = NoCode );

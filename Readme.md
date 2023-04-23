@@ -19,7 +19,6 @@ Intended for small-to midsized projects.
 * [Code generation and modification](#code-generation-and-modification)
 * [On multithreading](#on-multi-threading)
 * [Extending the library](#extending-the-library)
-* [Why](#why)
 * [TODO](#todo)
 
 ## Notes
@@ -276,6 +275,7 @@ u8                _Align_Pad[6];
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*
+*`StringCahced` is a typedef for `char const*` to denote it is an interned string*
 
 AST widths are setup to be AST_POD_Size.
 The width dictates how much the static array can hold before it must give way to using an allocated array:
@@ -305,7 +305,6 @@ Data Notes:
 * ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
-* Entires start as a static array, however if it goes over capacity a dynamic array is allocated for the entires.
 * Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
 
 ## There are four sets of interfaces for Code AST generation the library provides
@@ -580,34 +579,6 @@ Typical use case is for getting define constants an old C/C++ library with the s
 Code parse_defines() can emit a custom code AST with Macro_Constant type.
 
 Another would be getting preprocessor or template metaprogramming Codes from Unreal Engine definitions, etc.
-
-## Why
-
-Macros in c/c++ are usually painful to debug, and templates can be unless your on a monsterous IDE (and even then fail often).
-
-Templates also have a heavy cost to compile-times due to their recursive nature of expansion if complex code is getting generated, or if heavy type checking system is used (assertsion require expansion, etc).
-
-Unfortunately most programming langauges opt the approach of internally processing the generated code immediately within the AST or not expose it to the user in a nice way to even introspect as a text file.
-
-Stage metaprogramming doesn't have this problem, since its entire purpose is to create those generated files that the final program will reference instead.
-
-This is technically what the macro preprocessor does in a basic form, however a proper metaprogram for generation is easier to deal with for more complex generation.
-
-The drawback naturally is generation functions, at face value, are harder to grasp than something following a template pattern (for simple generation). This drawback becomes less valid the more complex the code generation becomes.
-
-Thus a rule of thumb is if its a simple definition you can get away with just the preprocessor `#define`, or if the templates being used don't break the debugger or your compile times, this is most likely not needed.
-
-However, if:
-
-* Compile time complexity becomes large.
-* You enjoy actually *seeing* the generated code instead of just the error symbols or the pdb symbols.
-* You value your debugging expereince, and would like to debug your metaprogram, without having to step through the debug version of the compiler (if you even can)
-* Want to roll your own reflection system
-* Want to maintain a series of libraries for internal use, but don't want to deal with manual merging as often when they update.
-* Want to create tailored headers for your code or for your libraries since you usually don't need the majority of the code within them.
-* You just dislike metaprogramming with template expansion
-
-Then this might help you boostrap a toolset todo so.
 
 # TODO
 
