@@ -2,7 +2,10 @@
 
 An attempt at simple staged metaprogramming for c/c++.
 
-This library is intended for small-to midsized projects.
+The library is mostly a compositon of code element constructors.
+These build up a code AST to then serialize with a file builder.
+
+Intended for small-to midsized projects.
 
 ### TOC
 
@@ -15,7 +18,7 @@ This library is intended for small-to midsized projects.
 * [The four constructors](#there-are-four-sets-of-interfaces-for-code-ast-generation-the-library-provides)
 * [Code generation and modification](#code-generation-and-modification)
 * [On multithreading](#on-multi-threading)
-* [On extending with whatever features you want](#on-extending-with-whatever-features-you-want)
+* [Extending the library](#extending-the-library)
 * [Why](#why)
 * [TODO](#todo)
 
@@ -27,7 +30,7 @@ Version 1 will have C and a subset of C++ features available to it.
 I will generate with this library a C99 or 11 variant when Version 1 is complete.
 A single-header version will also be generated.
 
-The size target of this library is to stay under 5000 sloc (data & interface code).
+The size target of this library is to stay under 5-6k sloc (data & interface code).
 With the dependency code being under 10000 sloc. (Containers, Memory, String handling, Language bloat)
 
 Any dependencies from the zpl library will be exposed manually with using declarations into global scope.
@@ -70,7 +73,8 @@ The user is given `Code` typed objects that are used to build up the AST.
 
 Example using each construction interface:
 
-#### Upfront
+### Upfront
+
 
 ```cpp
 Code t_uw           = def_type( name(uw) );
@@ -88,7 +92,7 @@ Code header;
 }
 ```
 
-#### Incremental
+### Incremental
 
 ```cpp
 // Types are done the same with upfront. Incremental does not have a full interface replacment.
@@ -106,7 +110,7 @@ Code header = make_struct( name(ArrayHeader) );
 }
 ```
 
-#### Parse
+### Parse
 
 ```cpp
 Code header = parse_struct( code(
@@ -122,20 +126,17 @@ Code header = parse_struct( code(
 
 Parse will automatically generate any types that have not been used previously.
 
-#### Undtyped
+### Undtyped
 
 ```cpp
-Code header = untyped_str(
-    R("struct ArrayHeader
+Code header = untyped_str( R("
+    struct ArrayHeader
     {
-        #define Using_ArrayHeader_Data \
-        uw        Num;                 \
-        uw        Capacity;            \
+        uw        Num;
+        uw        Capacity;
         allocator Allocator;
-        Using_ArrayHeader_Data
-    };)"
-);
-
+    };
+)");
 ```
 
 `name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.
@@ -213,38 +214,42 @@ If in your use case, decide to have exclusive separation or partial separation o
 
 * Macro or template generation                : This library is to avoid those, adding support for them adds unnecessary complexity.
 * Vendor provided dynamic dispatch (virtuals) : Roll your own, this library might roll its own vtable/interface generation helpers in the future.
-* RTTI                                        : This is kinda covered with the last point, but just wanted to emphasize.
-* Exceptions                                  : Most fo the
-* Execution statment validation               : Execution expressions are defined using the untyped string API.
+* RTTI
+* Exceptions
+* Execution statement validation              : Execution expressions are defined using the untyped string API.
 
 Keywords in from "Modern C++":
 
-* constexpr : Great to store compile-time constants, (easier to garanteed when emitted from gentime)
+* constexpr : Great to store compile-time constants, (easier to garantee when emitted from gentime)
 * consteval : Technically fine so long as templates are not used. Need to make sure to execute in moderation.
 * constinit : Better than constexpr at doing its job, however, its only c++ 20.
 * export    : Useful if c++ modules ever come around to actually being usable.
 * import    : ^^
 * module    : ^^
 
-These features are in as they either are not horrible when used conservatively or are a performance benefit (modules).
+These features are not horrible when used conservatively, or are a performance benefit (modules).
 
-When it comes to excution statements:
-There is no parse API for validating excution statements (possibly will add in the future, but very limited in what it can do).
-This reason there isn't one: thats where the can of worms open for parsing validation.
-For most metaprogramming (espcially for c/c++), expression validation is not necessary, it can be done by the compiler for the runtime program.
+When it comes to expressions:
+
+There is no support for validating expressions.
+The reason: thats where the can of worms open for parsing validation. This library would most likey more than double in size with that addition alone.
+For most metaprogramming (espcially for C/C++), expression validation is not necessary for metaprogramming, it can be done by the compiler for the runtime program.
 Most of the time, the critical complex metaprogramming conundrums are actaully producing the frame of abstractions around the expressions.
 Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
 
-To further this point, lets say you do have an error with an execution statment. It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
+To further this point, lets say you do have an error with an expressions composition.
+It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
 
-* If its not caught by the compiler, the only downside is the error appers on the generated function. Those with knowledge of how that definition was generated know where to find the code that inlined that expression in that file for that definition.
-* If its caught at runtime. The expression will be shown in a stack trace if debug symbols are enabled in the generated function body. Yet again those with knowledge of how that definition was generated know where to find the code that inlined that expression.
+* If its not caught by the compiler, the only downside is the error appers on the generated function.
+    Those with knowledge of how that definition was generated know where to find the code that inlined that expression in that file for that definition.
+* If its caught at runtime. The expression will be shown in a stack trace if debug symbols are enabled in the generated function body.
+    Yet again those with knowledge of how that definition was generated know where to find the code that inlined that expression.
 
-In both these cases will get objectively better debug information than you would normally get on most c++ compilers with complex macros or templates.
+In both these cases the user will get objectively better debug information than you would normally get on most c++ compilers/editors using complex macros or templates.
 
 ### The Data & Interface
 
-As mentioned in [Usage](#Usage), the user is provided Code objects by calling the constructor functions to generate them or find existing matches.
+As mentioned in [Usage](#usage), the user is provided Code objects by calling the constructor functions to generate them or find existing matches.
 
 The AST is managed by the library and provided the user via its interface prodedures.
 However, the user may specificy memory configuration.
@@ -252,21 +257,43 @@ However, the user may specificy memory configuration.
 Data layout of AST struct:
 
 ```cpp
-AST*              Parent;
-CachedString      Name;
-CachedString      Comment;
 union {
-    array(AST*)   Entries;
-    CachedString  Content;
+    AST*          ArrStatic[AST::ArrS_Cap];
+    Array(AST*)   Entries;
+    StringCached  Content;
+    SpecifierT    ArrSpecs[AST::ArrSpecs_Cap];
 };
+AST*              Parent;
+StringCached      Name;
+StringCached      Comment;
 CodeT             Type;
 OperatorT         Op;
 bool              Readonly;
-u8                _64_Align[23];
+bool              DynamicEntries;
+u8                StaticIndex;
+u8                _Align_Pad[6];
 ```
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*
+
+AST widths are setup to be AST_POD_Size.
+The width dictates how much the static array can hold before it must give way to using an allocated array:
+
+```cpp
+constexpr static
+uw ArrS_Cap =
+(     AST_POD_Size
+    - sizeof(AST*)
+    - sizeof(StringCached) * 2
+    - sizeof(CodeT)
+    - sizeof(OperatorT)
+    - sizeof(bool) * 2
+    - sizeof(u8) * 7 )
+/ sizeof(AST*);
+```
+
+*Ex: If the AST_POD_Size is 256 the capacity of the static array is 26.*
 
 ASTs can be set to readonly by calling Code's lock() member function.
 Adding comments is always available even if the AST is set to readonly.
@@ -278,10 +305,7 @@ Data Notes:
 * ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
-* The default setup assumes large definition sets may be provided to bodies so AST::Entires are dynamic arrays.
-  * They're allocated to arenas currently and are pretty wasteful if they go over their reserve size (its never recycled).
-  * Most likely will need to implement a dynamic-sized bucket allocation strategy for the entry arrays if memory is getting stressed.
-  * Otherwise if you are using fixed size entries and your definitions are under 128~512 entries for the body, you may be better of with a fixed-sized array.
+* Entires start as a static array, however if it goes over capacity a dynamic array is allocated for the entires.
 * Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
 
 ## There are four sets of interfaces for Code AST generation the library provides
@@ -300,7 +324,7 @@ Interface :
 
 * def_class
 * def_enum
-* def_enum_class
+* def_execution       NOTE: This is equivalent to untyped_str, except that its intended for use only in execution scopes.
 * def_friend
 * def_function
 * def_namespace
@@ -314,6 +338,7 @@ Interface :
 * def_type
 * def_typedef
 * def_using
+
 * def_class_body
 * def_enum_body
 * def_function_body   NOTE: Use this for operator bodies as well.
@@ -323,7 +348,7 @@ Interface :
 
 Usage:
 
-```c++
+```cpp
 <name> = def_<function type>( ... );
 
 Code <name>
@@ -385,6 +410,7 @@ Interface :
 * parse_type
 * parse_typedef
 * parse_using
+
 * parse_classes
 * parse_enums
 * parse_functions
@@ -394,10 +420,16 @@ Interface :
 * parse_typedefs
 * parse_usings
 
+The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
+This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
+
+The plural variants provide an array of codes, its up to the user to add them to a body AST
+(they are not auto-added to a body)
+
 Usage:
 
 ```cpp
-Code <name> = parse_<function name>( <string with code> );
+Code <name> = parse_<function name>( string with code );
 
 Code <name> = def_<function name>( ..., parse_<function name>(
     <string with code>
@@ -410,9 +442,6 @@ Code <name> = make_<function name>( ... )
     ));
 }
 ```
-
-The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
-This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
 
 ### Untyped constructions
 
@@ -447,17 +476,28 @@ Template metaprogramming in the traditional sense becomes possible with the use 
 
 ```cpp
 char const* token_key, token_value, ...;
-char const* template = txt(
-    Code with {key value} to replace with token_values
+char const* template_str = txt(
+    Code with {key} to replace with token_values
     ...
 );
-char const* gen_code_str = token_fmt( template, num_tokens, token, ... );
+char const* gen_code_str = token_fmt( template, num_tokens, { token_key, token_value }, ... );
 Code        <name>       = parse_<function name>( gen_code_str );
 ```
 
+## Extent of operator overload validation
+
+The AST and constructors will be able to validate that the arguments provided for the operator type match the expected form:
+
+* If return type must match a parameter
+* If number of parameters is correct
+* If added as a member symbol to a class or struct, that operator matches the requirements for the class (types match up)
+
+The user is responsible for making sure the code types provided are correct
+and have the desired specifiers assigned to them beforehand.
+
 ## Code generation and modification
 
-There are three provided interfaces:
+There are three provided file interfaces:
 
 * Builder
 * Editor
@@ -483,9 +523,9 @@ Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FE
 All three have the same parameters with exception to remove which only has SymbolInfo and Policy:
 
 * SymbolInfo:
-  * File      : The file the symbol resides in. Leave null to indicate to search all files.
-  * Marker    : #define symbol that indicates a location or following signature is valid to manipulate. Leave null to indicate that the signature should only be used.
-  * Signature : Use a Code symbol to find a valid location to manipulate, can be further filtered with the marker. Leave null to indicate that the marker should only be used.
+  * File      : The file the symbol resides in. Leave null to indicate to search all files. Leave null to indicated all-file search.
+  * Marker    : #define symbol that indicates a location or following signature is valid to manipulate. Leave null to indicate the signature should only be used.
+  * Signature : Use a Code symbol to find a valid location to manipulate, can be further filtered with the marker. Leave null to indicate the marker should only be used.
 
 * Policy : Additional policy info for completing the request (empty for now)
 * Code   : Code to inject if adding, or replace existing code with.
@@ -515,24 +555,19 @@ Request queue in both Editor and Scanner are cleared once process_requests compl
 
 ## On multi-threading
 
-Its intended eventually for this library to support multi-threading at some point,
-however for now it does not.
+Currently unsupported. The following changes would have to be made:
 
-The following changes would have to be made:
-
-* Setup static data accesss with fences if more than one thread will generate ASTs
+* Setup static data accesss with fences if more than one thread will generate ASTs ( or keep a different set for each thread)
 * Make sure local peristent data of functions are also thread local.
 * The builder should be done on a per-thread basis.
-* Due to the design of the editor and scanner, it will most likely
-        be best to make each file a job to process request entries on.
-        Receipts should have an an array to store per thread.
-        They can be combined to the final reciepts array when all files have been processed.
+* Due to the design of the editor and scanner, it will most likely be best to make each file a job to process request entries on. Receipts should have an an array to store per thread. They can be combined to the final reciepts array when all files have been processed.
 
-For now single-threaded should be pretty quick even without heavy optimizations.
+For now single-threaded has a bunch of optimization that most likely have done to it and will be more than capable
+for the majority of projects this thing is intended for. (IF you use this on Unreal... well your asking for it...)
 
-## On extending with whatever features you want
+## Extending the library
 
-This library is relatively very small, and you can easily extend it.
+This library is relatively very small, and can be extended without much hassle.
 
 The untyped codes and builder/editor/scanner can be technically be used to circumvent
 any sort of constrictions the library has with: modern c++, templates, macros, etc.
@@ -560,12 +595,13 @@ Thus a rule of thumb is if its a simple definition you can get away with just th
 
 However, if:
 
-* Your compile time complexity becomes large.
+* Compile time complexity becomes large.
 * You enjoy actually *seeing* the generated code instead of just the error symbols or the pdb symbols.
 * You value your debugging expereince, and would like to debug your metaprogram, without having to step through the debug version of the compiler (if you even can)
 * Want to roll your own reflection system
 * Want to maintain a series of libraries for internal use, but don't want to deal with manual merging as often when they update.
 * Want to create tailored headers for your code or for your libraries since you usually don't need the majority of the code within them.
+* You just dislike metaprogramming with template expansion
 
 Then this might help you boostrap a toolset todo so.
 

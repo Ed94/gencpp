@@ -26,7 +26,7 @@ namespace gen
 	}
 
 #pragma region Constants
-#	ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 	Code type_ns(void);
 
 	Code type_ns(bool);
@@ -48,7 +48,7 @@ namespace gen
 
 	Code type_ns(f32);
 	Code type_ns(f64);
-#	endif
+	#endif
 
 	Code access_public;
 	Code access_protected;
@@ -61,195 +61,305 @@ namespace gen
 	Code spec_ref;
 #pragma endregion Constants
 
-#	pragma region AST
+#pragma region AST Body Case Macros
+#	define AST_BODY_CLASS_UNALLOWED_TYPES \
+	case Class_Body:                      \
+	case Enum_Body:                       \
+	case Friend:                          \
+	case Function_Body:                   \
+	case Function_Fwd:                    \
+	case Global_Body:                     \
+	case Namespace:                       \
+	case Namespace_Body:                  \
+	case Operator:                        \
+	case Operator_Fwd:                    \
+	case Parameters:                      \
+	case Specifiers:                      \
+	case Struct_Body:                     \
+	case Typename:
+
+#	define AST_BODY_FUNCTION_UNALLOWED_TYPES \
+	case Access_Public:                      \
+	case Access_Protected:                   \
+	case Access_Private:                     \
+	case Class_Body:                         \
+	case Enum_Body:                          \
+	case Friend:                             \
+	case Function_Body:                      \
+	case Function_Fwd:                       \
+	case Global_Body:                        \
+	case Namespace:                          \
+	case Namespace_Body:                     \
+	case Operator:                           \
+	case Operator_Fwd:                       \
+	case Operator_Member:                    \
+	case Operator_Member_Fwd:                \
+	case Parameters:                         \
+	case Specifiers:                         \
+	case Struct_Body:                        \
+	case Typename:
+
+#	define AST_BODY_GLOBAL_UNALLOWED_TYPES \
+	case Access_Public: 				   \
+	case Access_Protected: 				   \
+	case Access_Private: 				   \
+	case Class_Body: 					   \
+	case Enum_Body: 					   \
+	case Execution: 					   \
+	case Friend: 						   \
+	case Function_Body: 				   \
+	case Global_Body: 					   \
+	case Namespace_Body: 				   \
+	case Operator_Member: 				   \
+	case Operator_Member_Fwd: 			   \
+	case Parameters: 					   \
+	case Specifiers: 					   \
+	case Struct_Body: 					   \
+	case Typename:
+
+#	define AST_BODY_NAMESPACE_UNALLOWED_TYPES \
+	case Access_Public: 					  \
+	case Access_Protected: 					  \
+	case Access_Private: 					  \
+	case Class_Body: 						  \
+	case Enum_Body: 						  \
+	case Execution: 						  \
+	case Friend: 							  \
+	case Function_Body: 					  \
+	case Global_Body: 						  \
+	case Namespace_Body: 					  \
+	case Operator_Member: 					  \
+	case Operator_Member_Fwd: 				  \
+	case Parameters: 						  \
+	case Specifiers: 						  \
+	case Struct_Body: 						  \
+	case Typename:
+
+#	define AST_BODY_STRUCT_UNALLOWED_TYPES \
+	case Enum_Body: 					   \
+	case Execution: 					   \
+	case Function_Body: 				   \
+	case Global_Body: 					   \
+	case Namespace: 					   \
+	case Namespace_Body: 				   \
+	case Operator: 						   \
+	case Operator_Fwd: 					   \
+	case Parameters: 					   \
+	case Specifiers: 					   \
+	case Struct_Body: 					   \
+	case Typename: 						   \
+	case Using_Namespace:
+#pragma endregion AST Body Case Macros
+
+#pragma region AST
 	Code Code::Invalid;
 
 	bool AST::add( AST* other )
 	{
+	#ifdef GEN_FEATURE_INCREMENTAL
+		if ( other == nullptr )
+		{
+			log_failure( "AST::add: Provided a null AST" );
+			return false;
+		}
+
+		if ( other->Type == ECode::Invalid )
+		{
+			log_failure( "AST::add: Provided an invalid AST" );
+			return false;
+		}
+
 		switch ( Type )
 		{
 			using namespace ECode;
 
 			case Invalid:
-			break;
+				log_failure( "AST::add: Cannot add an AST to an invalid AST." );
+				return false;
 
 			case Untyped:
-			break;
+				log_failure( "AST::add: Cannot add an AST to an untyped AST." );
+				return false;
 
 			case Access_Public:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a public access specifier." );
+				return false;
 
 			case Access_Protected:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a protected access specifier." );
+				return false;
 
 			case Access_Private:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a private access specifier." );
+				return false;
 
 			case Class:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a class, only to its body" );
+				return false;
 
 			case Class_Fwd:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a class forward declaration." );
+				return false;
 
 			case Class_Body:
+				switch ( other->Type )
+				{
+					AST_BODY_CLASS_UNALLOWED_TYPES
+					{
+						log_failure( "AST::add: Cannot add an AST to a class body." );
+						return false;
+					}
+
+					default:
+						break;
+				}
 			break;
 
 			case Enum:
-			break;
+				log_failure( "AST::add: Cannot add an AST to an enum, only to its body" );
+				return false;
 
 			case Enum_Fwd:
-			break;
+				log_failure( "AST::add: Cannot add an AST to an enum forward declaration." );
+				return false;
 
 			case Enum_Body:
+				if ( other->Type != Untyped )
+				{
+					log_failure( "AST::add: Cannot add an AST which is not untyped to an enum body." );
+					return false;
+				}
 			break;
 
 			case Enum_Class:
-			break;
+				log_failure( "AST::add: Cannot add an AST to an enum class, only to its body" );
+				return false;
 
 			case Enum_Class_Fwd:
-			break;
+				log_failure( "AST::add: Cannot add an AST to an enum class forward declaration." );
+				return false;
 
 			case Friend:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a friend declaration." );
+				return false;
 
 			case Function:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a function, only to its body" );
+				return false;
 
 			case Function_Body:
+				switch ( other->Type )
+				{
+					AST_BODY_FUNCTION_UNALLOWED_TYPES
+					{
+						log_failure( "AST::add: Cannot add an AST to a function body." );
+						return false;
+					}
+
+					default:
+						break;
+				}
 			break;
 
 			case Function_Fwd:
-			break;
+				log_failure( "AST::add: Cannot add an AST to a function forward declaration." );
+				return false;
 
 			case Global_Body:
+				switch ( other->Type )
+				{
+					AST_BODY_GLOBAL_UNALLOWED_TYPES
+					{
+						log_failure( "AST::add: Cannot add an AST to a global body." );
+						return false;
+					}
+
+					default:
+						break;
+				}
 			break;
+
 
 			case Namespace:
-			break;
+				if ( Type != Global_Body )
+				{
+					log_failure( "AST::add: Cannot add a namespace to a non-global body." );
+					return false;
+				}
 
 			case Namespace_Body:
+				switch ( other-> Type )
+				{
+					AST_BODY_NAMESPACE_UNALLOWED_TYPES
+					{
+						log_failure( "AST::add: Cannot add an AST to a namespace body." );
+						return false;
+					}
+
+					default:
+						break;
+				}
 			break;
 
 			case Operator:
-			break;
+				log_failure( "AST::add: Cannot add an operator, only to its body" );
+				return false;
 
 			case Operator_Fwd:
-			break;
+				log_failure( "AST::add: Cannot add an operator forward declaration." );
+				return false;
 
 			case Parameters:
-			break;
+				log_failure( "AST::add: Cannot add to a parameter list, use AST::add_param instead" );
+				return false;
 
 			case Specifiers:
-			break;
+				log_failure( "AST::add: Cannot add to a specifier, use AST::add_specifier instead." );
+				return false;
 
 			case Struct:
-			break;
+				log_failure( "AST::add: Cannot add to a struct, only to its body." );
+				return false;
 
 			case Struct_Body:
+				switch ( other->Type )
+				{
+					AST_BODY_STRUCT_UNALLOWED_TYPES
+					{
+						log_failure( "AST::add: Cannot add to a struct body." );
+						return false;
+					}
+
+					default:
+						break;
+				}
 			break;
 
 			case Variable:
-			break;
+				log_failure( "AST::add: Cannot add to a variable." );
+				return false;
 
 			case Typedef:
-			break;
+				log_failure( "AST::add: Cannot add to a typedef." );
+				return false;
 
 			case Typename:
-			break;
+				log_failure( "AST::add: Cannot add to a typename." );
+				return false;
 
 			case Using:
-			break;
+				log_failure( "AST::add: Cannot add to a using statement." );
+				return false;
 		}
 
 		array_append( Entries, other );
 
 		other->Parent = this;
 		return true;
-	}
-
-	bool AST::check()
-	{
-		switch ( Type )
-		{
-			using namespace ECode;
-
-			case Invalid:
-			break;
-
-			case Untyped:
-			break;
-
-			case Access_Public:
-			break;
-
-			case Access_Protected:
-			break;
-
-			case Access_Private:
-			break;
-
-			case Enum:
-			break;
-
-			case Enum_Fwd:
-			break;
-
-			case Enum_Body:
-			break;
-
-			case Friend:
-			break;
-
-			case Function:
-			break;
-
-			case Function_Body:
-			break;
-
-			case Function_Fwd:
-			break;
-
-			case Global_Body:
-			break;
-
-			case Namespace:
-			break;
-
-			case Namespace_Body:
-			break;
-
-			case Operator:
-			break;
-
-			case Operator_Fwd:
-			break;
-
-			case Parameters:
-			break;
-
-			case Specifiers:
-			break;
-
-			case Struct:
-			break;
-
-			case Struct_Body:
-			break;
-
-			case Variable:
-			break;
-
-			case Typedef:
-			break;
-
-			case Typename:
-			break;
-
-			case Using:
-			break;
-		}
-
-		return true;
+	#else
+		log_failure( "AST::add: Incremental AST building is not enabled." );
+		return false;
+	#endif
 	}
 
 	AST* AST::duplicate()
@@ -504,7 +614,7 @@ namespace gen
 
 		return result;
 	}
-#	pragma endregion AST
+#pragma endregion AST
 
 #pragma region Gen Interface
 	void init()
@@ -564,12 +674,12 @@ namespace gen
 		Code::Invalid = make_code();
 		Code::Invalid.lock();
 
-#	ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 		Code&
 		t_bool_write = ccast( Code, t_void );
 		t_bool_write = def_type( name(void) );
 
-#		define def_constant_code_type( Type_ ) \
+	#	define def_constant_code_type( Type_ ) \
 		Code&                                  \
 		t_##Type_ = def_type( name(Type_) );   \
 		t_##Type_->Readonly = true;
@@ -595,21 +705,21 @@ namespace gen
 
 		def_constant_code_type( f32 );
 		def_constant_code_type( f64 );
-#		undef def_constant_code_type
-#	endif
+	#	undef def_constant_code_type
+	#endif
 
 		Code&
 		spec_constexpr_write = ccast( Code, spec_constexpr );
 		spec_constexpr_write = def_specifiers( 1, ESpecifier::Constexpr );
 
-#		define def_constant_spec( Type_, ... )                                    \
+	#	define def_constant_spec( Type_, ... )                                    \
 		Code&                                                                     \
 		spec_##Type_ = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
 		spec_##Type_.lock();
 
 		def_constant_spec( const, ESpecifier::Const );
 		def_constant_spec( inline, ESpecifier::Inline );
-#		undef def_constant_spec
+	#	undef def_constant_spec
 	}
 
 	void clear_code_memory()
@@ -778,8 +888,8 @@ namespace gen
 			return OpValidateResult::Fail;
 		}
 
-#	pragma region Helper Macros
-#		define check_params()                                                                                  \
+	#pragma region Helper Macros
+	#	define check_params()                                                                                  \
 		if ( ! params_code )                                                                                   \
 		{                                                                                                      \
 			log_failure("gen::def_operator: params is null and operator%s requires it", to_str(op));           \
@@ -791,7 +901,7 @@ namespace gen
 			return OpValidateResult::Fail;                                                                     \
 		}
 
-#		define check_param_eq_ret()                                                                    \
+	#	define check_param_eq_ret()                                                                    \
 		if ( ! is_member_symbol && params_code->param_type() != ret_type )                             \
 		{                                                                                              \
 			log_failure("gen_def_operator: operator%s requires first parameter to equal return type\n" \
@@ -803,7 +913,7 @@ namespace gen
 			);                                                                                         \
 			return OpValidateResult::Fail;                                                             \
 		}
-#	pragma endregion Helper Macros
+	#pragma endregion Helper Macros
 
 		if ( ! ret_type )
 		{
@@ -820,7 +930,7 @@ namespace gen
 
 		switch ( op )
 		{
-#			define specs( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
+		#	define specs( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
 			case Assign:
 				check_params();
 
@@ -1081,14 +1191,13 @@ namespace gen
 			case Comma:
 				check_params();
 			break;
-#			undef specs
+		#	undef specs
 		}
 
-#		undef check_params
-#		undef check_ret_type
-#		undef check_param_eq_ret
-
 		return is_member_symbol ? OpValidateResult::Member : OpValidateResult::Global;
+	#	undef check_params
+	#	undef check_ret_type
+	#	undef check_param_eq_ret
 	}
 
 	void set_allocator_data_arrays( AllocatorInfo allocator )
@@ -1116,7 +1225,7 @@ namespace gen
 		StaticData::Allocator_StringArena = allocator;
 	}
 
-#	pragma region Helper Functions
+#pragma region Helper Marcos
 	// This snippet is used in nearly all the functions.
 #	define name_check( Context_, Length_, Name_ )                                                \
 	{                                                                                            \
@@ -1158,9 +1267,9 @@ namespace gen
 #	define not_implemented( Context_ )                              \
 		log_failure( "gen::%s: This function is not implemented" ); \
 		return Code::Invalid;
-#	pragma endregion Helper Functions
+#pragma endregion Helper Marcos
 
-#	pragma region Upfront Constructors
+#pragma region Upfront Constructors
 /*
 	The implementaiton of the upfront constructors involves bascially doing three things:
 	* Validate the arguments given to construct the intended type of AST is valid.
@@ -1694,7 +1803,7 @@ namespace gen
 	If a function's implementation deviates from the macros then its just writen it out.
 */
 
-#	pragma region Helper Macros for def_**_body functions
+#pragma region Helper Macros for def_**_body functions
 #	define def_body_start( Name_ )                                          \
 	using namespace ECode;                                                  \
 																            \
@@ -1744,7 +1853,7 @@ namespace gen
 		result->add_entry( entry );                                                                     \
 	}                                                                                                   \
 	while ( num--, num > 0 )
-#	pragma endregion Helper Macros for def_**_body functions
+#pragma endregion Helper Macros for def_**_body functions
 
 	Code def_class_body( s32 num, ... )
 	{
@@ -1757,19 +1866,7 @@ namespace gen
 		va_list va;
 		va_start(va, num);
 		def_body_code_validation_start( def_class_body, va_arg( va, Code ) );
-				case Enum_Body:
-				case Execution:
-				case Function_Body:
-				case Global_Body:
-				case Namespace:
-				case Namespace_Body:
-				case Operator:
-				case Operator_Fwd:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
-				case Using_Namespace:
+			AST_BODY_CLASS_UNALLOWED_TYPES
 		def_body_code_validation_end( def_class_body );
 		va_end(va);
 
@@ -1786,25 +1883,7 @@ namespace gen
 		result->Type = Function_Body;
 
 		def_body_code_validation_start( def_class_body, *codes; codes++ );
-				case Access_Public:
-				case Access_Protected:
-				case Access_Private:
-				case Class_Body:
-				case Enum_Body:
-				case Friend:
-				case Function_Body:
-				case Function_Fwd:
-				case Global_Body:
-				case Namespace:
-				case Namespace_Body:
-				case Operator:
-				case Operator_Fwd:
-				case Operator_Member:
-				case Operator_Member_Fwd:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
+			AST_BODY_CLASS_UNALLOWED_TYPES
 		def_body_code_validation_end( def_class_body );
 
 		result.lock();
@@ -1889,25 +1968,7 @@ namespace gen
 		va_list va;
 		va_start(va, num);
 		def_body_code_validation_start( def_function_body, va_arg(va, Code) );
-			case Access_Public:
-			case Access_Protected:
-			case Access_Private:
-			case Class_Body:
-			case Enum_Body:
-			case Friend:
-			case Function_Body:
-			case Function_Fwd:
-			case Global_Body:
-			case Namespace:
-			case Namespace_Body:
-			case Operator:
-			case Operator_Fwd:
-			case Operator_Member:
-			case Operator_Member_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Body:
-			case Typename:
+			AST_BODY_FUNCTION_UNALLOWED_TYPES
 		def_body_code_validation_end( def_function_body );
 		va_end(va);
 
@@ -1924,25 +1985,7 @@ namespace gen
 		result->Type = Function_Body;
 
 		def_body_code_validation_start( def_function_body, *codes; codes++ );
-				case Access_Public:
-				case Access_Protected:
-				case Access_Private:
-				case Class_Body:
-				case Enum_Body:
-				case Friend:
-				case Function_Body:
-				case Function_Fwd:
-				case Global_Body:
-				case Namespace:
-				case Namespace_Body:
-				case Operator:
-				case Operator_Fwd:
-				case Operator_Member:
-				case Operator_Member_Fwd:
-				case Parameters:
-				case Specifiers:
-				case Struct_Body:
-				case Typename:
+			AST_BODY_FUNCTION_UNALLOWED_TYPES
 		def_body_code_validation_end( def_function_body );
 
 		result.lock();
@@ -1960,22 +2003,7 @@ namespace gen
 		va_list va;
 		va_start(va, num);
 		def_body_code_validation_start( def_global_body, va_arg(va, Code) );
-			case Access_Public:
-			case Access_Protected:
-			case Access_Private:
-			case Class_Body:
-			case Enum_Body:
-			case Execution:
-			case Friend:
-			case Function_Body:
-			case Global_Body:
-			case Namespace_Body:
-			case Operator_Member:
-			case Operator_Member_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Body:
-			case Typename:
+			AST_BODY_GLOBAL_UNALLOWED_TYPES
 		def_body_code_validation_end( def_global_body );
 		va_end(va);
 
@@ -1992,22 +2020,7 @@ namespace gen
 		result->Type = Global_Body;
 
 		def_body_code_validation_start( def_global_body, *codes; codes++ );
-			case Access_Public:
-			case Access_Protected:
-			case Access_Private:
-			case Class_Body:
-			case Enum_Body:
-			case Execution:
-			case Friend:
-			case Function_Body:
-			case Global_Body:
-			case Namespace_Body:
-			case Operator_Member:
-			case Operator_Member_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Body:
-			case Typename:
+			AST_BODY_GLOBAL_UNALLOWED_TYPES
 		def_body_code_validation_end( def_global_body );
 
 		result.lock();
@@ -2025,22 +2038,7 @@ namespace gen
 		va_list va;
 		va_start(va, num);
 		def_body_code_validation_start( def_namespace_body, va_arg(va, Code) );
-			case Access_Public:
-			case Access_Protected:
-			case Access_Private:
-			case Class_Body:
-			case Enum_Body:
-			case Execution:
-			case Friend:
-			case Function_Body:
-			case Global_Body:
-			case Namespace_Body:
-			case Operator_Member:
-			case Operator_Member_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Body:
-			case Typename:
+			AST_BODY_NAMESPACE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_namespace_body );
 		va_end(va);
 
@@ -2057,22 +2055,7 @@ namespace gen
 		result->Type = Global_Body;
 
 		def_body_code_validation_start( def_namespace_body, *codes; codes++ );
-			case Access_Public:
-			case Access_Protected:
-			case Access_Private:
-			case Class_Body:
-			case Enum_Body:
-			case Execution:
-			case Friend:
-			case Function_Body:
-			case Global_Body:
-			case Namespace_Body:
-			case Operator_Member:
-			case Operator_Member_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Body:
-			case Typename:
+			AST_BODY_NAMESPACE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_namespace_body );
 
 		result.lock();
@@ -2219,19 +2202,7 @@ namespace gen
 		va_list va;
 		va_start(va, num);
 		def_body_code_validation_start( def_struct_body, va_arg(va, Code) );
-			case Enum_Body:
-			case Execution:
-			case Function_Body:
-			case Global_Body:
-			case Namespace:
-			case Namespace_Body:
-			case Operator:
-			case Operator_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Body:
-			case Typename:
-			case Using_Namespace:
+			AST_BODY_STRUCT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_struct_body );
 		va_end(va);
 
@@ -2248,28 +2219,16 @@ namespace gen
 		result->Type = Struct_Body;
 
 		def_body_code_validation_start( def_struct_body, *codes; codes++ );
-			case Enum_Body:
-			case Execution:
-			case Function_Body:
-			case Global_Body:
-			case Namespace:
-			case Namespace_Body:
-			case Operator:
-			case Operator_Fwd:
-			case Parameters:
-			case Specifiers:
-			case Struct_Body:
-			case Typename:
-			case Using_Namespace:
+			AST_BODY_STRUCT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_struct_body );
 
 		result.lock();
 		return result;
 	}
-#	pragma endregion Upfront Constructors
+#pragma endregion Upfront Constructors
 
-#	pragma region Incremetnal Constructors
-#	ifdef	GEN_FEATURE_INCREMENTAL
+#pragma region Incremetnal Constructors
+#ifdef	GEN_FEATURE_INCREMENTAL
 	Code make_class( s32 length, char const* name, Code parent, Code specifiers )
 	{
 		using namespace ECode;
@@ -2501,11 +2460,15 @@ namespace gen
 
 		return result;
 	}
-#	endif // GEN_FEATURE_INCREMENTAL
-#	pragma endregion Incremetnal Constructions
 
-#	pragma region Parsing Constructors
-#	ifdef GEN_FEATURE_PARSING
+#	undef name_check
+#	undef null_check
+#	undef null_or_invalid_check
+#endif // GEN_FEATURE_INCREMENTAL
+#pragma endregion Incremetnal Constructions
+
+#pragma region Parsing Constructors
+#ifdef GEN_FEATURE_PARSING
 /*
 	These constructors are the most implementation intensive other than the edtior or scanner.
 
@@ -2518,428 +2481,399 @@ namespace gen
 	It uses the upfront constructors to help keep code from getitng to large since the target is to keep the sloc low
 */
 
-#	pragma region Helper Macros
-#	define check_parse_args( func, length, def )                         \
-	if ( length <= 0 )                                                   \
-	{                                                                    \
-		log_failure( "gen::" txt(func) ": length must greater than 0" ); \
-		return Code::Invalid;                                            \
-	}                                                                    \
-	if ( def == nullptr )                                                \
-	{                                                                    \
-		log_failure( "gen::" txt(func) ": def was null" );               \
-		return Code::Invalid;                                            \
-	}
-
-/*
-	These macros are used to make the parsing code more readable.
-*/
-#	define curr_tok ( * tokens )
-
-#	define eat( Type_ )                                                                         \
-	if ( curr_tok.Type != Type_ )                                                               \
-	{                                                                                           \
-		String token_str = string_make_length( g_allocator, curr_tok.Text, curr_tok.Length );   \
-		log_failure( "gen::" txt(context) ": expected %s, got %s", txt(Type_), curr_tok.Type ); \
-		return Code::Invalid;                                                                   \
-	}                                                                                           \
-	tokIDX++;                                                                                   \
-	left--
-#	pragma endregion Helper Macros
-
-#	pragma region Lexer
-/*
-	This is a simple lexer that focuses on tokenizing only tokens relevant to the library.
-	It will not be capable of lexing C++ code with unsupported features.
-*/
-
-// Angle brackets not supported as they are used for template arguments outside of expressions
-// Any angle brackets found will be considered an operator token.
-
-#	define Define_TokType \
-	Entry( Access_Public,       "public" )         \
-	Entry( Access_Protected,    "protected" )      \
-	Entry( Access_Private,      "private" )        \
-	Entry( Access_MemberSymbol, "." )              \
-	Entry( Access_StaticSymbol, "::")              \
-	Entry( Ampersand,           "&" )              \
-	Entry( Ampersand_DBL,       "&&" )             \
-	Entry( Assign_Classifer,    ":" )              \
-	Entry( BraceCurly_Open,     "{" )              \
-	Entry( BraceCurly_Close,    "}" )              \
-	Entry( BraceSquare_Open,    "[" )              \
-	Entry( BraceSquare_Close,   "]" )              \
-	Entry( Capture_Start,       "(" )              \
-	Entry( Capture_End,         ")" )              \
-	Entry( Comment,             "__comment__" )    \
-	Entry( Char,                "__char__" )       \
-	Entry( Comma,               "," )              \
-	Entry( Decl_Class,          "class" )          \
-	Entry( Decl_Enum,           "enum" )           \
-	Entry( Decl_Friend,         "friend" )         \
-	Entry( Decl_Namespace,      "namespace" )      \
-	Entry( Decl_Struct,         "struct" )         \
-	Entry( Decl_Typedef,        "typedef" )        \
-	Entry( Decl_Using,          "using" )          \
-	Entry( Decl_Union,          "union" )          \
-	Entry( Identifier,          "__SymID__" )      \
-	Entry( Number,              "number" )         \
-	Entry( Operator,            "operator" )       \
-	Entry( Spec_API,            txt(API_Keyword) ) \
-	Entry( Spec_Alignas,        "alignas" )        \
-	Entry( Spec_CLinkage,       "extern \"C\"" )   \
-	Entry( Spec_Const,          "const" )          \
-	Entry( Spec_Consteval,      "consteval" )      \
-	Entry( Spec_Constexpr,      "constexpr" )      \
-	Entry( Spec_Constinit,      "constinit" )      \
-	Entry( Spec_Export,         "export" )         \
-	Entry( Spec_Extern,         "extern" )         \
-	Entry( Spec_Import,         "import" )         \
-	Entry( Spec_Inline,         "inline" )         \
-	Entry( Spec_Module,         "module" )         \
-	Entry( Spec_Static,         "static" )         \
-	Entry( Spec_ThreadLocal,    "thread_local" )   \
-	Entry( Spec_Volatile,       "volatile")        \
-	Entry( Star,                "*" )              \
-	Entry( Statement_End,       ";" )              \
-	Entry( String,              "__String__" )     \
-	Entry( Type_Unsigned, 	    "unsigned" )       \
-	Entry( Type_Signed,         "signed" )         \
-	Entry( Type_Short,          "short" )          \
-	Entry( Type_Long,           "long" )
-
-	enum class TokType : u32
+	namespace Parser
 	{
-#		define Entry( Name_, Str_ ) Name_,
-		Define_TokType
-#		undef Entry
 
-		Num,
-		Invalid
-	};
+	/*
+		This is a simple lexer that focuses on tokenizing only tokens relevant to the library.
+		It will not be capable of lexing C++ code with unsupported features.
+	*/
 
-	struct Token
-	{
-		char const* Text;
-		s32 	    Length;
-		TokType     Type;
-	};
+	// Angle brackets not supported as they are used for template arguments outside of expressions
+	// Any angle brackets found will be considered an operator token.
 
-	TokType get_token_type( char const* word, s32 length )
-	{
-		local_persist
-		char const* lookup[(u32)TokType::Num] =
+	#	define Define_TokType \
+		Entry( Access_Public,       "public" )         \
+		Entry( Access_Protected,    "protected" )      \
+		Entry( Access_Private,      "private" )        \
+		Entry( Access_MemberSymbol, "." )              \
+		Entry( Access_StaticSymbol, "::")              \
+		Entry( Ampersand,           "&" )              \
+		Entry( Ampersand_DBL,       "&&" )             \
+		Entry( Assign_Classifer,    ":" )              \
+		Entry( BraceCurly_Open,     "{" )              \
+		Entry( BraceCurly_Close,    "}" )              \
+		Entry( BraceSquare_Open,    "[" )              \
+		Entry( BraceSquare_Close,   "]" )              \
+		Entry( Capture_Start,       "(" )              \
+		Entry( Capture_End,         ")" )              \
+		Entry( Comment,             "__comment__" )    \
+		Entry( Char,                "__char__" )       \
+		Entry( Comma,               "," )              \
+		Entry( Decl_Class,          "class" )          \
+		Entry( Decl_Enum,           "enum" )           \
+		Entry( Decl_Friend,         "friend" )         \
+		Entry( Decl_Namespace,      "namespace" )      \
+		Entry( Decl_Struct,         "struct" )         \
+		Entry( Decl_Typedef,        "typedef" )        \
+		Entry( Decl_Using,          "using" )          \
+		Entry( Decl_Union,          "union" )          \
+		Entry( Identifier,          "__SymID__" )      \
+		Entry( Number,              "number" )         \
+		Entry( Operator,            "operator" )       \
+		Entry( Spec_API,            txt(API_Keyword) ) \
+		Entry( Spec_Alignas,        "alignas" )        \
+		Entry( Spec_CLinkage,       "extern \"C\"" )   \
+		Entry( Spec_Const,          "const" )          \
+		Entry( Spec_Consteval,      "consteval" )      \
+		Entry( Spec_Constexpr,      "constexpr" )      \
+		Entry( Spec_Constinit,      "constinit" )      \
+		Entry( Spec_Export,         "export" )         \
+		Entry( Spec_Extern,         "extern" )         \
+		Entry( Spec_Import,         "import" )         \
+		Entry( Spec_Inline,         "inline" )         \
+		Entry( Spec_Module,         "module" )         \
+		Entry( Spec_Static,         "static" )         \
+		Entry( Spec_ThreadLocal,    "thread_local" )   \
+		Entry( Spec_Volatile,       "volatile")        \
+		Entry( Star,                "*" )              \
+		Entry( Statement_End,       ";" )              \
+		Entry( String,              "__String__" )     \
+		Entry( Type_Unsigned, 	    "unsigned" )       \
+		Entry( Type_Signed,         "signed" )         \
+		Entry( Type_Short,          "short" )          \
+		Entry( Type_Long,           "long" )
+
+		enum class TokType : u32
 		{
-#			define Entry( Name_, Str_ ) Str_,
+		#	define Entry( Name_, Str_ ) Name_,
 			Define_TokType
-#			undef Entry
+		#	undef Entry
+
+			Num,
+			Invalid
 		};
 
-		for ( u32 index = 0; index < (u32)TokType::Num; index++ )
+		struct Token
 		{
-			if ( str_compare( word, lookup[index], length ) == 0 )
-				return scast(TokType, index);
-		}
+			char const* Text;
+			sptr        Length;
+			TokType     Type;
+		};
 
-		return TokType::Invalid;
-	}
-
-	inline
-	bool tok_is_specifier( Token const& tok )
-	{
-		return tok.Type >= TokType::Spec_API && tok.Type <= TokType::Spec_Volatile;
-	}
-
-	Arena LexAllocator;
-
-	Array(Token) lex( s32 length, char const* content)
-	{
-#		define current ( * scanner )
-
-#		define move_forward() \
-		left--;               \
-		scanner++
-
-#		define SkipWhitespace()                     \
-		while ( left && char_is_space( current ) )  \
-		{                                           \
-			move_forward();                         \
-		}
-
-#		define SkipWhitespace_Checked( Context_, Msg_, ... )             \
-		while ( left && char_is_space( current ) )                       \
-		{                                                                \
-			move_forward();                                              \
-		}                                                                \
-		if ( left <= 0 )                                                 \
-		{                                                                \
-			log_failure( "gen::" txt(Context_) ": " Msg_, __VA_ARGS__ ); \
-			return Code::Invalid;                                        \
-		}
-
-		do_once_start
-			arena_init_from_allocator( & LexAllocator, heap(), megabytes(10) );
-
-			if ( LexAllocator.physical_start == nullptr )
+		TokType get_tok_type( char const* word, s32 length )
+		{
+			local_persist
+			char const* lookup[(u32)TokType::Num] =
 			{
-				log_failure( "gen::lex: failed to allocate memory for parsing constructor's lexer");
-				return nullptr;
+			#	define Entry( Name_, Str_ ) Str_,
+				Define_TokType
+			#	undef Entry
+			};
+
+			for ( u32 index = 0; index < (u32)TokType::Num; index++ )
+			{
+				if ( str_compare( word, lookup[index], length ) == 0 )
+					return scast(TokType, index);
 			}
-		do_once_end
 
-		local_persist thread_local
-		Array(Token) Tokens = nullptr;
-
-		s32         left    = length;
-		char const* scanner = content;
-
-		char const* word        = scanner;
-		s32         word_length = 0;
-
-		SkipWhitespace();
-		if ( left <= 0 )
-		{
-			log_failure( "gen::lex: no tokens found (only whitespace provided)" );
-			return Tokens;
+			return TokType::Invalid;
 		}
 
-		if ( Tokens )
-			array_clear( Tokens );
-
-		array_init_reserve( Tokens, arena_allocator( & LexAllocator), length / 8 );
-
-		while (left )
+		char const* str_tok_ype( TokType type )
 		{
-			Token token = { nullptr, 0, TokType::Invalid };
-
-			switch ( current )
+			local_persist
+			char const* lookup[(u32)TokType::Num] =
 			{
-				case '.':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Access_MemberSymbol;
+			#	define Entry( Name_, Str_ ) Str_,
+				Define_TokType
+			#	undef Entry
+			};
 
-					if (left)
-						move_forward();
-					goto FoundToken;
+			return lookup[(u32)type];
+		}
 
-				case '&' :
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Ampersand;
+		inline
+		bool tok_is_specifier( Token const& tok )
+		{
+			return tok.Type >= TokType::Spec_API && tok.Type <= TokType::Spec_Volatile;
+		}
 
-					if (left)
-						move_forward();
+	#	undef Define_TokType
 
-					if ( current == '&' )	// &&
-					{
-						token.Length  = 2;
-						token.Type    = TokType::Ampersand_DBL;
+		Arena LexAllocator;
+
+		struct TokArray
+		{
+			s32          Idx;
+			Array(Token) Arr;
+
+			inline
+			bool __eat( TokType type, char const* context )
+			{
+				if ( Arr[0].Type != type )
+				{
+					String token_str = string_make_length( g_allocator, Arr[Idx].Text, Arr[Idx].Length );
+					log_failure( "gen::%s: expected %s, got %s", context, str_tok_ype(type), str_tok_ype(Arr[Idx].Type) );
+					return Code::Invalid;
+				}
+
+				Idx++;
+			}
+		};
+
+		TokArray lex( s32 length, char const* content)
+		{
+		#	define current ( * scanner )
+
+		#	define move_forward() \
+			left--;               \
+			scanner++
+
+		#	define SkipWhitespace()                     \
+			while ( left && char_is_space( current ) )  \
+			{                                           \
+				move_forward();                         \
+			}
+
+		#	define SkipWhitespace_Checked( Context_, Msg_, ... )             \
+			while ( left && char_is_space( current ) )                       \
+			{                                                                \
+				move_forward();                                              \
+			}                                                                \
+			if ( left <= 0 )                                                 \
+			{                                                                \
+				log_failure( "gen::" txt(Context_) ": " Msg_, __VA_ARGS__ ); \
+				return { 0, nullptr };                                       \
+			}
+
+			do_once_start
+				arena_init_from_allocator( & LexAllocator, heap(), megabytes(10) );
+
+				if ( LexAllocator.physical_start == nullptr )
+				{
+					log_failure( "gen::lex: failed to allocate memory for parsing constructor's lexer");
+					return { 0, nullptr };
+				}
+			do_once_end
+
+			local_persist thread_local
+			Array(Token) Tokens = nullptr;
+
+			s32         left    = length;
+			char const* scanner = content;
+
+			char const* word        = scanner;
+			s32         word_length = 0;
+
+			SkipWhitespace();
+			if ( left <= 0 )
+			{
+				log_failure( "gen::lex: no tokens found (only whitespace provided)" );
+				return { 0, nullptr };
+			}
+
+			if ( Tokens )
+				array_clear( Tokens );
+
+			array_init_reserve( Tokens, arena_allocator( & LexAllocator), length / 8 );
+
+			while (left )
+			{
+				Token token = { nullptr, 0, TokType::Invalid };
+
+				switch ( current )
+				{
+					case '.':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Access_MemberSymbol;
 
 						if (left)
 							move_forward();
-					}
+						goto FoundToken;
 
-					goto FoundToken;
+					case '&' :
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Ampersand;
 
-				case ':':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Assign_Classifer;
-
-					if (left)
-						move_forward();
-
-					if ( current == ':' )
-					{
-						move_forward();
-						token.Type  = TokType::Access_StaticSymbol;
-						token.Length++;
-					}
-					goto FoundToken;
-
-				case '{':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::BraceCurly_Open;
-					goto FoundToken;
-
-				case '}':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::BraceCurly_Close;
-					goto FoundToken;
-
-				case '[':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::BraceSquare_Open;
-					if ( left )
-					{
-						move_forward();
-
-						if ( current == ']' )
-						{
-							token.Length = 2;
-							token.Type   = TokType::Operator;
+						if (left)
 							move_forward();
-						}
-					}
-					goto FoundToken;
 
-				case ']':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::BraceSquare_Close;
-					goto FoundToken;
-
-				case '(':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Capture_Start;
-					if ( left )
-					{
-						move_forward();
-
-						if ( current == ')' )
+						if ( current == '&' )	// &&
 						{
-							token.Length = 2;
-							token.Type   = TokType::Operator;
-							move_forward();
-						}
-					}
-					goto FoundToken;
+							token.Length  = 2;
+							token.Type    = TokType::Ampersand_DBL;
 
-				case ')':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Capture_End;
-					goto FoundToken;
-
-				case '\'':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Char;
-
-					move_forward();
-
-					while ( left && current != '\'' )
-					{
-						move_forward();
-						token.Length++;
-					}
-
-					if ( left )
-					{
-						move_forward();
-						token.Length++;
-					}
-					goto FoundToken;
-
-				case ',':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Comma;
-					goto FoundToken;
-
-				case '*':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Star;
-					goto FoundToken;
-
-				case ';':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Statement_End;
-					goto FoundToken;
-
-				case '"':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::String;
-
-					move_forward();
-					while ( left )
-					{
-						if ( current == '"' )
-						{
-							move_forward();
-							break;
-						}
-
-						if ( current == '\\' )
-						{
-							move_forward();
-							token.Length++;
-
-							if ( left )
-							{
+							if (left)
 								move_forward();
-								token.Length++;
-							}
-							continue;
 						}
 
-						move_forward();
-						token.Length++;
-					}
-					goto FoundToken;
+						goto FoundToken;
 
-				// All other operators we just label as an operator and move forward.
-				case '+':
-				case '%':
-				case '^':
-				case '~':
-				case '!':
-				case '=':
-				case '<':
-				case '>':
-				case '|':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Operator;
-
-					if (left)
-						move_forward();
-
-					if ( current == '=' )
-					{
-						token.Length++;
+					case ':':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Assign_Classifer;
 
 						if (left)
 							move_forward();
-					}
-					else while ( left && current == *(scanner - 1) && length < 3 )
-					{
-						token.Length++;
 
-						if (left)
-							move_forward();
-					}
-					goto FoundToken;
-
-				// Dash is unfortunatlly a bit more complicated...
-				case '-':
-					token.Text   = scanner;
-					token.Length = 1;
-					token.Type   = TokType::Operator;
-					if ( left )
-					{
-						move_forward();
-
-						if ( current == '>'  )
+						if ( current == ':' )
 						{
+							move_forward();
+							token.Type  = TokType::Access_StaticSymbol;
 							token.Length++;
+						}
+						goto FoundToken;
+
+					case '{':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::BraceCurly_Open;
+						goto FoundToken;
+
+					case '}':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::BraceCurly_Close;
+						goto FoundToken;
+
+					case '[':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::BraceSquare_Open;
+						if ( left )
+						{
 							move_forward();
 
-							if ( current == '*' )
+							if ( current == ']' )
 							{
-								token.Length++;
+								token.Length = 2;
+								token.Type   = TokType::Operator;
 								move_forward();
 							}
 						}
-						else if ( current == '=' )
+						goto FoundToken;
+
+					case ']':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::BraceSquare_Close;
+						goto FoundToken;
+
+					case '(':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Capture_Start;
+						if ( left )
+						{
+							move_forward();
+
+							if ( current == ')' )
+							{
+								token.Length = 2;
+								token.Type   = TokType::Operator;
+								move_forward();
+							}
+						}
+						goto FoundToken;
+
+					case ')':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Capture_End;
+						goto FoundToken;
+
+					case '\'':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Char;
+
+						move_forward();
+
+						while ( left && current != '\'' )
+						{
+							move_forward();
+							token.Length++;
+						}
+
+						if ( left )
+						{
+							move_forward();
+							token.Length++;
+						}
+						goto FoundToken;
+
+					case ',':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Comma;
+						goto FoundToken;
+
+					case '*':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Star;
+						goto FoundToken;
+
+					case ';':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Statement_End;
+						goto FoundToken;
+
+					case '"':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::String;
+
+						move_forward();
+						while ( left )
+						{
+							if ( current == '"' )
+							{
+								move_forward();
+								break;
+							}
+
+							if ( current == '\\' )
+							{
+								move_forward();
+								token.Length++;
+
+								if ( left )
+								{
+									move_forward();
+									token.Length++;
+								}
+								continue;
+							}
+
+							move_forward();
+							token.Length++;
+						}
+						goto FoundToken;
+
+					// All other operators we just label as an operator and move forward.
+					case '+':
+					case '%':
+					case '^':
+					case '~':
+					case '!':
+					case '=':
+					case '<':
+					case '>':
+					case '|':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Operator;
+
+						if (left)
+							move_forward();
+
+						if ( current == '=' )
 						{
 							token.Length++;
 
@@ -2953,124 +2887,179 @@ namespace gen
 							if (left)
 								move_forward();
 						}
-					}
-					goto FoundToken;
+						goto FoundToken;
 
-				case '/':
+					// Dash is unfortunatlly a bit more complicated...
+					case '-':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Operator;
+						if ( left )
+						{
+							move_forward();
+
+							if ( current == '>'  )
+							{
+								token.Length++;
+								move_forward();
+
+								if ( current == '*' )
+								{
+									token.Length++;
+									move_forward();
+								}
+							}
+							else if ( current == '=' )
+							{
+								token.Length++;
+
+								if (left)
+									move_forward();
+							}
+							else while ( left && current == *(scanner - 1) && length < 3 )
+							{
+								token.Length++;
+
+								if (left)
+									move_forward();
+							}
+						}
+						goto FoundToken;
+
+					case '/':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Operator;
+
+						if ( left )
+						{
+							move_forward();
+
+							if ( current == '/' )
+							{
+								token.Type = TokType::Comment;
+
+								while ( left && current != '\n' )
+								{
+									move_forward();
+									token.Length++;
+								}
+							}
+							else if ( current == '*' )
+							{
+								token.Type = TokType::Comment;
+
+								while ( left && ( current != '*' || *(scanner + 1) != '/' ) )
+								{
+									move_forward();
+									token.Length++;
+								}
+								move_forward();
+								move_forward();
+							}
+						}
+						goto FoundToken;
+				}
+
+				SkipWhitespace();
+				if ( left <= 0 )
+					break;
+
+				if ( char_is_alpha( current ) || current == '_' )
+				{
 					token.Text   = scanner;
 					token.Length = 1;
-					token.Type   = TokType::Operator;
+					move_forward();
 
-					if ( left )
+					while ( left && ( char_is_alphanumeric(current) || current == '_' ) )
 					{
 						move_forward();
-
-						if ( current == '/' )
-						{
-							token.Type = TokType::Comment;
-
-							while ( left && current != '\n' )
-							{
-								move_forward();
-								token.Length++;
-							}
-						}
-						else if ( current == '*' )
-						{
-							token.Type = TokType::Comment;
-
-							while ( left && ( current != '*' || *(scanner + 1) != '/' ) )
-							{
-								move_forward();
-								token.Length++;
-							}
-							move_forward();
-							move_forward();
-						}
+						token.Length++;
 					}
+
 					goto FoundToken;
-			}
-
-			SkipWhitespace();
-			if ( left <= 0 )
-				break;
-
-			if ( char_is_alpha( current ) || current == '_' )
-			{
-				token.Text   = scanner;
-				token.Length = 1;
-				move_forward();
-
-				while ( left && ( char_is_alphanumeric(current) || current == '_' ) )
+				}
+				else
 				{
-					move_forward();
-					token.Length++;
+					String context_str = zpl::string_sprintf_buf( g_allocator, "%s", scanner, min( 100, left ) );
+
+					log_failure( "Failed to lex token %s", context_str );
+
+					// Skip to next whitespace since we can't know if anything else is valid until then.
+					while ( left && ! char_is_space( current ) )
+					{
+						move_forward();
+					}
 				}
 
-				goto FoundToken;
-			}
-			else
-			{
-				String context_str = zpl::string_sprintf_buf( g_allocator, "%s", scanner, min( 100, left ) );
+			FoundToken:
 
-				log_failure( "Failed to lex token %s", context_str );
-
-				// Skip to next whitespace since we can't know if anything else is valid until then.
-				while ( left && ! char_is_space( current ) )
+				if ( token.Type != TokType::Invalid )
 				{
-					move_forward();
+					array_append( Tokens, token );
+					continue;
+				}
+
+				TokType type = get_tok_type( token.Text, token.Length );
+
+				if ( type != TokType::Invalid )
+				{
+					token.Type = type;
+					array_append( Tokens, token );
+				}
+				else
+				{
+					// Its most likely an identifier...
+
+
+					String tok_str = zpl::string_sprintf_buf( g_allocator, "%s", token.Text, token.Length );
+
+					log_failure( "Failed to lex token %s", tok_str );
+
+					// Skip to next whitespace since we can't know if anything else is valid until then.
+					while ( left && ! char_is_space( current ) )
+					{
+						move_forward();
+					}
 				}
 			}
 
-		FoundToken:
+			return { 0, Tokens };
 
-			if ( token.Type != TokType::Invalid )
-			{
-				array_append( Tokens, token );
-				continue;
-			}
-
-			TokType type = get_token_type( token.Text, token.Length );
-
-			if ( type != TokType::Invalid )
-			{
-				token.Type = type;
-				array_append( Tokens, token );
-			}
-			else
-			{
-				// Its most likely an identifier...
-
-
-				String tok_str = zpl::string_sprintf_buf( g_allocator, "%s", token.Text, token.Length );
-
-				log_failure( "Failed to lex token %s", tok_str );
-
-				// Skip to next whitespace since we can't know if anything else is valid until then.
-				while ( left && ! char_is_space( current ) )
-				{
-					move_forward();
-				}
-			}
+		#undef current
+		#undef move_forward
+		#undef SkipWhitespace
+		#undef SkipWhitespace_Checked
 		}
-
-		return Tokens;
-
-#		undef current
-#		undef move_forward
-#		undef SkipWhitespace
-#		undef SkipWhitespace_Checked
 	}
-#	pragma endregion Lexer
+
+#pragma region Helper Macros
+#	define check_parse_args( func, length, def )                         \
+	if ( length <= 0 )                                                   \
+	{                                                                    \
+		log_failure( "gen::" txt(func) ": length must greater than 0" ); \
+		return Code::Invalid;                                            \
+	}                                                                    \
+	if ( def == nullptr )                                                \
+	{                                                                    \
+		log_failure( "gen::" txt(func) ": def was null" );               \
+		return Code::Invalid;                                            \
+	}
+
+#	define currtok      toks.Arr[toks.Idx]
+#	define eat( Type_ ) toks.__eat( Type_, txt(context) )
+#	define left         array_count(toks.Arr) - toks.Idx
+#pragma endregion Helper Macros
 
 	Code parse_class( s32 length, char const* def )
 	{
-#		define context parse_class
-		Array(Token) tokens = lex( length, def );
+	#	define context parse_class
+		using namespace Parser;
 
-		if ( tokens == nullptr || array_count( tokens ) == 0 )
+		TokArray toks = lex( length, def );
+		if ( array_count( toks.Arr ) == 0 )
 		{
-			log_failure( "gen::parse_class: no tokens found" );
+			log_failure( "gen::" txt(context) ": failed to lex tokens" );
 			return Code::Invalid;
 		}
 
@@ -3080,39 +3069,36 @@ namespace gen
 		Code speciifes = { nullptr };
 		Code body      = { nullptr };
 
-		Token& curr_token = * tokens;
-
-		s32 tokIDX = 0;
-		s32 left   = array_count( tokens );
 		do
 		{
 
 		}
 		while ( left--, left > 0 );
+
+		return Code::Invalid;
+	#	undef context
 	}
 
 	Code parse_enum( s32 length, char const* def )
 	{
 #		define context parse_enum
 		check_parse_args( parse_enum, length, def );
+		using namespace Parser;
 
-		Array(Token) tokens = lex( length, def );
-		if ( tokens == nullptr )
+		TokArray toks = lex( length, def );
+		if ( array_count( toks.Arr ) == 0 )
 		{
-			log_failure( "gen::parse_enum: no tokens found for provided definition" );
+			log_failure( "gen::" txt(context) ": failed to lex tokens" );
 			return Code::Invalid;
 		}
-
-		s32 left   = array_count( tokens );
-		s32 tokIDX = 0;
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
 
-		Token* name       = nullptr;
-		Code   array_expr = { nullptr };
-		Code   type       = { nullptr };
-		Token  body       = { nullptr, 0, TokType::Invalid };
+		Token name       = { nullptr, 0, TokType::Invalid };
+		Code  array_expr = { nullptr };
+		Code  type       = { nullptr };
+		Token body       = { nullptr, 0, TokType::Invalid };
 
 		char  entries_code[ kilobytes(128) ] { 0 };
 		s32   entries_length = 0;
@@ -3121,46 +3107,41 @@ namespace gen
 
 		eat( TokType::Decl_Enum );
 
-		if ( curr_tok.Type == TokType::Decl_Class )
+		if ( currtok.Type == TokType::Decl_Class )
 		{
 			eat( TokType::Decl_Class);
 			is_enum_class = true;
 		}
 
-		if ( curr_tok.Type != TokType::Identifier )
+		if ( currtok.Type != TokType::Identifier )
 		{
 			log_failure( "gen::parse_enum: expected identifier for enum name" );
 			return Code::Invalid;
 		}
 
-		name = tokens;
+		name = currtok;
 		eat( TokType::Identifier );
 
-		if ( curr_tok.Type == TokType::Assign_Classifer )
+		if ( currtok.Type == TokType::Assign_Classifer )
 		{
 			eat( TokType::Assign_Classifer );
 
-			s32 left_length = curr_tok.Length + curr_tok.Text - array_front(tokens).Text;
-
-			type = parse_type( curr_tok.Length , curr_tok.Text );
+			type = parse_type( toks, txt(parse_enum) );
 			if ( type == Code::Invalid )
-			{
-				log_failure( "gen::parse_enum: failed to parse enum type" );
 				return Code::Invalid;
-			}
 		}
 
-		if ( curr_tok.Type == TokType::BraceCurly_Open )
+		if ( currtok.Type == TokType::BraceCurly_Open )
 		{
 			eat( TokType::BraceCurly_Open );
 
-			body = curr_tok;
+			body = currtok;
 
-			while ( curr_tok.Type != TokType::BraceCurly_Close )
+			while ( currtok.Type != TokType::BraceCurly_Close )
 			{
-				body.Length += curr_tok.Length;
+				body.Length += currtok.Length;
 
-				eat( curr_tok.Type );
+				eat( currtok.Type );
 			}
 
 			eat( TokType::BraceCurly_Close );
@@ -3189,7 +3170,7 @@ namespace gen
 			result->Type = is_enum_class ? Enum_Class_Fwd : Enum_Fwd;
 		}
 
-		result->Name = get_cached_string( name->Text, name->Length );
+		result->Name = get_cached_string( name.Text, name.Length );
 
 		if ( type )
 			result->add_entry( type );
@@ -3206,18 +3187,17 @@ namespace gen
 
 	Code parse_friend( s32 length, char const* def )
 	{
+		using namespace Parser;
+
 #		define context parse_friend
 		check_parse_args( parse_friend, length, def );
 
-		Array(Token) tokens = lex( length, def );
-		if ( tokens == nullptr )
+		TokArray toks = lex( length, def );
+		if ( array_count( toks.Arr ) == 0 )
 		{
-			log_failure( "gen::parse_friend: no tokens found for provided definition" );
+			log_failure( "gen::" txt(context) ": failed to lex tokens" );
 			return Code::Invalid;
 		}
-
-		s32 left   = array_count( tokens );
-		s32 tokIDX = 0;
 
 		eat( TokType::Decl_Friend );
 
@@ -3244,6 +3224,8 @@ namespace gen
 
 	Code parse_function( s32 length, char const* def )
 	{
+		using namespace Parser;
+
 		check_parse_args( parse_function, length, def );
 
 		Arena mem;
@@ -3257,7 +3239,7 @@ namespace gen
 		u8 num_specifiers;
 
 		// Making all significant tokens have a max length of 128 for this parser.
-		ct sw LengthID = 128;
+		constexpr sw LengthID = 128;
 
 		struct Param
 		{
@@ -3321,7 +3303,7 @@ namespace gen
 		u8 num_specifiers;
 
 		// Making all significant tokens have a max length of 128 for this parser.
-		ct sw LengthID = 128;
+		constexpr sw LengthID = 128;
 
 		char const name  [LengthID] { 0 };
 		char const parent[LengthID] { 0 };
@@ -3331,106 +3313,125 @@ namespace gen
 
 	Code parse_variable( s32 length, char const* def )
 	{
-		not_implemented( parse_variable );
+	#	define context parse_variable
+		check_parse_args( parse_variable, length, def );
+		using namespace Parser;
+
+		TokArray toks = lex( length, def );
+		if ( array_count( toks.Arr ) == 0 )
+		{
+			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+			return Code::Invalid;
+		}
+
+		Token* name = nullptr;
+
+		Code type = parse_type( toks, txt(parse_variable) );
+
+		if ( type == Code::Invalid )
+			return Code::Invalid;
+
+		if ( currtok.Type != TokType::Identifier )
+		{
+			log_failure( "gen::parse_variable: expected identifier, recieved " txt(currtok.Type) );
+			return Code::Invalid;
+		}
+
+		name = & currtok;
+		eat( TokType::Identifier );
+
+		return Code::Invalid;
+	#	undef context
 	}
 
-	inline
-	bool parse_type_helper( char const* func_name
-		, Token& name
-		, s32& left, s32& tokIDX, Array(Token)& tokens
-		, s32& num_specifiers, SpecifierT* specs_found
-		, Code& array_expr
-	)
+	Code parse_type( Parser::TokArray& toks, char const* func_name )
 	{
-#	pragma push_macro( "eat" )
-#		undef eat
-#		define eat( Type_ )                                                                         \
-		if ( curr_tok.Type != Type_ )                                                               \
-		{                                                                                           \
-			String token_str = string_make_length( g_allocator, curr_tok.Text, curr_tok.Length );   \
-			log_failure( "gen::" txt(context) ": expected %s, got %s", txt(Type_), curr_tok.Type ); \
-			return Code::Invalid;                                                                   \
-		}                                                                                           \
-		tokIDX++;                                                                                   \
-		left--
+	#	define context parse_type
+		using namespace Parser;
 
-		while ( left && tok_is_specifier( curr_tok ) )
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
+
+		Token  name       = { nullptr, 0, TokType::Invalid };
+		Code   array_expr = { nullptr };
+
+		while ( left && tok_is_specifier( currtok ) )
 		{
-			SpecifierT spec = ESpecifier::to_type( curr_tok.Text, curr_tok.Length );
+			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
 
 			if (   spec != ESpecifier::Const
 				&& spec < ESpecifier::Type_Signed )
 			{
-				log_failure( "%s: Error, invalid specifier used in type definition: %s", func_name, curr_tok.Text );
-				return false;
+				log_failure( "gen::parse_type: Error, invalid specifier used in type definition: %s", currtok.Text );
+				return Code::Invalid;
 			}
 
 			specs_found[num_specifiers] = spec;
 			num_specifiers++;
-			eat( curr_tok.Type );
+			eat( currtok.Type );
 		}
 
 		if ( left == 0 )
 		{
 			log_failure( "%s: Error, unexpected end of type definition", func_name );
-			return false;
+			return Code::Invalid;
 		}
 
-		if (   curr_tok.Type == TokType::Decl_Class
-			|| curr_tok.Type == TokType::Decl_Struct )
+		if (   currtok.Type == TokType::Decl_Class
+			|| currtok.Type == TokType::Decl_Struct )
 		{
-			name = curr_tok;
-			eat( curr_tok.Type );
+			name = currtok;
+			eat( currtok.Type );
 
-			name.Length += curr_tok.Length;
+			name.Length = (  (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
 			eat( TokType::Identifier );
 		}
 		else
 		{
-			name = curr_tok;
+			name = currtok;
 			eat( TokType::Identifier );
 		}
 
-		while ( left && tok_is_specifier( curr_tok ) )
+		while ( left && tok_is_specifier( currtok ) )
 		{
-			SpecifierT spec = ESpecifier::to_type( curr_tok.Text, curr_tok.Length );
+			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
 
 			if (   spec != ESpecifier::Const
 			    && spec != ESpecifier::Ref
 			    && spec != ESpecifier::RValue
 				&& spec < ESpecifier::Type_Signed )
 			{
-				log_failure( "%s: Error, invalid specifier used in type definition: %s", func_name, curr_tok.Text );
-				return false;
+				log_failure( "%s: Error, invalid specifier used in type definition: %s", func_name, currtok.Text );
+				return Code::Invalid;
 			}
 
 			specs_found[num_specifiers] = spec;
 			num_specifiers++;
-			eat( curr_tok.Type );
+			eat( currtok.Type );
 		}
 
-		if ( left && curr_tok.Type == TokType::BraceSquare_Open )
+		if ( left && currtok.Type == TokType::BraceSquare_Open )
 		{
 			eat( TokType::BraceSquare_Open );
 
 			if ( left == 0 )
 			{
 				log_failure( "%s: Error, unexpected end of type definition", func_name );
-				return false;
+				return Code::Invalid;
 			}
 
-			if ( curr_tok.Type == TokType::BraceSquare_Close )
+			if ( currtok.Type == TokType::BraceSquare_Close )
 			{
 				eat( TokType::BraceSquare_Close );
-				return true;
+				return Code::Invalid;
 			}
 
 			Token
-			untyped_tok = curr_tok;
+			untyped_tok = currtok;
 
-			while ( left && curr_tok.Type != TokType::BraceSquare_Close )
+			while ( left && currtok.Type != TokType::BraceSquare_Close )
 			{
-				untyped_tok.Length += curr_tok.Length;
+				untyped_tok.Length += currtok.Length;
 			}
 
 			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
@@ -3438,59 +3439,24 @@ namespace gen
 			if ( left == 0 )
 			{
 				log_failure( "%s: Error, unexpected end of type definition", func_name );
-				return false;
+				return Code::Invalid;
 			}
 
-			if ( curr_tok.Type != TokType::BraceSquare_Close )
+			if ( currtok.Type != TokType::BraceSquare_Close )
 			{
 				log_failure( "%s: Error, expected ] in type definition", func_name );
-				return false;
+				return Code::Invalid;
 			}
 
 			eat( TokType::BraceSquare_Close );
 		}
-
-		return true;
-#	pragma pop_macro( "eat" )
-	}
-
-	Code parse_type( s32 length, char const* def )
-	{
-		check_parse_args( parse_type, length, def );
-
-		Array(Token) tokens = lex( length, def );
-
-		if ( tokens == nullptr )
-		{
-			log_failure( "gen::parse_type: no tokens found for provided definition" );
-			return Code::Invalid;
-		}
-
-		s32 left   = array_count( tokens );
-		s32 tokIDX = 0;
-
-		Token* name       = nullptr;
-		Code   array_expr = { nullptr };
-
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		s32        num_specifiers = 0;
-
-		bool helper_result = parse_type_helper( txt(parse_type)
-			, * name
-			, left, tokIDX, tokens
-			, num_specifiers, specs_found
-			, array_expr
-		);
-
-		if ( ! helper_result )
-			return Code::Invalid;
 
 		using namespace ECode;
 
 		Code
 		result       = make_code();
 		result->Type = Typename;
-		result->Name = get_cached_string( name->Text, name->Length );
+		result->Name = get_cached_string( name.Text, name.Length );
 
 		if (num_specifiers)
 		{
@@ -3504,52 +3470,58 @@ namespace gen
 
 		result.lock();
 		return result;
+	#	undef context
+	}
+
+	Code parse_type( s32 length, char const* def )
+	{
+	#	define context parse_type
+		check_parse_args( parse_type, length, def );
+
+		using namespace Parser;
+		TokArray toks = lex( length, def );
+		if ( array_count( toks.Arr ) == 0 )
+		{
+			log_failure( "gen::" txt(context) ": failed to lex tokens" );
+			return Code::Invalid;
+		}
+
+		Code result = parse_type( toks, txt(parse_type) );
+		return result;
+	#	undef context
 	}
 
 	Code parse_typedef( s32 length, char const* def )
 	{
-#		define context parse_typedef
+	#	define context parse_typedef
 		check_parse_args( parse_typedef, length, def );
 
-		Array(Token) tokens = lex( length, def );
-
-		if ( tokens == nullptr )
+		using namespace Parser;
+		TokArray toks = lex( length, def );
+		if ( array_count( toks.Arr ) == 0 )
 		{
-			log_failure( "gen::parse_typedef: no tokens found for provided definition" );
+			log_failure( "gen::" txt(context) ": failed to lex tokens" );
 			return Code::Invalid;
 		}
 
-		s32 left   = array_count( tokens );
-		s32 tokIDX = 0;
-
-		Token* name       = nullptr;
-		Code   array_expr = { nullptr };
-		Code   type       = { nullptr };
+		Token name       = { nullptr, 0, TokType::Invalid };
+		Code  array_expr = { nullptr };
+		Code  type       = { nullptr };
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
 
 		eat( TokType::Decl_Typedef );
 
-		bool helper_result = parse_type_helper( txt(parse_typedef)
-			, * name
-			, left, tokIDX, tokens
-			, num_specifiers, specs_found
-			, array_expr
-		);
+		type = parse_type( toks, txt(parse_typedef) );
 
-		if ( ! helper_result )
-			return Code::Invalid;
-
-		type = def_type( name->Length, name->Text, def_specifiers( num_specifiers, specs_found ) );
-
-		if ( curr_tok.Type != TokType::Identifier )
+		if ( currtok.Type != TokType::Identifier )
 		{
 			log_failure( "gen::parse_typedef: Error, expected identifier for typedef" );
 			return Code::Invalid;
 		}
 
-		name = tokens;
+		name = currtok;
 		eat( TokType::Identifier );
 
 		eat( TokType::Statement_End );
@@ -3559,30 +3531,27 @@ namespace gen
 		Code
 		result = make_code();
 		result->Type = Typedef;
-		result->Name = get_cached_string( name->Text, name->Length );
+		result->Name = get_cached_string( name.Text, name.Length );
 
 		result->add_entry( type );
 
 		result.lock();
 		return result;
-#		undef context
+	#	undef context
 	}
 
 	Code parse_using( s32 length, char const* def )
 	{
-#		define context parse_using
+	#	define context parse_using
 		check_parse_args( parse_using, length, def );
 
-		Array(Token) tokens = lex( length, def );
-
-		if ( tokens == nullptr )
+		using namespace Parser;
+		TokArray toks = lex( length, def );
+		if ( array_count( toks.Arr ) == 0 )
 		{
-			log_failure( "gen::parse_using: no tokens found for provided definition" );
+			log_failure( "gen::" txt(context) ": failed to lex tokens" );
 			return Code::Invalid;
 		}
-
-		s32 left   = array_count( tokens );
-		s32 tokIDX = 0;
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
@@ -3595,7 +3564,7 @@ namespace gen
 
 		eat( TokType::Decl_Using );
 
-		if ( curr_tok.Type == TokType::Decl_Namespace )
+		if ( currtok.Type == TokType::Decl_Namespace )
 		{
 			is_namespace = true;
 			eat( TokType::Decl_Namespace );
@@ -3603,7 +3572,7 @@ namespace gen
 
 		eat( TokType::Identifier );
 
-		if ( curr_tok.Type != TokType::Statement_End )
+		if ( currtok.Type != TokType::Statement_End )
 		{
 			if ( is_namespace )
 			{
@@ -3611,17 +3580,7 @@ namespace gen
 				return Code::Invalid;
 			}
 
-			bool helper_result = parse_type_helper( txt(parse_using)
-				, * name
-				, left, tokIDX, tokens
-				, num_specifiers, specs_found
-				, array_expr
-			);
-
-			if ( ! helper_result )
-				return Code::Invalid;
-
-			type = def_type( name->Length, name->Text, def_specifiers( num_specifiers, specs_found ) );
+			type = parse_type( toks, txt(parse_using) );
 		}
 
 		eat( TokType::Statement_End );
@@ -3637,9 +3596,8 @@ namespace gen
 
 		result.lock();
 		return result;
-#		undef context
+	#	undef context
 	}
-
 
 	s32 parse_classes( s32 length, char const* class_defs, Code* out_class_codes )
 	{
@@ -3690,11 +3648,105 @@ namespace gen
 	{
 		not_implemented( parse_usings );
 	}
+
+	// Undef helper macros
+#	undef check_parse_args
+#	undef curr_tok
+#	undef eat
+#	undef left
 //	End GEN_FEATURE_PARSING
 #	endif
-#	pragma endregion Parsing Constructors
+#pragma endregion Parsing Constructors
 
-#	pragma region Untyped Constructors
+#pragma region Untyped Constructors
+	struct TokEntry
+	{
+		char const* Str;
+		sw          Length;
+	};
+
+	ZPL_TABLE( static, TokMap, tokmap_, TokEntry )
+
+	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va )
+	{
+		char const* buf_begin = buf;
+		sw          remaining = buf_size;
+
+		TokMap tok_map;
+		{
+			tokmap_init( & tok_map, g_allocator );
+
+			s32 left = num_tokens;
+
+			while ( left-- )
+			{
+				char const* token = va_arg( va, char const* );
+				char const* value = va_arg( va, char const* );
+
+				TokEntry entry
+				{
+					value,
+					str_len(value, (sw)128)
+				};
+
+				u32 key = crc32( token, str_len(token, 32) );
+
+				tokmap_set( & tok_map, key, entry );
+			}
+		}
+
+		sw   result  = 0;
+		char current = *fmt;
+
+		while ( current )
+		{
+			sw len = 0;
+
+			while ( current && current != '{' && remaining )
+			{
+				* buf = * fmt;
+				buf++;
+				fmt++;
+
+				current = * fmt;
+			}
+
+			if ( current == '{' )
+			{
+				char const* scanner = fmt;
+
+				s32 tok_len = 0;
+
+				while ( *scanner != '}' )
+				{
+					tok_len++;
+					scanner++;
+				}
+
+				char const* token = fmt;
+
+				u32      key   = crc32( token, tok_len );
+				TokEntry value = * tokmap_get( & tok_map, key );
+				sw       left  = value.Length;
+
+				while ( left-- )
+				{
+					* buf = *value.Str;
+					buf++;
+					value.Str++;
+				}
+
+				scanner++;
+				fmt     = scanner;
+				current = * fmt;
+			}
+		}
+
+		tokmap_clear( & tok_map );
+
+		return result;
+	}
+
 	Code untyped_str( s32 length, char const* str )
 	{
 		Code
@@ -3719,7 +3771,7 @@ namespace gen
 
 		Code
 		result          = make_code();
-		result->Name    = get_cached_string( fmt, strnlen(fmt, MaxNameLength) );
+		result->Name    = get_cached_string( fmt, str_len(fmt, MaxNameLength) );
 		result->Type    = ECode::Untyped;
 		result->Content = get_cached_string( buf, length );
 
@@ -3746,7 +3798,7 @@ namespace gen
 		result.lock();
 		return result;
 	}
-#	pragma endregion Untyped Constructors
+#pragma endregion Untyped Constructors
 #pragma endregion Gen Interface
 
 #pragma region Builder
@@ -3789,6 +3841,10 @@ namespace gen
 	This is a more robust lexer than the ones used for the lexer in the parse constructors interface.
 	Its needed to scan a C++ file and have awareness to skip content unsupported by the library.
 */
+struct FileLexer
+{
+
+};
 #endif
 #pragma endregion File Lexer
 

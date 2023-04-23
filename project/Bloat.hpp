@@ -45,6 +45,8 @@ using zpl::u32;
 using zpl::u64;
 using zpl::uw;
 using zpl::sw;
+using zpl::sptr;
+using zpl::uptr;
 
 using zpl::Arena;
 using zpl::AllocatorInfo;
@@ -62,6 +64,7 @@ using zpl::arena_allocator;
 using zpl::arena_init_from_memory;
 using zpl::arena_init_from_allocator;
 using zpl::arena_free;
+using zpl::assert_crash;
 using zpl::str_fmt_buf;
 using zpl::char_is_alpha;
 using zpl::char_is_alphanumeric;
@@ -102,7 +105,7 @@ using zpl::str_len;
 #endif
 
 
-#if defined(__GNUC__) || defined(__clang__) || true
+#if defined(__GNUC__) || defined(__clang__)
 	// Supports 0-10 arguments
 	#define macro_num_args_impl( _0,                      \
 		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,  \
@@ -142,7 +145,6 @@ using zpl::str_len;
 
 #define bit( Value_ )                      ( 1 << Value_ )
 #define bitfield_is_equal( Field_, Mask_ ) ( ( (Mask_) & (Field_) ) == (Mask_) )
-#define ct                                 constexpr
 #define forceinline                        ZPL_ALWAYS_INLINE
 #define print_nl( _)                       zpl_printf("\n")
 #define ccast( Type_, Value_ )             * const_cast< Type_* >( & (Value_) )
@@ -176,16 +178,12 @@ do                     \
 }                      \
 while(0);
 
-ct char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
-
-namespace Global
-{
-	extern bool ShouldShowDebug;
-}
+constexpr
+char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
 namespace Memory
 {
-	ct uw Initial_Reserve = megabytes(10);
+	constexpr uw Initial_Reserve = megabytes(10);
 
 	extern Arena Global_Arena;
 	// #define g_allocator arena_allocator( & Memory::Global_Arena)
@@ -198,28 +196,9 @@ namespace Memory
 	void cleanup();
 }
 
-sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va );
-
-inline
-char const* token_fmt( char const* fmt, sw num_tokens, ... )
-{
-	local_persist thread_local
-	char buf[ZPL_PRINTF_MAXLEN] = { 0 };
-
-	va_list va;
-	va_start(va, fmt);
-	token_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, num_tokens, va);
-	va_end(va);
-
-	return buf;
-}
-
 inline
 sw log_fmt(char const *fmt, ...)
 {
-	if ( Global::ShouldShowDebug == false )
-		return 0;
-
 	sw res;
 	va_list va;
 
