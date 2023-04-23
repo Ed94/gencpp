@@ -51,6 +51,8 @@ namespace gen
 		Entry( Enum_Class )          \
 		Entry( Enum_Class_Fwd )      \
 		Entry( Execution )           \
+		Entry( Extern_Linkage )      \
+		Entry( Extern_Linkage_Body ) \
 		Entry( Friend )              \
 		Entry( Function )            \
 		Entry( Function_Fwd )        \
@@ -214,7 +216,6 @@ namespace gen
 		Entry( API_Export,       API_Import_Code )   \
 		Entry( Alignas,          alignas )                                          \
 		Entry( Array_Decl,       "You cannot stringize an array declare this way" ) \
-		Entry( C_Linkage,        extern "C" )        \
 		Entry( Const,            const )             \
 		Entry( Consteval,        consteval )         \
 		Entry( Constexpr,        constexpr )         \
@@ -714,10 +715,11 @@ namespace gen
 
 	Code def_friend         ( Code symbol );
 	Code def_function       ( s32 length, char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
+	Code def_extern_linkage ( s32 length, char const* name,                                                                         Code body );
 	Code def_namespace      ( s32 length, char const* name,                                                                         Code body );
 	Code def_operator       (             OperatorT   op,   Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
 
-	Code def_param          ( Code type, s32 length, char const* name );
+	Code def_param          ( Code type, s32 length, char const* name, Code value = NoCode );
 
 	Code def_specifier      ( SpecifierT specifier );
 
@@ -728,34 +730,37 @@ namespace gen
 
 	Code def_variable       ( Code type, s32 length, char const* name, Code value = NoCode, Code specifiers = NoCode );
 
-	Code def_class_body     ( s32 num, ... );
-	Code def_enum_body      ( u32 num, ... );
-	Code def_enum_body      ( u32 num, Code* codes );
-	Code def_global_body    ( s32 num, ... );
-	Code def_global_body    ( s32 num, Code* codes );
-	Code def_function_body  ( s32 num, ... );
-	Code def_function_body  ( s32 num, Code* codes );
-	Code def_namespace_body ( s32 num, ... );
-	Code def_namespace_body ( s32 num, Code* codes );
-	Code def_params         ( s32 num, ... );
-	Code def_params         ( s32 num, Code* params );
-	Code def_specifiers     ( s32 num , ... );
-	Code def_specifiers     ( s32 num, SpecifierT* specs );
-	Code def_struct_body    ( s32 num, ... );
-	Code def_struct_body    ( s32 num, Code* codes );
+	Code def_class_body         ( s32 num, ... );
+	Code def_enum_body          ( s32 num, ... );
+	Code def_enum_body          ( s32 num, Code* codes );
+	Code def_extern_linkage_body( s32 num, ... );
+	Code def_extern_linkage_body( s32 num, Code* codes );
+	Code def_global_body        ( s32 num, ... );
+	Code def_global_body        ( s32 num, Code* codes );
+	Code def_function_body      ( s32 num, ... );
+	Code def_function_body      ( s32 num, Code* codes );
+	Code def_namespace_body     ( s32 num, ... );
+	Code def_namespace_body     ( s32 num, Code* codes );
+	Code def_params             ( s32 num, ... );
+	Code def_params             ( s32 num, Code* params );
+	Code def_specifiers         ( s32 num , ... );
+	Code def_specifiers         ( s32 num, SpecifierT* specs );
+	Code def_struct_body        ( s32 num, ... );
+	Code def_struct_body        ( s32 num, Code* codes );
 #	pragma endregion Upfront
 
 #	pragma region Incremental
 #	ifdef GEN_FEATURE_INCREMENTAL
-	Code make_class       ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
-	Code make_enum        ( s32 length,     char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
-	Code make_function    ( s32 length,     char const* name, Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
-	Code make_global_body ( s32 length = 1, char const* name = "", s32 num = 0, ... );
-	Code make_namespace   ( s32 length,     char const* name );
-	Code make_operator    (                 OperatorT   op,   Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
-	Code make_params      ();
-	Code make_specifiers  ();
-	Code make_struct      ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+	Code make_class         ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+	Code make_enum          ( s32 length,     char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
+	Code make_extern_linkage( s32 length,     char const* name );
+	Code make_function      ( s32 length,     char const* name, Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
+	Code make_global_body   ( s32 length = 1, char const* name = "" );
+	Code make_namespace     ( s32 length,     char const* name );
+	Code make_operator      (                 OperatorT   op,   Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
+	Code make_params        ();
+	Code make_specifiers    ();
+	Code make_struct        ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
 #	endif
 #	pragma endregion Incremental
 
@@ -763,7 +768,6 @@ namespace gen
 	#ifdef GEN_FEATURE_PARSING
 	Code parse_class      ( s32 length, char const* class_def     );
 	Code parse_enum       ( s32 length, char const* enum_def      );
-	Code parse_execution  ( s32 length, char const* exec_def      );
 	Code parse_friend     ( s32 length, char const* friend_def    );
 	Code parse_function   ( s32 length, char const* fn_def        );
 	Code parse_global_body( s32 length, char const* body_def      );
@@ -1007,28 +1011,29 @@ namespace gen
 
 // Upfront
 
-#	define class( Name_, ... )           gen::def_class( txt_n_len(Name_), __VA_ARGS__ )
-#	define enum( Name_, Type_, Body_ )   gen::def_enum ( txt_n_len(Name_), type_ns(Type_), Body_ )
+#	define class( Name_, ... )            gen::def_class( txt_n_len(Name_), __VA_ARGS__ )
+#	define enum( Name_, Type_, Body_ )    gen::def_enum ( txt_n_len(Name_), type_ns(Type_), Body_ )
 
-#	define function( ... )               macrofn_polymorphic( function, __VA_ARGS__ )
-#	define namespace( Name_, Body_ )     gen::def_namespace      ( txt_n_len(Name_),  Body_ )
-#	define operator( Op_, ... )          macrofn_polymorphic( operator, __VA_ARGS__ )
-#	define params( ... )                 macrofn_polymorphic( params, __VA_ARGS__ )
-#	define specifiers( ... )             gen::def_specifiers     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define struct( Name_, ... )          gen::def_struct         ( txt_n_len(Name_), __VA_ARGS__ )
-#	define variable( Type_, Name_, ... ) gen::def_variable       ( type_ns(Type_), txt_n_len(Name_), __VA_ARGS__ )
-#	define type( Value_, ... )           gen::def_type           ( txt_n_len(Value_), __VA_ARGS__ )
-#	define type_fmt( Fmt_, ... )         gen::def_type           ( bprintf( Fmt_, __VA_ARGS__ ) )
-#	define using( Name_, Type_ )		 gen::def_using          ( txt_n_len(Name_), type_ns(Type_) )
-#	define using_namespace( Name_ )      gen::def_using_namespace( txt_n_len(Name_) )
+#	define extern_linkage( Name_, Body_ ) gen::def_extern_linkage( txt_n_len(Name_), Body_ )
+#	define function( ... )                macrofn_polymorphic( function, __VA_ARGS__ )
+#	define namespace( Name_, Body_ )      gen::def_namespace      ( txt_n_len(Name_),  Body_ )
+#	define operator( Op_, ... )           macrofn_polymorphic( operator, __VA_ARGS__ )
+#	define params( ... )                  macrofn_polymorphic( params, __VA_ARGS__ )
+#	define specifiers( ... )              gen::def_specifiers     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define struct( Name_, ... )           gen::def_struct         ( txt_n_len(Name_), __VA_ARGS__ )
+#	define variable( Type_, Name_, ... )  gen::def_variable       ( type_ns(Type_), txt_n_len(Name_), __VA_ARGS__ )
+#	define type( Value_, ... )            gen::def_type           ( txt_n_len(Value_), __VA_ARGS__ )
+#	define type_fmt( Fmt_, ... )          gen::def_type           ( bprintf( Fmt_, __VA_ARGS__ ) )
+#	define using( Name_, Type_ )		  gen::def_using          ( txt_n_len(Name_), type_ns(Type_) )
+#	define using_namespace( Name_ )       gen::def_using_namespace( txt_n_len(Name_) )
 
-#	define class_body(      ... )        gen::def_class_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define enum_body(       ... )        gen::def_enum_body     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define global_body(     ... )        gen::def_global_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define function_body(   ... )        gen::def_function_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define namespace_body(  ... )        gen::def_namespace_body( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define operator_body(   ... )        gen::def_operator_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define struct_body(     ... )        gen::def_struct_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define class_body(      ... )         gen::def_class_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define enum_body(       ... )         gen::def_enum_body     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define global_body(     ... )         gen::def_global_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define function_body(   ... )         gen::def_function_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define namespace_body(  ... )         gen::def_namespace_body( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define operator_body(   ... )         gen::def_operator_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define struct_body(     ... )         gen::def_struct_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
 
 #	ifdef GEN_FEATURE_INCREMENTAL
 // Incremental

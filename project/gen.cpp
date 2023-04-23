@@ -65,6 +65,7 @@ namespace gen
 #	define AST_BODY_CLASS_UNALLOWED_TYPES \
 	case Class_Body:                      \
 	case Enum_Body:                       \
+	case Extern_Linkage:                  \
 	case Friend:                          \
 	case Function_Body:                   \
 	case Function_Fwd:                    \
@@ -84,6 +85,7 @@ namespace gen
 	case Access_Private:                     \
 	case Class_Body:                         \
 	case Enum_Body:                          \
+	case Extern_Linkage:                     \
 	case Friend:                             \
 	case Function_Body:                      \
 	case Function_Fwd:                       \
@@ -135,8 +137,27 @@ namespace gen
 	case Struct_Body: 						  \
 	case Typename:
 
+#	define AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES \
+	case Access_Public: 					       \
+	case Access_Protected: 					       \
+	case Access_Private: 					       \
+	case Class_Body: 						       \
+	case Enum_Body: 						       \
+	case Execution: 						       \
+	case Friend: 							       \
+	case Function_Body: 					       \
+	case Global_Body: 						       \
+	case Namespace_Body: 					       \
+	case Operator_Member: 					       \
+	case Operator_Member_Fwd: 				       \
+	case Parameters: 						       \
+	case Specifiers: 						       \
+	case Struct_Body: 						       \
+	case Typename:
+
 #	define AST_BODY_STRUCT_UNALLOWED_TYPES \
 	case Enum_Body: 					   \
+	case Extern_Linkage:                   \
 	case Execution: 					   \
 	case Function_Body: 				   \
 	case Global_Body: 					   \
@@ -206,7 +227,7 @@ namespace gen
 				{
 					AST_BODY_CLASS_UNALLOWED_TYPES
 					{
-						log_failure( "AST::add: Cannot add an AST to a class body." );
+						log_failure( "AST::add: Cannot add %s to a class body.", other->type_str() );
 						return false;
 					}
 
@@ -222,6 +243,23 @@ namespace gen
 			case Enum_Fwd:
 				log_failure( "AST::add: Cannot add an AST to an enum forward declaration." );
 				return false;
+
+			case Extern_Linkage:
+				log_failure( "AST::add: Cannot add an AST to an extern linkage, only to its body." );
+				return false;
+
+			case Extern_Linkage_Body:
+				switch ( other->Type )
+				{
+					AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
+					{
+						log_failure( "AST::add: Cannot add %s to an extern linkage body.", other->type_str() );
+						return false;
+					}
+
+					default:
+						break;
+				}
 
 			case Enum_Body:
 				if ( other->Type != Untyped )
@@ -252,7 +290,7 @@ namespace gen
 				{
 					AST_BODY_FUNCTION_UNALLOWED_TYPES
 					{
-						log_failure( "AST::add: Cannot add an AST to a function body." );
+						log_failure( "AST::add: Cannot add %s to a function body.", other->type_str() );
 						return false;
 					}
 
@@ -270,7 +308,7 @@ namespace gen
 				{
 					AST_BODY_GLOBAL_UNALLOWED_TYPES
 					{
-						log_failure( "AST::add: Cannot add an AST to a global body." );
+						log_failure( "AST::add: Cannot add %s to a global body.", other->type_str() );
 						return false;
 					}
 
@@ -278,7 +316,6 @@ namespace gen
 						break;
 				}
 			break;
-
 
 			case Namespace:
 				if ( Type != Global_Body )
@@ -292,7 +329,7 @@ namespace gen
 				{
 					AST_BODY_NAMESPACE_UNALLOWED_TYPES
 					{
-						log_failure( "AST::add: Cannot add an AST to a namespace body." );
+						log_failure( "AST::add: Cannot add %s to a namespace body.", other->type_str() );
 						return false;
 					}
 
@@ -326,7 +363,7 @@ namespace gen
 				{
 					AST_BODY_STRUCT_UNALLOWED_TYPES
 					{
-						log_failure( "AST::add: Cannot add to a struct body." );
+						log_failure( "AST::add: Cannot add %s to a struct body.", other->type_str() );
 						return false;
 					}
 
@@ -384,10 +421,6 @@ namespace gen
 			case Access_Public:
 			case Access_Protected:
 			case Access_Private:
-			case Class_Fwd:
-			case Enum_Fwd:
-			case Function_Fwd:
-			case Specifiers:
 				// Can just be the same, as its a cached string.
 				result->Content = Content;
 				return result;
@@ -395,16 +428,28 @@ namespace gen
 			// The main purpose of this is to make sure entires in the AST are unique,
 			// So that we can assign the new parent without corrupting the existing AST.
 			case Class:
+			case Class_Fwd:
 			case Class_Body:
 			case Enum:
+			case Enum_Fwd:
 			case Enum_Body:
+			case Enum_Class:
+			case Enum_Class_Fwd:
+			case Extern_Linkage:
+			case Extern_Linkage_Body:
 			case Friend:
+			case Function:
+			case Function_Fwd:
+			case Function_Body:
 			case Global_Body:
 			case Namespace:
 			case Namespace_Body:
+			case Operator:
+			case Operator_Fwd:
+			case Operator_Member:
+			case Operator_Member_Fwd:
 			case Parameters:
-			case Function:
-			case Function_Body:
+			case Specifiers:
 			case Struct:
 			case Struct_Fwd:
 			case Struct_Body:
@@ -412,6 +457,7 @@ namespace gen
 			case Typedef:
 			case Typename:
 			case Using:
+			case Using_Namespace:
 				s32 index = 0;
 				s32 left  = num_entries();
 				while ( left -- )
@@ -530,6 +576,10 @@ namespace gen
 
 			case Enum_Class_Fwd:
 				result = string_append_fmt( result, "enum class %s : %s;\n", Name, underlying_type()->to_string() );
+			break;
+
+			case Extern_Linkage:
+				result = string_append_fmt( result, "extern %s\n{\n%s\n};\n", Name, body()->to_string() );
 			break;
 
 			case Friend:
@@ -773,6 +823,7 @@ namespace gen
 
 			case Class_Body:
 			case Enum_Body:
+			case Extern_Linkage_Body:
 			case Function_Body:
 			case Global_Body:
 			case Namespace_Body:
@@ -1581,6 +1632,32 @@ namespace gen
 		result       = make_code();
 		result->Type = ECode::Execution;
 
+		result->add_entry( untyped_code );
+
+		result.lock();
+		return result;
+	}
+
+	Code def_extern_linkage( s32 length, char const* name, Code body )
+	{
+		using namespace ECode;
+
+		name_check( def_extern_linkage, length, name );
+		null_check( def_extern_linkage, body );
+
+		if ( body->Type != Extern_Linkage_Body || body->Type != Untyped )
+		{
+			log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", body->debug_str());
+			return Code::Invalid;
+		}
+
+		Code
+		result = make_code();
+		result->Type = Extern_Linkage;
+		result->Name = get_cached_string( name, length );
+
+		result->add_entry( body );
+
 		result.lock();
 		return result;
 	}
@@ -1697,17 +1774,17 @@ namespace gen
 		name_check( def_namespace, length, name );
 		null_check( def_namespace, body );
 
-		Code
-		result          = make_code();
-		result->Type    = Namespace;
-		result->Name    = get_cached_string( name, length );
-		result->Entries = make_code_entries();
-
 		if ( body->Type != Namespace_Body || body->Type != Untyped )
 		{
 			log_failure("gen::def_namespace: body is not of namespace or untyped type %s", body->debug_str());
 			return Code::Invalid;
 		}
+
+		Code
+		result          = make_code();
+		result->Type    = Namespace;
+		result->Name    = get_cached_string( name, length );
+		result->Entries = make_code_entries();
 
 		result->add_entry( body );
 
@@ -1763,7 +1840,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_param( Code type, s32 length, char const* name )
+	Code def_param( Code type, s32 length, char const* name, Code value )
 	{
 		using namespace ECode;
 
@@ -1776,12 +1853,21 @@ namespace gen
 			return Code::Invalid;
 		}
 
+		if ( value && value->Type != Untyped )
+		{
+			log_failure( "gen::def_param: value is not untyped - %s", value->debug_str() );
+			return Code::Invalid;
+		}
+
 		Code
 		result       = make_code();
 		result->Type = Parameters;
 		result->Name = get_cached_string( name, length );
 
 		result->add_entry( type );
+
+		if ( value )
+			result->add_entry( value );
 
 		result.lock();
 		return result;
@@ -2141,6 +2227,41 @@ namespace gen
 		return result;
 	}
 
+	Code def_extern_linkage_body( s32 num, ... )
+	{
+		def_body_start( def_extern_linkage_body );
+
+		Code
+		result       = make_code();
+		result->Type = Extern_Linkage_Body;
+
+		va_list va;
+		va_start(va, num);
+		def_body_code_validation_start( def_extern_linkage_body, va_arg(va, Code) );
+			AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
+		def_body_code_validation_end( def_extern_linkage_body );
+		va_end(va);
+
+		result.lock();
+		return result;
+	}
+
+	Code def_extern_linkage_body( s32 num, Code* codes )
+	{
+		def_body_code_array_start( def_extern_linkage_body );
+
+		Code
+		result       = make_code();
+		result->Type = Extern_Linkage_Body;
+
+		def_body_code_validation_start( def_extern_linkage_body, *codes; codes++ );
+			AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
+		def_body_code_validation_end( def_extern_linkage_body );
+
+		result.lock();
+		return result;
+	}
+
 	Code def_function_body( s32 num, ... )
 	{
 		def_body_start( def_function_body );
@@ -2267,8 +2388,7 @@ namespace gen
 		s32         name_length = va_arg(va, s32 );
 		char const* name        = va_arg(va, char const*);
 
-		result->Name    = get_cached_string( name, name_length );
-		result->Entries = make_code_entries();
+		result->Name = get_cached_string( name, name_length );
 
 		if ( type->Type != Typename )
 		{
@@ -2531,14 +2651,18 @@ namespace gen
 		return result;
 	}
 
-	Code make_global_body( s32 length, char const* name, s32 num, ... )
+	Code make_global_body( s32 length, char const* name )
 	{
 		name_check( make_global_body, length, name );
 
 		Code
 		result       = make_code();
 		result->Type = ECode::Global_Body;
-		result->Name = get_cached_string( name, length );
+
+		if ( length > 0 )
+			result->Name = get_cached_string( name, length );
+
+
 
 		return result;
 	}
@@ -2744,6 +2868,11 @@ namespace gen
 			sptr        Length;
 			TokType     Type;
 			bool 	    IsAssign;
+
+			operator bool()
+			{
+				return Text && Length && Type != TokType::Invalid;
+			}
 		};
 
 		TokType get_tok_type( char const* word, s32 length )
@@ -3266,6 +3395,160 @@ namespace gen
 #	define check( Type_ ) left && currtok.Type == Type_
 #pragma endregion Helper Macros
 
+	Code parse_type( Parser::TokArray& toks, char const* func_name );
+
+	inline
+	Code parse_array_decl( Parser::TokArray& toks, char const* func_name )
+	{
+		using namespace Parser;
+
+		if ( check( TokType::BraceSquare_Open ) )
+		{
+			eat( TokType::BraceSquare_Open );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			if ( currtok.Type == TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			Token untyped_tok = currtok;
+
+			while ( left && currtok.Type != TokType::BraceSquare_Close )
+			{
+				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
+			}
+
+			Code array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
+				return Code::Invalid;
+			}
+
+			if ( currtok.Type != TokType::BraceSquare_Close )
+			{
+				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
+				return Code::Invalid;
+			}
+
+			eat( TokType::BraceSquare_Close );
+			return array_expr;
+		}
+
+		return Code::Invalid;
+	}
+
+	inline
+	Parser::Token parse_identifier( Parser::TokArray& toks, char const* func_name )
+	{
+		using namespace Parser;
+		Token name = currtok;
+
+		eat( TokType::Identifier );
+
+		while ( left && currtok.Type == TokType::Access_StaticSymbol )
+		{
+			eat( TokType::Access_StaticSymbol );
+
+			if ( left == 0 )
+			{
+				log_failure( "%s: Error, unexpected end of type definition, expected identifier", func_name );
+				return { nullptr, 0, TokType::Invalid };
+			}
+
+			if ( currtok.Type != TokType::Identifier )
+			{
+				log_failure( "%s: Error, expected identifier in type definition, not %s", func_name, str_tok_type( currtok.Type ) );
+				return { nullptr, 0, TokType::Invalid };
+			}
+
+			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+			eat( TokType::Identifier );
+		}
+
+		return name;
+	}
+
+	Code parse_params( Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+		using namespace ECode;
+
+		eat( TokType::Capture_Start );
+
+		if ( check(TokType::Capture_End) )
+		{
+			eat( TokType::Capture_End );
+			return { nullptr };
+		}
+
+		Code
+		result = make_code();
+		result->Type = Parameters;
+
+		while ( left && currtok.Type != TokType::Capture_End)
+		{
+			Code type  = { nullptr };
+			Code value = { nullptr };
+
+			type = parse_type( toks, context );
+			if ( type == Code::Invalid )
+				return Code::Invalid;
+
+			Token name = currtok;
+			eat( TokType::Identifier );
+
+			if ( currtok.IsAssign )
+			{
+				eat( TokType::Operator );
+
+				Token value_tok = currtok;
+
+				if ( currtok.Type == TokType::Statement_End )
+				{
+					log_failure( "gen::%s: Expected value after assignment operator", context );
+					return Code::Invalid;
+				}
+
+				while ( left && currtok.Type != TokType::Statement_End )
+				{
+					value_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)value_tok.Text;
+					eat( currtok.Type );
+				}
+
+				value = parse_type( toks, context );
+			}
+
+			Code
+			param = make_code();
+			param->Type = Parameters;
+			param->Name = get_cached_string( name.Text, name.Length );
+
+			param->add_entry( type );
+
+			if ( value )
+				param->add_entry( value );
+
+			param.lock();
+
+			result->add_entry( param );
+			eat( TokType::Comma );
+		}
+		eat( TokType::Capture_End );
+
+		result.lock();
+		return result;
+	#	undef context
+	}
+
 	Code parse_class( s32 length, char const* def )
 	{
 		using namespace Parser;
@@ -3391,14 +3674,10 @@ namespace gen
 	#	undef context
 	}
 
-	Code parse_execution( s32 length, char const* exec_def )
-	{
-		not_implemented( parse_execution );
-	}
-
 	Code parse_friend( s32 length, char const* def )
 	{
 		using namespace Parser;
+		using namespace ECode;
 
 #		define context parse_friend
 		check_parse_args( parse_friend, length, def );
@@ -3409,19 +3688,46 @@ namespace gen
 
 		eat( TokType::Decl_Friend );
 
-		// This can either be a simple type, or a function declaration.
-		// If its a function declaration, it will have a return type, followed by a name, followed by a parameter list.
-		// If its a simple type, it will have a type, followed by a name.
+		Code function = { nullptr };
 
+		// Type declaration or return type
+		Code type = parse_type( toks, txt(parse_friend) );
+		if ( type == Code::Invalid )
+			return Code::Invalid;
 
+		// Funciton declaration
+		if ( currtok.Type == TokType::Identifier )
+		{
+			// Name
+			Token name = parse_identifier( toks, txt(parse_friend) );
 
+			// Parameter list
+			Code params = parse_params( toks, txt(parse_friend) );
 
-		using namespace ECode;
+			function       = make_code();
+			function->Type = Function_Fwd;
+			function->Name = get_cached_string( name.Text, name.Length );
+			function->add_entry( type );
 
-		Code result = make_code();
+			if ( params )
+				function->add_entry( params );
 
+			function.lock();
+		}
 
+		eat( TokType::Statement_End );
 
+		Code
+		result       = make_code();
+		result->Type = Friend;
+
+		if ( function )
+			result->add_entry( function );
+
+		else
+			result->add_entry( type );
+
+		result.lock();
 		return result;
 	}
 
@@ -3441,48 +3747,12 @@ namespace gen
 			arena_init_from_allocator( & mem, heap(), kilobytes( 10 ) );
 		do_once_end
 
-		// Pretty sure its impossible to have more than this.
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-
-		u8 num_specifiers;
-
-		// Making all significant tokens have a max length of 128 for this parser.
-		constexpr sw LengthID = 128;
-
-		struct Param
-		{
-			char const Type[LengthID];
-			char const Name[LengthID];
-		};
-
-		static
-		Param Params[ 64 ] { 0 };
 
 
-
-
-		using namespace ECode;
-
-		Code specifiers = def_specifiers( num_specifiers, specs_found );
-
-		Code params   = make_code();
-		// Code ret_type = def_type( ret_length, ret_type_str );
-		// Code body     = untyped_str( body_length, body_str );
 
 		Code
-		result       = make_code();
-		// result->Name = get_cached_string( name, name_length );
-		result->Type = Function;
+		result = make_code();
 
-		// result->add_entry( body );
-
-		if ( specifiers )
-			result->add_entry( specifiers );
-
-		// result->add_entry( ret_type );
-
-		if ( params )
-			result->add_entry( params );
 
 		result.lock();
 		return result;
@@ -3530,7 +3800,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		Token* name = nullptr;
+		Token name = { nullptr, 0, TokType::Invalid };
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
@@ -3613,7 +3883,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		name = & currtok;
+		name = currtok;
 		eat( TokType::Identifier );
 
 		Code expr = { nullptr };
@@ -3639,46 +3909,7 @@ namespace gen
 			expr = untyped_str( expr_tok.Length, expr_tok.Text );
 		}
 
-		if ( check( TokType::BraceSquare_Open ) )
-		{
-			eat( TokType::BraceSquare_Open );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type == TokType::BraceSquare_Close )
-			{
-				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			Token
-			untyped_tok = currtok;
-
-			while ( left && currtok.Type != TokType::BraceSquare_Close )
-			{
-				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
-			}
-
-			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type != TokType::BraceSquare_Close )
-			{
-				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
-				return Code::Invalid;
-			}
-
-			eat( TokType::BraceSquare_Close );
-		}
+		array_expr = parse_array_decl( toks, txt(parse_variable) );
 
 		eat( TokType::Statement_End );
 
@@ -3686,7 +3917,7 @@ namespace gen
 
 		Code result  = make_code();
 		result->Type = Variable;
-		result->Name = get_cached_string( name->Text, name->Length );
+		result->Name = get_cached_string( name.Text, name.Length );
 
 		result->add_entry( type );
 
@@ -3742,13 +3973,14 @@ namespace gen
 			name = currtok;
 			eat( currtok.Type );
 
-			name.Length = (  (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
 			eat( TokType::Identifier );
 		}
 		else
 		{
-			name = currtok;
-			eat( TokType::Identifier );
+			name = parse_identifier( toks, func_name );
+			if ( ! name )
+				return Code::Invalid;
 		}
 
 		while ( left && tok_is_specifier( currtok ) )
@@ -3836,45 +4068,7 @@ namespace gen
 		name = currtok;
 		eat( TokType::Identifier );
 
-		if ( check( TokType::BraceSquare_Open ) )
-		{
-			eat( TokType::BraceSquare_Open );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type == TokType::BraceSquare_Close )
-			{
-				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			Token untyped_tok = currtok;
-
-			while ( left && currtok.Type != TokType::BraceSquare_Close )
-			{
-				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
-			}
-
-			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type != TokType::BraceSquare_Close )
-			{
-				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
-				return Code::Invalid;
-			}
-
-			eat( TokType::BraceSquare_Close );
-		}
+		array_expr = parse_array_decl( toks, txt(parse_typedef) );
 
 		eat( TokType::Statement_End );
 
@@ -3932,46 +4126,7 @@ namespace gen
 			type = parse_type( toks, txt(parse_typedef) );
 		}
 
-		if ( ! is_namespace && check( TokType::BraceSquare_Open ) )
-		{
-			eat( TokType::BraceSquare_Open );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type == TokType::BraceSquare_Close )
-			{
-				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			Token
-			untyped_tok = currtok;
-
-			while ( left && currtok.Type != TokType::BraceSquare_Close )
-			{
-				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
-			}
-
-			array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
-
-			if ( left == 0 )
-			{
-				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
-				return Code::Invalid;
-			}
-
-			if ( currtok.Type != TokType::BraceSquare_Close )
-			{
-				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
-				return Code::Invalid;
-			}
-
-			eat( TokType::BraceSquare_Close );
-		}
+		array_expr = parse_array_decl( toks, txt(parse_typedef) );
 
 		eat( TokType::Statement_End );
 
