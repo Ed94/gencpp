@@ -4,6 +4,12 @@
 #ifdef gen_time
 #include "gen.cpp"
 
+using namespace gen;
+
+
+
+
+
 int gen_main()
 {
 	Memory::setup();

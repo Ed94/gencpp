@@ -73,6 +73,8 @@ namespace gen
 		Entry( Typedef )             \
 		Entry( Typename )            \
 		Entry( Union )			     \
+		Entry( Union_Fwd )		     \
+		Entry( Union_Body) 		     \
 		Entry( Using )               \
 		Entry( Using_Namespace )
 
@@ -726,6 +728,7 @@ namespace gen
 	Code def_struct         ( s32 length, char const* name, Code parent     = NoCode, Code specifiers = NoCode, Code body = NoCode );
 	Code def_typedef        ( s32 length, char const* name, Code type );
 	Code def_type           ( s32 length, char const* name, Code specifiers = NoCode, Code ArrayExpr = NoCode );
+	Code def_union          ( s32 length, char const* name,                                                     Code body = NoCode );
 	Code def_using          ( s32 length, char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
 
 	Code def_variable       ( Code type, s32 length, char const* name, Code value = NoCode, Code specifiers = NoCode );
@@ -747,6 +750,8 @@ namespace gen
 	Code def_specifiers         ( s32 num, SpecifierT* specs );
 	Code def_struct_body        ( s32 num, ... );
 	Code def_struct_body        ( s32 num, Code* codes );
+	Code def_union_body         ( s32 num, ... );
+	Code def_union_body         ( s32 num, Code* codes );
 #	pragma endregion Upfront
 
 #	pragma region Incremental
@@ -761,6 +766,7 @@ namespace gen
 	Code make_params        ();
 	Code make_specifiers    ();
 	Code make_struct        ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
+	Code make_union 	    ( s32 length,     char const* name );
 #	endif
 #	pragma endregion Incremental
 
@@ -777,6 +783,7 @@ namespace gen
 	Code parse_variable   ( s32 length, char const* var_def       );
 	Code parse_type       ( s32 length, char const* type_def      );
 	Code parse_typedef    ( s32 length, char const* typedef_def   );
+	Code parse_union      ( s32 length, char const* union_def     );
 	Code parse_using      ( s32 length, char const* using_def     );
 
 	s32 parse_classes   ( s32 length, char const* class_defs,     Code* out_class_codes );
@@ -788,6 +795,7 @@ namespace gen
 	s32 parse_structs   ( s32 length, char const* struct_defs,    Code* out_struct_codes );
 	s32 parse_variables ( s32 length, char const* var_defs,       Code* out_var_codes );
 	s32 parse_typedefs  ( s32 length, char const* typedef_defs,   Code* out_typedef_codes );
+	s32 parse_unions    ( s32 length, char const* union_defs,     Code* out_union_codes );
 	s32 parse_usings    ( s32 length, char const* using_defs,     Code* out_using_codes );
 	#endif
 	#pragma endregion Parsing
@@ -1024,16 +1032,19 @@ namespace gen
 #	define variable( Type_, Name_, ... )  gen::def_variable       ( type_ns(Type_), txt_n_len(Name_), __VA_ARGS__ )
 #	define type( Value_, ... )            gen::def_type           ( txt_n_len(Value_), __VA_ARGS__ )
 #	define type_fmt( Fmt_, ... )          gen::def_type           ( bprintf( Fmt_, __VA_ARGS__ ) )
+#   define union( Name_, ... )            gen::def_union          ( txt_n_len(Name_), __VA_ARGS__ )
 #	define using( Name_, Type_ )		  gen::def_using          ( txt_n_len(Name_), type_ns(Type_) )
 #	define using_namespace( Name_ )       gen::def_using_namespace( txt_n_len(Name_) )
 
-#	define class_body(      ... )         gen::def_class_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define enum_body(       ... )         gen::def_enum_body     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define global_body(     ... )         gen::def_global_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define function_body(   ... )         gen::def_function_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define namespace_body(  ... )         gen::def_namespace_body( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define operator_body(   ... )         gen::def_operator_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define struct_body(     ... )         gen::def_struct_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define class_body(          ... )     gen::def_class_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define enum_body(           ... )     gen::def_enum_body     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define extern_linkage_body( ... )     gen::def_extern_linkage_body( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define global_body(         ... )     gen::def_global_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define function_body(       ... )     gen::def_function_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define namespace_body(      ... )     gen::def_namespace_body( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define operator_body(       ... )     gen::def_operator_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define struct_body(         ... )     gen::def_struct_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
+#	define union_body(          ... )     gen::def_union_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
 
 #	ifdef GEN_FEATURE_INCREMENTAL
 // Incremental
@@ -1054,6 +1065,7 @@ namespace gen
 #	define variable_code(    ... ) gen::parse_variable   ( txt_n_len( __VA_ARGS__ ))
 #	define type_code(        ... ) gen::parse_type       ( txt_n_len( __VA_ARGS__ ))
 #	define typedef_code(     ... ) gen::parse_typedef    ( txt_n_len( __VA_ARGS__ ))
+#	define union_code(       ... ) gen::parse_union      ( txt_n_len( __VA_ARGS__ ))
 #	define using_code(       ... ) gen::parse_code       ( txt_n_len( __VA_ARGS__ ))
 #	endif
 

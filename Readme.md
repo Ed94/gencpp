@@ -156,7 +156,7 @@ struct ArrayHeader
 
 ## Gen's DSL
 
-If you don't mind a low amount of macros (61 sloc), a DSL may be optionally defined with:
+If you don't mind a low amount of macros (~80 sloc), a DSL may be optionally defined with:
 
 ```cpp
 GEN_DEFINE_DSL
