@@ -37,45 +37,50 @@ namespace gen
 
 	namespace ECode
 	{
-	#	define Define_Types          \
-		Entry( Untyped )             \
-		Entry( Access_Public )       \
-		Entry( Access_Protected )    \
-		Entry( Access_Private )      \
-		Entry( Class )               \
-		Entry( Class_Fwd )           \
-		Entry( Class_Body )          \
-		Entry( Enum )                \
-		Entry( Enum_Fwd )            \
-		Entry( Enum_Body )           \
-		Entry( Enum_Class )          \
-		Entry( Enum_Class_Fwd )      \
-		Entry( Execution )           \
-		Entry( Extern_Linkage )      \
-		Entry( Extern_Linkage_Body ) \
-		Entry( Friend )              \
-		Entry( Function )            \
-		Entry( Function_Fwd )        \
-		Entry( Function_Body )       \
-		Entry( Global_Body )         \
-		Entry( Namespace )           \
-		Entry( Namespace_Body )      \
-		Entry( Operator )            \
-		Entry( Operator_Fwd )        \
-		Entry( Operator_Member )     \
-		Entry( Operator_Member_Fwd ) \
-		Entry( Parameters )          \
-		Entry( Specifiers )          \
-		Entry( Struct )              \
-		Entry( Struct_Fwd )          \
-		Entry( Struct_Body )         \
-		Entry( Variable )            \
-		Entry( Typedef )             \
-		Entry( Typename )            \
-		Entry( Union )			     \
-		Entry( Union_Fwd )		     \
-		Entry( Union_Body) 		     \
-		Entry( Using )               \
+	#	define Define_Types           \
+		Entry( Untyped )              \
+		Entry( Comment )              \
+		Entry( Access_Private )       \
+		Entry( Access_Protected )     \
+		Entry( Access_Public )        \
+		Entry( Attributes )           \
+		Entry( Class )                \
+		Entry( Class_Fwd )            \
+		Entry( Class_Body )           \
+		Entry( Enum )                 \
+		Entry( Enum_Fwd )             \
+		Entry( Enum_Body )            \
+		Entry( Enum_Class )           \
+		Entry( Enum_Class_Fwd )       \
+		Entry( Execution )            \
+		Entry( Export_Body )          \
+		Entry( Extern_Linkage )       \
+		Entry( Extern_Linkage_Body )  \
+		Entry( Friend )               \
+		Entry( Function )             \
+		Entry( Function_Fwd )         \
+		Entry( Function_Body )        \
+		Entry( Global_Body )          \
+		Entry( Module )               \
+		Entry( Namespace )            \
+		Entry( Namespace_Body )       \
+		Entry( Operator )             \
+		Entry( Operator_Fwd )         \
+		Entry( Operator_Member )      \
+		Entry( Operator_Member_Fwd )  \
+		Entry( Parameters )           \
+		Entry( Preprocessor_Include ) \
+		Entry( Specifiers )           \
+		Entry( Struct )               \
+		Entry( Struct_Fwd )           \
+		Entry( Struct_Body )          \
+		Entry( Variable )             \
+		Entry( Typedef )              \
+		Entry( Typename )             \
+		Entry( Union )			      \
+		Entry( Union_Fwd )		      \
+		Entry( Union_Body) 		      \
+		Entry( Using )                \
 		Entry( Using_Namespace )
 
 		enum Type : u32
@@ -101,7 +106,7 @@ namespace gen
 			return lookup[ type ];
 		}
 
-		#undef Define_Types
+	#	undef Define_Types
 	}
 	using CodeT = ECode::Type;
 
@@ -197,38 +202,27 @@ namespace gen
 			return lookup[ op ];
 		}
 
-	#undef Define_Operators
+	#	undef Define_Operators
 	}
 	using OperatorT = EOperator::Type;
 
 	namespace ESpecifier
 	{
-	#if defined(ZPL_SYSTEM_WINDOWS)
-	#	define API_Export_Code __declspec(dllexport)
-	#	define API_Import_Code __declspec(dllimport)
-	#	define API_Keyword     __declspec
-	#elif defined(ZPL_SYSTEM_MACOS)
-	#	define API_Export_Code __attribute__ ((visibility ("default")))
-	#	define API_Import_Code __attribute__ ((visibility ("default")))
-	#	define API_Keyword     __attribute__
-	#endif
+	/*
+		Note: The following are handled separately:
+		attributes
+		alignas
+	*/
 
 		#define Define_Specifiers                    \
-		Entry( API_Import,       API_Export_Code )   \
-		Entry( API_Export,       API_Import_Code )   \
-		Entry( Alignas,          alignas )                                          \
-		Entry( Array_Decl,       "You cannot stringize an array declare this way" ) \
 		Entry( Const,            const )             \
 		Entry( Consteval,        consteval )         \
 		Entry( Constexpr,        constexpr )         \
 		Entry( Constinit,        constinit )         \
-		Entry( Export,           export )            \
 		Entry( External_Linkage, extern )            \
-		Entry( Import,           import )            \
 		Entry( Inline,           inline )            \
 		Entry( Internal_Linkage, static )            \
 		Entry( Local_Persist,    static )            \
-		Entry( Module,           module )            \
 		Entry( Mutable,          mutable )           \
 		Entry( Ptr,              * )                 \
 		Entry( Ref,              & )                 \
@@ -295,6 +289,78 @@ namespace gen
 	}
 	using SpecifierT = ESpecifier::Type;
 
+	enum class AccessSpec : u32
+	{
+		Public,
+		Protected,
+		Private,
+
+		Num_AccessSpec,
+		Invalid,
+	};
+
+	inline
+	char const* to_str( AccessSpec type )
+	{
+		local_persist
+		char const* lookup[ (u32)AccessSpec::Num_AccessSpec ] = {
+			"private",
+			"protected",
+			"public",
+		};
+
+		if ( type > AccessSpec::Public )
+			return lookup[ (u32)AccessSpec::Invalid ];
+
+		return lookup[ (u32)type ];
+	}
+
+	enum class ModuleFlag : u32
+	{
+		None    = 0,
+		Export  = bit(0),
+		Import  = bit(1),
+		Private = bit(2),
+
+		Num_ModuleFlags,
+		Invalid,
+	};
+
+	/*
+		Predefined attributes
+
+		Used for the parser constructors to identify non-standard attributes
+	*/
+	namespace Attribute
+	{
+	#if 0 && defined(ZPL_SYSTEM_WINDOWS) || defined( __CYGWIN__ )
+	#	define GEN_API_
+	#	define GEN_API_Export_Code   __declspec(dllexport)
+	#	define GEN_API_Import_Code   __declspec(dllimport)
+	#	define GEN_Attribute_Keyword __declspec
+
+		constexpr char const* API_Export = txt( GEN_API_Export_Code );
+		constexpr char const* API_Import = txt( GEN_API_Import_Code );
+
+	#elif ZPL_HAS_ATTRIBUTE( visibility ) || ZPL_GCC_VERSION_CHECK( 3, 3, 0 ) || ZPL_INTEL_VERSION_CHECK( 13, 0, 0 )
+	#	define GEN_API_Export_Code   __attribute__ ((visibility ("default")))
+	#	define GEN_API_Import_Code   __attribute__ ((visibility ("default")))
+	#	define GEN_Attribute_Keyword __attribute__
+
+		constexpr char const* API_Export = txt( GEN_API_Export_Code );
+		constexpr char const* API_Import = txt( GEN_API_Import_Code );
+
+	#else
+	#	define GEN_API_Export_Code
+	#	define GEN_API_Import_Code
+	#	define GEN_Attribute_Keyword
+
+		constexpr char const* API_Export        = "";
+		constexpr char const* API_Import        = "";
+		constexpr char const* Attribute_Keyword = "";
+	#endif
+	}
+
 #pragma region Data Structures
 	// Implements basic string interning. Data structure is based off the ZPL Hashtable.
 	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, String );
@@ -326,7 +392,7 @@ namespace gen
 
 		void add_entry( AST* other );
 
-		forceinline
+		inline
 		AST* body()
 		{
 			return Entries[0];
@@ -334,19 +400,19 @@ namespace gen
 
 		AST* duplicate();
 
-		forceinline
+		inline
 		bool has_entries()
 		{
 			return Entries[0];
 		}
 
-		forceinline
+		inline
 		bool is_invalid()
 		{
 			return Type != ECode::Invalid;
 		}
 
-		forceinline
+		inline
 		s32 num_entries()
 		{
 			return DynamicEntries ? array_count(Entries) : StaticIndex;
@@ -354,7 +420,7 @@ namespace gen
 
 		// Class/Struct
 
-		forceinline
+		inline
 		AST* parent()
 		{
 			return Entries[1];
@@ -362,7 +428,7 @@ namespace gen
 
 		// Enum
 
-		forceinline
+		inline
 		AST* underlying_type()
 		{
 			return Entries[1];
@@ -372,7 +438,7 @@ namespace gen
 
 		bool add_param( AST* type, s32 length, char const* name );
 
-		forceinline
+		inline
 		AST* get_param( s32 index )
 		{
 			if ( index <= 0 )
@@ -381,14 +447,14 @@ namespace gen
 			return Entries[ index + 1 ];
 		}
 
-		forceinline
+		inline
 		s32 param_count()
 		{
 			// The first entry (which holds the type) represents the first parameter.
 			return num_entries();
 		}
 
-		forceinline
+		inline
 		AST* param_type()
 		{
 			return Entries[0];
@@ -411,32 +477,32 @@ namespace gen
 		}
 
 		inline
-		bool has_specifier( SpecifierT spec )
+		s32 has_specifier( SpecifierT spec )
 		{
-			for ( s32 Index = 0; Index < StaticIndex; Index++ )
+			for ( s32 idx = 0; idx < StaticIndex; idx++ )
 			{
 				if ( ArrSpecs[StaticIndex] == spec )
-					return true;
+					return idx;
 			}
 
-			return false;
+			return -1;
 		}
 
 		// Typename
 
-		forceinline
+		inline
 		bool typename_is_ptr()
 		{
 			assert_crash("not implemented");
 		}
 
-		forceinline
+		inline
 		bool typename_is_ref()
 		{
 			assert_crash("not implemented");
 		}
 
-		forceinline
+		inline
 		AST* typename_specifiers()
 		{
 			return Entries[0];
@@ -444,7 +510,7 @@ namespace gen
 
 		// Serialization
 
-		forceinline
+		inline
 		char const* debug_str()
 		{
 			char const* fmt = txt(
@@ -469,7 +535,7 @@ namespace gen
 			);
 		}
 
-		forceinline
+		inline
 		char const* type_str()
 		{
 			return ECode::to_str( Type );
@@ -481,12 +547,14 @@ namespace gen
 		constexpr static
 		uw ArrS_Cap =
 		( 	AST_POD_Size
-			- sizeof(AST*)
-			- sizeof(StringCached) * 2
-			- sizeof(CodeT)
-			- sizeof(OperatorT)
-			- sizeof(bool) * 2
-			- sizeof(u8) * 7 )
+			- sizeof(AST*)         // Parent
+			- sizeof(StringCached) // Name
+			- sizeof(CodeT) 	   // Type
+			- sizeof(OperatorT)    // Op
+			- sizeof(ModuleFlag)   // ModuleFlags
+			- sizeof(u32) 		   // StaticIndex
+			- sizeof(bool) * 2     // Readonly, DynamicEntries
+			- sizeof(u8) * 6 )     // _Align_Pad
 		/ sizeof(AST*);
 
 		constexpr static
@@ -501,12 +569,12 @@ namespace gen
 		};                                             \
 		AST*              Parent;                      \
 		StringCached      Name;                        \
-		StringCached      Comment;                     \
 		CodeT             Type;                        \
 		OperatorT         Op;                          \
+		ModuleFlag        ModuleFlags;                 \
+		u32               StaticIndex;                 \
 		bool              Readonly;                    \
 		bool              DynamicEntries;              \
-		u8                StaticIndex;                 \
 		u8                _Align_Pad[6];
 
 		Using_Code_POD
@@ -537,7 +605,7 @@ namespace gen
 	struct Code
 	{
 	#pragma region Statics
-		// Used internally for the most part to identify invaidly generated code.
+		// Used to identify invalid generated code.
 		static Code Invalid;
 	#pragma endregion Statics
 
@@ -574,43 +642,43 @@ namespace gen
 			return * (Code*)( ast->body() );
 		}
 
-		forceinline
+		inline
 		void lock()
 		{
 			ast->Readonly = true;
 		}
 
-		forceinline
+		inline
 		char const* to_string()
 		{
 			return ast->to_string();
 		}
 
-		forceinline
+		inline
 		operator bool()
 		{
 			return ast;
 		}
 
-		forceinline
+		inline
 		bool operator ==( Code other )
 		{
 			return ast == other.ast;
 		}
 
-		forceinline
+		inline
 		bool operator !=( Code other )
 		{
 			return ast != other.ast;
 		}
 
-		forceinline
+		inline
 		operator AST*()
 		{
 			return ast;
 		}
 
-		forceinline
+		inline
 		Code& operator=( Code other )
 		{
 			if ( ast == nullptr )
@@ -632,7 +700,7 @@ namespace gen
 			return *this;
 		}
 
-		forceinline
+		inline
 		AST* operator->()
 		{
 			if ( ast == nullptr )
@@ -710,63 +778,120 @@ namespace gen
 	void set_allocator_type_table       ( AllocatorInfo type_reg_allocator );
 
 #	pragma region Upfront
-	Code def_class          ( s32 length, char const* name, Code parent = NoCode,                         Code specifiers = NoCode, Code body = NoCode );
-	Code def_enum           ( s32 length, char const* name, Code type   = NoCode, EnumT specifier = EnumRegular,                    Code body = NoCode );
+	Code def_comment   ( s32 length, char const* content );
+	Code def_attributes( s32 length, char const* content );
 
-	Code def_execution      ( Code untyped_code );
+	Code def_class( s32 length, char const* name
+		, Code body         = NoCode
+		, Code parent       = NoCode, AccessSpec access     = AccessSpec::Public
+		, Code specifiers   = NoCode, Code       attributes = NoCode
+		, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_friend         ( Code symbol );
-	Code def_function       ( s32 length, char const* name, Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
-	Code def_extern_linkage ( s32 length, char const* name,                                                                         Code body );
-	Code def_namespace      ( s32 length, char const* name,                                                                         Code body );
-	Code def_operator       (             OperatorT   op,   Code params = NoCode, Code ret_type = NoCode, Code specifiers = NoCode, Code body = NoCode );
+	Code def_enum( s32 length, char const* name
+		, Code       body      = NoCode,      Code type       = NoCode
+		, EnumT      specifier = EnumRegular, Code attributes = NoCode
+		, ModuleFlag mflags    = ModuleFlag::None );
 
-	Code def_param          ( Code type, s32 length, char const* name, Code value = NoCode );
+	Code def_execution  ( s32 length, char const* content );
+	Code def_extern_link( s32 length, char const* name, Code body, ModuleFlag mflags = ModuleFlag::None );
+	Code def_friend     ( Code symbol );
 
-	Code def_specifier      ( SpecifierT specifier );
+	Code def_function( s32 length, char const* name
+		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
+		, Code       specifiers = NoCode, Code attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_struct         ( s32 length, char const* name, Code parent     = NoCode, Code specifiers = NoCode, Code body = NoCode );
-	Code def_typedef        ( s32 length, char const* name, Code type );
-	Code def_type           ( s32 length, char const* name, Code specifiers = NoCode, Code ArrayExpr = NoCode );
-	Code def_union          ( s32 length, char const* name,                                                     Code body = NoCode );
-	Code def_using          ( s32 length, char const* name, Code type       = NoCode, UsingT specifier = UsingRegular );
+	Code def_include  ( s32 length, char const* path );
+	Code def_module   ( s32 length, char const* name,            ModuleFlag mflags = ModuleFlag::None );
+	Code def_namespace( s32 length, char const* name, Code body, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_variable       ( Code type, s32 length, char const* name, Code value = NoCode, Code specifiers = NoCode );
+	Code def_operator( OperatorT op
+		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
+		, Code       specifiers = NoCode, Code attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_class_body         ( s32 num, ... );
-	Code def_enum_body          ( s32 num, ... );
-	Code def_enum_body          ( s32 num, Code* codes );
-	Code def_extern_linkage_body( s32 num, ... );
-	Code def_extern_linkage_body( s32 num, Code* codes );
-	Code def_global_body        ( s32 num, ... );
-	Code def_global_body        ( s32 num, Code* codes );
-	Code def_function_body      ( s32 num, ... );
-	Code def_function_body      ( s32 num, Code* codes );
-	Code def_namespace_body     ( s32 num, ... );
-	Code def_namespace_body     ( s32 num, Code* codes );
-	Code def_params             ( s32 num, ... );
-	Code def_params             ( s32 num, Code* params );
-	Code def_specifiers         ( s32 num , ... );
-	Code def_specifiers         ( s32 num, SpecifierT* specs );
-	Code def_struct_body        ( s32 num, ... );
-	Code def_struct_body        ( s32 num, Code* codes );
-	Code def_union_body         ( s32 num, ... );
-	Code def_union_body         ( s32 num, Code* codes );
+	Code def_param     ( Code type, s32 length, char const* name, Code value = NoCode );
+	Code def_specifier( SpecifierT specifier );
+
+	Code def_struct( s32 length, char const* name
+		, Code      body
+		, Code      parent     = NoCode, AccessSpec access
+		, Code      specifiers = NoCode, Code attributes = NoCode
+		, ModuleFlag mflags    = ModuleFlag::None );
+
+	Code def_typedef( s32 length, char const* name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	Code def_type   ( s32 length, char const* name, Code arrayexpr = NoCode, Code specifiers = NoCode );
+
+	Code def_union( s32 length, char const* name, Code body = NoCode, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+
+	Code def_using( s32 length, char const* name, UsingT specifier = UsingRegular
+		, Code       type        = NoCode
+		, Code       attributess = NoCode
+		, ModuleFlag mflags      = ModuleFlag::None );
+
+	Code def_variable( Code type, s32 length, char const* name, Code value = NoCode
+		, Code       specifiers = NoCode, Code attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
+
+	Code def_class_body      ( s32 num, ... );
+	Code def_enum_body       ( s32 num, ... );
+	Code def_enum_body       ( s32 num, Code* codes );
+	Code def_extern_link_body( s32 num, ... );
+	Code def_extern_link_body( s32 num, Code* codes );
+	Code def_export_body     ( s32 num, ... );
+	Code def_export_body     ( s32 num, Code* codes);
+	Code def_global_body     ( s32 num, ... );
+	Code def_global_body     ( s32 num, Code* codes );
+	Code def_function_body   ( s32 num, ... );
+	Code def_function_body   ( s32 num, Code* codes );
+	Code def_namespace_body  ( s32 num, ... );
+	Code def_namespace_body  ( s32 num, Code* codes );
+	Code def_params          ( s32 num, ... );
+	Code def_params          ( s32 num, Code* params );
+	Code def_specifiers      ( s32 num , ... );
+	Code def_specifiers      ( s32 num, SpecifierT* specs );
+	Code def_struct_body     ( s32 num, ... );
+	Code def_struct_body     ( s32 num, Code* codes );
+	Code def_union_body      ( s32 num, ... );
+	Code def_union_body      ( s32 num, Code* codes );
 #	pragma endregion Upfront
 
 #	pragma region Incremental
 #	ifdef GEN_FEATURE_INCREMENTAL
-	Code make_class         ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
-	Code make_enum          ( s32 length,     char const* name, Code type   = NoCode, EnumT specifier = EnumRegular );
+	Code make_class( s32 length, char const* name
+		, Code       parent     = NoCode, AccessSpec access     = AccessSpec::Public
+		, Code       specifiers = NoCode, Code       attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
+
+	Code make_enum( s32 length, char const* name
+		, Code type       = NoCode, EnumT      specifier = EnumRegular
+		, Code attributes = NoCode, ModuleFlag mflags    = ModuleFlag::None );
+
+	Code make_export_body   ( s32 length = 1, char const* name = "" );
 	Code make_extern_linkage( s32 length,     char const* name );
-	Code make_function      ( s32 length,     char const* name, Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
-	Code make_global_body   ( s32 length = 1, char const* name = "" );
-	Code make_namespace     ( s32 length,     char const* name );
-	Code make_operator      (                 OperatorT   op,   Code params = NoCode, Code  ret_type  = NoCode,      Code specifiers = NoCode );
-	Code make_params        ();
-	Code make_specifiers    ();
-	Code make_struct        ( s32 length,     char const* name, Code parent = NoCode,                                Code specifiers = NoCode );
-	Code make_union 	    ( s32 length,     char const* name );
+
+	Code make_function( s32 length, char const* name
+		, Code       params     = NoCode, Code ret_type   = NoCode
+		, Code       specifiers = NoCode, Code attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
+
+	Code make_global_body( s32 length = 1, char const* name = "" );
+	Code make_namespace  ( s32 length,     char const* name );
+
+	Code make_operator( OperatorT op
+		, Code       params     = NoCode, Code ret_type   = NoCode
+		, Code       specifiers = NoCode, Code attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
+
+	Code make_params    ();
+	Code make_specifiers();
+
+	Code make_struct( s32 length, char const* name
+		, Code       parent     = NoCode, AccessSpec access
+		, Code       specifiers = NoCode, Code       attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
+
+	Code make_union( s32 length, char const* name, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 #	endif
 #	pragma endregion Incremental
 
@@ -774,6 +899,8 @@ namespace gen
 	#ifdef GEN_FEATURE_PARSING
 	Code parse_class      ( s32 length, char const* class_def     );
 	Code parse_enum       ( s32 length, char const* enum_def      );
+	Code parse_export_body( s32 length, char const* export_def    );
+	Code parse_exten_link ( s32 length, char const* exten_link_def);
 	Code parse_friend     ( s32 length, char const* friend_def    );
 	Code parse_function   ( s32 length, char const* fn_def        );
 	Code parse_global_body( s32 length, char const* body_def      );
@@ -785,18 +912,6 @@ namespace gen
 	Code parse_typedef    ( s32 length, char const* typedef_def   );
 	Code parse_union      ( s32 length, char const* union_def     );
 	Code parse_using      ( s32 length, char const* using_def     );
-
-	s32 parse_classes   ( s32 length, char const* class_defs,     Code* out_class_codes );
-	s32 parse_enums     ( s32 length, char const* enum_defs,      Code* out_enum_codes );
-	s32 parse_friends   ( s32 length, char const* friend_defs,    Code* out_friend_codes );
-	s32 parse_functions ( s32 length, char const* fn_defs,        Code* out_fn_codes );
-	s32 parse_namespaces( s32 length, char const* namespace_defs, Code* out_namespaces_codes );
-	s32 parse_operators ( s32 length, char const* operator_defs,  Code* out_operator_codes );
-	s32 parse_structs   ( s32 length, char const* struct_defs,    Code* out_struct_codes );
-	s32 parse_variables ( s32 length, char const* var_defs,       Code* out_var_codes );
-	s32 parse_typedefs  ( s32 length, char const* typedef_defs,   Code* out_typedef_codes );
-	s32 parse_unions    ( s32 length, char const* union_defs,     Code* out_union_codes );
-	s32 parse_usings    ( s32 length, char const* using_defs,     Code* out_using_codes );
 	#endif
 	#pragma endregion Parsing
 
@@ -833,6 +948,15 @@ namespace gen
 		void write();
 	};
 
+#if defined(GEN_FEATURE_EDITOR) || defined(GEN_FEATURE_SCANNER)
+	struct SymbolInfo
+	{
+		StringCached File;
+		char const*  Marker;
+		Code         Signature;
+	};
+#endif
+
 #ifdef GEN_FEATURE_EDITOR
 	struct Policy
 	{
@@ -844,13 +968,6 @@ namespace gen
 		Code,
 		Line,
 		Marker
-	};
-
-	struct SymbolInfo
-	{
-		StringCached File;
-		char const*  Marker;
-		Code         Signature;
 	};
 
 	struct Editor
@@ -1003,11 +1120,11 @@ namespace gen
 #	define function_2( Name_, Params_ )                               gen::def_function( txt_n_len( Name_ ), macro_expand( Params_ ) )
 #	define function_1( Name_ )                                        gen::def_function( txt_n_len( Name_ ) )
 
-#	define params_12( T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4, T_5, V_5, T_6, V_6 ) gen::def_params( 6, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4), type_ns(T_5), txt_n_len( V_5), type_ns(T_6), txt_n_len(V_6))
-#	define params_10( T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4, T_5, V_5 )           gen::def_params( 5, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4), type_ns(T_5), txt_n_len( V_5))
-#	define params_8(  T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4 )                     gen::def_params( 4, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4) )
-#	define params_6(  T_1, V_1, T_2, V_2, T_3, V_3 )                               gen::def_params( 3, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3))
-#	define params_4(  T_1, V_1, T_2, V_2 )                                         gen::def_params( 2, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2))
+#	define params_12( T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4, T_5, V_5, T_6, V_6 ) gen::def_params( 12, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4), type_ns(T_5), txt_n_len( V_5), type_ns(T_6), txt_n_len(V_6))
+#	define params_10( T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4, T_5, V_5 )           gen::def_params( 10, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4), type_ns(T_5), txt_n_len( V_5))
+#	define params_8(  T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4 )                     gen::def_params( 8, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4) )
+#	define params_6(  T_1, V_1, T_2, V_2, T_3, V_3 )                               gen::def_params( 6, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3))
+#	define params_4(  T_1, V_1, T_2, V_2 )                                         gen::def_params( 4, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2))
 #	define params_2(  T_1, V_1 )                                                   gen::def_param (    type_ns(T_1), txt_n_len( V_1))
 #	define params_bad static_assert("params(...): Invalid number of parameters provided.")
 #	define params_11  params_bad
@@ -1019,9 +1136,10 @@ namespace gen
 
 // Upfront
 
+#	define comment( Value_ )			  gen::def_comment( sizeof(Value), Value_ )
+#	define attribute( Value_ )            gen::def_attribute( txt_n_len(Value_) )
 #	define class( Name_, ... )            gen::def_class( txt_n_len(Name_), __VA_ARGS__ )
 #	define enum( Name_, Type_, Body_ )    gen::def_enum ( txt_n_len(Name_), type_ns(Type_), Body_ )
-
 #	define extern_linkage( Name_, Body_ ) gen::def_extern_linkage( txt_n_len(Name_), Body_ )
 #	define function( ... )                macrofn_polymorphic( function, __VA_ARGS__ )
 #	define namespace( Name_, Body_ )      gen::def_namespace      ( txt_n_len(Name_),  Body_ )
@@ -1033,8 +1151,7 @@ namespace gen
 #	define type( Value_, ... )            gen::def_type           ( txt_n_len(Value_), __VA_ARGS__ )
 #	define type_fmt( Fmt_, ... )          gen::def_type           ( bprintf( Fmt_, __VA_ARGS__ ) )
 #   define union( Name_, ... )            gen::def_union          ( txt_n_len(Name_), __VA_ARGS__ )
-#	define using( Name_, Type_ )		  gen::def_using          ( txt_n_len(Name_), type_ns(Type_) )
-#	define using_namespace( Name_ )       gen::def_using_namespace( txt_n_len(Name_) )
+#	define using( Name_, ... )		  	  gen::def_using          ( txt_n_len(Name_), __VA_ARGS__ )
 
 #	define class_body(          ... )     gen::def_class_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
 #	define enum_body(           ... )     gen::def_enum_body     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
@@ -1116,6 +1233,7 @@ namespace gen
 	constexpr s32 SizePer_CodeEntriresArena = megabytes(16);
 	constexpr s32 SizePer_StringArena       = megabytes(32);
 
+	constexpr s32 MaxCommentLineLength      = 1024;
 	constexpr s32 MaxNameLength             = 128;
 	constexpr s32 MaxUntypedStrLength       = kilobytes(640);
 	constexpr s32 StringTable_MaxHashLength = kilobytes(1);

@@ -105,6 +105,9 @@ using zpl::str_len;
 #endif
 
 
+#include "Banned.define.hpp"
+
+
 #if defined(__GNUC__) || defined(__clang__)
 	// Supports 0-10 arguments
 	#define macro_num_args_impl( _0,                      \

@@ -63,6 +63,7 @@ namespace gen
 
 #pragma region AST Body Case Macros
 #	define AST_BODY_CLASS_UNALLOWED_TYPES \
+	case Attributes:                      \
 	case Class_Body:                      \
 	case Enum_Body:                       \
 	case Extern_Linkage:                  \
@@ -83,6 +84,7 @@ namespace gen
 	case Access_Public:                      \
 	case Access_Protected:                   \
 	case Access_Private:                     \
+	case Attributes:                         \
 	case Class_Body:                         \
 	case Enum_Body:                          \
 	case Extern_Linkage:                     \
@@ -105,6 +107,7 @@ namespace gen
 	case Access_Public: 				   \
 	case Access_Protected: 				   \
 	case Access_Private: 				   \
+	case Attributes:                       \
 	case Class_Body: 					   \
 	case Enum_Body: 					   \
 	case Execution: 					   \
@@ -119,57 +122,11 @@ namespace gen
 	case Struct_Body: 					   \
 	case Typename:
 
-#	define AST_BODY_NAMESPACE_UNALLOWED_TYPES \
-	case Access_Public: 					  \
-	case Access_Protected: 					  \
-	case Access_Private: 					  \
-	case Class_Body: 						  \
-	case Enum_Body: 						  \
-	case Execution: 						  \
-	case Friend: 							  \
-	case Function_Body: 					  \
-	case Global_Body: 						  \
-	case Namespace_Body: 					  \
-	case Operator_Member: 					  \
-	case Operator_Member_Fwd: 				  \
-	case Parameters: 						  \
-	case Specifiers: 						  \
-	case Struct_Body: 						  \
-	case Typename:
+#	define AST_BODY_EXPORT_UNALLOWED_TYPES         AST_BODY_GLOBAL_UNALLOWED_TYPES
+#	define AST_BODY_NAMESPACE_UNALLOWED_TYPES      AST_BODY_GLOBAL_UNALLOWED_TYPES
+#	define AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES AST_BODY_GLOBAL_UNALLOWED_TYPES
 
-#	define AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES \
-	case Access_Public: 					       \
-	case Access_Protected: 					       \
-	case Access_Private: 					       \
-	case Class_Body: 						       \
-	case Enum_Body: 						       \
-	case Execution: 						       \
-	case Friend: 							       \
-	case Function_Body: 					       \
-	case Global_Body: 						       \
-	case Namespace_Body: 					       \
-	case Operator_Member: 					       \
-	case Operator_Member_Fwd: 				       \
-	case Parameters: 						       \
-	case Specifiers: 						       \
-	case Struct_Body: 						       \
-	case Typename:
-
-#	define AST_BODY_STRUCT_UNALLOWED_TYPES \
-	case Enum_Body: 					   \
-	case Extern_Linkage:                   \
-	case Execution: 					   \
-	case Function_Body: 				   \
-	case Global_Body: 					   \
-	case Namespace: 					   \
-	case Namespace_Body: 				   \
-	case Operator: 						   \
-	case Operator_Fwd: 					   \
-	case Parameters: 					   \
-	case Specifiers: 					   \
-	case Struct_Body: 					   \
-	case Typename: 						   \
-	case Using_Namespace:
+#	define AST_BODY_STRUCT_UNALLOWED_TYPES AST_BODY_CLASS_UNALLOWED_TYPES
 #pragma endregion AST Body Case Macros
 
 #pragma region AST
@@ -202,16 +159,24 @@ namespace gen
 				log_failure( "AST::add: Cannot add an AST to an untyped AST." );
 				return false;
 
-			case Access_Public:
-				log_failure( "AST::add: Cannot add an AST to a public access specifier." );
+			case Comment:
+				log_failure( "AST::add: Cannot add an AST to a comment." );
+				return false;
+
+			case Access_Private:
+				log_failure( "AST::add: Cannot add an AST to a private access specifier." );
 				return false;
 
 			case Access_Protected:
 				log_failure( "AST::add: Cannot add an AST to a protected access specifier." );
 				return false;
 
-			case Access_Private:
-				log_failure( "AST::add: Cannot add an AST to a private access specifier." );
+			case Access_Public:
+				log_failure( "AST::add: Cannot add an AST to a public access specifier." );
+				return false;
+
+			case Attributes:
+				log_failure( "AST::add: Cannot add an AST to an attribute." );
 				return false;
 
 			case Class:
@@ -244,6 +209,33 @@ namespace gen
 				log_failure( "AST::add: Cannot add an AST to an enum forward declaration." );
 				return false;
 
+			case Enum_Body:
+				if ( other->Type != Untyped )
+				{
+					log_failure( "AST::add: Cannot add an AST which is not untyped to an enum body." );
+					return false;
+				}
+			break;
+
+			case Execution:
+				log_failure( "AST::add: Cannot add an AST to an execution block." );
+				return false;
+			break;
+
+			case Export_Body:
+				switch ( other->Type )
+				{
+					AST_BODY_EXPORT_UNALLOWED_TYPES
+					{
+						log_failure( "AST::add: Cannot add %s to an export body.", other->type_str() );
+						return false;
+					}
+
+					default:
+						break;
+				}
+			break;
+
 			case Extern_Linkage:
 				log_failure( "AST::add: Cannot add an AST to an extern linkage, only to its body." );
 				return false;
@@ -260,14 +252,6 @@ namespace gen
 					default:
 						break;
 				}
-
-			case Enum_Body:
-				if ( other->Type != Untyped )
-				{
-					log_failure( "AST::add: Cannot add an AST which is not untyped to an enum body." );
-					return false;
-				}
-			break;
 
 			case Enum_Class:
 				log_failure( "AST::add: Cannot add an AST to an enum class, only to its body" );
@@ -317,6 +301,10 @@ namespace gen
 				}
 			break;
 
+			case Module:
+				log_failure( "AST::add: Cannot add an AST to a module, only to its body" );
+				return false;
+
 			case Namespace:
 				if ( Type != Global_Body )
 				{
@@ -348,6 +336,10 @@ namespace gen
 
 			case Parameters:
 				log_failure( "AST::add: Cannot add to a parameter list, use AST::add_param instead" );
+				return false;
+
+			case Preprocessor_Include:
+				log_failure( "AST::add: Cannot add an AST to a preprocessor include." );
 				return false;
 
 			case Specifiers:
@@ -384,8 +376,23 @@ namespace gen
 				log_failure( "AST::add: Cannot add to a typename." );
 				return false;
 
+			case Union:
+				log_failure( "AST::add: Cannot add to a union, only to its body." );
+				return false;
+
+			case Union_Body:
+				if ( other->Type != Untyped )
+				{
+					log_failure( "AST::add: Cannot add an AST which is not untyped to a union body." );
+					return false;
+				}
+
 			case Using:
 				log_failure( "AST::add: Cannot add to a using statement." );
+				return false;
+
+			case Using_Namespace:
+				log_failure( "AST::add: Cannot add to a using namespace statement." );
 				return false;
 		}
 
@@ -407,7 +414,6 @@ namespace gen
 		result           = make_code();
 		result->Parent   = Parent;
 		result->Name     = Name;
-		result->Comment  = Comment;
 		result->Type     = Type;
 		result->Op       = Op;
 		result->Readonly = Readonly;
@@ -418,9 +424,13 @@ namespace gen
 			break;
 
 			case Untyped:
+			case Comment:
+			case Preprocessor_Include:
 			case Access_Public:
 			case Access_Protected:
 			case Access_Private:
+			case Attributes:
+			case Module:
 				// Can just be the same, as its a cached string.
 				result->Content = Content;
 				return result;
@@ -435,6 +445,8 @@ namespace gen
 			case Enum_Body:
 			case Enum_Class:
 			case Enum_Class_Fwd:
+			case Export_Body:
+			case Execution:
 			case Extern_Linkage:
 			case Extern_Linkage_Body:
 			case Friend:
@@ -456,6 +468,8 @@ namespace gen
 			case Variable:
 			case Typedef:
 			case Typename:
+			case Union:
+			case Union_Body:
 			case Using:
 			case Using_Namespace:
 				s32 index = 0;
@@ -476,9 +490,6 @@ namespace gen
 	{
 		String result = string_make( g_allocator, "" );
 
-		if ( Comment )
-			result = string_append_fmt( result, "// %s\n", Comment );
-
 		switch ( Type )
 		{
 			using namespace ECode;
@@ -491,14 +502,39 @@ namespace gen
 				result = string_append_length( result, Content, string_length( ccast(String, Content)) );
 			break;
 
-			case Access_Public:
-			case Access_Protected:
+			case Comment:
+			{
+				static char line[MaxCommentLineLength];
+
+				s32 left  = string_length( ccast(String, Content) );
+				s32 index = 0;
+				do
+				{
+					s32 length = 0;
+					while ( left && Content[index] != '\n' )
+						length++;
+
+					zpl::str_copy( line, Content, length );
+					line[length] = '\0';
+
+					result = string_append_fmt( result, "// %s\n", line );
+				}
+				while ( left--, left );
+			}
+			break;
+
 			case Access_Private:
+			case Access_Protected:
+			case Access_Public:
 				result = string_append_length( result, Name, string_length( ccast(String, Name)) ) ;
 			break;
 
+			case Attributes:
+				result = string_append_fmt( result, "%s", Content );
+
 			case Class:
 			{
+
 				result = string_append_fmt( result, "class");
 
 				s32 idx = 1;
@@ -576,6 +612,26 @@ namespace gen
 
 			case Enum_Class_Fwd:
 				result = string_append_fmt( result, "enum class %s : %s;\n", Name, underlying_type()->to_string() );
+			break;
+
+			case Execution:
+				result = string_append_fmt( result, "%s\n", Entries[0]->to_string() );
+			break;
+
+			case Export_Body:
+			{
+				result = string_append_fmt( result, "export\n{\n" );
+
+				s32 index = 0;
+				s32 left  = num_entries();
+				while ( left -- )
+				{
+					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
+					index++;
+				}
+
+				result = string_append_fmt( result, "};\n" );
+			}
 			break;
 
 			case Extern_Linkage:
@@ -660,6 +716,13 @@ namespace gen
 			}
 			break;
 
+			case Module:
+				// TODO: Add export condition
+				// if ( )
+
+				result = string_append_fmt( result, "module %s", Content );
+			break;
+
 			case Namespace:
 				result = string_append_fmt( result, "namespace %s\n{\n%s\n};\n", Name, body()->to_string() );
 			break;
@@ -731,6 +794,10 @@ namespace gen
 						, Entries[index]->Name
 					);
 			}
+			break;
+
+			case Preprocessor_Include:
+				result = string_append_fmt( result, "#include %s\n", Name );
 			break;
 
 			case Specifiers:
@@ -806,6 +873,10 @@ namespace gen
 				result = string_append_fmt( result, "%s %s", Name, Entries[0]->to_string() );
 			break;
 
+			case Union:
+				result = string_append_fmt( result, "union %s\n{\n%s\n};\n", Name, body()->to_string() );
+			break;
+
 			case Using:
 				// TODO: Check for array expression
 
@@ -820,7 +891,6 @@ namespace gen
 				result = string_append_fmt( result, "using namespace %s", Name );
 			break;
 
-
 			case Class_Body:
 			case Enum_Body:
 			case Extern_Linkage_Body:
@@ -828,6 +898,7 @@ namespace gen
 			case Global_Body:
 			case Namespace_Body:
 			case Struct_Body:
+			case Union_Body:
 			{
 				s32 index = 0;
 				s32 left  = num_entries();
@@ -1511,7 +1582,43 @@ namespace gen
 	I decided to validate a good protion of their form and thus the argument processing for is quite a bit.
 */
 
-	Code def_class( s32 length, char const* name, Code parent, Code specifiers, Code body )
+	Code def_comment( s32 length, char const* content )
+	{
+		if ( length <= 0 || content == nullptr )
+		{
+			log_failure( "gen::def_comment: Invalid comment provided", length );
+			return Code::Invalid;
+		}
+
+		Code
+		result = make_code();
+		result->Type    = ECode::Comment;
+		result->Name    = get_cached_string( content, length );
+		result->Content = result->Name;
+
+		result.lock();
+		return result;
+	}
+
+	Code def_attributes( s32 length, char const* content )
+	{
+		if ( length <= 0 || content == nullptr )
+		{
+			log_failure( "gen::def_attributes: Invalid attributes provided", length );
+			return Code::Invalid;
+		}
+
+		Code
+		result = make_code();
+		result->Type    = ECode::Attributes;
+		result->Name    = get_cached_string( content, length );
+		result->Content = result->Name;
+
+		result.lock();
+		return result;
+	}
+
+	Code def_class( s32 length, char const* name, Code body, Code parent, AccessSpec parent_access, Code specifiers, Code attributes, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
@@ -1618,27 +1725,25 @@ namespace gen
 		return result;
 	}
 
-	Code def_execution( Code untyped_code )
+	Code def_execution( s32 length, char const* content )
 	{
-		null_check( def_execution, untyped_code );
-
-		if ( untyped_code->Type != ECode::Untyped )
+		if ( length <= 0 || content == nullptr )
 		{
-			log_failure( "gen::def_execution: untyped_code is not of untyped type - %s", untyped_code->debug_str() );
+			log_failure( "gen::def_execution: Invalid execution provided", length );
 			return Code::Invalid;
 		}
 
 		Code
-		result       = make_code();
-		result->Type = ECode::Execution;
-
-		result->add_entry( untyped_code );
+		result = make_code();
+		result->Type    = ECode::Execution;
+		result->Name    = get_cached_string( content, length );
+		result->Content = result->Name;
 
 		result.lock();
 		return result;
 	}
 
-	Code def_extern_linkage( s32 length, char const* name, Code body )
+	Code def_extern_link( s32 length, char const* name, Code body )
 	{
 		using namespace ECode;
 
@@ -1762,6 +1867,24 @@ namespace gen
 
 		if ( params )
 			result->add_entry( params );
+
+		result.lock();
+		return result;
+	}
+
+	Code def_include ( s32 length, char const* path )
+	{
+		if ( length <= 0 || path == nullptr )
+		{
+			log_failure( "gen::def_include: Invalid path provided - %d", length );
+			return Code::Invalid;
+		}
+
+		Code
+		result          = make_code();
+		result->Type    = ECode::Preprocessor_Include;
+		result->Name    = get_cached_string( path, length );
+		result->Content = result->Name;
 
 		result.lock();
 		return result;
@@ -1921,46 +2044,6 @@ namespace gen
 		return result;
 	}
 
-	Code def_variable( Code type, u32 length, char const* name, Code value, Code specifiers )
-	{
-		name_check( def_variable, length, name );
-		null_check( def_variable, type );
-
-		if ( specifiers && specifiers->Type != ECode::Specifiers )
-		{
-			log_failure( "gen::def_variable: specifiers was not a `Specifiers` type" );
-			return Code::Invalid;
-		}
-
-		if ( type->Type != ECode::Typename )
-		{
-			log_failure( "gen::def_variable: type was not a Typename" );
-			return Code::Invalid;
-		}
-
-		if ( value && value->Type != ECode::Untyped )
-		{
-			log_failure( "gen::def_variable: value was not a `Untyped` type" );
-			return Code::Invalid;
-		}
-
-		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
-		result->Type = ECode::Variable;
-
-		result->add_entry( type );
-
-		if ( specifiers )
-			result->add_entry( specifiers );
-
-		if ( value )
-			result->add_entry( value );
-
-		result.lock();
-		return result;
-	}
-
 	Code def_typedef( u32 length, char const* name, Code type )
 	{
 		name_check( def_typedef, length, name );
@@ -2075,6 +2158,46 @@ namespace gen
 				result->Type = ECode::Using_Namespace;
 			break;
 		}
+
+		result.lock();
+		return result;
+	}
+
+	Code def_variable( Code type, u32 length, char const* name, Code value, Code specifiers )
+	{
+		name_check( def_variable, length, name );
+		null_check( def_variable, type );
+
+		if ( specifiers && specifiers->Type != ECode::Specifiers )
+		{
+			log_failure( "gen::def_variable: specifiers was not a `Specifiers` type" );
+			return Code::Invalid;
+		}
+
+		if ( type->Type != ECode::Typename )
+		{
+			log_failure( "gen::def_variable: type was not a Typename" );
+			return Code::Invalid;
+		}
+
+		if ( value && value->Type != ECode::Untyped )
+		{
+			log_failure( "gen::def_variable: value was not a `Untyped` type" );
+			return Code::Invalid;
+		}
+
+		Code
+		result       = make_code();
+		result->Name = get_cached_string( name, length );
+		result->Type = ECode::Variable;
+
+		result->add_entry( type );
+
+		if ( specifiers )
+			result->add_entry( specifiers );
+
+		if ( value )
+			result->add_entry( value );
 
 		result.lock();
 		return result;
@@ -2255,7 +2378,42 @@ namespace gen
 		return result;
 	}
 
-	Code def_extern_linkage_body( s32 num, ... )
+	Code def_export_body( s32 num, ... )
+	{
+		def_body_start( def_export_body );
+
+		Code
+		result       = make_code();
+		result->Type = Export_Body;
+
+		va_list va;
+		va_start(va, num);
+		def_body_code_validation_start( def_export_body, va_arg(va, Code) );
+			AST_BODY_EXPORT_UNALLOWED_TYPES
+		def_body_code_validation_end( def_export_body );
+		va_end(va);
+
+		result.lock();
+		return result;
+	}
+
+	Code def_export_body( s32 num, Code* codes )
+	{
+		def_body_code_array_start( def_export_body );
+
+		Code
+		result       = make_code();
+		result->Type = Export_Body;
+
+		def_body_code_validation_start( def_export_body, *codes; codes++ );
+			AST_BODY_EXPORT_UNALLOWED_TYPES
+		def_body_code_validation_end( def_export_body );
+
+		result.lock();
+		return result;
+	}
+
+	Code def_extern_link_body( s32 num, ... )
 	{
 		def_body_start( def_extern_linkage_body );
 
@@ -2274,7 +2432,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_extern_linkage_body( s32 num, Code* codes )
+	Code def_extern_link_body( s32 num, Code* codes )
 	{
 		def_body_code_array_start( def_extern_linkage_body );
 
@@ -2695,6 +2853,34 @@ namespace gen
 		return result;
 	}
 
+	Code make_export_body( s32 length, char const* name )
+	{
+		using namespace ECode;
+
+		Code
+		result       = make_code();
+		result->Type = Export_Body;
+
+		if ( name && length > 0 )
+			result->Name = get_cached_string( name, length );
+
+		return result;
+	}
+
+	Code make_extern_linkage( s32 length, char const* name )
+	{
+		using namespace ECode;
+
+		name_check( make_extern_linkage, length, name);
+
+		Code
+		result       = make_code();
+		result->Type = Extern_Linkage;
+		result->Name = get_cached_string( name, length );
+
+		return result;
+	}
+
 	Code make_function( s32 length, char const* name
 		, Code specifiers
 		, Code params
@@ -2896,9 +3082,9 @@ namespace gen
 	// Any angle brackets found will be considered an operator token.
 
 	#	define Define_TokType \
-		Entry( Access_Public,       "public" )         \
-		Entry( Access_Protected,    "protected" )      \
 		Entry( Access_Private,      "private" )        \
+		Entry( Access_Protected,    "protected" )      \
+		Entry( Access_Public,       "public" )         \
 		Entry( Access_MemberSymbol, "." )              \
 		Entry( Access_StaticSymbol, "::")              \
 		Entry( Ampersand,           "&" )              \
@@ -2916,14 +3102,18 @@ namespace gen
 		Entry( Decl_Class,          "class" )          \
 		Entry( Decl_Enum,           "enum" )           \
 		Entry( Decl_Friend,         "friend" )         \
+		Entry( Decl_Module,         "module" )         \
 		Entry( Decl_Namespace,      "namespace" )      \
 		Entry( Decl_Struct,         "struct" )         \
 		Entry( Decl_Typedef,        "typedef" )        \
 		Entry( Decl_Using,          "using" )          \
 		Entry( Decl_Union,          "union" )          \
 		Entry( Identifier,          "__SymID__" )      \
+		Entry( Module_Import,       "import" )         \
+		Entry( Module_Export,       "export" )         \
 		Entry( Number,              "number" )         \
 		Entry( Operator,            "operator" )       \
+		Entry( Spec_API_Macro,      API_Macro_Code )   \
 		Entry( Spec_API,            txt(API_Keyword) ) \
 		Entry( Spec_Alignas,        "alignas" )        \
 		Entry( Spec_CLinkage,       "extern \"C\"" )   \
@@ -2931,11 +3121,8 @@ namespace gen
 		Entry( Spec_Consteval,      "consteval" )      \
 		Entry( Spec_Constexpr,      "constexpr" )      \
 		Entry( Spec_Constinit,      "constinit" )      \
-		Entry( Spec_Export,         "export" )         \
 		Entry( Spec_Extern,         "extern" )         \
-		Entry( Spec_Import,         "import" )         \
 		Entry( Spec_Inline,         "inline" )         \
-		Entry( Spec_Module,         "module" )         \
 		Entry( Spec_Static,         "static" )         \
 		Entry( Spec_ThreadLocal,    "thread_local" )   \
 		Entry( Spec_Volatile,       "volatile")        \
@@ -3013,12 +3200,24 @@ namespace gen
 			;
 		}
 
+		inline
+		bool tok_is_access_specifier( Token const& tok )
+		{
+			return tok.Type >= TokType::Access_Private && tok.Type <= TokType::Access_Public;
+		}
+
+		inline
+		AccessSpec tok_to_access_specifier( Token const& tok )
+		{
+			return scast(AccessSpec, tok.Type);
+		}
+
 		Arena LexAllocator;
 
 		struct TokArray
 		{
-			s32          Idx;
 			Array(Token) Arr;
+			s32          Idx;
 
 			inline
 			bool __eat( TokType type, char const* context )
@@ -3073,7 +3272,7 @@ namespace gen
 				if ( LexAllocator.physical_start == nullptr )
 				{
 					log_failure( "gen::lex: failed to allocate memory for parsing constructor's lexer");
-					return { 0, nullptr };
+					return { nullptr, 0  };
 				}
 			do_once_end
 
@@ -3090,7 +3289,7 @@ namespace gen
 			if ( left <= 0 )
 			{
 				log_failure( "gen::lex: no tokens found (only whitespace provided)" );
-				return { 0, nullptr };
+				return { nullptr, 0 };
 			}
 
 			if ( Tokens )
@@ -3371,6 +3570,10 @@ namespace gen
 							{
 								token.Type = TokType::Comment;
 
+								move_forward();
+								token.Text   = scanner;
+								token.Length = 0;
+
 								while ( left && current != '\n' )
 								{
 									move_forward();
@@ -3381,7 +3584,11 @@ namespace gen
 							{
 								token.Type = TokType::Comment;
 
-								while ( left && ( current != '*' || *(scanner + 1) != '/' ) )
+								move_forward();
+								token.Text   = scanner;
+								token.Length = 0;
+
+								while ( left && ( current != '*' && *(scanner + 1) != '/' ) )
 								{
 									move_forward();
 									token.Length++;
@@ -3459,10 +3666,10 @@ namespace gen
 			if ( array_count(Tokens) == 0 )
 			{
 				log_failure( "Failed to lex any tokens" );
-				return { 0, nullptr };
+				return { nullptr, 0 };
 			}
 
-			return { 0, Tokens };
+			return { Tokens, 0 };
 		#	undef current
 		#	undef move_forward
 		#	undef SkipWhitespace
@@ -3489,6 +3696,8 @@ namespace gen
 
 #	define check( Type_ ) left && currtok.Type == Type_
 #pragma endregion Helper Macros
+	Code parse_function_body( Parser::TokArray& toks, char const* context );
+
 	Code parse_class   ( Parser::TokArray& toks, char const* context );
 	Code parse_enum    ( Parser::TokArray& toks, char const* context );
 	Code parse_friend  ( Parser::TokArray& toks, char const* context );
@@ -3501,7 +3710,7 @@ namespace gen
 	Code parse_using   ( Parser::TokArray& toks, char const* context );
 
 	inline
-	Code parse_array_decl( Parser::TokArray& toks, char const* func_name )
+	Code parse_array_decl( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
 
@@ -3550,7 +3759,7 @@ namespace gen
 	}
 
 	inline
-	Parser::Token parse_identifier( Parser::TokArray& toks, char const* func_name )
+	Parser::Token parse_identifier( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
 		Token name = currtok;
@@ -3563,13 +3772,13 @@ namespace gen
 
 			if ( left == 0 )
 			{
-				log_failure( "%s: Error, unexpected end of type definition, expected identifier", func_name );
+				log_failure( "%s: Error, unexpected end of type definition, expected identifier", context );
 				return { nullptr, 0, TokType::Invalid };
 			}
 
 			if ( currtok.Type != TokType::Identifier )
 			{
-				log_failure( "%s: Error, expected identifier in type definition, not %s", func_name, str_tok_type( currtok.Type ) );
+				log_failure( "%s: Error, expected identifier in type definition, not %s", context, str_tok_type( currtok.Type ) );
 				return { nullptr, 0, TokType::Invalid };
 			}
 
@@ -3652,6 +3861,43 @@ namespace gen
 	#	undef context
 	}
 
+	Code parse_variable_assignment( Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		Code expr = Code::Invalid;
+
+		if ( currtok.IsAssign )
+		{
+			eat( TokType::Operator );
+
+			Token expr_tok = currtok;
+
+			if ( currtok.Type == TokType::Statement_End )
+			{
+				log_failure( "gen::parse_variable: expected expression after assignment operator" );
+				return Code::Invalid;
+			}
+
+			while ( left && currtok.Type != TokType::Statement_End )
+			{
+				expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
+				eat( currtok.Type );
+			}
+
+			expr = untyped_str( expr_tok.Length, expr_tok.Text );
+		}
+
+		return expr;
+	}
+
+	Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		return Code::Invalid;
+	}
+
 	Code parse_class_struct_body( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
@@ -3670,11 +3916,23 @@ namespace gen
 			switch ( currtok.Type )
 			{
 				case TokType::Comment:
+					member = def_comment( currtok.Length, currtok.Text );
+					eat( TokType::Comment );
 				break;
 
 				case TokType::Access_Public:
+					member = access_public;
+					eat( TokType::Access_Public );
+				break;
+
 				case TokType::Access_Protected:
+					member = access_protected;
+					eat( TokType::Access_Protected );
+				break;
+
 				case TokType::Access_Private:
+					member = access_private;
+					eat( TokType::Access_Private );
 				break;
 
 				case TokType::Decl_Class:
@@ -3705,8 +3963,6 @@ namespace gen
 					member = parse_using( toks, context );
 				break;
 
-				case TokType::Identifier:
-				case TokType::Spec_Const:
 				case TokType::Spec_Consteval:
 				case TokType::Spec_Constexpr:
 				case TokType::Spec_Constinit:
@@ -3714,17 +3970,136 @@ namespace gen
 				case TokType::Spec_Static:
 				case TokType::Spec_ThreadLocal:
 				case TokType::Spec_Volatile:
+					Code specifiers = Code::Invalid;
+
+					SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+					s32        num_specifiers = 0;
+
+					while ( left && tok_is_specifier( currtok ) )
+					{
+						SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+
+						switch ( spec )
+						{
+							case ESpecifier::Constexpr:
+							case ESpecifier::Constinit:
+							case ESpecifier::Export:
+							case ESpecifier::External_Linkage:
+							case ESpecifier::Import:
+							case ESpecifier::Local_Persist:
+							case ESpecifier::Mutable:
+							case ESpecifier::Static_Member:
+							case ESpecifier::Thread_Local:
+							case ESpecifier::Volatile:
+							break;
+
+							default:
+								log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
+								return Code::Invalid;
+						}
+
+						specs_found[num_specifiers] = spec;
+						num_specifiers++;
+						eat( currtok.Type );
+					}
+
+					if ( num_specifiers )
+					{
+						specifiers = def_specifiers( num_specifiers, specs_found );
+					}
+
+				case TokType::Identifier:
+				case TokType::Spec_Const:
 				case TokType::Type_Unsigned:
 				case TokType::Type_Signed:
 				case TokType::Type_Short:
 				case TokType::Type_Long:
-				break;
+				{
+					Code type = parse_type( toks, context );
+					if ( type == Code::Invalid )
+						return Code::Invalid;
+
+					Token name = currtok;
+
+					if ( check( TokType::Identifier ) )
+					{
+						name = currtok;
+					}
+
+					// Parsing a member function
+					if ( check( TokType::Capture_Start ))
+					{
+						Code params = parse_params( toks, context );
+						if ( params == Code::Invalid )
+							return Code::Invalid;
+
+						if ( check( TokType::BraceCurly_Open ) )
+						{
+							Code body = parse_function_body( toks, context);
+							if ( body == Code::Invalid )
+								return Code::Invalid;
+
+							Code
+							member       = make_code();
+							member->Name = get_cached_string( name.Text, name.Length );
+
+							if ( body )
+							{
+								switch ( body->Type )
+								{
+									case Function_Body:
+									case Untyped:
+										break;
+
+									default:
+									{
+										log_failure("gen::def_function: body must be either of Function_Body or Untyped type. %s", body->debug_str());
+										return Code::Invalid;
+									}
+								}
+
+								member->Type = Function;
+								member->add_entry( body );
+							}
+							else
+							{
+								member->Type = Function_Fwd;
+							}
+
+							member->add_entry( type );
+
+							if ( params )
+								member->add_entry( params );
+
+							break;
+						}
+					}
+
+					// Parsing a member variable
+					Code array_expr = parse_array_decl( toks, context );
+					Code expr       = parse_variable_assignment( toks, context );
+
+					member       = make_code();
+					member->Type = Variable;
+					member->Name = get_cached_string( name.Text, name.Length );
+
+					member->add_entry( type );
+
+					if (array_expr)
+						type->add_entry( array_expr );
+
+					if (specifiers)
+						member->add_entry( specifiers );
+
+					if ( expr )
+						member->add_entry( expr );
+				}
+
+				if ( member == Code::Invalid )
+					return Code::Invalid;
+
+				result->add_entry( member );
 			}
-
-			if ( member == Code::Invalid )
-				return Code::Invalid;
-
-			result->add_entry( member );
 
 			eat( currtok.Type );
 		}
@@ -3832,28 +4207,98 @@ namespace gen
 
 		Token name { nullptr, 0, TokType::Invalid };
 
-		Code parent    = { nullptr };
-		Code speciifes = { nullptr };
-		Code body      = { nullptr };
+		Code parent       = { nullptr };
+		Code specifiers   = { nullptr };
+		Code body         = { nullptr };
+		Code lang_linkage = { nullptr };
 
 		Code result = Code::Invalid;
 
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
+
+		// Parse module specifiers
 		eat( TokType::Decl_Class );
+
+		// Parse specifiers
+		while ( left && tok_is_specifier( currtok ) )
+		{
+			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+
+			switch ( spec )
+			{
+				case ESpecifier::API_Macro:
+				case ESpecifier::API_Export:
+				case ESpecifier::API_Import:
+				case ESpecifier::External_Linkage:
+				case ESpecifier::Local_Persist:
+				case ESpecifier::Mutable:
+				case ESpecifier::Static_Member:
+				case ESpecifier::Thread_Local:
+				case ESpecifier::Volatile:
+				break;
+
+				default:
+					log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
+					return Code::Invalid;
+			}
+
+			if ( spec == ESpecifier::External_Linkage )
+			{
+				specs_found[num_specifiers] = spec;
+				num_specifiers++;
+				eat( TokType::Spec_Extern );
+
+				if ( currtok.Type == TokType::String )
+				{
+					lang_linkage = untyped_str( currtok.Length, currtok.Text );
+					eat( TokType::String );
+				}
+
+				continue;
+			}
+
+			specs_found[num_specifiers] = spec;
+			num_specifiers++;
+			eat( currtok.Type );
+		}
+
+		if ( num_specifiers )
+		{
+			specifiers = def_specifiers( num_specifiers, specs_found );
+		}
+
+		// Parse alignment
+
+		Token name = parse_identifier( toks, context );
+
+		if ( check( TokType::Assign_Classifer ) )
+		{
+			eat( TokType::Assign_Classifer );
+
+			AccessSpec access = AccessSpec::Invalid;
+
+			if ( tok_is_access_specifier( currtok ) )
+			{
+				access = tok_to_access_specifier( currtok );
+			}
+
+			Token parent_tok = parse_identifier( toks, context );
+		}
 
 		not_implemented();
 	}
 
 	Code parse_class( s32 length, char const* def )
 	{
-	#	define context txt(parse_class)
+		check_parse_args( parse_class, length, def );
 		using namespace Parser;
 
 		TokArray toks = lex( length, def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_class( toks, context );
-	#	undef context
+		return parse_class( toks, txt(parse_class) );
 	}
 
 	Code parse_enum( Parser::TokArray& toks, char const* context )
@@ -3881,6 +4326,8 @@ namespace gen
 			eat( TokType::Decl_Class);
 			is_enum_class = true;
 		}
+
+		// TODO: Parse attributes
 
 		if ( currtok.Type != TokType::Identifier )
 		{
@@ -3950,17 +4397,38 @@ namespace gen
 
 	Code parse_enum( s32 length, char const* def )
 	{
-		using namespace Parser;
-
-	#	define context parse_enum
 		check_parse_args( parse_enum, length, def );
+		using namespace Parser;
 
 		TokArray toks = lex( length, def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
 		return parse_enum( toks, txt(parse_enum) );
-	#	undef context
+	}
+
+	Code parse_export_body( Parser::TokArray& toks, char const* context )
+	{
+		not_implemented();
+		return Code::Invalid;
+	}
+
+	Code parse_export_body( s32 length, char const* def )
+	{
+		not_implemented();
+		return Code::Invalid;
+	}
+
+	Code parse_extern_link( Parser::TokArray& toks, char const* context )
+	{
+		not_implemented();
+		return Code::Invalid;
+	}
+
+	Code parse_extern_link( s32 length, char const* def )
+	{
+		not_implemented();
+		return Code::Invalid;
 	}
 
 	Code parse_friend( Parser::TokArray& toks, char const* context )
@@ -4015,11 +4483,8 @@ namespace gen
 
 	Code parse_friend( s32 length, char const* def )
 	{
-		using namespace Parser;
-		using namespace ECode;
-
-#		define context parse_friend
 		check_parse_args( parse_friend, length, def );
+		using namespace Parser;
 
 		TokArray toks = lex( length, def );
 		if ( toks.Arr == nullptr )
@@ -4041,10 +4506,10 @@ namespace gen
 		Code result = make_code();
 		result->Type = Global_Body;
 
-		while ( left )
-		{
+		// while ( left )
+		// {
 
-		}
+		// }
 
 		result.lock();
 		return result;
@@ -4064,16 +4529,21 @@ namespace gen
 		Code array_expr   = Code::Invalid;
 		Code specifiers   = Code::Invalid;
 
+		// TODO: Parse module specifiers
+
+		// TODO: Parse attributes
+
 		while ( left && tok_is_specifier( currtok ) )
 		{
 			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
 
 			switch ( spec )
 			{
+				case ESpecifier::API_Macro:
+				case ESpecifier::API_Export:
+				case ESpecifier::API_Import:
 				case ESpecifier::Constexpr:
-				case ESpecifier::Export:
 				case ESpecifier::External_Linkage:
-				case ESpecifier::Import:
 				case ESpecifier::Local_Persist:
 				case ESpecifier::Mutable:
 				case ESpecifier::Static_Member:
@@ -4238,6 +4708,20 @@ namespace gen
 		return Code::Invalid;
 	}
 
+	Code parse_union( Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		not_implemented();
+
+		return Code::Invalid;
+	}
+
+	Code parse_union( s32 length, char const* def )
+	{
+		not_implemented( parse_union );
+	}
+
 	Code parse_variable( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
@@ -4252,6 +4736,9 @@ namespace gen
 		Code array_expr   = Code::Invalid;
 		Code specifiers   = Code::Invalid;
 
+		// TODO: Parse module specifiers
+
+		// TODO: Parse attributes
 		if ( check( TokType::BraceSquare_Open ) )
 		{
 			eat( TokType::BraceSquare_Open );
@@ -4280,9 +4767,7 @@ namespace gen
 			{
 				case ESpecifier::Constexpr:
 				case ESpecifier::Constinit:
-				case ESpecifier::Export:
 				case ESpecifier::External_Linkage:
-				case ESpecifier::Import:
 				case ESpecifier::Local_Persist:
 				case ESpecifier::Mutable:
 				case ESpecifier::Static_Member:
@@ -4334,6 +4819,8 @@ namespace gen
 		name = currtok;
 		eat( TokType::Identifier );
 
+		array_expr = parse_array_decl( toks, txt(parse_variable) );
+
 		Code expr = Code::Invalid;
 
 		if ( currtok.IsAssign )
@@ -4356,8 +4843,6 @@ namespace gen
 
 			expr = untyped_str( expr_tok.Length, expr_tok.Text );
 		}
-
-		array_expr = parse_array_decl( toks, txt(parse_variable) );
 
 		eat( TokType::Statement_End );
 
@@ -4387,24 +4872,19 @@ namespace gen
 
 	Code parse_variable( s32 length, char const* def )
 	{
-	#	define context txt(parse_variable)
-		using namespace Parser;
-
 		check_parse_args( parse_variable, length, def );
+		using namespace Parser;
 
 		TokArray toks = lex( length, def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
 		return parse_variable( toks, txt(parse_variable) );
-	#	undef context
 	}
 
-	Code parse_type( Parser::TokArray& toks, char const* func_name )
+	Code parse_type( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
-
-	#	define context parse_type
 
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
@@ -4429,7 +4909,7 @@ namespace gen
 
 		if ( left == 0 )
 		{
-			log_failure( "%s: Error, unexpected end of type definition", func_name );
+			log_failure( "%s: Error, unexpected end of type definition", context );
 			return Code::Invalid;
 		}
 
@@ -4444,7 +4924,7 @@ namespace gen
 		}
 		else
 		{
-			name = parse_identifier( toks, func_name );
+			name = parse_identifier( toks, context );
 			if ( ! name )
 				return Code::Invalid;
 		}
@@ -4459,7 +4939,7 @@ namespace gen
 			    && spec != ESpecifier::RValue
 				&& spec < ESpecifier::Type_Signed )
 			{
-				log_failure( "%s: Error, invalid specifier used in type definition: %s", func_name, currtok.Text );
+				log_failure( "%s: Error, invalid specifier used in type definition: %s", context, currtok.Text );
 				return Code::Invalid;
 			}
 
@@ -4485,15 +4965,12 @@ namespace gen
 		}
 
 		return result;
-	#	undef context
 	}
 
 	Code parse_type( s32 length, char const* def )
 	{
-		using namespace Parser;
-
-	#	define context parse_type
 		check_parse_args( parse_type, length, def );
+		using namespace Parser;
 
 		TokArray toks = lex( length, def );
 		if ( toks.Arr == nullptr )
@@ -4503,7 +4980,6 @@ namespace gen
 
 		result.lock();
 		return result;
-	#	undef context
 	}
 
 	Code parse_typedef( Parser::TokArray& toks, char const* context )
@@ -4549,17 +5025,14 @@ namespace gen
 
 	Code parse_typedef( s32 length, char const* def )
 	{
-		using namespace Parser;
-
-	#	define context parse_typedef
 		check_parse_args( parse_typedef, length, def );
+		using namespace Parser;
 
 		TokArray toks = lex( length, def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
 		return parse_typedef( toks, txt(parse_typedef) );
-	#	undef context
 	}
 
 	Code parse_union( Parser::TokArray& toks, char const* context )
@@ -4597,6 +5070,8 @@ namespace gen
 			eat( TokType::Decl_Namespace );
 		}
 
+		// TODO: Parse Attributes
+
 		eat( TokType::Identifier );
 
 		if ( currtok.IsAssign )
@@ -4628,72 +5103,14 @@ namespace gen
 
 	Code parse_using( s32 length, char const* def )
 	{
-	#	define context parse_using
-		using namespace Parser;
-
 		check_parse_args( parse_using, length, def );
+		using namespace Parser;
 
 		TokArray toks = lex( length, def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
 		return parse_using( toks, txt(parse_using) );
-	#	undef context
-	}
-
-	s32 parse_classes( s32 length, char const* class_defs, Code* out_class_codes )
-	{
-		not_implemented( parse_classes );
-	}
-
-	s32 parse_enums( s32 length, char const* enum_defs, Code* out_enum_codes )
-	{
-		not_implemented( parse_enums );
-	}
-
-	s32 parse_friends( s32 length, char const* friend_defs, Code* out_friend_codes )
-	{
-		not_implemented( parse_friends );
-	}
-
-	s32 parse_functions ( s32 length, char const* fn_defs, Code* out_fn_codes )
-	{
-		not_implemented( parse_functions );
-	}
-
-	s32 parse_namespaces( s32 length, char const* namespace_defs, Code* out_namespaces_codes )
-	{
-		not_implemented( parse_namespaces );
-	}
-
-	s32 parse_operators( s32 length, char const* operator_defs, Code* out_operator_codes )
-	{
-		not_implemented( parse_operators );
-	}
-
-	s32 parse_structs( s32 length, char const* struct_defs, Code* out_struct_codes )
-	{
-		not_implemented( parse_structs );
-	}
-
-	s32 parse_variables( s32 length, char const* vars_def, Code* out_var_codes )
-	{
-		not_implemented( parse_variables );
-	}
-
-	s32 parse_typedefs( s32 length, char const* typedef_def, Code* out_typedef_codes )
-	{
-		not_implemented( parse_typedefs );
-	}
-
-	s32 parse_unions( s32 length, char const* union_defs, Code* out_union_codes )
-	{
-		not_implemented( parse_unions );
-	}
-
-	s32 parse_usings( s32 length, char const* usings_def, Code* out_using_codes )
-	{
-		not_implemented( parse_usings );
 	}
 
 	// Undef helper macros
