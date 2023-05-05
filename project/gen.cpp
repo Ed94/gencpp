@@ -364,10 +364,6 @@ namespace gen
 				}
 			break;
 
-			case Variable:
-				log_failure( "AST::add: Cannot add to a variable." );
-				return false;
-
 			case Typedef:
 				log_failure( "AST::add: Cannot add to a typedef." );
 				return false;
@@ -393,6 +389,10 @@ namespace gen
 
 			case Using_Namespace:
 				log_failure( "AST::add: Cannot add to a using namespace statement." );
+				return false;
+
+			case Variable:
+				log_failure( "AST::add: Cannot add to a variable." );
 				return false;
 		}
 
@@ -465,13 +465,13 @@ namespace gen
 			case Struct:
 			case Struct_Fwd:
 			case Struct_Body:
-			case Variable:
 			case Typedef:
 			case Typename:
 			case Union:
 			case Union_Body:
 			case Using:
 			case Using_Namespace:
+			case Variable:
 				s32 index = 0;
 				s32 left  = num_entries();
 				while ( left -- )
@@ -1618,27 +1618,38 @@ namespace gen
 		return result;
 	}
 
-	Code def_class( s32 length, char const* name, Code body, Code parent, AccessSpec parent_access, Code specifiers, Code attributes, ModuleFlag mflags )
+	Code def_class( s32 length, char const* name
+		, Code body
+		, Code parent, AccessSpec parent_access
+		, Code specifiers, Code attributes
+		, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		name_check( def_class, length, name );
 
-		if ( parent && parent->Type != Class || parent->Type != Struct )
+		if ( attributes && attributes->Type != Attributes )
 		{
-			log_failure( "gen::def_class: parent provided is not type 'Class' or 'Struct' - Type: %s", parent->debug_str() );
+			log_failure( "gen::def_class: attributes was not a 'Attributes' type: %s", attributes->debug_str() );
 			return Code::Invalid;
 		}
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
-			log_failure( "gen::def_class: specifiers was not a 'Specifiers' type - Type: %s", specifiers->debug_str() );
+			log_failure( "gen::def_class: specifiers was not a 'Specifiers' type: %s", specifiers->debug_str() );
+			return Code::Invalid;
+		}
+
+		if ( parent && parent->Type != Class || parent->Type != Struct )
+		{
+			log_failure( "gen::def_class: parent provided is not type 'Class' or 'Struct': %s", parent->debug_str() );
 			return Code::Invalid;
 		}
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		if ( body )
 		{
@@ -1661,6 +1672,9 @@ namespace gen
 			result->Type = Class_Fwd;
 		}
 
+		if ( attributes )
+			result->add_entry( attributes );
+
 		if ( specifiers )
 			result->add_entry( specifiers );
 
@@ -1671,7 +1685,10 @@ namespace gen
 		return result;
 	}
 
-	Code def_enum( s32 length, char const* name, Code type, EnumT specifier, Code body )
+	Code def_enum( s32 length, char const* name
+		, Code body, Code type
+		, EnumT specifier, Code attributes
+		, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
@@ -1683,9 +1700,16 @@ namespace gen
 			return Code::Invalid;
 		}
 
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::def_enum: attributes was not a 'Attributes' type: %s", attributes->debug_str() );
+			return Code::Invalid;
+		}
+
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		if ( body )
 		{
@@ -1710,6 +1734,9 @@ namespace gen
 			result->Type = specifier == EnumClass ?
 				Enum_Class_Fwd : Enum_Fwd;
 		}
+
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( type )
 		{
@@ -1743,7 +1770,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_extern_link( s32 length, char const* name, Code body )
+	Code def_extern_link( s32 length, char const* name, Code body, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
@@ -1758,8 +1785,9 @@ namespace gen
 
 		Code
 		result = make_code();
-		result->Type = Extern_Linkage;
-		result->Name = get_cached_string( name, length );
+		result->Type        = Extern_Linkage;
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		result->add_entry( body );
 
@@ -1798,37 +1826,42 @@ namespace gen
 	}
 
 	Code def_function( s32 length, char const* name
-		, Code specifiers
-		, Code params
-		, Code ret_type
-		, Code body
-	)
+		, Code params , Code ret_type, Code body
+		, Code specifiers, Code attributes
+		, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		name_check( def_function, length, name );
 
-		if ( specifiers && specifiers->Type != Specifiers )
-		{
-			log_failure( "gen::def_function: specifiers was not a `Specifiers` type %s", specifiers->debug_str() );
-			return Code::Invalid;
-		}
-
 		if ( params && params->Type != Parameters )
 		{
-			log_failure( "gen::def_function: params was not a `Parameters` type %s", params->debug_str() );
+			log_failure( "gen::def_function: params was not a `Parameters` type: %s", params->debug_str() );
 			return Code::Invalid;
 		}
 
 		if ( ret_type == nullptr || ret_type->Type != Typename )
 		{
-			log_failure( "gen::def_function: ret_type was not a Typename %s", ret_type->debug_str() );
+			log_failure( "gen::def_function: ret_type was not a Typename: %s", ret_type->debug_str() );
+			return Code::Invalid;
+		}
+
+		if ( specifiers && specifiers->Type != Specifiers )
+		{
+			log_failure( "gen::def_function: specifiers was not a `Specifiers` type: %s", specifiers->debug_str() );
+			return Code::Invalid;
+		}
+
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::def_function: attributes was not a `Attributes` type: %s", attributes->debug_str() );
 			return Code::Invalid;
 		}
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		if ( body )
 		{
@@ -1852,6 +1885,9 @@ namespace gen
 		{
 			result->Type = Function_Fwd;
 		}
+
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
@@ -1890,7 +1926,21 @@ namespace gen
 		return result;
 	}
 
-	Code def_namespace( s32 length, char const* name, Code body )
+	Code def_module( s32 length, char const* name, ModuleFlag mflags )
+	{
+		name_check( def_module, length, name );
+
+		Code
+		result = make_code();
+		result->Type        = ECode::Module;
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
+
+		result.lock();
+		return result;
+	}
+
+	Code def_namespace( s32 length, char const* name, Code body, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
@@ -1904,10 +1954,11 @@ namespace gen
 		}
 
 		Code
-		result          = make_code();
-		result->Type    = Namespace;
-		result->Name    = get_cached_string( name, length );
-		result->Entries = make_code_entries();
+		result              = make_code();
+		result->Type        = Namespace;
+		result->Name        = get_cached_string( name, length );
+		result->Entries     = make_code_entries();
+		result->ModuleFlags = mflags;
 
 		result->add_entry( body );
 
@@ -1915,13 +1966,28 @@ namespace gen
 		return result;
 	}
 
-	Code def_operator( OperatorT op, Code params_code, Code ret_type, Code specifiers, Code body )
+	Code def_operator( OperatorT op
+		, Code params_code, Code ret_type, Code body
+		, Code specifiers, Code attributes
+		, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		if ( body && body->Type != Function_Body )
 		{
-			log_failure( "gen::def_operator: Body was provided but its not of function body type - %s", body->debug_str() );
+			log_failure( "gen::def_operator: Body was provided but its not of function body type: %s", body->debug_str() );
+			return Code::Invalid;
+		}
+
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::def_operator: Attributes was provided but its not of attributes type: %s", attributes->debug_str() );
+			return Code::Invalid;
+		}
+
+		if ( specifiers && specifiers->Type != Specifiers )
+		{
+			log_failure( "gen::def_operator: Specifiers was provided but its not of specifiers type: %s", specifiers->debug_str() );
 			return Code::Invalid;
 		}
 
@@ -1935,8 +2001,9 @@ namespace gen
 		char const* name = str_fmt_buf( "operator%s", to_str(op) );
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, str_len(name, MaxNameLength) );
+		result              = make_code();
+		result->Name        = get_cached_string( name, str_len(name, MaxNameLength) );
+		result->ModuleFlags = mflags;
 
 		if ( body )
 		{
@@ -1950,6 +2017,9 @@ namespace gen
 			result->Type = check_result == OpValidateResult::Global ?
 				Operator_Fwd : Operator_Member_Fwd;
 		}
+
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
@@ -1996,11 +2066,21 @@ namespace gen
 		return result;
 	}
 
-	Code def_struct( u32 length, char const* name, Code body, Code parent, Code specifiers )
+	Code def_struct( u32 length, char const* name
+		, Code body
+		, Code parent, Code parent_access
+		, Code specifiers, Code attributes
+		, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		name_check( def_struct, length, name );
+
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::def_struct: attributes was not a `Attributes` type" );
+			return Code::Invalid;
+		}
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
@@ -2021,8 +2101,9 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		if ( body )
 		{
@@ -2034,17 +2115,20 @@ namespace gen
 			result->Type = Struct_Fwd;
 		}
 
-		if ( parent )
-			result->add_entry( parent );
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
+
+		if ( parent )
+			result->add_entry( parent );
 
 		result.lock();
 		return result;
 	}
 
-	Code def_typedef( u32 length, char const* name, Code type )
+	Code def_typedef( u32 length, char const* name, Code type, Code attributes, ModuleFlag mflags )
 	{
 		name_check( def_typedef, length, name );
 		null_check( def_typedef, type );
@@ -2065,17 +2149,21 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
-		result->Type = ECode::Typedef;
+		result = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->Type        = ECode::Typedef;
+		result->ModuleFlags = mflags;
 
 		result->add_entry( type );
-		result.lock();
 
+		if ( attributes )
+			result->add_entry( attributes );
+
+		result.lock();
 		return result;
 	}
 
-	Code def_type( u32 length, char const* name, Code specifiers, Code ArrayExpr )
+	Code def_type( u32 length, char const* name, Code ArrayExpr, Code specifiers )
 	{
 		name_check( def_type, length, name );
 
@@ -2100,7 +2188,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_union( s32 length, char const* name, Code body )
+	Code def_union( s32 length, char const* name, Code body, Code attributes, ModuleFlag mflags )
 	{
 		name_check( def_union, length, name );
 
@@ -2112,7 +2200,8 @@ namespace gen
 
 		Code
 		result = make_code();
-		result->Name = get_cached_string( name, length );
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		if ( body )
 		{
@@ -2124,11 +2213,17 @@ namespace gen
 			result->Type = ECode::Union_Fwd;
 		}
 
+		if ( attributes )
+			result->add_entry( attributes );
+
 		result.lock();
 		return result;
 	}
 
-	Code def_using( u32 length, char const* name, Code type, UsingT specifier )
+	Code def_using( u32 length, char const* name, UsingT specifier
+		, Code type
+		, Code attributes
+		, ModuleFlag mflags )
 	{
 		name_check( def_using, length, name );
 		null_check( def_using, type );
@@ -2163,10 +2258,18 @@ namespace gen
 		return result;
 	}
 
-	Code def_variable( Code type, u32 length, char const* name, Code value, Code specifiers )
+	Code def_variable( Code type, u32 length, char const* name, Code value
+		, Code specifiers, Code attributes
+		, ModuleFlag mflags )
 	{
 		name_check( def_variable, length, name );
 		null_check( def_variable, type );
+
+		if ( attributes && attributes->Type != ECode::Attributes )
+		{
+			log_failure( "gen::def_variable: attributes was not a `Attributes` type" );
+			return Code::Invalid;
+		}
 
 		if ( specifiers && specifiers->Type != ECode::Specifiers )
 		{
@@ -2187,11 +2290,15 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
-		result->Type = ECode::Variable;
+		result              = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->Type        = ECode::Variable;
+		result->ModuleFlags = mflags;
 
 		result->add_entry( type );
+
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
@@ -2786,28 +2893,38 @@ namespace gen
 
 #pragma region Incremetnal Constructors
 #ifdef	GEN_FEATURE_INCREMENTAL
-	Code make_class( s32 length, char const* name, Code parent, Code specifiers )
+	Code make_class( s32 length, char const* name
+		, Code parent, AccessSpec parent_access
+		, Code specifiers, Code attributes
+		, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		name_check( make_struct, length, name );
 
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::make_class: attributes was not a `Attributes` type: %s", attributes->debug_str() );
+			return Code::Invalid;
+		}
+
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
-			log_failure( "gen::make_class: specifiers was not a `Specifiers` type" );
+			log_failure( "gen::make_class: specifiers was not a `Specifiers` type: %s", specifiers->debug_str() );
 			return Code::Invalid;
 		}
 
 		if ( parent && parent->Type != Struct )
 		{
-			log_failure( "gen::make_class: parent was not a `Struct` type" );
+			log_failure( "gen::make_class: parent was not a `Struct` type: %s", parent->debug_str() );
 			return Code::Invalid;
 		}
 
 		Code
-		result       = make_code();
-		result->Type = Struct;
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Type        = Struct;
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		Code
 		body       = make_code();
@@ -2815,20 +2932,29 @@ namespace gen
 
 		result->add_entry( body );
 
-		if ( parent )
-			result->add_entry( parent );
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
 
+		if ( parent )
+			result->add_entry( parent );
+
 		return result;
 	}
 
-	Code make_enum( s32 length, char const* name, Code type, EnumT specifier )
+	Code make_enum( s32 length, char const* name, Code type, EnumT specifier, Code attributes, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		name_check( make_enum, length, name );
+
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::make_enum: attributes was not a `Attributes` type: %s", attributes->debug_str() );
+			return Code::Invalid;
+		}
 
 		if ( type && type != Typename )
 		{
@@ -2838,11 +2964,12 @@ namespace gen
 
 		Code
 		result = make_code();
-		result->Type = specifier == EnumClass ? Enum_Class : Enum;
-		result->Name = get_cached_string( name, length );
+		result->Type        = specifier == EnumClass ? Enum_Class : Enum;
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		Code
-		body = make_code();
+		body       = make_code();
 		body->Type = Enum_Body;
 
 		result->add_entry( body );
@@ -2867,29 +2994,37 @@ namespace gen
 		return result;
 	}
 
-	Code make_extern_linkage( s32 length, char const* name )
+	Code make_extern_linkage( s32 length, char const* name, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		name_check( make_extern_linkage, length, name);
 
 		Code
-		result       = make_code();
-		result->Type = Extern_Linkage;
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Type        = Extern_Linkage;
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		return result;
 	}
 
 	Code make_function( s32 length, char const* name
-		, Code specifiers
-		, Code params
-		, Code ret_type
+		, Code params, Code ret_type
+		, Code specifiers, Code attributes
+		, ModuleFlag mflags
+
 	)
 	{
 		using namespace ECode;
 
 		name_check( make_function, length, name );
+
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::make_function: attributes was not a `Attributes` type: %s", attributes->debug_str() );
+			return Code::Invalid;
+		}
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
@@ -2910,15 +3045,19 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
-		result->Type = Function;
+		result              = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->Type        = Function;
+		result->ModuleFlags = mflags;
 
 		Code
 		body       = make_code();
 		body->Type = Function_Body;
 
 		result->add_entry( body );
+
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
@@ -2943,19 +3082,18 @@ namespace gen
 		if ( length > 0 )
 			result->Name = get_cached_string( name, length );
 
-
-
 		return result;
 	}
 
-	Code make_namespace( s32 length, char const* name, Code parent, Code specifiers )
+	Code make_namespace( s32 length, char const* name, Code parent, ModuleFlag mflags )
 	{
 		name_check( make_namespace, length, name );
 
 		Code
 		result = make_code();
-		result->Type = ECode::Namespace;
-		result->Name = get_cached_string( name, length );
+		result->Type        = ECode::Namespace;
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		Code
 		body = make_code();
@@ -2966,9 +3104,15 @@ namespace gen
 		return result;
 	}
 
-	Code make_operator( OperatorT op, Code params_code, Code ret_type, Code specifiers )
+	Code make_operator( OperatorT op, Code params_code, Code ret_type, Code specifiers, Code attributes, ModuleFlag mflags )
 	{
 		using namespace ECode;
+
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::make_operator: attributes was not a `Attributes` type: %s", attributes->debug_str() );
+			return Code::Invalid;
+		}
 
 		OpValidateResult check_result = operator__validate( op, params_code, ret_type, specifiers );
 
@@ -2980,16 +3124,20 @@ namespace gen
 		char const* name = str_fmt_buf( "operator%s", to_str(op) );
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, str_len(name, MaxNameLength) );
+		result              = make_code();
+		result->Name        = get_cached_string( name, str_len(name, MaxNameLength) );
+		result->ModuleFlags = mflags;
+
+		if ( attributes )
+			result->add_entry( attributes );
+
+		if ( specifiers )
+			result->add_entry( specifiers );
 
 		if (params_code)
 			result->add_entry( params_code );
 
 		result->add_entry( ret_type );
-
-		if ( specifiers )
-			result->add_entry( specifiers );
 
 		return result;
 	}
@@ -3012,11 +3160,17 @@ namespace gen
 		return result;
 	}
 
-	Code make_struct( s32 length, char const* name, Code parent, Code specifiers )
+	Code make_struct( s32 length, char const* name, Code parent, Code specifiers, Code attributes, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
 		name_check( make_struct, length, name );
+
+		if ( attributes && attributes->Type != Attributes )
+		{
+			log_failure( "gen::make_struct: attributes was not a `Attributes` type: %s", attributes->debug_str() );
+			return Code::Invalid;
+		}
 
 		if ( specifiers && specifiers->Type != Specifiers )
 		{
@@ -3031,9 +3185,10 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Type = Struct;
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Type        = Struct;
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		Code
 		body       = make_code();
@@ -3041,11 +3196,14 @@ namespace gen
 
 		result->add_entry( make_code() );
 
-		if ( parent )
-			result->add_entry( parent );
+		if ( attributes )
+			result->add_entry( attributes );
 
 		if ( specifiers )
 			result->add_entry( specifiers );
+
+		if ( parent )
+			result->add_entry( parent );
 
 		return result;
 	}
@@ -3082,56 +3240,54 @@ namespace gen
 	// Any angle brackets found will be considered an operator token.
 
 	#	define Define_TokType \
-		Entry( Access_Private,      "private" )        \
-		Entry( Access_Protected,    "protected" )      \
-		Entry( Access_Public,       "public" )         \
-		Entry( Access_MemberSymbol, "." )              \
-		Entry( Access_StaticSymbol, "::")              \
-		Entry( Ampersand,           "&" )              \
-		Entry( Ampersand_DBL,       "&&" )             \
-		Entry( Assign_Classifer,    ":" )              \
-		Entry( BraceCurly_Open,     "{" )              \
-		Entry( BraceCurly_Close,    "}" )              \
-		Entry( BraceSquare_Open,    "[" )              \
-		Entry( BraceSquare_Close,   "]" )              \
-		Entry( Capture_Start,       "(" )              \
-		Entry( Capture_End,         ")" )              \
-		Entry( Comment,             "__comment__" )    \
-		Entry( Char,                "__char__" )       \
-		Entry( Comma,               "," )              \
-		Entry( Decl_Class,          "class" )          \
-		Entry( Decl_Enum,           "enum" )           \
-		Entry( Decl_Friend,         "friend" )         \
-		Entry( Decl_Module,         "module" )         \
-		Entry( Decl_Namespace,      "namespace" )      \
-		Entry( Decl_Struct,         "struct" )         \
-		Entry( Decl_Typedef,        "typedef" )        \
-		Entry( Decl_Using,          "using" )          \
-		Entry( Decl_Union,          "union" )          \
-		Entry( Identifier,          "__SymID__" )      \
-		Entry( Module_Import,       "import" )         \
-		Entry( Module_Export,       "export" )         \
-		Entry( Number,              "number" )         \
-		Entry( Operator,            "operator" )       \
-		Entry( Spec_API_Macro,      API_Macro_Code )   \
-		Entry( Spec_API,            txt(API_Keyword) ) \
-		Entry( Spec_Alignas,        "alignas" )        \
-		Entry( Spec_CLinkage,       "extern \"C\"" )   \
-		Entry( Spec_Const,          "const" )          \
-		Entry( Spec_Consteval,      "consteval" )      \
-		Entry( Spec_Constexpr,      "constexpr" )      \
-		Entry( Spec_Constinit,      "constinit" )      \
-		Entry( Spec_Extern,         "extern" )         \
-		Entry( Spec_Inline,         "inline" )         \
-		Entry( Spec_Static,         "static" )         \
-		Entry( Spec_ThreadLocal,    "thread_local" )   \
-		Entry( Spec_Volatile,       "volatile")        \
-		Entry( Star,                "*" )              \
-		Entry( Statement_End,       ";" )              \
-		Entry( String,              "__String__" )     \
-		Entry( Type_Unsigned, 	    "unsigned" )       \
-		Entry( Type_Signed,         "signed" )         \
-		Entry( Type_Short,          "short" )          \
+		Entry( Access_Private,      "private" )         \
+		Entry( Access_Protected,    "protected" )       \
+		Entry( Access_Public,       "public" )          \
+		Entry( Access_MemberSymbol, "." )               \
+		Entry( Access_StaticSymbol, "::")               \
+		Entry( Ampersand,           "&" )               \
+		Entry( Ampersand_DBL,       "&&" )              \
+		Entry( Assign_Classifer,    ":" )               \
+		Entry( BraceCurly_Open,     "{" )               \
+		Entry( BraceCurly_Close,    "}" )               \
+		Entry( BraceSquare_Open,    "[" )               \
+		Entry( BraceSquare_Close,   "]" )               \
+		Entry( Capture_Start,       "(" )               \
+		Entry( Capture_End,         ")" )               \
+		Entry( Comment,             "__comment__" )     \
+		Entry( Char,                "__char__" )        \
+		Entry( Comma,               "," )               \
+		Entry( Decl_Class,          "class" )           \
+		Entry( Decl_Enum,           "enum" )            \
+		Entry( Decl_Friend,         "friend" )          \
+		Entry( Decl_Module,         "module" )          \
+		Entry( Decl_Namespace,      "namespace" )       \
+		Entry( Decl_Struct,         "struct" )          \
+		Entry( Decl_Typedef,        "typedef" )         \
+		Entry( Decl_Using,          "using" )           \
+		Entry( Decl_Union,          "union" )           \
+		Entry( Identifier,          "__SymID__" )       \
+		Entry( Module_Import,       "import" )          \
+		Entry( Module_Export,       "export" )          \
+		Entry( Number,              "number" )          \
+		Entry( Operator,            "operator" )        \
+		Entry( Spec_Alignas,        "alignas" )         \
+		Entry( Spec_CLinkage,       "extern \"C\"" )    \
+		Entry( Spec_Const,          "const" )           \
+		Entry( Spec_Consteval,      "consteval" )       \
+		Entry( Spec_Constexpr,      "constexpr" )       \
+		Entry( Spec_Constinit,      "constinit" )       \
+		Entry( Spec_Extern,         "extern" )          \
+		Entry( Spec_Inline,         "inline" )          \
+		Entry( Spec_Static,         "static" )          \
+		Entry( Spec_ThreadLocal,    "thread_local" )    \
+		Entry( Spec_Volatile,       "volatile")         \
+		Entry( Star,                "*" )               \
+		Entry( Statement_End,       ";" )               \
+		Entry( String,              "__String__" )      \
+		Entry( Type_Unsigned, 	    "unsigned" )        \
+		Entry( Type_Signed,         "signed" )          \
+		Entry( Type_Short,          "short" )           \
 		Entry( Type_Long,           "long" )
 
 		enum class TokType : u32
@@ -3139,6 +3295,7 @@ namespace gen
 		#	define Entry( Name_, Str_ ) Name_,
 			Define_TokType
 		#	undef Entry
+			Attr_Keyword,
 
 			Num,
 			Invalid
@@ -3157,6 +3314,7 @@ namespace gen
 			}
 		};
 
+		inline
 		TokType get_tok_type( char const* word, s32 length )
 		{
 			local_persist
@@ -3165,6 +3323,8 @@ namespace gen
 			#	define Entry( Name_, Str_ ) Str_,
 				Define_TokType
 			#	undef Entry
+
+				Attribute::Keyword,
 			};
 
 			for ( u32 index = 0; index < (u32)TokType::Num; index++ )
@@ -3176,6 +3336,7 @@ namespace gen
 			return TokType::Invalid;
 		}
 
+		inline
 		char const* str_tok_type( TokType type )
 		{
 			local_persist
@@ -3184,6 +3345,8 @@ namespace gen
 			#	define Entry( Name_, Str_ ) Str_,
 				Define_TokType
 			#	undef Entry
+
+				Attribute::Keyword,
 			};
 
 			return lookup[(u32)type];
@@ -3194,7 +3357,8 @@ namespace gen
 		inline
 		bool tok_is_specifier( Token const& tok )
 		{
-			return tok.Type >= TokType::Spec_API && tok.Type <= TokType::Star
+			return tok.Type <= TokType::Star
+				|| tok.Type >= TokType::Spec_Alignas
 				|| tok.Type == TokType::Ampersand
 				|| tok.Type == TokType::Ampersand_DBL
 			;
@@ -3696,18 +3860,22 @@ namespace gen
 
 #	define check( Type_ ) left && currtok.Type == Type_
 #pragma endregion Helper Macros
-	Code parse_function_body( Parser::TokArray& toks, char const* context );
 
-	Code parse_class   ( Parser::TokArray& toks, char const* context );
-	Code parse_enum    ( Parser::TokArray& toks, char const* context );
-	Code parse_friend  ( Parser::TokArray& toks, char const* context );
-	Code parse_function( Parser::TokArray& toks, char const* context );
-	Code parse_struct  ( Parser::TokArray& toks, char const* context );
-	Code parse_variable( Parser::TokArray& toks, char const* context );
-	Code parse_type    ( Parser::TokArray& toks, char const* context );
-	Code parse_typedef ( Parser::TokArray& toks, char const* context );
-	Code parse_union   ( Parser::TokArray& toks, char const* context );
-	Code parse_using   ( Parser::TokArray& toks, char const* context );
+	Code parse_function_body( Parser::TokArray& toks, char const* context );
+	Code parse_global_nspace( Parser::TokArray& toks, char const* context );
+
+	Code parse_class        ( Parser::TokArray& toks, char const* context );
+	Code parse_enum         ( Parser::TokArray& toks, char const* context );
+	Code parse_export_body  ( Parser::TokArray& toks, char const* context );
+	Code parse_exten_link   ( Parser::TokArray& toks, char const* context );
+	Code parse_friend       ( Parser::TokArray& toks, char const* context );
+	Code parse_function     ( Parser::TokArray& toks, char const* context );
+	Code parse_struct       ( Parser::TokArray& toks, char const* context );
+	Code parse_variable     ( Parser::TokArray& toks, char const* context );
+	Code parse_type         ( Parser::TokArray& toks, char const* context );
+	Code parse_typedef      ( Parser::TokArray& toks, char const* context );
+	Code parse_union        ( Parser::TokArray& toks, char const* context );
+	Code parse_using        ( Parser::TokArray& toks, char const* context );
 
 	inline
 	Code parse_array_decl( Parser::TokArray& toks, char const* context )
@@ -4493,28 +4661,6 @@ namespace gen
 		return parse_friend( toks, txt(parse_friend) );
 	}
 
-	Code parse_global_body( Parser::TokArray& toks, char const* context )
-	{
-		not_implemented();
-	}
-
-	Code parse_global_body( s32 length, char const* def )
-	{
-		using namespace Parser;
-		using namespace ECode;
-
-		Code result = make_code();
-		result->Type = Global_Body;
-
-		// while ( left )
-		// {
-
-		// }
-
-		result.lock();
-		return result;
-	}
-
 	Code parse_functon( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
@@ -4662,6 +4808,28 @@ namespace gen
 		return parse_functon( toks, txt(parse_function) );
 	}
 
+	Code parse_global_body( Parser::TokArray& toks, char const* context )
+	{
+		not_implemented();
+	}
+
+	Code parse_global_body( s32 length, char const* def )
+	{
+		using namespace Parser;
+		using namespace ECode;
+
+		Code result = make_code();
+		result->Type = Global_Body;
+
+		// while ( left )
+		// {
+
+		// }
+
+		result.lock();
+		return result;
+	}
+
 	Code parse_namespace( Parser::TokArray& toks, char const* context )
 	{
 		not_implemented();
@@ -4708,6 +4876,159 @@ namespace gen
 		return Code::Invalid;
 	}
 
+	Code parse_type( Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
+
+		Token name = { nullptr, 0, TokType::Invalid };
+
+		while ( left && tok_is_specifier( currtok ) )
+		{
+			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+
+			if (   spec != ESpecifier::Const
+				&& spec < ESpecifier::Type_Signed )
+			{
+				log_failure( "gen::parse_type: Error, invalid specifier used in type definition: %s", currtok.Text );
+				return Code::Invalid;
+			}
+
+			specs_found[num_specifiers] = spec;
+			num_specifiers++;
+			eat( currtok.Type );
+		}
+
+		if ( left == 0 )
+		{
+			log_failure( "%s: Error, unexpected end of type definition", context );
+			return Code::Invalid;
+		}
+
+		if (   currtok.Type == TokType::Decl_Class
+			|| currtok.Type == TokType::Decl_Struct )
+		{
+			name = currtok;
+			eat( currtok.Type );
+
+			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+			eat( TokType::Identifier );
+		}
+		else
+		{
+			name = parse_identifier( toks, context );
+			if ( ! name )
+				return Code::Invalid;
+		}
+
+		while ( left && tok_is_specifier( currtok ) )
+		{
+			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+
+			if (   spec != ESpecifier::Const
+			    && spec != ESpecifier::Ptr
+			    && spec != ESpecifier::Ref
+			    && spec != ESpecifier::RValue
+				&& spec < ESpecifier::Type_Signed )
+			{
+				log_failure( "%s: Error, invalid specifier used in type definition: %s", context, currtok.Text );
+				return Code::Invalid;
+			}
+
+			specs_found[num_specifiers] = spec;
+			num_specifiers++;
+			eat( currtok.Type );
+		}
+
+		using namespace ECode;
+
+		// TODO: Need to figure out type code caching wiht the type table.
+
+		Code
+		result       = make_code();
+		result->Type = Typename;
+		result->Name = get_cached_string( name.Text, name.Length );
+
+		if (num_specifiers)
+		{
+			Code specifiers = def_specifiers( num_specifiers, specs_found );
+
+			result->add_entry( specifiers );
+		}
+
+		return result;
+	}
+
+	Code parse_type( s32 length, char const* def )
+	{
+		check_parse_args( parse_type, length, def );
+		using namespace Parser;
+
+		TokArray toks = lex( length, def );
+		if ( toks.Arr == nullptr )
+			return Code::Invalid;
+
+		Code result = parse_type( toks, txt(parse_type) );
+
+		result.lock();
+		return result;
+	}
+
+	Code parse_typedef( Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		Token name       = { nullptr, 0, TokType::Invalid };
+		Code  array_expr = { nullptr };
+		Code  type       = { nullptr };
+
+		eat( TokType::Decl_Typedef );
+
+		type = parse_type( toks, txt(parse_typedef) );
+
+		if ( check( TokType::Identifier ) )
+		{
+			log_failure( "gen::parse_typedef: Error, expected identifier for typedef" );
+			return Code::Invalid;
+		}
+
+		name = currtok;
+		eat( TokType::Identifier );
+
+		array_expr = parse_array_decl( toks, txt(parse_typedef) );
+
+		eat( TokType::Statement_End );
+
+		using namespace ECode;
+
+		Code
+		result       = make_code();
+		result->Type = Typedef;
+		result->Name = get_cached_string( name.Text, name.Length );
+
+		result->add_entry( type );
+
+		if ( array_expr )
+			type->add_entry( array_expr );
+
+		result.lock();
+		return result;
+	}
+
+	Code parse_typedef( s32 length, char const* def )
+	{
+		check_parse_args( parse_typedef, length, def );
+		using namespace Parser;
+
+		TokArray toks = lex( length, def );
+		if ( toks.Arr == nullptr )
+			return Code::Invalid;
+
+		return parse_typedef( toks, txt(parse_typedef) );
+	}
+
 	Code parse_union( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
@@ -4720,6 +5041,70 @@ namespace gen
 	Code parse_union( s32 length, char const* def )
 	{
 		not_implemented( parse_union );
+	}
+
+	Code parse_using( Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
+
+		Token* name       = nullptr;
+		Code   array_expr = { nullptr };
+		Code   type       = { nullptr };
+
+		bool is_namespace = false;
+
+		eat( TokType::Decl_Using );
+
+		if ( currtok.Type == TokType::Decl_Namespace )
+		{
+			is_namespace = true;
+			eat( TokType::Decl_Namespace );
+		}
+
+		// TODO: Parse Attributes
+
+		eat( TokType::Identifier );
+
+		if ( currtok.IsAssign )
+		{
+			eat( TokType::Operator );
+
+			type = parse_type( toks, txt(parse_typedef) );
+		}
+
+		array_expr = parse_array_decl( toks, txt(parse_typedef) );
+
+		eat( TokType::Statement_End );
+
+		using namespace ECode;
+
+		Code
+		result       = make_code();
+		result->Type = is_namespace ? Using : Using_Namespace;
+		result->Name = get_cached_string( name->Text, name->Length );
+
+		result->add_entry( type );
+
+		if ( array_expr )
+			type->add_entry( array_expr );
+
+		result.lock();
+		return result;
+	}
+
+	Code parse_using( s32 length, char const* def )
+	{
+		check_parse_args( parse_using, length, def );
+		using namespace Parser;
+
+		TokArray toks = lex( length, def );
+		if ( toks.Arr == nullptr )
+			return Code::Invalid;
+
+		return parse_using( toks, txt(parse_using) );
 	}
 
 	Code parse_variable( Parser::TokArray& toks, char const* context )
@@ -4880,237 +5265,6 @@ namespace gen
 			return Code::Invalid;
 
 		return parse_variable( toks, txt(parse_variable) );
-	}
-
-	Code parse_type( Parser::TokArray& toks, char const* context )
-	{
-		using namespace Parser;
-
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		s32        num_specifiers = 0;
-
-		Token name = { nullptr, 0, TokType::Invalid };
-
-		while ( left && tok_is_specifier( currtok ) )
-		{
-			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
-
-			if (   spec != ESpecifier::Const
-				&& spec < ESpecifier::Type_Signed )
-			{
-				log_failure( "gen::parse_type: Error, invalid specifier used in type definition: %s", currtok.Text );
-				return Code::Invalid;
-			}
-
-			specs_found[num_specifiers] = spec;
-			num_specifiers++;
-			eat( currtok.Type );
-		}
-
-		if ( left == 0 )
-		{
-			log_failure( "%s: Error, unexpected end of type definition", context );
-			return Code::Invalid;
-		}
-
-		if (   currtok.Type == TokType::Decl_Class
-			|| currtok.Type == TokType::Decl_Struct )
-		{
-			name = currtok;
-			eat( currtok.Type );
-
-			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
-			eat( TokType::Identifier );
-		}
-		else
-		{
-			name = parse_identifier( toks, context );
-			if ( ! name )
-				return Code::Invalid;
-		}
-
-		while ( left && tok_is_specifier( currtok ) )
-		{
-			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
-
-			if (   spec != ESpecifier::Const
-			    && spec != ESpecifier::Ptr
-			    && spec != ESpecifier::Ref
-			    && spec != ESpecifier::RValue
-				&& spec < ESpecifier::Type_Signed )
-			{
-				log_failure( "%s: Error, invalid specifier used in type definition: %s", context, currtok.Text );
-				return Code::Invalid;
-			}
-
-			specs_found[num_specifiers] = spec;
-			num_specifiers++;
-			eat( currtok.Type );
-		}
-
-		using namespace ECode;
-
-		// TODO: Need to figure out type code caching wiht the type table.
-
-		Code
-		result       = make_code();
-		result->Type = Typename;
-		result->Name = get_cached_string( name.Text, name.Length );
-
-		if (num_specifiers)
-		{
-			Code specifiers = def_specifiers( num_specifiers, specs_found );
-
-			result->add_entry( specifiers );
-		}
-
-		return result;
-	}
-
-	Code parse_type( s32 length, char const* def )
-	{
-		check_parse_args( parse_type, length, def );
-		using namespace Parser;
-
-		TokArray toks = lex( length, def );
-		if ( toks.Arr == nullptr )
-			return Code::Invalid;
-
-		Code result = parse_type( toks, txt(parse_type) );
-
-		result.lock();
-		return result;
-	}
-
-	Code parse_typedef( Parser::TokArray& toks, char const* context )
-	{
-		using namespace Parser;
-
-		Token name       = { nullptr, 0, TokType::Invalid };
-		Code  array_expr = { nullptr };
-		Code  type       = { nullptr };
-
-		eat( TokType::Decl_Typedef );
-
-		type = parse_type( toks, txt(parse_typedef) );
-
-		if ( check( TokType::Identifier ) )
-		{
-			log_failure( "gen::parse_typedef: Error, expected identifier for typedef" );
-			return Code::Invalid;
-		}
-
-		name = currtok;
-		eat( TokType::Identifier );
-
-		array_expr = parse_array_decl( toks, txt(parse_typedef) );
-
-		eat( TokType::Statement_End );
-
-		using namespace ECode;
-
-		Code
-		result       = make_code();
-		result->Type = Typedef;
-		result->Name = get_cached_string( name.Text, name.Length );
-
-		result->add_entry( type );
-
-		if ( array_expr )
-			type->add_entry( array_expr );
-
-		result.lock();
-		return result;
-	}
-
-	Code parse_typedef( s32 length, char const* def )
-	{
-		check_parse_args( parse_typedef, length, def );
-		using namespace Parser;
-
-		TokArray toks = lex( length, def );
-		if ( toks.Arr == nullptr )
-			return Code::Invalid;
-
-		return parse_typedef( toks, txt(parse_typedef) );
-	}
-
-	Code parse_union( Parser::TokArray& toks, char const* context )
-	{
-		using namespace Parser;
-
-		return Code::Invalid;
-	}
-
-	Code parse_union( s32 length, char const* def )
-	{
-		using namespace Parser;
-
-		return Code::Invalid;
-	}
-
-	Code parse_using( Parser::TokArray& toks, char const* context )
-	{
-		using namespace Parser;
-
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		s32        num_specifiers = 0;
-
-		Token* name       = nullptr;
-		Code   array_expr = { nullptr };
-		Code   type       = { nullptr };
-
-		bool is_namespace = false;
-
-		eat( TokType::Decl_Using );
-
-		if ( currtok.Type == TokType::Decl_Namespace )
-		{
-			is_namespace = true;
-			eat( TokType::Decl_Namespace );
-		}
-
-		// TODO: Parse Attributes
-
-		eat( TokType::Identifier );
-
-		if ( currtok.IsAssign )
-		{
-			eat( TokType::Operator );
-
-			type = parse_type( toks, txt(parse_typedef) );
-		}
-
-		array_expr = parse_array_decl( toks, txt(parse_typedef) );
-
-		eat( TokType::Statement_End );
-
-		using namespace ECode;
-
-		Code
-		result       = make_code();
-		result->Type = is_namespace ? Using : Using_Namespace;
-		result->Name = get_cached_string( name->Text, name->Length );
-
-		result->add_entry( type );
-
-		if ( array_expr )
-			type->add_entry( array_expr );
-
-		result.lock();
-		return result;
-	}
-
-	Code parse_using( s32 length, char const* def )
-	{
-		check_parse_args( parse_using, length, def );
-		using namespace Parser;
-
-		TokArray toks = lex( length, def );
-		if ( toks.Arr == nullptr )
-			return Code::Invalid;
-
-		return parse_using( toks, txt(parse_using) );
 	}
 
 	// Undef helper macros

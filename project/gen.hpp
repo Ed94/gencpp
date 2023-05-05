@@ -74,14 +74,14 @@ namespace gen
 		Entry( Struct )               \
 		Entry( Struct_Fwd )           \
 		Entry( Struct_Body )          \
-		Entry( Variable )             \
 		Entry( Typedef )              \
 		Entry( Typename )             \
 		Entry( Union )			      \
 		Entry( Union_Fwd )		      \
 		Entry( Union_Body) 		      \
 		Entry( Using )                \
-		Entry( Using_Namespace )
+		Entry( Using_Namespace )      \
+		Entry( Variable )
 
 		enum Type : u32
 		{
@@ -333,14 +333,15 @@ namespace gen
 	*/
 	namespace Attribute
 	{
-	#if 0 && defined(ZPL_SYSTEM_WINDOWS) || defined( __CYGWIN__ )
+	#if defined(ZPL_SYSTEM_WINDOWS) || defined( __CYGWIN__ )
 	#	define GEN_API_
 	#	define GEN_API_Export_Code   __declspec(dllexport)
 	#	define GEN_API_Import_Code   __declspec(dllimport)
 	#	define GEN_Attribute_Keyword __declspec
 
-		constexpr char const* API_Export = txt( GEN_API_Export_Code );
-		constexpr char const* API_Import = txt( GEN_API_Import_Code );
+		constexpr char const* API_Export = txt( GEN_API_Export_Code  );
+		constexpr char const* API_Import = txt( GEN_API_Import_Code  );
+		constexpr char const* Keyword    = txt( GEN_Attribute_Keyword);
 
 	#elif ZPL_HAS_ATTRIBUTE( visibility ) || ZPL_GCC_VERSION_CHECK( 3, 3, 0 ) || ZPL_INTEL_VERSION_CHECK( 13, 0, 0 )
 	#	define GEN_API_Export_Code   __attribute__ ((visibility ("default")))
@@ -349,15 +350,16 @@ namespace gen
 
 		constexpr char const* API_Export = txt( GEN_API_Export_Code );
 		constexpr char const* API_Import = txt( GEN_API_Import_Code );
+		constexpr char const* Keyword    = txt( GEN_Attribute_Keyword);
 
 	#else
 	#	define GEN_API_Export_Code
 	#	define GEN_API_Import_Code
 	#	define GEN_Attribute_Keyword
 
-		constexpr char const* API_Export        = "";
-		constexpr char const* API_Import        = "";
-		constexpr char const* Attribute_Keyword = "";
+		constexpr char const* API_Export = "";
+		constexpr char const* API_Import = "";
+		constexpr char const* Keyword    = "";
 	#endif
 	}
 
@@ -816,7 +818,7 @@ namespace gen
 	Code def_struct( s32 length, char const* name
 		, Code      body
 		, Code      parent     = NoCode, AccessSpec access
-		, Code      specifiers = NoCode, Code attributes = NoCode
+		, Code      specifiers = NoCode, Code       attributes = NoCode
 		, ModuleFlag mflags    = ModuleFlag::None );
 
 	Code def_typedef( s32 length, char const* name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
@@ -836,10 +838,10 @@ namespace gen
 	Code def_class_body      ( s32 num, ... );
 	Code def_enum_body       ( s32 num, ... );
 	Code def_enum_body       ( s32 num, Code* codes );
-	Code def_extern_link_body( s32 num, ... );
-	Code def_extern_link_body( s32 num, Code* codes );
 	Code def_export_body     ( s32 num, ... );
 	Code def_export_body     ( s32 num, Code* codes);
+	Code def_extern_link_body( s32 num, ... );
+	Code def_extern_link_body( s32 num, Code* codes );
 	Code def_global_body     ( s32 num, ... );
 	Code def_global_body     ( s32 num, Code* codes );
 	Code def_function_body   ( s32 num, ... );
@@ -868,7 +870,7 @@ namespace gen
 		, Code attributes = NoCode, ModuleFlag mflags    = ModuleFlag::None );
 
 	Code make_export_body   ( s32 length = 1, char const* name = "" );
-	Code make_extern_linkage( s32 length,     char const* name );
+	Code make_extern_linkage( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
 
 	Code make_function( s32 length, char const* name
 		, Code       params     = NoCode, Code ret_type   = NoCode
@@ -876,7 +878,7 @@ namespace gen
 		, ModuleFlag mflags     = ModuleFlag::None );
 
 	Code make_global_body( s32 length = 1, char const* name = "" );
-	Code make_namespace  ( s32 length,     char const* name );
+	Code make_namespace  ( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
 
 	Code make_operator( OperatorT op
 		, Code       params     = NoCode, Code ret_type   = NoCode
@@ -907,11 +909,11 @@ namespace gen
 	Code parse_namespace  ( s32 length, char const* namespace_def );
 	Code parse_operator   ( s32 length, char const* operator_def  );
 	Code parse_struct     ( s32 length, char const* struct_def    );
-	Code parse_variable   ( s32 length, char const* var_def       );
 	Code parse_type       ( s32 length, char const* type_def      );
 	Code parse_typedef    ( s32 length, char const* typedef_def   );
 	Code parse_union      ( s32 length, char const* union_def     );
 	Code parse_using      ( s32 length, char const* using_def     );
+	Code parse_variable   ( s32 length, char const* var_def       );
 	#endif
 	#pragma endregion Parsing
 
