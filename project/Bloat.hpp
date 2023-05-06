@@ -54,7 +54,7 @@ using zpl::ArrayHeader;
 using zpl::FileInfo;
 using zpl::FileError;
 using zpl::Pool;
-using zpl::String;
+// using zpl::String;
 
 using zpl::EFileMode_WRITE;
 using zpl::EFileError_NONE;
@@ -77,6 +77,7 @@ using zpl::pool_allocator;
 using zpl::pool_init;
 using zpl::pool_free;
 using zpl::process_exit;
+using zpl::str_copy;
 using zpl::str_fmt_out_va;
 using zpl::str_fmt_out_err_va;
 using zpl::str_compare;
@@ -188,7 +189,25 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 #pragma endregion Memory
 
 #pragma region String
-#if 0
+#if 1
+	// Constant string with length.
+	struct StrC
+	{
+		sw          Len;
+		char const* Ptr;
+
+		static StrC from( char const* str )
+		{
+			return { str_len( str ), str };
+		}
+
+		operator char const* () const
+		{
+			return Ptr;
+		}
+	};
+
+	// Dynamic String
 	struct String
 	{
 		struct Header
@@ -238,9 +257,11 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 		void append( char c );
 		void append( char const* str );
 		void append( char const* str, sw length );
+		void append( StrC str);
 		void append( const String other );
-		void append( char const* fmt, ... );
 		void append( const String other );
+
+		void append_fmt( char const* fmt, ... );
 
 		sw avail_space();
 		sw capacity();
@@ -251,13 +272,67 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
 		void free();
 
-		Header& header();
+		Header& get_headder()
+		{
+			return pcast( Header, Data[ - sizeof( Header ) ] );
+		}
 
-		sw length();
+		sw length() const;
 
 		void trim( char const* cut_set );
 		void trim_space();
 
+		operator bool()
+		{
+			return Data;
+		}
+
+		operator char* ()
+		{
+			return Data;
+		}
+
+		operator char const* () const
+		{
+			return Data;
+		}
+
+		operator StrC()
+		{
+			return
+			{
+				length(),
+				Data
+			};
+		}
+
+		String const& operator = ( String const& other ) const
+		{
+			if ( this == & other )
+				return *this;
+
+			String& this_ = ccast( String, *this );
+
+			this_.Data = other.Data;
+
+			return this_;
+		}
+
+		String& operator += ( String const& other )
+		{
+			append( other );
+			return *this;
+		}
+
+		char& operator [] ( sw index )
+		{
+			return Data[ index ];
+		}
+
+		char const& operator [] ( sw index ) const
+		{
+			return Data[ index ];
+		}
 
 		char* Data = nullptr;
 	};
@@ -287,7 +362,7 @@ namespace Memory
 }
 
 inline
-sw log_fmt(char const *fmt, ...)
+sw log_fmt(char const* fmt, ...)
 {
 	sw res;
 	va_list va;
@@ -300,7 +375,7 @@ sw log_fmt(char const *fmt, ...)
 }
 
 inline
-sw fatal(char const *fmt, ...)
+sw fatal(char const* fmt, ...)
 {
 	local_persist thread_local
 	char buf[ZPL_PRINTF_MAXLEN] = { 0 };

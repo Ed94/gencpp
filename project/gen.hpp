@@ -11,7 +11,7 @@
 #include "Bloat.hpp"
 
 // Temporarily here for debugging purposes.
-#define GEN_DEFINE_DSL
+// #define GEN_DEFINE_DSL
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 // #define GEN_DONT_USE_FATAL
 #define GEN_ENFORCE_READONLY_AST
@@ -94,11 +94,11 @@ namespace gen
 		};
 
 		inline
-		char const* to_str( Type type )
+		StrC to_str( Type type )
 		{
 			static
-			char const* lookup[Num_Types] = {
-			#	define Entry( Type ) txt( Type ),
+			StrC lookup[Num_Types] = {
+			#	define Entry( Type ) { txt_n_len( Type ) },
 				Define_Types
 			#	undef Entry
 			};
@@ -248,11 +248,11 @@ namespace gen
 
 		// Specifier to string
 		inline
-		char const* to_str( Type specifier )
+		StrC to_str( Type specifier )
 		{
 			local_persist
-			char const* lookup[ Num_Specifiers ] = {
-			#	define Entry( Spec_, Code_ ) txt(Code_),
+			StrC lookup[ Num_Specifiers ] = {
+			#	define Entry( Spec_, Code_ ) { txt_n_len(Code_) },
 				Define_Specifiers
 			#	undef Entry
 			};
@@ -261,20 +261,20 @@ namespace gen
 		}
 
 		inline
-		Type to_type( char const* str, s32 length )
+		Type to_type( StrC str )
 		{
 			local_persist
 			u32 keymap[ Num_Specifiers ];
 			do_once_start
 				for ( u32 index = 0; index < Num_Specifiers; index++ )
 				{
-					char const* enum_str = to_str( (Type)index );
+					StrC enum_str = to_str( (Type)index );
 
-					keymap[index] = crc32( enum_str, str_len(enum_str, 42) );
+					keymap[index] = crc32( enum_str.Ptr, enum_str.Len);
 				}
 			do_once_end
 
-			u32 hash = crc32(str, length );
+			u32 hash = crc32( str.Ptr, str.Len );
 
 			for ( u32 index = 0; index < Num_Specifiers; index++ )
 			{
@@ -371,7 +371,7 @@ namespace gen
 
 	// Represents strings cached with the string table.
 	// Should never be modified, if changed string is desired, cache_string( str ) another.
-	using StringCached = char const*;
+	using StringCached = String const;
 
 	// Desired width of the AST data structure.
 	constexpr u32 AST_POD_Size = 256;
@@ -424,7 +424,7 @@ namespace gen
 
 		// Parameter
 
-		bool add_param( AST* type, s32 length, char const* name );
+		bool add_param( AST* type, StrC name );
 
 		inline
 		AST* get_param( s32 index )
@@ -638,7 +638,7 @@ namespace gen
 		}
 
 		inline
-		char const* to_string()
+		String to_string()
 		{
 			return ast->to_string();
 		}
@@ -743,7 +743,7 @@ namespace gen
 
 	// Used internally to retrive or make string allocations.
 	// Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
-	StringCached get_cached_string( char const* cstr, s32 length );
+	StringCached get_cached_string( StrC str );
 
 	/*
 		This provides a fresh Code AST.
@@ -767,58 +767,58 @@ namespace gen
 	void set_allocator_type_table       ( AllocatorInfo type_reg_allocator );
 
 #	pragma region Upfront
-	Code def_comment   ( s32 length, char const* content );
-	Code def_attributes( s32 length, char const* content );
+	Code def_comment   ( StrC content );
+	Code def_attributes( StrC content );
 
-	Code def_class( s32 length, char const* name
+	Code def_class( StrC name
 		, Code body         = NoCode
 		, Code parent       = NoCode, AccessSpec access = AccessSpec::Public
 		, Code attributes   = NoCode
 		, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_enum( s32 length, char const* name
+	Code def_enum( StrC
 		, Code       body      = NoCode,      Code type       = NoCode
 		, EnumT      specifier = EnumRegular, Code attributes = NoCode
 		, ModuleFlag mflags    = ModuleFlag::None );
 
-	Code def_execution  ( s32 length, char const* content );
-	Code def_extern_link( s32 length, char const* name, Code body, ModuleFlag mflags = ModuleFlag::None );
+	Code def_execution  ( StrC content );
+	Code def_extern_link( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 	Code def_friend     ( Code symbol );
 
-	Code def_function( s32 length, char const* name
+	Code def_function( StrC name
 		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_include  ( s32 length, char const* path );
-	Code def_module   ( s32 length, char const* name,            ModuleFlag mflags = ModuleFlag::None );
-	Code def_namespace( s32 length, char const* name, Code body, ModuleFlag mflags = ModuleFlag::None );
+	Code def_include  ( StrC content );
+	Code def_module   ( StrC name,            ModuleFlag mflags = ModuleFlag::None );
+	Code def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 
 	Code def_operator( OperatorT op
 		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_param     ( Code type, s32 length, char const* name, Code value = NoCode );
+	Code def_param     ( Code type, StrC name, Code value = NoCode );
 	Code def_specifier( SpecifierT specifier );
 
-	Code def_struct( s32 length, char const* name
+	Code def_struct( StrC name
 		, Code       body
 		, Code       parent     = NoCode, AccessSpec access = AccessSpec::Public
 		, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_typedef( s32 length, char const* name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
-	Code def_type   ( s32 length, char const* name, Code arrayexpr = NoCode, Code specifiers = NoCode );
+	Code def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	Code def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode );
 
-	Code def_union( s32 length, char const* name, Code body = NoCode, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	Code def_union( StrC name, Code body = NoCode, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_using( s32 length, char const* name, UsingT specifier = UsingRegular
+	Code def_using( StrC name, UsingT specifier = UsingRegular
 		, Code       type        = NoCode
 		, Code       attributess = NoCode
 		, ModuleFlag mflags      = ModuleFlag::None );
 
-	Code def_variable( Code type, s32 length, char const* name, Code value = NoCode
+	Code def_variable( Code type, StrC name, Code value = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
@@ -847,24 +847,24 @@ namespace gen
 
 #	pragma region Incremental
 #	ifdef GEN_FEATURE_INCREMENTAL
-	Code make_class( s32 length, char const* name
+	Code make_class( StrC name
 		, Code       parent     = NoCode, AccessSpec access     = AccessSpec::Public
 		, Code       specifiers = NoCode, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code make_enum( s32 length, char const* name
+	Code make_enum( StrC name
 		, Code type       = NoCode, EnumT      specifier = EnumRegular
 		, Code attributes = NoCode, ModuleFlag mflags    = ModuleFlag::None );
 
-	Code make_export_body   ( s32 length = 1, char const* name = "" );
+	Code make_export_body   ( StrC name = { 1, "" } );
 	Code make_extern_linkage( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
 
-	Code make_function( s32 length, char const* name
+	Code make_function( StrC name
 		, Code       params     = NoCode, Code ret_type   = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code make_global_body( s32 length = 1, char const* name = "" );
+	Code make_global_body( StrC name = { 1, "" } );
 	Code make_namespace  ( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
 
 	Code make_operator( OperatorT op
@@ -875,32 +875,32 @@ namespace gen
 	Code make_params    ();
 	Code make_specifiers();
 
-	Code make_struct( s32 length, char const* name
+	Code make_struct( StrC name
 		, Code       parent     = NoCode, AccessSpec access
 		, Code       specifiers = NoCode, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code make_union( s32 length, char const* name, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	Code make_union( StrC name, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 #	endif
 #	pragma endregion Incremental
 
 	#pragma region Parsing
 	#ifdef GEN_FEATURE_PARSING
-	Code parse_class      ( s32 length, char const* class_def     );
-	Code parse_enum       ( s32 length, char const* enum_def      );
-	Code parse_export_body( s32 length, char const* export_def    );
-	Code parse_exten_link ( s32 length, char const* exten_link_def);
-	Code parse_friend     ( s32 length, char const* friend_def    );
-	Code parse_function   ( s32 length, char const* fn_def        );
-	Code parse_global_body( s32 length, char const* body_def      );
-	Code parse_namespace  ( s32 length, char const* namespace_def );
-	Code parse_operator   ( s32 length, char const* operator_def  );
-	Code parse_struct     ( s32 length, char const* struct_def    );
-	Code parse_type       ( s32 length, char const* type_def      );
-	Code parse_typedef    ( s32 length, char const* typedef_def   );
-	Code parse_union      ( s32 length, char const* union_def     );
-	Code parse_using      ( s32 length, char const* using_def     );
-	Code parse_variable   ( s32 length, char const* var_def       );
+	Code parse_class      ( StrC class_def     );
+	Code parse_enum       ( StrC enum_def      );
+	Code parse_export_body( StrC export_def    );
+	Code parse_exten_link ( StrC exten_link_def);
+	Code parse_friend     ( StrC friend_def    );
+	Code parse_function   ( StrC fn_def        );
+	Code parse_global_body( StrC body_def      );
+	Code parse_namespace  ( StrC namespace_def );
+	Code parse_operator   ( StrC operator_def  );
+	Code parse_struct     ( StrC struct_def    );
+	Code parse_type       ( StrC type_def      );
+	Code parse_typedef    ( StrC typedef_def   );
+	Code parse_union      ( StrC union_def     );
+	Code parse_using      ( StrC using_def     );
+	Code parse_variable   ( StrC var_def       );
 	#endif
 	#pragma endregion Parsing
 
@@ -921,9 +921,9 @@ namespace gen
 		return buf;
 	}
 
-	Code untyped_str      ( s32 length, char const* str);
-	Code untyped_fmt      (             char const* fmt, ... );
-	Code untyped_token_fmt(             char const* fmt, s32 num_tokens, ... );
+	Code untyped_str      ( StrC content);
+	Code untyped_fmt      ( char const* fmt, ... );
+	Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
 	#pragma endregion Untyped text
 
 	struct Builder
@@ -1058,10 +1058,10 @@ namespace gen
 
 //	Convienence for defining any name used with the gen interface.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
-#	define name( Id_ )   txt_n_len( Id_ )
+#	define name( Id_ )   { txt_n_len( Id_ ) }
 
 //  Same as name just used to indicate intention of literal for code instead of names.
-#	define code( Code_ ) txt_n_len( Code_ )
+#	define code( Code_ ) { txt_n_len( Code_ ) }
 
 /*
 	gen's Domain Specific Langauge.
@@ -1285,7 +1285,7 @@ namespace gen
 	}
 
 	inline
-	bool AST::add_param( AST* type, s32 length, char const* name )
+	bool AST::add_param( AST* type, StrC name )
 	{
 		if ( Type != ECode::Function )
 		{
@@ -1293,9 +1293,9 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		if ( length <= 0 )
+		if ( name.Len <= 0 )
 		{
-			log_failure( "gen::AST::add_param: Invalid name length provided - %d", length );
+			log_failure( "gen::AST::add_param: Invalid name length provided - %d", name.Len );
 			return Code::Invalid;
 		}
 
@@ -1317,7 +1317,7 @@ namespace gen
 		}
 		else if ( score == 2)
 		{
-			Name       = name;
+			Name       = get_cached_string( name );
 			Entries[0] = type;
 			return true;
 		}
