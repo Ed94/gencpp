@@ -66,12 +66,14 @@ using zpl::arena_init_from_allocator;
 using zpl::arena_free;
 using zpl::assert_crash;
 using zpl::str_fmt_buf;
+using zpl::char_first_occurence;
 using zpl::char_is_alpha;
 using zpl::char_is_alphanumeric;
 using zpl::char_is_space;
 using zpl::crc32;
 using zpl::free_all;
 using zpl::mem_copy;
+using zpl::mem_move;
 using zpl::mem_set;
 using zpl::pool_allocator;
 using zpl::pool_init;
@@ -189,7 +191,6 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 #pragma endregion Memory
 
 #pragma region String
-#if 1
 	// Constant string with length.
 	struct StrC
 	{
@@ -217,13 +218,13 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			sw            Capacity;
 		};
 
-		static String make ( AllocatorInfo allocator, char const* str )
+		static String make( AllocatorInfo allocator, char const* str )
 		{
 			sw length = str ? str_len( str ) : 0;
 			return make_length( allocator, str, length );
 		}
 
-		static String make ( AllocatorInfo allocator, StrC str )
+		static String make( AllocatorInfo allocator, StrC str )
 		{
 			return make_length( allocator, str.Ptr, str.Len );
 		}
@@ -250,42 +251,258 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return result;
 		}
 
-		static String make_length( AllocatorInfo allocator, char const* str, sw length );
+		static String make_length( AllocatorInfo allocator, char const* str, sw length )
+		{
+			constexpr sw header_size = sizeof( Header );
 
-		static String fmt    ( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... );
-		static String fmt_buf( AllocatorInfo allocator, char const* fmt, ... );
+			s32   alloc_size = header_size + length + 1;
+			void* allocation = alloc( allocator, alloc_size );
 
-		static String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue );
+			if ( allocation == nullptr )
+				return { nullptr };
 
-		static bool are_equal( String lhs, String rhs );
+			if ( ! str )
+				mem_set( allocation, 0, alloc_size );
 
-		void append( char c );
-		void append( char const* str );
-		void append( char const* str, sw length );
-		void append( StrC str);
-		void append( const String other );
-		void append( const String other );
+			Header
+			header = { allocator, length, length };
 
-		void append_fmt( char const* fmt, ... );
+			if ( length && str )
+				mem_copy( allocation + header_size, str, length );
 
-		sw avail_space();
-		sw capacity();
+			String
+			result = { rcast( char*, allocation + header_size) };
+			result[ length ] = '\0';
 
-		void clear();
+			return result;
+		}
 
-		String duplicate( AllocatorInfo allocator );
+		static String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... )
+		{
+			va_list va;
+			va_start( va, fmt );
+			str_fmt_va( buf, buf_size, fmt, va );
+			va_end( va );
 
-		void free();
+			return make( allocator, buf );
+		}
 
-		Header& get_headder()
+		static String fmt_buf( AllocatorInfo allocator, char const* fmt, ... )
+		{
+			local_persist thread_local
+			char buf[ ZPL_PRINTF_MAXLEN ] = { 0 };
+
+			va_list va;
+			va_start( va, fmt );
+			str_fmt_va( buf, ZPL_PRINTF_MAXLEN, fmt, va );
+			va_end( va );
+
+			return make( allocator, buf );
+		}
+
+		static String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue )
+		{
+			String result = make( allocator, "" );
+
+			for ( sw idx = 0; idx < num_parts; ++idx )
+			{
+				result.append( parts[ idx ] );
+
+				if ( idx < num_parts - 1 )
+					result.append( glue );
+			}
+
+			return result;
+		}
+
+		static bool are_equal( String lhs, String rhs )
+		{
+			if ( lhs.length() != rhs.length() )
+				return false;
+
+			for ( sw idx = 0; idx < lhs.length(); ++idx )
+				if ( lhs[ idx ] != rhs[ idx ] )
+					return false;
+
+			return true;
+		}
+
+
+		bool make_space_for( char const* str, sw add_len );
+
+		bool append( char const* str )
+		{
+			return append( str, str_len( str ) );
+		}
+
+		bool append( char const* str, sw length )
+		{
+			Header& header = get_header();
+
+			if ( str > 0 )
+			{
+				sw curr_len = header.Length;
+
+				if ( make_space_for( str, length ) )
+					return false;
+
+				mem_copy( Data + curr_len, str, length );
+
+				Data[ curr_len + length ] = '\0';
+
+				header.Length = curr_len + length;
+			}
+
+			return str;
+		}
+
+		bool append( StrC str)
+		{
+			return append( str.Ptr, str.Len );
+		}
+
+		bool append( const String other )
+		{
+			return append( other.Data, other.length() );
+		}
+
+		bool append_fmt( char const* fmt, ... )
+		{
+			sw   res;
+			char buf[ ZPL_PRINTF_MAXLEN ] = { 0 };
+
+			va_list va;
+			va_start( va, fmt );
+			res = str_fmt_va( buf, count_of( buf ) - 1, fmt, va ) - 1;
+			va_end( va );
+
+			return append( buf, res );
+		}
+
+		sw avail_space() const
+		{
+			Header const&
+			header = * rcast( Header const*, Data - sizeof( Header ));
+
+			return header.Capacity - header.Length;
+		}
+
+		sw capacity() const
+		{
+			Header const&
+			header = * rcast( Header const*, Data - sizeof( Header ));
+
+			return header.Capacity;
+		}
+
+		void clear()
+		{
+			get_header().Length = 0;
+		}
+
+		String duplicate( AllocatorInfo allocator )
+		{
+			return make_length( allocator, Data, length() );
+		}
+
+		void free()
+		{
+			if ( ! Data )
+				return;
+
+			Header& header = get_header();
+
+			zpl::free( header.Allocator, & header );
+		}
+
+		Header& get_header()
 		{
 			return pcast( Header, Data[ - sizeof( Header ) ] );
 		}
 
-		sw length() const;
+		sw length() const
+		{
+			Header const&
+			header = * rcast( Header const*, Data - sizeof( Header ));
 
-		void trim( char const* cut_set );
-		void trim_space();
+			return header.Length;
+		}
+
+		bool make_space_for( char const* str, sw add_len )
+		{
+			sw available = avail_space();
+
+			// NOTE: Return if there is enough space left
+			if ( available >= add_len )
+			{
+				return false;
+			}
+			else
+			{
+				sw new_len, old_size, new_size;
+
+				void* ptr;
+				void* new_ptr;
+
+				AllocatorInfo allocator = get_header().Allocator;
+				Header*       header	= nullptr;
+
+				new_len  = length() + add_len;
+				ptr      = & get_header();
+				old_size = size_of( Header ) + length() + 1;
+				new_size = size_of( Header ) + new_len + 1;
+
+				new_ptr = resize( allocator, ptr, old_size, new_size );
+
+				if ( new_ptr == nullptr )
+					return false;
+
+				header            = zpl_cast( Header* ) new_ptr;
+				header->Allocator = allocator;
+				header->Capacity  = new_len;
+
+				Data = rcast( char*, header + 1 );
+
+				return str;
+			}
+		}
+
+		void trim( char const* cut_set )
+		{
+			char* start;
+			char* end;
+
+			char* start_pos;
+			char* end_pos;
+
+			sw len = 0;
+
+			start_pos = Data;
+			start     = Data;
+
+			end_pos = Data + length() - 1;
+			end     = Data + length() - 1;
+
+			while ( start_pos <= end_pos && char_first_occurence( cut_set, *start_pos ) )
+				start_pos++;
+
+			while ( end_pos > start_pos && char_first_occurence( cut_set, *end_pos ) )
+				end_pos--;
+
+			len = scast( sw, ( start_pos > end_pos ) ? 0 : ( ( end_pos - start_pos ) + 1 ) );
+
+			if ( Data != start_pos )
+				mem_move( Data, start_pos, len );
+
+			Data[ len ] = '\0';
+
+			get_header().Length = len;
+		}
+
+		void trim_space()
+		{
+			return trim( " \t\r\n\v\f" );
+		}
 
 		operator bool()
 		{
@@ -339,6 +556,7 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return Data[ index ];
 		}
 
+
 		char* Data = nullptr;
 	};
 
@@ -347,7 +565,6 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 		char* Data;
 	};
 	static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
-#endif
 #pragma endregion String
 
 

@@ -4825,7 +4825,7 @@ namespace gen
 
 			function       = make_code();
 			function->Type = Function_Fwd;
-			function->Name = get_cached_string( name.Text, name.Length );
+			function->Name = get_cached_string( name );
 			function->add_entry( type );
 
 			if ( params )
@@ -4882,7 +4882,7 @@ namespace gen
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
-			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+			SpecifierT spec = ESpecifier::to_type( currtok );
 
 			switch ( spec )
 			{
@@ -4908,7 +4908,7 @@ namespace gen
 
 				if ( currtok.Type == TokType::String )
 				{
-					lang_linkage = untyped_str( currtok.Length, currtok.Text );
+					lang_linkage = untyped_str( currtok );
 					eat( TokType::String );
 				}
 
@@ -4951,7 +4951,7 @@ namespace gen
 
 		Code
 		result       = make_code();
-		result->Name = get_cached_string( name.Text, name.Length );
+		result->Name = get_cached_string( name );
 
 		if ( body )
 		{
@@ -5085,7 +5085,7 @@ namespace gen
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
-			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+			SpecifierT spec = ESpecifier::to_type( currtok );
 
 			if (   spec != ESpecifier::Const
 				&& spec < ESpecifier::Type_Signed )
@@ -5123,7 +5123,7 @@ namespace gen
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
-			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+			SpecifierT spec = ESpecifier::to_type( currtok );
 
 			if (   spec != ESpecifier::Const
 			    && spec != ESpecifier::Ptr
@@ -5147,7 +5147,7 @@ namespace gen
 		Code
 		result       = make_code();
 		result->Type = Typename;
-		result->Name = get_cached_string( name.Text, name.Length );
+		result->Name = get_cached_string( name );
 
 		if (num_specifiers)
 		{
@@ -5204,7 +5204,7 @@ namespace gen
 		Code
 		result       = make_code();
 		result->Type = Typedef;
-		result->Name = get_cached_string( name.Text, name.Length );
+		result->Name = get_cached_string( name );
 
 		result->add_entry( type );
 
@@ -5282,7 +5282,7 @@ namespace gen
 		Code
 		result       = make_code();
 		result->Type = is_namespace ? Using : Using_Namespace;
-		result->Name = get_cached_string( name->Text, name->Length );
+		result->Name = get_cached_string( * name );
 
 		result->add_entry( type );
 
