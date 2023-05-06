@@ -79,7 +79,7 @@ Code gen__array( StrC type, sw type_size )
 
 		Code init_reserve;
 		{
-			Code params = def_params( 2, t_allocator_info, name(allocator), t_sw, name(capacity) );
+			Code params = def_params( 2, t_allocator_info, txt_n_len(allocator), t_sw, txt_n_len(capacity) );
 			Code body = untyped_str( code(
 				Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) ));
 

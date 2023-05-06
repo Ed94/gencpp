@@ -223,6 +223,11 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return make_length( allocator, str, length );
 		}
 
+		static String make ( AllocatorInfo allocator, StrC str )
+		{
+			return make_length( allocator, str.Ptr, str.Len );
+		}
+
 		static String make_reserve( AllocatorInfo allocator, sw capacity )
 		{
 			constexpr sw header_size = sizeof( Header );

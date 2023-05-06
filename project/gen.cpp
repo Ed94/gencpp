@@ -3516,6 +3516,11 @@ namespace gen
 			{
 				return Text && Length && Type != TokType::Invalid;
 			}
+
+			operator StrC()
+			{
+				return { Length, Text };
+			}
 		};
 
 		inline
@@ -3609,7 +3614,7 @@ namespace gen
 			}
 		};
 
-		TokArray lex( s32 length, char const* content)
+		TokArray lex( StrC content )
 		{
 		#	define current ( * scanner )
 
@@ -3647,8 +3652,8 @@ namespace gen
 			local_persist thread_local
 			Array(Token) Tokens = nullptr;
 
-			s32         left    = length;
-			char const* scanner = content;
+			s32         left    = content.Len;
+			char const* scanner = content.Ptr;
 
 			char const* word        = scanner;
 			s32         word_length = 0;
@@ -3663,7 +3668,7 @@ namespace gen
 			if ( Tokens )
 				array_clear( Tokens );
 
-			array_init_reserve( Tokens, arena_allocator( & LexAllocator), length / 8 );
+			array_init_reserve( Tokens, arena_allocator( & LexAllocator), content.Len / 8 );
 
 			while (left )
 			{
@@ -3878,7 +3883,7 @@ namespace gen
 							if (left)
 								move_forward();
 						}
-						else while ( left && current == *(scanner - 1) && length < 3 )
+						else while ( left && current == *(scanner - 1) && token.Length < 3 )
 						{
 							token.Length++;
 
@@ -3915,7 +3920,7 @@ namespace gen
 								if (left)
 									move_forward();
 							}
-							else while ( left && current == *(scanner - 1) && length < 3 )
+							else while ( left && current == *(scanner - 1) && token.Length < 3 )
 							{
 								token.Length++;
 
@@ -4046,13 +4051,13 @@ namespace gen
 	}
 
 #pragma region Helper Macros
-#	define check_parse_args( func, length, def )                         \
-	if ( length <= 0 )                                                   \
+#	define check_parse_args( func, def )                                 \
+	if ( def.Len <= 0 )                                                  \
 	{                                                                    \
 		log_failure( "gen::" txt(func) ": length must greater than 0" ); \
 		return Code::Invalid;                                            \
 	}                                                                    \
-	if ( def == nullptr )                                                \
+	if ( def.Ptr == nullptr )                                            \
 	{                                                                    \
 		log_failure( "gen::" txt(func) ": def was null" );               \
 		return Code::Invalid;                                            \
@@ -4109,7 +4114,7 @@ namespace gen
 				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
 			}
 
-			Code array_expr = untyped_str( untyped_tok.Length, untyped_tok.Text );
+			Code array_expr = untyped_str( untyped_tok );
 
 			if ( left == 0 )
 			{
@@ -4214,7 +4219,7 @@ namespace gen
 			Code
 			param = make_code();
 			param->Type = Parameters;
-			param->Name = get_cached_string( name.Text, name.Length );
+			param->Name = get_cached_string( name );
 
 			param->add_entry( type );
 
@@ -4257,7 +4262,7 @@ namespace gen
 				eat( currtok.Type );
 			}
 
-			expr = untyped_str( expr_tok.Length, expr_tok.Text );
+			expr = untyped_str( expr_tok );
 		}
 
 		return expr;
@@ -4288,7 +4293,7 @@ namespace gen
 			switch ( currtok.Type )
 			{
 				case TokType::Comment:
-					member = def_comment( currtok.Length, currtok.Text );
+					member = def_comment( currtok );
 					eat( TokType::Comment );
 				break;
 
@@ -4349,7 +4354,7 @@ namespace gen
 
 					while ( left && tok_is_specifier( currtok ) )
 					{
-						SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+						SpecifierT spec = ESpecifier::to_type( currtok );
 
 						switch ( spec )
 						{
@@ -4411,7 +4416,7 @@ namespace gen
 
 							Code
 							member       = make_code();
-							member->Name = get_cached_string( name.Text, name.Length );
+							member->Name = get_cached_string( name );
 
 							if ( body )
 							{
@@ -4451,7 +4456,7 @@ namespace gen
 
 					member       = make_code();
 					member->Type = Variable;
-					member->Name = get_cached_string( name.Text, name.Length );
+					member->Name = get_cached_string( name );
 
 					member->add_entry( type );
 
@@ -4496,7 +4501,7 @@ namespace gen
 			switch ( currtok.Type )
 			{
 				case TokType::Comment:
-					member = def_comment( currtok.Length, currtok.Text );
+					member = def_comment( currtok );
 					eat( TokType::Comment );
 				break;
 
@@ -4552,7 +4557,7 @@ namespace gen
 						eat( currtok.Type );
 					}
 
-					Code member = untyped_str( untyped_tok.Length, untyped_tok.Text );
+					Code member = untyped_str( untyped_tok );
 				break;
 			}
 
@@ -4590,7 +4595,7 @@ namespace gen
 		// Parse specifiers
 		while ( left && tok_is_specifier( currtok ) )
 		{
-			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+			SpecifierT spec = ESpecifier::to_type( currtok );
 
 			switch ( spec )
 			{
@@ -4615,7 +4620,7 @@ namespace gen
 
 				if ( currtok.Type == TokType::String )
 				{
-					lang_linkage = untyped_str( currtok.Length, currtok.Text );
+					lang_linkage = untyped_str( currtok );
 					eat( TokType::String );
 				}
 
@@ -4653,12 +4658,12 @@ namespace gen
 		not_implemented();
 	}
 
-	Code parse_class( s32 length, char const* def )
+	Code parse_class( StrC def )
 	{
-		check_parse_args( parse_class, length, def );
+		check_parse_args( parse_class, def );
 		using namespace Parser;
 
-		TokArray toks = lex( length, def );
+		TokArray toks = lex( def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
@@ -4740,7 +4745,7 @@ namespace gen
 		{
 			mem_copy( entries_code, body.Text, body.Length );
 
-			Code untyped_body = untyped_str( entries_length, entries_code );
+			Code untyped_body = untyped_str( { entries_length, entries_code } );
 
 			result->Type = is_enum_class ? Enum_Class : Enum;
 			result->add_entry( untyped_body );
@@ -4750,7 +4755,7 @@ namespace gen
 			result->Type = is_enum_class ? Enum_Class_Fwd : Enum_Fwd;
 		}
 
-		result->Name = get_cached_string( name.Text, name.Length );
+		result->Name = get_cached_string( name );
 
 		if ( type )
 			result->add_entry( type );
@@ -4759,12 +4764,12 @@ namespace gen
 		return result;
 	}
 
-	Code parse_enum( s32 length, char const* def )
+	Code parse_enum( StrC def )
 	{
-		check_parse_args( parse_enum, length, def );
+		check_parse_args( parse_enum, def );
 		using namespace Parser;
 
-		TokArray toks = lex( length, def );
+		TokArray toks = lex( def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
@@ -4777,7 +4782,7 @@ namespace gen
 		return Code::Invalid;
 	}
 
-	Code parse_export_body( s32 length, char const* def )
+	Code parse_export_body( StrC def )
 	{
 		not_implemented();
 		return Code::Invalid;
@@ -4789,7 +4794,7 @@ namespace gen
 		return Code::Invalid;
 	}
 
-	Code parse_extern_link( s32 length, char const* def )
+	Code parse_extern_link( StrC def )
 	{
 		not_implemented();
 		return Code::Invalid;
@@ -4845,12 +4850,12 @@ namespace gen
 		return result;
 	}
 
-	Code parse_friend( s32 length, char const* def )
+	Code parse_friend( StrC def )
 	{
-		check_parse_args( parse_friend, length, def );
+		check_parse_args( parse_friend, def );
 		using namespace Parser;
 
-		TokArray toks = lex( length, def );
+		TokArray toks = lex( def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
@@ -4983,18 +4988,18 @@ namespace gen
 		return result;
 	}
 
-	Code parse_function( s32 length, char const* def )
+	Code parse_function( StrC def )
 	{
 		using namespace Parser;
 
-		check_parse_args( parse_function, length, def );
+		check_parse_args( parse_function, def );
 
 		Arena mem;
 		do_once_start
 			arena_init_from_allocator( & mem, heap(), kilobytes( 10 ) );
 		do_once_end
 
-		TokArray toks = lex( length, def );
+		TokArray toks = lex( def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
@@ -5006,7 +5011,7 @@ namespace gen
 		not_implemented();
 	}
 
-	Code parse_global_body( s32 length, char const* def )
+	Code parse_global_body( StrC def )
 	{
 		using namespace Parser;
 		using namespace ECode;
@@ -5028,7 +5033,7 @@ namespace gen
 		not_implemented();
 	}
 
-	Code parse_namespace( s32 length, char const* def )
+	Code parse_namespace( StrC def )
 	{
 		not_implemented( parse_namespace );
 	}
@@ -5038,7 +5043,7 @@ namespace gen
 		not_implemented();
 	}
 
-	Code parse_operator( s32 length, char const* def )
+	Code parse_operator( StrC def )
 	{
 		not_implemented( parse_operator );
 	}
@@ -5048,7 +5053,7 @@ namespace gen
 		not_implemented();
 	}
 
-	Code parse_struct( s32 length, char const* def )
+	Code parse_struct( StrC def )
 	{
 		Arena mem;
 		do_once_start
@@ -5154,12 +5159,12 @@ namespace gen
 		return result;
 	}
 
-	Code parse_type( s32 length, char const* def )
+	Code parse_type( StrC def )
 	{
-		check_parse_args( parse_type, length, def );
+		check_parse_args( parse_type, def );
 		using namespace Parser;
 
-		TokArray toks = lex( length, def );
+		TokArray toks = lex( def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
@@ -5210,12 +5215,12 @@ namespace gen
 		return result;
 	}
 
-	Code parse_typedef( s32 length, char const* def )
+	Code parse_typedef( StrC def )
 	{
-		check_parse_args( parse_typedef, length, def );
+		check_parse_args( parse_typedef, def );
 		using namespace Parser;
 
-		TokArray toks = lex( length, def );
+		TokArray toks = lex( def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
@@ -5288,12 +5293,12 @@ namespace gen
 		return result;
 	}
 
-	Code parse_using( s32 length, char const* def )
+	Code parse_using( StrC def )
 	{
-		check_parse_args( parse_using, length, def );
+		check_parse_args( parse_using, def );
 		using namespace Parser;
 
-		TokArray toks = lex( length, def );
+		TokArray toks = lex( def );
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
@@ -5332,14 +5337,14 @@ namespace gen
 			}
 		#endif
 
-			attributes = untyped_str( currtok.Length, currtok.Text );
+			attributes = untyped_str( currtok );
 
 			eat( TokType::BraceSquare_Close );
 		}
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
-			SpecifierT spec = ESpecifier::to_type( currtok.Text, currtok.Length );
+			SpecifierT spec = ESpecifier::to_type( currtok );
 
 			switch ( spec )
 			{
@@ -5366,7 +5371,7 @@ namespace gen
 
 				if ( currtok.Type == TokType::String )
 				{
-					lang_linkage = untyped_str( currtok.Length, currtok.Text );
+					lang_linkage = untyped_str( currtok );
 					eat( TokType::String );
 				}
 
@@ -5419,7 +5424,7 @@ namespace gen
 				eat( currtok.Type );
 			}
 
-			expr = untyped_str( expr_tok.Length, expr_tok.Text );
+			expr = untyped_str( expr_tok );
 		}
 
 		eat( TokType::Statement_End );
@@ -5428,7 +5433,7 @@ namespace gen
 
 		Code result  = make_code();
 		result->Type = Variable;
-		result->Name = get_cached_string( name.Text, name.Length );
+		result->Name = get_cached_string( name );
 
 		result->add_entry( type );
 
@@ -5562,7 +5567,7 @@ namespace gen
 	{
 		Code
 		result          = make_code();
-		result->Name    = get_cached_string( str, length );
+		result->Name    = get_cached_string( content );
 		result->Type    = ECode::Untyped;
 		result->Content = result->Name;
 
@@ -5582,9 +5587,9 @@ namespace gen
 
 		Code
 		result          = make_code();
-		result->Name    = get_cached_string( fmt, str_len(fmt, MaxNameLength) );
+		result->Name    = get_cached_string( { str_len(fmt, MaxNameLength), fmt } );
 		result->Type    = ECode::Untyped;
-		result->Content = get_cached_string( buf, length );
+		result->Content = get_cached_string( { length, buf } );
 
 		result.lock();
 		return result;
@@ -5602,9 +5607,9 @@ namespace gen
 
 		Code
 		result          = make_code();
-		result->Name    = get_cached_string( fmt, str_len(fmt, MaxNameLength) );
+		result->Name    = get_cached_string( { str_len(fmt, MaxNameLength), fmt } );
 		result->Type    = ECode::Untyped;
-		result->Content = get_cached_string( buf, length );
+		result->Content = get_cached_string( { length, buf } );
 
 		result.lock();
 		return result;
@@ -5628,7 +5633,7 @@ namespace gen
 			return false;
 		}
 
-		Buffer = string_make( g_allocator, "" );
+		Buffer = String::make( g_allocator, "" );
 
 		return true;
 	}
