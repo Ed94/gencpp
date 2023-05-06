@@ -81,9 +81,24 @@ Code gen__array( s32 length, char const* type_str, sw type_size )
 				return data[ header.Num - 1 ];
 			}
 
-			void clear();
+			void clear()
+			{
+				Header& header = get_header();
+				header.Num = 0;
+			}
 
-			bool fill();
+			bool fill( uw begin, uw end, Type const& value )
+			{
+				Header& header = get_header();
+
+				if ( begin < 0 || end >= header.Num )
+					return false;
+
+				for ( uw idx = begin; idx < end; idx++ )
+					data[ idx ] = value;
+
+				return true;
+			}
 
 			void free()
 			{
@@ -93,18 +108,79 @@ Code gen__array( s32 length, char const* type_str, sw type_size )
 
 			Header& get_header()
 			{
-				return rcast( Header*, Data ) - 1;
+				return pcast( Header, Data - 1 );
 			}
 
-			bool grow();
+			bool grow( uw min_capacity )
+			{
+				Header& header = get_header();
 
-			void pop();
+				uw new_capacity = grow_formula( header.Capacity );
 
-			bool reserve( uw num );
+				if ( new_capacity < min_capacity )
+					new_capacity = min_capacity;
 
-			bool resize( uw num );
+				return set_capacity( new_capacity );
+			}
 
-			bool set_capacity( uw capacity );
+			void pop()
+			{
+				Header& header = get_header();
+
+				assert_crash( header.Num > 0 );
+				header.Num--;
+			}
+
+			bool reserve( uw new_capacity )
+			{
+				Header& header = get_header();
+
+				if ( header.Capacity < new_capacity )
+					return set_capacity( new_capacity );
+
+				return true;
+			}
+
+			bool resize( uw num )
+			{
+				Header& header = get_header();
+
+				if ( header.Capacity < num )
+					if ( ! grow( num ))
+						return false;
+
+				header.Num = num;
+				return true;
+			}
+
+			bool set_capacity( uw new_capacity )
+			{
+				Header& header = get_header();
+
+				if ( new_capacity == header.Capacity )
+					return true;
+
+				if ( new_capacity < header.Num )
+					header.Num = new_capacity;
+
+				sw      size       = sizeof(Header) + sizeof(Type) * new_capacity;
+				Header* new_header = rcast( Header*, alloc( header.Allocator, size ));
+
+				if ( new_header == nullptr )
+					return false;
+
+				mem_move( new_header, & header, sizeof( Header ) + sizeof(Type) * header.Num );
+
+				new_header->Allocator = header.Allocator;
+				new_header->Num       = header.Num;
+				new_header->Capacity  = new_capacity;
+
+				::free( header );
+
+				*Data = new_header + 1;
+
+				return true;
+			}
 		}
 	);
 

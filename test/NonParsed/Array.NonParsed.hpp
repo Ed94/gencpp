@@ -130,8 +130,31 @@ Code gen__array( StrC type, sw type_size )
 			back = def_function( name(back), __, t_type_ref, body );
 		}
 
-		Code clear;
+		Code clear = def_function( name(clear), __, t_void, untyped_str( code(
+			Header& header = get_header();
+			header.Num = 0;
+		)));
+
 		Code fill;
+		{
+			Code params = def_params( 3, t_uw, txt_n_len(begin), t_uw, txt_n_len(end), t_type, txt_n_len(value) );
+
+			Code body = untyped_str( code(
+				Header& header = get_header();
+
+				if ( begin < 0 || end >= header.Num )
+					return false;
+
+				for ( sw idx = begin; idx < end; idx++ )
+				{
+					data[ idx ] = value;
+				}
+
+				return true;
+			));
+
+			fill = def_function( name(fill), params, t_bool, body );
+		}
 
 		Code free;
 		{
@@ -143,12 +166,110 @@ Code gen__array( StrC type, sw type_size )
 			free = def_function( name(free), __, t_void, body, spec_inline );
 		}
 
-		Code get_header;
+		Code get_header = def_function( name(get_header), __, t_header_ref, untyped_str( code(
+			return pcast( Header, Data - 1 );
+		)));
+
 		Code grow;
+		{
+			Code param = def_param( t_uw, name(min_capacity) );
+
+			Code body = untyped_str( code(
+				Header& header = get_header();
+
+				t_uw new_capacity = grow_formula( header.Capacity );
+
+				if ( new_capacity < min_capacity )
+					new_capacity = 8;
+
+				return set_capacity( new_capacity );
+			));
+
+			grow = def_function( name(grow), param, t_bool, body );
+		}
+
 		Code pop;
+		{
+			Code body = untyped_str( code(
+				Header& header = get_header();
+
+				assert_crash( header.Num > 0 );
+				header.Num--;
+			));
+
+			pop = def_function( name(pop), __, t_bool, body );
+		}
+
 		Code reserve;
+		{
+			Code param = def_param( t_uw, name(new_capacity) );
+
+			Code body = untyped_str( code(
+				Header& header = get_header();
+
+				if ( header.Capacity < new_capacity )
+					return set_capacity( capacity );
+
+				return true;
+			));
+
+			reserve = def_function( name(reserve), param, t_bool, body );
+		}
+
 		Code resize;
+		{
+			Code param = def_param( t_uw, name( num ));
+
+			Code body = untyped_str( code(
+				Header& header = get_header();
+
+				if ( num > header.Capacity )
+				{
+					if ( ! grow( header.Allocator ))
+						return false;
+				}
+
+				header.Num = num;
+				return true;
+			));
+
+			resize = def_function( name(resize), param, t_bool, body );
+		}
+
 		Code set_capacity;
+		{
+			Code param = def_param( t_uw, name(new_capacity) );
+
+			Code body = untyped_str( code(
+				Header& header = get_header();
+
+				if ( new_capacity == header.Capacity )
+					return true;
+
+				if ( new_capacity < header.Num )
+					header.Num = new_capacity;
+
+				sw      size       = sizeof(Header) + sizeof(Type) * new_capacity;
+				Header* new_header = rcast( Header*, alloc( header.Allocator, size ));
+
+				if ( new_header == nullptr )
+					return false;
+
+				mem_move( new_header, & header, sizeof( Header ) + sizeof(Type) * header.Num );
+
+				new_header->Allocator = header.Allocator;
+				new_header->Num       = header.Num;
+				new_header->Capacity  = new_capacity;
+
+				::free( header );
+
+				*Data = new_header + 1;
+
+				return true;
+			));
+
+			set_capacity = def_function( name(set_capacity), param, t_bool, body );
+		}
 
 		Code body = def_struct_body( 17
 			, using_type
