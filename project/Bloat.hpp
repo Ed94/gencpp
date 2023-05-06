@@ -89,7 +89,6 @@ using zpl::string_length;
 using zpl::string_make;
 using zpl::str_len;
 
-
 #if __clang__
 #	pragma clang diagnostic pop
 #endif
@@ -146,17 +145,17 @@ using zpl::str_len;
 
 #define macro_expand( Expanded_ ) Expanded_
 
-#define bit( Value_ )                      ( 1 << Value_ )
-#define bitfield_is_equal( Field_, Mask_ ) ( ( (Mask_) & (Field_) ) == (Mask_) )
-#define forceinline                        ZPL_ALWAYS_INLINE
-#define print_nl( _)                       zpl_printf("\n")
-#define ccast( Type_, Value_ )             * const_cast< Type_* >( & (Value_) )
-#define scast( Type_, Value_ )			   static_cast< Type_ >( Value_ )
-#define rcast( Type_, Value_ )			   reinterpret_cast< Type_ >( Value_ )
-#define pcast( Type_, Value_ )             ( * (Type_*)( & (Value_) ) )
-#define txt_impl( Value_ )                 #Value_
-#define txt( Value_ )                      txt_impl( Value_ )
-#define txt_n_len( Value_ )		           sizeof( txt_impl( Value_ ) ), txt_impl( Value_ )
+#define bit( Value_ )                             ( 1 << Value_ )
+#define bitfield_is_equal( Type_, Field_, Mask_ ) ( (Type_(Mask_) & Type_(Field_)) == Type_(Mask_) )
+#define forceinline                               ZPL_ALWAYS_INLINE
+#define print_nl( _)                              zpl_printf("\n")
+#define ccast( Type_, Value_ )                    * const_cast< Type_* >( & (Value_) )
+#define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
+#define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
+#define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
+#define txt_impl( Value_ )                        #Value_
+#define txt( Value_ )                             txt_impl( Value_ )
+#define txt_n_len( Value_ )		                  sizeof( txt_impl( Value_ ) ), txt_impl( Value_ )
 #define do_once()      \
 do                     \
 {                      \
@@ -183,6 +182,94 @@ while(0);
 
 constexpr
 char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
+
+
+#pragma region Memory
+#pragma endregion Memory
+
+#pragma region String
+#if 0
+	struct String
+	{
+		struct Header
+		{
+			AllocatorInfo Allocator;
+			sw            Length;
+			sw            Capacity;
+		};
+
+		static String make ( AllocatorInfo allocator, char const* str )
+		{
+			sw length = str ? str_len( str ) : 0;
+			return make_length( allocator, str, length );
+		}
+
+		static String make_reserve( AllocatorInfo allocator, sw capacity )
+		{
+			constexpr sw header_size = sizeof( Header );
+
+			s32   alloc_size = header_size + capacity + 1;
+			void* allocation = alloc( allocator, alloc_size );
+
+			if ( allocation == nullptr )
+				return { nullptr };
+
+			mem_set( allocation, 0, alloc_size );
+
+			Header*
+			header            = rcast(Header*, allocation);
+			header->Allocator = allocator;
+			header->Capacity  = capacity;
+			header->Length    = 0;
+
+			String result = { (char*)allocation + header_size };
+			return result;
+		}
+
+		static String make_length( AllocatorInfo allocator, char const* str, sw length );
+
+		static String fmt    ( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... );
+		static String fmt_buf( AllocatorInfo allocator, char const* fmt, ... );
+
+		static String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue );
+
+		static bool are_equal( String lhs, String rhs );
+
+		void append( char c );
+		void append( char const* str );
+		void append( char const* str, sw length );
+		void append( const String other );
+		void append( char const* fmt, ... );
+		void append( const String other );
+
+		sw avail_space();
+		sw capacity();
+
+		void clear();
+
+		String duplicate( AllocatorInfo allocator );
+
+		void free();
+
+		Header& header();
+
+		sw length();
+
+		void trim( char const* cut_set );
+		void trim_space();
+
+
+		char* Data = nullptr;
+	};
+
+	struct String_POD
+	{
+		char* Data;
+	};
+	static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
+#endif
+#pragma endregion String
+
 
 namespace Memory
 {

@@ -291,6 +291,7 @@ namespace gen
 
 	enum class AccessSpec : u32
 	{
+		Default,
 		Public,
 		Protected,
 		Private,
@@ -304,6 +305,7 @@ namespace gen
 	{
 		local_persist
 		char const* lookup[ (u32)AccessSpec::Num_AccessSpec ] = {
+			"",
 			"private",
 			"protected",
 			"public",
@@ -420,22 +422,6 @@ namespace gen
 			return DynamicEntries ? array_count(Entries) : StaticIndex;
 		}
 
-		// Class/Struct
-
-		inline
-		AST* parent()
-		{
-			return Entries[1];
-		}
-
-		// Enum
-
-		inline
-		AST* underlying_type()
-		{
-			return Entries[1];
-		}
-
 		// Parameter
 
 		bool add_param( AST* type, s32 length, char const* name );
@@ -533,7 +519,6 @@ namespace gen
 			,	Readonly ? "true"       : "false"
 			,	Parent   ? Parent->Name : ""
 			,	Name     ? Name         : ""
-			,	Comment  ? Comment      : ""
 			);
 		}
 
@@ -554,9 +539,10 @@ namespace gen
 			- sizeof(CodeT) 	   // Type
 			- sizeof(OperatorT)    // Op
 			- sizeof(ModuleFlag)   // ModuleFlags
+			- sizeof(AccessSpec)   // ParentAccess
 			- sizeof(u32) 		   // StaticIndex
 			- sizeof(bool) * 2     // Readonly, DynamicEntries
-			- sizeof(u8) * 6 )     // _Align_Pad
+			- sizeof(u8) * 2 )     // _Align_Pad
 		/ sizeof(AST*);
 
 		constexpr static
@@ -574,10 +560,11 @@ namespace gen
 		CodeT             Type;                        \
 		OperatorT         Op;                          \
 		ModuleFlag        ModuleFlags;                 \
+		AccessSpec        ParentAccess;				   \
 		u32               StaticIndex;                 \
 		bool              Readonly;                    \
 		bool              DynamicEntries;              \
-		u8                _Align_Pad[6];
+		u8                _Align_Pad[2];
 
 		Using_Code_POD
 	};
@@ -785,8 +772,8 @@ namespace gen
 
 	Code def_class( s32 length, char const* name
 		, Code body         = NoCode
-		, Code parent       = NoCode, AccessSpec access     = AccessSpec::Public
-		, Code specifiers   = NoCode, Code       attributes = NoCode
+		, Code parent       = NoCode, AccessSpec access = AccessSpec::Public
+		, Code attributes   = NoCode
 		, ModuleFlag mflags = ModuleFlag::None );
 
 	Code def_enum( s32 length, char const* name
@@ -816,10 +803,10 @@ namespace gen
 	Code def_specifier( SpecifierT specifier );
 
 	Code def_struct( s32 length, char const* name
-		, Code      body
-		, Code      parent     = NoCode, AccessSpec access
-		, Code      specifiers = NoCode, Code       attributes = NoCode
-		, ModuleFlag mflags    = ModuleFlag::None );
+		, Code       body
+		, Code       parent     = NoCode, AccessSpec access = AccessSpec::Public
+		, Code       attributes = NoCode
+		, ModuleFlag mflags     = ModuleFlag::None );
 
 	Code def_typedef( s32 length, char const* name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 	Code def_type   ( s32 length, char const* name, Code arrayexpr = NoCode, Code specifiers = NoCode );

@@ -126,7 +126,7 @@ namespace gen
 #	define AST_BODY_NAMESPACE_UNALLOWED_TYPES      AST_BODY_GLOBAL_UNALLOWED_TYPES
 #	define AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES AST_BODY_GLOBAL_UNALLOWED_TYPES
 
-#	define AST_BODY_STRUCT_UNALLOWED_TYPES AST_BODY_CLASS_UNALLOWED_TYPES
+#	define AST_BODY_STRUCT_UNALLOWED_TYPES         AST_BODY_CLASS_UNALLOWED_TYPES
 #pragma endregion AST Body Case Macros
 
 #pragma region AST
@@ -488,7 +488,30 @@ namespace gen
 
 	String AST::to_string()
 	{
+	#	define ProcessModuleFlags() \
+		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))  \
+			result = string_append_fmt( result, "export " );             \
+                                                                         \
+		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Import ))  \
+			result = string_append_fmt( result, "import " );             \
+                                                                         \
+		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Private )) \
+			result = string_append_fmt( result, "private " );
+
 		String result = string_make( g_allocator, "" );
+
+		// Scope indentation.
+		char indent_str[128] = {0};   // Should be more than enough...
+		s32  tab_count       = 0;
+		{
+			AST* curr_parent = Parent;
+
+			while ( Parent )
+			{
+				indent_str[tab_count] = '\t';
+				tab_count++;
+			}
+		}
 
 		switch ( Type )
 		{
@@ -504,6 +527,8 @@ namespace gen
 
 			case Comment:
 			{
+				result = string_append_length( result, indent_str, tab_count );
+
 				static char line[MaxCommentLineLength];
 
 				s32 left  = string_length( ccast(String, Content) );
@@ -526,141 +551,219 @@ namespace gen
 			case Access_Private:
 			case Access_Protected:
 			case Access_Public:
-				result = string_append_length( result, Name, string_length( ccast(String, Name)) ) ;
+				result = string_append_length( result, indent_str, tab_count );
+				result = string_append_length( result, Name, string_length( ccast(String, Name)) );
 			break;
 
 			case Attributes:
-				result = string_append_fmt( result, "%s", Content );
+				result = string_append_length( result, Content, string_length( ccast(String, Content)) );
 
 			case Class:
 			{
+				result = string_append_length( result, indent_str, tab_count );
 
-				result = string_append_fmt( result, "class");
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "class ");
 
 				s32 idx = 1;
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( Entries[idx]->Type == Attributes )
 				{
-					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
 					idx++;
 				}
 
-				result = string_append_fmt( result, " %s", Name );
+				result = string_append_length( result, Name, string_length( ccast(String, Name)) );
 
-				if ( parent() )
-					result = string_append_fmt( result, " : %s", parent()->to_string() );
+				AST* parent = Entries[idx];
 
-				result = string_append_fmt( result, "\n{\n%s\n};\n", body()->to_string() );
+				if ( parent )
+				{
+					char const* access_level = to_str( ParentAccess );
+
+					result = string_append_fmt( result, ": %s %s\n%s{\n"
+						, access_level
+						, parent
+						, indent_str
+					);
+				}
+
+				result = string_append_fmt( result, "%s\n%s};\n", body()->to_string(), indent_str );
 			}
 			break;
 
 			case Class_Fwd:
 			{
-				result = string_append_fmt( result, "class");
+				result = string_append_length( result, indent_str, tab_count );
 
-				s32 idx = 1;
+				ProcessModuleFlags();
 
-				if ( Entries[idx]->Type == Specifiers )
-				{
-					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
-					idx++;
-				}
-
-				result = string_append_fmt( result, " %s;", Name );
+				result = string_append_fmt( result, "class %s;", Name );
 			}
 			break;
 
 			case Enum:
-				if ( underlying_type() )
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				string_append_length( result, "enum ", 5);
+
+				s32 idx = 1;
+
+				if ( Entries[idx]->Type == Attributes )
 				{
-					result = string_append_fmt( result, "enum %s : %s\n{\n%s\n};\n"
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				if ( Entries[idx]->Type == Typename)
+				{
+					result = string_append_fmt( result, "%s : %s\n%s{\n"
 						, Name
-						, underlying_type()->to_string()
-						, body()->to_string()
+						, Entries[idx]->to_string()
+						, indent_str
 					);
 				}
 				else
 				{
-					result = string_append_fmt( result, "enum %s\n{\n%s\n};\n"
+					result = string_append_fmt( result, "%s\n%s{\n"
 						, Name
-						, body()->to_string()
+						, indent_str
 					);
 				}
+
+				result = string_append_fmt( result, "%s\n%s};"
+					, body()->to_string()
+					, indent_str
+				);
 			break;
 
 			case Enum_Fwd:
-				result = string_append_fmt( result, "enum %s : %s;\n", Name, underlying_type()->to_string() );
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "enum %s : %s;\n", Name, Entries[1]->to_string() );
 			break;
 
 			case Enum_Class:
-				if ( underlying_type() )
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "enum class " );
+
+				s32 idx = 0;
+
+				if ( Entries[idx]->Type == Attributes )
 				{
-					result = string_append_fmt( result, "enum class %s : %s\n{\n%s\n};\n"
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				if ( Entries[idx]->Type == Typename )
+				{
+					result = string_append_fmt( result, ": %s\n%s{\n"
 						, Name
-						, underlying_type()->to_string()
-						, body()->to_string()
+						, Entries[idx]->to_string()
+						, indent_str
 					);
 				}
 				else
 				{
-					result = string_append_fmt( result, "enum class %s\n{\n%s\n};\n"
+					result = string_append_fmt( result, "%s\n%s{\n"
 						, Name
-						, body()->to_string()
+						, indent_str
 					);
 				}
+
+				result = string_append_fmt( result, "%s\n%s};"
+					, body()->to_string()
+					, indent_str
+				);
 			break;
 
 			case Enum_Class_Fwd:
-				result = string_append_fmt( result, "enum class %s : %s;\n", Name, underlying_type()->to_string() );
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "enum class " );
+
+				s32 idx = 0;
+
+				if ( Entries[idx]->Type == Attributes )
+				{
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, ": %s;\n", Name, Entries[idx]->to_string() );
 			break;
 
 			case Execution:
-				result = string_append_fmt( result, "%s\n", Entries[0]->to_string() );
+				result = string_append_length( result, Content, string_length( ccast(String, Content)) );
 			break;
 
 			case Export_Body:
 			{
-				result = string_append_fmt( result, "export\n{\n" );
+				result = string_append_fmt( result, "%sexport\n%s{\n", indent_str, indent_str );
 
 				s32 index = 0;
 				s32 left  = num_entries();
 				while ( left -- )
 				{
-					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
+					result = string_append_fmt( result, "%s\t%s\n", indent_str, Entries[index]->to_string() );
 					index++;
 				}
 
-				result = string_append_fmt( result, "};\n" );
+				result = string_append_fmt( result, "%s};\n", indent_str );
 			}
 			break;
 
 			case Extern_Linkage:
-				result = string_append_fmt( result, "extern %s\n{\n%s\n};\n", Name, body()->to_string() );
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "extern %s\n%s{\n%s\n%s};\n"
+					, Name
+					, indent_str
+					, body()->to_string()
+					, indent_str
+				);
 			break;
 
 			case Friend:
-				result = string_append_fmt( result, "friend %s;\n", Entries[0]->to_string() );
+				result = string_append_fmt( result, "%sfriend %s;\n", indent_str, Entries[0]->to_string() );
 			break;
 
 			case Function:
 			{
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
 				u32 idx  = 1;
 				u32 left = num_entries();
 
-				if ( left <= 0 )
-					log_failure( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
-
-				if ( Entries[idx]->Type == Specifiers )
+				if ( Entries[idx]->Type == Attributes )
 				{
-					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
 					idx++;
 					left--;
 				}
 
-				if ( left <= 0 )
-					log_failure( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s\n", Entries[idx]->to_string() );
+					idx++;
+					left--;
+				}
 
-				result = string_append_fmt( result, "\n%s %s(", Entries[idx]->to_string(), Name );
+				result = string_append_fmt( result, "%s %s(", Entries[idx]->to_string(), Name );
 				idx++;
 				left--;
 
@@ -675,17 +778,20 @@ namespace gen
 					result = string_append_fmt( result, "void" );
 				}
 
-				result = string_append_fmt( result, ")\n{\n%s\n}", body()->to_string() );
+				result = string_append_fmt( result, ")\n%s{\n%s\n%s}"
+					, indent_str
+					, body()->to_string()
+					, indent_str
+				);
 			}
 			break;
 
 			case Function_Fwd:
 			{
+				result = string_append_length( result, indent_str, tab_count );
+
 				u32 idx  = 0;
 				u32 left = array_count( Entries );
-
-				if ( left <= 0 )
-					log_failure( "Code::to_string - Name: %s Type: %s, expected definition", Name, Type );
 
 				if ( Entries[idx]->Type == Specifiers )
 				{
@@ -693,9 +799,6 @@ namespace gen
 					idx++;
 					left--;
 				}
-
-				if ( left <= 0 )
-					log_failure( "Code::to_string - Name: %s Type: %s, expected return type", Name, Type );
 
 				result = string_append_fmt( result, "\n%s %s(", Entries[idx]->to_string(), Name );
 				idx++;
@@ -717,28 +820,48 @@ namespace gen
 			break;
 
 			case Module:
-				// TODO: Add export condition
-				// if ( )
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
 
 				result = string_append_fmt( result, "module %s", Content );
 			break;
 
 			case Namespace:
-				result = string_append_fmt( result, "namespace %s\n{\n%s\n};\n", Name, body()->to_string() );
+				result = string_append_length( result, indent_str, tab_count);
+
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "namespace %s\n%s{\n%s\n%s};\n"
+					, Name
+					, indent_str
+					, body()->to_string()
+					, indent_str
+				);
 			break;
 
 			case Operator:
 			case Operator_Member:
 			{
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
 				s32 idx = 1;
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( Entries[idx]->Type == Attributes )
 				{
-					result = string_append_fmt( result, "%s", Entries[idx]->to_string() );
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
 					idx++;
 				}
 
-				result = string_append_fmt( result, "%s operator%s(", Entries[idx]->to_string(), Name );
+				if ( Entries[idx]->Type == Specifiers )
+				{
+					result = string_append_fmt( result, "%s\n", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, "%s operator %s (", Entries[idx]->to_string(), Name );
 				idx++;
 
 				if ( Entries[idx]->Type == Parameters )
@@ -751,13 +874,21 @@ namespace gen
 					result = string_append_fmt( result, "void" );
 				}
 
-				result = string_append_fmt( result, ")\n{\n%s\n}", body()->to_string() );
+				result = string_append_fmt( result, ")\n%s{\n%s\n%s}"
+					, indent_str
+					, body()->to_string()
+					, indent_str
+				);
 			}
 			break;
 
 			case Operator_Fwd:
 			case Operator_Member_Fwd:
 			{
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
 				s32 idx;
 
 				if ( Entries[idx]->Type == Specifiers )
@@ -811,20 +942,28 @@ namespace gen
 
 			case Struct:
 			{
-				result = string_append_fmt( result, "struct");
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "struct ");
 
 				s32 idx = 1;
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( Entries[idx]->Type == Attributes )
 				{
-					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
 					idx++;
 				}
 
-				result = string_append_fmt( result, " %s", Name );
+				result = string_append_fmt( result, "%s ", Name );
 
-				if ( parent() )
-					result = string_append_fmt( result, " : %s", parent()->to_string() );
+				if ( Entries[idx] )
+				{
+					char const* access_str = to_str( ParentAccess );
+
+					result = string_append_fmt( result, ": %s %s", access_str, Entries[idx]->to_string() );
+				}
 
 				result = string_append_fmt( result, "\n{\n%s\n};\n", body()->to_string() );
 			}
@@ -832,22 +971,30 @@ namespace gen
 
 			case Struct_Fwd:
 			{
-				result = string_append_fmt( result, "struct");
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				result = string_append_fmt( result, "struct ");
 
 				s32 idx = 1;
 
 				if ( Entries[idx]->Type == Specifiers )
 				{
-					result = string_append_fmt( result, " %s", Entries[idx]->to_string() );
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
 					idx++;
 				}
 
-				result = string_append_fmt( result, " %s;", Name );
+				result = string_append_fmt( result, "%s;", Name );
 			}
 			break;
 
 			case Variable:
 			{
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
 				s32 idx = 1;
 
 				if ( Entries[idx]->Type == Specifiers )
@@ -864,27 +1011,87 @@ namespace gen
 			break;
 
 			case Typedef:
-				// TODO: Check for array expression
+				result = string_append_length( result, indent_str, tab_count );
 
-				result = string_append_fmt( result, "typedef %s %s", Entries[0]->to_string(), Name );
+				ProcessModuleFlags();
+
+				AST* type = Entries[0];
+
+				if ( Entries[1] && Entries[1]->Type == Attributes )
+				{
+					result = string_append_fmt( result, "%s ", Entries[1]->to_string() );
+				}
+
+				result = string_append_fmt( result, "typedef %s %s", type->to_string(), Name );
+
+				if ( type->Entries[1] )
+				{
+					result = string_append_fmt( result, "[%s];", type->Entries[1]->to_string() );
+				}
+				else
+				{
+					result = string_append_length( result, ";", 1);
+				}
 			break;
 
 			case Typename:
-				result = string_append_fmt( result, "%s %s", Name, Entries[0]->to_string() );
+				if ( Entries[0] )
+				{
+					result = string_append_fmt( result, "%s %s", Name, Entries[0]->to_string() );
+				}
+				else
+				{
+					result = string_append_fmt( result, "%s", Name );
+				}
 			break;
 
 			case Union:
-				result = string_append_fmt( result, "union %s\n{\n%s\n};\n", Name, body()->to_string() );
+				result = string_append_length( result, indent_str, tab_count );
+
+				ProcessModuleFlags();
+
+				s32 idx = 0;
+
+				result = string_append_length( result, "union ", 6 );
+
+				if ( Entries[idx]->Type == Attributes )
+				{
+					result = string_append_fmt( result, "%s ", Entries[idx]->to_string() );
+					idx++;
+				}
+
+				result = string_append_fmt( result, "%s\n%s{\n%s\n%s};\n"
+					, Name
+					, indent_str
+					, body()->to_string()
+					, indent_str
+				);
 			break;
 
 			case Using:
-				// TODO: Check for array expression
+				result = string_append_length( result, indent_str, tab_count );
 
-				if ( Entries[0] )
-					result = string_append_fmt( result, "using %s = %s", Name, Entries[0] );
+				ProcessModuleFlags();
 
+				AST* type = Entries[0];
+
+				if ( Entries[1] && Entries[1]->Type == Attributes )
+				{
+					result = string_append_fmt( result, "%s ", Entries[1]->to_string() );
+				}
+
+				if ( type )
+				{
+					result = string_append_fmt( result, "using %s = %s", Name, type->to_string() );
+
+					if ( type->Entries[1] )
+						result = string_append_fmt( result, "[%s]", type->Entries[1]->to_string() );
+
+				}
 				else
 					result = string_append_fmt( result, "using %s", Name );
+
+				result = string_append_fmt( result, ";" );
 			break;
 
 			case Using_Namespace:
@@ -904,7 +1111,7 @@ namespace gen
 				s32 left  = num_entries();
 				while ( left -- )
 				{
-					result = string_append_fmt( result, "%s\n", Entries[index]->to_string() );
+					result = string_append_fmt( result, "%s%s\n", indent_str, Entries[index]->to_string() );
 					index++;
 				}
 			}
@@ -912,6 +1119,8 @@ namespace gen
 		}
 
 		return result;
+
+	#undef ProcessModuleFlags
 	}
 #pragma endregion AST
 
@@ -1128,12 +1337,13 @@ namespace gen
 		result->Content        = nullptr;
 		result->Parent         = nullptr;
 		result->Name           = nullptr;
-		result->Comment        = nullptr;
 		result->Type           = ECode::Invalid;
 		result->Op             = EOperator::Invalid;
+		result->ModuleFlags    = ModuleFlag::Invalid;
+		result->ParentAccess   = AccessSpec::Invalid;
+		result->StaticIndex    = 0;
 		result->Readonly       = false;
 		result->DynamicEntries = false;
-		result->StaticIndex    = 0;
 
 		return result;
 	}
@@ -1621,7 +1831,7 @@ namespace gen
 	Code def_class( s32 length, char const* name
 		, Code body
 		, Code parent, AccessSpec parent_access
-		, Code specifiers, Code attributes
+		, Code attributes
 		, ModuleFlag mflags )
 	{
 		using namespace ECode;
@@ -1634,15 +1844,9 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		if ( specifiers && specifiers->Type != Specifiers )
+		if ( parent && parent->Type != Class || parent->Type != Struct || parent->Type != Typename || parent->Type != Untyped )
 		{
-			log_failure( "gen::def_class: specifiers was not a 'Specifiers' type: %s", specifiers->debug_str() );
-			return Code::Invalid;
-		}
-
-		if ( parent && parent->Type != Class || parent->Type != Struct )
-		{
-			log_failure( "gen::def_class: parent provided is not type 'Class' or 'Struct': %s", parent->debug_str() );
+			log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", parent->debug_str() );
 			return Code::Invalid;
 		}
 
@@ -1675,11 +1879,11 @@ namespace gen
 		if ( attributes )
 			result->add_entry( attributes );
 
-		if ( specifiers )
-			result->add_entry( specifiers );
-
 		if ( parent )
+		{
+			result->ParentAccess = parent_access;
 			result->add_entry( parent );
+		}
 
 		result.lock();
 		return result;
@@ -1742,7 +1946,7 @@ namespace gen
 		{
 			result->add_entry( type );
 		}
-		else if ( result->Type == Enum_Class_Fwd || result->Type == Enum_Fwd )
+		else if ( result->Type != Enum_Class_Fwd && result->Type != Enum_Fwd )
 		{
 			log_failure( "gen::def_enum: enum forward declaration must have an underlying type" );
 			return Code::Invalid;
@@ -2068,8 +2272,8 @@ namespace gen
 
 	Code def_struct( u32 length, char const* name
 		, Code body
-		, Code parent, Code parent_access
-		, Code specifiers, Code attributes
+		, Code parent, AccessSpec parent_access
+		, Code attributes
 		, ModuleFlag mflags )
 	{
 		using namespace ECode;
@@ -2079,12 +2283,6 @@ namespace gen
 		if ( attributes && attributes->Type != Attributes )
 		{
 			log_failure( "gen::def_struct: attributes was not a `Attributes` type" );
-			return Code::Invalid;
-		}
-
-		if ( specifiers && specifiers->Type != Specifiers )
-		{
-			log_failure( "gen::def_struct: specifiers was not a `Specifiers` type" );
 			return Code::Invalid;
 		}
 
@@ -2118,11 +2316,11 @@ namespace gen
 		if ( attributes )
 			result->add_entry( attributes );
 
-		if ( specifiers )
-			result->add_entry( specifiers );
-
 		if ( parent )
+		{
+			result->ParentAccess = parent_access;
 			result->add_entry( parent );
+		}
 
 		result.lock();
 		return result;
@@ -2237,8 +2435,9 @@ namespace gen
 		}
 
 		Code
-		result       = make_code();
-		result->Name = get_cached_string( name, length );
+		result              = make_code();
+		result->Name        = get_cached_string( name, length );
+		result->ModuleFlags = mflags;
 
 		switch ( specifier )
 		{
@@ -2253,6 +2452,9 @@ namespace gen
 				result->Type = ECode::Using_Namespace;
 			break;
 		}
+
+		if ( attributes )
+			result->add_entry( attributes );
 
 		result.lock();
 		return result;
@@ -3218,14 +3420,6 @@ namespace gen
 #ifdef GEN_FEATURE_PARSING
 /*
 	These constructors are the most implementation intensive other than the edtior or scanner.
-
-	The current implementation is very convervative and does not use a lexer to process the input first.
-	Instead, it just sifts through the content directly looking for the syntax pattern for the code type
-	and then constructs the AST after.
-
-	Eventually I will problably end up using a dedicated lexer for parser constructors to lower the sloc.
-
-	It uses the upfront constructors to help keep code from getitng to large since the target is to keep the sloc low
 */
 
 	namespace Parser
@@ -4151,9 +4345,7 @@ namespace gen
 						{
 							case ESpecifier::Constexpr:
 							case ESpecifier::Constinit:
-							case ESpecifier::Export:
 							case ESpecifier::External_Linkage:
-							case ESpecifier::Import:
 							case ESpecifier::Local_Persist:
 							case ESpecifier::Mutable:
 							case ESpecifier::Static_Member:
@@ -4340,10 +4532,6 @@ namespace gen
 					member = parse_variable( toks, context );
 				break;
 
-				case TokType::Spec_API:
-					log_failure( "gen::%s: %s not allowed in function body", context, str_tok_type( currtok.Type ) );
-					return Code::Invalid;
-
 				default:
 					Token untyped_tok = currtok;
 
@@ -4395,9 +4583,6 @@ namespace gen
 
 			switch ( spec )
 			{
-				case ESpecifier::API_Macro:
-				case ESpecifier::API_Export:
-				case ESpecifier::API_Import:
 				case ESpecifier::External_Linkage:
 				case ESpecifier::Local_Persist:
 				case ESpecifier::Mutable:
@@ -4685,9 +4870,6 @@ namespace gen
 
 			switch ( spec )
 			{
-				case ESpecifier::API_Macro:
-				case ESpecifier::API_Export:
-				case ESpecifier::API_Import:
 				case ESpecifier::Constexpr:
 				case ESpecifier::External_Linkage:
 				case ESpecifier::Local_Persist:
