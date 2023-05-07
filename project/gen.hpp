@@ -16,7 +16,7 @@
 // #define GEN_DONT_USE_FATAL
 #define GEN_ENFORCE_READONLY_AST
 
-// #define GEN_FEATURE_INCREMENTAL
+#define GEN_FEATURE_INCREMENTAL
 // #define GEN_FEATURE_PARSING
 // #define GEN_FEATURE_EDITOR
 // #define GEN_FEATURE_SCANNER
@@ -774,7 +774,7 @@ namespace gen
 
 	Code def_class( StrC name
 		, Code body         = NoCode
-		, Code parent       = NoCode, AccessSpec access = AccessSpec::Public
+		, Code parent       = NoCode, AccessSpec access = AccessSpec::Default
 		, Code attributes   = NoCode
 		, ModuleFlag mflags = ModuleFlag::None );
 
@@ -806,7 +806,7 @@ namespace gen
 
 	Code def_struct( StrC name
 		, Code       body
-		, Code       parent     = NoCode, AccessSpec access = AccessSpec::Public
+		, Code       parent     = NoCode, AccessSpec access = AccessSpec::Default
 		, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
@@ -851,7 +851,7 @@ namespace gen
 #	pragma region Incremental
 #	ifdef GEN_FEATURE_INCREMENTAL
 	Code make_class( StrC name
-		, Code       parent     = NoCode, AccessSpec access     = AccessSpec::Public
+		, Code       parent     = NoCode, AccessSpec access     = AccessSpec::Default
 		, Code       specifiers = NoCode, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
@@ -879,7 +879,7 @@ namespace gen
 	Code make_specifiers();
 
 	Code make_struct( StrC name
-		, Code       parent     = NoCode, AccessSpec access
+		, Code       parent     = NoCode, AccessSpec access     = AccessSpec::Default
 		, Code       specifiers = NoCode, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
