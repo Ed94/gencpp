@@ -16,10 +16,10 @@
 // #define GEN_DONT_USE_FATAL
 #define GEN_ENFORCE_READONLY_AST
 
-#define GEN_FEATURE_INCREMENTAL
-#define GEN_FEATURE_PARSING
-#define GEN_FEATURE_EDITOR
-#define GEN_FEATURE_SCANNER
+// #define GEN_FEATURE_INCREMENTAL
+// #define GEN_FEATURE_PARSING
+// #define GEN_FEATURE_EDITOR
+// #define GEN_FEATURE_SCANNER
 
 
 #ifdef gen_time
@@ -188,9 +188,6 @@ namespace gen
 		inline
 		char const* to_str( Type op )
 		{
-			using something = u8;
-			typedef u8 another;
-
 			local_persist
 			char const* lookup[ Num_Ops ] = {
 			#	define Entry( Type_, Token_ ) txt(Token_),
@@ -312,7 +309,7 @@ namespace gen
 		};
 
 		if ( type > AccessSpec::Public )
-			return lookup[ (u32)AccessSpec::Invalid ];
+			return "Invalid";
 
 		return lookup[ (u32)type ];
 	}
@@ -482,12 +479,14 @@ namespace gen
 		bool typename_is_ptr()
 		{
 			assert_crash("not implemented");
+			return false;
 		}
 
 		inline
 		bool typename_is_ref()
 		{
 			assert_crash("not implemented");
+			return false;
 		}
 
 		inline
@@ -572,7 +571,7 @@ namespace gen
 	struct CodePOD
 	{
 		Using_Code_POD
-	#	undef Using_CodePOD;
+	#	undef Using_CodePOD
 	};
 
 	constexpr sw size_AST = sizeof(AST);
@@ -667,6 +666,8 @@ namespace gen
 			return ast;
 		}
 
+	// Cannot be done unfortunately c++ sucks. (Will lose POD by doing so)
+	#if 0
 		inline
 		Code& operator=( Code other )
 		{
@@ -688,6 +689,7 @@ namespace gen
 
 			return *this;
 		}
+	#endif
 
 		inline
 		AST* operator->()
@@ -823,6 +825,7 @@ namespace gen
 		, ModuleFlag mflags     = ModuleFlag::None );
 
 	Code def_class_body      ( s32 num, ... );
+	Code def_class_body      ( s32 num, Code* codes );
 	Code def_enum_body       ( s32 num, ... );
 	Code def_enum_body       ( s32 num, Code* codes );
 	Code def_export_body     ( s32 num, ... );

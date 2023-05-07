@@ -34,8 +34,9 @@ GitHub:
   https://github.com/zpl-c/zpl
 
 Version History:
+  19.0.1  - Fixed zpl_array_fill ZPL_ASSERT off-by-one error
   19.0.0  - Check all results of zpl_alloc() when using JSON parser/writer (rheatley-pervasid)
-
+  
   18.1.5  - set parent to parsed JSON nodes (fixed)
   		- fix zpl_json/csv_write_string off-by-one issue
   18.1.4  - fix zpl_random_gen_isize/zpl_random_range_isize 32bit overflow
@@ -51,13 +52,13 @@ Version History:
   18.0.0  - removed coroutines module
           - removed timer module
           - rename zpl_adt_get -> zpl_adt_query
-
+  
   17.0.0  - ADT API changes
               zpl_adt_inset_* -> zpl_adt_append_*
               zpl_adt_node now holds a parent field, methods no longer require a pointer to the parent
               methods are now documented
           - add zpl_thread_init_nowait (gaopeng)
-
+  
   16.1.1  - fix scientific notation parsing
   16.1.0  - introduce ZPL_PARSER_DISABLE_ANALYSIS that disables extra parsing capabilities to offer better raw performance
               at a cost of lack of node metadata.
@@ -69,7 +70,7 @@ Version History:
           - fix memory leak when parsing a json array (gaopeng)
           - add zpl_strntok (gaopeng)
           - add zpl_semaphore_trywait (gaopeng)
-
+  
   15.0.3  - fix zpl_sign call in math failing to compile
               on macos devices
   15.0.2  - zpl_sign0 was introduced
@@ -77,7 +78,7 @@ Version History:
   		- zpl_sign(0) returns 0
   15.0.0  - Rework zpl ring buffer
   		- various code improvements
-
+  
   14.1.7  - fix zpl_random_range_i64
   		- set thread's is_running before we start a thread
   14.1.6  - remove windows.h dependency for header part
@@ -87,7 +88,7 @@ Version History:
   14.1.0  - add hashtable map_mut method
   14.0.1  - fix zpl_array_remove_at boundary bug
   14.0.0  - heap memory allocator analysis
-
+  
   13.4.1  - adt optimizations
   13.4.0  - new adt manipulation methods
   13.3.3  - fix zpl_str_skip_literal bug
@@ -102,7 +103,7 @@ Version History:
   13.1.1  - fix emscripten support
   13.1.0  - abstract data tree naming update
   13.0.0  - text parsers refactor
-
+  
   12.8.0  - zpl_opts improvements
   12.7.0  - math improvements
   12.6.2  - remove register usage (BeastLe9enD)
@@ -119,7 +120,7 @@ Version History:
   12.1.0  - Add rectangle partitioning
   12.0.1  - Optimize zpl_strlen
   12.0.0  - JSON API revamp + improvements
-
+  
   11.3.0  - JSON zpl_json_str_to_flt + cleanup
   11.2.5  - fix small atomics typo
   11.2.4  - JSON rewrite core parser
@@ -141,7 +142,7 @@ Version History:
   11.0.0  - New jobs system
           - Rewrite the timer module
           - zpl_ring rework
-
+  
   10.13.0 - Initial ARM threading support
   10.12.1 - Fix missing zpL_alloc_str
   10.12.0 - Add zpl_crc64
@@ -185,7 +186,7 @@ Version History:
   10.0.4 - Flush tester output to fix ordering
   10.0.3 - Fix ZPL_STATIC_ASSERT under MSVC
   10.0.0 - Major overhaul of the library
-
+  
   9.8.10 - JSON fix array-based documents with objects
   9.8.9 - JSON document structured as array now properly recognizes the root object as array.
   9.8.8 - Fixed an incorrect parsing of empty array nodes.
@@ -218,7 +219,7 @@ Version History:
   9.1.0 - get_env rework and fixes
   9.0.3 - Small fixes and removals
   9.0.0 - New documentation format, removed deprecated code, changed styles
-
+  
   8.14.1 - Fix string library
   8.14.0 - Added zpl_re_match_all
   8.13.0 - Update system command API
@@ -237,7 +238,7 @@ Version History:
   8.10.0 - Added zpl_strchr
   8.9.0  - API improvements for JSON5 parser
   8.8.4  - Add support for SJSON formatting http://bitsquid.blogspot.com/2009/10/simplified-json-notation.html
-
+  
   6.8.3  - JSON5 exp fix
   6.8.2  - Bugfixes applied from gb
   6.8.1  - Performance improvements for JSON5 parser
@@ -257,7 +258,7 @@ Version History:
   6.0.2  - Fixed warnings for json5 i64 printfs
   6.0.1  - Fixed warnings for particual win compiler in dirlist method
   6.0.0  - New build, include/ was renamed to code/
-
+  
   5.8.3  - Naming fixes
   5.8.2  - Job system now supports prioritized tasks
   5.8.1  - Renames zpl_pad to zpl_ring
@@ -285,7 +286,7 @@ Version History:
   5.0.2  - Fix segfault when using zpl_stack_memory
   5.0.1  - Small code improvements
   5.0.0  - Project structure changes
-
+  
   4.7.2  - Got rid of size arg for zpl_str_split_lines
   4.7.1  - Added an example
   4.7.0  - Added zpl_path_dirlist
@@ -310,7 +311,7 @@ Version History:
   4.0.2  - Warning fix for _LARGEFILE64_SOURCE
   4.0.1  - include stdlib.h for getenv (temp)
   4.0.0  - ARM support, coding style changes and various improvements
-
+  
   3.4.1  - zpl_memcopy now uses memcpy for ARM arch-family
   3.4.0  - Removed obsolete code
   3.3.4  - Added Travis CI config
@@ -331,7 +332,7 @@ Version History:
   3.0.2  - Fixed linux part, and removed trailing spaces
   3.0.1  - Small bugfix in zpl_file_open
   3.0.0  - Added several fixes and features
-
+  
   2.4.0  - Added remove to hash table
   2.3.3  - Removed redundant code
   2.3.2  - Eliminated extra warnings
@@ -344,7 +345,7 @@ Version History:
   2.0.8  - Small adjustments
   2.0.7  - MinGW related fixes
   2.0.0  - New NPM based version
-
+  
   1.2.2  - Small fix
   1.2.1  - Macro fixes
   1.2.0  - Added zpl_async macro
@@ -354,15 +355,15 @@ Version History:
 
 License:
   This Software is dual licensed under the following licenses:
-
+  
   Unlicense
   This is free and unencumbered software released into the public domain.
-
+  
   Anyone is free to copy, modify, publish, use, compile, sell, or
   distribute this software, either in source code form or as a compiled
   binary, for any purpose, commercial or non-commercial, and by any
   means.
-
+  
   In jurisdictions that recognize copyright laws, the author or authors
   of this software dedicate any and all copyright interest in the
   software to the public domain. We make this dedication for the benefit
@@ -370,7 +371,7 @@ License:
   successors. We intend this dedication to be an overt act of
   relinquishment in perpetuity of all present and future rights to this
   software under copyright law.
-
+  
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -378,15 +379,15 @@ License:
   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
   OTHER DEALINGS IN THE SOFTWARE.
-
+  
   For more information, please refer to <http://unlicense.org/>
-
+  
   BSD 3-Clause
   Copyright (c) 2016-2021 Dominik Madarász. All rights reserved.
-
+  
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
-
+  
   1. Redistributions of source code must retain the above copyright notice, this
   list of conditions and the following disclaimer.
   2. Redistributions in binary form must reproduce the above copyright notice,
@@ -395,7 +396,7 @@ License:
   3. Neither the name of the copyright holder nor the names of its contributors
   may be used to endorse or promote products derived from this software without
   specific prior written permission.
-
+  
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
   ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
   WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -414,7 +415,7 @@ License:
 
 #	define ZPL_VERSION_MAJOR 19
 #	define ZPL_VERSION_MINOR 0
-#	define ZPL_VERSION_PATCH 0
+#	define ZPL_VERSION_PATCH 1
 #	define ZPL_VERSION_PRE   ""
 
 // file: zpl_hedley.h
@@ -2044,7 +2045,7 @@ ZPL_DIAGNOSTIC_POP
 			namespace zpl           \
 			{
 #		define ZPL_END_NAMESPACE    }
-#		define ZPL_NS( Identifier ) zpl::##Identifier    // Used in macros, properly exposes symbol anywhere
+#		define ZPL_NS( Identifier ) zpl::Identifier    // Used in macros, properly exposes symbol anywhere
 #	else
 #		define ZPL_BEGIN_NAMESPACE
 #		define ZPL_END_NAMESPACE
@@ -3885,15 +3886,15 @@ ZPL_IMPL_INLINE b8 _array_appendv_at( void** x, void* items, sw item_size, sw it
 
 #define array_appendv_at( x, items, item_count, ind ) ZPL_NS( _array_appendv_at )( zpl_cast( void** ) & ( x ), ( items ), size_of( ( items )[ 0 ] ), ( item_count ), ( ind ) )
 
-#define array_fill( x, begin, end, value )                          \
-	do                                                              \
-	{                                                               \
-		ZPL_ASSERT( ( begin ) >= 0 && ( end ) < array_count( x ) ); \
-		ZPL_ASSERT( size_of( value ) == size_of( ( x )[ 0 ] ) );    \
-		for ( ZPL_NS( sw ) i = ( begin ); i < ( end ); i++ )        \
-		{                                                           \
-			x[ i ] = value;                                         \
-		}                                                           \
+#define array_fill( x, begin, end, value )                           \
+	do                                                               \
+	{                                                                \
+		ZPL_ASSERT( ( begin ) >= 0 && ( end ) <= array_count( x ) ); \
+		ZPL_ASSERT( size_of( value ) == size_of( ( x )[ 0 ] ) );     \
+		for ( ZPL_NS( sw ) i = ( begin ); i < ( end ); i++ )         \
+		{                                                            \
+			x[ i ] = value;                                          \
+		}                                                            \
 	} while ( 0 )
 
 #define array_remove_at( x, index )                                                                     \
@@ -4645,7 +4646,7 @@ ZPL_DEF_INLINE const char* str_tok( char* output, const char* src, const char* d
 ZPL_DEF_INLINE const char* strntok( char* output, sw len, const char* src, const char* delimit );
 
 ZPL_DEF_INLINE char*  str_dup( AllocatorInfo a, char* src, sw max_len );
-ZPL_DEF_INLINE char** str_split_lines( AllocatorInfo alloc, char* source, b32 strip_whitespace );
+ZPL_DEF_INLINE char** str_split_lines( AllocatorInfo allocator, char* source, b32 strip_whitespace );
 
 #define str_expand( str ) str, ZPL_NS( str_len )( str )
 #define str_advance_while( str, cond ) \
@@ -5126,10 +5127,10 @@ ZPL_IMPL_INLINE char* str_dup( AllocatorInfo a, char* src, sw max_len )
 	return dest;
 }
 
-ZPL_IMPL_INLINE char** str_split_lines( AllocatorInfo alloc, char* source, b32 strip_whitespace )
+ZPL_IMPL_INLINE char** str_split_lines( AllocatorInfo allocator, char* source, b32 strip_whitespace )
 {
 	char **lines = NULL, *p = source, *pd = p;
-	array_init( lines, alloc );
+	array_init( lines, allocator );
 
 	while ( *p )
 	{
@@ -5601,7 +5602,7 @@ ZPL_DEF b32 file_write_contents( char const* filepath, void const* buffer, sw si
  * @param  strip_whitespace Strip whitespace when we split to lines?
  * @return                  File content we've read itself
  */
-ZPL_DEF char* file_read_lines( AllocatorInfo alloc, Array( char* ) * lines, char const* filename, b32 strip_whitespace );
+ZPL_DEF char* file_read_lines( AllocatorInfo allocator, Array( char* ) * lines, char const* filename, b32 strip_whitespace );
 
 //! @}
 
@@ -5828,7 +5829,7 @@ ZPL_DEF char* path_get_full_name( AllocatorInfo a, char const* path );
  * @param  recurse [description]
  * @return         [description]
  */
-ZPL_DEF /*zpl_string*/ char* path_dirlist( AllocatorInfo alloc, char const* dirname, b32 recurse );
+ZPL_DEF /*zpl_string*/ char* path_dirlist( AllocatorInfo allocator, char const* dirname, b32 recurse );
 
 /**
  * Initialize dirinfo from specified path
@@ -5966,7 +5967,7 @@ ZPL_DEF sw tar_pack( FileInfo* archive, char const** paths, sw paths_len );
  * @param alloc memory allocator to use (ex. zpl_heap())
  * @return error
  */
-ZPL_DEF sw tar_pack_dir( FileInfo* archive, char const* path, AllocatorInfo alloc );
+ZPL_DEF sw tar_pack_dir( FileInfo* archive, char const* path, AllocatorInfo allocator );
 
 /**
  * @brief Unpacks an existing archive
@@ -6584,7 +6585,7 @@ typedef struct
 
 typedef struct
 {
-	AllocatorInfo alloc;
+	AllocatorInfo allocator;
 	OptsEntry*    entries;       ///< zpl_array
 	OptsError*    errors;        ///< zpl_array
 	OptsEntry**   positioned;    ///< zpl_array
@@ -8761,7 +8762,7 @@ typedef struct
 
 typedef struct
 {
-	AllocatorInfo alloc;
+	AllocatorInfo allocator;
 	u32           max_threads, max_jobs, counter;
 	ThreadWorker* workers;    ///< zpl_buffer
 	ThreadQueue   queues[ ZPL_JOBS_MAX_PRIORITIES ];
@@ -11248,16 +11249,16 @@ FileContents file_read_contents( AllocatorInfo a, b32 zero_terminate, char const
 
 	if ( file_open( &file, filepath ) == EFileError_NONE )
 	{
-		sw file_size = zpl_cast( sw ) file_size( &file );
-		if ( file_size > 0 )
+		sw fsize = zpl_cast( sw ) file_size( &file );
+		if ( fsize > 0 )
 		{
-			result.data = alloc( a, zero_terminate ? file_size + 1 : file_size );
-			result.size = file_size;
+			result.data = alloc( a, zero_terminate ? fsize + 1 : fsize );
+			result.size = fsize;
 			file_read_at( &file, result.data, result.size, 0 );
 			if ( zero_terminate )
 			{
-				u8* str          = zpl_cast( u8* ) result.data;
-				str[ file_size ] = '\0';
+				u8* str      = zpl_cast( u8* ) result.data;
+				str[ fsize ] = '\0';
 			}
 		}
 		file_close( &file );
@@ -11294,16 +11295,16 @@ b32 file_write_contents( char const* filepath, void const* buffer, sw size, File
 	return write_ok;
 }
 
-char* file_read_lines( AllocatorInfo alloc, Array( char* ) * lines, char const* filename, b32 strip_whitespace )
+char* file_read_lines( AllocatorInfo allocator, Array( char* ) * lines, char const* filename, b32 strip_whitespace )
 {
 	FileInfo f = { 0 };
 	file_open( &f, filename );
 	sw fsize = ( sw )file_size( &f );
 
-	char* contents = ( char* )alloc( alloc, fsize + 1 );
+	char* contents = ( char* )alloc( allocator, fsize + 1 );
 	file_read( &f, contents, fsize );
 	contents[ fsize ] = 0;
-	*lines            = str_split_lines( alloc, contents, strip_whitespace );
+	*lines            = str_split_lines( allocator, contents, strip_whitespace );
 	file_close( &f );
 
 	return contents;
@@ -11334,7 +11335,7 @@ typedef struct
 	u8            magic;
 	u8*           buf;    //< zpl_array OR plain buffer if we can't write
 	sw            cursor;
-	AllocatorInfo alloc;
+	AllocatorInfo allocator;
 
 	FileStreamFlags flags;
 	sw              cap;
@@ -11366,10 +11367,10 @@ b8 file_stream_new( FileInfo* file, AllocatorInfo allocator )
 	if ( ! d )
 		return false;
 	zero_item( file );
-	d->magic = ZPL__FILE_STREAM_FD_MAGIC;
-	d->alloc = allocator;
-	d->flags = EFileStream_CLONE_WRITABLE;
-	d->cap   = 0;
+	d->magic     = ZPL__FILE_STREAM_FD_MAGIC;
+	d->allocator = allocator;
+	d->flags     = EFileStream_CLONE_WRITABLE;
+	d->cap       = 0;
 	if ( ! array_init( d->buf, allocator ) )
 		return false;
 	file->ops             = memory_file_operations;
@@ -11388,9 +11389,9 @@ b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, sw siz
 	if ( ! d )
 		return false;
 	zero_item( file );
-	d->magic = ZPL__FILE_STREAM_FD_MAGIC;
-	d->alloc = allocator;
-	d->flags = flags;
+	d->magic     = ZPL__FILE_STREAM_FD_MAGIC;
+	d->allocator = allocator;
+	d->flags     = flags;
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
 		if ( ! array_init_reserve( d->buf, allocator, size ) )
@@ -11483,11 +11484,11 @@ internal ZPL_FILE_WRITE_AT_PROC( _memory_file_write )
 
 internal ZPL_FILE_CLOSE_PROC( _memory_file_close )
 {
-	_memory_fd*   d     = _file_stream_from_fd( fd );
-	AllocatorInfo alloc = d->alloc;
+	_memory_fd*   d         = _file_stream_from_fd( fd );
+	AllocatorInfo allocator = d->allocator;
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 		array_free( d->buf );
-	free( alloc, d );
+	free( allocator, d );
 }
 
 FileOperations const memory_file_operations = { _memory_file_read, _memory_file_write, _memory_file_seek, _memory_file_close };
@@ -11830,7 +11831,7 @@ FileError path_rmdir( char const* path )
 	return EFileError_UNKNOWN;
 }
 
-void _file_direntry( AllocatorInfo alloc, char const* dirname, String* output, b32 recurse )
+void _file_direntry( AllocatorInfo allocator, char const* dirname, String* output, b32 recurse )
 {
 #if defined( ZPL_SYSTEM_UNIX ) || defined( ZPL_SYSTEM_OSX )
 	DIR *          d, *cd;
@@ -11848,7 +11849,7 @@ void _file_direntry( AllocatorInfo alloc, char const* dirname, String* output, b
 			if ( dir->d_name[ 0 ] == '.' && dir->d_name[ 1 ] == 0 )
 				continue;
 
-			String dirpath = string_make( alloc, dirname );
+			String dirpath = string_make( allocator, dirname );
 			dirpath        = string_appendc( dirpath, "/" );
 			dirpath        = string_appendc( dirpath, dir->d_name );
 
@@ -11857,7 +11858,7 @@ void _file_direntry( AllocatorInfo alloc, char const* dirname, String* output, b
 
 			if ( recurse && ( cd = opendir( dirpath ) ) != NULL && dir->d_type == DT_DIR )
 			{
-				_file_direntry( alloc, dirpath, output, recurse );
+				_file_direntry( allocator, dirpath, output, recurse );
 			}
 			string_free( dirpath );
 		}
@@ -11884,7 +11885,7 @@ void _file_direntry( AllocatorInfo alloc, char const* dirname, String* output, b
 	}
 
 	// attach search pattern
-	String findpath = string_make( alloc, directory );
+	String findpath = string_make( allocator, directory );
 	findpath        = string_appendc( findpath, "\\" );
 	findpath        = string_appendc( findpath, "*" );
 
@@ -11901,7 +11902,7 @@ void _file_direntry( AllocatorInfo alloc, char const* dirname, String* output, b
 			if ( filename[ 0 ] == '.' && filename[ 1 ] == 0 )
 				continue;
 
-			String dirpath = string_make( alloc, directory );
+			String dirpath = string_make( allocator, directory );
 			dirpath        = string_appendc( dirpath, "\\" );
 			dirpath        = string_appendc( dirpath, filename );
 			DWORD attrs    = GetFileAttributesW( ( const wchar_t* )utf8_to_ucs2_buf( ( const u8* )dirpath ) );
@@ -11911,7 +11912,7 @@ void _file_direntry( AllocatorInfo alloc, char const* dirname, String* output, b
 
 			if ( recurse && ( data.attrib & _A_SUBDIR ) && ! ( attrs & FILE_ATTRIBUTE_REPARSE_POINT ) )
 			{
-				_file_direntry( alloc, dirpath, output, recurse );
+				_file_direntry( allocator, dirpath, output, recurse );
 			}
 
 			string_free( dirpath );
@@ -11923,10 +11924,10 @@ void _file_direntry( AllocatorInfo alloc, char const* dirname, String* output, b
 #endif
 }
 
-String path_dirlist( AllocatorInfo alloc, char const* dirname, b32 recurse )
+String path_dirlist( AllocatorInfo allocator, char const* dirname, b32 recurse )
 {
-	String buf = string_make_reserve( alloc, 4 );
-	_file_direntry( alloc, dirname, &buf, recurse );
+	String buf = string_make_reserve( allocator, 4 );
+	_file_direntry( allocator, dirname, &buf, recurse );
 	return buf;
 }
 
@@ -12136,9 +12137,9 @@ sw tar_pack( FileInfo* archive, char const** paths, sw paths_len )
 			return -( ZPL_TAR_ERROR_IO_ERROR );
 		}
 
-		s64 file_size = file_size( &file );
+		s64 fsize = file_size( &file );
 		str_fmt( hr.name, 12, "%s", paths[ i ] );
-		str_fmt( hr.size, 12, "%o", file_size );
+		str_fmt( hr.size, 12, "%o", fsize );
 		str_fmt( hr.mode, 8, "%o", 0664 );
 		str_fmt( hr.mtime, 12, "%o", fs_last_write_time( paths[ i ] ) );
 		hr.type = ZPL_TAR_TYPE_REGULAR;
@@ -12148,9 +12149,9 @@ sw tar_pack( FileInfo* archive, char const** paths, sw paths_len )
 
 		// write data
 		{
-			s64  remaining_data = file_size;
+			s64  remaining_data = fsize;
 			s64  total_data     = align_forward_i64( remaining_data, 512 );
-			s64  padding        = ( total_data - file_size );
+			s64  padding        = ( total_data - fsize );
 			char buf[ 4096 ]    = { 0 };
 			s64  pos            = 0;
 			sw   bytes_read     = 0;
@@ -12192,10 +12193,10 @@ sw tar_pack( FileInfo* archive, char const** paths, sw paths_len )
 	return 0;
 }
 
-sw tar_pack_dir( FileInfo* archive, char const* path, AllocatorInfo alloc )
+sw tar_pack_dir( FileInfo* archive, char const* path, AllocatorInfo allocator )
 {
-	String       filelst = path_dirlist( alloc, path, true );
-	char const** files   = zpl_cast( char const** ) str_split_lines( alloc, filelst, false );
+	String       filelst = path_dirlist( allocator, path, true );
+	char const** files   = zpl_cast( char const** ) str_split_lines( allocator, filelst, false );
 	sw           err     = tar_pack( archive, files, array_count( files ) );
 	string_free( filelst );
 	array_free( files );
@@ -15248,10 +15249,10 @@ ZPL_BEGIN_C_DECLS
 
 void opts_init( Opts* opts, AllocatorInfo a, char const* app )
 {
-	Opts opts_    = { 0 };
-	*opts         = opts_;
-	opts->alloc   = a;
-	opts->appname = app;
+	Opts opts_      = { 0 };
+	*opts           = opts_;
+	opts->allocator = a;
+	opts->appname   = app;
 
 	array_init( opts->entries, a );
 	array_init( opts->positioned, a );
@@ -15353,7 +15354,7 @@ void _opts_set_value( Opts* opts, OptsEntry* t, char* b )
 	{
 		case EOpts_STRING :
 			{
-				t->text = string_make( opts->alloc, b );
+				t->text = string_make( opts->allocator, b );
 			}
 			break;
 
@@ -19747,7 +19748,7 @@ void jobs_init_with_limit( JobsSystem* pool, AllocatorInfo a, u32 max_threads, u
 	JobsSystem pool_ = { 0 };
 	*pool            = pool_;
 
-	pool->alloc       = a;
+	pool->allocator   = a;
 	pool->max_threads = max_threads;
 	pool->max_jobs    = max_jobs;
 	pool->counter     = 0;
@@ -21643,7 +21644,7 @@ typedef uptr uintptr;
 typedef sptr intptr;
 #	endif    // ZPL_EXPOSE_TYPES
 
-#endif        // ZPL_H
+#endif    // ZPL_H
 
 // TOC:
 // zpl.h

@@ -80,10 +80,10 @@ using zpl::pool_init;
 using zpl::pool_free;
 using zpl::process_exit;
 using zpl::str_copy;
+using zpl::str_fmt_va;
 using zpl::str_fmt_out_va;
 using zpl::str_fmt_out_err_va;
 using zpl::str_compare;
-using zpl::str_fmt_va;
 using zpl::string_appendc;
 using zpl::string_append_fmt;
 using zpl::string_append_length;
@@ -104,6 +104,7 @@ using zpl::str_len;
 #	pragma clang diagnostic ignored "-Wunused-variable"
 #   pragma clang diagnostic ignored "-Wunknown-pragmas"
 #	pragma clang diagnostic ignored "-Wvarargs"
+#	pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
 
@@ -264,14 +265,12 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			if ( ! str )
 				mem_set( allocation, 0, alloc_size );
 
-			Header
-			header = { allocator, length, length };
+			Header header = { allocator, length, length };
+			String result = { rcast( char*, allocation) + header_size };
 
 			if ( length && str )
-				mem_copy( allocation + header_size, str, length );
+				mem_copy( result, str, length );
 
-			String
-			result = { rcast( char*, allocation + header_size) };
 			result[ length ] = '\0';
 
 			return result;
@@ -327,8 +326,45 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return true;
 		}
 
+		bool make_space_for( char const* str, sw add_len )
+		{
+			sw available = avail_space();
 
-		bool make_space_for( char const* str, sw add_len );
+			// NOTE: Return if there is enough space left
+			if ( available >= add_len )
+			{
+				return false;
+			}
+			else
+			{
+				sw new_len, old_size, new_size;
+
+				void* ptr;
+				void* new_ptr;
+
+				AllocatorInfo allocator = get_header().Allocator;
+				Header*       header	= nullptr;
+
+				new_len  = length() + add_len;
+				ptr      = & get_header();
+				old_size = size_of( Header ) + length() + 1;
+				new_size = size_of( Header ) + new_len + 1;
+
+				new_ptr = resize( allocator, ptr, old_size, new_size );
+
+				if ( new_ptr == nullptr )
+					return false;
+
+				header            = zpl_cast( Header* ) new_ptr;
+				header->Allocator = allocator;
+				header->Capacity  = new_len;
+
+				Data = rcast( char*, header + 1 );
+
+				return str;
+			}
+		}
+
 
 		bool append( char const* str )
 		{
@@ -339,7 +375,7 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 		{
 			Header& header = get_header();
 
-			if ( str > 0 )
+			if ( sptr(str) > 0 )
 			{
 				sw curr_len = header.Length;
 
@@ -428,60 +464,12 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return header.Length;
 		}
 
-		bool make_space_for( char const* str, sw add_len )
-		{
-			sw available = avail_space();
-
-			// NOTE: Return if there is enough space left
-			if ( available >= add_len )
-			{
-				return false;
-			}
-			else
-			{
-				sw new_len, old_size, new_size;
-
-				void* ptr;
-				void* new_ptr;
-
-				AllocatorInfo allocator = get_header().Allocator;
-				Header*       header	= nullptr;
-
-				new_len  = length() + add_len;
-				ptr      = & get_header();
-				old_size = size_of( Header ) + length() + 1;
-				new_size = size_of( Header ) + new_len + 1;
-
-				new_ptr = resize( allocator, ptr, old_size, new_size );
-
-				if ( new_ptr == nullptr )
-					return false;
-
-				header            = zpl_cast( Header* ) new_ptr;
-				header->Allocator = allocator;
-				header->Capacity  = new_len;
-
-				Data = rcast( char*, header + 1 );
-
-				return str;
-			}
-		}
-
 		void trim( char const* cut_set )
 		{
-			char* start;
-			char* end;
-
-			char* start_pos;
-			char* end_pos;
-
 			sw len = 0;
 
-			start_pos = Data;
-			start     = Data;
-
-			end_pos = Data + length() - 1;
-			end     = Data + length() - 1;
+			char* start_pos = Data;
+			char* end_pos   = Data + length() - 1;
 
 			while ( start_pos <= end_pos && char_first_occurence( cut_set, *start_pos ) )
 				start_pos++;
@@ -606,7 +594,7 @@ sw fatal(char const* fmt, ...)
 
 #if Build_Debug
 	va_start(va, fmt);
-	zpl::snprintf_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
+	str_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, va);
 	va_end(va);
 
 	assert_crash(buf);

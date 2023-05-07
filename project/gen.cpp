@@ -28,10 +28,10 @@ namespace gen
 #pragma region Constants
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 	Code type_ns(void);
-
+	Code type_ns(int);
 	Code type_ns(bool);
 	Code type_ns(char);
-	Code type_ns(char_wide);
+	Code type_ns(wchar_t);
 
 	Code type_ns(s8);
 	Code type_ns(s16);
@@ -421,7 +421,8 @@ namespace gen
 		switch ( Type )
 		{
 			case Invalid:
-			break;
+				log_failure( "AST::duplicate: Cannot duplicate an invalid AST." );
+				return nullptr;
 
 			case Untyped:
 			case Comment:
@@ -484,6 +485,9 @@ namespace gen
 				}
 				return result;
 		}
+
+		log_failure( "AST::duplicate: Unknown AST type %s.", type_str() );
+		return nullptr;
 	}
 
 	String AST::to_string()
@@ -606,6 +610,7 @@ namespace gen
 			break;
 
 			case Enum:
+			{
 				result.append( indent );
 
 				ProcessModuleFlags();
@@ -640,6 +645,7 @@ namespace gen
 					, body()->to_string()
 					, indent_str
 				);
+			}
 			break;
 
 			case Enum_Fwd:
@@ -651,6 +657,7 @@ namespace gen
 			break;
 
 			case Enum_Class:
+			{
 				result.append( indent );
 
 				ProcessModuleFlags();
@@ -685,9 +692,11 @@ namespace gen
 					, body()->to_string()
 					, indent_str
 				);
+			}
 			break;
 
 			case Enum_Class_Fwd:
+			{
 				result.append( indent );
 
 				ProcessModuleFlags();
@@ -703,6 +712,7 @@ namespace gen
 				}
 
 				result.append_fmt( ": %s;\n", Name, Entries[idx]->to_string() );
+			}
 			break;
 
 			case Execution:
@@ -900,7 +910,7 @@ namespace gen
 
 				ProcessModuleFlags();
 
-				s32 idx;
+				s32 idx = 0;
 
 				if ( Entries[idx]->Type == Specifiers )
 				{
@@ -1022,6 +1032,7 @@ namespace gen
 			break;
 
 			case Typedef:
+			{
 				result.append( indent );
 
 				ProcessModuleFlags();
@@ -1043,6 +1054,7 @@ namespace gen
 				{
 					result.append( ";" );
 				}
+			}
 			break;
 
 			case Typename:
@@ -1057,6 +1069,7 @@ namespace gen
 			break;
 
 			case Union:
+			{
 				result.append( indent );
 
 				ProcessModuleFlags();
@@ -1077,9 +1090,11 @@ namespace gen
 					, body()->to_string()
 					, indent_str
 				);
+			}
 			break;
 
 			case Using:
+			{
 				result.append( indent );
 
 				ProcessModuleFlags();
@@ -1103,6 +1118,7 @@ namespace gen
 					result.append_fmt( "using %s", Name );
 
 				result.append( ";" );
+			}
 			break;
 
 			case Using_Namespace:
@@ -1195,16 +1211,17 @@ namespace gen
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 		Code&
-		t_bool_write = ccast( Code, t_void );
-		t_bool_write = def_type( name(void) );
+		t_void_write = ccast( Code, t_void );
+		t_void_write = def_type( name(void) );
+		t_void_write->Readonly = true;
 
-	#	define def_constant_code_type( Type_ ) \
-		Code&                                  \
-		t_##Type_ = def_type( name(Type_) );   \
-		t_##Type_->Readonly = true;
+	#	define def_constant_code_type( Type_ )            \
+		Code&                                             \
+		t_##Type_##write = ccast( Code, type_ns(Type_) ); \
+		t_##Type_##write = def_type( name(Type_) );       \
+		t_##Type_##write->Readonly = true;
 
 		def_constant_code_type( int );
-
 		def_constant_code_type( bool );
 		def_constant_code_type( char );
 		def_constant_code_type( wchar_t );
@@ -1231,10 +1248,11 @@ namespace gen
 		spec_constexpr_write = ccast( Code, spec_constexpr );
 		spec_constexpr_write = def_specifiers( 1, ESpecifier::Constexpr );
 
-	#	define def_constant_spec( Type_, ... )                                    \
-		Code&                                                                     \
-		spec_##Type_ = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
-		spec_##Type_.lock();
+	#	define def_constant_spec( Type_, ... )                                           \
+		Code&                                                                            \
+		spec_##Type_##write = ccast( Code, spec_##Type_);                                \
+		spec_##Type_##write = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
+		spec_##Type_##write.lock()
 
 		def_constant_spec( const, ESpecifier::Const );
 		def_constant_spec( inline, ESpecifier::Inline );
@@ -1855,7 +1873,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		if ( parent && parent->Type != Class || parent->Type != Struct || parent->Type != Typename || parent->Type != Untyped )
+		if ( parent && (parent->Type != Class || parent->Type != Struct || parent->Type != Typename || parent->Type != Untyped) )
 		{
 			log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", parent->debug_str() );
 			return Code::Invalid;
