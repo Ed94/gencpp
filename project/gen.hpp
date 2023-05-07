@@ -547,7 +547,7 @@ namespace gen
 		constexpr static
 		uw ArrSpecs_Cap = ArrS_Cap * (sizeof(AST*) / sizeof(SpecifierT));
 
-	#	define Using_Code_POD                          \
+	#	define Using_AST_POD                           \
 		union {                                        \
 			AST*          ArrStatic[AST::ArrS_Cap];    \
 			Array(AST*)   Entries;                     \
@@ -565,22 +565,22 @@ namespace gen
 		bool              DynamicEntries;              \
 		u8                _Align_Pad[2];
 
-		Using_Code_POD
+		Using_AST_POD
 	};
 
-	struct CodePOD
+	struct AST_POD
 	{
-		Using_Code_POD
+		Using_AST_POD
 	#	undef Using_CodePOD
 	};
 
 	constexpr sw size_AST = sizeof(AST);
-	constexpr sw size_POD = sizeof(CodePOD);
+	constexpr sw size_POD = sizeof(AST_POD);
 
 	// Its intended for the AST to have equivalent size to its POD.
 	// All extra functionality within the AST namespace should just be syntatic sugar.
-	static_assert( sizeof(AST)     == sizeof(CodePOD), "ERROR: AST IS NOT POD" );
-	static_assert( sizeof(CodePOD) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
+	static_assert( sizeof(AST)     == sizeof(AST_POD), "ERROR: AST IS NOT POD" );
+	static_assert( sizeof(AST_POD) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
 
 	/*
 		AST* typedef as to not constantly have to add the '*' as this is written often..
@@ -666,8 +666,6 @@ namespace gen
 			return ast;
 		}
 
-	// Cannot be done unfortunately c++ sucks. (Will lose POD by doing so)
-	#if 0
 		inline
 		Code& operator=( Code other )
 		{
@@ -689,7 +687,6 @@ namespace gen
 
 			return *this;
 		}
-	#endif
 
 		inline
 		AST* operator->()
@@ -714,7 +711,13 @@ namespace gen
 
 		AST* ast;
 	};
-	static_assert( sizeof(Code) == sizeof(AST*), "ERROR: Code is not POD" );
+
+	struct Code_POD
+	{
+		AST_POD* ast;
+	};
+
+	static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 
 	// Used when the its desired when omission is allowed in a definition.
 	constexpr Code NoCode = { nullptr };

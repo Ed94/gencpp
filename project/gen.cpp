@@ -2587,10 +2587,25 @@ namespace gen
 		return Code::Invalid;                                                \
 	}
 
-#	define def_body_code_validation_start( Name_, Get_Code_Expr_ )          \
+#	define def_body_code_validation_start( Name_ )                          \
 	do                                                                      \
 	{                                                                       \
-		Code entry = Get_Code_Expr_;                                        \
+		Code_POD pod   = va_arg(va, Code_POD);                              \
+		Code     entry = pcast(Code, pod);                                  \
+                                                                            \
+		if ( ! entry )                                                      \
+		{                                                                   \
+			log_failure("gen::" txt(Name_) ": Provided an null entry");     \
+			return Code::Invalid;                                           \
+		}                                                                   \
+                                                                            \
+		switch ( entry->Type )                                              \
+		{
+
+#	define def_body_code_array_validation_start( Name_ )                    \
+	do                                                                      \
+	{                                                                       \
+		Code entry = *codes; codes++;                                       \
                                                                             \
 		if ( ! entry )                                                      \
 		{                                                                   \
@@ -2624,7 +2639,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		def_body_code_validation_start( def_class_body, va_arg( va, Code ) );
+		def_body_code_validation_start( def_class_body );
 			AST_BODY_CLASS_UNALLOWED_TYPES
 		def_body_code_validation_end( def_class_body );
 		va_end(va);
@@ -2641,7 +2656,7 @@ namespace gen
 		result       = make_code();
 		result->Type = Function_Body;
 
-		def_body_code_validation_start( def_class_body, *codes; codes++ );
+		def_body_code_array_validation_start( def_class_body );
 			AST_BODY_CLASS_UNALLOWED_TYPES
 		def_body_code_validation_end( def_class_body );
 
@@ -2661,7 +2676,8 @@ namespace gen
 		va_start(va, num);
 		do
 		{
-			Code entry = va_arg(va, Code);
+			Code_POD pod   = va_arg(va, Code_POD);
+			Code     entry = pcast(Code, pod);
 
 			if ( ! entry )
 			{
@@ -2726,7 +2742,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		def_body_code_validation_start( def_export_body, va_arg(va, Code) );
+		def_body_code_validation_start( def_export_body );
 			AST_BODY_EXPORT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_export_body );
 		va_end(va);
@@ -2743,7 +2759,7 @@ namespace gen
 		result       = make_code();
 		result->Type = Export_Body;
 
-		def_body_code_validation_start( def_export_body, *codes; codes++ );
+		def_body_code_array_validation_start( def_export_body );
 			AST_BODY_EXPORT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_export_body );
 
@@ -2761,7 +2777,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		def_body_code_validation_start( def_extern_linkage_body, va_arg(va, Code) );
+		def_body_code_validation_start( def_extern_linkage_body );
 			AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_extern_linkage_body );
 		va_end(va);
@@ -2778,7 +2794,7 @@ namespace gen
 		result       = make_code();
 		result->Type = Extern_Linkage_Body;
 
-		def_body_code_validation_start( def_extern_linkage_body, *codes; codes++ );
+		def_body_code_array_validation_start( def_extern_linkage_body );
 			AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_extern_linkage_body );
 
@@ -2796,7 +2812,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		def_body_code_validation_start( def_function_body, va_arg(va, Code) );
+		def_body_code_validation_start( def_function_body );
 			AST_BODY_FUNCTION_UNALLOWED_TYPES
 		def_body_code_validation_end( def_function_body );
 		va_end(va);
@@ -2813,7 +2829,7 @@ namespace gen
 		result       = make_code();
 		result->Type = Function_Body;
 
-		def_body_code_validation_start( def_function_body, *codes; codes++ );
+		def_body_code_array_validation_start( def_function_body );
 			AST_BODY_FUNCTION_UNALLOWED_TYPES
 		def_body_code_validation_end( def_function_body );
 
@@ -2831,7 +2847,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		def_body_code_validation_start( def_global_body, va_arg(va, Code) );
+		def_body_code_validation_start( def_global_body );
 			AST_BODY_GLOBAL_UNALLOWED_TYPES
 		def_body_code_validation_end( def_global_body );
 		va_end(va);
@@ -2848,7 +2864,7 @@ namespace gen
 		result       = make_code();
 		result->Type = Global_Body;
 
-		def_body_code_validation_start( def_global_body, *codes; codes++ );
+		def_body_code_array_validation_start( def_global_body );
 			AST_BODY_GLOBAL_UNALLOWED_TYPES
 		def_body_code_validation_end( def_global_body );
 
@@ -2866,7 +2882,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		def_body_code_validation_start( def_namespace_body, va_arg(va, Code) );
+		def_body_code_validation_start( def_namespace_body );
 			AST_BODY_NAMESPACE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_namespace_body );
 		va_end(va);
@@ -2883,7 +2899,7 @@ namespace gen
 		result       = make_code();
 		result->Type = Global_Body;
 
-		def_body_code_validation_start( def_namespace_body, *codes; codes++ );
+		def_body_code_array_validation_start( def_namespace_body );
 			AST_BODY_NAMESPACE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_namespace_body );
 
@@ -2908,7 +2924,8 @@ namespace gen
 		va_list va;
 		va_start(va, num);
 
-		Code        type        = va_arg(va, Code);
+		Code_POD    pod         = va_arg(va, Code_POD);
+		Code        type        = pcast( Code, pod );
 		s32         name_length = va_arg(va, s32 );
 		char const* name        = va_arg(va, char const*);
 
@@ -2924,7 +2941,8 @@ namespace gen
 
 		while( num -= 3, num && num % 3 == 0 )
 		{
-			type        = va_arg(va, Code);
+			pod         = va_arg(va, Code_POD);
+			type        = pcast( Code, pod );
 			name_length = va_arg(va, u32);
 			name        = va_arg(va, char const*);
 
@@ -3029,7 +3047,7 @@ namespace gen
 
 		va_list va;
 		va_start(va, num);
-		def_body_code_validation_start( def_struct_body, va_arg(va, Code) );
+		def_body_code_validation_start( def_struct_body );
 			AST_BODY_STRUCT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_struct_body );
 		va_end(va);
@@ -3046,7 +3064,7 @@ namespace gen
 		result       = make_code();
 		result->Type = Struct_Body;
 
-		def_body_code_validation_start( def_struct_body, *codes; codes++ );
+		def_body_code_array_validation_start( def_struct_body );
 			AST_BODY_STRUCT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_struct_body );
 
@@ -3066,7 +3084,8 @@ namespace gen
 		va_start(va, num);
 		do
 		{
-			Code entry = va_arg(va, Code);
+			Code_POD pod   = va_arg(va, Code_POD);
+			Code     entry = pcast( Code, pod );
 
 			if ( ! entry )
 			{
@@ -3187,7 +3206,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		if ( type && type != Typename )
+		if ( type && type->Type != Typename )
 		{
 			log_failure("gen::make_enum: type provided is not of code type typename - %s", type->debug_str() );
 			return Code::Invalid;
