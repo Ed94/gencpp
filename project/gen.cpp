@@ -1213,13 +1213,11 @@ namespace gen
 		Code&
 		t_void_write = ccast( Code, t_void );
 		t_void_write = def_type( name(void) );
-		t_void_write->Readonly = true;
 
-	#	define def_constant_code_type( Type_ )            \
-		Code&                                             \
-		t_##Type_##write = ccast( Code, type_ns(Type_) ); \
-		t_##Type_##write = def_type( name(Type_) );       \
-		t_##Type_##write->Readonly = true;
+	#	define def_constant_code_type( Type_ )             \
+		Code&                                              \
+		t_##Type_##_write = ccast( Code, type_ns(Type_) ); \
+		t_##Type_##_write = def_type( name(Type_) );       \
 
 		def_constant_code_type( int );
 		def_constant_code_type( bool );
@@ -1248,15 +1246,49 @@ namespace gen
 		spec_constexpr_write = ccast( Code, spec_constexpr );
 		spec_constexpr_write = def_specifiers( 1, ESpecifier::Constexpr );
 
-	#	define def_constant_spec( Type_, ... )                                           \
-		Code&                                                                            \
-		spec_##Type_##write = ccast( Code, spec_##Type_);                                \
-		spec_##Type_##write = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
-		spec_##Type_##write.lock()
+	#	define def_constant_spec( Type_, ... )                                            \
+		Code&                                                                             \
+		spec_##Type_##_write = ccast( Code, spec_##Type_);                                \
+		spec_##Type_##_write = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
 
 		def_constant_spec( const, ESpecifier::Const );
 		def_constant_spec( inline, ESpecifier::Inline );
 	#	undef def_constant_spec
+	}
+
+	void deinit()
+	{
+		using namespace StaticData;
+
+		s32 left = array_count( CodePools );
+		do
+		{
+			Pool* code_pool = & CodePools[left];
+			pool_free( code_pool );
+		}
+		while ( left--, left );
+
+		left = array_count( CodeEntriesArenas );
+		do
+		{
+			Arena* code_entries_arena = & CodeEntriesArenas[left];
+			arena_free( code_entries_arena );
+		}
+		while ( left--, left );
+
+		left = array_count( StringArenas );
+		do
+		{
+			Arena* string_arena = & StringArenas[left];
+			arena_free( string_arena );
+		}
+		while ( left--, left );
+
+		str_tbl_destroy( & StringMap );
+		type_tbl_destroy( & TypeMap );
+
+		array_free( CodePools );
+		array_free( CodeEntriesArenas );
 	}
 
 	void clear_code_memory()
@@ -1316,18 +1348,20 @@ namespace gen
 	// Will either make or retrive a code string.
 	StringCached get_cached_string( StrC str )
 	{
-		s32     hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
-		u32     key         = crc32( str.Ptr, hash_length );
-		String* result      = str_tbl_get( & StaticData::StringMap, key );
+		s32 hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
+		u32 key         = crc32( str.Ptr, hash_length );
+		{
+			String* result = str_tbl_get( & StaticData::StringMap, key );
 
-		if ( result )
-			return * result;
+			if ( result )
+				return * result;
+		}
 
-		* result = String::make( get_string_allocator( str.Len ), str.Ptr );
+		String result = String::make( get_string_allocator( str.Len ), str.Ptr );
 
-		str_tbl_set( & StaticData::StringMap, key, * result );
+		str_tbl_set( & StaticData::StringMap, key, result );
 
-		return * result;
+		return result;
 	}
 
 	/*

@@ -1,0 +1,7 @@
+﻿  
+  
+  Building Test
+  
+  ninja: Entering directory `C:\projects\gencpp\test\gen\build'
+  [1/2] Compiling C++ object gencpp.exe.p/.._test.cpp.obj
+  [2/2] Linking target gencpp.exe

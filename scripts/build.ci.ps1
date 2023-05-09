@@ -52,7 +52,7 @@ $path_scripts = Join-Path $path_root scripts
 	$gencpp = Join-Path $path_gen_build gencpp.exe
 
 	Push-location $path_gen
-	& $gencpp
+	# & $gencpp
 	Pop-Location
 
 

@@ -14,4 +14,57 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="project\Bloat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\gen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\gen.singleheader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\gen\build\meson-private\sanitycheckc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\gen\build\meson-private\sanitycheckcpp.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="project\Bloat.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\Bloat.redef.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\Bloat.undef.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\gen.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thirdparty\zpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".editorconfig" />
+    <None Include="Readme.md" />
+    <None Include="scripts\build.ci.ps1" />
+    <None Include="scripts\build.ps1" />
+    <None Include="scripts\clean.ps1" />
+    <None Include="scripts\get_sources.ps1" />
+    <None Include="scripts\meson.build" />
+    <None Include="singleheader\genc.refactor" />
+    <None Include="test\gen\meson.build" />
+    <None Include="test\meson.build" />
+    <None Include="test\Readme.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include=".vscode\gencpp.natvis" />
+  </ItemGroup>
 </Project>

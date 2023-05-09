@@ -14,11 +14,9 @@ int gen_main()
 {
 	Memory::setup();
 
-	log_fmt("\nPress any key after attaching to process\n");
-	getchar();
-
 	gen::init();
 
+	gen::deinit();
 	Memory::cleanup();
 	return 0;
 }

@@ -235,12 +235,12 @@ namespace gen
 
 		enum Type : u32
 		{
+			Invalid,
 		#	define Entry( Specifier, Code ) Specifier,
 			Define_Specifiers
 		#	undef Entry
 
 			Num_Specifiers,
-			Invalid,
 		};
 
 		// Specifier to string
@@ -669,14 +669,8 @@ namespace gen
 		inline
 		Code& operator=( Code other )
 		{
-			if ( ast == nullptr )
-			{
-				log_failure("Attempt to set with a null AST!");
-				return *this;
-			}
-
 		#ifdef GEN_ENFORCE_READONLY_AST
-			if ( ast->Readonly )
+			if ( ast && ast->Readonly )
 			{
 				log_failure("Attempted to set a readonly AST!");
 				return *this;
@@ -737,6 +731,8 @@ namespace gen
 	// Initialize the library.
 	// This currently just initializes the CodePool.
 	void init();
+
+	void deinit();
 
 	/*
 		Use this only if you know you generated the code you needed to a file.

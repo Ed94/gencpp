@@ -18,5 +18,6 @@
 		"algorithm": "cpp",
 		"limits": "cpp"
 	},
-	"C_Cpp.intelliSenseEngineFallback": "disabled"
+	"C_Cpp.intelliSenseEngineFallback": "disabled",
+	"mesonbuild.configureOnOpen": true
 }

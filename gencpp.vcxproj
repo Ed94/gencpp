@@ -76,17 +76,17 @@
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NMakeBuildCommandLine>$(ProjectDir)scripts\build.ps1</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>$(ProjectDir)scripts\build.ps1</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine>$(ProjectDir)scripts\clean.ps1</NMakeCleanCommandLine>
+    <NMakeBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>gen_time;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(ProjectDir)thirdparty;$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)project;$(ProjectDir)test;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <NMakeBuildCommandLine>$(ProjectDir)scripts\build.ps1</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>$(ProjectDir)scripts\build.ps1</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine>$(ProjectDir)scripts\clean.ps1</NMakeCleanCommandLine>
+    <NMakeBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>gen_time;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(ProjectDir)thirdparty;$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)project;$(ProjectDir)test;$(SourcePath)</SourcePath>
@@ -123,6 +123,9 @@
     <ClCompile Include="test\gen\build\meson-private\sanitycheckc.c" />
     <ClCompile Include="test\gen\build\meson-private\sanitycheckcpp.cc" />
     <ClCompile Include="test\test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include=".vscode\gencpp.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

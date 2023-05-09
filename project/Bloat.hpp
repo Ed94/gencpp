@@ -210,6 +210,9 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 	};
 
 	// Dynamic String
+	// This is directly based off the ZPL string api. 
+	// They used a header pattern
+	// I kept it for simplicty of porting but its not necessary to keep it that way.
 	struct String
 	{
 		struct Header
@@ -265,8 +268,11 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			if ( ! str )
 				mem_set( allocation, 0, alloc_size );
 
-			Header header = { allocator, length, length };
-			String result = { rcast( char*, allocation) + header_size };
+			Header& 
+			header = * rcast(Header*, allocation);
+			header = { allocator, length, length };
+
+			String  result = { rcast( char*, allocation) + header_size };
 
 			if ( length && str )
 				mem_copy( result, str, length );
@@ -453,7 +459,7 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
 		Header& get_header()
 		{
-			return pcast( Header, Data[ - sizeof( Header ) ] );
+			return *(Header*)(Data - sizeof(Header));
 		}
 
 		sw length() const
@@ -551,6 +557,11 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 	struct String_POD
 	{
 		char* Data;
+
+		operator String()
+		{
+			return * rcast(String*, this);
+		}
 	};
 	static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
 #pragma endregion String

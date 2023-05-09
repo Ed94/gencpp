@@ -13,7 +13,7 @@
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Users/Ed/scoop/apps/llvm/current/bin/clang++.exe",
-            "intelliSenseMode": "windows-clang-x64"
+            "intelliSenseMode": "windows-clang-x64",
         }
     ],
     "version": 4

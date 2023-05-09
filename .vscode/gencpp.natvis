@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+	<Type Name="String">
+		<DisplayString Condition="Data == nullptr">null</DisplayString>
+		<DisplayString>{Data,na}</DisplayString>
+		<Expand>
+			<!-- Define a synthetic child element for the Header -->
+			<Synthetic Name="Header">
+				<!-- Construct a Header object from the Data pointer -->
+				<DisplayString>{(Header*)((char*)Data - sizeof(Header))}</DisplayString>
+				<!-- Define the children of the synthetic element -->
+				<Expand>
+					<Item Name="Allocator">((Header*)((char*)Data - sizeof(Header)))->Allocator</Item>
+					<Item Name="Length">((Header*)((char*)Data - sizeof(Header)))->Length</Item>
+					<Item Name="Capacity">((Header*)((char*)Data - sizeof(Header)))->Capacity</Item>
+				</Expand>
+			</Synthetic>
+		</Expand>
+	</Type>
+
+	<Type Name="String::Header">
+		<DisplayString>Length: {Length}, Capacity: {Capacity}</DisplayString>
+		<Expand>
+			<Item Name="Allocator">Allocator</Item>
+			<Item Name="Length">Length</Item>
+			<Item Name="Capacity">Capacity</Item>
+		</Expand>
+	</Type>
+
+</AutoVisualizer>
