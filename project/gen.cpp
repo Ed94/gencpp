@@ -6,7 +6,7 @@
 namespace gen
 {
 	ZPL_TABLE_DEFINE( StringTable, str_tbl_,   String );
-	ZPL_TABLE_DEFINE( TypeTable,   type_tbl_ , Code   );
+	// ZPL_TABLE_DEFINE( TypeTable,   type_tbl_ , Code   );
 
 	namespace StaticData
 	{
@@ -15,7 +15,7 @@ namespace gen
 		static Array(Arena) StringArenas      =  nullptr;
 
 		static StringTable StringMap;
-		static TypeTable   TypeMap;
+		// static TypeTable   TypeMap;
 
 		static AllocatorInfo Allocator_DataArrays       = heap();
 		static AllocatorInfo Allocator_CodePool         = heap();
@@ -54,11 +54,26 @@ namespace gen
 	Code access_protected;
 	Code access_private;
 
-	Code spec_constexpr;
 	Code spec_const;
+	Code spec_consteval;
+	Code spec_constexpr;
+	Code spec_constinit;
+	Code spec_extern_linkage;
 	Code spec_inline;
-	Code sepc_ptr;
+	Code spec_internal_linkage;
+	Code spec_local_persist;
+	Code spec_mutable;
+	Code spec_ptr;
 	Code spec_ref;
+	Code spec_register;
+	Code spec_rvalue;
+	Code spec_static_member;
+	Code spec_thread_local;
+	Code spec_volatile;
+	Code spec_type_signed;
+	Code spec_type_unsigned;
+	Code spec_type_short;
+	Code spec_type_long;
 #pragma endregion Constants
 
 #pragma region AST Body Case Macros
@@ -1201,15 +1216,14 @@ namespace gen
 			if ( StringMap.entries == nullptr )
 				fatal( "gen::init: Failed to initialize the StringMap");
 
-			type_tbl_init( & TypeMap,   Allocator_TypeTable );
-			if ( TypeMap.entries == nullptr )
-				fatal( "gen::init: Failed to initialize the TypeMap" );
+			//type_tbl_init( & TypeMap,   Allocator_TypeTable );
+			//if ( TypeMap.entries == nullptr )
+			//	fatal( "gen::init: Failed to initialize the TypeMap" );
 		}
 
 		Code::Invalid = make_code();
 		Code::Invalid.lock();
 
-	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 		Code&
 		t_void_write = ccast( Code, t_void );
 		t_void_write = def_type( name(void) );
@@ -1224,6 +1238,7 @@ namespace gen
 		def_constant_code_type( char );
 		def_constant_code_type( wchar_t );
 
+	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 		def_constant_code_type( s8 );
 		def_constant_code_type( s16 );
 		def_constant_code_type( s32 );
@@ -1239,20 +1254,58 @@ namespace gen
 
 		def_constant_code_type( f32 );
 		def_constant_code_type( f64 );
-	#	undef def_constant_code_type
 	#endif
+	#	undef def_constant_code_type
 
 		Code&
-		spec_constexpr_write = ccast( Code, spec_constexpr );
-		spec_constexpr_write = def_specifiers( 1, ESpecifier::Constexpr );
+		access_private_write = ccast( Code, access_private );
+		access_private_write = make_code();
+		access_private_write->Type = ECode::Access_Private;
+		access_private_write->Name = get_cached_string( { sizeof("private"), "private" } );
+		access_private_write.lock();
+
+		Code&
+		access_protected_write = ccast( Code, access_protected );
+		access_protected_write = make_code();
+		access_protected_write->Type = ECode::Access_Protected;
+		access_protected_write->Name = get_cached_string( { sizeof("protected"), "protected" } );
+		access_protected_write.lock();
+
+		Code&
+		access_public_write = ccast( Code, access_public );
+		access_public_write = make_code();
+		access_public_write->Type = ECode::Access_Public;
+		access_public_write->Name = get_cached_string( { sizeof("public"), "public" } );
+		access_public_write.lock();
+
+		Code&
+		spec_local_persist_write = ccast( Code, spec_local_persist );
+		spec_local_persist_write = def_specifiers( 1, ESpecifier::Local_Persist );
 
 	#	define def_constant_spec( Type_, ... )                                            \
 		Code&                                                                             \
 		spec_##Type_##_write = ccast( Code, spec_##Type_);                                \
 		spec_##Type_##_write = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
 
-		def_constant_spec( const, ESpecifier::Const );
-		def_constant_spec( inline, ESpecifier::Inline );
+		def_constant_spec( consteval,        ESpecifier::Consteval );
+		def_constant_spec( constexpr,        ESpecifier::Constexpr );
+		def_constant_spec( constinit,        ESpecifier::Constinit );
+		def_constant_spec( extern_linkage,   ESpecifier::External_Linkage );
+		def_constant_spec( const,            ESpecifier::Const );
+		def_constant_spec( inline,           ESpecifier::Inline );
+		def_constant_spec( internal_linkage, ESpecifier::Internal_Linkage );
+		def_constant_spec( mutable,          ESpecifier::Mutable );
+		def_constant_spec( ptr,              ESpecifier::Ptr );
+		def_constant_spec( ref,              ESpecifier::Ref );
+		def_constant_spec( register,         ESpecifier::Register );
+		def_constant_spec( rvalue,           ESpecifier::RValue );
+		def_constant_spec( static_member,    ESpecifier::Static_Member );
+		def_constant_spec( thread_local,     ESpecifier::Thread_Local );
+		def_constant_spec( volatile, 	     ESpecifier::Volatile)
+		def_constant_spec( type_signed,      ESpecifier::Type_Signed );
+		def_constant_spec( type_unsigned,    ESpecifier::Type_Unsigned );
+		def_constant_spec( type_short,       ESpecifier::Type_Short );
+		def_constant_spec( type_long,        ESpecifier::Type_Long );
 	#	undef def_constant_spec
 	}
 
@@ -1260,35 +1313,42 @@ namespace gen
 	{
 		using namespace StaticData;
 
-		s32 left = array_count( CodePools );
+		s32 index = 0;
+		s32 left  = array_count( CodePools );
 		do
 		{
-			Pool* code_pool = & CodePools[left];
+			Pool* code_pool = & CodePools[index];
 			pool_free( code_pool );
+			index++;
 		}
 		while ( left--, left );
 
-		left = array_count( CodeEntriesArenas );
+		index = 0;
+		left  = array_count( CodeEntriesArenas );
 		do
 		{
-			Arena* code_entries_arena = & CodeEntriesArenas[left];
+			Arena* code_entries_arena = & CodeEntriesArenas[index];
 			arena_free( code_entries_arena );
+			index++;
 		}
 		while ( left--, left );
 
-		left = array_count( StringArenas );
+		index = 0;
+		left  = array_count( StringArenas );
 		do
 		{
-			Arena* string_arena = & StringArenas[left];
+			Arena* string_arena = & StringArenas[index];
 			arena_free( string_arena );
+			index++;
 		}
 		while ( left--, left );
 
 		str_tbl_destroy( & StringMap );
-		type_tbl_destroy( & TypeMap );
+		// type_tbl_destroy( & TypeMap );
 
 		array_free( CodePools );
 		array_free( CodeEntriesArenas );
+		array_free( StringArenas );
 	}
 
 	void clear_code_memory()
@@ -1323,7 +1383,7 @@ namespace gen
 			array_clear( CodeEntriesArenas );
 		}
 
-		type_tbl_clear( & StaticData::TypeMap );
+		// type_tbl_clear( & StaticData::TypeMap );
 	}
 
 	inline
@@ -1364,6 +1424,20 @@ namespace gen
 		return result;
 	}
 
+	// Code get_cached_type( StrC name )
+	// {
+	// 	s32 hash_length = name.Len > kilobytes(1) ? kilobytes(1) : name.Len;
+	// 	s32 key         = crc32( name.Ptr, hash_length );
+	// 	{
+	// 		Code* result = type_tbl_get( & StaticData::TypeMap, key );
+
+	// 		if ( result )
+	// 			return * result;
+	// 	}
+
+	// 	return Code::Invalid;
+	// }
+
 	/*
 		Used internally to retireve a Code object form the CodePool.
 	*/
@@ -1373,11 +1447,16 @@ namespace gen
 
 		AllocatorInfo allocator = { nullptr, nullptr };
 
-		s32 left = array_count( CodePools );
+		s32 index = 0;
+		s32 left  = array_count( CodePools );
 		do
 		{
-			if ( CodePools[left].free_list != nullptr  )
-				allocator = zpl::pool_allocator( & CodePools[left] );
+			if ( CodePools[index].free_list != nullptr  )
+			{
+				allocator = zpl::pool_allocator( & CodePools[index] );
+				break;
+			}
+			index++;
 		}
 		while ( left--, left );
 
@@ -1417,11 +1496,13 @@ namespace gen
 
 		AllocatorInfo allocator = { nullptr, nullptr };
 
-		s32 left = array_count( CodeEntriesArenas );
+		s32 index = 0;
+		s32 left  = array_count( CodeEntriesArenas );
 		do
 		{
-			if ( arena_size_remaining(CodeEntriesArenas, ZPL_DEFAULT_MEMORY_ALIGNMENT) >= InitSize_CodeEntiresArray )
-				allocator = arena_allocator( & CodeEntriesArenas[left] );
+			if ( arena_size_remaining( & CodeEntriesArenas[index], ZPL_DEFAULT_MEMORY_ALIGNMENT) >= InitSize_CodeEntiresArray )
+				allocator = arena_allocator( & CodeEntriesArenas[index] );
+			index++;
 		}
 		while( left--, left );
 
@@ -1433,7 +1514,8 @@ namespace gen
 			if ( arena.physical_start == nullptr )
 				fatal( "gen::make_code: Failed to allocate a new code entries arena - CodeEntriesArena allcoator returned nullptr." );
 
-			allocator = arena_allocator( CodeEntriesArenas );
+			allocator = arena_allocator( & arena );
+			array_append( CodeEntriesArenas, arena );
 		}
 
 		Array(AST*) entry_array;
@@ -2399,6 +2481,10 @@ namespace gen
 			return Code::Invalid;
 		}
 
+		// Code cached = get_cached_type( name );
+		// if ( cached )
+		// 	return cached;
+
 		Code
 		result       = make_code();
 		result->Name = get_cached_string( name );
@@ -2411,6 +2497,12 @@ namespace gen
 			result->add_entry( ArrayExpr );
 
 		result.lock();
+
+		// s32 hash_length = name.Len > kilobytes(1) ? kilobytes(1) : name.Len;
+		// s32 key         = crc32( name.Ptr, hash_length );
+
+		// type_tbl_set( & StaticData::TypeMap, key, result );
+
 		return result;
 	}
 

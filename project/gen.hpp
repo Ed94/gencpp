@@ -723,8 +723,13 @@ namespace gen
 		Provides interning specific to Typename ASTs.
 		Interning for other types should be possible (specifiers) with this, so long as they
 		don't have an set of child AST entries (Use the content field).
+
+		TODO: I'm not sure if this is viable.
+		ASTs are duplicated when added (parent is unique),
+		Parent is currently used for debug and serialization.
+		If these features are considered unnecessary, then caching would be fine.
 	*/
-	ZPL_TABLE_DECLARE( ZPL_EXTERN, TypeTable, type_tbl_, Code );
+	// ZPL_TABLE_DECLARE( ZPL_EXTERN, TypeTable, type_tbl_, Code );
 #pragma endregion Data Structures
 
 #pragma region Gen Interface
@@ -1058,131 +1063,13 @@ namespace gen
 // Used by the DSL but can also be used without it.
 #	define type_ns( Name_ ) t_##Name_
 
-//	Convienence for defining any name used with the gen interface.
+//	Convienence for defining any name used with the gen api.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
 #	define name( Id_ )   { txt_n_len( Id_ ) }
 
 //  Same as name just used to indicate intention of literal for code instead of names.
 #	define code( Code_ ) { txt_n_len( Code_ ) }
 
-/*
-	gen's Domain Specific Langauge.
-
-	Completely optional, makes the code gen syntax less verbose and cumbersome...
-	Since its C macros ends up looking like a lisp dialect...
-
-	Longforms auto-define the variable.
-	Shorthands are just the function call.
-
-	Anything below the make() macro is intended to be syntactically used in the follwing format:
-	make( <type>, <name> )
-	{
-		...
-	}
-
-	Where ... are whatever is deemed necessary to produce the definition for the def( <name> ).
-
-	The code macros are used to embed c/c++ to insert into the desired lcoation.
-*/
-#ifdef GEN_DEFINE_DSL
-
-// Boilerplate
-
-/*
-	In order to provide some convient syntax sugar this polymoprhic macro boilerplate is needed for:
-	* function( ... )
-	* operator( ... )
-	* params( ... )
-
-	macrofn based off of: https://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros
-	specifically: https://stackoverflow.com/a/56038661
-*/
-
-#	define macrofn_chooser(_f0, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, _f10, _f11, _f12, _f13, _f14, _f15, _f16, ...) _f16
-#	define macrofn_recomposer(ArgsWithParentheses_) macrofn_chooser ArgsWithParentheses_
-#	define macrofn_chose_from_arg_num(F, ...)       macrofn_recomposer((__VA_ARGS__, F##_16, F##_15, F##_14, F##_13, F##_12, F##_11, F##_10, F##_9, F##_8, F##_7, F##_6, F##_5, F##_4, F##_3, F##_2, F##_1, ))
-#	define marcofn_no_arg_expander(Func_)           ,,,,,,,,,,,,,,,,Func_ ## _0
-#	define macrofn_finder(Func_, ...)               macrofn_chose_from_arg_num(Func_, marcofn_no_arg_expander __VA_ARGS__ (Func_))
-#	define macrofn_polymorphic(Func_, ...)          macrofn_finder(Func_, __VA_ARGS__)(__VA_ARGS__)
-
-#	define function_5( Name_, Params_, RetType_, Specifiers_, Body_ ) gen::def_function( txt_n_len( Name_ ), macro_expand( Params_ ), type_ns(RetType_), Specifiers_, Body_ )
-#	define function_4( Name_, Params_, RetType_, Specifiers_ )        gen::def_function( txt_n_len( Name_ ), macro_expand( Params_ ), type_ns(RetType_), Specifiers_ )
-#	define function_3( Name_, Params_, RetType_ )                     gen::def_function( txt_n_len( Name_ ), macro_expand( Params_ ), type_ns(RetType_) )
-#	define function_2( Name_, Params_ )                               gen::def_function( txt_n_len( Name_ ), macro_expand( Params_ ) )
-#	define function_1( Name_ )                                        gen::def_function( txt_n_len( Name_ ) )
-
-#	define params_12( T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4, T_5, V_5, T_6, V_6 ) gen::def_params( 12, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4), type_ns(T_5), txt_n_len( V_5), type_ns(T_6), txt_n_len(V_6))
-#	define params_10( T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4, T_5, V_5 )           gen::def_params( 10, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4), type_ns(T_5), txt_n_len( V_5))
-#	define params_8(  T_1, V_1, T_2, V_2, T_3, V_3, T_4, V_4 )                     gen::def_params( 8, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3), type_ns(T_4), txt_n_len( V_4) )
-#	define params_6(  T_1, V_1, T_2, V_2, T_3, V_3 )                               gen::def_params( 6, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2), type_ns(T_3), txt_n_len( V_3))
-#	define params_4(  T_1, V_1, T_2, V_2 )                                         gen::def_params( 4, type_ns(T_1), txt_n_len( V_1), type_ns(T_2), txt_n_len( V_2))
-#	define params_2(  T_1, V_1 )                                                   gen::def_param (    type_ns(T_1), txt_n_len( V_1))
-#	define params_bad static_assert("params(...): Invalid number of parameters provided.")
-#	define params_11  params_bad
-#	define params_9   params_bad
-#	define params_7   params_bad
-#	define params_5   params_bad
-#	define params_3   params_bad
-#	define params_1   params_bad
-
-// Upfront
-
-#	define comment( Value_ )			  gen::def_comment( sizeof(Value), Value_ )
-#	define attribute( Value_ )            gen::def_attribute( txt_n_len(Value_) )
-#	define class( Name_, ... )            gen::def_class( txt_n_len(Name_), __VA_ARGS__ )
-#	define enum( Name_, Type_, Body_ )    gen::def_enum ( txt_n_len(Name_), type_ns(Type_), Body_ )
-#	define extern_linkage( Name_, Body_ ) gen::def_extern_linkage( txt_n_len(Name_), Body_ )
-#	define function( ... )                macrofn_polymorphic( function, __VA_ARGS__ )
-#	define namespace( Name_, Body_ )      gen::def_namespace      ( txt_n_len(Name_),  Body_ )
-#	define operator( Op_, ... )           macrofn_polymorphic( operator, __VA_ARGS__ )
-#	define params( ... )                  macrofn_polymorphic( params, __VA_ARGS__ )
-#	define specifiers( ... )              gen::def_specifiers     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define struct( Name_, ... )           gen::def_struct         ( txt_n_len(Name_), __VA_ARGS__ )
-#	define variable( Type_, Name_, ... )  gen::def_variable       ( type_ns(Type_), txt_n_len(Name_), __VA_ARGS__ )
-#	define type( Value_, ... )            gen::def_type           ( txt_n_len(Value_), __VA_ARGS__ )
-#	define type_fmt( Fmt_, ... )          gen::def_type           ( bprintf( Fmt_, __VA_ARGS__ ) )
-#   define union( Name_, ... )            gen::def_union          ( txt_n_len(Name_), __VA_ARGS__ )
-#	define using( Name_, ... )		  	  gen::def_using          ( txt_n_len(Name_), __VA_ARGS__ )
-
-#	define class_body(          ... )     gen::def_class_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define enum_body(           ... )     gen::def_enum_body     ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define extern_linkage_body( ... )     gen::def_extern_linkage_body( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define global_body(         ... )     gen::def_global_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define function_body(       ... )     gen::def_function_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define namespace_body(      ... )     gen::def_namespace_body( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define operator_body(       ... )     gen::def_operator_body ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define struct_body(         ... )     gen::def_struct_body   ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-#	define union_body(          ... )     gen::def_union_body    ( macro_num_args( __VA_ARGS__ ), __VA_ARGS__ )
-
-#	ifdef GEN_FEATURE_INCREMENTAL
-// Incremental
-
-#   define make( ConstructType_, Name_, ... ) Code Name_ = make_##ConstructType_( txt_n_len(Name_), __VA_ARGS__ );
-#	endif
-
-#	ifdef GEN_FEATURE_PARSING
-// Parsing
-
-#	define class_code(       ... ) gen::parse_class      ( txt_n_len( __VA_ARGS__ ))
-#	define enum_code(        ... ) gen::parse_enum       ( txt_n_len( __VA_ARGS__ ))
-#	define function_code(    ... ) gen::parse_function   ( txt_n_len( __VA_ARGS__ ))
-#	define global_body_code( ... ) gen::parse_global_body( txt_n_len( __VA_ARGS__ ))
-#	define operator_code(    ... ) gen::parse_operator   ( txt_n_len( __VA_ARGS__ ))
-#	define namespace_code(   ... ) gen::parse_namespace  ( txt_n_len( __VA_ARGS__ ))
-#	define struct_code(      ... ) gen::parse_struct     ( txt_n_len( __VA_ARGS__ ))
-#	define variable_code(    ... ) gen::parse_variable   ( txt_n_len( __VA_ARGS__ ))
-#	define type_code(        ... ) gen::parse_type       ( txt_n_len( __VA_ARGS__ ))
-#	define typedef_code(     ... ) gen::parse_typedef    ( txt_n_len( __VA_ARGS__ ))
-#	define union_code(       ... ) gen::parse_union      ( txt_n_len( __VA_ARGS__ ))
-#	define using_code(       ... ) gen::parse_code       ( txt_n_len( __VA_ARGS__ ))
-#	endif
-
-// Untyped
-
-#   define code_str(   ... )       gen::untyped_str      ( txt_n_len(__VA_ARGS__) )
-#	define code_fmt(   Fmt_, ... ) gen::untyped_fmt      ( Fmt_, __VA_ARGS__ )
-#	define code_token( Fmt_, ... ) gen::untyped_token_fmt( Fmt_, macro_num_args( __VA_ARGS__) / 2, __VA_ARGS__ )
-#endif
 #pragma endregion Macros
 
 #pragma region Constants
@@ -1241,11 +1128,26 @@ namespace gen
 	extern Code access_protected;
 	extern Code access_private;
 
-	extern Code spec_constexpr;
 	extern Code spec_const;
+	extern Code spec_consteval;
+	extern Code spec_constexpr;
+	extern Code spec_constinit;
+	extern Code spec_extern_linkage;
 	extern Code spec_inline;
+	extern Code spec_internal_linkage;
+	extern Code spec_local_persist;
+	extern Code spec_mutable;
 	extern Code spec_ptr;
 	extern Code spec_ref;
+	extern Code spec_register;
+	extern Code spec_rvalue;
+	extern Code spec_static_member;
+	extern Code spec_thread_local;
+	extern Code spec_volatile;
+	extern Code spec_type_signed;
+	extern Code spec_type_unsigned;
+	extern Code spec_type_short;
+	extern Code spec_type_long;
 }
 #pragma endregion Constants
 
