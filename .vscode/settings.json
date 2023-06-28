@@ -19,5 +19,6 @@
 		"limits": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
-	"mesonbuild.configureOnOpen": true
+	"mesonbuild.configureOnOpen": true,
+	"C_Cpp.errorSquiggles": "enabled"
 }

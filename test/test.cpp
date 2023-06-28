@@ -1,4 +1,6 @@
 #include "Bloat.cpp"
+#include "NonParsed\Array.NonParsed.hpp"
+#include "NonParsed\Sanity.hpp"
 
 
 #ifdef gen_time
@@ -9,12 +11,13 @@ using namespace gen;
 
 
 
-
 int gen_main()
 {
 	Memory::setup();
-
 	gen::init();
+
+	gen_sanity();
+	// gen_array_file();
 
 	gen::deinit();
 	Memory::cleanup();

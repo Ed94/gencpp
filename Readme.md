@@ -154,47 +154,6 @@ struct ArrayHeader
 
 **Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**
 
-## Gen's DSL
-
-If you don't mind a low amount of macros (~80 sloc), a DSL may be optionally defined with:
-
-```cpp
-GEN_DEFINE_DSL
-```
-
-Using the previous example to show usage:
-
-```cpp
-Code type_ns(uw)           = type( uw );
-Code type_ns(allocator)    = type( allocator );
-Code type_ns(string_const) = type( char, specifiers( Const, Ptr ) );
-
-make( struct, ArrayHeader )
-{
-    Code
-    body = ArrayHeader.body();
-    body->add( variable( uw,        Num       ));
-    body->add( variable( uw,        Capacity  ));
-    body->add( variable( allocaotr, Allocator ));
-}
-
-// Or using parse!
-Code type_ns(uw)           = type_code( uw );
-Code type_ns(allocator)    = type_code( allocator );
-Code type_ns(string_const) = type_code( char const* );
-
-Code header = struct_code(
-    struct ArrayHeader
-    {
-        uw        Num;
-        uw        Capacity;
-        allocator Allocator;
-    };
-);
-```
-
-`type_ns` is a helper macro for providing refering to a typename if using the c-namespace naming convention.
-
 ## Building
 
 An example of building is provided in the test directory.

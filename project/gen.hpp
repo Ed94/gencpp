@@ -14,7 +14,7 @@
 // #define GEN_DEFINE_DSL
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 // #define GEN_DONT_USE_FATAL
-#define GEN_ENFORCE_READONLY_AST
+// #define GEN_ENFORCE_READONLY_AST
 
 #define GEN_FEATURE_INCREMENTAL
 // #define GEN_FEATURE_PARSING
@@ -939,6 +939,7 @@ namespace gen
 		String   Buffer;
 
 		void print( Code );
+		void print_fmt( char const* fmt, ... );
 
 		bool open( char const* path );
 		void write();

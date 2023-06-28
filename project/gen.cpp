@@ -506,8 +506,8 @@ namespace gen
 	}
 
 	String AST::to_string()
-	{
-	#	define ProcessModuleFlags() \
+{
+#	define ProcessModuleFlags() \
 		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))  \
 			result.append( "export " );             \
                                                                          \
@@ -524,11 +524,33 @@ namespace gen
 		s32  tab_count       = 0;
 		{
 			AST* curr_parent = Parent;
-
-			while ( Parent )
+			while ( curr_parent )
 			{
+				switch ( curr_parent->Type )
+				{
+					using namespace ECode;
+
+					case Class_Body:
+					case Enum_Body:
+					case Extern_Linkage_Body:
+					case Function_Body:
+					case Global_Body:
+					case Namespace_Body:
+					case Struct_Body:
+					case Union_Body:
+						break;
+
+					default:
+					{
+						curr_parent = curr_parent->Parent;
+						continue;
+					}
+				}
+
 				indent_str[tab_count] = '\t';
 				tab_count++;
+
+				curr_parent = curr_parent->Parent;
 			}
 		}
 		StrC indent = { tab_count, indent_str };
@@ -558,14 +580,17 @@ namespace gen
 				{
 					s32 length = 0;
 					while ( left && Content[index] != '\n' )
+					{
 						length++;
+						left--;
+					}
 
 					str_copy( line, Content, length );
 					line[length] = '\0';
 
-					result.append_fmt( "// %s\n", line );
+					result.append_fmt( "// %s", line );
 				}
-				while ( left--, left );
+				while ( left--, left > 0 );
 			}
 			break;
 
@@ -585,32 +610,43 @@ namespace gen
 
 				ProcessModuleFlags();
 
-				result.append( "class " );
-
-				s32 idx = 1;
-
-				if ( Entries[idx]->Type == Attributes )
+				if ( num_entries() > 1 )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
-					idx++;
+					result.append( "class " );
+
+					s32 idx = 1;
+
+					if ( Entries[idx]->Type == Attributes )
+					{
+						result.append_fmt( "%s ", Entries[idx]->to_string() );
+						idx++;
+					}
+
+					result.append( Name );
+
+					AST* parent = Entries[idx];
+
+					if ( parent )
+					{
+						char const* access_level = to_str( ParentAccess );
+
+						result.append_fmt( ": %s %s\n%s{\n"
+							, access_level
+							, parent
+							, indent_str
+						);
+					}
+					else
+					{
+						result.append( "\n{\n" );
+					}
+
+					result.append_fmt( "%s\n%s};\n", body()->to_string(), indent_str );
 				}
-
-				result.append( Name );
-
-				AST* parent = Entries[idx];
-
-				if ( parent )
+				else
 				{
-					char const* access_level = to_str( ParentAccess );
-
-					result.append_fmt( ": %s %s\n%s{\n"
-						, access_level
-						, parent
-						, indent_str
-					);
+					result.append_fmt( "class %s\n{\n%s\n%s};\n", Name, body()->to_string(), indent_str );
 				}
-
-				result.append_fmt( "%s\n%s};\n", body()->to_string(), indent_str );
 			}
 			break;
 
@@ -820,31 +856,42 @@ namespace gen
 				ProcessModuleFlags();
 
 				u32 idx  = 0;
-				u32 left = array_count( Entries );
+				u32 left = num_entries();
 
-				if ( Entries[idx]->Type == Attributes )
+				AST* Entry = Entries[idx];
+
+				if ( Entry && Entry->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", Entry->to_string() );
 					idx++;
 					left--;
+					Entry = Entries[idx];
 				}
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( Entry && Entry->Type == Specifiers )
 				{
-					result.append_fmt( "%s\n", Entries[idx]->to_string() );
+					result.append_fmt( "%s\n", Entry->to_string() );
 					idx++;
 					left--;
+					Entry = Entries[idx];
 				}
 
-				result.append_fmt( "\n%s %s(", Entries[idx]->to_string(), Name );
-				idx++;
-				left--;
-
-				if ( left && Entries[idx]->Type == Parameters )
+				if ( Entry && Entry->Type == Typename )
 				{
-					result.append_fmt( "%s", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", Entry->to_string() );
 					idx++;
 					left--;
+					Entry = Entries[idx];
+				}
+
+				result.append_fmt( "%s(", Name );
+
+				if ( left && Entry && Entry->Type == Parameters )
+				{
+					result.append_fmt("%s", Entry->to_string() );
+					idx++;
+					left--;
+					Entry = Entries[idx];
 				}
 				else
 				{
@@ -1073,7 +1120,7 @@ namespace gen
 			break;
 
 			case Typename:
-				if ( Entries[0] )
+				if ( num_entries() && Entries[0] )
 				{
 					result.append_fmt( "%s %s", Name, Entries[0]->to_string() );
 				}
@@ -1486,6 +1533,7 @@ namespace gen
 		result->StaticIndex    = 0;
 		result->Readonly       = false;
 		result->DynamicEntries = false;
+		result->Entries        = result->ArrStatic;
 
 		return result;
 	}
@@ -2189,7 +2237,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		if ( ret_type == nullptr || ret_type->Type != Typename )
+		if ( ret_type && ret_type->Type != Typename )
 		{
 			log_failure( "gen::def_function: ret_type was not a Typename: %s", ret_type->debug_str() );
 			return Code::Invalid;
@@ -5738,7 +5786,7 @@ namespace gen
 		return result;
 	}
 
-	Code untyped_fmt(char const* fmt, ...)
+	Code untyped_fmt( char const* fmt, ...)
 	{
 		local_persist thread_local
 		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
@@ -5783,7 +5831,20 @@ namespace gen
 #pragma region Builder
 	void Builder::print( Code code )
 	{
-		Buffer.append_fmt( "%s\n\n", code.to_string() );
+		Buffer.append_fmt( "%s\n", code.to_string() );
+	}
+
+	void Builder::print_fmt( char const* fmt, ... )
+	{
+		sw   res;
+		char buf[ ZPL_PRINTF_MAXLEN ] = { 0 };
+
+		va_list va;
+		va_start( va, fmt );
+		res = str_fmt_va( buf, count_of( buf ) - 1, fmt, va ) - 1;
+		va_end( va );
+
+		Buffer.append( buf, res );
 	}
 
 	bool Builder::open( char const* path )
@@ -5803,7 +5864,7 @@ namespace gen
 
 	void Builder::write()
 	{
-		bool result = file_write( & File, Buffer, string_length(Buffer) );
+		bool result = file_write( & File, Buffer, Buffer.length() );
 
 		if ( result == false )
 			log_failure("gen::File::write - Failed to write to file: %s", file_name( & File ) );

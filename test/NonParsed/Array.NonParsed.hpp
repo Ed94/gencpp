@@ -307,12 +307,12 @@ struct GenArrayRequest
 };
 Array(GenArrayRequest) GenArrayRequests;
 
-void gen__array_request( StrC type, StrC dep, sw size )
+void gen__array_request( StrC type, sw size, StrC dep = {} )
 {
 	GenArrayRequest request = { type, dep, size };
 	array_append( GenArrayRequests, request );
 }
-#define Gen_Array( type ) gen__array_request( txt_n_len( type ), sizeof(type) )
+#define Gen_Array( type ) gen__array_request( { txt_n_len(type) }, sizeof(type) )
 
 u32 gen_array_file()
 {

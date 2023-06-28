@@ -10,7 +10,7 @@
 			"name": "Debug gentime lldb",
 			"program": "${workspaceFolder}/test/gen/build/gencpp.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}",
+			"cwd": "${workspaceFolder}/test/gen/",
 			"postRunCommands": [
 				"command script import \"${workspaceFolder}/.vscode/gencpp_lldbvis.py\""
 			]
@@ -21,7 +21,7 @@
 			"name": "Debug gentime vsdbg",
 			"program": "${workspaceFolder}/test/gen/build/gencpp.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}",
+			"cwd": "${workspaceFolder}/test/gen/",
 			"visualizerFile": "${workspaceFolder}/.vscode/gencpp.natvis"
 		}
 	]

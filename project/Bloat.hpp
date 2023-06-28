@@ -84,12 +84,12 @@ using zpl::str_fmt_va;
 using zpl::str_fmt_out_va;
 using zpl::str_fmt_out_err_va;
 using zpl::str_compare;
-using zpl::string_appendc;
-using zpl::string_append_fmt;
-using zpl::string_append_length;
-using zpl::string_make_length;
-using zpl::string_length;
-using zpl::string_make;
+// using zpl::string_appendc;
+// using zpl::string_append_fmt;
+// using zpl::string_append_length;
+// using zpl::string_make_length;
+// using zpl::string_length;
+// using zpl::string_make;
 using zpl::str_len;
 
 #if __clang__
@@ -198,7 +198,8 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 		sw          Len;
 		char const* Ptr;
 
-		static StrC from( char const* str )
+		static constexpr
+		StrC from( char const* str )
 		{
 			return { str_len( str ), str };
 		}
@@ -210,7 +211,7 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 	};
 
 	// Dynamic String
-	// This is directly based off the ZPL string api. 
+	// This is directly based off the ZPL string api.
 	// They used a header pattern
 	// I kept it for simplicty of porting but its not necessary to keep it that way.
 	struct String
@@ -268,7 +269,7 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			if ( ! str )
 				mem_set( allocation, 0, alloc_size );
 
-			Header& 
+			Header&
 			header = * rcast(Header*, allocation);
 			header = { allocator, length, length };
 
@@ -339,7 +340,7 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			// NOTE: Return if there is enough space left
 			if ( available >= add_len )
 			{
-				return false;
+				return true;
 			}
 			else
 			{
@@ -371,7 +372,6 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			}
 		}
 
-
 		bool append( char const* str )
 		{
 			return append( str, str_len( str ) );
@@ -379,14 +379,14 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
 		bool append( char const* str, sw length )
 		{
-			Header& header = get_header();
-
 			if ( sptr(str) > 0 )
 			{
-				sw curr_len = header.Length;
+				sw curr_len = this->length();
 
-				if ( make_space_for( str, length ) )
+				if ( ! make_space_for( str, length ) )
 					return false;
+
+				Header& header = get_header();
 
 				mem_copy( Data + curr_len, str, length );
 
