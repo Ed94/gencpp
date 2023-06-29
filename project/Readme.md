@@ -18,6 +18,7 @@ Organization:
 * ZPL inclusion and selective symbol exposure to global scope.
 * Utility macro definitions used throughout the library.
 * Global memory arena definition
+* StrC and String definitions
 * Token string formatter
 * Formatted and Fatal Logs
 
@@ -52,7 +53,10 @@ Major enum definitions and their associated functions used with the AST data
 
 * `ECode` : Used to tag ASTs by their type
 * `EOperator` : Used to tag operator overloads with thier op type
-* `ESpecifier` : Used with specifier ASTs for all specifiers the user may tag an associated AST with.
+* `ESpecifier` : Used with specifier ASTs for all specifiers the user may tag an associated
+AST with.
+* `AccessSpec` : Used with class and struct ASTs to denote the public, protected, or private fields.
+* `ModuleFlag` : Used with any valid definition that can have export or import related keywords assoicated with it.
 
 #### Data Structures
 
@@ -85,3 +89,17 @@ Inlined functions related to the AST datatype that required forwards for gen int
 
 ## gen.cpp
 
+* Static data defined at the top.
+* AST Body case macros are next.
+* AST implementation follows
+* Gen interface begins with its `init`, `deinit`, etc.. Until `make_code_entires`
+* operator__validate defined, which will be used to verify if an operator definition is constructible.
+* Allocator interface for data arrays, code pool, code entries, string arenas, and string table.
+* Helper macros used throughout the constructor API
+* Upfront constructors, following the same order as shown in the header.
+* Incremental constructors
+* Parsing constructors, it defines its own lexer, and has many helper functions for parsing not exposed through the header.
+* Untyped constructors
+* Builder
+* Editor
+* Scanner

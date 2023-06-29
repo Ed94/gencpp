@@ -556,8 +556,6 @@ namespace gen
 		constexpr static
 		uw ArrSpecs_Cap = ArrS_Cap * (sizeof(AST*) / sizeof(SpecifierT));
 
-		// static_assert( sizeof( AST* ) * ArrS_Cap == sizeof( AST** ) * ArrS_Cap, "Blah" );
-
 	#	define Using_AST_POD                           \
 		union {                                        \
 			AST*          ArrStatic[AST::ArrS_Cap];    \
@@ -778,8 +776,8 @@ namespace gen
 	void set_allocator_type_table       ( AllocatorInfo type_reg_allocator );
 
 #	pragma region Upfront
-	Code def_comment   ( StrC content );
 	Code def_attributes( StrC content );
+	Code def_comment   ( StrC content );
 
 	Code def_class( StrC name
 		, Code body         = NoCode
@@ -819,8 +817,8 @@ namespace gen
 		, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 	Code def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode );
+	Code def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
 	Code def_union( StrC name, Code body, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
@@ -842,10 +840,10 @@ namespace gen
 	Code def_export_body     ( s32 num, Code* codes);
 	Code def_extern_link_body( s32 num, ... );
 	Code def_extern_link_body( s32 num, Code* codes );
-	Code def_global_body     ( s32 num, ... );
-	Code def_global_body     ( s32 num, Code* codes );
 	Code def_function_body   ( s32 num, ... );
 	Code def_function_body   ( s32 num, Code* codes );
+	Code def_global_body     ( s32 num, ... );
+	Code def_global_body     ( s32 num, Code* codes );
 	Code def_namespace_body  ( s32 num, ... );
 	Code def_namespace_body  ( s32 num, Code* codes );
 	Code def_params          ( s32 num, ... );
@@ -869,8 +867,8 @@ namespace gen
 		, Code type       = NoCode, EnumT      specifier = EnumRegular
 		, Code attributes = NoCode, ModuleFlag mflags    = ModuleFlag::None );
 
-	Code make_export_body   ( StrC name = { 1, "" } );
-	Code make_extern_linkage( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
+	Code make_export_body( StrC name = { 1, "" } );
+	Code make_extern_link( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
 
 	Code make_function( StrC name
 		, Code       params     = NoCode, Code ret_type   = NoCode
@@ -1137,6 +1135,8 @@ namespace gen
 
 	extern Code module_global_fragment;
 	extern Code module_private_fragment;
+
+	extern Code pragma_once;
 
 	extern Code spec_const;
 	extern Code spec_consteval;

@@ -57,6 +57,8 @@ namespace gen
 	Code module_global_fragment;
 	Code module_private_fragment;
 
+	Code pragma_once;
+
 	Code spec_const;
 	Code spec_consteval;
 	Code spec_constexpr;
@@ -1336,21 +1338,21 @@ namespace gen
 		access_private_write = ccast( Code, access_private );
 		access_private_write = make_code();
 		access_private_write->Type = ECode::Access_Private;
-		access_private_write->Name = get_cached_string( { sizeof("private"), "private" } );
+		access_private_write->Name = get_cached_string( StrC::from("private") );
 		access_private_write.lock();
 
 		Code&
 		access_protected_write = ccast( Code, access_protected );
 		access_protected_write = make_code();
 		access_protected_write->Type = ECode::Access_Protected;
-		access_protected_write->Name = get_cached_string( { sizeof("protected"), "protected" } );
+		access_protected_write->Name = get_cached_string( StrC::from("protected") );
 		access_protected_write.lock();
 
 		Code&
 		access_public_write = ccast( Code, access_public );
 		access_public_write = make_code();
 		access_public_write->Type = ECode::Access_Public;
-		access_public_write->Name = get_cached_string( { sizeof("public"), "public" } );
+		access_public_write->Name = get_cached_string( StrC::from("public") );
 		access_public_write.lock();
 
 		module_global_fragment          = make_code();
@@ -1364,6 +1366,12 @@ namespace gen
 		module_private_fragment->Name    = get_cached_string( StrC::from("module : private;") );
 		module_private_fragment->Content = module_private_fragment->Name;
 		module_private_fragment.lock();
+
+		pragma_once          = make_code();
+		pragma_once->Type    = ECode::Untyped;
+		pragma_once->Name    = get_cached_string( StrC::from("#pragma once") );
+		pragma_once->Content = pragma_once->Name;
+		pragma_once.lock();
 
 		Code&
 		spec_local_persist_write = ccast( Code, spec_local_persist );
@@ -2009,6 +2017,23 @@ namespace gen
 	The largest of the functions is related to operator overload definitions.
 	I decided to validate a good protion of their form and thus the argument processing for is quite a bit.
 */
+	Code def_attributes( StrC content )
+	{
+		if ( content.Len <= 0 || content.Ptr == nullptr )
+		{
+			log_failure( "gen::def_attributes: Invalid attributes provided" );
+			return Code::Invalid;
+		}
+
+		Code
+		result = make_code();
+		result->Type    = ECode::Attributes;
+		result->Name    = get_cached_string( content );
+		result->Content = result->Name;
+
+		result.lock();
+		return result;
+	}
 
 	Code def_comment( StrC content )
 	{
@@ -2021,24 +2046,6 @@ namespace gen
 		Code
 		result = make_code();
 		result->Type    = ECode::Comment;
-		result->Name    = get_cached_string( content );
-		result->Content = result->Name;
-
-		result.lock();
-		return result;
-	}
-
-	Code def_attributes( StrC content )
-	{
-		if ( content.Len <= 0 || content.Ptr == nullptr )
-		{
-			log_failure( "gen::def_attributes: Invalid attributes provided" );
-			return Code::Invalid;
-		}
-
-		Code
-		result = make_code();
-		result->Type    = ECode::Attributes;
 		result->Name    = get_cached_string( content );
 		result->Content = result->Name;
 
@@ -3442,7 +3449,7 @@ namespace gen
 		return result;
 	}
 
-	Code make_extern_linkage( StrC name, ModuleFlag mflags )
+	Code make_extern_link( StrC name, ModuleFlag mflags )
 	{
 		using namespace ECode;
 

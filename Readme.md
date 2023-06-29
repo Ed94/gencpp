@@ -2,7 +2,7 @@
 
 An attempt at simple staged metaprogramming for c/c++.
 
-The library is mostly a compositon of code element constructors.
+The library API is a compositon of code element constructors.
 These build up a code AST to then serialize with a file builder.
 
 Intended for small-to midsized projects.
@@ -11,11 +11,11 @@ Intended for small-to midsized projects.
 
 * [Notes](#notes)
 * [Usage](#usage)
-* [Gen's DSL](#gens-dsl)
 * [Building](#notes)
 * [Outline](#outline)
 * [What is not provided](#what-is-not-provided)
 * [The four constructors](#there-are-four-sets-of-interfaces-for-code-ast-generation-the-library-provides)
+* [Predefined Codes](#predefined-codes)
 * [Code generation and modification](#code-generation-and-modification)
 * [On multithreading](#on-multi-threading)
 * [Extending the library](#extending-the-library)
@@ -29,11 +29,13 @@ Version 1 will have C and a subset of C++ features available to it.
 I will generate with this library a C99 or 11 variant when Version 1 is complete.
 A single-header version will also be generated.
 
-The size target of this library is to stay under 5-6k sloc (data & interface code).
+The size target is to stay under 5-6k sloc (data & interface code).
 With the dependency code being under 10000 sloc. (Containers, Memory, String handling, Language bloat)
 
 Any dependencies from the zpl library will be exposed manually with using declarations into global scope.
 They will be removed when the library is feature complete for version 1 (zero dependencies milestone).
+
+***The editor and scanner will NOT be implemented by version 1. They require alot of code and the focus for version 1 is to have a robust constructor API and builder, witch a wide suite of usage examples in the tests for the project.***
 
 ## Usage
 
@@ -67,8 +69,8 @@ u32 gen_main()
 
 ```
 
-The design a constructive builder of a sort of AST for the code to generate.
-The user is given `Code` typed objects that are used to build up the AST.
+The design uses a constructive builder sort of AST for the code to generate.
+The user is given `Code` objects that are used to build up the AST.
 
 Example using each construction interface:
 
@@ -125,7 +127,7 @@ Code header = parse_struct( code(
 
 Parse will automatically generate any types that have not been used previously.
 
-### Undtyped
+### Untyped
 
 ```cpp
 Code header = untyped_str( R("
@@ -161,10 +163,10 @@ An example of building is provided in the test directory.
 There are two meson build files the one within test is the program's build specification.
 The other one in the gen directory within test is the metaprogram's build specification.
 
-Both of them build the same source file: `test.cpp`. The only differences between them is that gen need a different relative path to the include directories and defines the macro definition: `gen_time`.
+Both of them build the same source file: `test.cpp`. The only differences are that gen needs a different relative path to the include directories and defines the macro definition: `gen_time`.
 
 This method is setup where all the metaprogram's code are the within the same files as the regular program's code.
-If in your use case, decide to have exclusive separation or partial separation of the metaprogam's code from the program's code files then your build configuration would need to change to reflect that (specifically the sources).
+If in your use case, you decide to have exclusive separation or partial separation of the metaprogam's code from the program's code files, then your build configuration would need to change to reflect that (specifically the sources).
 
 ## Outline
 
@@ -192,7 +194,7 @@ When it comes to expressions:
 There is no support for validating expressions.
 The reason: thats where the can of worms open for parsing validation. This library would most likey more than double in size with that addition alone.
 For most metaprogramming (espcially for C/C++), expression validation is not necessary for metaprogramming, it can be done by the compiler for the runtime program.
-Most of the time, the critical complex metaprogramming conundrums are actaully producing the frame of abstractions around the expressions.
+Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions.
 Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
 
 To further this point, lets say you do have an error with an expressions composition.
@@ -207,9 +209,9 @@ In both these cases the user will get objectively better debug information than 
 
 ### The Data & Interface
 
-As mentioned in [Usage](#usage), the user is provided Code objects by calling the constructor functions to generate them or find existing matches.
+As mentioned in [Usage](#usage), the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
-The AST is managed by the library and provided the user via its interface prodedures.
+The AST is managed by the library and provided the user via its interface.
 However, the user may specificy memory configuration.
 
 Data layout of AST struct:
@@ -217,19 +219,20 @@ Data layout of AST struct:
 ```cpp
 union {
     AST*          ArrStatic[AST::ArrS_Cap];
-    Array(AST*)   Entries;
+    Array(AST*)   ArrDyn;
     StringCached  Content;
     SpecifierT    ArrSpecs[AST::ArrSpecs_Cap];
 };
 AST*              Parent;
 StringCached      Name;
-StringCached      Comment;
 CodeT             Type;
 OperatorT         Op;
+ModuleFlag        ModuleFlags;
+AccessSpec        ParentAccess;
+u32               StaticIndex;
 bool              Readonly;
 bool              DynamicEntries;
-u8                StaticIndex;
-u8                _Align_Pad[6];
+u8                _Align_Pad[2];
 ```
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*
@@ -243,16 +246,19 @@ The width dictates how much the static array can hold before it must give way to
 constexpr static
 uw ArrS_Cap =
 (     AST_POD_Size
-    - sizeof(AST*)
-    - sizeof(StringCached) * 2
-    - sizeof(CodeT)
-    - sizeof(OperatorT)
-    - sizeof(bool) * 2
-    - sizeof(u8) * 7 )
+    - sizeof(AST*)         // Parent
+    - sizeof(StringCached) // Name
+    - sizeof(CodeT) 	   // Type
+    - sizeof(OperatorT)    // Op
+    - sizeof(ModuleFlag)   // ModuleFlags
+    - sizeof(AccessSpec)   // ParentAccess
+    - sizeof(u32) 		   // StaticIndex
+    - sizeof(bool) * 2     // Readonly, DynamicEntries
+    - sizeof(u8) * 2 )     // _Align_Pad
 / sizeof(AST*);
 ```
 
-*Ex: If the AST_POD_Size is 256 the capacity of the static array is 26.*
+*Ex: If the AST_POD_Size is 256 the capacity of the static array is 27.*
 
 ASTs can be set to readonly by calling Code's lock() member function.
 Adding comments is always available even if the AST is set to readonly.
@@ -261,7 +267,7 @@ Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
   * You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`, and `make_code_entries`.
-* ASTs are wrapped for the user in a Code struct which essentially a warpper for a AST* type.
+* ASTs are wrapped for the user in a Code struct which is a warpper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
 * Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
@@ -280,11 +286,16 @@ The construction will fail and return InvalidCode otherwise.
 
 Interface :
 
+* def_attributes
+* def_comment
 * def_class
 * def_enum
 * def_execution       NOTE: This is equivalent to untyped_str, except that its intended for use only in execution scopes.
+* def_extern_link
 * def_friend
 * def_function
+* def_include
+* def_module
 * def_namespace
 * def_operator
 * def_param
@@ -292,19 +303,24 @@ Interface :
 * def_specifier
 * def_specifiers
 * def_struct
-* def_variable
 * def_type
 * def_typedef
+* def_union
 * def_using
+* def_using_namespace
+* def_variable
 
 Bodies:
 
 * def_class_body
 * def_enum_body
+* def_export_body
+* def_extern_link_body
 * def_function_body   NOTE: Use this for operator bodies as well.
 * def_global_body
 * def_namespace_body
 * def_struct_body
+* def_union_body
 
 Usage:
 
@@ -332,7 +348,8 @@ Interface :
 
 * make_class
 * make_enum
-* make_enum_class
+* make_export_body
+* make_extern_linkage
 * make_function
 * make_global_body
 * make_namespace
@@ -340,6 +357,7 @@ Interface :
 * make_params
 * make_specifiers
 * make_struct
+* make_union
 
 Usage:
 
@@ -359,34 +377,22 @@ Interface :
 
 * parse_class
 * parse_enum
+* parse_export_body
+* parse_extern_link
 * parse_friend
 * parse_function
 * parse_global_body
 * parse_namespace
 * parse_operator
 * parse_struct
-* parse_strucs
-* parse_variable
 * parse_type
 * parse_typedef
+* parse_union
 * parse_using
-
-Multiple defs:
-
-* parse_classes
-* parse_enums
-* parse_functions
-* parse_namespaces
-* parse_operators
-* parse_variables
-* parse_typedefs
-* parse_usings
+* parse_variable
 
 The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
 This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
-
-The plural variants provide an array of codes, its up to the user to add them to a body AST
-(they are not auto-added to a body)
 
 Usage:
 
@@ -411,6 +417,7 @@ Code ASTs are constructed using unvalidated strings.
 
 Interface :
 
+* token_fmt_va
 * token_fmt
 * untyped_str
 * untyped_fmt
@@ -445,6 +452,57 @@ char const* template_str = txt(
 char const* gen_code_str = token_fmt( template, num_tokens, { token_key, token_value }, ... );
 Code        <name>       = parse_<function name>( gen_code_str );
 ```
+
+## Predefined Codes
+
+The following are provided predefined by the library as they are commonly used:
+
+* `access_public`
+* `access_protected`
+* `access_private`
+* `module_global_fragment`
+* `module_private_fragment`
+* `pragma_once`
+* `spec_const`
+* `spec_consteval`
+* `spec_constexpr`
+* `spec_constinit`
+* `spec_extern_linkage`
+* `spec_inline`
+* `spec_internal_linkage`
+* `spec_local_persist`
+* `spec_mutable`
+* `spec_ptr`
+* `spec_ref`
+* `spec_register`
+* `spec_rvalue`
+* `spec_static_member`
+* `spec_thread_local`
+* `spec_volatile`
+* `spec_type_signed`
+* `spec_type_unsigned`
+* `spec_type_short`
+* `spec_type_long`
+* `type_ns(void)`
+* `type_ns(int)`
+* `type_ns(bool)`
+* `type_ns(char)`
+* `type_ns(wchar_t)`
+
+Optionally the following may be defined if `GEN_DEFINE_LIBRARY_CODE_CONSTANTS` is defined
+
+* `type_ns( s8 )`
+* `type_ns( s16 )`
+* `type_ns( s32 )`
+* `type_ns( s64 )`
+* `type_ns( u8 )`
+* `type_ns( u16 )`
+* `type_ns( u32 )`
+* `type_ns( u64 )`
+* `type_ns( sw )`
+* `type_ns( uw )`
+* `type_ns( f32 )`
+* `type_ns( f64 )`
 
 ## Extent of operator overload validation
 
@@ -539,6 +597,19 @@ Code parse_defines() can emit a custom code AST with Macro_Constant type.
 
 Another would be getting preprocessor or template metaprogramming Codes from Unreal Engine definitions, etc.
 
+The rules for constructing the AST are largely bound the syntax rules for what can be composed with whichever version of C++ your targeting.
+
+The convention you'll see used throughout the API of the library is as follows:
+
+1. Check name or parameters to make sure they are valid for the construction requested
+2. Create a code object using `make_code`.
+3. Populate immediate fields (Name, Type, ModuleFlags, etc)
+4. Populate sub-entires using `add_entry`. If using the default seralization function `to_string`, follow the order at which entires are expected to appear (there is a strong ordering expected).
+
+Names or Content fields are interned strings and thus showed be cached using `get_cached_string` if its desired to preserve that behavior.
+
+`def_operator` is the most sophisitacated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
+
 # TODO
 
 * May be in need of a better name, I found a few repos with this same one...
@@ -552,7 +623,3 @@ Another would be getting preprocessor or template metaprogramming Codes from Unr
   * Most likely at least Incremental could possibly be removed in favor of just using the parse constructors.
   * Possible merits are ergonomics for very dynamic generation or performance reasons.
   * They'll most likely stay until its evident that they are not necessary.
-* Review memory handling for the AST, specifically relating to:
-  * Giving type asts a dedicated memory arenas.
-  * Giving specifier definitions a dedicated memory arenas and hashtable lookup.
-  * Possibly adding a dedicated block allocator for the dynamic arrays of AST::Entires.
