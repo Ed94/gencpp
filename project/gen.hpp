@@ -77,7 +77,6 @@ namespace gen
 		Entry( Typedef )              \
 		Entry( Typename )             \
 		Entry( Union )			      \
-		Entry( Union_Fwd )		      \
 		Entry( Union_Body) 		      \
 		Entry( Using )                \
 		Entry( Using_Namespace )      \
@@ -319,11 +318,16 @@ namespace gen
 		None    = 0,
 		Export  = bit(0),
 		Import  = bit(1),
-		Private = bit(2),
+		// Private = bit(2),
 
 		Num_ModuleFlags,
 		Invalid,
 	};
+
+	ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
+	{
+		return (ModuleFlag)( (u32)A | (u32)B );
+	}
 
 	/*
 		Predefined attributes
@@ -818,12 +822,13 @@ namespace gen
 	Code def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 	Code def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode );
 
-	Code def_union( StrC name, Code body = NoCode, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	Code def_union( StrC name, Code body, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_using( StrC name, UsingT specifier = UsingRegular
-		, Code       type        = NoCode
+	Code def_using( StrC name, Code type = NoCode
 		, Code       attributess = NoCode
 		, ModuleFlag mflags      = ModuleFlag::None );
+
+	Code def_using_namespace( StrC name );
 
 	Code def_variable( Code type, StrC name, Code value = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
@@ -1129,6 +1134,9 @@ namespace gen
 	extern Code access_public;
 	extern Code access_protected;
 	extern Code access_private;
+
+	extern Code module_global_fragment;
+	extern Code module_private_fragment;
 
 	extern Code spec_const;
 	extern Code spec_consteval;

@@ -54,6 +54,9 @@ namespace gen
 	Code access_protected;
 	Code access_private;
 
+	Code module_global_fragment;
+	Code module_private_fragment;
+
 	Code spec_const;
 	Code spec_consteval;
 	Code spec_constexpr;
@@ -82,7 +85,6 @@ namespace gen
 	case Class_Body:                      \
 	case Enum_Body:                       \
 	case Extern_Linkage:                  \
-	case Friend:                          \
 	case Function_Body:                   \
 	case Function_Fwd:                    \
 	case Global_Body:                     \
@@ -511,9 +513,6 @@ namespace gen
                                                                          \
 		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Import ))  \
 			result.append( "import " );             \
-                                                                         \
-		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Private )) \
-			result.append( "private " );
 
 		String result = String::make( g_allocator, "" );
 
@@ -639,11 +638,11 @@ namespace gen
 						result.append( "\n{\n" );
 					}
 
-					result.append_fmt( "%s\n%s};\n", body()->to_string(), indent_str );
+					result.append_fmt( "%s\n%s};", body()->to_string(), indent_str );
 				}
 				else
 				{
-					result.append_fmt( "class %s\n{\n%s\n%s};\n", Name, body()->to_string(), indent_str );
+					result.append_fmt( "class %s\n{\n%s\n%s};", Name, body()->to_string(), indent_str );
 				}
 			}
 			break;
@@ -733,7 +732,7 @@ namespace gen
 
 				if ( entry( idx )->Type == Typename )
 				{
-					result.append_fmt( ": %s\n%s{\n"
+					result.append_fmt( "%s : %s\n%s{\n"
 						, Name
 						, entry( idx )->to_string()
 						, indent_str
@@ -770,7 +769,7 @@ namespace gen
 					idx++;
 				}
 
-				result.append_fmt( ": %s;\n", Name, entry( idx )->to_string() );
+				result.append_fmt( "%s : %s;", Name, entry( idx )->to_string() );
 			}
 			break;
 
@@ -790,7 +789,7 @@ namespace gen
 					index++;
 				}
 
-				result.append_fmt( "%s};\n", indent_str );
+				result.append_fmt( "%s};", indent_str );
 			}
 			break;
 
@@ -799,7 +798,7 @@ namespace gen
 
 				ProcessModuleFlags();
 
-				result.append_fmt( "extern %s\n%s{\n%s\n%s};\n"
+				result.append_fmt( "extern \"%s\"\n%s{\n%s\n%s}"
 					, Name
 					, indent_str
 					, body()->to_string()
@@ -808,7 +807,7 @@ namespace gen
 			break;
 
 			case Friend:
-				result.append_fmt( "%sfriend %s;\n", indent_str, entry( 0 )->to_string() );
+				result.append_fmt( "%sfriend %s", indent_str, entry( 0 )->to_string() );
 			break;
 
 			case Function:
@@ -820,33 +819,44 @@ namespace gen
 				u32 idx  = 1;
 				u32 left = num_entries();
 
-				if ( entry( idx )->Type == Attributes )
+				AST* Entry = entry( idx );
+
+				if ( Entry && Entry->Type == Attributes )
 				{
-					result.append_fmt( "%s ", entry( idx )->to_string() );
+					result.append_fmt( "%s ", Entry->to_string() );
 					idx++;
 					left--;
+					Entry = entry( idx );
 				}
 
-				if ( entry( idx )->Type == Specifiers )
+				if ( Entry && Entry->Type == Specifiers )
 				{
-					result.append_fmt( "%s\n", entry( idx )->to_string() );
+					result.append_fmt( "%s\n", Entry->to_string() );
 					idx++;
 					left--;
+					Entry = entry( idx );
 				}
 
-				result.append_fmt( "%s %s(", entry( idx )->to_string(), Name );
-				idx++;
-				left--;
-
-				if ( left && entry( idx )->Type == Parameters )
+				if ( Entry && Entry->Type == Typename )
 				{
-					result.append_fmt( "%s", entry( idx )->to_string() );
+					result.append_fmt( "%s ", Entry->to_string() );
 					idx++;
 					left--;
+					Entry = entry( idx );
+				}
+
+				result.append_fmt( "%s(", Name );
+
+				if ( left && Entry && Entry->Type == Parameters )
+				{
+					result.append_fmt("%s", Entry->to_string() );
+					idx++;
+					left--;
+					Entry = entry( idx );
 				}
 				else
 				{
-					result.append_fmt( "void" );
+					result.append( "void" );
 				}
 
 				result.append_fmt( ")\n%s{\n%s\n%s}"
@@ -906,24 +916,28 @@ namespace gen
 					result.append( "void" );
 				}
 
-				result.append( ");\n" );
+				result.append( ");" );
 			}
 			break;
 
 			case Module:
 				result.append( indent );
 
-				ProcessModuleFlags();
+				if (((u32(ModuleFlag::Export) & u32(ModuleFlags)) == u32(ModuleFlag::Export)))
+					result.append("export ");
 
-				result.append_fmt( "module %s", Content );
-			break;
+				if (((u32(ModuleFlag::Import) & u32(ModuleFlags)) == u32(ModuleFlag::Import)))
+					result.append("import ");
+
+				result.append_fmt( "%s;", Name );
+				break;
 
 			case Namespace:
 				result.append( indent );
 
 				ProcessModuleFlags();
 
-				result.append_fmt( "namespace %s\n%s{\n%s\n%s};\n"
+				result.append_fmt( "namespace %s\n%s{\n%s\n%s};"
 					, Name
 					, indent_str
 					, body()->to_string()
@@ -993,12 +1007,12 @@ namespace gen
 
 				if ( entry( idx )->Type == Parameters )
 				{
-					result.append_fmt( "%s);\n", entry( idx )->to_string() );
+					result.append_fmt( "%s);", entry( idx )->to_string() );
 					idx++;
 				}
 				else
 				{
-					result.append_fmt( "void);\n" );
+					result.append_fmt( "void);" );
 				}
 			}
 			break;
@@ -1008,7 +1022,7 @@ namespace gen
 				result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
 
 				s32 index = 1;
-				s32 left  = num_entries() - 1;
+				s32 left  = num_entries();
 
 				while ( left--, left > 0 )
 					result.append_fmt( ", %s %s"
@@ -1019,7 +1033,7 @@ namespace gen
 			break;
 
 			case Preprocessor_Include:
-				result.append_fmt( "#include %s\n", Name );
+				result.append_fmt( "#include \"%s\"", Name );
 			break;
 
 			case Specifiers:
@@ -1056,7 +1070,7 @@ namespace gen
 					result.append_fmt( ": %s %s", access_str, entry( idx )->to_string() );
 				}
 
-				result.append_fmt( "\n{\n%s\n};\n", body()->to_string() );
+				result.append_fmt( "\n{\n%s\n};", body()->to_string() );
 			}
 			break;
 
@@ -1088,16 +1102,23 @@ namespace gen
 
 				s32 idx = 1;
 
-				if ( entry( idx )->Type == Specifiers )
+				if ( num_entries() > 1 )
 				{
-					result.append_fmt( "%s", entry( idx )->to_string() );
-					idx++;
+					if ( entry( idx )->Type == Specifiers )
+					{
+						result.append_fmt( "%s", entry( idx )->to_string() );
+						idx++;
+					}
+
+					result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
+
+					if ( entry( idx ) )
+						result.append_fmt( " = %s;", entry( idx )->to_string() );
+
+					break;
 				}
 
-				result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
-
-				if ( entry( idx ) )
-					result.append_fmt( " = %s", entry( idx )->to_string() );
+				result.append_fmt( "%s %s;", entry( 0 )->to_string(), Name );
 			}
 			break;
 
@@ -1154,7 +1175,7 @@ namespace gen
 					idx++;
 				}
 
-				result.append_fmt( "%s\n%s{\n%s\n%s};\n"
+				result.append_fmt( "%s\n%s{\n%s\n%s};"
 					, Name
 					, indent_str
 					, body()->to_string()
@@ -1183,16 +1204,15 @@ namespace gen
 					if ( type->entry( 1 ) )
 						result.append_fmt( "[%s]", type->entry( 1 )->to_string() );
 
+					result.append( ";" );
 				}
 				else
-					result.append_fmt( "using %s", Name );
-
-				result.append( ";" );
+					result.append_fmt( "using %s;", Name );
 			}
 			break;
 
 			case Using_Namespace:
-				result.append_fmt( "%susing namespace %s", indent_str, Name );
+				result.append_fmt( "%susing namespace %s;", indent_str, Name );
 			break;
 
 			case Class_Body:
@@ -1332,6 +1352,18 @@ namespace gen
 		access_public_write->Type = ECode::Access_Public;
 		access_public_write->Name = get_cached_string( { sizeof("public"), "public" } );
 		access_public_write.lock();
+
+		module_global_fragment          = make_code();
+		module_global_fragment->Type    = ECode::Untyped;
+		module_global_fragment->Name    = get_cached_string( StrC::from("module;") );
+		module_global_fragment->Content = module_global_fragment->Name;
+		module_global_fragment.lock();
+
+		module_private_fragment          = make_code();
+		module_private_fragment->Type    = ECode::Untyped;
+		module_private_fragment->Name    = get_cached_string( StrC::from("module : private;") );
+		module_private_fragment->Content = module_private_fragment->Name;
+		module_private_fragment.lock();
 
 		Code&
 		spec_local_persist_write = ccast( Code, spec_local_persist );
@@ -2167,7 +2199,7 @@ namespace gen
 		name_check( def_extern_linkage, name );
 		null_check( def_extern_linkage, body );
 
-		if ( body->Type != Extern_Linkage_Body || body->Type != Untyped )
+		if ( body->Type != Extern_Linkage_Body && body->Type != Untyped )
 		{
 			log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", body->debug_str());
 			return Code::Invalid;
@@ -2324,6 +2356,7 @@ namespace gen
 		result = make_code();
 		result->Type        = ECode::Module;
 		result->Name        = get_cached_string( name );
+		result->Content     = result->Name;
 		result->ModuleFlags = mflags;
 
 		result.lock();
@@ -2337,7 +2370,7 @@ namespace gen
 		name_check( def_namespace, name );
 		null_check( def_namespace, body );
 
-		if ( body->Type != Namespace_Body || body->Type != Untyped )
+		if ( body->Type != Namespace_Body && body->Type != Untyped )
 		{
 			log_failure("gen::def_namespace: body is not of namespace or untyped type %s", body->debug_str());
 			return Code::Invalid;
@@ -2584,8 +2617,9 @@ namespace gen
 	Code def_union( StrC name, Code body, Code attributes, ModuleFlag mflags )
 	{
 		name_check( def_union, name );
+		null_check( def_union, body );
 
-		if ( body && body->Type != ECode::Union_Body )
+		if ( body->Type != ECode::Union_Body )
 		{
 			log_failure( "gen::def_union: body was not a Union_Body type" );
 			return Code::Invalid;
@@ -2595,16 +2629,9 @@ namespace gen
 		result = make_code();
 		result->Name        = get_cached_string( name );
 		result->ModuleFlags = mflags;
+		result->Type        = ECode::Union;
 
-		if ( body )
-		{
-			result->Type = ECode::Union;
-			result->add_entry( body );
-		}
-		else
-		{
-			result->Type = ECode::Union_Fwd;
-		}
+		result->add_entry( body );
 
 		if ( attributes )
 			result->add_entry( attributes );
@@ -2613,8 +2640,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_using( StrC name, UsingT specifier
-		, Code type
+	Code def_using( StrC name, Code type
 		, Code attributes
 		, ModuleFlag mflags )
 	{
@@ -2633,23 +2659,27 @@ namespace gen
 		result              = make_code();
 		result->Name        = get_cached_string( name );
 		result->ModuleFlags = mflags;
+		result->Type = ECode::Using;
 
-		switch ( specifier )
-		{
-			case UsingRegular:
-				result->Type = ECode::Using;
-
-				if ( type )
-					result->add_entry( type );
-			break;
-
-			case UsingNamespace:
-				result->Type = ECode::Using_Namespace;
-			break;
-		}
+		if ( type )
+			result->add_entry( type );
 
 		if ( attributes )
 			result->add_entry( attributes );
+
+		result.lock();
+		return result;
+	}
+
+	Code def_using_namespace( StrC name )
+	{
+		name_check( def_using_namespace, name );
+
+		Code
+		result          = make_code();
+		result->Name    = get_cached_string( name );
+		result->Content = result->Name;
+		result->Type    = ECode::Using_Namespace;
 
 		result.lock();
 		return result;
@@ -3159,6 +3189,8 @@ namespace gen
 		result->Name = current->Name;
 		result->Type = current->Type;
 
+		result->add_entry( current->entry( 0) );
+
 		while( codes++, current = * codes, num--, num > 0 )
 		{
 			check_current();
@@ -3259,7 +3291,7 @@ namespace gen
 				return Code::Invalid;
 			}
 
-			if ( entry->Type != Untyped )
+			if ( entry->Type != Untyped && entry->Type != Comment )
 			{
 				log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped type.", entry->debug_str() ); \
 				return Code::Invalid;

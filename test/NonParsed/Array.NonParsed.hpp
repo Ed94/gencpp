@@ -64,7 +64,7 @@ Code gen__array( StrC type, sw type_size )
 
 	Code array;
 	{
-		Code using_type = def_using( name(Type), UsingRegular, t_type );
+		Code using_type = def_using( name(Type), t_type );
 		Code data       = def_variable( t_type_ptr, name(Data) );
 
 		Code init;
