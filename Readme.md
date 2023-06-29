@@ -2,7 +2,7 @@
 
 An attempt at simple staged metaprogramming for c/c++.
 
-The library API is a compositon of code element constructors.
+The library API is a compositon of code element constructors.  
 These build up a code AST to then serialize with a file builder.
 
 Intended for small-to midsized projects.
@@ -23,19 +23,19 @@ Intended for small-to midsized projects.
 
 ## Notes
 
-This project is not minimum feature complete yet.
+This project is not minimum feature complete yet.  
 Version 1 will have C and a subset of C++ features available to it.
 
-I will generate with this library a C99 or 11 variant when Version 1 is complete.
+I will generate with this library a C99 or 11 variant when Version 1 is complete.  
 A single-header version will also be generated.
 
-The size target is to stay under 5-6k sloc (data & interface code).
+The size target is to stay under 5-6k sloc (data & interface code).  
 With the dependency code being under 10000 sloc. (Containers, Memory, String handling, Language bloat)
 
-Any dependencies from the zpl library will be exposed manually with using declarations into global scope.
+Any dependencies from the zpl library will be exposed manually with using declarations into global scope.  
 They will be removed when the library is feature complete for version 1 (zero dependencies milestone).
 
-***The editor and scanner will NOT be implemented by version 1. They require alot of code and the focus for version 1 is to have a robust constructor API and builder, witch a wide suite of usage examples in the tests for the project.***
+***The editor and scanner will NOT be implemented by version 1. They require alot code and the focus for version 1 is to have a robust constructor API and builder, witch a wide suite of usage examples in the tests for the project.***
 
 ## Usage
 
@@ -69,7 +69,7 @@ u32 gen_main()
 
 ```
 
-The design uses a constructive builder sort of AST for the code to generate.
+The design uses a constructive builder sort of AST for the code to generate.  
 The user is given `Code` objects that are used to build up the AST.
 
 Example using each construction interface:
@@ -140,7 +140,7 @@ Code header = untyped_str( R("
 )");
 ```
 
-`name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.
+`name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.  
 `code` is a helper macro for providing a string literal with its size, but intended for code string parameters.
 
 All three constrcuton interfaces will generate the following C code:
@@ -160,12 +160,12 @@ struct ArrayHeader
 
 An example of building is provided in the test directory.
 
-There are two meson build files the one within test is the program's build specification.
+There are two meson build files the one within test is the program's build specification.  
 The other one in the gen directory within test is the metaprogram's build specification.
 
 Both of them build the same source file: `test.cpp`. The only differences are that gen needs a different relative path to the include directories and defines the macro definition: `gen_time`.
 
-This method is setup where all the metaprogram's code are the within the same files as the regular program's code.
+This method is setup where all the metaprogram's code are the within the same files as the regular program's code.  
 If in your use case, you decide to have exclusive separation or partial separation of the metaprogam's code from the program's code files, then your build configuration would need to change to reflect that (specifically the sources).
 
 ## Outline
@@ -191,13 +191,13 @@ These features are not horrible when used conservatively, or are a performance b
 
 When it comes to expressions:
 
-There is no support for validating expressions.
-The reason: thats where the can of worms open for parsing validation. This library would most likey more than double in size with that addition alone.
-For most metaprogramming (espcially for C/C++), expression validation is not necessary for metaprogramming, it can be done by the compiler for the runtime program.
-Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions.
+There is no support for validating expressions.  
+The reason: thats where the can of worms open for parsing validation. This library would most likey more than double in size with that addition alone.  
+For most metaprogramming (espcially for C/C++), expression validation is not necessary for metaprogramming, it can be done by the compiler for the runtime program.  
+Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions.  
 Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
 
-To further this point, lets say you do have an error with an expressions composition.
+To further this point, lets say you do have an error with an expressions composition.  
 It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
 
 * If its not caught by the compiler, the only downside is the error appers on the generated function.
@@ -211,7 +211,7 @@ In both these cases the user will get objectively better debug information than 
 
 As mentioned in [Usage](#usage), the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
-The AST is managed by the library and provided the user via its interface.
+The AST is managed by the library and provided the user via its interface.  
 However, the user may specificy memory configuration.
 
 Data layout of AST struct:
@@ -235,11 +235,11 @@ bool              DynamicEntries;
 u8                _Align_Pad[2];
 ```
 
-*`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*
-*`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*
+*`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
+*`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
 *`StringCahced` is a typedef for `char const*` to denote it is an interned string*
 
-AST widths are setup to be AST_POD_Size.
+AST widths are setup to be AST_POD_Size.  
 The width dictates how much the static array can hold before it must give way to using an allocated array:
 
 ```cpp
@@ -260,7 +260,7 @@ uw ArrS_Cap =
 
 *Ex: If the AST_POD_Size is 256 the capacity of the static array is 27.*
 
-ASTs can be set to readonly by calling Code's lock() member function.
+ASTs can be set to readonly by calling Code's lock() member function.  
 Adding comments is always available even if the AST is set to readonly.
 
 Data Notes:
@@ -391,7 +391,7 @@ Interface :
 * parse_using
 * parse_variable
 
-The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
+The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.  
 This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
 
 Usage:
@@ -423,10 +423,8 @@ Interface :
 * untyped_fmt
 * untyped_token_fmt
 
-During serialization any untyped Code AST has its string value directly injected inline of
-whatever context the content existed as an entry within.
-Even though these are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that
-Untyped code can be added as any component of a Code AST:
+During serialization any untyped Code AST has its string value directly injected inline of whatever context the content existed as an entry within.  
+Even though these are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that Untyped code can be added as any component of a Code AST:
 
 * Untyped code cannot have children, thus there cannot be recursive injection this way.
 * Untyped code can only be a child of a parent of body AST, or for values of an assignment (ex: variable assignment).
@@ -550,8 +548,8 @@ All three have the same parameters with exception to remove which only has Symbo
 * Policy : Additional policy info for completing the request (empty for now)
 * Code   : Code to inject if adding, or replace existing code with.
 
-Additionally if `GEN_FEATURE_EDITOR_REFACTOR` is defined, refactor( file_path, specification_path ) wil be made available.
-Refactor is based of the refactor library and uses its interface.
+Additionally if `GEN_FEATURE_EDITOR_REFACTOR` is defined, refactor( file_path, specification_path ) wil be made available.  
+Refactor is based of the refactor library and uses its interface.  
 It will on call add a request to the queue to run the refactor script on the file.
 
 ### Scanner allows the user to generate Code ASTs by reading files
@@ -565,10 +563,10 @@ One great use case is for example: generating the single-header library for genc
 
 ### Additional Info (Editor and Scanner)
 
-When all requests have been populated, call process_requests().
+When all requests have been populated, call process_requests().  
 It will provide an output of receipt data of the results when it completes.
 
-Files may be added to the Editor and Scanner additionally with add_files( num, files ).
+Files may be added to the Editor and Scanner additionally with add_files( num, files ).  
 This is intended for when you have requests that are for multiple files.
 
 Request queue in both Editor and Scanner are cleared once process_requests completes.
@@ -592,7 +590,7 @@ This library is relatively very small, and can be extended without much hassle.
 The untyped codes and builder/editor/scanner can be technically be used to circumvent
 any sort of constrictions the library has with: modern c++, templates, macros, etc.
 
-Typical use case is for getting define constants an old C/C++ library with the scanner:
+Typical use case is for getting define constants an old C/C++ library with the scanner:  
 Code parse_defines() can emit a custom code AST with Macro_Constant type.
 
 Another would be getting preprocessor or template metaprogramming Codes from Unreal Engine definitions, etc.

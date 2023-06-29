@@ -42,7 +42,7 @@ These macros are:
 
 Due to the design of `gen.hpp` to support being written alongside runtime intended code (in the same file), all the code is wrapped in a `gen_time` `#ifdef` and then wrapped further in a `gen` namespace to avoid pollution of the global scope.
 
-*Note: Its possible with the scanner feature to support parsing runtime files that use "generic" macros or identifiers with certain patterns.
+*Note: Its possible with the scanner feature to support parsing runtime files that use "generic" macros or identifiers with certain patterns.  
 This can be used to auto-queue generation of dependent definitions for the symbols used.*
 
 ### Organization
