@@ -9,8 +9,6 @@
 using namespace gen;
 
 
-
-
 int gen_main()
 {
 	Memory::setup();

@@ -36,9 +36,36 @@ u32 gen_sanity()
 
 	gen_sanity_file.print_fmt("\n");
 
-	//
+	// Typedef
 	{
+		Code t_unsigned_char = def_type( name(unsigned char) );
 
+		Code u8_typedef = def_typedef( name(u8), t_unsigned_char );
+
+		gen_sanity_file.print(u8_typedef);
+	}
+
+	gen_sanity_file.print_fmt("\n");
+
+	// Enum
+	{
+		Code fwd = def_enum( StrC::from("Test_Enum"), NoCode, t_u8 );
+		Code def;
+		{
+
+			Code body = untyped_str( StrC::from(
+			#define enum_entry( id ) "\t" #id ",\n"
+				enum_entry( A )
+				enum_entry( B )
+				enum_entry( C )
+			#undef enum_entry
+			));
+
+			def = def_enum( StrC::from("Test_Enum"), body, t_u8 );
+		}
+
+		gen_sanity_file.print(fwd);
+		gen_sanity_file.print(def);
 	}
 
 	gen_sanity_file.write();

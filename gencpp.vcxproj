@@ -114,6 +114,7 @@
     <ClInclude Include="project\Bloat.redef.hpp" />
     <ClInclude Include="project\Bloat.undef.hpp" />
     <ClInclude Include="project\gen.hpp" />
+    <ClInclude Include="test\NonParsed\Sanity.hpp" />
     <ClInclude Include="thirdparty\zpl.h" />
   </ItemGroup>
   <ItemGroup>

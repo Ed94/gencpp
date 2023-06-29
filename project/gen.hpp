@@ -396,15 +396,20 @@ namespace gen
 		inline
 		AST* body()
 		{
-			return Entries[0];
+			return entry( 0 );
 		}
 
 		AST* duplicate();
 
+		AST*& entry( u32 idx )
+		{
+			return DynamicEntries ? ArrDyn[ idx ] : ArrStatic[ idx ];
+		}
+
 		inline
 		bool has_entries()
 		{
-			return Entries[0];
+			return entry( 0 );
 		}
 
 		inline
@@ -416,7 +421,7 @@ namespace gen
 		inline
 		s32 num_entries()
 		{
-			return DynamicEntries ? array_count(Entries) : StaticIndex;
+			return DynamicEntries ? array_count( ArrDyn ) : StaticIndex;
 		}
 
 		// Parameter
@@ -429,7 +434,7 @@ namespace gen
 			if ( index <= 0 )
 				return this;
 
-			return Entries[ index + 1 ];
+			return entry( index + 1 );
 		}
 
 		inline
@@ -442,7 +447,7 @@ namespace gen
 		inline
 		AST* param_type()
 		{
-			return Entries[0];
+			return entry( 0 );
 		}
 
 		// Specifiers
@@ -492,7 +497,7 @@ namespace gen
 		inline
 		AST* typename_specifiers()
 		{
-			return Entries[0];
+			return entry( 0 );
 		}
 
 		// Serialization
@@ -547,10 +552,12 @@ namespace gen
 		constexpr static
 		uw ArrSpecs_Cap = ArrS_Cap * (sizeof(AST*) / sizeof(SpecifierT));
 
+		// static_assert( sizeof( AST* ) * ArrS_Cap == sizeof( AST** ) * ArrS_Cap, "Blah" );
+
 	#	define Using_AST_POD                           \
 		union {                                        \
 			AST*          ArrStatic[AST::ArrS_Cap];    \
-			Array(AST*)   Entries;                     \
+			Array(AST*)   ArrDyn;                      \
 			StringCached  Content;                     \
 			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; \
 		};                                             \
@@ -613,19 +620,13 @@ namespace gen
 				return Invalid;
 			}
 
-			if ( ast->Entries == nullptr || array_count(ast->Entries) == 0 )
-			{
-				log_failure("Code::body: Entries of ast not properly setup.");
-				return Invalid;
-			}
-
-#		ifdef GEN_ENFORCE_READONLY_AST
+		#ifdef GEN_ENFORCE_READONLY_AST
 			if ( ast->Readonly )
 			{
 				log_failure("Attempted to a body AST from a readonly AST!");
 				return Invalid;
 			}
-#		endif
+		#endif
 
 			return * (Code*)( ast->body() );
 		}
@@ -691,13 +692,13 @@ namespace gen
 				return nullptr;
 			}
 
-#		ifdef GEN_ENFORCE_READONLY_AST
+		#ifdef GEN_ENFORCE_READONLY_AST
 			if ( ast->Readonly )
 			{
 				log_failure("Attempted to access a member from a readonly AST!");
 				return nullptr;
 			}
-#		endif
+		#endif
 
 			return ast;
 		}
@@ -1162,7 +1163,7 @@ namespace gen
 			other->duplicate() : other;
 
 		if (DynamicEntries)
-			array_append( Entries, to_add );
+			array_append( ArrDyn, to_add );
 
 		else
 		{
@@ -1173,16 +1174,16 @@ namespace gen
 			}
 			else
 			{
-				Entries = make_code_entries();
+				ArrDyn = make_code_entries();
 
 				s32 index = 0;
 				do
 				{
-					array_append( Entries, ArrStatic[index] );
+					array_append( ArrDyn, ArrStatic[index] );
 				}
 				while ( StaticIndex--, StaticIndex );
 
-				array_append( Entries, to_add );
+				array_append( ArrDyn, to_add );
 			}
 		}
 
@@ -1213,7 +1214,7 @@ namespace gen
 		s32
 		score  = 0;
 		score += Name       == nullptr;
-		score += Entries[0] == nullptr;
+		score += entry( 0 ) == nullptr;
 
 		if ( score == 1 )
 		{
@@ -1223,7 +1224,7 @@ namespace gen
 		else if ( score == 2)
 		{
 			Name       = get_cached_string( name );
-			Entries[0] = type;
+			entry( 0 ) = type;
 			return true;
 		}
 

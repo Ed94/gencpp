@@ -50,6 +50,9 @@
     <ClInclude Include="thirdparty\zpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="test\NonParsed\Sanity.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />

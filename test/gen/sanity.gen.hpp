@@ -4,9 +4,16 @@ class Test_EmptyClass;
 class Test_EmptyClass
 {
 	// Empty class
+
 };
 
 
-UFUNCTION( BlueprintCallable, Category = "Test" )
-void Test_UFunction(void);
+typedef unsigned char u8;
 
+enum Test_Enum : u8;
+enum Test_Enum : u8
+{
+	A,
+	B,
+	C,
+};

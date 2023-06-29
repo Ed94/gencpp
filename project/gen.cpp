@@ -411,9 +411,7 @@ namespace gen
 				return false;
 		}
 
-		array_append( Entries, other );
-
-		other->Parent = this;
+		add_entry( other );
 		return true;
 	#else
 		log_failure( "AST::add: Incremental AST building is not enabled." );
@@ -495,7 +493,7 @@ namespace gen
 					// This will naturally duplicate the entire chain duplicate all of the ast nodes.
 					// It may not be the most optimal way for memory reasons, however figuring out the heuristic
 					// For when it should reparent all nodes or not is not within the simple scope of this library.
-					result->add_entry( Entries[index]->duplicate() );
+					result->add_entry( entry(index)->duplicate() );
 					index++;
 				}
 				return result;
@@ -506,7 +504,7 @@ namespace gen
 	}
 
 	String AST::to_string()
-{
+	{
 #	define ProcessModuleFlags() \
 		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))  \
 			result.append( "export " );             \
@@ -616,15 +614,15 @@ namespace gen
 
 					s32 idx = 1;
 
-					if ( Entries[idx]->Type == Attributes )
+					if ( entry( idx )->Type == Attributes )
 					{
-						result.append_fmt( "%s ", Entries[idx]->to_string() );
+						result.append_fmt( "%s ", entry( idx )->to_string() );
 						idx++;
 					}
 
 					result.append( Name );
 
-					AST* parent = Entries[idx];
+					AST* parent = entry( idx );
 
 					if ( parent )
 					{
@@ -668,43 +666,53 @@ namespace gen
 
 				result.append( "enum " );
 
-				s32 idx = 1;
-
-				if ( Entries[idx]->Type == Attributes )
+				if ( num_entries() > 1 )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
-					idx++;
-				}
+					s32 idx = 1;
 
-				if ( Entries[idx]->Type == Typename)
-				{
-					result.append_fmt( "%s : %s\n%s{\n"
-						, Name
-						, Entries[idx]->to_string()
-						, indent_str
-					);
+					AST* Entry = entry( idx);
+
+					if ( Entry->Type == Attributes )
+					{
+						result.append_fmt( "%s ", entry( idx )->to_string() );
+						idx++;
+					}
+
+					if ( Entry->Type == Typename)
+					{
+						result.append_fmt( "%s : %s\n{\n"
+							, Name
+							, entry( idx )->to_string()
+						);
+					}
+					else
+					{
+						result.append_fmt( "%s\n{\n"
+							, Name
+						);
+					}
 				}
 				else
 				{
-					result.append_fmt( result, "%s\n%s{\n"
+					result.append_fmt( "%s\n{\n"
 						, Name
-						, indent_str
 					);
 				}
 
-				result.append_fmt( result, "%s\n%s};"
+				result.append_fmt( "%s};"
 					, body()->to_string()
-					, indent_str
 				);
 			}
 			break;
 
 			case Enum_Fwd:
+			{
 				result.append( indent );
 
 				ProcessModuleFlags();
 
-				result.append_fmt( "enum %s : %s;\n", Name, Entries[1]->to_string() );
+				result.append_fmt( "enum %s : %s;", Name, entry( 0 )->to_string() );
+			}
 			break;
 
 			case Enum_Class:
@@ -717,17 +725,17 @@ namespace gen
 
 				s32 idx = 0;
 
-				if ( Entries[idx]->Type == Attributes )
+				if ( entry( idx )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", entry( idx )->to_string() );
 					idx++;
 				}
 
-				if ( Entries[idx]->Type == Typename )
+				if ( entry( idx )->Type == Typename )
 				{
 					result.append_fmt( ": %s\n%s{\n"
 						, Name
-						, Entries[idx]->to_string()
+						, entry( idx )->to_string()
 						, indent_str
 					);
 				}
@@ -756,13 +764,13 @@ namespace gen
 
 				s32 idx = 0;
 
-				if ( Entries[idx]->Type == Attributes )
+				if ( entry( idx )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", entry( idx )->to_string() );
 					idx++;
 				}
 
-				result.append_fmt( ": %s;\n", Name, Entries[idx]->to_string() );
+				result.append_fmt( ": %s;\n", Name, entry( idx )->to_string() );
 			}
 			break;
 
@@ -778,7 +786,7 @@ namespace gen
 				s32 left  = num_entries();
 				while ( left -- )
 				{
-					result.append_fmt( "%s\t%s\n", indent_str, Entries[index]->to_string() );
+					result.append_fmt( "%s\t%s\n", indent_str, entry( index )->to_string() );
 					index++;
 				}
 
@@ -800,7 +808,7 @@ namespace gen
 			break;
 
 			case Friend:
-				result.append_fmt( "%sfriend %s;\n", indent_str, Entries[0]->to_string() );
+				result.append_fmt( "%sfriend %s;\n", indent_str, entry( 0 )->to_string() );
 			break;
 
 			case Function:
@@ -812,27 +820,27 @@ namespace gen
 				u32 idx  = 1;
 				u32 left = num_entries();
 
-				if ( Entries[idx]->Type == Attributes )
+				if ( entry( idx )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", entry( idx )->to_string() );
 					idx++;
 					left--;
 				}
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( entry( idx )->Type == Specifiers )
 				{
-					result.append_fmt( "%s\n", Entries[idx]->to_string() );
+					result.append_fmt( "%s\n", entry( idx )->to_string() );
 					idx++;
 					left--;
 				}
 
-				result.append_fmt( "%s %s(", Entries[idx]->to_string(), Name );
+				result.append_fmt( "%s %s(", entry( idx )->to_string(), Name );
 				idx++;
 				left--;
 
-				if ( left && Entries[idx]->Type == Parameters )
+				if ( left && entry( idx )->Type == Parameters )
 				{
-					result.append_fmt( "%s", Entries[idx]->to_string() );
+					result.append_fmt( "%s", entry( idx )->to_string() );
 					idx++;
 					left--;
 				}
@@ -858,14 +866,14 @@ namespace gen
 				u32 idx  = 0;
 				u32 left = num_entries();
 
-				AST* Entry = Entries[idx];
+				AST* Entry = entry( idx );
 
 				if ( Entry && Entry->Type == Attributes )
 				{
 					result.append_fmt( "%s ", Entry->to_string() );
 					idx++;
 					left--;
-					Entry = Entries[idx];
+					Entry = entry( idx );
 				}
 
 				if ( Entry && Entry->Type == Specifiers )
@@ -873,7 +881,7 @@ namespace gen
 					result.append_fmt( "%s\n", Entry->to_string() );
 					idx++;
 					left--;
-					Entry = Entries[idx];
+					Entry = entry( idx );
 				}
 
 				if ( Entry && Entry->Type == Typename )
@@ -881,7 +889,7 @@ namespace gen
 					result.append_fmt( "%s ", Entry->to_string() );
 					idx++;
 					left--;
-					Entry = Entries[idx];
+					Entry = entry( idx );
 				}
 
 				result.append_fmt( "%s(", Name );
@@ -891,7 +899,7 @@ namespace gen
 					result.append_fmt("%s", Entry->to_string() );
 					idx++;
 					left--;
-					Entry = Entries[idx];
+					Entry = entry( idx );
 				}
 				else
 				{
@@ -932,24 +940,24 @@ namespace gen
 
 				s32 idx = 1;
 
-				if ( Entries[idx]->Type == Attributes )
+				if ( entry( idx )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", entry( idx )->to_string() );
 					idx++;
 				}
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( entry( idx )->Type == Specifiers )
 				{
-					result.append_fmt( "%s\n", Entries[idx]->to_string() );
+					result.append_fmt( "%s\n", entry( idx )->to_string() );
 					idx++;
 				}
 
-				result.append_fmt( "%s operator %s (", Entries[idx]->to_string(), Name );
+				result.append_fmt( "%s operator %s (", entry( idx )->to_string(), Name );
 				idx++;
 
-				if ( Entries[idx]->Type == Parameters )
+				if ( entry( idx )->Type == Parameters )
 				{
-					result.append_fmt( "%s", Entries[idx]->to_string() );
+					result.append_fmt( "%s", entry( idx )->to_string() );
 					idx++;
 				}
 				else
@@ -974,18 +982,18 @@ namespace gen
 
 				s32 idx = 0;
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( entry( idx )->Type == Specifiers )
 				{
-					result.append_fmt( "%s", Entries[idx]->to_string() );
+					result.append_fmt( "%s", entry( idx )->to_string() );
 					idx++;
 				}
 
-				result.append_fmt( "%s operator%s(", Entries[idx]->to_string(), Name );
+				result.append_fmt( "%s operator%s(", entry( idx )->to_string(), Name );
 				idx++;
 
-				if ( Entries[idx]->Type == Parameters )
+				if ( entry( idx )->Type == Parameters )
 				{
-					result.append_fmt( "%s);\n", Entries[idx]->to_string() );
+					result.append_fmt( "%s);\n", entry( idx )->to_string() );
 					idx++;
 				}
 				else
@@ -997,15 +1005,15 @@ namespace gen
 
 			case Parameters:
 			{
-				result.append_fmt( "%s %s", Entries[0]->to_string(), Name );
+				result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
 
 				s32 index = 1;
-				s32 left  = array_count( Entries ) - 1;
+				s32 left  = num_entries() - 1;
 
 				while ( left--, left > 0 )
 					result.append_fmt( ", %s %s"
-						, Entries[index]->Entries[0]->to_string()
-						, Entries[index]->Name
+						, entry( index )->entry( 0 )->to_string()
+						, entry( index )->Name
 					);
 			}
 			break;
@@ -1033,19 +1041,19 @@ namespace gen
 
 				s32 idx = 1;
 
-				if ( Entries[idx]->Type == Attributes )
+				if ( entry( idx )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", entry( idx )->to_string() );
 					idx++;
 				}
 
 				result.append_fmt( "%s ", Name );
 
-				if ( Entries[idx] )
+				if ( entry( idx ) )
 				{
 					char const* access_str = to_str( ParentAccess );
 
-					result.append_fmt( ": %s %s", access_str, Entries[idx]->to_string() );
+					result.append_fmt( ": %s %s", access_str, entry( idx )->to_string() );
 				}
 
 				result.append_fmt( "\n{\n%s\n};\n", body()->to_string() );
@@ -1062,9 +1070,9 @@ namespace gen
 
 				s32 idx = 1;
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( entry( idx )->Type == Specifiers )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", entry( idx )->to_string() );
 					idx++;
 				}
 
@@ -1080,16 +1088,16 @@ namespace gen
 
 				s32 idx = 1;
 
-				if ( Entries[idx]->Type == Specifiers )
+				if ( entry( idx )->Type == Specifiers )
 				{
-					result.append_fmt( "%s", Entries[idx]->to_string() );
+					result.append_fmt( "%s", entry( idx )->to_string() );
 					idx++;
 				}
 
-				result.append_fmt( "%s %s", Entries[0]->to_string(), Name );
+				result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
 
-				if ( Entries[idx] )
-					result.append_fmt( " = %s", Entries[idx]->to_string() );
+				if ( entry( idx ) )
+					result.append_fmt( " = %s", entry( idx )->to_string() );
 			}
 			break;
 
@@ -1099,18 +1107,18 @@ namespace gen
 
 				ProcessModuleFlags();
 
-				AST* type = Entries[0];
+				AST* type = entry( 0 );
 
-				if ( Entries[1] && Entries[1]->Type == Attributes )
+				if ( entry( 1 ) && entry( 1 )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[1]->to_string() );
+					result.append_fmt( "%s ", entry( 1 )->to_string() );
 				}
 
 				result.append_fmt( "typedef %s %s", type->to_string(), Name );
 
-				if ( type->Entries[1] )
+				if ( type->entry( 1 ) )
 				{
-					result.append_fmt( "[%s];", type->Entries[1]->to_string() );
+					result.append_fmt( "[%s];", type->entry( 1 )->to_string() );
 				}
 				else
 				{
@@ -1120,9 +1128,9 @@ namespace gen
 			break;
 
 			case Typename:
-				if ( num_entries() && Entries[0] )
+				if ( num_entries() && entry( 0 ) )
 				{
-					result.append_fmt( "%s %s", Name, Entries[0]->to_string() );
+					result.append_fmt( "%s %s", Name, entry( 0 )->to_string() );
 				}
 				else
 				{
@@ -1140,9 +1148,9 @@ namespace gen
 
 				result.append( "union " );
 
-				if ( Entries[idx]->Type == Attributes )
+				if ( entry( idx )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[idx]->to_string() );
+					result.append_fmt( "%s ", entry( idx )->to_string() );
 					idx++;
 				}
 
@@ -1161,19 +1169,19 @@ namespace gen
 
 				ProcessModuleFlags();
 
-				AST* type = Entries[0];
+				AST* type = entry( 0 );
 
-				if ( Entries[1] && Entries[1]->Type == Attributes )
+				if ( entry( 1 ) && entry( 1 )->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entries[1]->to_string() );
+					result.append_fmt( "%s ", entry( 1 )->to_string() );
 				}
 
 				if ( type )
 				{
 					result.append_fmt( "using %s = %s", Name, type->to_string() );
 
-					if ( type->Entries[1] )
-						result.append_fmt( "[%s]", type->Entries[1]->to_string() );
+					if ( type->entry( 1 ) )
+						result.append_fmt( "[%s]", type->entry( 1 )->to_string() );
 
 				}
 				else
@@ -1200,7 +1208,7 @@ namespace gen
 				s32 left  = num_entries();
 				while ( left -- )
 				{
-					result.append_fmt( "%s%s\n", indent_str, Entries[index]->to_string() );
+					result.append_fmt( "%s%s\n", indent_str, entry( index )->to_string() );
 					index++;
 				}
 			}
@@ -1471,20 +1479,6 @@ namespace gen
 		return result;
 	}
 
-	// Code get_cached_type( StrC name )
-	// {
-	// 	s32 hash_length = name.Len > kilobytes(1) ? kilobytes(1) : name.Len;
-	// 	s32 key         = crc32( name.Ptr, hash_length );
-	// 	{
-	// 		Code* result = type_tbl_get( & StaticData::TypeMap, key );
-
-	// 		if ( result )
-	// 			return * result;
-	// 	}
-
-	// 	return Code::Invalid;
-	// }
-
 	/*
 		Used internally to retireve a Code object form the CodePool.
 	*/
@@ -1533,7 +1527,6 @@ namespace gen
 		result->StaticIndex    = 0;
 		result->Readonly       = false;
 		result->DynamicEntries = false;
-		result->Entries        = result->ArrStatic;
 
 		return result;
 	}
@@ -2126,7 +2119,7 @@ namespace gen
 
 			result->add_entry( body );
 		}
-		else if ( specifier == EnumClass )
+		else
 		{
 			result->Type = specifier == EnumClass ?
 				Enum_Class_Fwd : Enum_Fwd;
@@ -2354,7 +2347,6 @@ namespace gen
 		result              = make_code();
 		result->Type        = Namespace;
 		result->Name        = get_cached_string( name );
-		result->Entries     = make_code_entries();
 		result->ModuleFlags = mflags;
 
 		result->add_entry( body );
