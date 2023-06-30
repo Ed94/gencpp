@@ -299,6 +299,18 @@ void gen__array_request( StrC type, sw size, StrC dep = {} )
 		array_init( GenArrayRequests, g_allocator );
 	do_once_end
 
+	// Make sure we don't already have a request for the type.
+	for ( sw idx = 0; idx < array_count( GenArrayRequests ); ++idx )
+	{
+		StrC const reqest_type = GenArrayRequests[ idx ].Type;
+
+		if ( reqest_type.Len != type.Len )
+			continue;
+
+		if ( str_compare( reqest_type.Ptr, type.Ptr, reqest_type.Len ) == 0 )
+			return;
+	}
+
 	GenArrayRequest request = { dep, type, size };
 	array_append( GenArrayRequests, request );
 }

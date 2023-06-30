@@ -227,13 +227,25 @@ struct GenBufferRequest
 	StrC Type;
 	sw   TypeSize;
 };
-Array(GenBufferRequest) GenBufferRequests;;
+Array(GenBufferRequest) GenBufferRequests;
 
 void gen__buffer_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
 		array_init( GenBufferRequests, g_allocator );
 	do_once_end
+
+	// Make sure we don't already have a request for the type.
+	for ( sw idx = 0; idx < array_count( GenBufferRequests ); ++idx )
+	{
+		StrC const reqest_type = GenBufferRequests[ idx ].Type;
+
+		if ( reqest_type.Len != type.Len )
+			continue;
+
+		if ( str_compare( reqest_type.Ptr, type.Ptr, reqest_type.Len ) == 0 )
+			return;
+	}
 
 	GenBufferRequest request = { dep, type, size};
 	array_append( GenBufferRequests, request );
@@ -270,8 +282,7 @@ u32 gen_buffer_file()
 		}
 
 		gen_buffer_file.print( generated_buffer );
-
-		++current;
+		current++;
 	}
 
 	gen_buffer_file.write();

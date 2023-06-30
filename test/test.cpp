@@ -1,6 +1,7 @@
 #include "Bloat.cpp"
 #include "NonParsed\Array.NonParsed.hpp"
 #include "NonParsed\Buffer.NonParsed.hpp"
+#include "NonParsed\Ring.NonParsed.hpp"
 #include "NonParsed\Sanity.hpp"
 
 
@@ -19,10 +20,14 @@ int gen_main()
 
 	gen_array( u8 );
 	// gen_array( sw );
-	gen_array_file();
 
 	gen_buffer( u8 );
+
+	gen_ring( s16 );
+
+	gen_array_file();
 	gen_buffer_file();
+	gen_ring_file();
 
 	gen::deinit();
 	Memory::cleanup();
