@@ -24,7 +24,7 @@ Intended for small-to midsized projects.
 ## Notes
 
 This project is not minimum feature complete yet.  
-Version 1 will have C and a subset of C++ features available to it.
+Version 1 will have C and a subset of C++ features available to it.  
 
 I will generate with this library a C99 or 11 variant when Version 1 is complete.  
 A single-header version will also be generated.
@@ -34,6 +34,8 @@ With the dependency code being under 10000 sloc. (Containers, Memory, String han
 
 Any dependencies from the zpl library will be exposed manually with using declarations into global scope.  
 They will be removed when the library is feature complete for version 1 (zero dependencies milestone).
+
+*Right now the upfront constructors are working to some extent based on testing*
 
 ***The editor and scanner will NOT be implemented by version 1. They require alot code and the focus for version 1 is to have a robust constructor API and builder, witch a wide suite of usage examples in the tests for the project.***
 

@@ -3992,6 +3992,7 @@ typedef struct BufferHeader
 	ZPL_NS( buffer_init )( Name, allocator, cap )
 
 #define ZPL_BUFFER_HEADER( x ) ( zpl_cast( ZPL_NS( BufferHeader )* )( x ) - 1 )
+#define buffer_allocator( x )  ( ZPL_BUFFER_HEADER( x )->backing )
 #define buffer_count( x )      ( ZPL_BUFFER_HEADER( x )->count )
 #define buffer_capacity( x )   ( ZPL_BUFFER_HEADER( x )->capacity )
 #define buffer_end( x )        ( x + ( buffer_count( x ) - 1 ) )
@@ -4027,7 +4028,7 @@ typedef struct BufferHeader
 #define buffer_copy_init( y, x )                                                                   \
 	do                                                                                             \
 	{                                                                                              \
-		ZPL_NS( buffer_init_reserve )( y, ZPL_NS( buffer_allocator )( x ), buffer_capacity( x ) ); \
+		buffer_init( y, buffer_allocator( x ), buffer_capacity( x ) ); \
 		ZPL_NS( mem_copy )( y, x, buffer_capacity( x ) * size_of( *x ) );                          \
 		buffer_count( y ) = buffer_count( x );                                                     \
 	} while ( 0 )

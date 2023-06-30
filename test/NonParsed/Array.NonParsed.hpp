@@ -91,22 +91,31 @@ Code gen__array( StrC type, sw type_size )
 			init_reserve = def_function( name(init_reserve), params, t_array_type, body, spec_static );
 		}
 
-		Code append = def_function( name(append), def_param(t_type, name(value)), t_bool
-			, untyped_str( code(
-				Header& header = get_header();
+		Code append;
+		{
+			Code param_type;
+			if ( type_size <= 8 )
+				param_type = t_type;
+			else
+				param_type = t_type_ref;
 
-				if ( header.Num == header.Capacity )
-				{
-					if ( ! grow( header.Capacity ))
-						return false;
-				}
+			append = def_function( name(append), def_param(param_type, name(value)), t_bool
+				, untyped_str( code(
+					Header& header = get_header();
 
-				Data[ header.Num ] = value;
-				header.Num++;
+					if ( header.Num == header.Capacity )
+					{
+						if ( ! grow( header.Capacity ))
+							return false;
+					}
 
-				return true;
-			))
-		);
+					Data[ header.Num ] = value;
+					header.Num++;
+
+					return true;
+				))
+			);
+		}
 
 		Code back;
 		{
@@ -278,8 +287,8 @@ Code gen__array( StrC type, sw type_size )
 
 struct GenArrayRequest
 {
-	StrC Type;
 	StrC Dependency;
+	StrC Type;
 	sw   Size;
 };
 Array(GenArrayRequest) GenArrayRequests;
@@ -290,7 +299,7 @@ void gen__array_request( StrC type, sw size, StrC dep = {} )
 		array_init( GenArrayRequests, g_allocator );
 	do_once_end
 
-	GenArrayRequest request = { type, dep, size };
+	GenArrayRequest request = { dep, type, size };
 	array_append( GenArrayRequests, request );
 }
 #define gen_array( type ) gen__array_request( { txt_n_len(type) }, sizeof(type) )
