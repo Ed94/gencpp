@@ -1067,6 +1067,7 @@ namespace gen
 
 	// Predefined Codes. Are set to readonly and are setup during gen::init()
 
+	extern Code type_ns( auto );
 	extern Code type_ns( void );
 	extern Code type_ns( int );
 	extern Code type_ns( bool );

@@ -26,6 +26,7 @@ namespace gen
 
 #pragma region Constants
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+	Code type_ns(auto);
 	Code type_ns(void);
 	Code type_ns(int);
 	Code type_ns(bool);
@@ -1088,6 +1089,8 @@ namespace gen
 
 		Code::Invalid = make_code();
 		Code::Invalid.lock();
+
+		type_ns(auto) = def_type( name(auto) );
 
 		Code&
 		t_void_write = ccast( Code, t_void );
@@ -2905,56 +2908,34 @@ namespace gen
 	{
 		def_body_start( def_params );
 
-		if ( num % 3 != 0 )
-		{
-			log_failure("gen::def_params: number of arguments must be a multiple of 3 (Code, s32, char const*) - %d", num);
-			return Code::Invalid;
-		}
-
-		Code
-		result       = make_code();
-		result->Type = Parameters;
-
 		va_list va;
 		va_start(va, num);
 
-		Code_POD    pod         = va_arg(va, Code_POD);
-		Code        type        = pcast( Code, pod );
-		s32         name_length = va_arg(va, s32 );
-		char const* name        = va_arg(va, char const*);
+		Code_POD pod   = va_arg(va, Code_POD);
+		Code     param = pcast( Code, pod );
 
-		result->Name = get_cached_string( { name_length, name } );
+		null_check( def_params, param );
 
-		if ( type->Type != Typename )
+		if ( param->Type != Parameters )
 		{
-			log_failure( "gen::def_params: type of param %d is not a Typename", num - num + 1 );
+			log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
 			return Code::Invalid;
 		}
 
-		result->add_entry( type );
+		Code result = { param->duplicate() };
 
-		while( num -= 3, num && num % 3 == 0 )
+		while ( -- num )
 		{
-			pod         = va_arg(va, Code_POD);
-			type        = pcast( Code, pod );
-			name_length = va_arg(va, u32);
-			name        = va_arg(va, char const*);
+			pod   = va_arg(va, Code_POD);
+			param = pcast( Code, pod );
 
-			Code
-			param       = make_code();
-			param->Type = Parameters;
-			param->Name = get_cached_string( { name_length, name } );
-
-			if ( type->Type != Typename )
+			if ( param->Type != Parameters )
 			{
-				log_failure( "gen::def_params: type of param %d is not a Typename", num - num + 1 );
+				log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
 				return Code::Invalid;
 			}
 
-			param->add_entry( type );
-			param.lock();
-
-			result->add_entry(param);
+			result->add_entry( param );
 		}
 		va_end(va);
 
