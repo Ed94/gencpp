@@ -180,6 +180,12 @@ namespace gen
 				result->Content = Content;
 				return result;
 
+			case Specifiers:
+				// Need to memcpy the specifiers.
+				mem_copy( result->ArrSpecs, ArrSpecs, sizeof( ArrSpecs ) );
+				result->StaticIndex = StaticIndex;
+				return result;
+
 			// The main purpose of this is to make sure entires in the AST are unique,
 			// So that we can assign the new parent without corrupting the existing AST.
 			case Class:
@@ -206,7 +212,6 @@ namespace gen
 			case Operator_Member:
 			case Operator_Member_Fwd:
 			case Parameters:
-			case Specifiers:
 			case Struct:
 			case Struct_Fwd:
 			case Struct_Body:
@@ -397,15 +402,15 @@ namespace gen
 				{
 					s32 idx = 1;
 
-					AST const* Entry = entry( idx);
+					AST const* current = entry( idx);
 
-					if ( Entry->Type == Attributes )
+					if ( current->Type == Attributes )
 					{
 						result.append_fmt( "%s ", entry( idx )->to_string() );
 						idx++;
 					}
 
-					if ( Entry->Type == Typename)
+					if ( current->Type == Typename)
 					{
 						result.append_fmt( "%s : %s\n{\n"
 							, Name
@@ -476,7 +481,7 @@ namespace gen
 					}
 				}
 
-				result.append_fmt( "%s};"
+				result.append_fmt( "%s\n};"
 					, body()->to_string()
 				);
 			}
@@ -548,40 +553,40 @@ namespace gen
 				u32 idx  = 1;
 				u32 left = num_entries();
 
-				AST* Entry = entry( idx );
+				AST* current = entry( idx );
 
-				if ( Entry && Entry->Type == Attributes )
+				if ( current && current->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entry->to_string() );
+					result.append_fmt( "%s ", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 
-				if ( Entry && Entry->Type == Specifiers )
+				if ( current && current->Type == Specifiers )
 				{
-					result.append_fmt( "%s\n", Entry->to_string() );
+					result.append_fmt( "%s\n", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 
-				if ( Entry && Entry->Type == Typename )
+				if ( current && current->Type == Typename )
 				{
-					result.append_fmt( "%s ", Entry->to_string() );
+					result.append_fmt( "%s ", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 
 				result.append_fmt( "%s(", Name );
 
-				if ( left && Entry && Entry->Type == Parameters )
+				if ( left && current && current->Type == Parameters )
 				{
-					result.append_fmt("%s", Entry->to_string() );
+					result.append_fmt("%s", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 				else
 				{
@@ -605,40 +610,40 @@ namespace gen
 				u32 idx  = 0;
 				u32 left = num_entries();
 
-				AST* Entry = entry( idx );
+				AST* current = entry( idx );
 
-				if ( Entry && Entry->Type == Attributes )
+				if ( current && current->Type == Attributes )
 				{
-					result.append_fmt( "%s ", Entry->to_string() );
+					result.append_fmt( "%s ", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 
-				if ( Entry && Entry->Type == Specifiers )
+				if ( current && current->Type == Specifiers )
 				{
-					result.append_fmt( "%s\n", Entry->to_string() );
+					result.append_fmt( "%s\n", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 
-				if ( Entry && Entry->Type == Typename )
+				if ( current && current->Type == Typename )
 				{
-					result.append_fmt( "%s ", Entry->to_string() );
+					result.append_fmt( "%s ", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 
 				result.append_fmt( "%s(", Name );
 
-				if ( left && Entry && Entry->Type == Parameters )
+				if ( left && current && current->Type == Parameters )
 				{
-					result.append_fmt("%s", Entry->to_string() );
+					result.append_fmt("%s", current->to_string() );
 					idx++;
 					left--;
-					Entry = entry( idx );
+					current = entry( idx );
 				}
 				else
 				{
@@ -750,13 +755,16 @@ namespace gen
 				result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
 
 				s32 index = 1;
-				s32 left  = num_entries();
+				s32 left  = num_entries() - 1;
 
-				while ( left--, left > 0 )
+				while ( left-- )
+				{
 					result.append_fmt( ", %s %s"
 						, entry( index )->entry( 0 )->to_string()
 						, entry( index )->Name
 					);
+					index++;
+				}
 			}
 			break;
 
@@ -768,8 +776,11 @@ namespace gen
 			{
 				s32 idx  = 0;
 				s32 left = StaticIndex;
-				while ( left--, left > 0 )
-					result.append_fmt( "%s ", ESpecifier::to_str( ArrSpecs[idx]) );
+				while ( left-- )
+				{
+					result.append_fmt( "%s ", (char const*)ESpecifier::to_str( ArrSpecs[idx]) );
+					idx++;
+				}
 			}
 			break;
 
@@ -781,24 +792,43 @@ namespace gen
 
 				result.append( "struct ");
 
-				s32 idx = 1;
-
-				if ( entry( idx )->Type == Attributes )
+				if ( num_entries() > 1 )
 				{
-					result.append_fmt( "%s ", entry( idx )->to_string() );
-					idx++;
+					s32 idx = 1;
+
+					AST* current = entry( idx );
+
+					if ( current && current->Type == Attributes )
+					{
+						result.append_fmt( "%s ", entry( idx )->to_string() );
+						idx++;
+						current = entry( idx );
+					}
+
+					result.append_fmt( "%s", Name );
+
+					if ( current )
+					{
+						switch ( ParentAccess )
+						{
+							case AccessSpec::Private:
+							case AccessSpec::Protected:
+							case AccessSpec::Public:
+								result.append_fmt( " : %s %s", to_str(ParentAccess), current->to_string() );
+								idx++;
+								break;
+
+							default:
+								result.append_fmt( " : %s", current->to_string() );
+								break;
+						}
+					}
+
+					result.append_fmt( "\n{\n%s\n};", body()->to_string() );
+					break;
 				}
 
-				result.append_fmt( "%s ", Name );
-
-				if ( entry( idx ) )
-				{
-					char const* access_str = to_str( ParentAccess );
-
-					result.append_fmt( ": %s %s", access_str, entry( idx )->to_string() );
-				}
-
-				result.append_fmt( "\n{\n%s\n};", body()->to_string() );
+				result.append_fmt( "%s\n{\n%s\n};", Name, body()->to_string() );
 			}
 			break;
 
@@ -2253,6 +2283,18 @@ namespace gen
 		return result;
 	}
 
+	Code def_specifier( SpecifierT spec )
+	{
+		Code
+		result       = make_code();
+		result->Type = ECode::Specifiers;
+
+		result->add_specifier( spec );
+
+		result.lock();
+		return result;
+	}
+
 	Code def_struct( StrC name
 		, Code body
 		, Code parent, AccessSpec parent_access
@@ -2269,7 +2311,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		if ( parent && parent->Type != Struct )
+		if ( parent && parent->Type != Typename )
 		{
 			log_failure( "gen::def_struct: parent was not a `Struct` type" );
 			return Code::Invalid;
@@ -5184,56 +5226,70 @@ namespace gen
 			}
 		}
 
-		sw   result  = 0;
 		char current = *fmt;
 
 		while ( current )
 		{
 			sw len = 0;
 
-			while ( current && current != '{' && remaining )
+			while ( current && current != '<' && remaining )
 			{
 				* buf = * fmt;
 				buf++;
 				fmt++;
+				remaining--;
 
 				current = * fmt;
 			}
 
-			if ( current == '{' )
+			if ( current == '<' )
 			{
-				char const* scanner = fmt;
+				char const* scanner = fmt + 1;
 
 				s32 tok_len = 0;
 
-				while ( *scanner != '}' )
+				while ( *scanner != '>' )
 				{
 					tok_len++;
 					scanner++;
 				}
 
-				char const* token = fmt;
+				char const* token = fmt + 1;
 
-				u32      key   = crc32( token, tok_len );
-				TokEntry value = * tokmap_get( & tok_map, key );
-				sw       left  = value.Length;
+				u32       key   = crc32( token, tok_len );
+				TokEntry* value = tokmap_get( & tok_map, key );
 
-				while ( left-- )
+				if ( value )
 				{
-					* buf = *value.Str;
-					buf++;
-					value.Str++;
+					sw          left = value->Length;
+					char const* str  = value->Str;
+
+					while ( left-- )
+					{
+						* buf = * str;
+						buf++;
+						remaining--;
+						str++;
+					}
+
+					scanner++;
+					fmt     = scanner;
+					current = * fmt;
+					continue;
 				}
 
-				scanner++;
-				fmt     = scanner;
+				* buf = * fmt;
+				buf++;
+				fmt++;
+				remaining--;
+
 				current = * fmt;
 			}
 		}
 
 		tokmap_clear( & tok_map );
 
-		return result;
+		return buf_size - remaining;
 	}
 
 	Code untyped_str( StrC content )

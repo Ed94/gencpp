@@ -23,7 +23,7 @@ Code gen__array_base()
 		Code params = def_param( t_uw, name(value));
 		Code body   = untyped_str( code( return 2 * value * 8; ));
 
-		Code spec = def_specifiers( ESpecifier::Static_Member, ESpecifier::Inline );
+		Code spec = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
 
 		grow_formula = def_function( name(grow_formula), params, t_uw, body, spec );
 	}
@@ -36,15 +36,34 @@ Code gen__array_base()
 
 Code gen__array( StrC type, sw type_size )
 {
-	Code t_allocator_info = def_type( name(AllocatorInfo) );
-	Code v_nullptr        = untyped_str( code(nullptr));
+	static Code t_allocator_info = def_type( name(AllocatorInfo) );
+	static Code v_nullptr        = untyped_str( code(nullptr));
 
-	static Code ArrayBase = gen__array_base();
+	// static Code array_base = def_type( name(ArrayBase) );
+	static Code header;
+	do_once_start
+		Code allocator = def_variable( t_allocator_info, name(Allocator) );
+		Code capacity  = def_variable( t_uw,             name(Capacity) );
+		Code num       = def_variable( t_uw,             name(Num) );
+
+		Code body   = def_struct_body( 3, allocator, capacity, num );
+		     header = def_struct( name(Header), body );
+	do_once_end
+
+	static Code grow_formula;
+	do_once_start
+		Code params = def_param( t_uw, name(value));
+		Code body   = untyped_str( code( return 2 * value * 8; ));
+
+		Code spec = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
+
+		grow_formula = def_function( name(grow_formula), params, t_uw, body, spec );
+	do_once_end
 
 	StrC name;
 	{
-		char const* name_str = str_fmt_buf( "Array_%s", type.Ptr );
-		s32         name_len = str_len( name );
+		char const* name_str = str_fmt_buf( "Array_%s\0", type.Ptr );
+		s32         name_len = str_len( name_str );
 
 		name = { name_len, name_str };
 	};
@@ -59,8 +78,8 @@ Code gen__array( StrC type, sw type_size )
 	Code t_header_ptr = def_type( name(Header), __, spec_ptr );
 	Code t_header_ref = def_type( name(Header), __, spec_ref );
 
-	Code spec_static_inline = def_specifiers( ESpecifier::Static_Member, ESpecifier::Inline );
-	Code spec_static        = def_specifiers( ESpecifier::Static_Member );
+	static Code spec_static_inline = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
+	static Code spec_static        = def_specifier( ESpecifier::Static_Member );
 
 	Code array;
 	{
@@ -79,21 +98,25 @@ Code gen__array( StrC type, sw type_size )
 
 		Code init_reserve;
 		{
-			Code params = def_params( 2, t_allocator_info, txt_n_len(allocator), t_sw, txt_n_len(capacity) );
-			Code body = untyped_str( code(
+			Code params = def_params( 2, (Code[2]){
+				def_param( t_allocator_info, name(allocator) ),
+				def_param( t_sw, name(capacity) )
+			});
+
+			char const* tmpl = txt(
 				Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) ));
 
 				if ( header == nullptr )
-					return false;
+					return (<type>){ nullptr };
 
 				header->Allocator = allocator;
 				header->Capacity  = capacity;
 				header->Num       = 0;
 
-				Data = rcast( Type*, header + 1 );
+				return (<type>){ rcast( Type*, header + 1) };
+			);
 
-				return true;
-			));
+			Code body = untyped_str( token_fmt( tmpl, 1, "type", (char const*)t_array_type->Name) );
 
 			init_reserve = def_function( name(init_reserve), params, t_array_type, body, spec_static );
 		}
@@ -107,11 +130,11 @@ Code gen__array( StrC type, sw type_size )
 
 				if ( header.Num == header.Capacity )
 				{
-					if ( ! grow( header.Allocator ))
+					if ( ! grow( header.Capacity ))
 						return false;
 				}
 
-				data[ header.Num ] = value;
+				Data[ header.Num ] = value;
 				header.Num++;
 
 				return true;
@@ -127,17 +150,21 @@ Code gen__array( StrC type, sw type_size )
 				return Data[ header.Num - 1 ];
 			));
 
-			back = def_function( name(back), __, t_type_ref, body );
+			back = def_function( name(back), __, t_type_ref, body, spec_inline );
 		}
 
 		Code clear = def_function( name(clear), __, t_void, untyped_str( code(
 			Header& header = get_header();
 			header.Num = 0;
-		)));
+		)), spec_inline );
 
 		Code fill;
 		{
-			Code params = def_params( 3, t_uw, txt_n_len(begin), t_uw, txt_n_len(end), t_type, txt_n_len(value) );
+			Code params = def_params( 3, (Code[3]){
+				def_param( t_uw, name(begin) ),
+				def_param( t_uw, name(end) ),
+				def_param( t_type, name(value) )
+			});
 
 			Code body = untyped_str( code(
 				Header& header = get_header();
@@ -147,7 +174,7 @@ Code gen__array( StrC type, sw type_size )
 
 				for ( sw idx = begin; idx < end; idx++ )
 				{
-					data[ idx ] = value;
+					Data[ idx ] = value;
 				}
 
 				return true;
@@ -167,7 +194,7 @@ Code gen__array( StrC type, sw type_size )
 		}
 
 		Code get_header = def_function( name(get_header), __, t_header_ref, untyped_str( code(
-			return pcast( Header, Data - 1 );
+			return * ( rcast( Header*, Data ) - 1 );
 		)));
 
 		Code grow;
@@ -177,7 +204,7 @@ Code gen__array( StrC type, sw type_size )
 			Code body = untyped_str( code(
 				Header& header = get_header();
 
-				t_uw new_capacity = grow_formula( header.Capacity );
+				uw new_capacity = grow_formula( header.Capacity );
 
 				if ( new_capacity < min_capacity )
 					new_capacity = 8;
@@ -193,11 +220,11 @@ Code gen__array( StrC type, sw type_size )
 			Code body = untyped_str( code(
 				Header& header = get_header();
 
-				assert_crash( header.Num > 0 );
+				ZPL_ASSERT( header.Num > 0 );
 				header.Num--;
 			));
 
-			pop = def_function( name(pop), __, t_bool, body );
+			pop = def_function( name(pop), __, t_bool, body, spec_inline );
 		}
 
 		Code reserve;
@@ -208,7 +235,7 @@ Code gen__array( StrC type, sw type_size )
 				Header& header = get_header();
 
 				if ( header.Capacity < new_capacity )
-					return set_capacity( capacity );
+					return set_capacity( new_capacity );
 
 				return true;
 			));
@@ -225,7 +252,7 @@ Code gen__array( StrC type, sw type_size )
 
 				if ( num > header.Capacity )
 				{
-					if ( ! grow( header.Allocator ))
+					if ( ! grow( header.Capacity ))
 						return false;
 				}
 
@@ -261,9 +288,9 @@ Code gen__array( StrC type, sw type_size )
 				new_header->Num       = header.Num;
 				new_header->Capacity  = new_capacity;
 
-				::free( header );
+				::free( header.Allocator, & header );
 
-				*Data = new_header + 1;
+				Data = (u8*) new_header + 1;
 
 				return true;
 			));
@@ -272,6 +299,8 @@ Code gen__array( StrC type, sw type_size )
 		}
 
 		Code body = def_struct_body( 17
+			, header
+			, grow_formula
 			, using_type
 
 			, init
@@ -309,10 +338,14 @@ Array(GenArrayRequest) GenArrayRequests;
 
 void gen__array_request( StrC type, sw size, StrC dep = {} )
 {
+	do_once_start
+		array_init( GenArrayRequests, g_allocator );
+	do_once_end
+
 	GenArrayRequest request = { type, dep, size };
 	array_append( GenArrayRequests, request );
 }
-#define Gen_Array( type ) gen__array_request( { txt_n_len(type) }, sizeof(type) )
+#define gen_array( type ) gen__array_request( { txt_n_len(type) }, sizeof(type) )
 
 u32 gen_array_file()
 {
@@ -320,6 +353,11 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.gen.hpp" );
 
+	Code include_zpl = def_include( StrC::from("../../thirdparty/zpl.h") );
+	gen_array_file.print( include_zpl );
+
+	// Code array_base = gen__array_base();
+	// gen_array_file.print( array_base );
 
 	GenArrayRequest* current = GenArrayRequests;
 	s32 left = array_count( GenArrayRequests );

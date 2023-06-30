@@ -1,5 +1,3 @@
-
-
 #ifdef gen_time
 #include "gen.hpp"
 

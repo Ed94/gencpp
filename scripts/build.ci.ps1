@@ -37,7 +37,7 @@ $path_scripts = Join-Path $path_root scripts
 		$args_meson += $path_gen_build
 
 		Push-Location $path_gen
-		& meson $args_meson 
+		& meson $args_meson
 		Pop-Location
 	}
 
@@ -49,6 +49,7 @@ $path_scripts = Join-Path $path_root scripts
 	& ninja $args_ninja
 	Pop-Location
 
+	if ($true) {
 	$gencpp = Join-Path $path_gen_build gencpp.exe
 
 	Push-location $path_gen
@@ -71,6 +72,7 @@ $path_scripts = Join-Path $path_root scripts
 	clang-format $formatParams $targetFiles
 	Write-Host "`nFormatting complete"
 	Pop-Location
+	}
 
 
 	# Build the program depending on generated files.

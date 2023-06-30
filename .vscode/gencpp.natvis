@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
+	<Type Name="gen::Code">
+		<DisplayString>{ast.Name} {ast.Type}</DisplayString>
+	</Type>
+
+	<Type Name="gen::AST">
+		<DisplayString>{Name} {Type}</DisplayString>
+	</Type>
+
 	<Type Name="String">
 		<DisplayString Condition="Data == nullptr">null</DisplayString>
 		<DisplayString>{Data,na}</DisplayString>

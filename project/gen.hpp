@@ -210,6 +210,7 @@ namespace gen
 	*/
 
 		#define Define_Specifiers                    \
+		Entry( Invalid,          INVALID )           \
 		Entry( Const,            const )             \
 		Entry( Consteval,        consteval )         \
 		Entry( Constexpr,        constexpr )         \
@@ -233,7 +234,6 @@ namespace gen
 
 		enum Type : u32
 		{
-			Invalid,
 		#	define Entry( Specifier, Code ) Specifier,
 			Define_Specifiers
 		#	undef Entry
@@ -301,9 +301,9 @@ namespace gen
 		local_persist
 		char const* lookup[ (u32)AccessSpec::Num_AccessSpec ] = {
 			"",
-			"private",
-			"protected",
 			"public",
+			"protected",
+			"private",
 		};
 
 		if ( type > AccessSpec::Public )
@@ -862,17 +862,17 @@ namespace gen
 	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va );
 
 	inline
-	char const* token_fmt( char const* fmt, sw num_tokens, ... )
+	StrC token_fmt( char const* fmt, sw num_tokens, ... )
 	{
 		local_persist thread_local
 		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 
 		va_list va;
 		va_start(va, fmt);
-		token_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, num_tokens, va);
+		sw result = token_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, num_tokens, va);
 		va_end(va);
 
-		return buf;
+		return { result, buf };
 	}
 
 	Code untyped_str      ( StrC content);
