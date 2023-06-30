@@ -56,11 +56,9 @@ u32 gen_sanity()
 		Code def;
 		{
 			Code body = untyped_str( StrC::from(
-			#define enum_entry( id ) "\t" #id ",\n"
 				enum_entry( A )
 				enum_entry( B )
 				enum_entry( C )
-			#undef enum_entry
 			));
 
 			def = def_enum( name(ETestEnum), body, t_u8 );
@@ -120,7 +118,7 @@ u32 gen_sanity()
 
 	// Include
 	{
-		Code include = def_include( StrC::from("DummyInclude.hpp") );
+		Code include = def_include( StrC::from("../DummyInclude.hpp") );
 
 		gen_sanity_file.print(include);
 	}
@@ -161,7 +159,37 @@ u32 gen_sanity()
 
 	// Operator
 	{
-		// This is nasty...
+		// Going to make a bit flag set of overloads for this.
+
+
+		Code bitflagtest;
+		{
+			Code body = def_enum_body( 1, untyped_str( StrC::from(
+				enum_entry( A = 1 << 0 )
+				enum_entry( B = 1 << 1 )
+				enum_entry( C = 1 << 2 )
+			)));
+			bitflagtest = def_enum( name(EBitFlagtest), body, t_u8,  EnumClass );
+		}
+		Code t_bitflag = def_type( name(EBitFlagtest) );
+
+		Code op_fwd, op_or;
+		{
+			Code params = def_params( code_args( 2,
+				def_param( t_bitflag, name(a) ),
+				def_param( t_bitflag, name(b) )
+			));
+
+			op_fwd = def_operator( EOperator::BOr, params, t_bitflag );
+			op_or  = def_operator( EOperator::BOr, params, t_bitflag, untyped_str( code(
+				return EBitFlagtest( (u8)a | (u8)b );
+			)));
+		}
+
+		gen_sanity_file.print(bitflagtest);
+		gen_sanity_file.print_fmt("\n");
+		gen_sanity_file.print(op_fwd);
+		gen_sanity_file.print(op_or);
 	}
 
 	gen_sanity_file.print_fmt("\n");

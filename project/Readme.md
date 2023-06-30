@@ -32,7 +32,6 @@ While getting fleshed out, all feature macros are defined on the top of the head
 
 These macros are:
 
-* `GEN_DEFINE_DSL` : Define the preprocessor DSL for using the library interface
 * `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
 * `GEN_ENCORCE_READONLY_AST` : Defines checks in Code when accessing the AST to make sure readonly marked ASTs are not mutated
 * `GEN_FEATURE_INCREMENTAL` : Defines the incremental constructors
@@ -71,7 +70,7 @@ AST with.
 
 First set of fowards are either backend functions used for various aspects of AST generation or configurating allocators used for different containers.
 
-Interface fowards defined in order of: Upfront, Incremental, Parsing, Untyped.
+Interface fowards defined in order of: Upfront, Parsing, Untyped.
 
 From there forwards for the File handlers are defined: Builder, Editor, Scanner.
 

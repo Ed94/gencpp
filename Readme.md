@@ -93,24 +93,6 @@ Code header;
 }
 ```
 
-### Incremental
-
-```cpp
-// Types are done the same with upfront. Incremental does not have a full interface replacment.
-
-// Get a Code AST from the CodePool.
-Code header = make_struct( name(ArrayHeader) );
-{
-    // Make a struct body.
-    Code body = header.body();
-
-    // Members
-    body->add( def_variable( t_uw,        name(Num)) );
-    body->add( def_variable( t_uw,        name(Capacity)) );
-    body->add( def_variable( t_allocator, name(Allocator)) );
-}
-```
-
 ### Parse
 
 ```cpp
@@ -272,10 +254,9 @@ Data Notes:
 * This library treats memory failures as fatal.
 * Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
 
-## There are four sets of interfaces for Code AST generation the library provides
+## There are three sets of interfaces for Code AST generation the library provides
 
 * Upfront
-* Incremental
 * Parsing
 * Untyped
 
@@ -333,40 +314,6 @@ Code <name>
     <name> = def_<function name>( ... );
 }
 
-```
-
-### Incremental construction
-
-A Code AST is provided but the body is not complete.
-
-* code.add( AST* )                     // Adds AST with validation.
-* code.add_entry( AST* )               // Adds AST entry without validation.
-
-Code ASTs may be explictly validated at anytime using Code's check() member function.
-
-Interface :
-
-* make_class
-* make_enum
-* make_export_body
-* make_extern_linkage
-* make_function
-* make_global_body
-* make_namespace
-* make_operator
-* make_params
-* make_specifiers
-* make_struct
-* make_union
-
-Usage:
-
-```cpp
-Code <name> = make_<function name>( ... )
-{
-    <name>->add( ... );
-    ...
-}
 ```
 
 ### Parse construction
@@ -616,8 +563,3 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Generate a single-header library.
 * Generate a C-supported single-header library.
 * Actually get to version 1.
-* Review if the upfront or incremental constructors are actually a net benefit vs just using the parse constructors.
-  * They exist as a artifact of learning what was possible or not possible with staged metaprogramming in C++ (the parse interface was the last to get fleshed out)
-  * Most likely at least Incremental could possibly be removed in favor of just using the parse constructors.
-  * Possible merits are ergonomics for very dynamic generation or performance reasons.
-  * They'll most likely stay until its evident that they are not necessary.

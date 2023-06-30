@@ -37,7 +37,7 @@ $path_scripts = Join-Path $path_root scripts
 		$args_meson += $path_gen_build
 
 		Push-Location $path_gen
-		& meson $args_meson
+		& meson $args_meson 
 		Pop-Location
 	}
 
@@ -52,12 +52,29 @@ $path_scripts = Join-Path $path_root scripts
 	$gencpp = Join-Path $path_gen_build gencpp.exe
 
 	Push-location $path_gen
-	# & $gencpp
+
+	Write-Host `nGenerating files...
+	& $gencpp
+
+	Write-Host `nBeginning format...
+	$formatParams = @(
+		'-i'          # In-place
+		'-style=file' # Search for a .clang-format file in the parent directory of the source file.
+		'-verbose'
+	)
+
+	$include = @('*.gen.hpp', '*.gen.cpp')
+	$exclude = $null
+
+	$targetFiles = @(Get-ChildItem -Recurse -Path $path_gen -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
+
+	clang-format $formatParams $targetFiles
+	Write-Host "`nFormatting complete"
 	Pop-Location
 
 
 	# Build the program depending on generated files.
-	# if ( -not( Test-Path $path_test_build ) )
+	# if ( -not( Test-Path $path_test_build ) )k
 	# {
 	# 	$args_meson = @()
 	# 	$args_meson += "setup"

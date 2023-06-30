@@ -11,7 +11,6 @@
 #include "Bloat.hpp"
 
 // Temporarily here for debugging purposes.
-// #define GEN_DEFINE_DSL
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 // #define GEN_DONT_USE_FATAL
 // #define GEN_ENFORCE_READONLY_AST
@@ -390,11 +389,6 @@ namespace gen
 	struct AST
 	{
 	#pragma region Member Functions
-
-		// Used with incremental constructors
-		// Adds and checks entries to see if they are valid additions the type of ast.
-		bool add( AST* other );
-
 		void add_entry( AST* other );
 
 		inline
@@ -413,7 +407,7 @@ namespace gen
 		inline
 		bool has_entries()
 		{
-			return entry( 0 );
+			return num_entries();
 		}
 
 		inline
@@ -421,6 +415,9 @@ namespace gen
 		{
 			return Type != ECode::Invalid;
 		}
+
+		inline
+		bool is_equal( AST* other );
 
 		inline
 		s32 num_entries()
@@ -640,13 +637,13 @@ namespace gen
 		}
 
 		inline
-		String to_string()
+		String to_string() const
 		{
 			return ast->to_string();
 		}
 
 		inline
-		operator bool()
+		operator bool() const
 		{
 			return ast;
 		}
@@ -718,21 +715,6 @@ namespace gen
 
 	// Used when the its desired when omission is allowed in a definition.
 	constexpr Code NoCode = { nullptr };
-	// extern const Code InvalidCode;
-
-	/*
-		Type Table: Used to store Typename ASTs. Types are registered by their string literal value.
-
-		Provides interning specific to Typename ASTs.
-		Interning for other types should be possible (specifiers) with this, so long as they
-		don't have an set of child AST entries (Use the content field).
-
-		TODO: I'm not sure if this is viable.
-		ASTs are duplicated when added (parent is unique),
-		Parent is currently used for debug and serialization.
-		If these features are considered unnecessary, then caching would be fine.
-	*/
-	// ZPL_TABLE_DECLARE( ZPL_EXTERN, TypeTable, type_tbl_, Code );
 #pragma endregion Data Structures
 
 #pragma region Gen Interface
@@ -855,45 +837,6 @@ namespace gen
 	Code def_union_body      ( s32 num, ... );
 	Code def_union_body      ( s32 num, Code* codes );
 #	pragma endregion Upfront
-
-#	pragma region Incremental
-#	ifdef GEN_FEATURE_INCREMENTAL
-	Code make_class( StrC name
-		, Code       parent     = NoCode, AccessSpec access     = AccessSpec::Default
-		, Code       specifiers = NoCode, Code       attributes = NoCode
-		, ModuleFlag mflags     = ModuleFlag::None );
-
-	Code make_enum( StrC name
-		, Code type       = NoCode, EnumT      specifier = EnumRegular
-		, Code attributes = NoCode, ModuleFlag mflags    = ModuleFlag::None );
-
-	Code make_export_body( StrC name = { 1, "" } );
-	Code make_extern_link( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
-
-	Code make_function( StrC name
-		, Code       params     = NoCode, Code ret_type   = NoCode
-		, Code       specifiers = NoCode, Code attributes = NoCode
-		, ModuleFlag mflags     = ModuleFlag::None );
-
-	Code make_global_body( StrC name = { 1, "" } );
-	Code make_namespace  ( s32 length,     char const* name, ModuleFlag mflags = ModuleFlag::None );
-
-	Code make_operator( OperatorT op
-		, Code       params     = NoCode, Code ret_type   = NoCode
-		, Code       specifiers = NoCode, Code attributes = NoCode
-		, ModuleFlag mflags     = ModuleFlag::None );
-
-	Code make_params    ();
-	Code make_specifiers();
-
-	Code make_struct( StrC name
-		, Code       parent     = NoCode, AccessSpec access     = AccessSpec::Default
-		, Code       specifiers = NoCode, Code       attributes = NoCode
-		, ModuleFlag mflags     = ModuleFlag::None );
-
-	Code make_union( StrC name, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
-#	endif
-#	pragma endregion Incremental
 
 	#pragma region Parsing
 	#ifdef GEN_FEATURE_PARSING
@@ -1061,11 +1004,9 @@ namespace gen
 #pragma region Macros
 #	define gen_main main
 
-#	define __                     NoCode
-#	define spec_alignas( Value_ ) ESpecifier::Alignas, Value
+#	define __ NoCode
 
 // This represents the naming convention for all typename Codes generated.
-// Used by the DSL but can also be used without it.
 #	define type_ns( Name_ ) t_##Name_
 
 //	Convienence for defining any name used with the gen api.
@@ -1075,6 +1016,9 @@ namespace gen
 //  Same as name just used to indicate intention of literal for code instead of names.
 #	define code( Code_ ) { txt_n_len( Code_ ) }
 
+#	define code_args( num, ... )  num, (Code[num]){ __VA_ARGS__ }
+
+#	define enum_entry( id ) "\t" #id ",\n"
 #pragma endregion Macros
 
 #pragma region Constants

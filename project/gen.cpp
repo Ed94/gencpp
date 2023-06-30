@@ -5,8 +5,7 @@
 #ifdef gen_time
 namespace gen
 {
-	ZPL_TABLE_DEFINE( StringTable, str_tbl_,   String );
-	// ZPL_TABLE_DEFINE( TypeTable,   type_tbl_ , Code   );
+	ZPL_TABLE_DEFINE( StringTable, str_tbl_, String );
 
 	namespace StaticData
 	{
@@ -151,278 +150,6 @@ namespace gen
 #pragma region AST
 	Code Code::Invalid;
 
-	bool AST::add( AST* other )
-	{
-	#ifdef GEN_FEATURE_INCREMENTAL
-		if ( other == nullptr )
-		{
-			log_failure( "AST::add: Provided a null AST" );
-			return false;
-		}
-
-		if ( other->Type == ECode::Invalid )
-		{
-			log_failure( "AST::add: Provided an invalid AST" );
-			return false;
-		}
-
-		switch ( Type )
-		{
-			using namespace ECode;
-
-			case Invalid:
-				log_failure( "AST::add: Cannot add an AST to an invalid AST." );
-				return false;
-
-			case Untyped:
-				log_failure( "AST::add: Cannot add an AST to an untyped AST." );
-				return false;
-
-			case Comment:
-				log_failure( "AST::add: Cannot add an AST to a comment." );
-				return false;
-
-			case Access_Private:
-				log_failure( "AST::add: Cannot add an AST to a private access specifier." );
-				return false;
-
-			case Access_Protected:
-				log_failure( "AST::add: Cannot add an AST to a protected access specifier." );
-				return false;
-
-			case Access_Public:
-				log_failure( "AST::add: Cannot add an AST to a public access specifier." );
-				return false;
-
-			case Attributes:
-				log_failure( "AST::add: Cannot add an AST to an attribute." );
-				return false;
-
-			case Class:
-				log_failure( "AST::add: Cannot add an AST to a class, only to its body" );
-				return false;
-
-			case Class_Fwd:
-				log_failure( "AST::add: Cannot add an AST to a class forward declaration." );
-				return false;
-
-			case Class_Body:
-				switch ( other->Type )
-				{
-					AST_BODY_CLASS_UNALLOWED_TYPES
-					{
-						log_failure( "AST::add: Cannot add %s to a class body.", other->type_str() );
-						return false;
-					}
-
-					default:
-						break;
-				}
-			break;
-
-			case Enum:
-				log_failure( "AST::add: Cannot add an AST to an enum, only to its body" );
-				return false;
-
-			case Enum_Fwd:
-				log_failure( "AST::add: Cannot add an AST to an enum forward declaration." );
-				return false;
-
-			case Enum_Body:
-				if ( other->Type != Untyped )
-				{
-					log_failure( "AST::add: Cannot add an AST which is not untyped to an enum body." );
-					return false;
-				}
-			break;
-
-			case Execution:
-				log_failure( "AST::add: Cannot add an AST to an execution block." );
-				return false;
-			break;
-
-			case Export_Body:
-				switch ( other->Type )
-				{
-					AST_BODY_EXPORT_UNALLOWED_TYPES
-					{
-						log_failure( "AST::add: Cannot add %s to an export body.", other->type_str() );
-						return false;
-					}
-
-					default:
-						break;
-				}
-			break;
-
-			case Extern_Linkage:
-				log_failure( "AST::add: Cannot add an AST to an extern linkage, only to its body." );
-				return false;
-
-			case Extern_Linkage_Body:
-				switch ( other->Type )
-				{
-					AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
-					{
-						log_failure( "AST::add: Cannot add %s to an extern linkage body.", other->type_str() );
-						return false;
-					}
-
-					default:
-						break;
-				}
-
-			case Enum_Class:
-				log_failure( "AST::add: Cannot add an AST to an enum class, only to its body" );
-				return false;
-
-			case Enum_Class_Fwd:
-				log_failure( "AST::add: Cannot add an AST to an enum class forward declaration." );
-				return false;
-
-			case Friend:
-				log_failure( "AST::add: Cannot add an AST to a friend declaration." );
-				return false;
-
-			case Function:
-				log_failure( "AST::add: Cannot add an AST to a function, only to its body" );
-				return false;
-
-			case Function_Body:
-				switch ( other->Type )
-				{
-					AST_BODY_FUNCTION_UNALLOWED_TYPES
-					{
-						log_failure( "AST::add: Cannot add %s to a function body.", other->type_str() );
-						return false;
-					}
-
-					default:
-						break;
-				}
-			break;
-
-			case Function_Fwd:
-				log_failure( "AST::add: Cannot add an AST to a function forward declaration." );
-				return false;
-
-			case Global_Body:
-				switch ( other->Type )
-				{
-					AST_BODY_GLOBAL_UNALLOWED_TYPES
-					{
-						log_failure( "AST::add: Cannot add %s to a global body.", other->type_str() );
-						return false;
-					}
-
-					default:
-						break;
-				}
-			break;
-
-			case Module:
-				log_failure( "AST::add: Cannot add an AST to a module, only to its body" );
-				return false;
-
-			case Namespace:
-				if ( Type != Global_Body )
-				{
-					log_failure( "AST::add: Cannot add a namespace to a non-global body." );
-					return false;
-				}
-
-			case Namespace_Body:
-				switch ( other-> Type )
-				{
-					AST_BODY_NAMESPACE_UNALLOWED_TYPES
-					{
-						log_failure( "AST::add: Cannot add %s to a namespace body.", other->type_str() );
-						return false;
-					}
-
-					default:
-						break;
-				}
-			break;
-
-			case Operator:
-				log_failure( "AST::add: Cannot add an operator, only to its body" );
-				return false;
-
-			case Operator_Fwd:
-				log_failure( "AST::add: Cannot add an operator forward declaration." );
-				return false;
-
-			case Parameters:
-				log_failure( "AST::add: Cannot add to a parameter list, use AST::add_param instead" );
-				return false;
-
-			case Preprocessor_Include:
-				log_failure( "AST::add: Cannot add an AST to a preprocessor include." );
-				return false;
-
-			case Specifiers:
-				log_failure( "AST::add: Cannot add to a specifier, use AST::add_specifier instead." );
-				return false;
-
-			case Struct:
-				log_failure( "AST::add: Cannot add to a struct, only to its body." );
-				return false;
-
-			case Struct_Body:
-				switch ( other->Type )
-				{
-					AST_BODY_STRUCT_UNALLOWED_TYPES
-					{
-						log_failure( "AST::add: Cannot add %s to a struct body.", other->type_str() );
-						return false;
-					}
-
-					default:
-						break;
-				}
-			break;
-
-			case Typedef:
-				log_failure( "AST::add: Cannot add to a typedef." );
-				return false;
-
-			case Typename:
-				log_failure( "AST::add: Cannot add to a typename." );
-				return false;
-
-			case Union:
-				log_failure( "AST::add: Cannot add to a union, only to its body." );
-				return false;
-
-			case Union_Body:
-				if ( other->Type != Untyped )
-				{
-					log_failure( "AST::add: Cannot add an AST which is not untyped to a union body." );
-					return false;
-				}
-
-			case Using:
-				log_failure( "AST::add: Cannot add to a using statement." );
-				return false;
-
-			case Using_Namespace:
-				log_failure( "AST::add: Cannot add to a using namespace statement." );
-				return false;
-
-			case Variable:
-				log_failure( "AST::add: Cannot add to a variable." );
-				return false;
-		}
-
-		add_entry( other );
-		return true;
-	#else
-		log_failure( "AST::add: Incremental AST building is not enabled." );
-		return false;
-	#endif
-	}
-
 	AST* AST::duplicate()
 	{
 		using namespace ECode;
@@ -563,7 +290,6 @@ namespace gen
 			break;
 
 			case Untyped:
-				// result = string_append_length( result, Content, string_length( ccast(String, Content)) );
 				result.append( Content );
 			break;
 
@@ -623,7 +349,7 @@ namespace gen
 
 					result.append( Name );
 
-					AST* parent = entry( idx );
+					AST const* parent = entry( idx );
 
 					if ( parent )
 					{
@@ -671,7 +397,7 @@ namespace gen
 				{
 					s32 idx = 1;
 
-					AST* Entry = entry( idx);
+					AST const* Entry = entry( idx);
 
 					if ( Entry->Type == Attributes )
 					{
@@ -724,33 +450,34 @@ namespace gen
 
 				result.append( "enum class " );
 
-				s32 idx = 0;
-
-				if ( entry( idx )->Type == Attributes )
+				if ( num_entries()  > 1 )
 				{
-					result.append_fmt( "%s ", entry( idx )->to_string() );
-					idx++;
+					s32 idx = 1;
+
+					if ( entry( idx )->Type == Attributes )
+					{
+						result.append_fmt( "%s ", entry( idx )->to_string() );
+						idx++;
+					}
+
+					if ( entry( idx )->Type == Typename )
+					{
+						result.append_fmt( "%s : %s\n%s{\n"
+							, Name
+							, entry( idx )->to_string()
+							, indent_str
+						);
+					}
+					else
+					{
+						result.append_fmt( "%s\n{\n"
+							, Name
+						);
+					}
 				}
 
-				if ( entry( idx )->Type == Typename )
-				{
-					result.append_fmt( "%s : %s\n%s{\n"
-						, Name
-						, entry( idx )->to_string()
-						, indent_str
-					);
-				}
-				else
-				{
-					result.append_fmt( "%s\n%s{\n"
-						, Name
-						, indent_str
-					);
-				}
-
-				result.append_fmt( "%s\n%s};"
+				result.append_fmt( "%s};"
 					, body()->to_string()
-					, indent_str
 				);
 			}
 			break;
@@ -968,7 +695,7 @@ namespace gen
 					idx++;
 				}
 
-				result.append_fmt( "%s operator %s (", entry( idx )->to_string(), Name );
+				result.append_fmt( "%s %s (", entry( idx )->to_string(), Name );
 				idx++;
 
 				if ( entry( idx )->Type == Parameters )
@@ -981,10 +708,9 @@ namespace gen
 					result.append_fmt( "void" );
 				}
 
-				result.append_fmt( ")\n%s{\n%s\n%s}"
+				result.append_fmt( ")\n%s{\n%s\n}"
 					, indent_str
 					, body()->to_string()
-					, indent_str
 				);
 			}
 			break;
@@ -1004,7 +730,7 @@ namespace gen
 					idx++;
 				}
 
-				result.append_fmt( "%s operator%s(", entry( idx )->to_string(), Name );
+				result.append_fmt( "%s %s (", entry( idx )->to_string(), Name );
 				idx++;
 
 				if ( entry( idx )->Type == Parameters )
@@ -1240,6 +966,38 @@ namespace gen
 		return result;
 
 	#undef ProcessModuleFlags
+	}
+
+	bool AST::is_equal( AST* other )
+	{
+		if ( Type != other->Type )
+			return false;
+
+		switch ( Type )
+		{
+			case ECode::Typedef:
+			case ECode::Typename:
+			{
+				if ( Name != other->Name )
+					return false;
+
+				if ( num_entries() != other->num_entries() )
+					return false;
+
+				for ( s32 i = 0; i < num_entries(); ++i )
+				{
+					if ( entry( i ) != other->entry( i ) )
+						return false;
+				}
+
+				return true;
+			}
+		}
+
+		if ( Name != other->Name )
+			return false;
+
+		return true;
 	}
 #pragma endregion AST
 
@@ -1728,7 +1486,7 @@ namespace gen
 					switch ( params_code->param_count() )
 					{
 						case 1:
-							if ( params_code->param_type() == type_ns(int) )
+							if ( params_code->param_type()->is_equal( type_ns(int) ) )
 								is_member_symbol = true;
 
 							else
@@ -1738,7 +1496,7 @@ namespace gen
 						case 2:
 							check_param_eq_ret();
 
-							if ( params_code->get_param(1) != type_ns(int) )
+							if ( ! params_code->get_param(1)->is_equal( type_ns(int) ) )
 							{
 								log_failure("gen::def_operator: "
 									"operator%s requires second parameter of non-member definition to be int for post-decrement",
@@ -1772,7 +1530,7 @@ namespace gen
 						return OpValidateResult::Fail;
 					}
 
-					if ( params_code->param_type() == ret_type )
+					if ( params_code->param_type()->is_equal( ret_type ) )
 					{
 						log_failure("gen::def_operator: "
 							"operator%s is non-member symbol yet first paramter does not equal return type\n"
@@ -1814,7 +1572,7 @@ namespace gen
 					break;
 
 					case 2:
-						if ( params_code->param_type() != ret_type )
+						if ( ! params_code->param_type()->is_equal( ret_type ) )
 						{
 							log_failure("gen::def_operator: "
 								"operator%s is non-member symbol yet first paramter does not equal return type\n"
@@ -1858,7 +1616,7 @@ namespace gen
 					}
 				}
 
-				if ( ret_type != type_ns(bool) )
+				if ( ! ret_type->is_equal( type_ns(bool) ))
 				{
 					log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
 						, to_str(op)
@@ -2402,7 +2160,7 @@ namespace gen
 	{
 		using namespace ECode;
 
-		if ( body && body->Type != Function_Body )
+		if ( body && body->Type != Function_Body && body->Type != Untyped )
 		{
 			log_failure( "gen::def_operator: Body was provided but its not of function body type: %s", body->debug_str() );
 			return Code::Invalid;
@@ -2427,7 +2185,7 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		char const* name = str_fmt_buf( "operator%s", to_str(op) );
+		char const* name = str_fmt_buf( "operator %s", to_str(op) );
 
 		Code
 		result              = make_code();
@@ -2561,10 +2319,6 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		// Code cached = get_cached_type( name );
-		// if ( cached )
-		// 	return cached;
-
 		Code
 		result       = make_code();
 		result->Name = get_cached_string( name );
@@ -2577,11 +2331,6 @@ namespace gen
 			result->add_entry( ArrayExpr );
 
 		result.lock();
-
-		// s32 hash_length = name.Len > kilobytes(1) ? kilobytes(1) : name.Len;
-		// s32 key         = crc32( name.Ptr, hash_length );
-
-		// type_tbl_set( & StaticData::TypeMap, key, result );
 
 		return result;
 	}
@@ -3196,7 +2945,7 @@ namespace gen
 		result->Name = current->Name;
 		result->Type = current->Type;
 
-		result->add_entry( current->entry( 0) );
+		result->add_entry( current->entry( 0 ) );
 
 		while( codes++, current = * codes, num--, num > 0 )
 		{
@@ -3344,329 +3093,11 @@ namespace gen
 		result.lock();
 		return result;
 	}
-#pragma endregion Upfront Constructors
-
-#pragma region Incremetnal Constructors
-#ifdef	GEN_FEATURE_INCREMENTAL
-	Code make_class( StrC name
-		, Code parent, AccessSpec parent_access
-		, Code specifiers, Code attributes
-		, ModuleFlag mflags )
-	{
-		using namespace ECode;
-
-		name_check( make_struct, name );
-
-		if ( attributes && attributes->Type != Attributes )
-		{
-			log_failure( "gen::make_class: attributes was not a `Attributes` type: %s", attributes->debug_str() );
-			return Code::Invalid;
-		}
-
-		if ( specifiers && specifiers->Type != Specifiers )
-		{
-			log_failure( "gen::make_class: specifiers was not a `Specifiers` type: %s", specifiers->debug_str() );
-			return Code::Invalid;
-		}
-
-		if ( parent && parent->Type != Struct )
-		{
-			log_failure( "gen::make_class: parent was not a `Struct` type: %s", parent->debug_str() );
-			return Code::Invalid;
-		}
-
-		Code
-		result              = make_code();
-		result->Type        = Struct;
-		result->Name        = get_cached_string( name );
-		result->ModuleFlags = mflags;
-
-		Code
-		body       = make_code();
-		body->Type = Struct_Body;
-
-		result->add_entry( body );
-
-		if ( attributes )
-			result->add_entry( attributes );
-
-		if ( specifiers )
-			result->add_entry( specifiers );
-
-		if ( parent )
-			result->add_entry( parent );
-
-		return result;
-	}
-
-	Code make_enum( StrC name, Code type, EnumT specifier, Code attributes, ModuleFlag mflags )
-	{
-		using namespace ECode;
-
-		name_check( make_enum, name );
-
-		if ( attributes && attributes->Type != Attributes )
-		{
-			log_failure( "gen::make_enum: attributes was not a `Attributes` type: %s", attributes->debug_str() );
-			return Code::Invalid;
-		}
-
-		if ( type && type->Type != Typename )
-		{
-			log_failure("gen::make_enum: type provided is not of code type typename - %s", type->debug_str() );
-			return Code::Invalid;
-		}
-
-		Code
-		result = make_code();
-		result->Type        = specifier == EnumClass ? Enum_Class : Enum;
-		result->Name        = get_cached_string( name );
-		result->ModuleFlags = mflags;
-
-		Code
-		body       = make_code();
-		body->Type = Enum_Body;
-
-		result->add_entry( body );
-
-		if ( type )
-			result->add_entry( type );
-
-		return result;
-	}
-
-	Code make_export_body( StrC name )
-	{
-		using namespace ECode;
-
-		Code
-		result       = make_code();
-		result->Type = Export_Body;
-
-		if ( name && name.Len > 0 )
-			result->Name = get_cached_string( name );
-
-		return result;
-	}
-
-	Code make_extern_link( StrC name, ModuleFlag mflags )
-	{
-		using namespace ECode;
-
-		name_check( make_extern_linkage, name);
-
-		Code
-		result              = make_code();
-		result->Type        = Extern_Linkage;
-		result->Name        = get_cached_string( name );
-		result->ModuleFlags = mflags;
-
-		return result;
-	}
-
-	Code make_function( StrC name
-		, Code params, Code ret_type
-		, Code specifiers, Code attributes
-		, ModuleFlag mflags
-	)
-	{
-		using namespace ECode;
-
-		name_check( make_function, name );
-
-		if ( attributes && attributes->Type != Attributes )
-		{
-			log_failure( "gen::make_function: attributes was not a `Attributes` type: %s", attributes->debug_str() );
-			return Code::Invalid;
-		}
-
-		if ( specifiers && specifiers->Type != Specifiers )
-		{
-			log_failure( "gen::def_function: specifiers was not a `Specifiers` type" );
-			return Code::Invalid;
-		}
-
-		if ( params && params->Type != Parameters )
-		{
-			log_failure( "gen::def_function: params was not a `Parameters` type" );
-			return Code::Invalid;
-		}
-
-		if ( ret_type == nullptr || ret_type->Type != Typename )
-		{
-			log_failure( "gen::def_function: ret_type was not a Typename" );
-			return Code::Invalid;
-		}
-
-		Code
-		result              = make_code();
-		result->Name        = get_cached_string( name );
-		result->Type        = Function;
-		result->ModuleFlags = mflags;
-
-		Code
-		body       = make_code();
-		body->Type = Function_Body;
-
-		result->add_entry( body );
-
-		if ( attributes )
-			result->add_entry( attributes );
-
-		if ( specifiers )
-			result->add_entry( specifiers );
-
-		if ( ret_type )
-			result->add_entry( ret_type );
-
-		if ( params )
-			result->add_entry( params );
-
-		return result;
-	}
-
-	Code make_global_body( StrC name )
-	{
-		name_check( make_global_body, name );
-
-		Code
-		result       = make_code();
-		result->Type = ECode::Global_Body;
-
-		if ( name.Len > 0 )
-			result->Name = get_cached_string( name );
-
-		return result;
-	}
-
-	Code make_namespace( StrC name, Code parent, ModuleFlag mflags )
-	{
-		name_check( make_namespace, name );
-
-		Code
-		result = make_code();
-		result->Type        = ECode::Namespace;
-		result->Name        = get_cached_string( name );
-		result->ModuleFlags = mflags;
-
-		Code
-		body = make_code();
-		body->Type = ECode::Namespace_Body;
-
-		result->add_entry( body );
-
-		return result;
-	}
-
-	Code make_operator( OperatorT op, Code params_code, Code ret_type, Code specifiers, Code attributes, ModuleFlag mflags )
-	{
-		using namespace ECode;
-
-		if ( attributes && attributes->Type != Attributes )
-		{
-			log_failure( "gen::make_operator: attributes was not a `Attributes` type: %s", attributes->debug_str() );
-			return Code::Invalid;
-		}
-
-		OpValidateResult check_result = operator__validate( op, params_code, ret_type, specifiers );
-
-		if ( check_result == OpValidateResult::Fail )
-		{
-			return Code::Invalid;
-		}
-
-		char const* name = str_fmt_buf( "operator%s", to_str(op) );
-
-		Code
-		result              = make_code();
-		result->Name        = get_cached_string( { str_len(name, MaxNameLength), name } );
-		result->ModuleFlags = mflags;
-
-		if ( attributes )
-			result->add_entry( attributes );
-
-		if ( specifiers )
-			result->add_entry( specifiers );
-
-		if (params_code)
-			result->add_entry( params_code );
-
-		result->add_entry( ret_type );
-
-		return result;
-	}
-
-	Code make_params()
-	{
-		Code
-		result       = make_code();
-		result->Type = ECode::Parameters;
-
-		return result;
-	}
-
-	Code make_specifiers()
-	{
-		Code
-		result       = make_code();
-		result->Type = ECode::Specifiers;
-
-		return result;
-	}
-
-	Code make_struct( StrC name, Code parent, Code specifiers, Code attributes, ModuleFlag mflags )
-	{
-		using namespace ECode;
-
-		name_check( make_struct, name );
-
-		if ( attributes && attributes->Type != Attributes )
-		{
-			log_failure( "gen::make_struct: attributes was not a `Attributes` type: %s", attributes->debug_str() );
-			return Code::Invalid;
-		}
-
-		if ( specifiers && specifiers->Type != Specifiers )
-		{
-			log_failure( "gen::make_struct: specifiers was not a `Specifiers` type" );
-			return Code::Invalid;
-		}
-
-		if ( parent && parent->Type != Struct )
-		{
-			log_failure( "gen::make_struct: parent was not a `Struct` type" );
-			return Code::Invalid;
-		}
-
-		Code
-		result              = make_code();
-		result->Type        = Struct;
-		result->Name        = get_cached_string( name );
-		result->ModuleFlags = mflags;
-
-		Code
-		body       = make_code();
-		body->Type = Function_Body;
-
-		result->add_entry( make_code() );
-
-		if ( attributes )
-			result->add_entry( attributes );
-
-		if ( specifiers )
-			result->add_entry( specifiers );
-
-		if ( parent )
-			result->add_entry( parent );
-
-		return result;
-	}
 
 #	undef name_check
 #	undef null_check
 #	undef null_or_invalid_check
-#endif // GEN_FEATURE_INCREMENTAL
-#pragma endregion Incremetnal Constructions
+#pragma endregion Upfront Constructors
 
 #pragma region Parsing Constructors
 #ifdef GEN_FEATURE_PARSING
