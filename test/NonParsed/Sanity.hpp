@@ -53,10 +53,10 @@ u32 gen_sanity()
 		Code fwd = def_enum( name(ETestEnum), NoCode, t_u8 );
 		Code def;
 		{
-			Code body = untyped_str( StrC::from(
-				enum_entry( A )
-				enum_entry( B )
-				enum_entry( C )
+			Code body = untyped_str( code(
+				A,
+				B,
+				C
 			));
 
 			def = def_enum( name(ETestEnum), body, t_u8 );
@@ -162,10 +162,10 @@ u32 gen_sanity()
 
 		Code bitflagtest;
 		{
-			Code body = def_enum_body( 1, untyped_str( StrC::from(
-				enum_entry( A = 1 << 0 )
-				enum_entry( B = 1 << 1 )
-				enum_entry( C = 1 << 2 )
+			Code body = def_enum_body( 1, untyped_str( code(
+				A = 1 << 0,
+				B = 1 << 1,
+				C = 1 << 2
 			)));
 			bitflagtest = def_enum( name(EBitFlagtest), body, t_u8,  EnumClass );
 		}
@@ -173,10 +173,10 @@ u32 gen_sanity()
 
 		Code op_fwd, op_or;
 		{
-			Code params = def_params( code_args( 2,
+			Code params = def_params( 2,
 				def_param( t_bitflag, name(a) ),
 				def_param( t_bitflag, name(b) )
-			));
+			);
 
 			op_fwd = def_operator( EOperator::BOr, params, t_bitflag );
 			op_or  = def_operator( EOperator::BOr, params, t_bitflag, untyped_str( code(

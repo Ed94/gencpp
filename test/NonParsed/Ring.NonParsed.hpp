@@ -35,6 +35,8 @@ Code gen__ring( StrC type, sw type_size )
 
 	Code ring;
 	{
+		Code using_type = def_using( name(Type), t_type );
+
 		Code backing  = def_variable( t_allocator_info, name(Backing) );
 		Code capacity = def_variable( t_uw, name(Capacity) );
 		Code head     = def_variable( t_uw, name(Head) );
@@ -70,8 +72,83 @@ Code gen__ring( StrC type, sw type_size )
 			init = def_function( name(init), params, t_ring_type, body, spec_static_member );
 		}
 
-		ring = def_struct( name, def_struct_body( 6,
+		Code append = def_function( name(append), def_param( t_type, name(value)), t_void
+			, untyped_str( code(
+				Buffer[ Head ] = value;
+				Head = ( Head + 1 ) % Capacity;
+
+			if ( Head == Tail )
+					Tail = ( Tail + 1 ) % Capacity;
+			))
+			, spec_inline
+		);
+
+		Code appendv;
+		{
+			Code params = def_params( 2
+				, def_param( t_type_ptr, name(values))
+				, def_param( t_sw,       name(num))
+			);
+
+			Code body = untyped_str( code(
+				for ( sw idx = 0; idx < num; idx++ )
+					append( values[ idx ] );
+			));
+
+			appendv = def_function( name(append), params, t_void, body, spec_inline );
+		}
+
+		Code empty = def_function( name(empty), __, t_bool
+			, def_execution( code(
+				return Head == Tail;
+			))
+			, spec_inline
+		);
+
+		Code free = def_function( name(free), __, t_void
+			, def_execution( code(
+				Buffer.free();
+			))
+			, spec_inline
+		);
+
+		Code full = def_function( name(full), __, t_bool
+			, def_execution( code(
+				return (Head + 1) % Capacity == Tail;
+			))
+			, spec_inline
+		);
+
+		Code get = def_function( name(get), __, t_type_ref
+			, def_execution( code(
+				Type& data = Buffer[ Tail ];
+				Tail = ( Tail + 1 ) % Capacity;
+
+				return data;
+			))
+		);
+
+		Code wipe = def_function( name(wipe), __, t_void
+			, def_execution( code(
+				Head = 0;
+				Tail = 0;
+				Buffer.wipe();
+			))
+			, spec_inline
+		);
+
+		ring = def_struct( name, def_struct_body( 14,
+			using_type,
+
 			init,
+
+			append,
+			appendv,
+			empty,
+			free,
+			full,
+			get,
+			wipe,
 
 			backing,
 			capacity,
@@ -110,7 +187,7 @@ void gen__ring_request( StrC type, sw size, StrC dep = {} )
 			return;
 	}
 
-	// Ring definition depends on a buffer definition.
+	// Ring definition depends on a array and buffer definition.
 	gen__buffer_request( type, size, dep );
 
 	GenRingRequest request = { dep, type, size};

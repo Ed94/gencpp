@@ -25,13 +25,15 @@ namespace gen
 	}
 
 #pragma region Constants
-	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 	Code type_ns(auto);
 	Code type_ns(void);
 	Code type_ns(int);
 	Code type_ns(bool);
 	Code type_ns(char);
 	Code type_ns(wchar_t);
+
+	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+	Code type_ns(b32);
 
 	Code type_ns(s8);
 	Code type_ns(s16);
@@ -296,6 +298,7 @@ namespace gen
 			break;
 
 			case Untyped:
+			case Execution:
 				result.append( Content );
 			break;
 
@@ -328,7 +331,6 @@ namespace gen
 			case Access_Private:
 			case Access_Protected:
 			case Access_Public:
-				result.append( indent );
 				result.append( Name );
 			break;
 
@@ -506,10 +508,6 @@ namespace gen
 
 				result.append_fmt( "%s : %s;", Name, entry( idx )->to_string() );
 			}
-			break;
-
-			case Execution:
-				result.append( Content );
 			break;
 
 			case Export_Body:
@@ -1107,6 +1105,8 @@ namespace gen
 		def_constant_code_type( wchar_t );
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+		type_ns(b32) = def_type( name(b32) );
+
 		def_constant_code_type( s8 );
 		def_constant_code_type( s16 );
 		def_constant_code_type( s32 );
@@ -1129,21 +1129,21 @@ namespace gen
 		access_private_write = ccast( Code, access_private );
 		access_private_write = make_code();
 		access_private_write->Type = ECode::Access_Private;
-		access_private_write->Name = get_cached_string( StrC::from("private") );
+		access_private_write->Name = get_cached_string( StrC::from("private:") );
 		access_private_write.lock();
 
 		Code&
 		access_protected_write = ccast( Code, access_protected );
 		access_protected_write = make_code();
 		access_protected_write->Type = ECode::Access_Protected;
-		access_protected_write->Name = get_cached_string( StrC::from("protected") );
+		access_protected_write->Name = get_cached_string( StrC::from("protected:") );
 		access_protected_write.lock();
 
 		Code&
 		access_public_write = ccast( Code, access_public );
 		access_public_write = make_code();
 		access_public_write->Type = ECode::Access_Public;
-		access_public_write->Name = get_cached_string( StrC::from("public") );
+		access_public_write->Name = get_cached_string( StrC::from("public:") );
 		access_public_write.lock();
 
 		module_global_fragment          = make_code();
@@ -2088,12 +2088,13 @@ namespace gen
 			switch ( body->Type )
 			{
 				case Function_Body:
+				case Execution:
 				case Untyped:
 					break;
 
 				default:
 				{
-					log_failure("gen::def_function: body must be either of Function_Body or Untyped type. %s", body->debug_str());
+					log_failure("gen::def_function: body must be either of Function_Body, Execution, or Untyped type. %s", body->debug_str());
 					return Code::Invalid;
 				}
 			}
@@ -2193,12 +2194,6 @@ namespace gen
 	{
 		using namespace ECode;
 
-		if ( body && body->Type != Function_Body && body->Type != Untyped )
-		{
-			log_failure( "gen::def_operator: Body was provided but its not of function body type: %s", body->debug_str() );
-			return Code::Invalid;
-		}
-
 		if ( attributes && attributes->Type != Attributes )
 		{
 			log_failure( "gen::def_operator: Attributes was provided but its not of attributes type: %s", attributes->debug_str() );
@@ -2227,6 +2222,20 @@ namespace gen
 
 		if ( body )
 		{
+			switch ( body->Type )
+			{
+				case Function_Body:
+				case Execution:
+				case Untyped:
+					break;
+
+				default:
+				{
+					log_failure("gen::def_operator: body must be either of Function_Body, Execution, or Untyped type. %s", body->debug_str());
+					return Code::Invalid;
+				}
+			}
+
 			result->Type = check_result == OpValidateResult::Global ?
 				Operator : Operator_Member;
 
@@ -5270,7 +5279,10 @@ namespace gen
 
 		tokmap_clear( & tok_map );
 
-		return buf_size - remaining;
+		sw result = buf_size - remaining;
+		// buf[ result ] = '\0';
+
+		return result;
 	}
 
 	Code untyped_str( StrC content )

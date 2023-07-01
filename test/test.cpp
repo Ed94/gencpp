@@ -1,6 +1,7 @@
 #include "Bloat.cpp"
 #include "NonParsed\Array.NonParsed.hpp"
 #include "NonParsed\Buffer.NonParsed.hpp"
+#include "NonParsed\HashTable.NonParsed.hpp"
 #include "NonParsed\Ring.NonParsed.hpp"
 #include "NonParsed\Sanity.hpp"
 
@@ -23,10 +24,13 @@ int gen_main()
 
 	gen_buffer( u8 );
 
+	gen_hashtable( u32 );
+
 	gen_ring( s16 );
 
 	gen_array_file();
 	gen_buffer_file();
+	gen_hashtable_file();
 	gen_ring_file();
 
 	gen::deinit();

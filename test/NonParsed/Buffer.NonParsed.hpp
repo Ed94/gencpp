@@ -15,7 +15,7 @@ Code gen__buffer_base()
 		, def_variable( t_uw,             name(Num) )
 	));
 
-	return def_global_body( code_args( 1, header ) );
+	return def_global_body( 1, header );
 }
 
 Code gen__buffer( StrC type, sw type_size )
@@ -97,13 +97,13 @@ Code gen__buffer( StrC type, sw type_size )
 
 		Code append;
 		{
-			Code param_type;
-			if ( type_size <= 8 )
-				param_type = t_type;
-			else
-				param_type = t_type_ref;
+			// Code param_type;
+			// if ( type_size <= 64 )
+			// 	param_type = t_type;
+			// else
+			// 	param_type = t_type_ref;
 
-			append = def_function( name(append), def_param( param_type, name(value)), t_void
+			append = def_function( name(append), def_param( t_type, name(value)), t_void
 				, untyped_str( code(
 					Header& header = get_header();
 					Data[ header.Num ] = value;

@@ -36,6 +36,7 @@
 // #		define ZPL_MODULE_PARSER
 #include "zpl.h"
 
+using zpl::b32;
 using zpl::s8;
 using zpl::s16;
 using zpl::s32;
@@ -157,9 +158,9 @@ using zpl::str_len;
 #define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
 #define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
 #define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
-#define txt_impl( Value_ )                        #Value_
-#define txt( Value_ )                             txt_impl( Value_ )
-#define txt_n_len( Value_ )		                  sizeof( txt_impl( Value_ ) ), txt_impl( Value_ )
+#define txt_impl( ... )                           #__VA_ARGS__
+#define txt( ... )                                txt_impl( __VA_ARGS__ )
+#define txt_n_len( ... )		                  sizeof( txt_impl( __VA_ARGS__ ) ), txt_impl( __VA_ARGS__ )
 #define do_once()      \
 do                     \
 {                      \
@@ -513,7 +514,7 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return Data;
 		}
 
-		operator StrC()
+		operator StrC() const
 		{
 			return
 			{

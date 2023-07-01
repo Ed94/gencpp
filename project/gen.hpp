@@ -866,6 +866,7 @@ namespace gen
 	{
 		local_persist thread_local
 		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
+		mem_set( buf, 0, ZPL_PRINTF_MAXLEN );
 
 		va_list va;
 		va_start(va, fmt);
@@ -1014,11 +1015,7 @@ namespace gen
 #	define name( Id_ )   { txt_n_len( Id_ ) }
 
 //  Same as name just used to indicate intention of literal for code instead of names.
-#	define code( Code_ ) { txt_n_len( Code_ ) }
-
-#	define code_args( num, ... )  num, (Code[num]){ __VA_ARGS__ }
-
-#	define enum_entry( id ) "\t" #id ",\n"
+#	define code( ... ) { txt_n_len( __VA_ARGS__ ) }
 #pragma endregion Macros
 
 #pragma region Constants
@@ -1026,6 +1023,8 @@ namespace gen
 namespace gen
 {
 	// Predefined typename codes. Are set to readonly and are setup during gen::init()
+
+	extern Code type_ns( b32 );
 
 	extern Code type_ns( s8 );
 	extern Code type_ns( s16 );

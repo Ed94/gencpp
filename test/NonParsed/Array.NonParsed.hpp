@@ -20,7 +20,7 @@ Code gen__array_base()
 		, def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline )
 	);
 
-	return def_global_body( code_args( 2, header, grow_formula ) );
+	return def_global_body( 2, header, grow_formula );
 }
 
 Code gen__array( StrC type, sw type_size )
@@ -49,6 +49,10 @@ Code gen__array( StrC type, sw type_size )
 	Code t_type_ptr = def_type( type, __, spec_ptr );
 	Code t_type_ref = def_type( type, __, spec_ref );
 
+	Code t_alias     = def_type( name(Type) );
+	Code t_alias_ptr = def_type( name(Type), __, spec_ptr );
+	Code t_alias_ref = def_type( name(Type), __, spec_ref );
+
 	Code t_header     = def_type( name(Header) );
 	Code t_header_ptr = def_type( name(Header), __, spec_ptr );
 	Code t_header_ref = def_type( name(Header), __, spec_ref );
@@ -56,7 +60,7 @@ Code gen__array( StrC type, sw type_size )
 	Code array;
 	{
 		Code using_type = def_using( name(Type), t_type );
-		Code data       = def_variable( t_type_ptr, name(Data) );
+		Code data       = def_variable( t_alias_ptr, name(Data) );
 
 		Code init;
 		{
@@ -93,13 +97,13 @@ Code gen__array( StrC type, sw type_size )
 
 		Code append;
 		{
-			Code param_type;
-			if ( type_size <= 8 )
-				param_type = t_type;
-			else
-				param_type = t_type_ref;
+			// Code param_type;
+			// if ( type_size <= 64 )
+			// 	param_type = t_type;
+			// else
+			// 	param_type = t_type_ref;
 
-			append = def_function( name(append), def_param(param_type, name(value)), t_bool
+			append = def_function( name(append), def_param(t_alias, name(value)), t_bool
 				, untyped_str( code(
 					Header& header = get_header();
 
@@ -124,7 +128,7 @@ Code gen__array( StrC type, sw type_size )
 				return Data[ header.Num - 1 ];
 			));
 
-			back = def_function( name(back), __, t_type_ref, body, spec_inline );
+			back = def_function( name(back), __, t_alias_ref, body, spec_inline );
 		}
 
 		Code clear = def_function( name(clear), __, t_void
@@ -138,9 +142,9 @@ Code gen__array( StrC type, sw type_size )
 		Code fill;
 		{
 			Code params = def_params( 3
-				, def_param( t_uw,   name(begin) )
-				, def_param( t_uw,   name(end) )
-				, def_param( t_type, name(value) )
+				, def_param( t_uw,    name(begin) )
+				, def_param( t_uw,    name(end) )
+				, def_param( t_alias, name(value) )
 			);
 
 			Code body = untyped_str( code(
@@ -185,6 +189,13 @@ Code gen__array( StrC type, sw type_size )
 			))
 		);
 
+		Code num = def_function( name(num), __, t_uw
+			, untyped_str( code(
+				return get_header().Num;
+			))
+			, spec_inline
+		);
+
 		Code pop;
 		{
 			Code body = untyped_str( code(
@@ -196,6 +207,17 @@ Code gen__array( StrC type, sw type_size )
 
 			pop = def_function( name(pop), __, t_bool, body, spec_inline );
 		}
+
+		Code remove_at = def_function( name(remove_at), def_param( t_uw, name(idx)), t_void
+			, def_execution( code(
+				Header* header = & get_header();
+				ZPL_ASSERT( idx < header->Num );
+
+				mem_move( header + idx, header + idx + 1, sizeof( Type ) * ( header->Num - idx - 1 ) );
+				header->Num--;
+			))
+			, spec_inline
+		);
 
 		Code reserve = def_function( name(reserve), def_param( t_uw, name(new_capacity)), t_bool
 			, untyped_str( code(
@@ -248,7 +270,7 @@ Code gen__array( StrC type, sw type_size )
 
 				zpl::free( header.Allocator, & header );
 
-				Data = (u8*) new_header + 1;
+				Data = (Type*) new_header + 1;
 
 				return true;
 			));
@@ -256,7 +278,14 @@ Code gen__array( StrC type, sw type_size )
 			set_capacity = def_function( name(set_capacity), def_param( t_uw, name(new_capacity)), t_bool, body );
 		}
 
-		Code body = def_struct_body( 17
+		Code op_ptr = untyped_str( code(
+			operator Type*()
+			{
+				return Data;
+			}
+		));
+
+		Code body = def_struct_body( 20
 			, using_header
 			, using_type
 			, ct_grow_formula
@@ -271,10 +300,14 @@ Code gen__array( StrC type, sw type_size )
 			, free
 			, get_header
 			, grow
+			, num
 			, pop
+			, remove_at
 			, reserve
 			, resize
 			, set_capacity
+
+			, op_ptr
 
 			, data
 		);
