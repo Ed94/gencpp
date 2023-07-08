@@ -391,7 +391,7 @@ namespace gen
 					);
 				}
 
-				result.append_fmt( "%s};"
+				result.append_fmt( "%s};\n"
 					, body()->to_string()
 				);
 			}
@@ -3207,6 +3207,12 @@ namespace gen
 			{
 				return Arr[Idx];
 			}
+
+			inline
+			Token& previous()
+			{
+				return Arr[Idx - 1];
+			}
 		};
 
 		TokArray lex( StrC content )
@@ -3651,6 +3657,7 @@ namespace gen
 	}
 
 #	define currtok      toks.current()
+#	define prevtok      toks.previous()
 #	define eat( Type_ ) toks.__eat( Type_, context )
 #	define left         ( array_count(toks.Arr) - toks.Idx )
 
@@ -4294,12 +4301,29 @@ namespace gen
 
 			while ( currtok.Type != TokType::BraceCurly_Close )
 			{
-				body.Length += currtok.Length;
+				eat( TokType::Identifier);
 
-				eat( currtok.Type );
+				if ( currtok.Type == TokType::Operator && currtok.Text[0] == '=' )
+				{
+					eat( TokType::Operator );
+
+					while ( currtok.Type != TokType::Comma || currtok.Type != TokType::BraceCurly_Close )
+					{
+						eat( currtok.Type );
+					}
+
+				}
+
+				if ( currtok.Type == TokType::Comma )
+				{
+					eat( TokType::Comma );
+				}
 			}
 
+			body.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)body.Text;
+
 			eat( TokType::BraceCurly_Close );
+			eat( TokType::Statement_End );
 		}
 		else
 		{
@@ -4313,9 +4337,9 @@ namespace gen
 
 		if ( body.Length )
 		{
-			mem_copy( entries_code, body.Text, body.Length );
+			// mem_copy( entries_code, body.Text, body.Length );
 
-			Code untyped_body = untyped_str( { entries_length, entries_code } );
+			Code untyped_body = untyped_str( body );
 
 			result->Type = is_enum_class ? Enum_Class : Enum;
 			result->add_entry( untyped_body );

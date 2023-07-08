@@ -45,7 +45,6 @@ void gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Enum
-	if (0)
 	{
 		Code fwd = parse_enum( code(
 			enum ETestEnum : u8;
@@ -61,7 +60,7 @@ void gen_sanity()
 		));
 
 		Code fwd_enum_class = parse_enum( code(
-			enum class ETestEnum : u8;
+			enum class ETestEnumClass : u8;
 		));
 
 		gen_sanity_file.print(fwd);
