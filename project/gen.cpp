@@ -1702,7 +1702,7 @@ namespace gen
 	identify the issue without having to debug too much (at least they can debug though...)
 
 	The largest of the functions is related to operator overload definitions.
-	I decided to validate a good protion of their form and thus the argument processing for is quite a bit.
+	The library validates a good protion of their form and thus the argument processing for is quite a bit.
 */
 	Code def_attributes( StrC content )
 	{
@@ -2423,7 +2423,7 @@ namespace gen
 
 /*
 	Body related functions typically follow the same implementation pattern.
-	So I opted to use inline helper macros to get the implementaiton done.
+	Opted to use inline helper macros to get the implementaiton done.
 
 	The implementation pattern is as follows:
 	* Validate a valid parameter num was provided, or code array
@@ -3269,6 +3269,10 @@ namespace gen
 			{
 				Token token = { nullptr, 0, TokType::Invalid, false };
 
+				SkipWhitespace();
+				if ( left <= 0 )
+					break;
+
 				switch ( current )
 				{
 					case '.':
@@ -3568,10 +3572,6 @@ namespace gen
 						goto FoundToken;
 				}
 
-				SkipWhitespace();
-				if ( left <= 0 )
-					break;
-
 				if ( char_is_alpha( current ) || current == '_' )
 				{
 					token.Text   = scanner;
@@ -3657,21 +3657,22 @@ namespace gen
 #	define check( Type_ ) ( left && currtok.Type == Type_ )
 #pragma endregion Helper Macros
 
-	Code parse_function_body( Parser::TokArray& toks, char const* context );
-	Code parse_global_nspace( Parser::TokArray& toks, char const* context );
+	Code parse_class_struct_body( Parser::TokArray& toks, char const* context );
+	Code parse_function_body    ( Parser::TokArray& toks, char const* context );
+	Code parse_global_nspace    ( Parser::TokArray& toks, char const* context );
 
-	Code parse_class        ( Parser::TokArray& toks, char const* context );
-	Code parse_enum         ( Parser::TokArray& toks, char const* context );
-	Code parse_export_body  ( Parser::TokArray& toks, char const* context );
-	Code parse_exten_link   ( Parser::TokArray& toks, char const* context );
-	Code parse_friend       ( Parser::TokArray& toks, char const* context );
-	Code parse_function     ( Parser::TokArray& toks, char const* context );
-	Code parse_struct       ( Parser::TokArray& toks, char const* context );
-	Code parse_variable     ( Parser::TokArray& toks, char const* context );
-	Code parse_type         ( Parser::TokArray& toks, char const* context );
-	Code parse_typedef      ( Parser::TokArray& toks, char const* context );
-	Code parse_union        ( Parser::TokArray& toks, char const* context );
-	Code parse_using        ( Parser::TokArray& toks, char const* context );
+	Code parse_class            ( Parser::TokArray& toks, char const* context );
+	Code parse_enum             ( Parser::TokArray& toks, char const* context );
+	Code parse_export_body      ( Parser::TokArray& toks, char const* context );
+	Code parse_exten_link       ( Parser::TokArray& toks, char const* context );
+	Code parse_friend           ( Parser::TokArray& toks, char const* context );
+	Code parse_function         ( Parser::TokArray& toks, char const* context );
+	Code parse_struct           ( Parser::TokArray& toks, char const* context );
+	Code parse_variable         ( Parser::TokArray& toks, char const* context );
+	Code parse_type             ( Parser::TokArray& toks, char const* context );
+	Code parse_typedef          ( Parser::TokArray& toks, char const* context );
+	Code parse_union            ( Parser::TokArray& toks, char const* context );
+	Code parse_using            ( Parser::TokArray& toks, char const* context );
 
 	inline
 	Code parse_array_decl( Parser::TokArray& toks, char const* context )
@@ -3856,7 +3857,69 @@ namespace gen
 	{
 		using namespace Parser;
 
-		return Code::Invalid;
+		if ( which != TokType::Decl_Class && which != TokType::Decl_Struct )
+		{
+			log_failure( "%s: Error, expected class or struct, not %s", context, str_tok_type( which ) );
+			return Code::Invalid;
+		}
+
+		Token name { nullptr, 0, TokType::Invalid };
+
+		Code       parent     = { nullptr };
+		Code       body       = { nullptr };
+		Code       attributes = { nullptr };
+		ModuleFlag mflags     = ModuleFlag::None;
+
+		Code result = Code::Invalid;
+
+		// TODO: Parse module specifiers
+
+		eat( which );
+
+		// TODO: Parse attributes
+
+		name = parse_identifier( toks, context );
+
+		AccessSpec access     = AccessSpec::Invalid;
+		Token      parent_tok = { nullptr, 0, TokType::Invalid };
+
+		if ( check( TokType::Assign_Classifer ) )
+		{
+			eat( TokType::Assign_Classifer );
+
+			if ( tok_is_access_specifier( currtok ) )
+			{
+				access = tok_to_access_specifier( currtok );
+			}
+
+			parent_tok = parse_identifier( toks, context );
+		}
+
+		if ( check( TokType::BraceCurly_Open ) )
+		{
+			body = parse_class_struct_body( toks, context );
+		}
+
+		eat( TokType::Statement_End );
+
+		if ( parent_tok )
+			parent = def_type( parent_tok );
+
+		if ( which == TokType::Decl_Class )
+			result = def_class( name, body, parent, access
+				// TODO: Set these up later
+				, NoCode // Attributes
+				, ModuleFlag::None
+			);
+
+		else
+			result = def_struct( name, body, parent, access
+				// TODO: Set these up later
+				, NoCode // Attributes
+				, ModuleFlag::None
+			);
+
+		return result;
 	}
 
 	Code parse_class_struct_body( Parser::TokArray& toks, char const* context )
@@ -4162,87 +4225,7 @@ namespace gen
 
 	Code parse_class( Parser::TokArray& toks, char const* context )
 	{
-		using namespace Parser;
-
-		Token name { nullptr, 0, TokType::Invalid };
-
-		Code parent       = { nullptr };
-		Code specifiers   = { nullptr };
-		Code body         = { nullptr };
-		Code lang_linkage = { nullptr };
-
-		Code result = Code::Invalid;
-
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		s32        num_specifiers = 0;
-
-		// Parse module specifiers
-		eat( TokType::Decl_Class );
-
-		// Parse specifiers
-		while ( left && tok_is_specifier( currtok ) )
-		{
-			SpecifierT spec = ESpecifier::to_type( currtok );
-
-			switch ( spec )
-			{
-				case ESpecifier::External_Linkage:
-				case ESpecifier::Local_Persist:
-				case ESpecifier::Mutable:
-				case ESpecifier::Static_Member:
-				case ESpecifier::Thread_Local:
-				case ESpecifier::Volatile:
-				break;
-
-				default:
-					log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
-					return Code::Invalid;
-			}
-
-			if ( spec == ESpecifier::External_Linkage )
-			{
-				specs_found[num_specifiers] = spec;
-				num_specifiers++;
-				eat( TokType::Spec_Extern );
-
-				if ( currtok.Type == TokType::String )
-				{
-					lang_linkage = untyped_str( currtok );
-					eat( TokType::String );
-				}
-
-				continue;
-			}
-
-			specs_found[num_specifiers] = spec;
-			num_specifiers++;
-			eat( currtok.Type );
-		}
-
-		if ( num_specifiers )
-		{
-			specifiers = def_specifiers( num_specifiers, specs_found );
-		}
-
-		// Parse alignment
-
-		name = parse_identifier( toks, context );
-
-		if ( check( TokType::Assign_Classifer ) )
-		{
-			eat( TokType::Assign_Classifer );
-
-			AccessSpec access = AccessSpec::Invalid;
-
-			if ( tok_is_access_specifier( currtok ) )
-			{
-				access = tok_to_access_specifier( currtok );
-			}
-
-			Token parent_tok = parse_identifier( toks, context );
-		}
-
-		not_implemented();
+		return parse_class_struct( Parser::TokType::Decl_Class, toks, context );
 	}
 
 	Code parse_class( StrC def )
@@ -4254,7 +4237,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_class( toks, txt(parse_class) );
+		return parse_class_struct( TokType::Decl_Class, toks, txt(parse_class) );
 	}
 
 	Code parse_enum( Parser::TokArray& toks, char const* context )
@@ -4631,124 +4614,115 @@ namespace gen
 
 	Code parse_struct( Parser::TokArray& toks, char const* context )
 	{
-		not_implemented();
+		return parse_class_struct( Parser::TokType::Decl_Struct, toks, txt(parse_struct) );
 	}
 
 	Code parse_struct( StrC def )
 	{
-		Arena mem;
-		do_once_start
-			arena_init_from_allocator( & mem, heap(), kilobytes( 10 ) );
-		do_once_end
+		check_parse_args( parse_struct, def );
+		using namespace Parser;
 
-		// Pretty sure its impossible to have more than this.
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-
-		u8 num_specifiers;
-
-		// Making all significant tokens have a max length of 128 for this parser.
-		constexpr sw LengthID = 128;
-
-		char const name  [LengthID] { 0 };
-		char const parent[LengthID] { 0 };
-
-		return Code::Invalid;
-	}
-
-Code parse_type( Parser::TokArray& toks, char const* context )
-{
-	using namespace Parser;
-
-	SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-	s32        num_specifiers = 0;
-
-	Token name = { nullptr, 0, TokType::Invalid };
-
-	while ( left && tok_is_specifier( currtok ) )
-	{
-		SpecifierT spec = ESpecifier::to_type( currtok );
-
-		if (   spec != ESpecifier::Const )
-		{
-			log_failure( "gen::parse_type: Error, invalid specifier used in type definition: %s", currtok.Text );
+		TokArray toks = lex( def );
+		if ( toks.Arr == nullptr )
 			return Code::Invalid;
-		}
 
-		specs_found[num_specifiers] = spec;
-		num_specifiers++;
-		eat( currtok.Type );
+		return parse_class_struct( TokType::Decl_Struct, toks, txt(parse_struct) );
 	}
 
-	if ( left == 0 )
+	Code parse_type( Parser::TokArray& toks, char const* context )
 	{
-		log_failure( "%s: Error, unexpected end of type definition", context );
-		return Code::Invalid;
-	}
+		using namespace Parser;
 
-	if (   currtok.Type == TokType::Decl_Class
-		|| currtok.Type == TokType::Decl_Struct )
-	{
-		name = currtok;
-		eat( currtok.Type );
+		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+		s32        num_specifiers = 0;
 
-		name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
-		eat( TokType::Identifier );
-	}
-	else if ( currtok.Type >= TokType::Type_Unsigned )
-	{
-		name = currtok;
-		eat( currtok.Type );
+		Token name = { nullptr, 0, TokType::Invalid };
 
-		while (currtok.Type >= TokType::Type_Unsigned)
+		while ( left && tok_is_specifier( currtok ) )
 		{
-			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+			SpecifierT spec = ESpecifier::to_type( currtok );
+
+			if (   spec != ESpecifier::Const )
+			{
+				log_failure( "gen::parse_type: Error, invalid specifier used in type definition: %s", currtok.Text );
+				return Code::Invalid;
+			}
+
+			specs_found[num_specifiers] = spec;
+			num_specifiers++;
 			eat( currtok.Type );
 		}
 
-		name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
-		eat( TokType::Identifier );
-	}
-	else
-	{
-		name = parse_identifier( toks, context );
-		if ( ! name )
-			return Code::Invalid;
-	}
-
-	while ( left && tok_is_specifier( currtok ) )
-	{
-		SpecifierT spec = ESpecifier::to_type( currtok );
-
-		if (   spec != ESpecifier::Const
-			&& spec != ESpecifier::Ptr
-			&& spec != ESpecifier::Ref
-			&& spec != ESpecifier::RValue )
+		if ( left == 0 )
 		{
-			log_failure( "%s: Error, invalid specifier used in type definition: %s", context, currtok.Text );
+			log_failure( "%s: Error, unexpected end of type definition", context );
 			return Code::Invalid;
 		}
 
-		specs_found[num_specifiers] = spec;
-		num_specifiers++;
-		eat( currtok.Type );
+		if (   currtok.Type == TokType::Decl_Class
+			|| currtok.Type == TokType::Decl_Struct )
+		{
+			name = currtok;
+			eat( currtok.Type );
+
+			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+			eat( TokType::Identifier );
+		}
+		else if ( currtok.Type >= TokType::Type_Unsigned )
+		{
+			name = currtok;
+			eat( currtok.Type );
+
+			while (currtok.Type >= TokType::Type_Unsigned)
+			{
+				name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+				eat( currtok.Type );
+			}
+
+			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+			eat( TokType::Identifier );
+		}
+		else
+		{
+			name = parse_identifier( toks, context );
+			if ( ! name )
+				return Code::Invalid;
+		}
+
+		while ( left && tok_is_specifier( currtok ) )
+		{
+			SpecifierT spec = ESpecifier::to_type( currtok );
+
+			if (   spec != ESpecifier::Const
+				&& spec != ESpecifier::Ptr
+				&& spec != ESpecifier::Ref
+				&& spec != ESpecifier::RValue )
+			{
+				log_failure( "%s: Error, invalid specifier used in type definition: %s", context, currtok.Text );
+				return Code::Invalid;
+			}
+
+			specs_found[num_specifiers] = spec;
+			num_specifiers++;
+			eat( currtok.Type );
+		}
+
+		using namespace ECode;
+
+		Code
+		result       = make_code();
+		result->Type = Typename;
+		result->Name = get_cached_string( name );
+
+		if (num_specifiers)
+		{
+			Code specifiers = def_specifiers( num_specifiers, (SpecifierT*)specs_found );
+
+			result->add_entry( specifiers );
+		}
+
+		return result;
 	}
-
-	using namespace ECode;
-
-	Code
-	result       = make_code();
-	result->Type = Typename;
-	result->Name = get_cached_string( name );
-
-	if (num_specifiers)
-	{
-		Code specifiers = def_specifiers( num_specifiers, (SpecifierT*)specs_found );
-
-		result->add_entry( specifiers );
-	}
-
-	return result;
-}
 
 	Code parse_type( StrC def )
 	{

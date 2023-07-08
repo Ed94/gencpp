@@ -606,7 +606,7 @@ namespace gen
 				return Invalid;
 			}
 
-			return * (Code*)( ast->body() );
+			return { ast->body() };
 		}
 
 		inline

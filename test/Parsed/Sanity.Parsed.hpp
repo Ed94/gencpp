@@ -26,7 +26,6 @@ void gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Class
-	if (0)
 	{
 		Code fwd = parse_class( code(
 			class TestEmptyClass;
@@ -46,9 +45,38 @@ void gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Enum
+	if (0)
+	{
+		Code fwd = parse_enum( code(
+			enum ETestEnum : u8;
+		));
+
+		Code def = parse_enum( code(
+			enum ETestEnum : u8
+			{
+				A,
+				B,
+				C
+			};
+		));
+
+		Code fwd_enum_class = parse_enum( code(
+			enum class ETestEnum : u8;
+		));
+
+		gen_sanity_file.print(fwd);
+		gen_sanity_file.print(def);
+		gen_sanity_file.print(fwd_enum_class);
+	}
+
+	gen_sanity_file.print_fmt("\n");
+
+	// External Linkage
 	{
 
 	}
+
+	gen_sanity_file.print_fmt("\n");
 
 	gen_sanity_file.write();
 }
