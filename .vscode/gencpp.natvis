@@ -36,4 +36,8 @@
 		</Expand>
 	</Type>
 
+	<Type Name="gen::Parser::TokArray">
+		<DisplayString>Current = { Arr[Idx] }</DisplayString>
+	</Type>
+
 </AutoVisualizer>

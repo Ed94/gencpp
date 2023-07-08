@@ -1087,10 +1087,6 @@ namespace gen
 		def_constant_spec( static_member,    ESpecifier::Static_Member );
 		def_constant_spec( thread_local,     ESpecifier::Thread_Local );
 		def_constant_spec( volatile, 	     ESpecifier::Volatile)
-		def_constant_spec( type_signed,      ESpecifier::Type_Signed );
-		def_constant_spec( type_unsigned,    ESpecifier::Type_Unsigned );
-		def_constant_spec( type_short,       ESpecifier::Type_Short );
-		def_constant_spec( type_long,        ESpecifier::Type_Long );
 
 		spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
 		spec_local_persist.set_global();
@@ -1204,7 +1200,7 @@ namespace gen
 				return * result;
 		}
 
-		String result = String::make( get_string_allocator( str.Len ), str.Ptr );
+		String result = String::make( get_string_allocator( str.Len ), str );
 
 		str_tbl_set( & StaticData::StringMap, key, result );
 
@@ -3193,7 +3189,7 @@ namespace gen
 					return Code::Invalid;
 				}
 
-				if ( Arr[0].Type != type )
+				if ( Arr[Idx].Type != type )
 				{
 					String token_str = String::make( g_allocator, { Arr[Idx].Length, Arr[Idx].Text } );
 
@@ -3204,6 +3200,12 @@ namespace gen
 
 				Idx++;
 				return true;
+			}
+
+			inline
+			Token& current()
+			{
+				return Arr[Idx];
 			}
 		};
 
@@ -3245,7 +3247,7 @@ namespace gen
 			local_persist thread_local
 			Array(Token) Tokens = nullptr;
 
-			s32         left    = content.Len;
+			s32         left    = content.Len -1;
 			char const* scanner = content.Ptr;
 
 			char const* word        = scanner;
@@ -3602,31 +3604,23 @@ namespace gen
 				if ( token.Type != TokType::Invalid )
 				{
 					array_append( Tokens, token );
+
+					if (left)
+						move_forward();
+
 					continue;
 				}
 
 				TokType type = get_tok_type( token.Text, token.Length );
 
-				if ( type != TokType::Invalid )
-				{
-					token.Type = type;
-					array_append( Tokens, token );
-				}
-				else
+				if ( type == TokType::Invalid)
 				{
 					// Its most likely an identifier...
-
-
-					String tok_str = String::fmt_buf( g_allocator, "%s", token.Text, token.Length );
-
-					log_failure( "Failed to lex token %s", tok_str );
-
-					// Skip to next whitespace since we can't know if anything else is valid until then.
-					while ( left && ! char_is_space( current ) )
-					{
-						move_forward();
-					}
+					type = TokType::Identifier;
 				}
+
+				token.Type = type;
+				array_append( Tokens, token );
 			}
 
 			if ( array_count(Tokens) == 0 )
@@ -3656,11 +3650,11 @@ namespace gen
 		return Code::Invalid;                                            \
 	}
 
-#	define currtok      toks.Arr[toks.Idx]
+#	define currtok      toks.current()
 #	define eat( Type_ ) toks.__eat( Type_, context )
-#	define left         array_count(toks.Arr) - toks.Idx
+#	define left         ( array_count(toks.Arr) - toks.Idx )
 
-#	define check( Type_ ) left && currtok.Type == Type_
+#	define check( Type_ ) ( left && currtok.Type == Type_ )
 #pragma endregion Helper Macros
 
 	Code parse_function_body( Parser::TokArray& toks, char const* context );
@@ -4661,90 +4655,100 @@ namespace gen
 		return Code::Invalid;
 	}
 
-	Code parse_type( Parser::TokArray& toks, char const* context )
+Code parse_type( Parser::TokArray& toks, char const* context )
+{
+	using namespace Parser;
+
+	SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+	s32        num_specifiers = 0;
+
+	Token name = { nullptr, 0, TokType::Invalid };
+
+	while ( left && tok_is_specifier( currtok ) )
 	{
-		using namespace Parser;
+		SpecifierT spec = ESpecifier::to_type( currtok );
 
-		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
-		s32        num_specifiers = 0;
-
-		Token name = { nullptr, 0, TokType::Invalid };
-
-		while ( left && tok_is_specifier( currtok ) )
+		if (   spec != ESpecifier::Const )
 		{
-			SpecifierT spec = ESpecifier::to_type( currtok );
-
-			if (   spec != ESpecifier::Const
-				&& spec < ESpecifier::Type_Signed )
-			{
-				log_failure( "gen::parse_type: Error, invalid specifier used in type definition: %s", currtok.Text );
-				return Code::Invalid;
-			}
-
-			specs_found[num_specifiers] = spec;
-			num_specifiers++;
-			eat( currtok.Type );
-		}
-
-		if ( left == 0 )
-		{
-			log_failure( "%s: Error, unexpected end of type definition", context );
+			log_failure( "gen::parse_type: Error, invalid specifier used in type definition: %s", currtok.Text );
 			return Code::Invalid;
 		}
 
-		if (   currtok.Type == TokType::Decl_Class
-			|| currtok.Type == TokType::Decl_Struct )
-		{
-			name = currtok;
-			eat( currtok.Type );
-
-			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
-			eat( TokType::Identifier );
-		}
-		else
-		{
-			name = parse_identifier( toks, context );
-			if ( ! name )
-				return Code::Invalid;
-		}
-
-		while ( left && tok_is_specifier( currtok ) )
-		{
-			SpecifierT spec = ESpecifier::to_type( currtok );
-
-			if (   spec != ESpecifier::Const
-			    && spec != ESpecifier::Ptr
-			    && spec != ESpecifier::Ref
-			    && spec != ESpecifier::RValue
-				&& spec < ESpecifier::Type_Signed )
-			{
-				log_failure( "%s: Error, invalid specifier used in type definition: %s", context, currtok.Text );
-				return Code::Invalid;
-			}
-
-			specs_found[num_specifiers] = spec;
-			num_specifiers++;
-			eat( currtok.Type );
-		}
-
-		using namespace ECode;
-
-		// TODO: Need to figure out type code caching wiht the type table.
-
-		Code
-		result       = make_code();
-		result->Type = Typename;
-		result->Name = get_cached_string( name );
-
-		if (num_specifiers)
-		{
-			Code specifiers = def_specifiers( num_specifiers, (SpecifierT*)specs_found );
-
-			result->add_entry( specifiers );
-		}
-
-		return result;
+		specs_found[num_specifiers] = spec;
+		num_specifiers++;
+		eat( currtok.Type );
 	}
+
+	if ( left == 0 )
+	{
+		log_failure( "%s: Error, unexpected end of type definition", context );
+		return Code::Invalid;
+	}
+
+	if (   currtok.Type == TokType::Decl_Class
+		|| currtok.Type == TokType::Decl_Struct )
+	{
+		name = currtok;
+		eat( currtok.Type );
+
+		name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+		eat( TokType::Identifier );
+	}
+	else if ( currtok.Type >= TokType::Type_Unsigned )
+	{
+		name = currtok;
+		eat( currtok.Type );
+
+		while (currtok.Type >= TokType::Type_Unsigned)
+		{
+			name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+			eat( currtok.Type );
+		}
+
+		name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+		eat( TokType::Identifier );
+	}
+	else
+	{
+		name = parse_identifier( toks, context );
+		if ( ! name )
+			return Code::Invalid;
+	}
+
+	while ( left && tok_is_specifier( currtok ) )
+	{
+		SpecifierT spec = ESpecifier::to_type( currtok );
+
+		if (   spec != ESpecifier::Const
+			&& spec != ESpecifier::Ptr
+			&& spec != ESpecifier::Ref
+			&& spec != ESpecifier::RValue )
+		{
+			log_failure( "%s: Error, invalid specifier used in type definition: %s", context, currtok.Text );
+			return Code::Invalid;
+		}
+
+		specs_found[num_specifiers] = spec;
+		num_specifiers++;
+		eat( currtok.Type );
+	}
+
+	using namespace ECode;
+
+	Code
+	result       = make_code();
+	result->Type = Typename;
+	result->Name = get_cached_string( name );
+
+	if (num_specifiers)
+	{
+		Code specifiers = def_specifiers( num_specifiers, (SpecifierT*)specs_found );
+
+		result->add_entry( specifiers );
+	}
+
+	return result;
+}
 
 	Code parse_type( StrC def )
 	{
@@ -4772,7 +4776,7 @@ namespace gen
 
 		type = parse_type( toks, txt(parse_typedef) );
 
-		if ( check( TokType::Identifier ) )
+		if ( ! check( TokType::Identifier ) )
 		{
 			log_failure( "gen::parse_typedef: Error, expected identifier for typedef" );
 			return Code::Invalid;
@@ -4794,7 +4798,7 @@ namespace gen
 
 		result->add_entry( type );
 
-		if ( array_expr )
+		if ( array_expr && array_expr->Type != Invalid )
 			type->add_entry( array_expr );
 
 		return result;
@@ -5257,20 +5261,6 @@ namespace gen
 		file_close( & File );
 	}
 #pragma endregion Builder
-
-#pragma region File Lexer
-// The Editor and Scanner require this lexer.
-#if defined(GEN_FEATURE_EDITOR) || defined(GEN_FEATURE_SCANNER)
-/*
-	This is a more robust lexer than the ones used for the lexer in the parse constructors interface.
-	Its needed to scan a C++ file and have awareness to skip content unsupported by the library.
-*/
-struct FileLexer
-{
-
-};
-#endif
-#pragma endregion File Lexer
 
 #pragma region Editor
 #ifdef GEN_FEATURE_EDITOR

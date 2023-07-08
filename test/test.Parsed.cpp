@@ -3,7 +3,7 @@
 // #include "Parsed\Buffer.Parsed.hpp"
 // #include "Parsed\HashTable.Parsed.hpp"
 // #include "Parsed\Ring.Parsed.hpp"
-#include "Parsed\Sanity.hpp"
+#include "Parsed\Sanity.Parsed.hpp"
 
 
 #ifdef gen_time

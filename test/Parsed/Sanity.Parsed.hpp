@@ -23,7 +23,33 @@ void gen_sanity()
 		gen_sanity_file.print(u8_typedef);
 	}
 
+	gen_sanity_file.print_fmt("\n");
+
+	// Class
+	if (0)
+	{
+		Code fwd = parse_class( code(
+			class TestEmptyClass;
+		));
+
+		Code empty_body = parse_class( code(
+			class TestEmptyClass
+			{};
+		));
+
+		empty_body.body()->add_entry( def_comment( StrC::from("Empty class body") ) );
+
+		gen_sanity_file.print(fwd);
+		gen_sanity_file.print(empty_body);
+	}
+
+	gen_sanity_file.print_fmt("\n");
+
+	// Enum
+	{
+
+	}
+
 	gen_sanity_file.write();
 }
 #endif
-

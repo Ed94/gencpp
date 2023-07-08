@@ -23,6 +23,15 @@
 			"args": [],
 			"cwd": "${workspaceFolder}/test/gen/",
 			"visualizerFile": "${workspaceFolder}/.vscode/gencpp.natvis"
+		},
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
+			"name": "Debug gentime parsed vsdbg",
+			"program": "${workspaceFolder}/test/gen/build/gencpp_parsed.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}/test/gen/",
+			"visualizerFile": "${workspaceFolder}/.vscode/gencpp.natvis"
 		}
 	]
 }
