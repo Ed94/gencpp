@@ -151,6 +151,7 @@ namespace gen
 #pragma endregion AST Body Case Macros
 
 #pragma region AST
+	Code Code::Global;
 	Code Code::Invalid;
 
 	AST* AST::duplicate()
@@ -163,7 +164,6 @@ namespace gen
 		result->Name     = Name;
 		result->Type     = Type;
 		result->Op       = Op;
-		result->Readonly = Readonly;
 
 		switch ( Type )
 		{
@@ -171,14 +171,15 @@ namespace gen
 				log_failure( "AST::duplicate: Cannot duplicate an invalid AST." );
 				return nullptr;
 
-			case Untyped:
-			case Comment:
-			case Preprocessor_Include:
 			case Access_Public:
 			case Access_Protected:
 			case Access_Private:
 			case Attributes:
+			case Comment:
+			case Execution:
 			case Module:
+			case Preprocessor_Include:
+			case Untyped:
 				// Can just be the same, as its a cached string.
 				result->Content = Content;
 				return result;
@@ -200,7 +201,6 @@ namespace gen
 			case Enum_Class:
 			case Enum_Class_Fwd:
 			case Export_Body:
-			case Execution:
 			case Extern_Linkage:
 			case Extern_Linkage_Body:
 			case Friend:
@@ -253,42 +253,6 @@ namespace gen
 
 		String result = String::make( g_allocator, "" );
 
-		// Scope indentation.
-		char indent_str[128] = {0};   // Should be more than enough...
-		s32  tab_count       = 0;
-		{
-			AST* curr_parent = Parent;
-			while ( curr_parent )
-			{
-				switch ( curr_parent->Type )
-				{
-					using namespace ECode;
-
-					case Class_Body:
-					case Enum_Body:
-					case Extern_Linkage_Body:
-					case Function_Body:
-					case Global_Body:
-					case Namespace_Body:
-					case Struct_Body:
-					case Union_Body:
-						break;
-
-					default:
-					{
-						curr_parent = curr_parent->Parent;
-						continue;
-					}
-				}
-
-				indent_str[tab_count] = '\t';
-				tab_count++;
-
-				curr_parent = curr_parent->Parent;
-			}
-		}
-		StrC indent = { tab_count, indent_str };
-
 		switch ( Type )
 		{
 			using namespace ECode;
@@ -304,8 +268,6 @@ namespace gen
 
 			case Comment:
 			{
-				result.append( indent );
-
 				static char line[MaxCommentLineLength];
 
 				s32 left  = Content.length();
@@ -339,8 +301,6 @@ namespace gen
 
 			case Class:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				if ( num_entries() > 1 )
@@ -363,10 +323,9 @@ namespace gen
 					{
 						char const* access_level = to_str( ParentAccess );
 
-						result.append_fmt( ": %s %s\n%s{\n"
+						result.append_fmt( ": %s %s\n{\n"
 							, access_level
 							, parent
-							, indent_str
 						);
 					}
 					else
@@ -374,19 +333,17 @@ namespace gen
 						result.append( "\n{\n" );
 					}
 
-					result.append_fmt( "%s\n%s};", body()->to_string(), indent_str );
+					result.append_fmt( "%s\n};", body()->to_string() );
 				}
 				else
 				{
-					result.append_fmt( "class %s\n{\n%s\n%s};", Name, body()->to_string(), indent_str );
+					result.append_fmt( "class %s\n{\n%s\n};", Name, body()->to_string() );
 				}
 			}
 			break;
 
 			case Class_Fwd:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				result.append_fmt( "class %s;", Name );
@@ -395,8 +352,6 @@ namespace gen
 
 			case Enum:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				result.append( "enum " );
@@ -442,8 +397,6 @@ namespace gen
 
 			case Enum_Fwd:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				result.append_fmt( "enum %s : %s;", Name, entry( 0 )->to_string() );
@@ -452,8 +405,6 @@ namespace gen
 
 			case Enum_Class:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				result.append( "enum class " );
@@ -470,10 +421,9 @@ namespace gen
 
 					if ( entry( idx )->Type == Typename )
 					{
-						result.append_fmt( "%s : %s\n%s{\n"
+						result.append_fmt( "%s : %s\n{\n"
 							, Name
 							, entry( idx )->to_string()
-							, indent_str
 						);
 					}
 					else
@@ -492,8 +442,6 @@ namespace gen
 
 			case Enum_Class_Fwd:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				result.append( "enum class " );
@@ -512,41 +460,35 @@ namespace gen
 
 			case Export_Body:
 			{
-				result.append_fmt( "%sexport\n%s{\n", indent_str, indent_str );
+				result.append_fmt( "export\n{\n" );
 
 				s32 index = 0;
 				s32 left  = num_entries();
 				while ( left -- )
 				{
-					result.append_fmt( "%s\t%s\n", indent_str, entry( index )->to_string() );
+					result.append_fmt( "%s\n", entry( index )->to_string() );
 					index++;
 				}
 
-				result.append_fmt( "%s};", indent_str );
+				result.append_fmt( "};" );
 			}
 			break;
 
 			case Extern_Linkage:
-				result.append( indent );
-
 				ProcessModuleFlags();
 
-				result.append_fmt( "extern \"%s\"\n%s{\n%s\n%s}"
+				result.append_fmt( "extern \"%s\"\n{\n%s\n}"
 					, Name
-					, indent_str
 					, body()->to_string()
-					, indent_str
 				);
 			break;
 
 			case Friend:
-				result.append_fmt( "%sfriend %s", indent_str, entry( 0 )->to_string() );
+				result.append_fmt( "friend %s", entry( 0 )->to_string() );
 			break;
 
 			case Function:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				u32 idx  = 1;
@@ -592,18 +534,14 @@ namespace gen
 					result.append( "void" );
 				}
 
-				result.append_fmt( ")\n%s{\n%s\n%s}"
-					, indent_str
+				result.append_fmt( ")\n{\n%s\n}"
 					, body()->to_string()
-					, indent_str
 				);
 			}
 			break;
 
 			case Function_Fwd:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				u32 idx  = 0;
@@ -654,8 +592,6 @@ namespace gen
 			break;
 
 			case Module:
-				result.append( indent );
-
 				if (((u32(ModuleFlag::Export) & u32(ModuleFlags)) == u32(ModuleFlag::Export)))
 					result.append("export ");
 
@@ -666,23 +602,17 @@ namespace gen
 				break;
 
 			case Namespace:
-				result.append( indent );
-
 				ProcessModuleFlags();
 
-				result.append_fmt( "namespace %s\n%s{\n%s\n%s};"
+				result.append_fmt( "namespace %s\n{\n%s\n};"
 					, Name
-					, indent_str
 					, body()->to_string()
-					, indent_str
 				);
 			break;
 
 			case Operator:
 			case Operator_Member:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				s32 idx = 1;
@@ -712,8 +642,7 @@ namespace gen
 					result.append_fmt( "void" );
 				}
 
-				result.append_fmt( ")\n%s{\n%s\n}"
-					, indent_str
+				result.append_fmt( ")\n{\n%s\n}"
 					, body()->to_string()
 				);
 			}
@@ -722,8 +651,6 @@ namespace gen
 			case Operator_Fwd:
 			case Operator_Member_Fwd:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				s32 idx = 0;
@@ -785,8 +712,6 @@ namespace gen
 
 			case Struct:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				result.append( "struct ");
@@ -833,8 +758,6 @@ namespace gen
 
 			case Struct_Fwd:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				result.append( "struct ");
@@ -853,8 +776,6 @@ namespace gen
 
 			case Variable:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				s32 idx = 1;
@@ -881,8 +802,6 @@ namespace gen
 
 			case Typedef:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				AST* type = entry( 0 );
@@ -918,8 +837,6 @@ namespace gen
 
 			case Union:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				s32 idx = 0;
@@ -932,19 +849,15 @@ namespace gen
 					idx++;
 				}
 
-				result.append_fmt( "%s\n%s{\n%s\n%s};"
+				result.append_fmt( "%s\n{\n%s\n};"
 					, Name
-					, indent_str
 					, body()->to_string()
-					, indent_str
 				);
 			}
 			break;
 
 			case Using:
 			{
-				result.append( indent );
-
 				ProcessModuleFlags();
 
 				AST* type = entry( 0 );
@@ -969,7 +882,7 @@ namespace gen
 			break;
 
 			case Using_Namespace:
-				result.append_fmt( "%susing namespace %s;", indent_str, Name );
+				result.append_fmt( "using namespace %s;", Name );
 			break;
 
 			case Class_Body:
@@ -985,7 +898,7 @@ namespace gen
 				s32 left  = num_entries();
 				while ( left -- )
 				{
-					result.append_fmt( "%s%s\n", indent_str, entry( index )->to_string() );
+					result.append_fmt( "%s\n", entry( index )->to_string() );
 					index++;
 				}
 			}
@@ -1085,20 +998,19 @@ namespace gen
 			//	fatal( "gen::init: Failed to initialize the TypeMap" );
 		}
 
+		Code::Global          = make_code();
+		Code::Global->Name    = get_cached_string( name("Global Code") );
+		Code::Global->Content = Code::Global->Name;
+
 		Code::Invalid = make_code();
-		Code::Invalid.lock();
+		Code::Invalid.set_global();
 
-		type_ns(auto) = def_type( name(auto) );
+	#	define def_constant_code_type( Type_ )    \
+		type_ns(Type_) = def_type( name(Type_) ); \
+		type_ns(Type_).set_global();
 
-		Code&
-		t_void_write = ccast( Code, t_void );
-		t_void_write = def_type( name(void) );
-
-	#	define def_constant_code_type( Type_ )             \
-		Code&                                              \
-		t_##Type_##_write = ccast( Code, type_ns(Type_) ); \
-		t_##Type_##_write = def_type( name(Type_) );       \
-
+		def_constant_code_type( auto );
+		def_constant_code_type( void );
 		def_constant_code_type( int );
 		def_constant_code_type( bool );
 		def_constant_code_type( char );
@@ -1125,53 +1037,42 @@ namespace gen
 	#endif
 	#	undef def_constant_code_type
 
-		Code&
-		access_private_write = ccast( Code, access_private );
-		access_private_write = make_code();
-		access_private_write->Type = ECode::Access_Private;
-		access_private_write->Name = get_cached_string( StrC::from("private:") );
-		access_private_write.lock();
+		access_private       = make_code();
+		access_private->Type = ECode::Access_Private;
+		access_private->Name = get_cached_string( StrC::from("private:") );
+		access_private.set_global();
 
-		Code&
-		access_protected_write = ccast( Code, access_protected );
-		access_protected_write = make_code();
-		access_protected_write->Type = ECode::Access_Protected;
-		access_protected_write->Name = get_cached_string( StrC::from("protected:") );
-		access_protected_write.lock();
+		access_protected = make_code();
+		access_protected->Type = ECode::Access_Protected;
+		access_protected->Name = get_cached_string( StrC::from("protected:") );
+		access_protected.set_global();
 
-		Code&
-		access_public_write = ccast( Code, access_public );
-		access_public_write = make_code();
-		access_public_write->Type = ECode::Access_Public;
-		access_public_write->Name = get_cached_string( StrC::from("public:") );
-		access_public_write.lock();
+		access_public = make_code();
+		access_public->Type = ECode::Access_Public;
+		access_public->Name = get_cached_string( StrC::from("public:") );
+		access_public.set_global();
 
 		module_global_fragment          = make_code();
 		module_global_fragment->Type    = ECode::Untyped;
 		module_global_fragment->Name    = get_cached_string( StrC::from("module;") );
 		module_global_fragment->Content = module_global_fragment->Name;
-		module_global_fragment.lock();
+		module_global_fragment.set_global();
 
 		module_private_fragment          = make_code();
 		module_private_fragment->Type    = ECode::Untyped;
 		module_private_fragment->Name    = get_cached_string( StrC::from("module : private;") );
 		module_private_fragment->Content = module_private_fragment->Name;
-		module_private_fragment.lock();
+		module_private_fragment.set_global();
 
 		pragma_once          = make_code();
 		pragma_once->Type    = ECode::Untyped;
 		pragma_once->Name    = get_cached_string( StrC::from("#pragma once") );
 		pragma_once->Content = pragma_once->Name;
-		pragma_once.lock();
+		pragma_once.set_global();
 
-		Code&
-		spec_local_persist_write = ccast( Code, spec_local_persist );
-		spec_local_persist_write = def_specifiers( 1, ESpecifier::Local_Persist );
-
-	#	define def_constant_spec( Type_, ... )                                            \
-		Code&                                                                             \
-		spec_##Type_##_write = ccast( Code, spec_##Type_);                                \
-		spec_##Type_##_write = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
+	#	define def_constant_spec( Type_, ... )                                    \
+		spec_##Type_ = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
+		spec_##Type_.set_global();
 
 		def_constant_spec( consteval,        ESpecifier::Consteval );
 		def_constant_spec( constexpr,        ESpecifier::Constexpr );
@@ -1192,6 +1093,10 @@ namespace gen
 		def_constant_spec( type_unsigned,    ESpecifier::Type_Unsigned );
 		def_constant_spec( type_short,       ESpecifier::Type_Short );
 		def_constant_spec( type_long,        ESpecifier::Type_Long );
+
+		spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
+		spec_local_persist.set_global();
+
 	#	undef def_constant_spec
 	}
 
@@ -1268,8 +1173,6 @@ namespace gen
 
 			array_clear( CodeEntriesArenas );
 		}
-
-		// type_tbl_clear( & StaticData::TypeMap );
 	}
 
 	inline
@@ -1356,7 +1259,6 @@ namespace gen
 		result->ModuleFlags    = ModuleFlag::Invalid;
 		result->ParentAccess   = AccessSpec::Invalid;
 		result->StaticIndex    = 0;
-		result->Readonly       = false;
 		result->DynamicEntries = false;
 
 		return result;
@@ -1822,7 +1724,6 @@ namespace gen
 		result->Name    = get_cached_string( content );
 		result->Content = result->Name;
 
-		result.lock();
 		return result;
 	}
 
@@ -1840,7 +1741,6 @@ namespace gen
 		result->Name    = get_cached_string( content );
 		result->Content = result->Name;
 
-		result.lock();
 		return result;
 	}
 
@@ -1901,7 +1801,6 @@ namespace gen
 			result->add_entry( parent );
 		}
 
-		result.lock();
 		return result;
 	}
 
@@ -1968,7 +1867,6 @@ namespace gen
 			return Code::Invalid;
 		}
 
-		result.lock();
 		return result;
 	}
 
@@ -1986,7 +1884,6 @@ namespace gen
 		result->Name    = get_cached_string( content );
 		result->Content = result->Name;
 
-		result.lock();
 		return result;
 	}
 
@@ -2011,7 +1908,6 @@ namespace gen
 
 		result->add_entry( body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2041,7 +1937,6 @@ namespace gen
 
 		result->add_entry( declaration );
 
-		result.lock();
 		return result;
 	}
 
@@ -2125,7 +2020,6 @@ namespace gen
 		if ( params )
 			result->add_entry( params );
 
-		result.lock();
 		return result;
 	}
 
@@ -2143,7 +2037,6 @@ namespace gen
 		result->Name    = get_cached_string( path );
 		result->Content = result->Name;
 
-		result.lock();
 		return result;
 	}
 
@@ -2158,7 +2051,6 @@ namespace gen
 		result->Content     = result->Name;
 		result->ModuleFlags = mflags;
 
-		result.lock();
 		return result;
 	}
 
@@ -2183,7 +2075,6 @@ namespace gen
 
 		result->add_entry( body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2258,7 +2149,6 @@ namespace gen
 		if (params_code)
 			result->add_entry( params_code );
 
-		result.lock();
 		return result;
 	}
 
@@ -2291,7 +2181,6 @@ namespace gen
 		if ( value )
 			result->add_entry( value );
 
-		result.lock();
 		return result;
 	}
 
@@ -2303,7 +2192,6 @@ namespace gen
 
 		result->add_specifier( spec );
 
-		result.lock();
 		return result;
 	}
 
@@ -2359,7 +2247,6 @@ namespace gen
 			result->add_entry( parent );
 		}
 
-		result.lock();
 		return result;
 	}
 
@@ -2383,8 +2270,6 @@ namespace gen
 
 		if ( ArrayExpr )
 			result->add_entry( ArrayExpr );
-
-		result.lock();
 
 		return result;
 	}
@@ -2420,7 +2305,6 @@ namespace gen
 		if ( attributes )
 			result->add_entry( attributes );
 
-		result.lock();
 		return result;
 	}
 
@@ -2446,7 +2330,6 @@ namespace gen
 		if ( attributes )
 			result->add_entry( attributes );
 
-		result.lock();
 		return result;
 	}
 
@@ -2477,7 +2360,6 @@ namespace gen
 		if ( attributes )
 			result->add_entry( attributes );
 
-		result.lock();
 		return result;
 	}
 
@@ -2491,7 +2373,6 @@ namespace gen
 		result->Content = result->Name;
 		result->Type    = ECode::Using_Namespace;
 
-		result.lock();
 		return result;
 	}
 
@@ -2543,7 +2424,6 @@ namespace gen
 		if ( value )
 			result->add_entry( value );
 
-		result.lock();
 		return result;
 	}
 
@@ -2650,7 +2530,6 @@ namespace gen
 		def_body_code_validation_end( def_class_body );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2666,7 +2545,6 @@ namespace gen
 			AST_BODY_CLASS_UNALLOWED_TYPES
 		def_body_code_validation_end( def_class_body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2702,7 +2580,6 @@ namespace gen
 		while ( num--, num > 0 );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2734,7 +2611,6 @@ namespace gen
 		}
 		while ( codes++, num--, num > 0 );
 
-		result.lock();
 		return result;
 	}
 
@@ -2753,7 +2629,6 @@ namespace gen
 		def_body_code_validation_end( def_export_body );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2769,7 +2644,6 @@ namespace gen
 			AST_BODY_EXPORT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_export_body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2788,7 +2662,6 @@ namespace gen
 		def_body_code_validation_end( def_extern_linkage_body );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2804,7 +2677,6 @@ namespace gen
 			AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_extern_linkage_body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2823,7 +2695,6 @@ namespace gen
 		def_body_code_validation_end( def_function_body );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2839,7 +2710,6 @@ namespace gen
 			AST_BODY_FUNCTION_UNALLOWED_TYPES
 		def_body_code_validation_end( def_function_body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2858,7 +2728,6 @@ namespace gen
 		def_body_code_validation_end( def_global_body );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2874,7 +2743,6 @@ namespace gen
 			AST_BODY_GLOBAL_UNALLOWED_TYPES
 		def_body_code_validation_end( def_global_body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2893,7 +2761,6 @@ namespace gen
 		def_body_code_validation_end( def_namespace_body );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2909,7 +2776,6 @@ namespace gen
 			AST_BODY_NAMESPACE_UNALLOWED_TYPES
 		def_body_code_validation_end( def_namespace_body );
 
-		result.lock();
 		return result;
 	}
 
@@ -2948,7 +2814,6 @@ namespace gen
 		}
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -2986,7 +2851,6 @@ namespace gen
 		}
 	#	undef check_current
 
-		result.lock();
 		return result;
 	}
 
@@ -3019,7 +2883,6 @@ namespace gen
 		while ( --num, num );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -3038,7 +2901,6 @@ namespace gen
 		def_body_code_validation_end( def_struct_body );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -3054,7 +2916,6 @@ namespace gen
 			AST_BODY_STRUCT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_struct_body );
 
-		result.lock();
 		return result;
 	}
 
@@ -3090,7 +2951,6 @@ namespace gen
 		while ( num--, num > 0 );
 		va_end(va);
 
-		result.lock();
 		return result;
 	}
 
@@ -3122,7 +2982,6 @@ namespace gen
 		}
 		while ( codes++, num--, num > 0 );
 
-		result.lock();
 		return result;
 	}
 
@@ -5293,7 +5152,6 @@ namespace gen
 		result->Type    = ECode::Untyped;
 		result->Content = result->Name;
 
-		result.lock();
 		return result;
 	}
 
@@ -5313,7 +5171,6 @@ namespace gen
 		result->Type    = ECode::Untyped;
 		result->Content = get_cached_string( { length, buf } );
 
-		result.lock();
 		return result;
 	}
 
@@ -5333,7 +5190,6 @@ namespace gen
 		result->Type    = ECode::Untyped;
 		result->Content = get_cached_string( { length, buf } );
 
-		result.lock();
 		return result;
 	}
 #pragma endregion Untyped Constructors

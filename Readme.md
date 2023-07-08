@@ -157,7 +157,7 @@ If in your use case, you decide to have exclusive separation or partial separati
 ### *WHAT IS NOT PROVIDED*
 
 * Macro or template generation                : This library is to avoid those, adding support for them adds unnecessary complexity.
-* Vendor provided dynamic dispatch (virtuals) : Roll your own, this library might roll its own vtable/interface generation helpers in the future.
+* Vendor provided dynamic dispatch (virtuals) : `override` and `final` specifiers complicate the specifier serialization. (I'll problably end up adding in later)
 * RTTI
 * Exceptions
 * Execution statement validation              : Execution expressions are defined using the untyped string API.
@@ -177,19 +177,8 @@ When it comes to expressions:
 
 There is no support for validating expressions.  
 The reason: thats where the can of worms open for parsing validation. This library would most likey more than double in size with that addition alone.  
-For most metaprogramming (espcially for C/C++), expression validation is not necessary for metaprogramming, it can be done by the compiler for the runtime program.  
 Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions.  
 Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
-
-To further this point, lets say you do have an error with an expressions composition.  
-It will either be caught by the c++ compiler when compiling the target program, or at runtime for the program.
-
-* If its not caught by the compiler, the only downside is the error appers on the generated function.
-    Those with knowledge of how that definition was generated know where to find the code that inlined that expression in that file for that definition.
-* If its caught at runtime. The expression will be shown in a stack trace if debug symbols are enabled in the generated function body.
-    Yet again those with knowledge of how that definition was generated know where to find the code that inlined that expression.
-
-In both these cases the user will get objectively better debug information than you would normally get on most c++ compilers/editors using complex macros or templates.
 
 ### The Data & Interface
 
@@ -214,9 +203,8 @@ OperatorT         Op;
 ModuleFlag        ModuleFlags;
 AccessSpec        ParentAccess;
 u32               StaticIndex;
-bool              Readonly;
 bool              DynamicEntries;
-u8                _Align_Pad[2];
+u8                _Align_Pad[3];
 ```
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
@@ -237,7 +225,7 @@ uw ArrS_Cap =
     - sizeof(ModuleFlag)   // ModuleFlags
     - sizeof(AccessSpec)   // ParentAccess
     - sizeof(u32) 		   // StaticIndex
-    - sizeof(bool) * 2     // Readonly, DynamicEntries
+    - sizeof(bool) * 1     // DynamicEntries
     - sizeof(u8) * 2 )     // _Align_Pad
 / sizeof(AST*);
 ```

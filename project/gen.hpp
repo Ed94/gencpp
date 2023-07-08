@@ -13,9 +13,7 @@
 // Temporarily here for debugging purposes.
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 // #define GEN_DONT_USE_FATAL
-// #define GEN_ENFORCE_READONLY_AST
 
-#define GEN_FEATURE_INCREMENTAL
 // #define GEN_FEATURE_PARSING
 // #define GEN_FEATURE_EDITOR
 // #define GEN_FEATURE_SCANNER
@@ -427,8 +425,6 @@ namespace gen
 
 		// Parameter
 
-		bool add_param( AST* type, StrC name );
-
 		inline
 		AST* get_param( s32 index )
 		{
@@ -509,7 +505,6 @@ namespace gen
 			char const* fmt = txt(
 				\nCode Debug:
 				\nType    : %s
-				\nReadonly: %s
 				\nParent  : %s
 				\nName    : %s
 				\nComment : %s
@@ -521,7 +516,6 @@ namespace gen
 			// allocate this to proper string.
 			return str_fmt_buf( fmt
 			,	type_str()
-			,	Readonly ? "true"       : "false"
 			,	Parent   ? Parent->Name : ""
 			,	Name     ? Name         : ""
 			);
@@ -546,7 +540,7 @@ namespace gen
 			- sizeof(ModuleFlag)   // ModuleFlags
 			- sizeof(AccessSpec)   // ParentAccess
 			- sizeof(u32) 		   // StaticIndex
-			- sizeof(bool) * 2     // Readonly, DynamicEntries
+			- sizeof(bool) * 1     // DynamicEntries
 			- sizeof(u8) * 2 )     // _Align_Pad
 		/ sizeof(AST*);
 
@@ -567,9 +561,8 @@ namespace gen
 		ModuleFlag        ModuleFlags;                 \
 		AccessSpec        ParentAccess;				   \
 		u32               StaticIndex;                 \
-		bool              Readonly;                    \
 		bool              DynamicEntries;              \
-		u8                _Align_Pad[2];
+		u8                _Align_Pad[3];
 
 		Using_AST_POD
 	};
@@ -599,6 +592,9 @@ namespace gen
 	struct Code
 	{
 	#pragma region Statics
+		// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
+		static Code Global;
+
 		// Used to identify invalid generated code.
 		static Code Invalid;
 	#pragma endregion Statics
@@ -631,15 +627,21 @@ namespace gen
 		}
 
 		inline
-		void lock()
-		{
-			ast->Readonly = true;
-		}
-
-		inline
 		String to_string() const
 		{
 			return ast->to_string();
+		}
+
+		inline
+		void set_global()
+		{
+			if ( ast == nullptr )
+			{
+				log_failure("Code::set_global: Cannot set code as global, AST is null!");
+				return;
+			}
+
+			ast->Parent = Global.ast;
 		}
 
 		inline
@@ -669,13 +671,11 @@ namespace gen
 		inline
 		Code& operator=( Code other )
 		{
-		#ifdef GEN_ENFORCE_READONLY_AST
-			if ( ast && ast->Readonly )
+			if ( other.ast == nullptr )
 			{
-				log_failure("Attempted to set a readonly AST!");
+				log_failure("Attempted to assign a nullptr!");
 				return *this;
 			}
-		#endif
 
 			ast = other.ast;
 
@@ -690,14 +690,6 @@ namespace gen
 				log_failure("Attempt to dereference a nullptr!");
 				return nullptr;
 			}
-
-		#ifdef GEN_ENFORCE_READONLY_AST
-			if ( ast->Readonly )
-			{
-				log_failure("Attempted to access a member from a readonly AST!");
-				return nullptr;
-			}
-		#endif
 
 			return ast;
 		}
@@ -722,13 +714,14 @@ namespace gen
 	// This currently just initializes the CodePool.
 	void init();
 
+	// Currently manually free's the arenas, code for checking for leaks.
+	// However on Windows at least, it doesn't need to occur as the OS will clean up after the process.
 	void deinit();
 
 	/*
 		Use this only if you know you generated the code you needed to a file.
 		And rather get rid of current code asts instead of growing the pool memory.
-		This generally can be done everytime a file is generated
-		TODO: In order for this to work, the type map needs its own arenas so do specifiers.
+		TODO: Need to put permanent ASTs into a separate set of memory. (I might just remove this tbh as it might be useless)
 	*/
 	void clear_code_memory();
 
@@ -1140,52 +1133,6 @@ namespace gen
 		}
 
 		to_add->Parent = this;
-	}
-
-	inline
-	bool AST::add_param( AST* type, StrC name )
-	{
-		if ( Type != ECode::Function )
-		{
-			log_failure( "gen::AST::add_param: this AST is not a function - %s", debug_str() );
-			return Code::Invalid;
-		}
-
-		if ( name.Len <= 0 )
-		{
-			log_failure( "gen::AST::add_param: Invalid name length provided - %d", name.Len );
-			return Code::Invalid;
-		}
-
-		if ( name == nullptr )
-		{
-			log_failure( "gen::AST::add_param: name is null");
-			return Code::Invalid;
-		}
-
-		s32
-		score  = 0;
-		score += Name       == nullptr;
-		score += entry( 0 ) == nullptr;
-
-		if ( score == 1 )
-		{
-			log_failure("gen::AST::add_param: this AST has bad data - %s", debug_str() );
-			return false;
-		}
-		else if ( score == 2)
-		{
-			Name       = get_cached_string( name );
-			entry( 0 ) = type;
-			return true;
-		}
-
-		Code
-		result = make_code();
-		result->Type = ECode::Parameters;
-
-		result->add_entry( result );
-		return true;
 	}
 }
 #pragma endregion Inlines

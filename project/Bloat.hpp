@@ -85,12 +85,6 @@ using zpl::str_fmt_va;
 using zpl::str_fmt_out_va;
 using zpl::str_fmt_out_err_va;
 using zpl::str_compare;
-// using zpl::string_appendc;
-// using zpl::string_append_fmt;
-// using zpl::string_append_length;
-// using zpl::string_make_length;
-// using zpl::string_length;
-// using zpl::string_make;
 using zpl::str_len;
 
 #if __clang__

@@ -12,7 +12,7 @@ Code gen__hashtable_base()
 	Code entry_prev  = def_variable( t_sw, name(PrevIndex) );
 	Code entry_index = def_variable( t_sw, name(EntryIndex) );
 
-	Code find_result = def_struct( name(HashTableFindResult), def_struct_body( 3
+	Code find_result = def_struct( name(HashTable_FindResult), def_struct_body( 3
 		, hashIndex
 		, entry_prev
 		, entry_index
@@ -25,7 +25,7 @@ Code gen__hashtable( StrC type, sw type_size )
 {
 	static Code t_allocator_info = def_type( name(AllocatorInfo) );
 
-	Code t_find_result = def_type( name(HashTableFindResult) );
+	Code t_find_result = def_type( name(HashTable_FindResult) );
 
 	StringCached name;
 	{
@@ -61,7 +61,7 @@ Code gen__hashtable( StrC type, sw type_size )
 		t_array_ht_entry = def_type( array_ht_entry->Name );
 	}
 
-	Code hashtable;
+	Code hashtable = {0};
 	{
 		Code using_entry       = def_using( name(Entry), t_ht_entry );
 		Code using_array_entry = def_using( name(Array_Entry), t_array_ht_entry );

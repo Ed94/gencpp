@@ -42,7 +42,7 @@ Code gen__buffer( StrC type, sw type_size )
 	Code t_header_ptr  = def_type( name(Header), __, spec_ptr );
 	Code t_header_ref  = def_type( name(Header), __, spec_ref );
 
-	Code buffer;
+	Code buffer = {0};
 	{
 		Code using_type = def_using( name(Type), t_type );
 		Code data       = def_variable( t_type_ptr, name(Data) );
@@ -54,7 +54,7 @@ Code gen__buffer( StrC type, sw type_size )
 				, def_param( t_sw,             name(capacity))
 			);
 
-			Code body = untyped_str( code(
+			Code body = def_execution( code(
 				Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + capacity * sizeof(Type) ) );
 
 				if ( header == nullptr )
@@ -78,7 +78,7 @@ Code gen__buffer( StrC type, sw type_size )
 			);
 
 			init_copy = def_function( name(init), params, t_buffer_type
-				, untyped_str( code(
+				, def_execution( code(
 					Header& other_header = other.get_header();
 					Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + other_header.Capacity * sizeof(Type) ) );
 
@@ -95,23 +95,14 @@ Code gen__buffer( StrC type, sw type_size )
 			);
 		}
 
-		Code append;
-		{
-			// Code param_type;
-			// if ( type_size <= 64 )
-			// 	param_type = t_type;
-			// else
-			// 	param_type = t_type_ref;
-
-			append = def_function( name(append), def_param( t_type, name(value)), t_void
-				, untyped_str( code(
-					Header& header = get_header();
-					Data[ header.Num ] = value;
-					header.Num++;
-				))
-				, spec_inline
-			);
-		}
+		Code append = def_function( name(append), def_param( t_type, name(value)), t_void
+			, def_execution( code(
+				Header& header = get_header();
+				Data[ header.Num ] = value;
+				header.Num++;
+			))
+			, spec_inline
+		);
 
 		Code appendv;
 		{
@@ -121,7 +112,7 @@ Code gen__buffer( StrC type, sw type_size )
 			);
 
 			appendv = def_function( name(append), params, t_void
-				, untyped_str( code(
+				, def_execution( code(
 					Header& header = get_header();
 
 					ZPL_ASSERT( header.Num + num <= header.Capacity);
@@ -135,7 +126,7 @@ Code gen__buffer( StrC type, sw type_size )
 		}
 
 		Code clear = def_function( name(clear), __, t_void
-			, untyped_str( code(
+			, def_execution( code(
 				Header& header = get_header();
 				header.Num = 0;
 			))
@@ -143,7 +134,7 @@ Code gen__buffer( StrC type, sw type_size )
 		);
 
 		Code end = def_function( name(end), __, t_type_ref
-			, untyped_str( code(
+			, def_execution( code(
 				Header& header = get_header();
 				return Data[ header.Num - 1 ];
 			))
@@ -151,7 +142,7 @@ Code gen__buffer( StrC type, sw type_size )
 		);
 
 		Code free = def_function( name(free), __, t_void
-			, untyped_str( code(
+			, def_execution( code(
 				Header& header = get_header();
 				zpl::free( header.Backing, & header );
 			))
@@ -159,21 +150,21 @@ Code gen__buffer( StrC type, sw type_size )
 		);
 
 		Code get_header = def_function( name(get_header), __, t_header_ref
-			, untyped_str( code(
+			, def_execution( code(
 				return * ( rcast( Header*, Data ) - 1 );
 			))
 			, spec_inline
 		);
 
 		Code num = def_function( name(num), __, t_sw
-			, untyped_str( code(
+			, def_execution( code(
 				return get_header().Num;
 			))
 			, spec_inline
 		);
 
 		Code pop = def_function( name(pop), __, t_type
-			, untyped_str( code(
+			, def_execution( code(
 				Header& header = get_header();
 				header.Num--;
 				return Data[ header.Num ];
@@ -182,7 +173,7 @@ Code gen__buffer( StrC type, sw type_size )
 		);
 
 		Code wipe = def_function( name(wipe), __, t_void
-			, untyped_str( code(
+			, def_execution( code(
 				Header& header = get_header();
 				header.Num = 0;
 				mem_set( Data, 0, header.Capacity * sizeof( Type ) );

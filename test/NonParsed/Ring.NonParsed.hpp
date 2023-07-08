@@ -33,7 +33,7 @@ Code gen__ring( StrC type, sw type_size )
 		t_buffer_type = def_type( { len, name_str } );
 	}
 
-	Code ring;
+	Code ring = {0};
 	{
 		Code using_type = def_using( name(Type), t_type );
 
@@ -64,7 +64,7 @@ Code gen__ring( StrC type, sw type_size )
 
 				return result;
 			);
-			Code body = untyped_str( token_fmt( tmpl, 2
+			Code body = def_execution( token_fmt( tmpl, 2
 				, "type", (char const*)name
 				, "data_type", (char const*)type
 			));
@@ -73,7 +73,7 @@ Code gen__ring( StrC type, sw type_size )
 		}
 
 		Code append = def_function( name(append), def_param( t_type, name(value)), t_void
-			, untyped_str( code(
+			, def_execution( code(
 				Buffer[ Head ] = value;
 				Head = ( Head + 1 ) % Capacity;
 
@@ -90,7 +90,7 @@ Code gen__ring( StrC type, sw type_size )
 				, def_param( t_sw,       name(num))
 			);
 
-			Code body = untyped_str( code(
+			Code body = def_execution( code(
 				for ( sw idx = 0; idx < num; idx++ )
 					append( values[ idx ] );
 			));
