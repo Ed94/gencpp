@@ -8,18 +8,18 @@
 */
 #pragma once
 
+#ifdef gen_time
+
 #include "Bloat.hpp"
 
 // Temporarily here for debugging purposes.
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 // #define GEN_DONT_USE_FATAL
 
-// #define GEN_FEATURE_PARSING
+#define GEN_FEATURE_PARSING
 // #define GEN_FEATURE_EDITOR
 // #define GEN_FEATURE_SCANNER
 
-
-#ifdef gen_time
 namespace gen
 {
 	using LogFailType = sw(*)(char const*, ...);
@@ -583,11 +583,6 @@ namespace gen
 
 	/*
 		AST* typedef as to not constantly have to add the '*' as this is written often..
-
-		If GEN_ENFORCE_READONLY_AST is defined, readonly assertions will be done on any member dreference,
-		and the 'gen API' related functions. will set their created ASTs to readonly before returning.
-
-		Casting to AST* will bypass.
 	*/
 	struct Code
 	{
@@ -614,14 +609,6 @@ namespace gen
 				log_failure("Code::body: Type is invalid, cannot get");
 				return Invalid;
 			}
-
-		#ifdef GEN_ENFORCE_READONLY_AST
-			if ( ast->Readonly )
-			{
-				log_failure("Attempted to a body AST from a readonly AST!");
-				return Invalid;
-			}
-		#endif
 
 			return * (Code*)( ast->body() );
 		}

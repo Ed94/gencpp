@@ -11,7 +11,8 @@ includes = include_directories(
 # get_sources = files('./get_sources.ps1')
 # sources     = files(run_command('powershell', get_sources, check: true).stdout().strip().split('\n'))
 
-sources = [ '../test.cpp' ]
+sources = [ '../test.NonParsed.cpp' ]
+sources_parsed = [ '../test.Parsed.cpp' ]
 
 if get_option('buildtype').startswith('debug')
 
@@ -24,4 +25,5 @@ endif
 
 add_project_arguments('-Dgen_time', language : ['c', 'cpp'])
 
-executable( 'gencpp', sources, include_directories : includes )
+# executable( 'gencpp', sources, include_directories : includes )
+executable( 'gencpp_parsed', sources_parsed, include_directories : includes )

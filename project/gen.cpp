@@ -1,8 +1,10 @@
 // ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
+
+#ifdef gen_time
+
 #include "Bloat.hpp"
 #include "gen.hpp"
 
-#ifdef gen_time
 namespace gen
 {
 	ZPL_TABLE_DEFINE( StringTable, str_tbl_, String );
@@ -244,7 +246,7 @@ namespace gen
 
 	String AST::to_string()
 	{
-#	define ProcessModuleFlags() \
+	#	define ProcessModuleFlags() \
 		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))  \
 			result.append( "export " );             \
                                                                          \
@@ -992,10 +994,6 @@ namespace gen
 			str_tbl_init ( & StringMap, Allocator_StringTable );
 			if ( StringMap.entries == nullptr )
 				fatal( "gen::init: Failed to initialize the StringMap");
-
-			//type_tbl_init( & TypeMap,   Allocator_TypeTable );
-			//if ( TypeMap.entries == nullptr )
-			//	fatal( "gen::init: Failed to initialize the TypeMap" );
 		}
 
 		Code::Global          = make_code();
@@ -2886,6 +2884,35 @@ namespace gen
 		return result;
 	}
 
+	Code def_specifiers( s32 num, SpecifierT* specs )
+	{
+		if ( num <= 0 )
+		{
+			log_failure("gen::def_specifiers: num cannot be zero or less");
+			return Code::Invalid;
+		}
+
+		if ( num > AST::ArrSpecs_Cap )
+		{
+			log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
+			return Code::Invalid;
+		}
+
+		Code
+		result       = make_code();
+		result->Type = ECode::Specifiers;
+
+		s32 idx = 0;
+		do
+		{
+			result->add_specifier( specs[idx] );
+			idx++;
+		}
+		while ( --num, num );
+
+		return result;
+	}
+
 	Code def_struct_body( s32 num, ... )
 	{
 		def_body_start( def_struct_body );
@@ -3027,6 +3054,7 @@ namespace gen
 		Entry( Comma,               "," )               \
 		Entry( Decl_Class,          "class" )           \
 		Entry( Decl_Enum,           "enum" )            \
+		Entry( Decl_Extern_Linkage, "extern" )          \
 		Entry( Decl_Friend,         "friend" )          \
 		Entry( Decl_Module,         "module" )          \
 		Entry( Decl_Namespace,      "namespace" )       \
@@ -3040,13 +3068,14 @@ namespace gen
 		Entry( Number,              "number" )          \
 		Entry( Operator,            "operator" )        \
 		Entry( Spec_Alignas,        "alignas" )         \
-		Entry( Spec_CLinkage,       "extern \"C\"" )    \
 		Entry( Spec_Const,          "const" )           \
 		Entry( Spec_Consteval,      "consteval" )       \
 		Entry( Spec_Constexpr,      "constexpr" )       \
 		Entry( Spec_Constinit,      "constinit" )       \
 		Entry( Spec_Extern,         "extern" )          \
 		Entry( Spec_Inline,         "inline" )          \
+		Entry( Spec_LocalPersist,   "local_persist" )   \
+		Entry( Spec_Mutable,        "mutable" )         \
 		Entry( Spec_Static,         "static" )          \
 		Entry( Spec_ThreadLocal,    "thread_local" )    \
 		Entry( Spec_Volatile,       "volatile")         \
@@ -3130,8 +3159,7 @@ namespace gen
 		inline
 		bool tok_is_specifier( Token const& tok )
 		{
-			return tok.Type <= TokType::Star
-				|| tok.Type >= TokType::Spec_Alignas
+			return (tok.Type <= TokType::Star && tok.Type >= TokType::Spec_Alignas)
 				|| tok.Type == TokType::Ampersand
 				|| tok.Type == TokType::Ampersand_DBL
 			;
@@ -3175,6 +3203,7 @@ namespace gen
 				}
 
 				Idx++;
+				return true;
 			}
 		};
 
@@ -3790,14 +3819,11 @@ namespace gen
 			if ( value )
 				param->add_entry( value );
 
-			param.lock();
-
 			result->add_entry( param );
 			eat( TokType::Comma );
 		}
 		eat( TokType::Capture_End );
 
-		result.lock();
 		return result;
 	#	undef context
 	}
@@ -3911,6 +3937,7 @@ namespace gen
 				case TokType::Spec_Static:
 				case TokType::Spec_ThreadLocal:
 				case TokType::Spec_Volatile:
+				{
 					Code specifiers = Code::Invalid;
 
 					SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
@@ -3946,7 +3973,7 @@ namespace gen
 					{
 						specifiers = def_specifiers( num_specifiers, specs_found );
 					}
-
+				}
 				case TokType::Identifier:
 				case TokType::Spec_Const:
 				case TokType::Type_Unsigned:
@@ -3954,6 +3981,8 @@ namespace gen
 				case TokType::Type_Short:
 				case TokType::Type_Long:
 				{
+					Code specifiers = Code::Invalid;
+
 					Code type = parse_type( toks, context );
 					if ( type == Code::Invalid )
 						return Code::Invalid;
@@ -4203,7 +4232,7 @@ namespace gen
 
 		// Parse alignment
 
-		Token name = parse_identifier( toks, context );
+		name = parse_identifier( toks, context );
 
 		if ( check( TokType::Assign_Classifer ) )
 		{
@@ -4324,7 +4353,6 @@ namespace gen
 		if ( type )
 			result->add_entry( type );
 
-		result.lock();
 		return result;
 	}
 
@@ -4394,8 +4422,6 @@ namespace gen
 
 			if ( params )
 				function->add_entry( params );
-
-			function.lock();
 		}
 
 		eat( TokType::Statement_End );
@@ -4410,7 +4436,6 @@ namespace gen
 		else
 			result->add_entry( type );
 
-		result.lock();
 		return result;
 	}
 
@@ -4548,7 +4573,6 @@ namespace gen
 		if ( params )
 			result->add_entry( params );
 
-		result.lock();
 		return result;
 	}
 
@@ -4588,7 +4612,6 @@ namespace gen
 
 		// }
 
-		result.lock();
 		return result;
 	}
 
@@ -4715,7 +4738,7 @@ namespace gen
 
 		if (num_specifiers)
 		{
-			Code specifiers = def_specifiers( num_specifiers, specs_found );
+			Code specifiers = def_specifiers( num_specifiers, (SpecifierT*)specs_found );
 
 			result->add_entry( specifiers );
 		}
@@ -4734,7 +4757,6 @@ namespace gen
 
 		Code result = parse_type( toks, txt(parse_type) );
 
-		result.lock();
 		return result;
 	}
 
@@ -4775,7 +4797,6 @@ namespace gen
 		if ( array_expr )
 			type->add_entry( array_expr );
 
-		result.lock();
 		return result;
 	}
 
@@ -4853,7 +4874,6 @@ namespace gen
 		if ( array_expr )
 			type->add_entry( array_expr );
 
-		result.lock();
 		return result;
 	}
 
@@ -5013,7 +5033,6 @@ namespace gen
 		if ( expr )
 			result->add_entry( expr );
 
-		result.lock();
 		return result;
 	}
 
@@ -5139,7 +5158,6 @@ namespace gen
 		tokmap_clear( & tok_map );
 
 		sw result = buf_size - remaining;
-		// buf[ result ] = '\0';
 
 		return result;
 	}
@@ -5236,7 +5254,6 @@ namespace gen
 		if ( result == false )
 			log_failure("gen::File::write - Failed to write to file: %s", file_name( & File ) );
 
-		// file_seek( & File, 0 );
 		file_close( & File );
 	}
 #pragma endregion Builder

@@ -49,12 +49,39 @@ $path_scripts = Join-Path $path_root scripts
 	& ninja $args_ninja
 	Pop-Location
 
-	if ($true) {
+	# Test NonParsed
+	if ($false) {
 	$gencpp = Join-Path $path_gen_build gencpp.exe
 
 	Push-location $path_gen
 
 	Write-Host `nGenerating files...
+	& $gencpp
+
+	Write-Host `nBeginning format...
+	$formatParams = @(
+		'-i'          # In-place
+		'-style=file' # Search for a .clang-format file in the parent directory of the source file.
+		'-verbose'
+	)
+
+	$include = @('*.gen.hpp', '*.gen.cpp')
+	$exclude = $null
+
+	$targetFiles = @(Get-ChildItem -Recurse -Path $path_gen -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
+
+	clang-format $formatParams $targetFiles
+	Write-Host "`nFormatting complete"
+	Pop-Location
+	}
+
+	# Test Parsed
+	if ($true) {
+	$gencpp = Join-Path $path_gen_build gencpp_parsed.exe
+
+	Push-location $path_gen
+
+	Write-Host `nGenerating files -- using Parse API...
 	& $gencpp
 
 	Write-Host `nBeginning format...
