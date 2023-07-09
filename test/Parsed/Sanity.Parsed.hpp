@@ -172,14 +172,13 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Parameters
-	if (0)
 	{
 		Code fwd = parse_function( code(
-			void test_function( int a );
+			void test_function_param( int a );
 		));
 
 		Code def = parse_function( code(
-			void test_function( int a, int b )
+			void test_function_param2( int a, int b )
 			{
 			}
 		));

@@ -3140,7 +3140,7 @@ namespace gen
 		Entry( Type_Long,             "long" )            \
 		Entry( Type_char, 			  "char" )            \
 		Entry( Type_int, 			  "int" )             \
-		Entry( Type_double, 		  "double" )          \
+		Entry( Type_double, 		  "double" )
 
 		enum class TokType : u32
 		{
@@ -3175,18 +3175,21 @@ namespace gen
 		TokType get_tok_type( char const* word, s32 length )
 		{
 			local_persist
-			char const* lookup[(u32)TokType::Num] =
+			StrC lookup[(u32)TokType::Num] =
 			{
-			#	define Entry( Name_, Str_ ) Str_,
+			#	define Entry( Name_, Str_ ) { sizeof(Str_), Str_ },
 				Define_TokType
 			#	undef Entry
 
-				Attribute::Keyword,
+				{ sizeof(Attribute::Keyword), Attribute::Keyword },
 			};
 
 			for ( u32 index = 0; index < (u32)TokType::Num; index++ )
 			{
-				if ( str_compare( word, lookup[index], length ) == 0 )
+				s32         lookup_len = lookup[index].Len - 1;
+				char const* lookup_str = lookup[index].Ptr;
+
+				if ( str_compare( word, lookup_str, lookup_len ) == 0 )
 					return scast(TokType, index);
 			}
 
@@ -3940,7 +3943,9 @@ namespace gen
 				param->add_entry( value );
 
 			result->add_entry( param );
-			eat( TokType::Comma );
+
+			if ( check( TokType::Comma ) )
+				eat( TokType::Comma );
 		}
 		eat( TokType::Capture_End );
 
@@ -4735,7 +4740,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_extern_link( toks, txt(parse_export_body) );
+		return parse_export_body( toks, txt(parse_export_body) );
 	}
 
 	internal
