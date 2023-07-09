@@ -88,7 +88,6 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Friend
-	if (0)
 	{
 		Code fwd = parse_class( code(
 			class TestFriendClass;

@@ -483,7 +483,7 @@ namespace gen
 			break;
 
 			case Friend:
-				result.append_fmt( "friend %s", entry( 0 )->to_string() );
+				result.append_fmt( "friend %s;", entry( 0 )->to_string() );
 			break;
 
 			case Function:
@@ -4140,17 +4140,15 @@ namespace gen
 					if ( expr )
 						member->add_entry( expr );
 				}
-
-				if ( member == Code::Invalid )
-				{
-					log_failure( "gen::parse_variable: failed to parse member" );
-					return Code::Invalid;
-				}
-
-				result->add_entry( member );
 			}
 
-			eat( currtok.Type );
+			if ( member == Code::Invalid )
+			{
+				log_failure( "gen::parse_variable: failed to parse member" );
+				return Code::Invalid;
+			}
+
+			result->add_entry( member );
 		}
 
 		eat( TokType::BraceCurly_Close );
@@ -4577,17 +4575,15 @@ namespace gen
 					if ( expr )
 						member->add_entry( expr );
 				}
-
-				if ( member == Code::Invalid )
-				{
-					log_failure( "gen::parse_extern_link_body: failed to parse extern linkage member" );
-					return Code::Invalid;
-				}
-
-				result->add_entry( member );
 			}
 
-			eat( currtok.Type );
+			if ( member == Code::Invalid )
+			{
+				log_failure( "gen::parse_extern_link_body: failed to parse extern linkage member" );
+				return Code::Invalid;
+			}
+
+			result->add_entry( member );
 		}
 
 		eat( TokType::BraceCurly_Close );
