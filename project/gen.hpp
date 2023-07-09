@@ -207,16 +207,17 @@ namespace gen
 		alignas
 	*/
 
-		#define Define_Specifiers                    \
+	#	define Define_Specifiers                    \
 		Entry( Invalid,          INVALID )           \
 		Entry( Const,            const )             \
 		Entry( Consteval,        consteval )         \
 		Entry( Constexpr,        constexpr )         \
 		Entry( Constinit,        constinit )         \
 		Entry( External_Linkage, extern )            \
+		Entry( Global,           global )            \
 		Entry( Inline,           inline )            \
-		Entry( Internal_Linkage, static )            \
-		Entry( Local_Persist,    static )            \
+		Entry( Internal_Linkage, internal )          \
+		Entry( Local_Persist,    local_persist )     \
 		Entry( Mutable,          mutable )           \
 		Entry( Ptr,              * )                 \
 		Entry( Ref,              & )                 \
@@ -241,9 +242,20 @@ namespace gen
 		{
 			local_persist
 			StrC lookup[ Num_Specifiers ] = {
+			#	pragma push_macro( "global" )
+			#	pragma push_macro( "internal" )
+			#	pragma push_macro( "local_persist" )
+			#	define global        global
+			#	define internal      internal
+			#	define local_persist local_persist
+
 			#	define Entry( Spec_, Code_ ) { txt_n_len(Code_) },
 				Define_Specifiers
 			#	undef Entry
+
+			#	pragma pop_macro( "global" )
+			#	pragma pop_macro( "internal" )
+			#	pragma pop_macro( "local_persist" )
 			};
 
 			return lookup[ specifier ];
@@ -274,7 +286,7 @@ namespace gen
 			return Invalid;
 		}
 
-		#undef Define_Specifiers
+	#	undef Define_Specifiers
 	}
 	using SpecifierT = ESpecifier::Type;
 
@@ -382,7 +394,7 @@ namespace gen
 	*/
 	struct AST
 	{
-	#pragma region Member Functions
+	#	pragma region Member Functions
 		void add_entry( AST* other );
 
 		inline
@@ -524,7 +536,7 @@ namespace gen
 		}
 
 		String to_string();
-	#pragma endregion Member Functions
+	#	pragma endregion Member Functions
 
 		constexpr static
 		uw ArrS_Cap =
@@ -582,15 +594,15 @@ namespace gen
 	*/
 	struct Code
 	{
-	#pragma region Statics
+	#	pragma region Statics
 		// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
 		static Code Global;
 
 		// Used to identify invalid generated code.
 		static Code Invalid;
-	#pragma endregion Statics
+	#	pragma endregion Statics
 
-	#pragma region Member Functions
+	#	pragma region Member Functions
 		inline
 		Code body()
 		{
@@ -676,7 +688,7 @@ namespace gen
 
 			return ast;
 		}
-	#pragma endregion Member Functions
+	#	pragma endregion Member Functions
 
 		AST* ast;
 	};
@@ -814,27 +826,26 @@ namespace gen
 	Code def_union_body      ( s32 num, Code* codes );
 #	pragma endregion Upfront
 
-	#pragma region Parsing
-	#ifdef GEN_FEATURE_PARSING
-	Code parse_class      ( StrC class_def     );
-	Code parse_enum       ( StrC enum_def      );
-	Code parse_export_body( StrC export_def    );
-	Code parse_exten_link ( StrC exten_link_def);
-	Code parse_friend     ( StrC friend_def    );
-	Code parse_function   ( StrC fn_def        );
-	Code parse_global_body( StrC body_def      );
-	Code parse_namespace  ( StrC namespace_def );
-	Code parse_operator   ( StrC operator_def  );
-	Code parse_struct     ( StrC struct_def    );
-	Code parse_type       ( StrC type_def      );
-	Code parse_typedef    ( StrC typedef_def   );
-	Code parse_union      ( StrC union_def     );
-	Code parse_using      ( StrC using_def     );
-	Code parse_variable   ( StrC var_def       );
-	#endif
-	#pragma endregion Parsing
+#	pragma region Parsing
+#	ifdef GEN_FEATURE_PARSING
+	Code parse_class       ( StrC class_def     );
+	Code parse_enum        ( StrC enum_def      );
+	Code parse_extern_link ( StrC exten_link_def);
+	Code parse_friend      ( StrC friend_def    );
+	Code parse_function    ( StrC fn_def        );
+	Code parse_global_body ( StrC body_def      );
+	Code parse_namespace   ( StrC namespace_def );
+	Code parse_operator    ( StrC operator_def  );
+	Code parse_struct      ( StrC struct_def    );
+	Code parse_type        ( StrC type_def      );
+	Code parse_typedef     ( StrC typedef_def   );
+	Code parse_union       ( StrC union_def     );
+	Code parse_using       ( StrC using_def     );
+	Code parse_variable    ( StrC var_def       );
+#	endif
+#	pragma endregion Parsing
 
-	#pragma region Untyped text
+#	pragma region Untyped text
 	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va );
 
 	inline
@@ -855,7 +866,7 @@ namespace gen
 	Code untyped_str      ( StrC content);
 	Code untyped_fmt      ( char const* fmt, ... );
 	Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
-	#pragma endregion Untyped text
+#	pragma endregion Untyped text
 
 	struct Builder
 	{
@@ -945,7 +956,7 @@ namespace gen
 	};
 #endif
 
-#	ifdef GEN_FEATURE_SCANNER
+#ifdef GEN_FEATURE_SCANNER
 	struct Scanner
 	{
 		struct RequestEntry
@@ -974,7 +985,7 @@ namespace gen
 
 		bool process_requests( Array(Receipt) out_receipts );
 	};
-#	endif
+#endif
 #pragma endregion Gen Interface
 }
 
@@ -982,9 +993,6 @@ namespace gen
 #	define gen_main main
 
 #	define __ NoCode
-
-// This represents the naming convention for all typename Codes generated.
-#	define type_ns( Name_ ) t_##Name_
 
 //	Convienence for defining any name used with the gen api.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
@@ -1000,23 +1008,23 @@ namespace gen
 {
 	// Predefined typename codes. Are set to readonly and are setup during gen::init()
 
-	extern Code type_ns( b32 );
+	extern Code t_b32;
 
-	extern Code type_ns( s8 );
-	extern Code type_ns( s16 );
-	extern Code type_ns( s32 );
-	extern Code type_ns( s64 );
+	extern Code t_s8;
+	extern Code t_s16;
+	extern Code t_s32;
+	extern Code t_s64;
 
-	extern Code type_ns( u8 );
-	extern Code type_ns( u16 );
-	extern Code type_ns( u32 );
-	extern Code type_ns( u64 );
+	extern Code t_u8;
+	extern Code t_u16;
+	extern Code t_u32;
+	extern Code t_u64;
 
-	extern Code type_ns( sw );
-	extern Code type_ns( uw );
+	extern Code t_sw;
+	extern Code t_uw;
 
-	extern Code type_ns( f32 );
-	extern Code type_ns( f64 );
+	extern Code t_f32;
+	extern Code t_f64;
 }
 #endif
 
@@ -1042,12 +1050,12 @@ namespace gen
 
 	// Predefined Codes. Are set to readonly and are setup during gen::init()
 
-	extern Code type_ns( auto );
-	extern Code type_ns( void );
-	extern Code type_ns( int );
-	extern Code type_ns( bool );
-	extern Code type_ns( char );
-	extern Code type_ns( wchar_t );
+	extern Code t_auto;
+	extern Code t_void;
+	extern Code t_int;
+	extern Code t_bool;
+	extern Code t_char;
+	extern Code t_wchar_t;
 
 	extern Code access_public;
 	extern Code access_protected;
@@ -1063,6 +1071,7 @@ namespace gen
 	extern Code spec_constexpr;
 	extern Code spec_constinit;
 	extern Code spec_extern_linkage;
+	extern Code spec_global;
 	extern Code spec_inline;
 	extern Code spec_internal_linkage;
 	extern Code spec_local_persist;
@@ -1074,10 +1083,6 @@ namespace gen
 	extern Code spec_static_member;
 	extern Code spec_thread_local;
 	extern Code spec_volatile;
-	extern Code spec_type_signed;
-	extern Code spec_type_unsigned;
-	extern Code spec_type_short;
-	extern Code spec_type_long;
 }
 #pragma endregion Constants
 

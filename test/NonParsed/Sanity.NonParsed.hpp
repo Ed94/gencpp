@@ -7,7 +7,7 @@ u32 gen_sanity()
 {
 	Builder
 	gen_sanity_file;
-	gen_sanity_file.open("./sanity.gen.hpp");
+	gen_sanity_file.open("./sanity.NonParsed.gen.hpp");
 
 	// Comment
 	{
@@ -159,7 +159,6 @@ u32 gen_sanity()
 	{
 		// Going to make a bit flag set of overloads for this.
 
-
 		Code bitflagtest;
 		{
 			Code body = def_enum_body( 1, untyped_str( code(
@@ -185,7 +184,6 @@ u32 gen_sanity()
 		}
 
 		gen_sanity_file.print(bitflagtest);
-		gen_sanity_file.print_fmt("\n");
 		gen_sanity_file.print(op_fwd);
 		gen_sanity_file.print(op_or);
 	}
@@ -207,7 +205,10 @@ u32 gen_sanity()
 				, def_comment( StrC::from("Empty function body") )
 			);
 
-			Code params = def_params( 2 * 3, t_u8, 1, "a", t_u8, 1, "b" );
+			Code params = def_params( 2
+				, def_param( t_u8, name(a) )
+				, def_param( t_u8, name(b) )
+			);
 
 			def = def_function( name(test_function_wparams), params, __, body );
 
@@ -231,10 +232,13 @@ u32 gen_sanity()
 	{
 		Code fwd_fn         = def_function( name(test_function_specifiers), __, __, __, spec_inline );
 
-		// Need an op overload here
+		// TODO: Need an op overload here
 
-		Code t_ct_u8               = def_type( name(u8), __, spec_constexpr );
-		Code typedef_ConstExprTest = def_typedef( name(ConstExprTest), t_ct_u8 );
+		Code u8_ptr         = def_type( name(u8), __, spec_ptr );
+		Code typedef_u8_ptr = def_typedef( name(ConstExprTest), u8_ptr );
+
+		gen_sanity_file.print(fwd_fn);
+		gen_sanity_file.print(typedef_u8_ptr);
 	}
 
 	gen_sanity_file.print_fmt("\n");
@@ -244,7 +248,7 @@ u32 gen_sanity()
 		Code fwd = def_class( name(TestEmptyStruct) );
 		Code empty_body;
 		{
-			Code cmt  = def_comment( StrC::from("Empty class body") );
+			Code cmt  = def_comment( StrC::from("Empty struct body") );
 			Code body = def_class_body( 1, cmt );
 
 			empty_body = def_class( name(TestEmptyStruct), body );

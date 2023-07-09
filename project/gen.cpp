@@ -27,31 +27,31 @@ namespace gen
 	}
 
 #pragma region Constants
-	Code type_ns(auto);
-	Code type_ns(void);
-	Code type_ns(int);
-	Code type_ns(bool);
-	Code type_ns(char);
-	Code type_ns(wchar_t);
+	Code t_auto;
+	Code t_void;
+	Code t_int;
+	Code t_bool;
+	Code t_char;
+	Code t_wchar_t;
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-	Code type_ns(b32);
+	Code t_b32;
 
-	Code type_ns(s8);
-	Code type_ns(s16);
-	Code type_ns(s32);
-	Code type_ns(s64);
+	Code t_s8;
+	Code t_s16;
+	Code t_s32;
+	Code t_s64;
 
-	Code type_ns(u8);
-	Code type_ns(u16);
-	Code type_ns(u32);
-	Code type_ns(u64);
+	Code t_u8;
+	Code t_u16;
+	Code t_u32;
+	Code t_u64;
 
-	Code type_ns(sw);
-	Code type_ns(uw);
+	Code t_sw;
+	Code t_uw;
 
-	Code type_ns(f32);
-	Code type_ns(f64);
+	Code t_f32;
+	Code t_f64;
 	#endif
 
 	Code access_public;
@@ -68,6 +68,7 @@ namespace gen
 	Code spec_constexpr;
 	Code spec_constinit;
 	Code spec_extern_linkage;
+	Code spec_global;
 	Code spec_inline;
 	Code spec_internal_linkage;
 	Code spec_local_persist;
@@ -79,10 +80,6 @@ namespace gen
 	Code spec_static_member;
 	Code spec_thread_local;
 	Code spec_volatile;
-	Code spec_type_signed;
-	Code spec_type_unsigned;
-	Code spec_type_short;
-	Code spec_type_long;
 #pragma endregion Constants
 
 #pragma region AST Body Case Macros
@@ -1004,8 +1001,8 @@ namespace gen
 		Code::Invalid.set_global();
 
 	#	define def_constant_code_type( Type_ )    \
-		type_ns(Type_) = def_type( name(Type_) ); \
-		type_ns(Type_).set_global();
+		t_##Type_ = def_type( name(Type_) ); \
+		t_##Type_.set_global();
 
 		def_constant_code_type( auto );
 		def_constant_code_type( void );
@@ -1015,7 +1012,7 @@ namespace gen
 		def_constant_code_type( wchar_t );
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-		type_ns(b32) = def_type( name(b32) );
+		t_b32 = def_type( name(b32) );
 
 		def_constant_code_type( s8 );
 		def_constant_code_type( s16 );
@@ -1068,17 +1065,26 @@ namespace gen
 		pragma_once->Content = pragma_once->Name;
 		pragma_once.set_global();
 
+	#	pragma push_macro( "global" )
+	#	pragma push_macro( "internal" )
+	#	pragma push_macro( "local_persist" )
+	#	define global        global
+	#	define internal      internal
+	#	define local_persist local_persist
+
 	#	define def_constant_spec( Type_, ... )                                    \
 		spec_##Type_ = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
 		spec_##Type_.set_global();
 
+		def_constant_spec( const,            ESpecifier::Const );
 		def_constant_spec( consteval,        ESpecifier::Consteval );
 		def_constant_spec( constexpr,        ESpecifier::Constexpr );
 		def_constant_spec( constinit,        ESpecifier::Constinit );
 		def_constant_spec( extern_linkage,   ESpecifier::External_Linkage );
-		def_constant_spec( const,            ESpecifier::Const );
+		def_constant_spec( global,           ESpecifier::Global );
 		def_constant_spec( inline,           ESpecifier::Inline );
 		def_constant_spec( internal_linkage, ESpecifier::Internal_Linkage );
+		def_constant_spec( local_persist,    ESpecifier::Local_Persist );
 		def_constant_spec( mutable,          ESpecifier::Mutable );
 		def_constant_spec( ptr,              ESpecifier::Ptr );
 		def_constant_spec( ref,              ESpecifier::Ref );
@@ -1090,6 +1096,10 @@ namespace gen
 
 		spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
 		spec_local_persist.set_global();
+
+	#	pragma pop_macro( "global" )
+	#	pragma pop_macro( "internal" )
+	#	pragma pop_macro( "local_persist" )
 
 	#	undef def_constant_spec
 	}
@@ -1415,7 +1425,7 @@ namespace gen
 					switch ( params_code->param_count() )
 					{
 						case 1:
-							if ( params_code->param_type()->is_equal( type_ns(int) ) )
+							if ( params_code->param_type()->is_equal( t_int ) )
 								is_member_symbol = true;
 
 							else
@@ -1425,7 +1435,7 @@ namespace gen
 						case 2:
 							check_param_eq_ret();
 
-							if ( ! params_code->get_param(1)->is_equal( type_ns(int) ) )
+							if ( ! params_code->get_param(1)->is_equal( t_int ) )
 							{
 								log_failure("gen::def_operator: "
 									"operator%s requires second parameter of non-member definition to be int for post-decrement",
@@ -1545,7 +1555,7 @@ namespace gen
 					}
 				}
 
-				if ( ! ret_type->is_equal( type_ns(bool) ))
+				if ( ! ret_type->is_equal( t_bool ))
 				{
 					log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
 						, to_str(op)
@@ -2008,7 +2018,7 @@ namespace gen
 		}
 		else
 		{
-			result->add_entry( type_ns(void) );
+			result->add_entry( t_void );
 		}
 
 		if ( params )
@@ -3031,57 +3041,59 @@ namespace gen
 	// Any angle brackets found will be considered an operator token.
 
 	#	define Define_TokType \
-		Entry( Access_Private,      "private" )         \
-		Entry( Access_Protected,    "protected" )       \
-		Entry( Access_Public,       "public" )          \
-		Entry( Access_MemberSymbol, "." )               \
-		Entry( Access_StaticSymbol, "::")               \
-		Entry( Ampersand,           "&" )               \
-		Entry( Ampersand_DBL,       "&&" )              \
-		Entry( Assign_Classifer,    ":" )               \
-		Entry( BraceCurly_Open,     "{" )               \
-		Entry( BraceCurly_Close,    "}" )               \
-		Entry( BraceSquare_Open,    "[" )               \
-		Entry( BraceSquare_Close,   "]" )               \
-		Entry( Capture_Start,       "(" )               \
-		Entry( Capture_End,         ")" )               \
-		Entry( Comment,             "__comment__" )     \
-		Entry( Char,                "__char__" )        \
-		Entry( Comma,               "," )               \
-		Entry( Decl_Class,          "class" )           \
-		Entry( Decl_Enum,           "enum" )            \
-		Entry( Decl_Extern_Linkage, "extern" )          \
-		Entry( Decl_Friend,         "friend" )          \
-		Entry( Decl_Module,         "module" )          \
-		Entry( Decl_Namespace,      "namespace" )       \
-		Entry( Decl_Struct,         "struct" )          \
-		Entry( Decl_Typedef,        "typedef" )         \
-		Entry( Decl_Using,          "using" )           \
-		Entry( Decl_Union,          "union" )           \
-		Entry( Identifier,          "__SymID__" )       \
-		Entry( Module_Import,       "import" )          \
-		Entry( Module_Export,       "export" )          \
-		Entry( Number,              "number" )          \
-		Entry( Operator,            "operator" )        \
-		Entry( Spec_Alignas,        "alignas" )         \
-		Entry( Spec_Const,          "const" )           \
-		Entry( Spec_Consteval,      "consteval" )       \
-		Entry( Spec_Constexpr,      "constexpr" )       \
-		Entry( Spec_Constinit,      "constinit" )       \
-		Entry( Spec_Extern,         "extern" )          \
-		Entry( Spec_Inline,         "inline" )          \
-		Entry( Spec_LocalPersist,   "local_persist" )   \
-		Entry( Spec_Mutable,        "mutable" )         \
-		Entry( Spec_Static,         "static" )          \
-		Entry( Spec_ThreadLocal,    "thread_local" )    \
-		Entry( Spec_Volatile,       "volatile")         \
-		Entry( Star,                "*" )               \
-		Entry( Statement_End,       ";" )               \
-		Entry( String,              "__String__" )      \
-		Entry( Type_Unsigned, 	    "unsigned" )        \
-		Entry( Type_Signed,         "signed" )          \
-		Entry( Type_Short,          "short" )           \
-		Entry( Type_Long,           "long" )
+		Entry( Access_Private,        "private" )         \
+		Entry( Access_Protected,      "protected" )       \
+		Entry( Access_Public,         "public" )          \
+		Entry( Access_MemberSymbol,   "." )               \
+		Entry( Access_StaticSymbol,   "::")               \
+		Entry( Ampersand,             "&" )               \
+		Entry( Ampersand_DBL,         "&&" )              \
+		Entry( Assign_Classifer,      ":" )               \
+		Entry( BraceCurly_Open,       "{" )               \
+		Entry( BraceCurly_Close,      "}" )               \
+		Entry( BraceSquare_Open,      "[" )               \
+		Entry( BraceSquare_Close,     "]" )               \
+		Entry( Capture_Start,         "(" )               \
+		Entry( Capture_End,           ")" )               \
+		Entry( Comment,               "__comment__" )     \
+		Entry( Char,                  "__char__" )        \
+		Entry( Comma,                 "," )               \
+		Entry( Decl_Class,            "class" )           \
+		Entry( Decl_Enum,             "enum" )            \
+		Entry( Decl_Extern_Linkage,   "extern" )          \
+		Entry( Decl_Friend,           "friend" )          \
+		Entry( Decl_Module,           "module" )          \
+		Entry( Decl_Namespace,        "namespace" )       \
+		Entry( Decl_Struct,           "struct" )          \
+		Entry( Decl_Typedef,          "typedef" )         \
+		Entry( Decl_Using,            "using" )           \
+		Entry( Decl_Union,            "union" )           \
+		Entry( Identifier,            "__SymID__" )       \
+		Entry( Module_Import,         "import" )          \
+		Entry( Module_Export,         "export" )          \
+		Entry( Number,                "number" )          \
+		Entry( Operator,              "operator" )        \
+		Entry( Spec_Alignas,          "alignas" )         \
+		Entry( Spec_Const,            "const" )           \
+		Entry( Spec_Consteval,        "consteval" )       \
+		Entry( Spec_Constexpr,        "constexpr" )       \
+		Entry( Spec_Constinit,        "constinit" )       \
+		Entry( Spec_Extern,           "extern" )          \
+		Entry( Spec_Global, 		  "global" )          \
+		Entry( Spec_Inline,           "inline" )          \
+		Entry( Spec_Internal_Linkage, "internal" )        \
+		Entry( Spec_LocalPersist,     "local_persist" )   \
+		Entry( Spec_Mutable,          "mutable" )         \
+		Entry( Spec_Static,           "static" )          \
+		Entry( Spec_ThreadLocal,      "thread_local" )    \
+		Entry( Spec_Volatile,         "volatile")         \
+		Entry( Star,                  "*" )               \
+		Entry( Statement_End,         ";" )               \
+		Entry( String,                "__String__" )      \
+		Entry( Type_Unsigned, 	      "unsigned" )        \
+		Entry( Type_Signed,           "signed" )          \
+		Entry( Type_Short,            "short" )           \
+		Entry( Type_Long,             "long" )
 
 		enum class TokType : u32
 		{
@@ -3674,6 +3686,7 @@ namespace gen
 	Code parse_exten_link       ( Parser::TokArray& toks, char const* context );
 	Code parse_friend           ( Parser::TokArray& toks, char const* context );
 	Code parse_function         ( Parser::TokArray& toks, char const* context );
+	Code parse_namespace        ( Parser::TokArray& toks, char const* context );
 	Code parse_struct           ( Parser::TokArray& toks, char const* context );
 	Code parse_variable         ( Parser::TokArray& toks, char const* context );
 	Code parse_type             ( Parser::TokArray& toks, char const* context );
@@ -3942,7 +3955,8 @@ namespace gen
 
 		while ( left && currtok.Type != TokType::BraceCurly_Close )
 		{
-			Code member = Code::Invalid;
+			Code member     = Code::Invalid;
+			Code specifiers = Code::Invalid;
 
 			switch ( currtok.Type )
 			{
@@ -4002,8 +4016,6 @@ namespace gen
 				case TokType::Spec_ThreadLocal:
 				case TokType::Spec_Volatile:
 				{
-					Code specifiers = Code::Invalid;
-
 					SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 					s32        num_specifiers = 0;
 
@@ -4045,33 +4057,35 @@ namespace gen
 				case TokType::Type_Short:
 				case TokType::Type_Long:
 				{
-					Code specifiers = Code::Invalid;
-
 					Code type = parse_type( toks, context );
 					if ( type == Code::Invalid )
+					{
+						log_failure( "gen::parse_variable: failed to parse type" );
 						return Code::Invalid;
+					}
 
 					Token name = currtok;
-
-					if ( check( TokType::Identifier ) )
-					{
-						name = currtok;
-					}
+					eat( TokType::Identifier );
 
 					// Parsing a member function
 					if ( check( TokType::Capture_Start ))
 					{
 						Code params = parse_params( toks, context );
 						if ( params == Code::Invalid )
+						{
+							log_failure( "gen::parse_variable: failed to parse function parameters" );
 							return Code::Invalid;
+						}
 
 						if ( check( TokType::BraceCurly_Open ) )
 						{
 							Code body = parse_function_body( toks, context);
 							if ( body == Code::Invalid )
+							{
+								log_failure( "gen::parse_variable: failed to parse function body" );
 								return Code::Invalid;
+							}
 
-							Code
 							member       = make_code();
 							member->Name = get_cached_string( name );
 
@@ -4128,7 +4142,10 @@ namespace gen
 				}
 
 				if ( member == Code::Invalid )
+				{
+					log_failure( "gen::parse_variable: failed to parse member" );
 					return Code::Invalid;
+				}
 
 				result->add_entry( member );
 			}
@@ -4176,7 +4193,6 @@ namespace gen
 
 				case TokType::Decl_Typedef:
 					member = parse_typedef( toks, context );
-
 				break;
 
 				case TokType::Decl_Union:
@@ -4375,22 +4391,248 @@ namespace gen
 		return Code::Invalid;
 	}
 
-	Code parse_export_body( StrC def )
+	Code parse_extern_link_body( Parser::TokArray& toks, char const* context )
 	{
-		not_implemented();
-		return Code::Invalid;
+		using namespace Parser;
+		using namespace ECode;
+
+		eat( TokType::BraceCurly_Open );
+
+		Code
+		result = make_code();
+		result->Type = Extern_Linkage_Body;
+
+		while ( left && currtok.Type != TokType::BraceCurly_Close )
+		{
+			Code member     = Code::Invalid;
+			Code specifiers = Code::Invalid;
+
+			switch ( currtok.Type )
+			{
+				case TokType::Comment:
+					def_comment( currtok );
+					eat( TokType::Comment );
+				break;
+
+				case TokType::Decl_Enum:
+					member = parse_enum( toks, context);
+				break;
+
+				case TokType::Decl_Class:
+					member = parse_class( toks, context );
+				break;
+
+				case TokType::Decl_Extern_Linkage:
+					log_failure( "gen::parse_extern_link_body: nested extern linkage" );
+					return Code::Invalid;
+
+				case TokType::Decl_Namespace:
+					member = parse_namespace( toks, context );
+				break;
+
+				case TokType::Decl_Struct:
+					member = parse_struct( toks, context );
+				break;
+
+				case TokType::Decl_Typedef:
+					member = parse_typedef( toks, context );
+				break;
+
+				case TokType::Decl_Union:
+					member = parse_union( toks, context );
+				break;
+
+				case TokType::Decl_Using:
+					member = parse_using( toks, context );
+				break;
+
+				// TODO: Module support.
+				// case TokType::Module_Export:
+				// case TokType::Module_Import:
+
+				case TokType::Spec_Extern:
+				case TokType::Spec_Global:
+				case TokType::Spec_Inline:
+				case TokType::Spec_Internal_Linkage:
+				case TokType::Spec_Static:
+				{
+					SpecifierT specs_found[16] { ESpecifier::Invalid };
+					s32         num_specs = 0;
+
+					while ( left && tok_is_specifier( currtok ) )
+					{
+						SpecifierT spec = ESpecifier::to_type( currtok );
+
+						switch ( spec )
+						{
+							case ESpecifier::Const:
+							case ESpecifier::External_Linkage:
+							case ESpecifier::Global:
+							case ESpecifier::Inline:
+							case ESpecifier::Internal_Linkage:
+							break;
+
+							default:
+								log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for extern linkage scope" );
+								return Code::Invalid;
+						}
+
+						specs_found[num_specs] = spec;
+						num_specs++;
+						eat( currtok.Type );
+					}
+
+					if ( num_specs )
+					{
+						specifiers = def_specifiers( num_specs, specs_found );
+					}
+				}
+				case TokType::Identifier:
+				case TokType::Spec_Const:
+				case TokType::Type_Long:
+				case TokType::Type_Short:
+				case TokType::Type_Signed:
+				case TokType::Type_Unsigned:
+				{
+					Code type = parse_type( toks, context );
+					if ( type == Code::Invalid )
+					{
+						log_failure( "gen::parse_extern_link_body: failed to parse type" );
+						return Code::Invalid;
+					}
+
+					Token name = currtok;
+					eat( TokType::Identifier );
+
+					// Parsing a function
+					if ( check( TokType::Capture_Start ))
+					{
+						Code params = parse_params( toks, context );
+						if ( params == Code::Invalid )
+						{
+							log_failure( "gen::parse_extern_link_body: failed to parse function params" );
+							return Code::Invalid;
+						}
+
+						if ( check( TokType::BraceCurly_Open ))
+						{
+							Code body = parse_function_body( toks, context );
+							if ( body == Code::Invalid )
+							{
+								log_failure( "gen::parse_extern_link_body: failed to parse function body" );
+								return Code::Invalid;
+							}
+
+							member = make_code();
+							member->Name = get_cached_string( name );
+
+							if ( body )
+							{
+								switch ( body->Type )
+								{
+									case Function_Body:
+									case Untyped:
+										break;
+
+									default:
+									{
+										log_failure( "gen::parse_extern_link_body: invalid function body" );
+										return Code::Invalid;
+									}
+								}
+
+								member->Type = Function;
+								member->add_entry( body );
+							}
+							else
+							{
+								member->Type = Function_Fwd;
+							}
+
+							member->add_entry( type );
+
+							if ( params )
+								member->add_entry( params );
+
+							break;
+						}
+					}
+
+					// Parsing a variable
+					Code array_expr = parse_array_decl( toks, context );
+					Code expr       = parse_variable_assignment( toks, context );
+
+					member = make_code();
+					member->Type = Variable;
+					member->Name = get_cached_string( name );
+
+					member->add_entry( type );
+
+					if ( array_expr )
+						type->add_entry( array_expr );
+
+					if ( specifiers )
+						member->add_entry( specifiers );
+
+					if ( expr )
+						member->add_entry( expr );
+				}
+
+				if ( member == Code::Invalid )
+				{
+					log_failure( "gen::parse_extern_link_body: failed to parse extern linkage member" );
+					return Code::Invalid;
+				}
+
+				result->add_entry( member );
+			}
+
+			eat( currtok.Type );
+		}
+
+		eat( TokType::BraceCurly_Close );
+		return result;
 	}
 
 	Code parse_extern_link( Parser::TokArray& toks, char const* context )
 	{
-		not_implemented();
-		return Code::Invalid;
+		using namespace Parser;
+
+		eat( TokType::Decl_Extern_Linkage );
+
+		Token name = currtok;
+		eat( TokType::String );
+
+		name.Text   += 1;
+		name.Length -= 1;
+
+		Code
+		result       = make_code();
+		result->Type = ECode::Extern_Linkage;
+		result->Name = get_cached_string( name );
+
+		Code entry = parse_extern_link_body( toks, context );
+		if ( entry == Code::Invalid )
+		{
+			log_failure( "gen::parse_extern_link: failed to parse body" );
+			return result;
+		}
+
+		result->add_entry( entry );
+
+		return result;
 	}
 
 	Code parse_extern_link( StrC def )
 	{
-		not_implemented();
-		return Code::Invalid;
+		check_parse_args( parse_extern_link, def );
+		using namespace Parser;
+
+		TokArray toks = lex( def );
+		if ( toks.Arr == nullptr )
+			return Code::Invalid;
+
+		return parse_extern_link( toks, txt(parse_extern_link) );
 	}
 
 	Code parse_friend( Parser::TokArray& toks, char const* context )
@@ -5056,7 +5298,7 @@ namespace gen
 #	undef eat
 #	undef left
 //	End GEN_FEATURE_PARSING
-#	endif
+#endif
 #pragma endregion Parsing Constructors
 
 #pragma region Untyped Constructors
