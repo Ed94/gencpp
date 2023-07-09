@@ -548,8 +548,8 @@ namespace gen
 			- sizeof(ModuleFlag)   // ModuleFlags
 			- sizeof(AccessSpec)   // ParentAccess
 			- sizeof(u32) 		   // StaticIndex
-			- sizeof(bool) * 1     // DynamicEntries
-			- sizeof(u8) * 2 )     // _Align_Pad
+			- sizeof(bool)         // DynamicEntries
+			- sizeof(u8) * 3 )     // _Align_Pad
 		/ sizeof(AST*);
 
 		constexpr static
@@ -713,13 +713,6 @@ namespace gen
 	// However on Windows at least, it doesn't need to occur as the OS will clean up after the process.
 	void deinit();
 
-	/*
-		Use this only if you know you generated the code you needed to a file.
-		And rather get rid of current code asts instead of growing the pool memory.
-		TODO: Need to put permanent ASTs into a separate set of memory. (I might just remove this tbh as it might be useless)
-	*/
-	void clear_code_memory();
-
 	// Used internally to retrive or make string allocations.
 	// Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
 	StringCached get_cached_string( StrC str );
@@ -787,7 +780,7 @@ namespace gen
 		, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode );
+	Code def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode, Code attributes = NoCode );
 	Code def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
 	Code def_union( StrC name, Code body, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
@@ -830,6 +823,7 @@ namespace gen
 #	ifdef GEN_FEATURE_PARSING
 	Code parse_class       ( StrC class_def     );
 	Code parse_enum        ( StrC enum_def      );
+	Code parse_export_body ( StrC export_def    );
 	Code parse_extern_link ( StrC exten_link_def);
 	Code parse_friend      ( StrC friend_def    );
 	Code parse_function    ( StrC fn_def        );
@@ -1030,7 +1024,7 @@ namespace gen
 
 namespace gen
 {
-	// These constexprs are used for allocation heavior of data structurs
+	// These constexprs are used for allocation behavior of data structures
 	// or string handling while constructing or serializing.
 	// Change them to suit your needs.
 

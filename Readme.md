@@ -35,7 +35,7 @@ With the dependency code being under 10000 sloc. (Containers, Memory, String han
 Any dependencies from the zpl library will be exposed manually with using declarations into global scope.  
 They will be removed when the library is feature complete for version 1 (zero dependencies milestone).
 
-*Right now the upfront constructors are working to some extent based on testing*
+*Right now the constructors are working to some extent based on testing*
 
 ***The editor and scanner will NOT be implemented by version 1. They require alot code and the focus for version 1 is to have a robust constructor API and builder, witch a wide suite of usage examples in the tests for the project.***
 
@@ -156,15 +156,17 @@ If in your use case, you decide to have exclusive separation or partial separati
 
 ### *WHAT IS NOT PROVIDED*
 
-* Macro or template generation                : This library is to avoid those, adding support for them adds unnecessary complexity.
+* Macro or template generation                : This library is *currently* intended to avoid those, adding support for them adds unnecessary complexity.
+  * There may be an argument to support basic templates for substitution, to reduce symbol redundancy for the user, since debuggers tend to do well for them.
+  * Any sort of template complexity however to resolve if the subtiution is valid with templates would not be supported.
 * Vendor provided dynamic dispatch (virtuals) : `override` and `final` specifiers complicate the specifier serialization. (I'll problably end up adding in later)
 * RTTI
 * Exceptions
-* Execution statement validation              : Execution expressions are defined using the untyped string API.
+* Execution statement validation              : Execution expressions are defined using the untyped API.
 
 Keywords in from "Modern C++":
 
-* constexpr : Great to store compile-time constants, (easier to garantee when emitted from gentime)
+* constexpr : Great to store compile-time constants, (easier to guarantee when emitted from gentime)
 * consteval : Technically fine so long as templates are not used. Need to make sure to execute in moderation.
 * constinit : Better than constexpr at doing its job, however, its only c++ 20.
 * export    : Useful if c++ modules ever come around to actually being usable.
@@ -220,13 +222,13 @@ uw ArrS_Cap =
 (     AST_POD_Size
     - sizeof(AST*)         // Parent
     - sizeof(StringCached) // Name
-    - sizeof(CodeT) 	   // Type
+    - sizeof(CodeT)        // Type
     - sizeof(OperatorT)    // Op
     - sizeof(ModuleFlag)   // ModuleFlags
     - sizeof(AccessSpec)   // ParentAccess
-    - sizeof(u32) 		   // StaticIndex
-    - sizeof(bool) * 1     // DynamicEntries
-    - sizeof(u8) * 2 )     // _Align_Pad
+    - sizeof(u32)          // StaticIndex
+    - sizeof(bool)         // DynamicEntries
+    - sizeof(u8) * 3 )     // _Align_Pad
 / sizeof(AST*);
 ```
 
@@ -243,6 +245,10 @@ Data Notes:
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
 * Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
+  * `StringArenas`, `StringMap`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
+* Strings used for seralization and file buffers are not contained by those used for cached strings.
+  * They are currently using `Memory::GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
+  * Memory within the buckets is not resused, so its inherently wasteful (most likely will give non-cached strings their own tailored alloator later)
 
 ## There are three sets of interfaces for Code AST generation the library provides
 
@@ -258,10 +264,13 @@ The construction will fail and return InvalidCode otherwise.
 Interface :
 
 * def_attributes
+  * *This is preappened right before the function symbol, or placed after the class or struct keyword for any flavor of attributes used.*
+  * *Its up to the user to use the desired attribute formatting: `[[]]` (standard), `__declspec` (Microsoft), or `__attribute__` (GNU).*
 * def_comment
 * def_class
 * def_enum
-* def_execution       NOTE: This is equivalent to untyped_str, except that its intended for use only in execution scopes.
+* def_execution
+  * *This is equivalent to untyped_str, except that its intended for use only in execution scopes.*
 * def_extern_link
 * def_friend
 * def_function
@@ -287,7 +296,8 @@ Bodies:
 * def_enum_body
 * def_export_body
 * def_extern_link_body
-* def_function_body   NOTE: Use this for operator bodies as well.
+* def_function_body
+  * *Use this for operator bodies as well*
 * def_global_body
 * def_namespace_body
 * def_struct_body
@@ -328,8 +338,17 @@ Interface :
 * parse_using
 * parse_variable
 
-The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.  
-This includes the assignmetn of variables; due to the library not yet supporting c/c++ expression parsing.
+The lexing and parsing takes shortcuts from whats expected in the standard.
+
+* Numeric literals are not check for validity.
+* The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
+  * *This includes the assignment of variables.*
+* Attributes ( `[[]]` (standard), `__declspec` (Microsoft), or `__attribute__` (GNU) )
+  * Assumed to *come before specifiers* (`const`, `constexpr`, `extern`, `static`, etc) for a function
+  * Or in the usual spot for class, structs, (*right after the declaration keyword*)
+  * typedefs have attributes with the type (`parse_type`)
+* As a general rule; if its not available from the upfront contructors, its not available in the parsing constructors.
+  * *Upfront constructors are not necessarily used in the parsing constructors, this is just a good metric to know what can be parsed.*
 
 Usage:
 
@@ -402,42 +421,45 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_consteval`
 * `spec_constexpr`
 * `spec_constinit`
-* `spec_extern_linkage`
+* `spec_extern_linkage` (extern)
+* `spec_global` (global macro)
 * `spec_inline`
-* `spec_internal_linkage`
-* `spec_local_persist`
+* `spec_internal_linkage` (internal macro)
+* `spec_local_persist` (local_persist macro)
 * `spec_mutable`
 * `spec_ptr`
 * `spec_ref`
 * `spec_register`
 * `spec_rvalue`
-* `spec_static_member`
+* `spec_static_member` (static)
 * `spec_thread_local`
 * `spec_volatile`
 * `spec_type_signed`
 * `spec_type_unsigned`
 * `spec_type_short`
 * `spec_type_long`
-* `type_ns(void)`
-* `type_ns(int)`
-* `type_ns(bool)`
-* `type_ns(char)`
-* `type_ns(wchar_t)`
+* `t_auto`
+* `t_void`
+* `t_int`
+* `t_bool`
+* `t_char`
+* `t_wchar_t`
 
 Optionally the following may be defined if `GEN_DEFINE_LIBRARY_CODE_CONSTANTS` is defined
 
-* `type_ns( s8 )`
-* `type_ns( s16 )`
-* `type_ns( s32 )`
-* `type_ns( s64 )`
-* `type_ns( u8 )`
-* `type_ns( u16 )`
-* `type_ns( u32 )`
-* `type_ns( u64 )`
-* `type_ns( sw )`
-* `type_ns( uw )`
-* `type_ns( f32 )`
-* `type_ns( f64 )`
+* `t_b32`
+* `t_s8`
+* `t_s16`
+* `t_s32`
+* `t_s64`
+* `t_u8`
+* `t_u16`
+* `t_u32`
+* `t_u64`
+* `t_sw`
+* `t_uw`
+* `t_f32`
+* `t_f64`
 
 ## Extent of operator overload validation
 
@@ -551,5 +573,4 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Make a test suite made up of collections based of the ZPL library templated colllection macros and the memory module.
 * Remove full ZPL dependency, move into Bloat header/source only what is used.
 * Generate a single-header library.
-* Generate a C-supported single-header library.
 * Actually get to version 1.

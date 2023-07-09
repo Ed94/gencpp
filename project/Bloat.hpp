@@ -61,6 +61,7 @@ using zpl::EFileMode_WRITE;
 using zpl::EFileError_NONE;
 
 using zpl::alloc;
+using zpl::alloc_align;
 using zpl::arena_allocator;
 using zpl::arena_init_from_memory;
 using zpl::arena_init_from_allocator;
@@ -70,6 +71,8 @@ using zpl::str_fmt_buf;
 using zpl::char_first_occurence;
 using zpl::char_is_alpha;
 using zpl::char_is_alphanumeric;
+using zpl::char_is_digit;
+using zpl::char_is_hex_digit;
 using zpl::char_is_space;
 using zpl::crc32;
 using zpl::free_all;
@@ -564,16 +567,17 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
 namespace Memory
 {
-	constexpr uw Initial_Reserve = megabytes(10);
+	// NOTE: This limits the size of the string that can be read from a file or generated to 10 megs.
+	// If you are generating a string larger than this, increase the size of the bucket here.
+	constexpr uw BucketSize = megabytes(10);
 
-	extern Arena Global_Arena;
-	// #define g_allocator arena_allocator( & Memory::Global_Arena)
+	// Global allocator used for data with process lifetime.
+	extern AllocatorInfo GlobalAllocator;
 
 	// Heap allocator is being used for now to isolate errors from being memory related (tech debt till ready to address)
-	#define g_allocator heap()
+	// #define g_allocator heap()
 
 	void setup();
-	void resize( uw new_size );
 	void cleanup();
 }
 

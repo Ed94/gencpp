@@ -107,7 +107,6 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Function
-	if (0)
 	{
 		Code fwd = parse_function( code(
 			void test_function();
@@ -128,7 +127,6 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Namespace
-	if (0)
 	{
 		Code def = parse_namespace( code(
 			namespace TestNamespace
@@ -144,10 +142,9 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Operator
-
 	if (0)
 	{
-		Code bitflagtest = parse_class( code(
+		Code bitflagtest = parse_enum( code(
 			enum class EBitFlagTest : u8
 			{
 				A = 1 << 0,

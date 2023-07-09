@@ -33,7 +33,6 @@ While getting fleshed out, all feature macros are defined on the top of the head
 These macros are:
 
 * `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
-* `GEN_FEATURE_INCREMENTAL` : Defines the incremental constructors
 * `GEN_FEATURE_PARSING` : Defines the parse constructors
 * `GEN_FEATURE_EDITOR` : Defines the file editing features for changing definitions based on ASTs
 * `GEN_FEATURE_SCANNER` : Defines the file scanning features for generating ASTs
