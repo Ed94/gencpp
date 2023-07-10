@@ -192,7 +192,6 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Specifiers
-	if (0)
 	{
 		Code fwd_fn = parse_function( code(
 			inline

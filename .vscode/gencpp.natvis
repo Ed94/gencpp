@@ -1,23 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
-	<Type Name="gen::Code">
-		<DisplayString>{ast.Name} {ast.Type}</DisplayString>
-	</Type>
-
-	<Type Name="gen::AST">
-		<DisplayString>{Name} {Type}</DisplayString>
-	</Type>
-
 	<Type Name="String">
 		<DisplayString Condition="Data == nullptr">null</DisplayString>
 		<DisplayString>{Data,na}</DisplayString>
 		<Expand>
-			<!-- Define a synthetic child element for the Header -->
 			<Synthetic Name="Header">
-				<!-- Construct a Header object from the Data pointer -->
 				<DisplayString>{(Header*)((char*)Data - sizeof(Header))}</DisplayString>
-				<!-- Define the children of the synthetic element -->
 				<Expand>
 					<Item Name="Allocator">((Header*)((char*)Data - sizeof(Header)))->Allocator</Item>
 					<Item Name="Length">((Header*)((char*)Data - sizeof(Header)))->Length</Item>
@@ -36,8 +25,40 @@
 		</Expand>
 	</Type>
 
+	<Type Name="gen::AST">
+		<DisplayString>{Name} {Type}</DisplayString>
+		<Expand>
+			<Item Name="Type">Type</Item>
+			<Item Name="Name">Name</Item>
+			<Item Name="ArrStatic" Condition="DynamicEntries == false">ArrStatic</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="gen::Code">
+		<DisplayString>{ast.Name} {ast.Type}</DisplayString>
+	</Type>
+
+	<Type Name ="gen::Parser::Token">
+		<DisplayString>Type:{Type} Text:{Text, [Length]s} Length:{Length}</DisplayString>
+	</Type>
+
 	<Type Name="gen::Parser::TokArray">
-		<DisplayString>Current = { Arr[Idx] }</DisplayString>
+		<DisplayString>Current[ { Arr[Idx] } ]</DisplayString>
+		<Expand>
+			<Synthetic Name="Header">
+				<DisplayString>{(ArrayHeader*)((char*)Arr - sizeof(ArrayHeader))}</DisplayString>
+				<Expand>
+					<Item Name="elem_size">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->elem_size</Item>
+					<Item Name="count">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->count</Item>
+					<Item Name="capacity">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->capacity</Item>
+					<Item Name="allocator">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->allocator</Item>
+				</Expand>
+			</Synthetic>
+			<ArrayItems>
+				<Size>((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->count</Size>
+				<ValuePointer>Arr</ValuePointer>
+			</ArrayItems>
+		</Expand>
 	</Type>
 
 </AutoVisualizer>

@@ -25,15 +25,6 @@
 #		define ZPL_MODULE_CORE
 #		define ZPL_MODULE_TIMER
 #		define ZPL_MODULE_HASHING
-// #		define ZPL_MODULE_REGEX
-// #		define ZPL_MODULE_EVENT
-// #		define ZPL_MODULE_DLL
-// #		define ZPL_MODULE_OPTS
-// #		define ZPL_MODULE_PROCESS
-// #		define ZPL_MODULE_MAT
-// #		define ZPL_MODULE_THREADING
-// #		define ZPL_MODULE_JOBS
-// #		define ZPL_MODULE_PARSER
 #include "zpl.h"
 
 using zpl::b32;
@@ -185,6 +176,450 @@ while(0);
 constexpr
 char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
+#pragma region Containers
+#pragma push_macro("template")
+#undef template
+
+template<class Type>
+struct TArray
+{
+	struct Header
+	{
+		AllocatorInfo Allocator;
+		uw            Capacity;
+		uw            Num;
+	};
+
+	static
+	TArray<Type> init( AllocatorInfo allocator )
+	{
+		return init_reserve( allocator, grow_formula(0) );
+	}
+
+	static
+	TArray<Type> init_reserve( AllocatorInfo allocator, sw capacity )
+	{
+		Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) ));
+
+		if ( header == nullptr )
+			return { nullptr };
+
+		header->Allocator = allocator;
+		header->Capacity  = capacity;
+		header->Num       = 0;
+
+		return { rcast( Type*, header + 1) };
+	}
+
+	static
+	uw grow_formula( uw value )
+	{
+		return 2 * value * 8;
+	}
+
+	bool append( Type value )
+	{
+		Header& header = get_header();
+
+		if ( header.Num == header.Capacity )
+		{
+			if ( ! grow( header.Capacity ))
+				return false;
+		}
+
+		Data[ header.Num ] = value;
+		header.Num++;
+
+		return true;
+	}
+
+	Type& back( void )
+	{
+		Header& header = get_header();
+		return Data[ header.Num - 1 ];
+	}
+
+	void clear( void )
+	{
+		Header& header = get_header();
+		header.Num     = 0;
+	}
+
+	bool fill( uw begin, uw end, Type value )
+	{
+		Header& header = get_header();
+
+		if ( begin < 0 || end >= header.Num )
+			return false;
+
+		for ( sw idx = begin; idx < end; idx++ )
+		{
+			Data[ idx ] = value;
+		}
+
+		return true;
+	}
+
+	void free( void )
+	{
+		Header& header = get_header();
+		zpl::free( header.Allocator, &header );
+	}
+
+	Header& get_header( void )
+	{
+		return *( reinterpret_cast< Header* >( Data ) - 1 );
+	}
+
+	bool grow( uw min_capacity )
+	{
+		Header& header       = get_header();
+		uw      new_capacity = grow_formula( header.Capacity );
+
+		if ( new_capacity < min_capacity )
+			new_capacity = 8;
+
+		return set_capacity( new_capacity );
+	}
+
+	uw num( void )
+	{
+		return get_header().Num;
+	}
+
+	bool pop( void )
+	{
+		Header& header = get_header();
+
+		ZPL_ASSERT( header.Num > 0 );
+		header.Num--;
+	}
+
+	void remove_at( uw idx )
+	{
+		Header* header = &get_header();
+		ZPL_ASSERT( idx < header->Num );
+
+		mem_move( header + idx, header + idx + 1, sizeof( Type ) * ( header->Num - idx - 1 ) );
+		header->Num--;
+	}
+
+	bool reserve( uw new_capacity )
+	{
+		Header& header = get_header();
+
+		if ( header.Capacity < new_capacity )
+			return set_capacity( new_capacity );
+
+		return true;
+	}
+
+	bool resize( uw num )
+	{
+		Header& header = get_header();
+
+		if ( num > header.Capacity )
+		{
+			if ( ! grow( header.Capacity ) )
+				return false;
+		}
+
+		header.Num = num;
+		return true;
+	}
+
+	bool set_capacity( uw new_capacity )
+	{
+		Header& header = get_header();
+
+		if ( new_capacity == header.Capacity )
+			return true;
+
+		if ( new_capacity < header.Num )
+			header.Num = new_capacity;
+
+		sw      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
+		Header* new_header = reinterpret_cast< Header* >( alloc( header.Allocator, size ) );
+
+		if ( new_header == nullptr )
+			return false;
+
+		mem_move( new_header, &header, sizeof( Header ) + sizeof( Type ) * header.Num );
+
+		new_header->Allocator = header.Allocator;
+		new_header->Num       = header.Num;
+		new_header->Capacity  = new_capacity;
+
+		zpl::free( header.Allocator, &header );
+
+		Data = ( Type* )new_header + 1;
+		return true;
+	}
+
+	Type* Data;
+
+	operator Type*()
+	{
+		return Data;
+	}
+
+	operator Type const*() const
+	{
+		return Data;
+	}
+};
+
+template<typename Type>
+struct THashTable
+{
+	struct FindResult
+	{
+		sw HashIndex;
+		sw PrevIndex;
+		sw EntryIndex;
+	};
+
+	struct Entry
+	{
+		u64  Key;
+		sw   Next;
+		Type Value;
+	};
+
+	static
+	THashTable<Type> init( AllocatorInfo allocator )
+	{
+		THashTable<Type> result = {0};
+
+		result.Hashes.init( allocator );
+		result.Entries.init( allocator );
+
+		return result;
+	}
+
+	void clear( void )
+	{
+		for ( sw idx = 0; idx < Hashes.num(); idx++ )
+			Hashes[ idx ] = -1;
+
+		Hashes.clear();
+		Entries.clear();
+	}
+
+	void destroy( void )
+	{
+		if ( Hashes )
+			Hashes.free();
+		if ( Entries )
+			Entries.free();
+	}
+
+	Type* get( u64 key )
+	{
+		sw idx = find( key ).EntryIndex;
+		if ( idx > 0 )
+			return & Entries[ idx ].Value;
+
+		return nullptr;
+	}
+
+	using MapProc = void (*)( u64 key, Type  value );
+
+	void map( MapProc map_proc )
+	{
+		ZPL_ASSERT_NOT_NULL( map_proc );
+
+		for ( sw idx = 0; idx < Entries.num(); idx++ )
+		{
+			map_proc( Entries[ idx ].Key, Entries[ idx ].Value );
+		}
+	}
+
+	using MapMutProc = void (*)( u64 key, Type* value );
+
+	void map_mut( MapMutProc map_proc )
+	{
+		ZPL_ASSERT_NOT_NULL( map_proc );
+
+		for ( sw idx = 0; idx < Entries.num(); idx++ )
+		{
+			map_proc( Entries[ idx ].Key, & Entries[ idx ].Value );
+		}
+	}
+
+	void grow()
+	{
+		sw new_num = TArray<Entry>::grow_formula( Entries.num() )
+		rehash( new_num );
+	}
+
+	void rehash( sw new_num )
+	{
+		sw idx;
+		sw last_added_index;
+
+		THashTable<Type> new_ht = init( Hashes.get_header().Allocator );
+
+		new_ht.Hashes.resize( new_num );
+		new_ht.Entries.reserve( new_ht.Hashes.num() );
+
+		for ( idx = 0; idx < new_ht.Hashes.num(); ++idx )
+			new_ht.Hashes[ idx ] = -1;
+
+		for ( idx = 0; idx < Entries.num(); ++idx )
+		{
+			Entry& entry = Entries[ idx ];
+
+			FindResult find_result;
+
+			if ( new_ht.Hashes.num() == 0 )
+				new_ht.grow();
+
+			entry            = Entries[ idx ];
+			find_result      = new_ht.find( entry.Key );
+			last_added_index = new_ht.add_entry( entry.Key );
+
+			if ( find_result.PrevIndex < 0 )
+				new_ht.Hashes[ find_result.HashIndex ] = last_added_index;
+
+			else
+				new_ht.Entries[ find_result.PrevIndex ].Next = last_added_index;
+
+			new_ht.Entries[ last_added_index ].Next  = find_result.EntryIndex;
+			new_ht.Entries[ last_added_index ].Value = entry.Value;
+		}
+
+		// *this = new_ht;
+
+		// old_ht.destroy();
+
+		destroy();
+		Hashes  = new_ht.Hashes;
+		Entries = new_ht.Entries;
+	}
+
+	void rehash_fast()
+	{
+		sw idx;
+
+		for ( idx = 0; idx < Entries.num(); idx++ )
+			Entries[ idx ].Next = -1;
+
+		for ( idx = 0; idx < Hashes.num(); idx++ )
+			Hashes[ idx ] = -1;
+
+		for ( idx = 0; idx < Entries.num(); idx++ )
+		{
+			Entry* entry;
+
+			FindResult find_result;
+		}
+	}
+
+	void remove( u64 key )
+	{
+		FindResult find_result = find( key);
+
+		if ( find_result.EntryIndex >= 0 )
+		{
+			Entries.remove_at( find_result.EntryIndex );
+			rehash_fast();
+		}
+	}
+
+	void remove_entry( sw idx )
+	{
+		Entries.remove_at( idx );
+	}
+
+	void set( u64 key, Type value )
+	{
+		sw idx;
+		FindResult find_result;
+
+		if ( Hashes.num() == 0 )
+			grow();
+
+		find_result = find( key );
+
+		if ( find_result.EntryIndex >= 0 )
+		{
+			idx = find_result.EntryIndex;
+		}
+		else
+		{
+			idx = add_entry( key );
+
+			if ( find_result.PrevIndex >= 0 )
+			{
+				Entries[ find_result.PrevIndex ].Next = idx;
+			}
+			else
+			{
+				Hashes[ find_result.HashIndex ] = idx;
+			}
+		}
+
+		Entries[ idx ].Value = value;
+
+		if ( full() )
+			grow();
+	}
+
+	sw slot( u64 key )
+	{
+		for ( sw idx = 0; idx < Hashes.num(); ++idx )
+			if ( Hashes[ idx ] == key )
+				return idx;
+
+		return -1;
+	}
+
+	TArray< sw>    Hashes;
+	TArray< Entry> Entries;
+
+protected:
+
+	sw add_entry( u64 key )
+	{
+		sw idx;
+		Entry entry = { key, -1 };
+
+		idx = Entries.num();
+		Entries.append( entry );
+		return idx;
+	}
+
+	FindResult find( u64 key )
+	{
+		FindResult result = { -1, -1, -1 };
+
+		if ( Hashes.num() > 0 )
+		{
+			result.HashIndex    = key % Hashes.num();
+			result.EntryIndex  = Hashes[ result.HashIndex ];
+
+			while ( result.EntryIndex >= 0 )
+			{
+				if ( Entries[ result.EntryIndex ].Key == key )
+					break;
+
+				result.PrevIndex  = result.EntryIndex;
+				result.EntryIndex = Entries[ result.EntryIndex ].Next;
+			}
+		}
+
+		return result;
+	}
+
+	b32 full()
+	{
+		return 0.75f * Hashes.num() < Entries.num();
+	}
+};
+
+#pragma pop_macro("template")
+#pragma endregion Containers
 
 #pragma region Memory
 #pragma endregion Memory
@@ -221,18 +656,21 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			sw            Capacity;
 		};
 
-		static String make( AllocatorInfo allocator, char const* str )
+		static
+		String make( AllocatorInfo allocator, char const* str )
 		{
 			sw length = str ? str_len( str ) : 0;
 			return make_length( allocator, str, length );
 		}
 
-		static String make( AllocatorInfo allocator, StrC str )
+		static
+		String make( AllocatorInfo allocator, StrC str )
 		{
 			return make_length( allocator, str.Ptr, str.Len );
 		}
 
-		static String make_reserve( AllocatorInfo allocator, sw capacity )
+		static
+		String make_reserve( AllocatorInfo allocator, sw capacity )
 		{
 			constexpr sw header_size = sizeof( Header );
 
@@ -254,7 +692,8 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return result;
 		}
 
-		static String make_length( AllocatorInfo allocator, char const* str, sw length )
+		static
+		String make_length( AllocatorInfo allocator, char const* str, sw length )
 		{
 			constexpr sw header_size = sizeof( Header );
 
@@ -281,7 +720,8 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return result;
 		}
 
-		static String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... )
+		static
+		String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... )
 		{
 			va_list va;
 			va_start( va, fmt );
@@ -291,7 +731,8 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return make( allocator, buf );
 		}
 
-		static String fmt_buf( AllocatorInfo allocator, char const* fmt, ... )
+		static
+		String fmt_buf( AllocatorInfo allocator, char const* fmt, ... )
 		{
 			local_persist thread_local
 			char buf[ ZPL_PRINTF_MAXLEN ] = { 0 };
@@ -304,7 +745,8 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return make( allocator, buf );
 		}
 
-		static String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue )
+		static
+		String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue )
 		{
 			String result = make( allocator, "" );
 
@@ -319,7 +761,8 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return result;
 		}
 
-		static bool are_equal( String lhs, String rhs )
+		static
+		bool are_equal( String lhs, String rhs )
 		{
 			if ( lhs.length() != rhs.length() )
 				return false;
@@ -520,6 +963,8 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			};
 		}
 
+		// Used with cached strings
+		// Essentially makes the string a string view.
 		String const& operator = ( String const& other ) const
 		{
 			if ( this == & other )
@@ -532,12 +977,6 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 			return this_;
 		}
 
-		String& operator += ( String const& other )
-		{
-			append( other );
-			return *this;
-		}
-
 		char& operator [] ( sw index )
 		{
 			return Data[ index ];
@@ -547,7 +986,6 @@ char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 		{
 			return Data[ index ];
 		}
-
 
 		char* Data = nullptr;
 	};
@@ -580,6 +1018,7 @@ namespace Memory
 	void setup();
 	void cleanup();
 }
+
 
 inline
 sw log_fmt(char const* fmt, ...)

@@ -71,6 +71,7 @@ namespace gen
 		Entry( Struct )               \
 		Entry( Struct_Fwd )           \
 		Entry( Struct_Body )          \
+		Entry( Template )             \
 		Entry( Typedef )              \
 		Entry( Typename )             \
 		Entry( Union )			      \
@@ -771,7 +772,7 @@ namespace gen
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_param     ( Code type, StrC name, Code value = NoCode );
+	Code def_param    ( Code type, StrC name, Code value = NoCode );
 	Code def_specifier( SpecifierT specifier );
 
 	Code def_struct( StrC name
@@ -779,6 +780,8 @@ namespace gen
 		, Code       parent     = NoCode, AccessSpec access = AccessSpec::Default
 		, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
+
+	Code def_template( Code params, Code body, ModuleFlag mflags = ModuleFlag::None );
 
 	Code def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode, Code attributes = NoCode );
 	Code def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
@@ -831,6 +834,7 @@ namespace gen
 	Code parse_namespace   ( StrC namespace_def );
 	Code parse_operator    ( StrC operator_def  );
 	Code parse_struct      ( StrC struct_def    );
+	Code parse_template    ( StrC template_def  );
 	Code parse_type        ( StrC type_def      );
 	Code parse_typedef     ( StrC typedef_def   );
 	Code parse_union       ( StrC union_def     );
@@ -1050,6 +1054,8 @@ namespace gen
 	extern Code t_bool;
 	extern Code t_char;
 	extern Code t_wchar_t;
+	extern Code t_class;
+	extern Code t_typename;
 
 	extern Code access_public;
 	extern Code access_protected;

@@ -78,13 +78,13 @@ Code gen__array( StrC type, sw type_size )
 					return true;
 				}
 
-				inline Type& back( void )
+				Type& back( void )
 				{
 					Header& header = get_header();
 					return Data[ header.Num - 1 ];
 				}
 
-				inline void clear( void )
+				void clear( void )
 				{
 					Header& header = get_header();
 					header.Num     = 0;
@@ -105,13 +105,13 @@ Code gen__array( StrC type, sw type_size )
 					return true;
 				}
 
-				inline void free( void )
+				void free( void )
 				{
 					Header& header = get_header();
 					zpl::free( header.Allocator, &header );
 				}
 
-				inline Header& get_header( void )
+				Header& get_header( void )
 				{
 					return *( reinterpret_cast< Header* >( Data ) - 1 );
 				}
@@ -127,12 +127,12 @@ Code gen__array( StrC type, sw type_size )
 					return set_capacity( new_capacity );
 				}
 
-				inline uw num( void )
+				uw num( void )
 				{
 					return get_header().Num;
 				}
 
-				inline bool pop( void )
+				bool pop( void )
 				{
 					Header& header = get_header();
 
@@ -140,7 +140,7 @@ Code gen__array( StrC type, sw type_size )
 					header.Num--;
 				}
 
-				inline void remove_at( uw idx )
+				void remove_at( uw idx )
 				{
 					Header* header = &get_header();
 					ZPL_ASSERT( idx < header->Num );
@@ -233,7 +233,7 @@ Array(GenArrayRequest) GenArrayRequests;
 void gen__array_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenArrayRequests, g_allocator );
+		array_init( GenArrayRequests, Memory::GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.

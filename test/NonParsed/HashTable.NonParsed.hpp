@@ -90,7 +90,7 @@ Code gen__hashtable( StrC type, sw type_size )
 
 		Code clear = def_function( name(clear), __, t_void
 			, def_execution( code(
-				if ( s32 idx = 0; idx < Hashes.num(), idx++ )
+				for ( s32 idx = 0; idx < Hashes.num(), idx++ )
 					Hashes[ idx ] = -1;
 
 				Entries.clear();
@@ -100,11 +100,10 @@ Code gen__hashtable( StrC type, sw type_size )
 		Code destroy = def_function( name(destroy), __, t_void
 			, def_execution( code(
 				if ( Hashes )
-					Hashes .free();
+					Hashes.free();
 				if ( Entries )
 					Entries.free();
 			))
-			, spec_inline
 		);
 
 		Code get = def_function( name(get), def_param( t_u64, name(key)), t_type_ptr
@@ -174,7 +173,6 @@ Code gen__hashtable( StrC type, sw type_size )
 				sw new_num = array_grow_formula( Entries.num() );
 				rehash( new_num );
 			))
-			, spec_inline
 		);
 
 		Code rehash;
@@ -214,7 +212,6 @@ Code gen__hashtable( StrC type, sw type_size )
 					new_ht.Entries[ last_added_index ].Value = entry.Value;
 				}
 
-				// <type>* old_ht = this;
 				// *this = new_ht;
 
 				// old_ht.destroy();
@@ -320,7 +317,6 @@ Code gen__hashtable( StrC type, sw type_size )
 
 				return -1;
 			))
-			, spec_inline
 		);
 
 		Code add_entry = def_function( name(add_entry), def_param( t_u64, name(key)), t_sw
@@ -332,7 +328,6 @@ Code gen__hashtable( StrC type, sw type_size )
 				Entries.append( entry );
 				return idx;
 			))
-			, spec_inline
 		);
 
 		Code find = def_function( name(find), def_param( t_u64, name(key)), t_find_result
@@ -362,7 +357,6 @@ Code gen__hashtable( StrC type, sw type_size )
 			, def_execution( code(
 				return 0.75f * Hashes.num() < Entries.num();
 			))
-			, spec_inline
 		);
 
 		hashtable = def_struct( name, def_struct_body( 24
@@ -411,7 +405,7 @@ Array(GenHashTableRequest) GenHashTableRequests;
 void gen__hashtable_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenHashTableRequests, g_allocator );
+		array_init( GenHashTableRequests, Memory::GlobalAllocator );
 
 		gen_array( sw );
 	do_once_end

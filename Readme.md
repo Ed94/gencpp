@@ -5,8 +5,6 @@ An attempt at simple staged metaprogramming for c/c++.
 The library API is a compositon of code element constructors.  
 These build up a code AST to then serialize with a file builder.
 
-Intended for small-to midsized projects.
-
 ### TOC
 
 * [Notes](#notes)
@@ -156,31 +154,43 @@ If in your use case, you decide to have exclusive separation or partial separati
 
 ### *WHAT IS NOT PROVIDED*
 
-* Macro or template generation                : This library is *currently* intended to avoid those, adding support for them adds unnecessary complexity.
-  * There may be an argument to support basic templates for substitution, to reduce symbol redundancy for the user, since debuggers tend to do well for them.
-  * Any sort of template complexity however to resolve if the subtiution is valid with templates would not be supported.
-* Vendor provided dynamic dispatch (virtuals) : `override` and `final` specifiers complicate the specifier serialization. (I'll problably end up adding in later)
+* Lambdas
+* Vendor provided dynamic dispatch (virtuals) : `override` and `final` specifiers complicate the specifier parsing and serialization. (I'll problably end up adding in later)
 * RTTI
 * Exceptions
 * Execution statement validation              : Execution expressions are defined using the untyped API.
 
-Keywords in from "Modern C++":
+Keywords kept from "Modern C++":
 
-* constexpr : Great to store compile-time constants, (easier to guarantee when emitted from gentime)
-* consteval : Technically fine so long as templates are not used. Need to make sure to execute in moderation.
+* constexpr : Great to store compile-time constants.
+* consteval : Technically fine, need to make sure to execute in moderation.
 * constinit : Better than constexpr at doing its job, however, its only c++ 20.
 * export    : Useful if c++ modules ever come around to actually being usable.
 * import    : ^^
 * module    : ^^
 
-These features are not horrible when used conservatively, or are a performance benefit (modules).
-
 When it comes to expressions:
 
-There is no support for validating expressions.  
-The reason: thats where the can of worms open for parsing validation. This library would most likey more than double in size with that addition alone.  
-Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions.  
-Thus its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.
+**There is no support for validating expressions.**  
+**The reason:** Its difficult to parse with not much of a benefit from doing so.  
+Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions (which this library provides constructors to help validate, you can skip that process by using the untyped constructors).  
+Its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.  
+Especially when the priority is to keep this library small and easy to grasp for what it is.
+
+When it comes to templates:
+
+Only trivial template support is provided. the intention is for only simple, non-recursive subsitution.  
+The parameters of the template are treated like regular parameter AST entries.  
+This means that the typename entry for the parameter AST would be either:
+
+* `class`
+* `typename`
+* A fundamental type, function, or pointer type.
+
+Anything beyond this usage is not supported by parse_template for arguments (at least not intentionally).  
+Use at your own mental peril...
+
+*Concepts and Constraints are not supported, its usage is non-tirival substiution.*
 
 ### The Data & Interface
 
@@ -194,7 +204,7 @@ Data layout of AST struct:
 ```cpp
 union {
     AST*          ArrStatic[AST::ArrS_Cap];
-    Array(AST*)   ArrDyn;
+    Array<AST*>   ArrDyn;
     StringCached  Content;
     SpecifierT    ArrSpecs[AST::ArrSpecs_Cap];
 };
@@ -250,6 +260,12 @@ Data Notes:
   * They are currently using `Memory::GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
   * Memory within the buckets is not resused, so its inherently wasteful (most likely will give non-cached strings their own tailored alloator later)
 
+Two generic templated containers throughout the library:
+
+`template< class Type> struct Array` and `template< class Type> struct HashTable >`
+
+Otherwise the library is free of any templates.
+
 ## There are three sets of interfaces for Code AST generation the library provides
 
 * Upfront
@@ -261,7 +277,7 @@ Data Notes:
 All component ASTs must be previously constructed, and provided on creation of the code AST.
 The construction will fail and return InvalidCode otherwise.
 
-Interface :
+Interface :``
 
 * def_attributes
   * *This is preappened right before the function symbol, or placed after the class or struct keyword for any flavor of attributes used.*
@@ -283,6 +299,7 @@ Interface :
 * def_specifier
 * def_specifiers
 * def_struct
+* def_template
 * def_type
 * def_typedef
 * def_union
@@ -327,14 +344,16 @@ Interface :
 * parse_export_body
 * parse_extern_link
 * parse_friend
+  * Purposefully are only support forward declares with this constructor.
 * parse_function
 * parse_global_body
 * parse_namespace
-* parse_operator
+* parse_operator (Not ready)
 * parse_struct
+* parse_template (Not ready)
 * parse_type
 * parse_typedef
-* parse_union
+* parse_union (Not ready)
 * parse_using
 * parse_variable
 
@@ -538,9 +557,6 @@ Currently unsupported. The following changes would have to be made:
 * Make sure local peristent data of functions are also thread local.
 * The builder should be done on a per-thread basis.
 * Due to the design of the editor and scanner, it will most likely be best to make each file a job to process request entries on. Receipts should have an an array to store per thread. They can be combined to the final reciepts array when all files have been processed.
-
-For now single-threaded has a bunch of optimization that most likely have done to it and will be more than capable
-for the majority of projects this thing is intended for. (IF you use this on Unreal... well your asking for it...)
 
 ## Extending the library
 

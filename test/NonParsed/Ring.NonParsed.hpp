@@ -80,7 +80,6 @@ Code gen__ring( StrC type, sw type_size )
 			if ( Head == Tail )
 					Tail = ( Tail + 1 ) % Capacity;
 			))
-			, spec_inline
 		);
 
 		Code appendv;
@@ -102,21 +101,18 @@ Code gen__ring( StrC type, sw type_size )
 			, def_execution( code(
 				return Head == Tail;
 			))
-			, spec_inline
 		);
 
 		Code free = def_function( name(free), __, t_void
 			, def_execution( code(
 				Buffer.free();
 			))
-			, spec_inline
 		);
 
 		Code full = def_function( name(full), __, t_bool
 			, def_execution( code(
 				return (Head + 1) % Capacity == Tail;
 			))
-			, spec_inline
 		);
 
 		Code get = def_function( name(get), __, t_type_ref
@@ -134,7 +130,6 @@ Code gen__ring( StrC type, sw type_size )
 				Tail = 0;
 				Buffer.wipe();
 			))
-			, spec_inline
 		);
 
 		ring = def_struct( name, def_struct_body( 14,
@@ -172,7 +167,7 @@ Array(GenRingRequest) GenRingRequests;
 void gen__ring_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenRingRequests, g_allocator );
+		array_init( GenRingRequests, Memory::GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.

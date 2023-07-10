@@ -114,7 +114,6 @@ Code gen__array( StrC type, sw type_size )
 				Header& header = get_header();
 				return Data[ header.Num - 1 ];
 			))
-			, spec_inline
 		);
 
 		Code clear = def_function( name(clear), __, t_void
@@ -122,7 +121,6 @@ Code gen__array( StrC type, sw type_size )
 				Header& header = get_header();
 				header.Num = 0;
 			))
-			, spec_inline
 		);
 
 		Code fill;
@@ -155,14 +153,12 @@ Code gen__array( StrC type, sw type_size )
 				Header& header = get_header();
 				zpl::free( header.Allocator, & header );
 			))
-			, spec_inline
 		);
 
 		Code get_header = def_function( name(get_header), __, t_header_ref
 			, def_execution( code(
 				return * ( rcast( Header*, Data ) - 1 );
 			))
-			, spec_inline
 		);
 
 		Code grow = def_function( name(grow), def_param( t_uw, name(min_capacity)), t_bool
@@ -182,7 +178,6 @@ Code gen__array( StrC type, sw type_size )
 			, def_execution( code(
 				return get_header().Num;
 			))
-			, spec_inline
 		);
 
 		Code pop = def_function( name(pop), __, t_bool
@@ -192,7 +187,6 @@ Code gen__array( StrC type, sw type_size )
 				ZPL_ASSERT( header.Num > 0 );
 				header.Num--;
 			))
-			, spec_inline
 		);
 
 		Code remove_at = def_function( name(remove_at), def_param( t_uw, name(idx)), t_void
@@ -203,7 +197,6 @@ Code gen__array( StrC type, sw type_size )
 				mem_move( header + idx, header + idx + 1, sizeof( Type ) * ( header->Num - idx - 1 ) );
 				header->Num--;
 			))
-			, spec_inline
 		);
 
 		Code reserve = def_function( name(reserve), def_param( t_uw, name(new_capacity)), t_bool
@@ -316,7 +309,7 @@ Array(GenArrayRequest) GenArrayRequests;
 void gen__array_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenArrayRequests, g_allocator );
+		array_init( GenArrayRequests, Memory::GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.

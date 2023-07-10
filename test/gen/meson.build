@@ -25,5 +25,5 @@ endif
 
 add_project_arguments('-Dgen_time', language : ['c', 'cpp'])
 
-# executable( 'gencpp', sources, include_directories : includes )
+executable( 'gencpp', sources, include_directories : includes )
 executable( 'gencpp_parsed', sources_parsed, include_directories : includes )

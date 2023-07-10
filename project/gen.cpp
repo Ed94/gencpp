@@ -32,6 +32,8 @@ namespace gen
 	global Code t_bool;
 	global Code t_char;
 	global Code t_wchar_t;
+	global Code t_class;
+	global Code t_typename;
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 	global Code t_b32;
@@ -216,6 +218,7 @@ namespace gen
 			case Struct:
 			case Struct_Fwd:
 			case Struct_Body:
+			case Template:
 			case Typedef:
 			case Typename:
 			case Union:
@@ -824,6 +827,14 @@ namespace gen
 			}
 			break;
 
+			case Template:
+			{
+				ProcessModuleFlags();
+
+				result.append_fmt( "template< %s >\n%s", entry( 1 )->to_string(), body()->to_string() );
+			}
+			break;
+
 			case Typedef:
 			{
 				ProcessModuleFlags();
@@ -889,10 +900,20 @@ namespace gen
 					idx++;
 				}
 
-				result.append_fmt( "%s\n{\n%s\n};"
-					, Name
-					, body()->to_string()
-				);
+				if ( Name )
+				{
+					result.append_fmt( "%s\n{\n%s\n};"
+						, Name
+						, body()->to_string()
+					);
+				}
+				else
+				{
+					// Anonymous union
+					result.append_fmt( "\n{\n%s\n};"
+						, body()->to_string()
+					);
+				}
 			}
 			break;
 
@@ -1051,6 +1072,8 @@ namespace gen
 		def_constant_code_type( bool );
 		def_constant_code_type( char );
 		def_constant_code_type( wchar_t );
+		def_constant_code_type( class );
+		def_constant_code_type( typename );
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 		t_b32 = def_type( name(b32) );
@@ -1937,11 +1960,14 @@ namespace gen
 			case Function_Fwd:
 			case Operator_Fwd:
 			case Struct_Fwd:
+			case Class:
+			case Function:
+			case Operator:
+			case Struct:
 			break;
 
 			default:
-				// Technically friends can have a function body. I will not support it so if you want that add it yourself. - Ed.
-				log_failure("gen::def_friend: declaration cannot be used with friend, must be a forward declare - %s", declaration->debug_str());
+				log_failure("gen::def_friend: requires declartion to have class, function, operator, or struct - %s", declaration->debug_str());
 				return Code::Invalid;
 		}
 
@@ -2264,6 +2290,40 @@ namespace gen
 		return result;
 	}
 
+	Code def_template( Code params, Code definition, ModuleFlag mflags )
+	{
+		null_check( def_template, definition );
+
+		if ( params && params->Type != ECode::Parameters )
+		{
+			log_failure( "gen::def_template: params is not of parameters type - %s", params->debug_str() );
+			return Code::Invalid;
+		}
+
+		switch (definition->Type )
+		{
+			case ECode::Class:
+			case ECode::Function:
+			case ECode::Struct:
+			case ECode::Variable:
+			case ECode::Using:
+			break;
+
+			default:
+				log_failure( "gen::def_template: definition is not of class, function, struct, variable, or using type - %s", definition->debug_str() );
+		}
+
+		Code
+		result              = make_code();
+		result->Type        = ECode::Template;
+		result->ModuleFlags = mflags;
+
+		result->add_entry( definition );
+		result->add_entry( params );
+
+		return result;
+	}
+
 	Code def_type( StrC name, Code arrayexpr, Code specifiers, Code attributes )
 	{
 		name_check( def_type, name );
@@ -2345,7 +2405,6 @@ namespace gen
 
 	Code def_union( StrC name, Code body, Code attributes, ModuleFlag mflags )
 	{
-		name_check( def_union, name );
 		null_check( def_union, body );
 
 		if ( body->Type != ECode::Union_Body )
@@ -2362,9 +2421,11 @@ namespace gen
 
 		Code
 		result = make_code();
-		result->Name        = get_cached_string( name );
 		result->ModuleFlags = mflags;
 		result->Type        = ECode::Union;
+
+		if ( name.Ptr )
+			result->Name = get_cached_string( name );
 
 		result->add_entry( body );
 
@@ -3080,9 +3141,6 @@ namespace gen
 		It will not be capable of lexing C++ code with unsupported features.
 	*/
 
-	// Angle brackets not supported as they are used for template arguments outside of expressions
-	// Any angle brackets found will be considered an operator token.
-
 	#	define Define_TokType \
 		Entry( Access_Private,        "private" )         \
 		Entry( Access_Protected,      "protected" )       \
@@ -3134,6 +3192,7 @@ namespace gen
 		Entry( Star,                  "*" )               \
 		Entry( Statement_End,         ";" )               \
 		Entry( String,                "__String__" )      \
+		Entry( Template,              "template" )        \
 		Entry( Type_Unsigned, 	      "unsigned" )        \
 		Entry( Type_Signed,           "signed" )          \
 		Entry( Type_Short,            "short" )           \
@@ -3796,6 +3855,7 @@ namespace gen
 	internal Code parse_namespace        ( Parser::TokArray& toks, char const* context );
 	internal Code parse_struct           ( Parser::TokArray& toks, char const* context );
 	internal Code parse_variable         ( Parser::TokArray& toks, char const* context );
+	internal Code parse_template         ( Parser::TokArray& toks, char const* context );
 	internal Code parse_type             ( Parser::TokArray& toks, char const* context );
 	internal Code parse_typedef          ( Parser::TokArray& toks, char const* context );
 	internal Code parse_union            ( Parser::TokArray& toks, char const* context );
@@ -3895,12 +3955,51 @@ namespace gen
 			return { nullptr };
 		}
 
+		Code type  = { nullptr };
+		Code value = { nullptr };
+
+		type = parse_type( toks, context );
+		if ( type == Code::Invalid )
+			return Code::Invalid;
+
+		Token name = currtok;
+		eat( TokType::Identifier );
+
+		if ( currtok.IsAssign )
+		{
+			eat( TokType::Operator );
+
+			Token value_tok = currtok;
+
+			if ( currtok.Type == TokType::Statement_End )
+			{
+				log_failure( "gen::%s: Expected value after assignment operator", context );
+				return Code::Invalid;
+			}
+
+			while ( left && currtok.Type != TokType::Statement_End )
+			{
+				value_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)value_tok.Text;
+				eat( currtok.Type );
+			}
+
+			value = parse_type( toks, context );
+		}
+
 		Code
-		result = make_code();
+		result       = make_code();
 		result->Type = Parameters;
+		result->Name = get_cached_string( name );
+
+		result->add_entry( type );
+
+		if ( value )
+			result->add_entry( value );
 
 		while ( left && currtok.Type != TokType::Capture_End)
 		{
+			eat( TokType::Comma );
+
 			Code type  = { nullptr };
 			Code value = { nullptr };
 
@@ -3933,7 +4032,7 @@ namespace gen
 			}
 
 			Code
-			param = make_code();
+			param       = make_code();
 			param->Type = Parameters;
 			param->Name = get_cached_string( name );
 
@@ -3943,17 +4042,218 @@ namespace gen
 				param->add_entry( value );
 
 			result->add_entry( param );
-
-			if ( check( TokType::Comma ) )
-				eat( TokType::Comma );
 		}
+
 		eat( TokType::Capture_End );
 
 		return result;
 	#	undef context
 	}
 
-	internal
+	// Function parsing is handled in multiple places because its initial signature is shared with variable parsing
+	internal inline
+	Code parse_function_after_name(
+		  ModuleFlag mflags
+		, Code attributes
+		, Code specifiers
+		, Code ret_type
+		, StrC name
+		, Parser::TokArray& toks
+		, char const* context
+	)
+	{
+		using namespace Parser;
+
+		Code params = parse_params( toks, txt(parse_function) );
+
+		Code body = { nullptr };
+		if ( check( TokType::BraceCurly_Open ) )
+		{
+			body = parse_function_body( toks, txt(parse_function) );
+			if ( body == Code::Invalid )
+				return Code::Invalid;
+		}
+		else
+		{
+			eat( TokType::Statement_End );
+		}
+
+		using namespace ECode;
+
+		Code
+		result              = make_code();
+		result->Name        = get_cached_string( name );
+		result->ModuleFlags = mflags;
+
+		if ( body )
+		{
+			switch ( body->Type )
+			{
+				case Function_Body:
+				case Untyped:
+					break;
+
+				default:
+				{
+					log_failure("gen::def_function: body must be either of Function_Body or Untyped type. %s", body->debug_str());
+					return Code::Invalid;
+				}
+			}
+
+			result->Type = Function;
+			result->add_entry( body );
+		}
+		else
+		{
+			result->Type = Function_Fwd;
+		}
+
+		if ( specifiers )
+			result->add_entry( specifiers );
+
+		result->add_entry( ret_type );
+
+		if ( params )
+			result->add_entry( params );
+
+		return result;
+	}
+
+	internal inline
+	Code parse_operator_after_ret_type( ModuleFlag mflags, Code attributes, Code specifiers, Code ret_type, Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		// Parse Operator
+		eat( TokType::Decl_Operator );
+
+		if ( ! check( TokType::Operator ) )
+		{
+			log_failure( "gen::%s: Expected operator after 'operator' keyword", context );
+			return Code::Invalid;
+		}
+
+		OperatorT op = OperatorT::Invalid;
+		switch ( currtok.Text[0] )
+		{
+			case '+':
+			case '-':
+			case '*':
+			case '/':
+			case '%':
+			case '&':
+			case '|':
+			case '^':
+			case '~':
+			case '!':
+			case '=':
+			case '<':
+			case '>':
+			case '.':
+			case ',':
+			case ':':
+			case ';':
+			case '?':
+			case '@':
+			case '#':
+			case '$':
+			case '`':
+			case '\'':
+			case '"':
+			case '(':
+			case ')':
+			case '[':
+			case ']':
+			case '{':
+			case '}':
+			{
+				log_failure( "gen::%s: Invalid operator '%c'", context, currtok.Text[0] );
+				return Code::Invalid;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+
+		// Parse Params
+		Code params = parse_params( toks, txt(parse_operator) );
+
+		// Parse Body
+		Code body = { nullptr };
+
+		// OpValidateResult check_result = operator__validate( op, params, ret_type, specifiers );
+		Code result = def_operator( op, params, ret_type, body, specifiers, attributes, mflags );
+		return result;
+	}
+
+	// Variable parsing is handled in multiple places because its initial signature is shared with function parsing
+	internal inline
+	Code parse_variable_after_name(
+		  ModuleFlag mflags
+		, Code attributes
+		, Code specifiers
+		, Code type
+		, StrC name
+		, Parser::TokArray& toks
+		, char const* context )
+	{
+		using namespace Parser;
+
+		Code array_expr = parse_array_decl( toks, txt(parse_variable) );
+
+		Code expr = Code::Invalid;
+
+		if ( currtok.IsAssign )
+		{
+			eat( TokType::Operator );
+
+			Token expr_tok = currtok;
+
+			if ( currtok.Type == TokType::Statement_End )
+			{
+				log_failure( "gen::parse_variable: expected expression after assignment operator" );
+				return Code::Invalid;
+			}
+
+			while ( left && currtok.Type != TokType::Statement_End )
+			{
+				expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
+				eat( currtok.Type );
+			}
+
+			expr = untyped_str( expr_tok );
+		}
+
+		eat( TokType::Statement_End );
+
+		using namespace ECode;
+
+		Code
+		result              = make_code();
+		result->Type        = Variable;
+		result->Name        = get_cached_string( name );
+		result->ModuleFlags = mflags;
+
+		result->add_entry( type );
+
+		if (array_expr)
+			type->add_entry( array_expr );
+
+		if ( attributes )
+			result->add_entry( attributes );
+
+		if (specifiers)
+			result->add_entry( specifiers );
+
+		if ( expr )
+			result->add_entry( expr );
+
+		return result;
+	}
+
+	internal inline
 	Code parse_variable_assignment( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
@@ -3984,6 +4284,50 @@ namespace gen
 		return expr;
 	}
 
+	internal inline
+	Code parse_operator_function_or_variable( bool expects_function, Code attributes, Code specifiers, Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		Code result = Code::Invalid;
+
+		Code type = parse_type( toks, txt(parse_variable) );
+
+		if ( type == Code::Invalid )
+			return Code::Invalid;
+
+		if ( check( TokType::Operator) )
+		{
+			// Dealing with an operator overload
+			result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, type, toks, txt(parse_template) );
+		}
+		else
+		{
+			StrC name = currtok;
+			eat( TokType::Identifier );
+
+			if ( check( TokType::Operator ) && currtok.Text[0] == '(' )
+			{
+				// Dealing with a function
+
+				result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, txt(parse_template) );
+			}
+			else
+			{
+				if ( expects_function )
+				{
+					log_failure( "gen::parse_template: expected function declaration (consteval was used)" );
+					return Code::Invalid;
+				}
+
+				// Dealing with a variable
+				result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, txt(parse_template) );
+			}
+		}
+
+		return result;
+	}
+
 	internal
 	Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char const* context )
 	{
@@ -4004,11 +4348,11 @@ namespace gen
 
 		Code result = Code::Invalid;
 
-		// TODO: Parse module specifiers
+		// TODO : Parse module specifiers
 
 		eat( which );
 
-		// TODO: Parse attributes
+		// TODO : Parse attributes
 
 		name = parse_identifier( toks, context );
 
@@ -4039,14 +4383,14 @@ namespace gen
 
 		if ( which == TokType::Decl_Class )
 			result = def_class( name, body, parent, access
-				// TODO: Set these up later
+				// TODO : Set these up later
 				, NoCode // Attributes
 				, ModuleFlag::None
 			);
 
 		else
 			result = def_struct( name, body, parent, access
-				// TODO: Set these up later
+				// TODO : Set these up later
 				, NoCode // Attributes
 				, ModuleFlag::None
 			);
@@ -4069,7 +4413,10 @@ namespace gen
 		while ( left && currtok.Type != TokType::BraceCurly_Close )
 		{
 			Code member     = Code::Invalid;
-			Code specifiers = Code::Invalid;
+			Code attributes = { nullptr };
+			Code specifiers = { nullptr };
+
+			bool expects_function = false;
 
 			switch ( currtok.Type )
 			{
@@ -4109,6 +4456,10 @@ namespace gen
 					member = parse_struct( toks, context );
 				break;
 
+				case TokType::Template:
+					member = parse_template( toks, context );
+				break;
+
 				case TokType::Decl_Typedef:
 					member = parse_typedef( toks, context );
 				break;
@@ -4121,12 +4472,44 @@ namespace gen
 					member = parse_using( toks, context );
 				break;
 
+				case TokType::BraceSquare_Open:
+				case TokType::Attr_Keyword:
+				{
+					// Standard attribute
+					if ( currtok.Type == TokType::BraceSquare_Open  )
+					{
+						eat( TokType::BraceSquare_Open );
+
+						if ( currtok.Type != TokType::BraceSquare_Open )
+						{
+							log_failure( "%s: Error, expected attribute name", context );
+							return result;
+						}
+
+						while ( left && currtok.Type != TokType::BraceSquare_Close )
+						{
+							// TODO : Parse attributes
+						}
+
+						eat( TokType::BraceSquare_Close );
+						eat( TokType::BraceSquare_Close );
+					}
+
+					// Platform Specific attribute
+					eat( TokType::Attr_Keyword );
+					eat( TokType::Capture_Start );
+
+					// TODO : Parse attributes
+
+					eat( TokType::Capture_End );
+				}
+				//! Fallthrough intended
 				case TokType::Spec_Consteval:
 				case TokType::Spec_Constexpr:
 				case TokType::Spec_Constinit:
 				case TokType::Spec_Inline:
+				case TokType::Spec_Mutable:
 				case TokType::Spec_Static:
-				case TokType::Spec_ThreadLocal:
 				case TokType::Spec_Volatile:
 				{
 					SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
@@ -4140,18 +4523,23 @@ namespace gen
 						{
 							case ESpecifier::Constexpr:
 							case ESpecifier::Constinit:
-							case ESpecifier::External_Linkage:
-							case ESpecifier::Local_Persist:
+							case ESpecifier::Inline:
 							case ESpecifier::Mutable:
 							case ESpecifier::Static_Member:
-							case ESpecifier::Thread_Local:
 							case ESpecifier::Volatile:
 							break;
 
+							case ESpecifier::Consteval:
+								expects_function = true;
+							break;
+
 							default:
-								log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
+								log_failure( "gen::parse_class_struct_body: invalid specifier " txt(spec) " for variable" );
 								return Code::Invalid;
 						}
+
+						if ( spec == ESpecifier::Const )
+							continue;
 
 						specs_found[num_specifiers] = spec;
 						num_specifiers++;
@@ -4163,6 +4551,7 @@ namespace gen
 						specifiers = def_specifiers( num_specifiers, specs_found );
 					}
 				}
+				//! Fallthrough intentional
 				case TokType::Identifier:
 				case TokType::Spec_Const:
 				case TokType::Type_Unsigned:
@@ -4170,89 +4559,20 @@ namespace gen
 				case TokType::Type_Short:
 				case TokType::Type_Long:
 				{
-					Code type = parse_type( toks, context );
-					if ( type == Code::Invalid )
-					{
-						log_failure( "gen::parse_variable: failed to parse type" );
-						return Code::Invalid;
-					}
-
-					Token name = currtok;
-					eat( TokType::Identifier );
-
-					// Parsing a member function
-					if ( check( TokType::Capture_Start ))
-					{
-						Code params = parse_params( toks, context );
-						if ( params == Code::Invalid )
-						{
-							log_failure( "gen::parse_variable: failed to parse function parameters" );
-							return Code::Invalid;
-						}
-
-						if ( check( TokType::BraceCurly_Open ) )
-						{
-							Code body = parse_function_body( toks, context);
-							if ( body == Code::Invalid )
-							{
-								log_failure( "gen::parse_variable: failed to parse function body" );
-								return Code::Invalid;
-							}
-
-							member       = make_code();
-							member->Name = get_cached_string( name );
-
-							if ( body )
-							{
-								switch ( body->Type )
-								{
-									case Function_Body:
-									case Untyped:
-										break;
-
-									default:
-									{
-										log_failure("gen::def_function: body must be either of Function_Body or Untyped type. %s", body->debug_str());
-										return Code::Invalid;
-									}
-								}
-
-								member->Type = Function;
-								member->add_entry( body );
-							}
-							else
-							{
-								member->Type = Function_Fwd;
-							}
-
-							member->add_entry( type );
-
-							if ( params )
-								member->add_entry( params );
-
-							break;
-						}
-					}
-
-					// Parsing a member variable
-					Code array_expr = parse_array_decl( toks, context );
-					Code expr       = parse_variable_assignment( toks, context );
-
-					member       = make_code();
-					member->Type = Variable;
-					member->Name = get_cached_string( name );
-
-					member->add_entry( type );
-
-					if (array_expr)
-						type->add_entry( array_expr );
-
-					if (specifiers)
-						member->add_entry( specifiers );
-
-					if ( expr )
-						member->add_entry( expr );
+					member = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, context );
 				}
+
+				default:
+					Token untyped_tok = currtok;
+
+					while ( left && currtok.Type != TokType::BraceCurly_Close )
+					{
+						untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
+						eat( currtok.Type );
+					}
+
+					member = untyped_str( untyped_tok );
+				break;
 			}
 
 			if ( member == Code::Invalid )
@@ -4282,7 +4602,11 @@ namespace gen
 
 		while ( left && currtok.Type != TokType::BraceCurly_Close )
 		{
-			Code member = Code::Invalid;
+			Code member     = Code::Invalid;
+			Code attributes = { nullptr };
+			Code specifiers = { nullptr };
+
+			bool expects_function = false;
 
 			switch ( currtok.Type )
 			{
@@ -4315,17 +4639,55 @@ namespace gen
 					member = parse_using( toks, context );
 				break;
 
-				case TokType::Identifier:
-				break;
-
-				case TokType::Spec_Const:
 				case TokType::Spec_Constexpr:
 				case TokType::Spec_Constinit:
+				case TokType::Spec_Mutable:
 				case TokType::Spec_Static:
 				case TokType::Spec_ThreadLocal:
 				case TokType::Spec_Volatile:
-					// Can be all kinds of crap
+				{
+					SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+					s32        num_specifiers = 0;
 
+					while ( left && tok_is_specifier( currtok ) )
+					{
+						SpecifierT spec = ESpecifier::to_type( currtok );
+
+						switch ( spec )
+						{
+							case ESpecifier::Constexpr:
+							case ESpecifier::Constinit:
+							case ESpecifier::Mutable:
+							case ESpecifier::Static_Member:
+							case ESpecifier::Thread_Local:
+							case ESpecifier::Volatile:
+							break;
+
+							case ESpecifier::Consteval:
+								expects_function = true;
+							break;
+
+							default:
+								log_failure( "gen::parse_class_struct_body: invalid specifier " txt(spec) " for variable" );
+								return Code::Invalid;
+						}
+
+						if ( spec == ESpecifier::Const )
+							continue;
+
+						specs_found[num_specifiers] = spec;
+						num_specifiers++;
+						eat( currtok.Type );
+					}
+
+					if ( num_specifiers )
+					{
+						specifiers = def_specifiers( num_specifiers, specs_found );
+					}
+				}
+				//! Fallthrough intentional
+				case TokType::Identifier:
+				case TokType::Spec_Const:
 				case TokType::Type_Unsigned:
 				case TokType::Type_Signed:
 				case TokType::Type_Short:
@@ -4376,7 +4738,10 @@ namespace gen
 		while ( left && currtok.Type != TokType::BraceCurly_Close )
 		{
 			Code member     = Code::Invalid;
-			Code specifiers = Code::Invalid;
+			Code attributes = { nullptr };
+			Code specifiers = { nullptr };
+
+			bool expects_function = false;
 
 			switch ( currtok.Type )
 			{
@@ -4391,13 +4756,6 @@ namespace gen
 
 				case TokType::Decl_Class:
 					member = parse_class( toks, context );
-				break;
-
-				case TokType::Module_Export:
-					if ( which == Export_Body )
-						log_failure( "gen::parse_extern_link_body: nested export declaration" );
-
-					member = parse_export_body( toks, context );
 				break;
 
 				case TokType::Decl_Extern_Linkage:
@@ -4415,6 +4773,10 @@ namespace gen
 					member = parse_struct( toks, context );
 				break;
 
+				case TokType::Template:
+					member = parse_template( toks, context );
+				break;
+
 				case TokType::Decl_Typedef:
 					member = parse_typedef( toks, context );
 				break;
@@ -4427,18 +4789,63 @@ namespace gen
 					member = parse_using( toks, context );
 				break;
 
-				// TODO: Module support.
-				// case TokType::Module_Export:
-				// case TokType::Module_Import:
+				case TokType::Module_Export:
+					if ( which == Export_Body )
+						log_failure( "gen::parse_extern_link_body: nested export declaration" );
 
+					member = parse_export_body( toks, context );
+				break;
+
+				case TokType::Module_Import:
+				{
+					not_implemented();
+				}
+				//! Fallthrough intentional
+				case TokType::BraceSquare_Open:
+				case TokType::Attr_Keyword:
+				{
+					not_implemented();
+
+					// Standard attribute
+					if ( currtok.Type == TokType::BraceSquare_Open  )
+					{
+						eat( TokType::BraceSquare_Open );
+
+						if ( currtok.Type != TokType::BraceSquare_Open )
+						{
+							log_failure( "%s: Error, expected attribute name", context );
+							return result;
+						}
+
+						while ( left && currtok.Type != TokType::BraceSquare_Close )
+						{
+							// TODO : Parse attributes
+						}
+
+						eat( TokType::BraceSquare_Close );
+						eat( TokType::BraceSquare_Close );
+					}
+
+					// Platform Specific attribute
+					eat( TokType::Attr_Keyword );
+					eat( TokType::Capture_Start );
+
+					// TODO : Parse attributes
+
+					eat( TokType::Capture_End );
+				}
+				//! Fallthrough intentional
+				case TokType::Spec_Consteval:
+				case TokType::Spec_Constexpr:
+				case TokType::Spec_Constinit:
 				case TokType::Spec_Extern:
 				case TokType::Spec_Global:
 				case TokType::Spec_Inline:
 				case TokType::Spec_Internal_Linkage:
 				case TokType::Spec_Static:
 				{
-					SpecifierT specs_found[16] { ESpecifier::Invalid };
-					s32         num_specs = 0;
+					SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+					s32        num_specifiers = 0;
 
 					while ( left && tok_is_specifier( currtok ) )
 					{
@@ -4446,28 +4853,37 @@ namespace gen
 
 						switch ( spec )
 						{
-							case ESpecifier::Const:
-							case ESpecifier::External_Linkage:
-							case ESpecifier::Global:
+							case ESpecifier::Constexpr:
+							case ESpecifier::Constinit:
 							case ESpecifier::Inline:
-							case ESpecifier::Internal_Linkage:
+							case ESpecifier::Mutable:
+							case ESpecifier::Static_Member:
+							case ESpecifier::Volatile:
+							break;
+
+							case ESpecifier::Consteval:
+								expects_function = true;
 							break;
 
 							default:
-								log_failure( "gen::%s: invalid specifier " txt(spec) " for a global scope", context );
+								log_failure( "gen::parse_class_struct_body: invalid specifier " txt(spec) " for variable" );
 								return Code::Invalid;
 						}
 
-						specs_found[num_specs] = spec;
-						num_specs++;
+						if ( spec == ESpecifier::Const )
+							continue;
+
+						specs_found[num_specifiers] = spec;
+						num_specifiers++;
 						eat( currtok.Type );
 					}
 
-					if ( num_specs )
+					if ( num_specifiers )
 					{
-						specifiers = def_specifiers( num_specs, specs_found );
+						specifiers = def_specifiers( num_specifiers, specs_found );
 					}
 				}
+				//! Fallthrough intentional
 				case TokType::Identifier:
 				case TokType::Spec_Const:
 				case TokType::Type_Long:
@@ -4475,100 +4891,7 @@ namespace gen
 				case TokType::Type_Signed:
 				case TokType::Type_Unsigned:
 				{
-					Code type = parse_type( toks, context );
-					if ( type == Code::Invalid )
-					{
-						log_failure( "gen::%s: failed to parse type", context );
-						return Code::Invalid;
-					}
-					if ( check( TokType::Decl_Operator ) )
-					{
-						// Already parsed the return type...
-
-						eat( TokType::Decl_Operator );
-
-						// Parse op type
-
-						// Parse parameters
-
-						// Parse possible body
-					}
-
-					Token name = currtok;
-					eat( TokType::Identifier );
-
-					// Parsing a function
-					if ( check( TokType::Capture_Start ))
-					{
-						Code params = parse_params( toks, context );
-						if ( params == Code::Invalid )
-						{
-							log_failure( "gen::%s: failed to parse function params", context );
-							return Code::Invalid;
-						}
-
-						if ( check( TokType::BraceCurly_Open ))
-						{
-							Code body = parse_function_body( toks, context );
-							if ( body == Code::Invalid )
-							{
-								log_failure( "gen::%s: failed to parse function body", context );
-								return Code::Invalid;
-							}
-
-							member = make_code();
-							member->Name = get_cached_string( name );
-
-							if ( body )
-							{
-								switch ( body->Type )
-								{
-									case Function_Body:
-									case Untyped:
-										break;
-
-									default:
-									{
-										log_failure( "gen::%s: invalid function body", context );
-										return Code::Invalid;
-									}
-								}
-
-								member->Type = Function;
-								member->add_entry( body );
-							}
-							else
-							{
-								member->Type = Function_Fwd;
-							}
-
-							member->add_entry( type );
-
-							if ( params )
-								member->add_entry( params );
-
-							break;
-						}
-					}
-
-					// Parsing a variable
-					Code array_expr = parse_array_decl( toks, context );
-					Code expr       = parse_variable_assignment( toks, context );
-
-					member = make_code();
-					member->Type = Variable;
-					member->Name = get_cached_string( name );
-
-					member->add_entry( type );
-
-					if ( array_expr )
-						type->add_entry( array_expr );
-
-					if ( specifiers )
-						member->add_entry( specifiers );
-
-					if ( expr )
-						member->add_entry( expr );
+					member = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, context );
 				}
 			}
 
@@ -4630,7 +4953,7 @@ namespace gen
 			is_enum_class = true;
 		}
 
-		// TODO: Parse attributes
+		// TODO : Parse attributes
 
 		if ( currtok.Type != TokType::Identifier )
 		{
@@ -4679,12 +5002,9 @@ namespace gen
 			body.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)body.Text;
 
 			eat( TokType::BraceCurly_Close );
-			eat( TokType::Statement_End );
 		}
-		else
-		{
-			eat( TokType::Statement_End );
-		}
+
+		eat( TokType::Statement_End );
 
 		using namespace ECode;
 
@@ -4725,7 +5045,7 @@ namespace gen
 		return parse_enum( toks, txt(parse_enum) );
 	}
 
-	internal
+	internal inline
 	Code parse_export_body( Parser::TokArray& toks, char const* context )
 	{
 		return parse_global_nspace( ECode::Export_Body, toks, context );
@@ -4743,7 +5063,7 @@ namespace gen
 		return parse_export_body( toks, txt(parse_export_body) );
 	}
 
-	internal
+	internal inline
 	Code parse_extern_link_body( Parser::TokArray& toks, char const* context )
 	{
 		return parse_global_nspace( ECode::Extern_Linkage_Body, toks, context );
@@ -4864,9 +5184,9 @@ namespace gen
 		Code array_expr   = { nullptr };
 		Code specifiers   = { nullptr };
 
-		// TODO: Parse module specifiers
+		// TODO : Parse module specifiers
 
-		// TODO: Parse attributes
+		// TODO : Parse attributes
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
@@ -4921,56 +5241,7 @@ namespace gen
 		if ( ! name )
 			return Code::Invalid;
 
-		Code params = parse_params( toks, txt(parse_function) );
-
-		Code body = { nullptr };
-		if ( check( TokType::BraceCurly_Open ) )
-		{
-			body = parse_function_body( toks, txt(parse_function) );
-			if ( body == Code::Invalid )
-				return Code::Invalid;
-		}
-		else
-		{
-			eat( TokType::Statement_End );
-		}
-
-		using namespace ECode;
-
-		Code
-		result       = make_code();
-		result->Name = get_cached_string( name );
-
-		if ( body )
-		{
-			switch ( body->Type )
-			{
-				case Function_Body:
-				case Untyped:
-					break;
-
-				default:
-				{
-					log_failure("gen::def_function: body must be either of Function_Body or Untyped type. %s", body->debug_str());
-					return Code::Invalid;
-				}
-			}
-
-			result->Type = Function;
-			result->add_entry( body );
-		}
-		else
-		{
-			result->Type = Function_Fwd;
-		}
-
-		if ( specifiers )
-			result->add_entry( specifiers );
-
-		result->add_entry( ret_type );
-
-		if ( params )
-			result->add_entry( params );
+		Code result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, ret_type, name, toks, context );
 
 		return result;
 	}
@@ -5040,18 +5311,16 @@ namespace gen
 		// Parse Module specifier
 
 		// Parse Attributes
+		Code attributes = { nullptr };
 
 		// Parse Speciifers
+		Code specifiers = { nullptr };
 
 		// Parse Return Type
+		Code ret_type = parse_type( toks, txt(parse_operator) );
 
-		// Parse Operator
-
-		// Parse Params
-
-		// Parse Body
-
-		return Code::Invalid;
+		Code result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, ret_type, toks, context );
+		return result;
 	}
 
 	Code parse_operator( StrC def )
@@ -5066,7 +5335,7 @@ namespace gen
 		return parse_operator( toks, txt(parse_operator) );
 	}
 
-	internal
+	internal inline
 	Code parse_struct( Parser::TokArray& toks, char const* context )
 	{
 		return parse_class_struct( Parser::TokType::Decl_Struct, toks, txt(parse_struct) );
@@ -5082,6 +5351,135 @@ namespace gen
 			return Code::Invalid;
 
 		return parse_class_struct( TokType::Decl_Struct, toks, txt(parse_struct) );
+	}
+
+	internal
+	Code parse_template( Parser::TokArray& toks, char const* context )
+	{
+		using namespace Parser;
+
+		// TODO : Parse Module specifier
+
+		eat( TokType::Template );
+
+		if ( ! check( TokType::Operator) || currtok.Text[0] != '<' )
+		{
+			log_failure("gen::parse_template: expected '<' after 'template' keyword. %s", str_tok_type( currtok.Type ));
+			return Code::Invalid;
+		}
+		eat( TokType::Operator );
+
+		Code params = parse_params( toks, txt(parse_template) );
+		if ( params == Code::Invalid )
+			return Code::Invalid;
+
+		if ( ! check( TokType::Operator) || currtok.Text[0] != '>' )
+		{
+			log_failure("gen::parse_template: expected '<' after 'template' keyword. %s", str_tok_type( currtok.Type ));
+			return Code::Invalid;
+		}
+		eat( TokType::Operator );
+
+		Code definition = Code::Invalid;
+
+		while ( left )
+		{
+			if ( check( TokType::Decl_Class ) )
+			{
+				definition = parse_class( toks, txt(parse_template) );
+				break;
+			}
+
+			if ( check( TokType::Decl_Struct ) )
+			{
+				definition = parse_enum( toks, txt(parse_template) );
+				break;
+			}
+
+			if ( check( TokType::Decl_Using ))
+			{
+				definition = parse_using( toks, txt(parse_template) );
+				break;
+			}
+
+			// Its either a function or a variable
+			Token name = { nullptr, 0, TokType::Invalid };
+
+
+			Code attributes   = Code::Invalid;
+			Code specifiers   = Code::Invalid;
+
+			// TODO : Parse attributes
+
+			bool expects_function = false;
+
+			SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+			s32        num_specifiers = 0;
+
+			while ( left && tok_is_specifier( currtok ) )
+			{
+				SpecifierT spec = ESpecifier::to_type( currtok );
+
+				switch ( spec )
+				{
+					case ESpecifier::Const:
+					case ESpecifier::Constexpr:
+					case ESpecifier::Constinit:
+					case ESpecifier::External_Linkage:
+					case ESpecifier::Global:
+					case ESpecifier::Inline:
+					case ESpecifier::Local_Persist:
+					case ESpecifier::Mutable:
+					case ESpecifier::Static_Member:
+					case ESpecifier::Thread_Local:
+					case ESpecifier::Volatile:
+					break;
+
+					case ESpecifier::Consteval:
+						expects_function = true;
+					break;
+
+					default:
+						log_failure( "gen::parse_template: invalid specifier " txt(spec) " for variable or function" );
+						return Code::Invalid;
+				}
+
+				// Ignore const it will be handled by the type
+				if ( spec == ESpecifier::Const )
+					continue;
+
+				specs_found[num_specifiers] = spec;
+				num_specifiers++;
+				eat( currtok.Type );
+			}
+
+			if ( num_specifiers )
+			{
+				specifiers = def_specifiers( num_specifiers, specs_found );
+			}
+
+			definition = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, txt(parse_template) );
+		}
+
+		Code
+		result = make_code();
+		result->Type = ECode::Template;
+		result->add_entry( definition );
+		result->add_entry( params );
+
+		return Code::Invalid;
+	}
+
+	Code parse_template( StrC def )
+	{
+		check_parse_args( parse_template, def );
+		using namespace Parser;
+
+		TokArray toks = lex( def );
+		if ( toks.Arr == nullptr )
+			return Code::Invalid;
+
+		return parse_template( toks, txt(parse_template) );
 	}
 
 	internal
@@ -5183,7 +5581,7 @@ namespace gen
 
 			eat( TokType::Capture_Start );
 
-			// TODO: Change this to validate the parameters...
+			// TODO : Change this to validate the parameters...
 			// Bruteforce lex the parameters, no validation.
 			while ( ! check( TokType::Capture_End ))
 			{
@@ -5298,9 +5696,57 @@ namespace gen
 	{
 		using namespace Parser;
 
-		not_implemented();
+		// TODO : Parse module spec
 
-		return Code::Invalid;
+		eat( TokType::Decl_Union );
+
+		// Parse attributes
+		Code attributes = { nullptr };
+
+		StrC name = { 0, nullptr };
+
+		if ( check( TokType::Identifier ) )
+		{
+			name = currtok;
+			eat( TokType::Identifier );
+		}
+
+		Code body = { nullptr };
+
+		if ( check( TokType::BraceCurly_Open ) )
+		{
+			eat( TokType::BraceCurly_Open );
+
+			body = make_code();
+			body->Type = ECode::Union_Body;
+
+			while ( ! check( TokType::BraceCurly_Close ) )
+			{
+				Code entry = parse_variable( toks, txt(parse_union) );
+
+				if ( entry )
+					body->add_entry( entry );
+			}
+
+			eat( TokType::BraceCurly_Close );
+		}
+
+		eat( TokType::Statement_End );
+
+		Code
+		result = make_code();
+		result->Type = ECode::Union;
+
+		if ( name )
+			result->Name = get_cached_string( name );
+
+		if ( body )
+			result->add_entry( body );
+
+		if ( attributes )
+			result->add_entry( attributes );
+
+		return result;
 	}
 
 	Code parse_union( StrC def )
@@ -5329,7 +5775,7 @@ namespace gen
 
 		bool is_namespace = false;
 
-		// TODO: Parse module specs
+		// TODO : Parse module specs
 
 		eat( TokType::Decl_Using );
 
@@ -5344,7 +5790,7 @@ namespace gen
 
 		if ( currtok.IsAssign )
 		{
-			// TODO: Parse Attributes (using type-alias)
+			// TODO : Parse Attributes (using type-alias)
 
 			eat( TokType::Operator );
 
@@ -5392,14 +5838,12 @@ namespace gen
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
 
-		Code lang_linkage = Code::Invalid;
-		Code attributes   = Code::Invalid;
-		Code array_expr   = Code::Invalid;
-		Code specifiers   = Code::Invalid;
+		Code attributes = Code::Invalid;
+		Code specifiers = Code::Invalid;
 
-		// TODO: Parse module specifiers
+		// TODO : Parse module specifiers
 
-		// TODO: Parse attributes
+		// TODO : Parse attributes
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
@@ -5407,9 +5851,12 @@ namespace gen
 
 			switch ( spec )
 			{
+				case ESpecifier::Const:
 				case ESpecifier::Constexpr:
 				case ESpecifier::Constinit:
 				case ESpecifier::External_Linkage:
+				case ESpecifier::Global:
+				case ESpecifier::Inline:
 				case ESpecifier::Local_Persist:
 				case ESpecifier::Mutable:
 				case ESpecifier::Static_Member:
@@ -5422,20 +5869,9 @@ namespace gen
 					return Code::Invalid;
 			}
 
-			if ( spec == ESpecifier::External_Linkage )
-			{
-				specs_found[num_specifiers] = spec;
-				num_specifiers++;
-				eat( TokType::Spec_Extern );
-
-				if ( currtok.Type == TokType::String )
-				{
-					lang_linkage = untyped_str( currtok );
-					eat( TokType::String );
-				}
-
+			// Ignore const specifiers, they're handled by the type
+			if ( spec == ESpecifier::Const )
 				continue;
-			}
 
 			specs_found[num_specifiers] = spec;
 			num_specifiers++;
@@ -5452,61 +5888,10 @@ namespace gen
 		if ( type == Code::Invalid )
 			return Code::Invalid;
 
-		if ( currtok.Type != TokType::Identifier )
-		{
-			log_failure( "gen::parse_variable: expected identifier, recieved " txt(currtok.Type) );
-			return Code::Invalid;
-		}
-
 		name = currtok;
 		eat( TokType::Identifier );
 
-		array_expr = parse_array_decl( toks, txt(parse_variable) );
-
-		Code expr = Code::Invalid;
-
-		if ( currtok.IsAssign )
-		{
-			eat( TokType::Operator );
-
-			Token expr_tok = currtok;
-
-			if ( currtok.Type == TokType::Statement_End )
-			{
-				log_failure( "gen::parse_variable: expected expression after assignment operator" );
-				return Code::Invalid;
-			}
-
-			while ( left && currtok.Type != TokType::Statement_End )
-			{
-				expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
-				eat( currtok.Type );
-			}
-
-			expr = untyped_str( expr_tok );
-		}
-
-		eat( TokType::Statement_End );
-
-		using namespace ECode;
-
-		Code result  = make_code();
-		result->Type = Variable;
-		result->Name = get_cached_string( name );
-
-		result->add_entry( type );
-
-		if (array_expr)
-			type->add_entry( array_expr );
-
-		if ( attributes )
-			result->add_entry( attributes );
-
-		if (specifiers)
-			result->add_entry( specifiers );
-
-		if ( expr )
-			result->add_entry( expr );
+		Code result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, txt(parse_variable) );
 
 		return result;
 	}
@@ -5548,7 +5933,7 @@ namespace gen
 
 		TokMap tok_map;
 		{
-			// TODO: Switch this to use an arena that makes use of the stack (cap the size of the token table to around 4096 bytes)
+			// TODO : Switch this to use an arena that makes use of the stack (cap the size of the token table to around 4096 bytes)
 			tokmap_init( & tok_map, Memory::GlobalAllocator );
 
 			s32 left = num_tokens;

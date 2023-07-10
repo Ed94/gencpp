@@ -101,7 +101,6 @@ Code gen__buffer( StrC type, sw type_size )
 				Data[ header.Num ] = value;
 				header.Num++;
 			))
-			, spec_inline
 		);
 
 		Code appendv;
@@ -121,7 +120,6 @@ Code gen__buffer( StrC type, sw type_size )
 
 					header.Num += num;
 				))
-				, spec_inline
 			);
 		}
 
@@ -130,7 +128,6 @@ Code gen__buffer( StrC type, sw type_size )
 				Header& header = get_header();
 				header.Num = 0;
 			))
-			, spec_inline
 		);
 
 		Code end = def_function( name(end), __, t_type_ref
@@ -138,7 +135,6 @@ Code gen__buffer( StrC type, sw type_size )
 				Header& header = get_header();
 				return Data[ header.Num - 1 ];
 			))
-			, spec_inline
 		);
 
 		Code free = def_function( name(free), __, t_void
@@ -146,21 +142,18 @@ Code gen__buffer( StrC type, sw type_size )
 				Header& header = get_header();
 				zpl::free( header.Backing, & header );
 			))
-			, spec_inline
 		);
 
 		Code get_header = def_function( name(get_header), __, t_header_ref
 			, def_execution( code(
 				return * ( rcast( Header*, Data ) - 1 );
 			))
-			, spec_inline
 		);
 
 		Code num = def_function( name(num), __, t_sw
 			, def_execution( code(
 				return get_header().Num;
 			))
-			, spec_inline
 		);
 
 		Code pop = def_function( name(pop), __, t_type
@@ -169,7 +162,6 @@ Code gen__buffer( StrC type, sw type_size )
 				header.Num--;
 				return Data[ header.Num ];
 			))
-			, spec_inline
 		);
 
 		Code wipe = def_function( name(wipe), __, t_void
@@ -178,7 +170,6 @@ Code gen__buffer( StrC type, sw type_size )
 				header.Num = 0;
 				mem_set( Data, 0, header.Capacity * sizeof( Type ) );
 			))
-			, spec_inline
 		);
 
 		Code op_type_ptr = untyped_str( code(
@@ -223,7 +214,7 @@ Array(GenBufferRequest) GenBufferRequests;
 void gen__buffer_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenBufferRequests, g_allocator );
+		array_init( GenBufferRequests, Memory::GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
