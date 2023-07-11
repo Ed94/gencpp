@@ -4615,16 +4615,19 @@ namespace gen
 				case TokType::Access_Public:
 					member = access_public;
 					eat( TokType::Access_Public );
+					eat( TokType::Assign_Classifer );
 				break;
 
 				case TokType::Access_Protected:
 					member = access_protected;
 					eat( TokType::Access_Protected );
+					eat( TokType::Assign_Classifer );
 				break;
 
 				case TokType::Access_Private:
 					member = access_private;
 					eat( TokType::Access_Private );
+					eat( TokType::Assign_Classifer );
 				break;
 
 				case TokType::Decl_Class:
@@ -5721,10 +5724,13 @@ namespace gen
 	{
 		using namespace Parser;
 
+		Token context_tok = prevtok;
+
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
 
-		Token name = { nullptr, 0, TokType::Invalid };
+		Token name     = { nullptr, 0, TokType::Invalid };
+		Token func_sig = { currtok.Text, 0, TokType::Invalid };
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
@@ -5793,13 +5799,11 @@ namespace gen
 			eat( currtok.Type );
 		}
 
-		Token func_sig = { nullptr, 0, TokType::Invalid };
-
-		if ( check( TokType::Capture_Start ) && prevtok.Type == TokType::Capture_End )
+		// Not sure if its technically possible to cast ot a function pointer user defined operator cast...
+		// Supporting it is not worth the effort.
+		if ( check( TokType::Capture_Start ) && context_tok.Type != TokType::Decl_Operator )
 		{
 			// Its a function type
-
-			func_sig = currtok;
 			eat( TokType::Capture_Start );
 
 			while ( check( TokType::Star ) || currtok.Type == TokType::Spec_Const )
@@ -5807,7 +5811,9 @@ namespace gen
 				eat( currtok.Type );
 			}
 
-			eat(TokType::Identifier);
+			// if its a using statement there will not be an ID.
+			if ( check( TokType::Identifier ) )
+				eat(TokType::Identifier);
 
 			eat( TokType::Capture_End );
 
@@ -5817,8 +5823,15 @@ namespace gen
 
 			// TODO : Change this to validate the parameters...
 			// Bruteforce lex the parameters, no validation.
-			while ( ! check( TokType::Capture_End ))
+			s32 level = 0;
+			while ( ! check( TokType::Capture_End ) || level > 0 )
 			{
+				if ( check( TokType::Capture_Start ) )
+					level++;
+
+				if ( check( TokType::Capture_End ) )
+					level--;
+
 				eat( currtok.Type );
 			}
 
@@ -5833,17 +5846,10 @@ namespace gen
 		result       = make_code();
 		result->Type = Typename;
 
-		if ( func_sig )
+		if ( func_sig.Length > 0 )
 		{
-			// Brute force name to the entire signature.
-
-			String custom_name = String::make( Memory::GlobalAllocator, name );
-
-			if ( num_specifiers )
-				custom_name.append( def_specifiers( num_specifiers, (SpecifierT*)specs_found ).to_string() );
-
-			custom_name.append( " " );
-			custom_name.append(func_sig );
+			// Bruteforce all tokens together.
+			name = func_sig;
 		}
 		else
 		{

@@ -48,7 +48,6 @@ Code gen__hashtable( StrC type, sw type_size )
 		s32         len      = str_len( name_str );
 
 		StringCached ht_entry_name = get_cached_string({ len, name_str });
-		sw const     entry_size    = sizeof( u64 ) + sizeof( sw ) + type_size;
 
 		t_ht_entry = def_type( ht_entry_name );
 		ht_entry   = def_struct( ht_entry_name, def_struct_body( 3
@@ -57,7 +56,7 @@ Code gen__hashtable( StrC type, sw type_size )
 			, def_variable( t_type, name(Value))
 		));
 
-		array_ht_entry   = gen__array( ht_entry_name, entry_size );
+		array_ht_entry   = gen__array( ht_entry_name );
 		t_array_ht_entry = def_type( array_ht_entry->Name );
 	}
 
@@ -90,7 +89,7 @@ Code gen__hashtable( StrC type, sw type_size )
 
 		Code clear = def_function( name(clear), __, t_void
 			, def_execution( code(
-				for ( s32 idx = 0; idx < Hashes.num(), idx++ )
+				for ( s32 idx = 0; idx < Hashes.num(); idx++ )
 					Hashes[ idx ] = -1;
 
 				Entries.clear();
@@ -222,7 +221,7 @@ Code gen__hashtable( StrC type, sw type_size )
 			);
 			Code body = def_execution( token_fmt( tmpl, 1, "type", name ) );
 
-			rehash = def_function( name(rehash), def_param( t_sw, name(new_num)), t_void, body, spec_inline);
+			rehash = def_function( name(rehash), def_param( t_sw, name(new_num)), t_void, body );
 		}
 
 		Code rehash_fast;
@@ -435,7 +434,7 @@ u32 gen_hashtable_file()
 
 	gen_buffer_file.print( def_include( StrC::from("Bloat.hpp")) );
 	gen_buffer_file.print( def_include( StrC::from("Array.NonParsed.hpp")) );
-	gen_buffer_file.print( def_include( StrC::from("array.gen.hpp")) );
+	gen_buffer_file.print( def_include( StrC::from("array.NonParsed.gen.hpp")) );
 
 	gen_buffer_file.print( gen__hashtable_base());
 

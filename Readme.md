@@ -588,8 +588,10 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 # TODO
 
-* May be in need of a better name, I found a few repos with this same one...
-* Make a test suite made up of collections based of the ZPL library templated colllection macros and the memory module.
+* Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
+* Make a test suite thats covers some base cases and zpl containers (+ anything else suitable)
+* Finish support for module specifiers and standard/platform attributes.
 * Remove full ZPL dependency, move into Bloat header/source only what is used.
 * Generate a single-header library.
 * Actually get to version 1.
+* May be in need of a better name, I found a few repos with this same one...

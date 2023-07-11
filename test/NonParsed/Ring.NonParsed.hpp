@@ -197,7 +197,7 @@ u32 gen_ring_file()
 	gen_ring_file.open( "ring.NonParsed.gen.hpp" );
 
 	gen_ring_file.print( def_include( StrC::from("Bloat.hpp")) );
-	gen_ring_file.print( def_include( StrC::from("buffer.gen.hpp")) );
+	gen_ring_file.print( def_include( StrC::from("buffer.NonParsed.gen.hpp")) );
 	// gen_ring_file.print( gen__ring_base() );
 
 	GenRingRequest* current = GenRingRequests;

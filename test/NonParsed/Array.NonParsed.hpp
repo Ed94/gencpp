@@ -23,7 +23,7 @@ Code gen__array_base()
 	return def_global_body( 2, header, grow_formula );
 }
 
-Code gen__array( StrC type, sw type_size )
+Code gen__array( StrC type )
 {
 	static Code t_allocator_info = def_type( name(AllocatorInfo) );
 	static Code v_nullptr        = untyped_str( code(nullptr));
@@ -299,11 +299,10 @@ struct GenArrayRequest
 {
 	StrC Dependency;
 	StrC Type;
-	sw   Size;
 };
 Array(GenArrayRequest) GenArrayRequests;
 
-void gen__array_request( StrC type, sw size, StrC dep = {} )
+void gen__array_request( StrC type, StrC dep = {} )
 {
 	do_once_start
 		array_init( GenArrayRequests, Memory::GlobalAllocator );
@@ -321,10 +320,10 @@ void gen__array_request( StrC type, sw size, StrC dep = {} )
 			return;
 	}
 
-	GenArrayRequest request = { dep, type, size };
+	GenArrayRequest request = { dep, type };
 	array_append( GenArrayRequests, request );
 }
-#define gen_array( type ) gen__array_request( { txt_to_StrC(type) }, sizeof(type) )
+#define gen_array( type ) gen__array_request( { txt_to_StrC(type) } )
 
 u32 gen_array_file()
 {
@@ -344,7 +343,7 @@ u32 gen_array_file()
 	{
 		GenArrayRequest const& request = * current;
 
-		Code generated_array = gen__array( request.Type, request.Size );
+		Code generated_array = gen__array( request.Type );
 
 		if ( request.Dependency )
 		{

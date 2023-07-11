@@ -22,7 +22,7 @@ Code gen__array_base()
 	));
 }
 
-Code gen__array( StrC type, sw type_size )
+Code gen__array( StrC type )
 {
 	StrC name;
 	{
@@ -184,7 +184,7 @@ Code gen__array( StrC type, sw type_size )
 						header.Num = new_capacity;
 
 					sw      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
-					Header* new_header = reinterpret_cast< Header* >( alloc( header.Allocator, size ) );
+					Header* new_header = rcast( Header*, alloc( header.Allocator, size ) );
 
 					if ( new_header == nullptr )
 						return false;
@@ -223,7 +223,6 @@ struct GenArrayRequest
 {
 	StrC Dependency;
 	StrC Type;
-	sw   Size;
 };
 Array(GenArrayRequest) GenArrayRequests;
 
@@ -245,7 +244,7 @@ void gen__array_request( StrC type, sw size, StrC dep = {} )
 			return;
 	}
 
-	GenArrayRequest request = { dep, type, size };
+	GenArrayRequest request = { dep, type };
 	array_append( GenArrayRequests, request );
 }
 #define gen_array( type ) gen__array_request( { txt_to_StrC(type) }, sizeof(type) )
@@ -268,7 +267,7 @@ u32 gen_array_file()
 	{
 		GenArrayRequest const& request = * current;
 
-		Code generated_array = gen__array( request.Type, request.Size );
+		Code generated_array = gen__array( request.Type );
 
 		if ( request.Dependency )
 		{
