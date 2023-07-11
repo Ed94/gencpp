@@ -251,7 +251,7 @@ void gen__array_request( StrC type, sw size, StrC dep = {} )
 	GenArrayRequest request = { dep, type, size };
 	array_append( GenArrayRequests, request );
 }
-#define gen_array( type ) gen__array_request( { txt_n_len(type) }, sizeof(type) )
+#define gen_array( type ) gen__array_request( { txt_to_StrC(type) }, sizeof(type) )
 
 u32 gen_array_file()
 {

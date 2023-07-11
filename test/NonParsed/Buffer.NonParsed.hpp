@@ -172,12 +172,9 @@ Code gen__buffer( StrC type, sw type_size )
 			))
 		);
 
-		Code op_type_ptr = untyped_str( code(
-			operator Type*()
-			{
-				return Data;
-			}
-		));
+		Code op_type_ptr = def_operator_cast( t_type_ptr, def_execution( code(
+			return Data;
+		)));
 
 		buffer = def_struct( name, def_struct_body( 14
 			, using_header
@@ -232,7 +229,7 @@ void gen__buffer_request( StrC type, sw size, StrC dep = {} )
 	GenBufferRequest request = { dep, type, size};
 	array_append( GenBufferRequests, request );
 }
-#define gen_buffer( type ) gen__buffer_request( { txt_n_len(type) }, sizeof( type ))
+#define gen_buffer( type ) gen__buffer_request( { txt_to_StrC(type) }, sizeof( type ))
 
 u32 gen_buffer_file()
 {

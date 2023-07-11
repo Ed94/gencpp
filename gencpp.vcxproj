@@ -103,27 +103,34 @@
     <None Include="scripts\build.ps1" />
     <None Include="scripts\clean.ps1" />
     <None Include="scripts\get_sources.ps1" />
-    <None Include="scripts\meson.build" />
-    <None Include="singleheader\genc.refactor" />
     <None Include="test\gen\meson.build" />
     <None Include="test\meson.build" />
     <None Include="test\Readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="project\Banned.define.hpp" />
+    <ClInclude Include="project\Banned.undef.hpp" />
     <ClInclude Include="project\Bloat.hpp" />
-    <ClInclude Include="project\Bloat.redef.hpp" />
-    <ClInclude Include="project\Bloat.undef.hpp" />
     <ClInclude Include="project\gen.hpp" />
-    <ClInclude Include="test\NonParsed\Sanity.hpp" />
+    <ClInclude Include="test\DummyInclude.hpp" />
+    <ClInclude Include="test\NonParsed\Array.NonParsed.hpp" />
+    <ClInclude Include="test\NonParsed\Buffer.NonParsed.hpp" />
+    <ClInclude Include="test\NonParsed\HashTable.NonParsed.hpp" />
+    <ClInclude Include="test\NonParsed\Memory.NonParsed.hpp" />
+    <ClInclude Include="test\NonParsed\Ring.NonParsed.hpp" />
+    <ClInclude Include="test\NonParsed\Sanity.NonParsed.hpp" />
+    <ClInclude Include="test\Parsed\Array.Parsed.hpp" />
+    <ClInclude Include="test\Parsed\Sanity.Parsed.hpp" />
     <ClInclude Include="thirdparty\zpl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="project\Bloat.cpp" />
     <ClCompile Include="project\gen.cpp" />
-    <ClCompile Include="project\gen.singleheader.cpp" />
+    <ClCompile Include="singleheader\gen\gen.singleheader.cpp" />
     <ClCompile Include="test\gen\build\meson-private\sanitycheckc.c" />
     <ClCompile Include="test\gen\build\meson-private\sanitycheckcpp.cc" />
-    <ClCompile Include="test\test.cpp" />
+    <ClCompile Include="test\test.NonParsed.cpp" />
+    <ClCompile Include="test\test.Parsed.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include=".vscode\gencpp.natvis" />

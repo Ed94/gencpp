@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
+	<Type Name="StrC">
+		<DisplayString>Len:{Len} Ptr:{Ptr, [Len]s}</DisplayString>
+	</Type>
+
 	<Type Name="String">
 		<DisplayString Condition="Data == nullptr">null</DisplayString>
 		<DisplayString>{Data,na}</DisplayString>
@@ -30,7 +34,30 @@
 		<Expand>
 			<Item Name="Type">Type</Item>
 			<Item Name="Name">Name</Item>
+			<Item Name="Parent">Parent</Item>
+			<Item Name="Op" Condition="Op != 43">Op</Item>
+			<Item Name="ModuleFlags">ModuleFlags</Item>
+			<Item Name="ParentAcess" Condition="ParentAccess != gen::AccessSpec::Invalid">ParentAccess</Item>
 			<Item Name="ArrStatic" Condition="DynamicEntries == false">ArrStatic</Item>
+			<Item Name="Index" Condition="DynamicEntries == false">StaticIndex</Item>
+			<Item Name="ArrDyn" Condition="DynamicEntries == true">ArrDyn</Item>
+			<Item Name="Index" Condition="DynamicEntries == true">((ArrayHeader*)((char*)ArrDyn - sizeof(ArrayHeader)))->count</Item>
+		</Expand>
+	</Type>
+
+	<Type Name="gen::Code">
+		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
+		<Expand>
+			<Item Name="Type">ast->Type</Item>
+			<Item Name="Name">ast->Name</Item>
+			<Item Name="Parent">ast->Parent</Item>
+			<Item Name="Op" Condition="ast->Op != 43">ast->Op</Item>
+			<Item Name="ModuleFlags">ast->ModuleFlags</Item>
+			<Item Name="ParentAcess" Condition="ast->ParentAccess != gen::AccessSpec::Invalid">ast->ParentAccess</Item>
+			<Item Name="ArrStatic" Condition="ast->DynamicEntries == false">ast->ArrStatic</Item>
+			<Item Name="Index" Condition="ast->DynamicEntries == false">ast->StaticIndex</Item>
+			<Item Name="ArrDyn" Condition="ast->DynamicEntries == true">ast->ArrDyn</Item>
+			<Item Name="Index" Condition="ast->DynamicEntries == true">((ArrayHeader*)((char*)ast->ArrDyn - sizeof(ArrayHeader)))->count</Item>
 		</Expand>
 	</Type>
 
@@ -39,7 +66,7 @@
 	</Type>
 
 	<Type Name ="gen::Parser::Token">
-		<DisplayString>Type:{Type} Text:{Text, [Length]s} Length:{Length}</DisplayString>
+		<DisplayString>Length:{Length} Text:{Text, [Length]s} Type:{Type}</DisplayString>
 	</Type>
 
 	<Type Name="gen::Parser::TokArray">

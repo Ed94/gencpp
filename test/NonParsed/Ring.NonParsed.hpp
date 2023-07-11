@@ -188,7 +188,7 @@ void gen__ring_request( StrC type, sw size, StrC dep = {} )
 	GenRingRequest request = { dep, type, size};
 	array_append( GenRingRequests, request );
 }
-#define gen_ring( type ) gen__ring_request( { txt_n_len(type) }, sizeof( type ))
+#define gen_ring( type ) gen__ring_request( { txt_to_StrC(type) }, sizeof( type ))
 
 u32 gen_ring_file()
 {

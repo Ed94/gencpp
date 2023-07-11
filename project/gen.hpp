@@ -65,6 +65,8 @@ namespace gen
 		Entry( Operator_Fwd )         \
 		Entry( Operator_Member )      \
 		Entry( Operator_Member_Fwd )  \
+		Entry( Operator_Cast )		  \
+		Entry( Operator_Cast_Fwd )    \
 		Entry( Parameters )           \
 		Entry( Preprocessor_Include ) \
 		Entry( Specifiers )           \
@@ -95,7 +97,7 @@ namespace gen
 		{
 			static
 			StrC lookup[Num_Types] = {
-			#	define Entry( Type ) { txt_n_len( Type ) },
+			#	define Entry( Type ) { txt_to_StrC( Type ) },
 				Define_Types
 			#	undef Entry
 			};
@@ -132,11 +134,11 @@ namespace gen
 		Entry( Assign,          =  )  \
 		Entry( Assign_Add,      += )  \
 		Entry( Assign_Subtract, -= )  \
-		Entry( Assgin_Multiply, *= )  \
-		Entry( Assgin_Divide,   /= )  \
-		Entry( Assgin_Modulo,   %= )  \
-		Entry( Assgin_BAnd,     &= )  \
-		Entry( Assgin_BOr,      |= )  \
+		Entry( Assign_Multiply, *= )  \
+		Entry( Assign_Divide,   /= )  \
+		Entry( Assign_Modulo,   %= )  \
+		Entry( Assign_BAnd,     &= )  \
+		Entry( Assign_BOr,      |= )  \
 		Entry( Assign_BXOr,     ^= )  \
 		Entry( Assign_LShift,   <<= ) \
 		Entry( Assign_RShift,   >>= ) \
@@ -144,6 +146,7 @@ namespace gen
 		Entry( Decrement,       -- )  \
 		Entry( Unary_Plus,      + )   \
 		Entry( Unary_Minus,     - )   \
+		Entry( UnaryNot,        ! )   \
 		Entry( Add,             + )   \
 		Entry( Subtract,        - )   \
 		Entry( Multiply,        * )   \
@@ -155,11 +158,10 @@ namespace gen
 		Entry( BXOr,            ^ )   \
 		Entry( LShift,          << )  \
 		Entry( RShift,          >> )  \
-		Entry( LNot,            ! )   \
 		Entry( LAnd,            && )  \
 		Entry( LOr,             || )  \
-		Entry( Equals,          == )  \
-		Entry( NotEquals,       != )  \
+		Entry( LEqual,          == )  \
+		Entry( LNot,            != )  \
 		Entry( Lesser,          < )   \
 		Entry( Greater,         > )   \
 		Entry( LesserEqual,     <= )  \
@@ -250,7 +252,7 @@ namespace gen
 			#	define internal      internal
 			#	define local_persist local_persist
 
-			#	define Entry( Spec_, Code_ ) { txt_n_len(Code_) },
+			#	define Entry( Spec_, Code_ ) { txt_to_StrC(Code_) },
 				Define_Specifiers
 			#	undef Entry
 
@@ -272,7 +274,9 @@ namespace gen
 				{
 					StrC enum_str = to_str( (Type)index );
 
-					keymap[index] = crc32( enum_str.Ptr, enum_str.Len);
+					// We subtract 1 to remove the null terminator
+					// This is because the tokens lexed are not null terminated.
+					keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1);
 				}
 			do_once_end
 
@@ -398,7 +402,6 @@ namespace gen
 	#	pragma region Member Functions
 		void add_entry( AST* other );
 
-		inline
 		AST* body()
 		{
 			return entry( 0 );
@@ -411,22 +414,18 @@ namespace gen
 			return DynamicEntries ? ArrDyn[ idx ] : ArrStatic[ idx ];
 		}
 
-		inline
 		bool has_entries()
 		{
 			return num_entries();
 		}
 
-		inline
 		bool is_invalid()
 		{
 			return Type != ECode::Invalid;
 		}
 
-		inline
 		bool is_equal( AST* other );
 
-		inline
 		s32 num_entries()
 		{
 			return DynamicEntries ? array_count( ArrDyn ) : StaticIndex;
@@ -434,7 +433,6 @@ namespace gen
 
 		// Parameter
 
-		inline
 		AST* get_param( s32 index )
 		{
 			if ( index <= 0 )
@@ -443,14 +441,12 @@ namespace gen
 			return entry( index + 1 );
 		}
 
-		inline
 		s32 param_count()
 		{
 			// The first entry (which holds the type) represents the first parameter.
 			return num_entries();
 		}
 
-		inline
 		AST* param_type()
 		{
 			return entry( 0 );
@@ -458,7 +454,6 @@ namespace gen
 
 		// Specifiers
 
-		inline
 		bool add_specifier( SpecifierT spec )
 		{
 			if ( StaticIndex == AST::ArrSpecs_Cap )
@@ -472,7 +467,6 @@ namespace gen
 			return true;
 		}
 
-		inline
 		s32 has_specifier( SpecifierT spec )
 		{
 			for ( s32 idx = 0; idx < StaticIndex; idx++ )
@@ -486,21 +480,18 @@ namespace gen
 
 		// Typename
 
-		inline
 		bool typename_is_ptr()
 		{
 			assert_crash("not implemented");
 			return false;
 		}
 
-		inline
 		bool typename_is_ref()
 		{
 			assert_crash("not implemented");
 			return false;
 		}
 
-		inline
 		AST* typename_specifiers()
 		{
 			return entry( 0 );
@@ -508,7 +499,6 @@ namespace gen
 
 		// Serialization
 
-		inline
 		char const* debug_str()
 		{
 			char const* fmt = txt(
@@ -530,7 +520,6 @@ namespace gen
 			);
 		}
 
-		inline
 		char const* type_str()
 		{
 			return ECode::to_str( Type );
@@ -582,9 +571,6 @@ namespace gen
 	#	undef Using_CodePOD
 	};
 
-	constexpr sw size_AST = sizeof(AST);
-	constexpr sw size_POD = sizeof(AST_POD);
-
 	// Its intended for the AST to have equivalent size to its POD.
 	// All extra functionality within the AST namespace should just be syntatic sugar.
 	static_assert( sizeof(AST)     == sizeof(AST_POD), "ERROR: AST IS NOT POD" );
@@ -604,7 +590,6 @@ namespace gen
 	#	pragma endregion Statics
 
 	#	pragma region Member Functions
-		inline
 		Code body()
 		{
 			if ( ast == nullptr )
@@ -622,13 +607,11 @@ namespace gen
 			return { ast->body() };
 		}
 
-		inline
 		String to_string() const
 		{
 			return ast->to_string();
 		}
 
-		inline
 		void set_global()
 		{
 			if ( ast == nullptr )
@@ -640,45 +623,34 @@ namespace gen
 			ast->Parent = Global.ast;
 		}
 
-		inline
-		operator bool() const
+		bool is_valid()
 		{
-			return ast;
+			// Originally intended to use operator bool(), however for some reason
+			// The C++ standard has operator Type*() with higher precedence than operator bool().
+			// Even when directly casting to bool. Amazing.
+			return ast != nullptr && ast->Type != ECode::Invalid;
 		}
 
-		inline
+		operator bool() const
+		{
+			return ast != nullptr && ast->Type != ECode::Invalid;
+		}
+
 		bool operator ==( Code other )
 		{
 			return ast == other.ast;
 		}
 
-		inline
 		bool operator !=( Code other )
 		{
 			return ast != other.ast;
 		}
 
-		inline
 		operator AST*()
 		{
 			return ast;
 		}
 
-		inline
-		Code& operator=( Code other )
-		{
-			if ( other.ast == nullptr )
-			{
-				log_failure("Attempted to assign a nullptr!");
-				return *this;
-			}
-
-			ast = other.ast;
-
-			return *this;
-		}
-
-		inline
 		AST* operator->()
 		{
 			if ( ast == nullptr )
@@ -732,12 +704,12 @@ namespace gen
 	// Set these before calling gen's init() procedure.
 	// Data
 
-	void set_allocator_data_arrays      ( AllocatorInfo data_array_allocator );
-	void set_allocator_code_pool        ( AllocatorInfo pool_allocator );
-	void set_allocator_code_enries_arena( AllocatorInfo pool_allocator );
-	void set_allocator_string_arena     ( AllocatorInfo string_allocator );
-	void set_allocator_string_table     ( AllocatorInfo string_allocator );
-	void set_allocator_type_table       ( AllocatorInfo type_reg_allocator );
+	void set_allocator_data_arrays       ( AllocatorInfo data_array_allocator );
+	void set_allocator_code_pool         ( AllocatorInfo pool_allocator );
+	void set_allocator_code_enrties_arena( AllocatorInfo pool_allocator );
+	void set_allocator_string_arena      ( AllocatorInfo string_allocator );
+	void set_allocator_string_table      ( AllocatorInfo string_allocator );
+	void set_allocator_type_table        ( AllocatorInfo type_reg_allocator );
 
 #	pragma region Upfront
 	Code def_attributes( StrC content );
@@ -771,6 +743,8 @@ namespace gen
 		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
+
+	Code def_operator_cast( Code type, Code body = NoCode );
 
 	Code def_param    ( Code type, StrC name, Code value = NoCode );
 	Code def_specifier( SpecifierT specifier );
@@ -824,22 +798,23 @@ namespace gen
 
 #	pragma region Parsing
 #	ifdef GEN_FEATURE_PARSING
-	Code parse_class       ( StrC class_def     );
-	Code parse_enum        ( StrC enum_def      );
-	Code parse_export_body ( StrC export_def    );
-	Code parse_extern_link ( StrC exten_link_def);
-	Code parse_friend      ( StrC friend_def    );
-	Code parse_function    ( StrC fn_def        );
-	Code parse_global_body ( StrC body_def      );
-	Code parse_namespace   ( StrC namespace_def );
-	Code parse_operator    ( StrC operator_def  );
-	Code parse_struct      ( StrC struct_def    );
-	Code parse_template    ( StrC template_def  );
-	Code parse_type        ( StrC type_def      );
-	Code parse_typedef     ( StrC typedef_def   );
-	Code parse_union       ( StrC union_def     );
-	Code parse_using       ( StrC using_def     );
-	Code parse_variable    ( StrC var_def       );
+	Code parse_class        ( StrC class_def     );
+	Code parse_enum         ( StrC enum_def      );
+	Code parse_export_body  ( StrC export_def    );
+	Code parse_extern_link  ( StrC exten_link_def);
+	Code parse_friend       ( StrC friend_def    );
+	Code parse_function     ( StrC fn_def        );
+	Code parse_global_body  ( StrC body_def      );
+	Code parse_namespace    ( StrC namespace_def );
+	Code parse_operator     ( StrC operator_def  );
+	Code parse_operator_cast( StrC operator_def  );
+	Code parse_struct       ( StrC struct_def    );
+	Code parse_template     ( StrC template_def  );
+	Code parse_type         ( StrC type_def      );
+	Code parse_typedef      ( StrC typedef_def   );
+	Code parse_union        ( StrC union_def     );
+	Code parse_using        ( StrC using_def     );
+	Code parse_variable     ( StrC var_def       );
 #	endif
 #	pragma endregion Parsing
 
@@ -994,10 +969,10 @@ namespace gen
 
 //	Convienence for defining any name used with the gen api.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
-#	define name( Id_ )   { txt_n_len( Id_ ) }
+#	define name( Id_ )   { txt_to_StrC( Id_ ) }
 
 //  Same as name just used to indicate intention of literal for code instead of names.
-#	define code( ... ) { txt_n_len( __VA_ARGS__ ) }
+#	define code( ... ) { txt_to_StrC( __VA_ARGS__ ) }
 #pragma endregion Macros
 
 #pragma region Constants

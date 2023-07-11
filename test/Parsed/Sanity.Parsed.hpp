@@ -142,7 +142,6 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Operator
-	if (0)
 	{
 		Code bitflagtest = parse_enum( code(
 			enum class EBitFlagTest : u8
@@ -167,6 +166,25 @@ u32 gen_sanity()
 		gen_sanity_file.print(bitflagtest);
 		gen_sanity_file.print(op_fwd);
 		gen_sanity_file.print(op_or);
+	}
+
+	gen_sanity_file.print_fmt("\n");
+
+	// Operator cast
+	{
+		Code op_ptr = parse_operator_cast( code(
+			operator u8* ();
+		));
+
+		Code class_def = parse_class( code(
+			class TestClass
+			{
+			};
+		));
+
+		class_def.body()->add_entry( op_ptr );
+
+		gen_sanity_file.print(class_def);
 	}
 
 	gen_sanity_file.print_fmt("\n");
@@ -209,7 +227,6 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Struct
-	if (0)
 	{
 		Code fwd = parse_struct( code(
 			struct TestEmptyStruct;
@@ -229,7 +246,6 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Union
-	if (0)
 	{
 		Code empty = parse_union( code(
 			union TestEmptyUnion
@@ -239,10 +255,13 @@ u32 gen_sanity()
 
 		empty.body()->add_entry( def_comment( StrC::from("Empty union body") ) );
 
+		gen_sanity_file.print( parse_typedef( code( typedef unsigned short u16; )) );
+		gen_sanity_file.print( parse_typedef( code( typedef unsigned long  u32; )) );
+
 		Code def = parse_union( code(
 			union TestUnion
 			{
-				u8 a;
+				u8  a;
 				u16 b;
 				u32 c;
 			};
@@ -255,28 +274,30 @@ u32 gen_sanity()
 	gen_sanity_file.print_fmt("\n");
 
 	// Using
-	if (0)
 	{
 		Code reg = parse_using( code(
 			using TestUsing = u8;
 		));
 
-		Code nspace = parse_using( code(
+		Code nspace = parse_namespace( code(
 			namespace TestNamespace
 			{
 			};
 
-			using namespace TestUsing;
+		));
+
+		Code npspace_using = parse_using( code(
+			using namespace TestNamespace;
 		));
 
 		gen_sanity_file.print(reg);
 		gen_sanity_file.print(nspace);
+		gen_sanity_file.print(npspace_using);
 	}
 
 	gen_sanity_file.print_fmt("\n");
 
 	// Variable
-	if (0)
 	{
 		Code bss = parse_variable( code(
 			u8 test_variable;
@@ -285,6 +306,26 @@ u32 gen_sanity()
 		Code data = parse_variable( code(
 			u8 test_variable = 0x12;
 		));
+
+		gen_sanity_file.print(bss);
+		gen_sanity_file.print(data);
+	}
+
+	gen_sanity_file.print_fmt("\n");
+
+	// template
+	{
+	#pragma push_macro("template")
+	#undef template
+		Code tmpl = parse_template( code(
+			template< typename Type >
+			void test_template( Type a )
+			{
+			}
+		));
+	#pragma pop_macro("template")
+
+		gen_sanity_file.print(tmpl);
 	}
 
 	gen_sanity_file.print_fmt("\n");

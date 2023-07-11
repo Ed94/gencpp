@@ -425,7 +425,7 @@ void gen__hashtable_request( StrC type, sw size, StrC dep = {} )
 	GenHashTableRequest request = { dep, type, size};
 	array_append( GenHashTableRequests, request );
 }
-#define gen_hashtable( type ) gen__hashtable_request( { txt_n_len(type) }, sizeof( type ))
+#define gen_hashtable( type ) gen__hashtable_request( { txt_to_StrC(type) }, sizeof( type ))
 
 u32 gen_hashtable_file()
 {

@@ -3141,10 +3141,10 @@ ZPL_BEGIN_C_DECLS
 
 typedef enum AllocType
 {
-	EAllocationALLOC,
-	EAllocationFREE,
-	EAllocationFREE_ALL,
-	EAllocationRESIZE,
+	EAllocation_ALLOC,
+	EAllocation_FREE,
+	EAllocation_FREE_ALL,
+	EAllocation_RESIZE,
 } AllocType;
 
 // NOTE: This is useful so you can define an allocator of the same type and parameters
@@ -3392,7 +3392,7 @@ ZPL_DEF                      ZPL_ALLOCATOR_PROC( stack_allocator_proc );
 
 ZPL_IMPL_INLINE void* alloc_align( AllocatorInfo a, sw size, sw alignment )
 {
-	return a.proc( a.data, EAllocationALLOC, size, alignment, NULL, 0, ZPL_DEFAULT_ALLOCATOR_FLAGS );
+	return a.proc( a.data, EAllocation_ALLOC, size, alignment, NULL, 0, ZPL_DEFAULT_ALLOCATOR_FLAGS );
 }
 
 ZPL_IMPL_INLINE void* alloc( AllocatorInfo a, sw size )
@@ -3403,12 +3403,12 @@ ZPL_IMPL_INLINE void* alloc( AllocatorInfo a, sw size )
 ZPL_IMPL_INLINE void free( AllocatorInfo a, void* ptr )
 {
 	if ( ptr != NULL )
-		a.proc( a.data, EAllocationFREE, 0, 0, ptr, 0, ZPL_DEFAULT_ALLOCATOR_FLAGS );
+		a.proc( a.data, EAllocation_FREE, 0, 0, ptr, 0, ZPL_DEFAULT_ALLOCATOR_FLAGS );
 }
 
 ZPL_IMPL_INLINE void free_all( AllocatorInfo a )
 {
-	a.proc( a.data, EAllocationFREE_ALL, 0, 0, NULL, 0, ZPL_DEFAULT_ALLOCATOR_FLAGS );
+	a.proc( a.data, EAllocation_FREE_ALL, 0, 0, NULL, 0, ZPL_DEFAULT_ALLOCATOR_FLAGS );
 }
 
 ZPL_IMPL_INLINE void* resize( AllocatorInfo a, void* ptr, sw old_size, sw new_size )
@@ -3418,7 +3418,7 @@ ZPL_IMPL_INLINE void* resize( AllocatorInfo a, void* ptr, sw old_size, sw new_si
 
 ZPL_IMPL_INLINE void* resize_align( AllocatorInfo a, void* ptr, sw old_size, sw new_size, sw alignment )
 {
-	return a.proc( a.data, EAllocationRESIZE, new_size, alignment, ptr, old_size, ZPL_DEFAULT_ALLOCATOR_FLAGS );
+	return a.proc( a.data, EAllocation_RESIZE, new_size, alignment, ptr, old_size, ZPL_DEFAULT_ALLOCATOR_FLAGS );
 }
 
 ZPL_IMPL_INLINE void* alloc_copy( AllocatorInfo a, void const* src, sw size )
@@ -4025,12 +4025,12 @@ typedef struct BufferHeader
 		buffer_count( x ) += ( item_count );                                                              \
 	} while ( 0 )
 
-#define buffer_copy_init( y, x )                                                                   \
-	do                                                                                             \
-	{                                                                                              \
-		buffer_init( y, buffer_allocator( x ), buffer_capacity( x ) ); \
-		ZPL_NS( mem_copy )( y, x, buffer_capacity( x ) * size_of( *x ) );                          \
-		buffer_count( y ) = buffer_count( x );                                                     \
+#define buffer_copy_init( y, x )                                                           \
+	do                                                                                     \
+	{                                                                                      \
+		ZPL_NS( buffer_init )( y, ZPL_NS( buffer_allocator )( x ), buffer_capacity( x ) ); \
+		ZPL_NS( mem_copy )( y, x, buffer_capacity( x ) * size_of( *x ) );                  \
+		buffer_count( y ) = buffer_count( x );                                             \
 	} while ( 0 )
 
 #define buffer_pop( x )                      \
@@ -8324,10 +8324,10 @@ ZPL_BEGIN_C_DECLS
 
 typedef enum CSV_Error
 {
-	ECSV_Error_NONE,
-	ECSV_Error_INTERNAL,
-	ECSV_Error_UNEXPECTED_END_OF_INPUT,
-	ECSV_Error_MISMATCHED_ROWS,
+	ECSV_Error__NONE,
+	ECSV_Error__INTERNAL,
+	ECSV_Error__UNEXPECTED_END_OF_INPUT,
+	ECSV_Error__MISMATCHED_ROWS,
 } CSV_Error;
 
 typedef ADT_Node CSV_Object;
@@ -9302,7 +9302,7 @@ ZPL_ALLOCATOR_PROC( heap_allocator_proc )
 	sw track_size           = max( alloc_info_size, alignment ) + alloc_info_remainder;
 	switch ( type )
 	{
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			{
 				if ( ! old_memory )
 					break;
@@ -9312,7 +9312,7 @@ ZPL_ALLOCATOR_PROC( heap_allocator_proc )
 				old_memory = alloc_info->physical_start;
 			}
 			break;
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			{
 				size += track_size;
 			}
@@ -9325,15 +9325,15 @@ ZPL_ALLOCATOR_PROC( heap_allocator_proc )
 	switch ( type )
 	{
 #if defined( ZPL_COMPILER_MSVC ) || ( defined( ZPL_COMPILER_GCC ) && defined( ZPL_SYSTEM_WINDOWS ) ) || ( defined( ZPL_COMPILER_TINYC ) && defined( ZPL_SYSTEM_WINDOWS ) )
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			ptr = _aligned_malloc( size, alignment );
 			if ( flags & ZPL_ALLOCATOR_FLAG_CLEAR_TO_ZERO )
 				zero_size( ptr, size );
 			break;
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			_aligned_free( old_memory );
 			break;
-		case EAllocationRESIZE :
+		case EAllocation_RESIZE :
 			{
 				AllocatorInfo a = heap_allocator();
 				ptr             = default_resize_align( a, old_memory, old_size, size, alignment );
@@ -9341,7 +9341,7 @@ ZPL_ALLOCATOR_PROC( heap_allocator_proc )
 			break;
 
 #elif defined( ZPL_SYSTEM_LINUX ) && ! defined( ZPL_CPU_ARM ) && ! defined( ZPL_COMPILER_TINYC )
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			{
 				ptr = aligned_alloc( alignment, ( size + alignment - 1 ) & ~( alignment - 1 ) );
 
@@ -9352,20 +9352,20 @@ ZPL_ALLOCATOR_PROC( heap_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			{
 				free( old_memory );
 			}
 			break;
 
-		case EAllocationRESIZE :
+		case EAllocation_RESIZE :
 			{
 				AllocatorInfo a = heap_allocator();
 				ptr             = default_resize_align( a, old_memory, old_size, size, alignment );
 			}
 			break;
 #else
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			{
 				posix_memalign( &ptr, alignment, size );
 
@@ -9376,13 +9376,13 @@ ZPL_ALLOCATOR_PROC( heap_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			{
 				free( old_memory );
 			}
 			break;
 
-		case EAllocationRESIZE :
+		case EAllocation_RESIZE :
 			{
 				AllocatorInfo a = heap_allocator();
 				ptr             = default_resize_align( a, old_memory, old_size, size, alignment );
@@ -9390,12 +9390,12 @@ ZPL_ALLOCATOR_PROC( heap_allocator_proc )
 			break;
 #endif
 
-		case EAllocationFREE_ALL :
+		case EAllocation_FREE_ALL :
 			break;
 	}
 
 #ifdef ZPL_HEAP_ANALYSIS
-	if ( type == EAllocationALLOC )
+	if ( type == EAllocation_ALLOC )
 	{
 		_heap_alloc_info* alloc_info = zpl_cast( _heap_alloc_info* )( zpl_cast( char* ) ptr + alloc_info_remainder );
 		zero_item( alloc_info );
@@ -9423,7 +9423,7 @@ ZPL_ALLOCATOR_PROC( arena_allocator_proc )
 
 	switch ( type )
 	{
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			{
 				void* end        = pointer_add( arena->physical_start, arena->total_allocated );
 				sw    total_size = align_forward_i64( size, alignment );
@@ -9442,16 +9442,16 @@ ZPL_ALLOCATOR_PROC( arena_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			// NOTE: Free all at once
 			// Use Temp_Arena_Memory if you want to free a block
 			break;
 
-		case EAllocationFREE_ALL :
+		case EAllocation_FREE_ALL :
 			arena->total_allocated = 0;
 			break;
 
-		case EAllocationRESIZE :
+		case EAllocation_RESIZE :
 			{
 				// TODO: Check if ptr is on top of stack and just extend
 				AllocatorInfo a = arena_allocator( arena );
@@ -9509,7 +9509,7 @@ ZPL_ALLOCATOR_PROC( pool_allocator_proc )
 
 	switch ( type )
 	{
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			{
 				uptr next_free;
 				ZPL_ASSERT( size == pool->block_size );
@@ -9525,7 +9525,7 @@ ZPL_ALLOCATOR_PROC( pool_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			{
 				uptr* next;
 				if ( old_memory == NULL )
@@ -9538,7 +9538,7 @@ ZPL_ALLOCATOR_PROC( pool_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE_ALL :
+		case EAllocation_FREE_ALL :
 			{
 				sw    actual_block_size, block_index;
 				void* curr;
@@ -9562,7 +9562,7 @@ ZPL_ALLOCATOR_PROC( pool_allocator_proc )
 			}
 			break;
 
-		case EAllocationRESIZE :
+		case EAllocation_RESIZE :
 			// NOTE: Cannot resize
 			ZPL_PANIC( "You cannot resize something allocated by with a pool." );
 			break;
@@ -9608,7 +9608,7 @@ ZPL_ALLOCATOR_PROC( scratch_allocator_proc )
 
 	switch ( type )
 	{
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			{
 				void*                 pt     = s->alloc_point;
 				allocation_header_ev* header = zpl_cast( allocation_header_ev* ) pt;
@@ -9641,7 +9641,7 @@ ZPL_ALLOCATOR_PROC( scratch_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			{
 				if ( old_memory )
 				{
@@ -9672,12 +9672,12 @@ ZPL_ALLOCATOR_PROC( scratch_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE_ALL :
+		case EAllocation_FREE_ALL :
 			s->alloc_point = s->physical_start;
 			s->free_point  = s->physical_start;
 			break;
 
-		case EAllocationRESIZE :
+		case EAllocation_RESIZE :
 			ptr = default_resize_align( scratch_allocator( s ), old_memory, old_size, size, alignment );
 			break;
 	}
@@ -9698,7 +9698,7 @@ ZPL_ALLOCATOR_PROC( stack_allocator_proc )
 
 	switch ( type )
 	{
-		case EAllocationALLOC :
+		case EAllocation_ALLOC :
 			{
 				size             += ZPL_STACK_ALLOC_OFFSET;
 				u64 alloc_offset  = s->allocated;
@@ -9729,7 +9729,7 @@ ZPL_ALLOCATOR_PROC( stack_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE :
+		case EAllocation_FREE :
 			{
 				if ( old_memory )
 				{
@@ -9742,13 +9742,13 @@ ZPL_ALLOCATOR_PROC( stack_allocator_proc )
 			}
 			break;
 
-		case EAllocationFREE_ALL :
+		case EAllocation_FREE_ALL :
 			{
 				s->allocated = 0;
 			}
 			break;
 
-		case EAllocationRESIZE :
+		case EAllocation_RESIZE :
 			{
 				ZPL_PANIC( "You cannot resize something allocated by a stack." );
 			}
@@ -21338,7 +21338,7 @@ ZPL_BEGIN_C_DECLS
 
 u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim )
 {
-	CSV_Error err = ECSV_Error_NONE;
+	CSV_Error err = ECSV_Error__NONE;
 	ZPL_ASSERT_NOT_NULL( root );
 	ZPL_ASSERT_NOT_NULL( text );
 	zero_item( root );
@@ -21379,7 +21379,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			if ( *e == 0 )
 			{
 				ZPL_CSV_ASSERT( "unmatched quoted string" );
-				err = ECSV_Error_UNEXPECTED_END_OF_INPUT;
+				err = ECSV_Error__UNEXPECTED_END_OF_INPUT;
 				return err;
 			}
 			*e = 0;
@@ -21467,7 +21467,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			else if ( total_colc != colc )
 			{
 				ZPL_CSV_ASSERT( "mismatched rows" );
-				err = ECSV_Error_MISMATCHED_ROWS;
+				err = ECSV_Error__MISMATCHED_ROWS;
 				return err;
 			}
 			colc = 0;
@@ -21479,7 +21479,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 	if ( array_count( root->nodes ) == 0 )
 	{
 		ZPL_CSV_ASSERT( "unexpected end of input. stream is empty." );
-		err = ECSV_Error_UNEXPECTED_END_OF_INPUT;
+		err = ECSV_Error__UNEXPECTED_END_OF_INPUT;
 		return err;
 	}
 

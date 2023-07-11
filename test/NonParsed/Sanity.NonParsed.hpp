@@ -190,6 +190,19 @@ u32 gen_sanity()
 
 	gen_sanity_file.print_fmt("\n");
 
+	// Operator cast
+	{
+		Code t_u8_ptr = def_type( name(u8), __, spec_ptr );
+
+		Code op_ptr = def_operator_cast( t_u8_ptr, __ );
+
+		Code op_class = def_class( name(TestOperatorCast), def_class_body( 1, op_ptr ) );
+
+		gen_sanity_file.print(op_class);
+	}
+
+	gen_sanity_file.print_fmt("\n");
+
 	// Parameters
 	{
 		Code fwd;
@@ -291,6 +304,21 @@ u32 gen_sanity()
 
 		gen_sanity_file.print(bss);
 		gen_sanity_file.print(data);
+	}
+
+	gen_sanity_file.print_fmt("\n");
+
+	// Template
+	{
+		Code t_Type = def_type( name(Type) );
+
+		Code tmpl = def_template(  def_param( t_class, name(Type) )
+			, def_function( name(test_template), def_param( t_Type, name(a) ), __
+				, def_function_body(1, def_comment( StrC::from("Empty template function body")))
+			)
+		);
+
+		gen_sanity_file.print(tmpl);
 	}
 
 	gen_sanity_file.print_fmt("\n");

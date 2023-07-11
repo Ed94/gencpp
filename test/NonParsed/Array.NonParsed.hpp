@@ -258,12 +258,9 @@ Code gen__array( StrC type, sw type_size )
 			set_capacity = def_function( name(set_capacity), def_param( t_uw, name(new_capacity)), t_bool, body );
 		}
 
-		Code op_ptr = untyped_str( code(
-			operator Type*()
-			{
-				return Data;
-			}
-		));
+		Code op_ptr = def_operator_cast( t_type_ptr, def_execution( code(
+			return Data;
+		)));
 
 		Code body = def_struct_body( 20
 			, using_header
@@ -327,7 +324,7 @@ void gen__array_request( StrC type, sw size, StrC dep = {} )
 	GenArrayRequest request = { dep, type, size };
 	array_append( GenArrayRequests, request );
 }
-#define gen_array( type ) gen__array_request( { txt_n_len(type) }, sizeof(type) )
+#define gen_array( type ) gen__array_request( { txt_to_StrC(type) }, sizeof(type) )
 
 u32 gen_array_file()
 {

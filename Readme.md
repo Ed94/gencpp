@@ -262,7 +262,8 @@ Data Notes:
 
 Two generic templated containers throughout the library:
 
-`template< class Type> struct Array` and `template< class Type> struct HashTable >`
+* `template< class Type> struct Array`
+* `template< class Type> struct HashTable`
 
 Otherwise the library is free of any templates.
 

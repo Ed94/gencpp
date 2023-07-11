@@ -40,6 +40,7 @@ using zpl::sw;
 using zpl::sptr;
 using zpl::uptr;
 
+using zpl::AllocType;
 using zpl::Arena;
 using zpl::AllocatorInfo;
 using zpl::ArrayHeader;
@@ -48,9 +49,17 @@ using zpl::FileError;
 using zpl::Pool;
 // using zpl::String;
 
+using zpl::EAllocation_ALLOC;
+using zpl::EAllocation_FREE;
+using zpl::EAllocation_FREE_ALL;
+using zpl::EAllocation_RESIZE;
 using zpl::EFileMode_WRITE;
 using zpl::EFileError_NONE;
 
+using zpl::ZPL_ALLOCATOR_FLAG_CLEAR_TO_ZERO;
+
+using zpl::align_forward;
+using zpl::align_forward_i64;
 using zpl::alloc;
 using zpl::alloc_align;
 using zpl::arena_allocator;
@@ -58,7 +67,6 @@ using zpl::arena_init_from_memory;
 using zpl::arena_init_from_allocator;
 using zpl::arena_free;
 using zpl::assert_crash;
-using zpl::str_fmt_buf;
 using zpl::char_first_occurence;
 using zpl::char_is_alpha;
 using zpl::char_is_alphanumeric;
@@ -67,19 +75,23 @@ using zpl::char_is_hex_digit;
 using zpl::char_is_space;
 using zpl::crc32;
 using zpl::free_all;
+using zpl::is_power_of_two;
 using zpl::mem_copy;
 using zpl::mem_move;
 using zpl::mem_set;
+using zpl::pointer_add;
 using zpl::pool_allocator;
 using zpl::pool_init;
 using zpl::pool_free;
 using zpl::process_exit;
+using zpl::str_compare;
 using zpl::str_copy;
+using zpl::str_fmt_buf;
 using zpl::str_fmt_va;
 using zpl::str_fmt_out_va;
 using zpl::str_fmt_out_err_va;
-using zpl::str_compare;
 using zpl::str_len;
+using zpl::zero_size;
 
 #if __clang__
 #	pragma clang diagnostic pop
@@ -141,14 +153,13 @@ using zpl::str_len;
 #define bit( Value_ )                             ( 1 << Value_ )
 #define bitfield_is_equal( Type_, Field_, Mask_ ) ( (Type_(Mask_) & Type_(Field_)) == Type_(Mask_) )
 #define forceinline                               ZPL_ALWAYS_INLINE
-#define print_nl( _)                              zpl_printf("\n")
 #define ccast( Type_, Value_ )                    * const_cast< Type_* >( & (Value_) )
 #define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
 #define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
 #define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
-#define txt_impl( ... )                           #__VA_ARGS__
-#define txt( ... )                                txt_impl( __VA_ARGS__ )
-#define txt_n_len( ... )		                  sizeof( txt_impl( __VA_ARGS__ ) ), txt_impl( __VA_ARGS__ )
+#define GEN_STRINGIZE_VA( ... )                   #__VA_ARGS__
+#define txt( ... )                                GEN_STRINGIZE_VA( __VA_ARGS__ )
+#define txt_to_StrC( ... )		                  sizeof( GEN_STRINGIZE_VA( __VA_ARGS__ ) ), GEN_STRINGIZE_VA( __VA_ARGS__ )
 #define do_once()      \
 do                     \
 {                      \
@@ -176,10 +187,127 @@ while(0);
 constexpr
 char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
+#pragma region Memory
+
+// TODO : Use it.
+struct gen_Arena
+{
+	static
+	void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+
+	static
+	gen_Arena init_from_memory( void* start, sw size )
+	{
+		return
+		{
+			{ nullptr, nullptr },
+			start,
+			size,
+			0,
+			0
+		};
+	}
+
+	static
+	gen_Arena init_from_allocator( AllocatorInfo backing, sw size )
+	{
+		gen_Arena result =
+		{
+			backing,
+			alloc( backing, size),
+			size,
+			0,
+			0
+		};
+		return result;
+	}
+
+	static
+	gen_Arena init_sub( gen_Arena& parent, sw size )
+	{
+		return init_from_allocator( parent.Backing, size );
+	}
+
+	sw alignment_of( sw alignment )
+	{
+		sw alignment_offset, result_pointer, mask;
+		ZPL_ASSERT( is_power_of_two( alignment ) );
+
+		alignment_offset = 0;
+		result_pointer   = (sw) PhysicalStart + TotalUsed;
+		mask             = alignment - 1;
+
+		if ( result_pointer & mask )
+			alignment_offset = alignment - ( result_pointer & mask );
+
+		return alignment_offset;
+	}
+
+	void check()
+	{
+		ZPL_ASSERT( TempCount == 0 );
+	}
+
+	void free()
+	{
+		if ( Backing.proc )
+		{
+			zpl::free( Backing, PhysicalStart );
+			PhysicalStart = nullptr;
+		}
+	}
+
+	sw size_remaining( sw alignment )
+	{
+		sw result = TotalSize - ( TotalUsed + alignment_of( alignment ) );
+		return result;
+	}
+
+	AllocatorInfo Backing;
+	void*         PhysicalStart;
+	sw            TotalSize;
+	sw            TotalUsed;
+	sw            TempCount;
+};
+
+struct gen_Pool
+{
+	static
+	void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+
+	static
+	gen_Pool init( AllocatorInfo backing, sw num_blocks, sw block_size )
+	{
+		return init_align( backing, num_blocks, block_size, ZPL_DEFAULT_MEMORY_ALIGNMENT );
+	}
+
+	static
+	gen_Pool init_align( AllocatorInfo backing, sw num_blocks, sw block_size, sw block_align );
+
+	void free()
+	{
+		if ( Backing.proc )
+		{
+			zpl::free( Backing, PhysicalStart );
+		}
+	}
+
+	AllocatorInfo Backing;
+	void*         PhysicalStart;
+	void*         FreeList;
+	sw            BlockSize;
+	sw            BlockAlign;
+	sw            TotalSize;
+	sw            NumBlocks;
+};
+
+#pragma endregion Memory
+
 #pragma region Containers
 #pragma push_macro("template")
 #undef template
 
+// TODO : Use it.
 template<class Type>
 struct TArray
 {
@@ -191,13 +319,13 @@ struct TArray
 	};
 
 	static
-	TArray<Type> init( AllocatorInfo allocator )
+	TArray init( AllocatorInfo allocator )
 	{
 		return init_reserve( allocator, grow_formula(0) );
 	}
 
 	static
-	TArray<Type> init_reserve( AllocatorInfo allocator, sw capacity )
+	TArray init_reserve( AllocatorInfo allocator, sw capacity )
 	{
 		Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) ));
 
@@ -369,6 +497,7 @@ struct TArray
 	}
 };
 
+// TODO : Use it.
 template<typename Type>
 struct THashTable
 {
@@ -387,7 +516,7 @@ struct THashTable
 	};
 
 	static
-	THashTable<Type> init( AllocatorInfo allocator )
+	THashTable init( AllocatorInfo allocator )
 	{
 		THashTable<Type> result = {0};
 
@@ -620,9 +749,6 @@ protected:
 
 #pragma pop_macro("template")
 #pragma endregion Containers
-
-#pragma region Memory
-#pragma endregion Memory
 
 #pragma region String
 	// Constant string with length.
