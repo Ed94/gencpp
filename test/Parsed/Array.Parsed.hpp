@@ -202,6 +202,11 @@ Code gen__array( StrC type, sw type_size )
 				}
 
 				Type* Data;
+
+				operator Type*()
+				{
+					return Data;
+				}
 			};
 		),
 		// Tokens
@@ -209,14 +214,6 @@ Code gen__array( StrC type, sw type_size )
 			, "ArrayType", name
 			, "type",      type
 	));
-
-	Code op_ptr = untyped_str( code(
-		operator Type*()
-		{
-			return Data;
-		}
-	));
-	array.body()->add_entry( op_ptr );
 
 	return array;
 }

@@ -197,10 +197,12 @@ namespace Memory
 			{
 				// Doesn't recycle.
 			}
+			break;
 			case EAllocation_FREE_ALL:
 			{
 				// Memory::cleanup instead.
 			}
+			break;
 			case EAllocation_RESIZE:
 			{
 				if ( last->total_allocated + size > last->total_size )

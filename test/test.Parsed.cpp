@@ -1,5 +1,5 @@
 #include "Bloat.cpp"
-// #include "Parsed\Array.Parsed.hpp"
+#include "Parsed\Array.Parsed.hpp"
 // #include "Parsed\Buffer.Parsed.hpp"
 // #include "Parsed\HashTable.Parsed.hpp"
 // #include "Parsed\Ring.Parsed.hpp"
@@ -19,7 +19,7 @@ int gen_main()
 
 	gen_sanity();
 
-	// gen_array( u8 );
+	gen_array( u8 );
 	// gen_array( sw );
 
 	// gen_buffer( u8 );
@@ -28,7 +28,7 @@ int gen_main()
 
 	// gen_ring( s16 );
 
-	// gen_array_file();
+	gen_array_file();
 	// gen_buffer_file();
 	// gen_hashtable_file();
 	// gen_ring_file();

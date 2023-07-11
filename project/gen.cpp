@@ -6110,7 +6110,281 @@ namespace gen
 		sw          Length;
 	};
 
-	ZPL_TABLE( static, TokMap, tokmap_, TokEntry )
+	typedef struct TokMapEntry
+	{
+		zpl::u64 key;
+		zpl::sw next;
+		TokEntry value;
+	} TokMapEntry;
+	typedef struct TokMap
+	{
+		zpl::sw *hashes;
+		TokMapEntry *entries;
+	} TokMap;
+	static void tokmap_init(TokMap *h, zpl::AllocatorInfo a);
+	static void tokmap_destroy(TokMap *h);
+	static void tokmap_clear(TokMap *h);
+	static TokEntry *tokmap_get(TokMap *h, zpl::u64 key);
+	static zpl::sw tokmap_slot(TokMap *h, zpl::u64 key);
+	static void tokmap_set(TokMap *h, zpl::u64 key, TokEntry value);
+	static void tokmap_grow(TokMap *h);
+	static void tokmap_rehash(TokMap *h, zpl::sw new_count);
+	static void tokmap_rehash_fast(TokMap *h);
+	static void tokmap_map(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry value));
+	static void tokmap_map_mut(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry *value));
+	static void tokmap_remove(TokMap *h, zpl::u64 key);
+	static void tokmap_remove_entry(TokMap *h, zpl::sw idx);
+	;
+	void tokmap_init(TokMap *h, zpl::AllocatorInfo a)
+	{
+		zpl::_array_init_reserve((void **)&(h->hashes), a, (zpl::sw)(sizeof(*(h->hashes))), ((2 * (0) + 8)));
+		zpl::_array_init_reserve((void **)&(h->entries), a, (zpl::sw)(sizeof(*(h->entries))), ((2 * (0) + 8)));
+	}
+	void tokmap_destroy(TokMap *h)
+	{
+		if (h->entries)
+			do
+			{
+				if (h->entries)
+				{
+					zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->entries) - 1);
+					zpl::free(_ah->allocator, _ah);
+				}
+			} while (0);
+		if (h->hashes)
+			do
+			{
+				if (h->hashes)
+				{
+					zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->hashes) - 1);
+					zpl::free(_ah->allocator, _ah);
+				}
+			} while (0);
+	}
+	void tokmap_clear(TokMap *h)
+	{
+		for (int i = 0; i < (((zpl::ArrayHeader *)(h->hashes) - 1)->count); i++)
+			h->hashes[i] = -1;
+		do
+		{
+			((zpl::ArrayHeader *)(h->entries) - 1)->count = 0;
+		} while (0);
+	}
+	zpl::sw tokmap_slot(TokMap *h, zpl::u64 key)
+	{
+		for (zpl::sw i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
+		{
+			if (h->entries[i].key == key)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+	static zpl::sw tokmap__add_entry(TokMap *h, zpl::u64 key)
+	{
+		zpl::sw index;
+		TokMapEntry e = {0};
+		e.key = key;
+		e.next = -1;
+		index = (((zpl::ArrayHeader *)(h->entries) - 1)->count);
+		(zpl::_array_append_helper((void **)&(h->entries)) && (((h->entries)[(((zpl::ArrayHeader *)(h->entries) - 1)->count)++] = (e)), true));
+		return index;
+	}
+	static zpl::hash_table_find_result tokmap__find(TokMap *h, zpl::u64 key)
+	{
+		zpl::hash_table_find_result r = {-1, -1, -1};
+		if ((((zpl::ArrayHeader *)(h->hashes) - 1)->count) > 0)
+		{
+			r.hash_index = key % (((zpl::ArrayHeader *)(h->hashes) - 1)->count);
+			r.entry_index = h->hashes[r.hash_index];
+			while (r.entry_index >= 0)
+			{
+				if (h->entries[r.entry_index].key == key)
+					return r;
+				r.entry_prev = r.entry_index;
+				r.entry_index = h->entries[r.entry_index].next;
+			}
+		}
+		return r;
+	}
+	static zpl::b32 tokmap__full(TokMap *h) { return 0.75f * (((zpl::ArrayHeader *)(h->hashes) - 1)->count) < (((zpl::ArrayHeader *)(h->entries) - 1)->count); }
+	void tokmap_grow(TokMap *h)
+	{
+		zpl::sw new_count = (2 * ((((zpl::ArrayHeader *)(h->entries) - 1)->count)) + 8);
+		tokmap_rehash(h, new_count);
+	}
+	void tokmap_rehash(TokMap *h, zpl::sw new_count)
+	{
+		zpl::sw i, j;
+		TokMap nh = {0};
+		tokmap_init(&nh, (((zpl::ArrayHeader *)(h->hashes) - 1)->allocator));
+		zpl::_array_resize((void **)&(nh.hashes), (new_count));
+		zpl::_array_reserve((void **)&(nh.entries), ((((zpl::ArrayHeader *)(h->entries) - 1)->count)));
+		for (i = 0; i < new_count; i++)
+			nh.hashes[i] = -1;
+		for (i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
+		{
+			TokMapEntry *e;
+			zpl::hash_table_find_result fr;
+			if ((((zpl::ArrayHeader *)(nh.hashes) - 1)->count) == 0)
+				tokmap_grow(&nh);
+			e = &h->entries[i];
+			fr = tokmap__find(&nh, e->key);
+			j = tokmap__add_entry(&nh, e->key);
+			if (fr.entry_prev < 0)
+				nh.hashes[fr.hash_index] = j;
+			else
+				nh.entries[fr.entry_prev].next = j;
+			nh.entries[j].next = fr.entry_index;
+			nh.entries[j].value = e->value;
+		}
+		tokmap_destroy(h);
+		h->hashes = nh.hashes;
+		h->entries = nh.entries;
+	}
+	void tokmap_rehash_fast(TokMap *h)
+	{
+		zpl::sw i;
+		for (i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
+			h->entries[i].next = -1;
+		for (i = 0; i < (((zpl::ArrayHeader *)(h->hashes) - 1)->count); i++)
+			h->hashes[i] = -1;
+		for (i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
+		{
+			TokMapEntry *e;
+			zpl::hash_table_find_result fr;
+			e = &h->entries[i];
+			fr = tokmap__find(h, e->key);
+			if (fr.entry_prev < 0)
+				h->hashes[fr.hash_index] = i;
+			else
+				h->entries[fr.entry_prev].next = i;
+		}
+	}
+	TokEntry *tokmap_get(TokMap *h, zpl::u64 key)
+	{
+		zpl::sw index = tokmap__find(h, key).entry_index;
+		if (index >= 0)
+			return &h->entries[index].value;
+		return 0;
+	}
+	void tokmap_remove(TokMap *h, zpl::u64 key)
+	{
+		zpl::hash_table_find_result fr = tokmap__find(h, key);
+		if (fr.entry_index >= 0)
+		{
+			do
+			{
+				zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->entries) - 1);
+				do
+				{
+					if (!(fr.entry_index < _ah->count))
+					{
+						zpl::assert_handler("fr.entry_index < _ah->count", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, 0);
+						__debugbreak();
+					}
+				} while (0);
+				zpl::mem_move(h->entries + fr.entry_index, h->entries + fr.entry_index + 1, (zpl::sw)(sizeof(h->entries[0])) * (_ah->count - fr.entry_index - 1));
+				--_ah->count;
+			} while (0);
+			tokmap_rehash_fast(h);
+		}
+	}
+	void tokmap_remove_entry(TokMap *h, zpl::sw idx)
+	{
+		do
+		{
+			zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->entries) - 1);
+			do
+			{
+				if (!(idx < _ah->count))
+				{
+					zpl::assert_handler("idx < _ah->count", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, 0);
+					__debugbreak();
+				}
+			} while (0);
+			zpl::mem_move(h->entries + idx, h->entries + idx + 1, (zpl::sw)(sizeof(h->entries[0])) * (_ah->count - idx - 1));
+			--_ah->count;
+		} while (0);
+	}
+	void tokmap_map(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry value))
+	{
+		do
+		{
+			if (!((h) != 0))
+			{
+				zpl::assert_handler("( h ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "h"
+																											   " must not be NULL");
+				__debugbreak();
+			}
+		} while (0);
+		do
+		{
+			if (!((map_proc) != 0))
+			{
+				zpl::assert_handler("( map_proc ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "map_proc"
+																													  " must not be NULL");
+				__debugbreak();
+			}
+		} while (0);
+		for (zpl::sw i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); ++i)
+		{
+			map_proc(h->entries[i].key, h->entries[i].value);
+		}
+	}
+	void tokmap_map_mut(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry *value))
+	{
+		do
+		{
+			if (!((h) != 0))
+			{
+				zpl::assert_handler("( h ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "h"
+																											   " must not be NULL");
+				__debugbreak();
+			}
+		} while (0);
+		do
+		{
+			if (!((map_proc) != 0))
+			{
+				zpl::assert_handler("( map_proc ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "map_proc"
+																													  " must not be NULL");
+				__debugbreak();
+			}
+		} while (0);
+		for (zpl::sw i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); ++i)
+		{
+			map_proc(h->entries[i].key, &h->entries[i].value);
+		}
+	}
+	void tokmap_set(TokMap *h, zpl::u64 key, TokEntry value)
+	{
+		zpl::sw index;
+		zpl::hash_table_find_result fr;
+		if ((((zpl::ArrayHeader *)(h->hashes) - 1)->count) == 0)
+			tokmap_grow(h);
+		fr = tokmap__find(h, key);
+		if (fr.entry_index >= 0)
+		{
+			index = fr.entry_index;
+		}
+		else
+		{
+			index = tokmap__add_entry(h, key);
+			if (fr.entry_prev >= 0)
+			{
+				h->entries[fr.entry_prev].next = index;
+			}
+			else
+			{
+				h->hashes[fr.hash_index] = index;
+			}
+		}
+		h->entries[index].value = value;
+		if (tokmap__full(h))
+			tokmap_grow(h);
+	};
 
 	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va )
 	{
