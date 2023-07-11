@@ -39,7 +39,7 @@ Code gen__array( StrC type, sw type_size )
 				using Header = ArrayHeader;
 				using Type   = <type>;
 
-				constexpr auto grow_formula = &array_glow_formula;
+				static constexpr auto grow_formula = &array_grow_formula;
 
 				static
 				<ArrayType> init( AllocatorInfo allocator )
@@ -211,8 +211,8 @@ Code gen__array( StrC type, sw type_size )
 		),
 		// Tokens
 			2
-			, "ArrayType", name
-			, "type",      type
+			, "ArrayType", (char const*) name
+			, "type",      (char const*) type
 	));
 
 	return array;
@@ -254,7 +254,7 @@ u32 gen_array_file()
 {
 	Builder
 	gen_array_file;
-	gen_array_file.open( "array.gen.hpp" );
+	gen_array_file.open( "array.Parsed.gen.hpp" );
 
 	Code include_zpl = def_include( StrC::from("Bloat.hpp") );
 	gen_array_file.print( include_zpl );

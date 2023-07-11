@@ -50,7 +50,7 @@ $path_scripts = Join-Path $path_root scripts
 	Pop-Location
 
 	# Test NonParsed
-	if ($true) {
+	if ($false) {
 	$gencpp = Join-Path $path_gen_build gencpp.exe
 
 	Push-location $path_gen

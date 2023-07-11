@@ -431,7 +431,7 @@ u32 gen_hashtable_file()
 {
 	Builder
 	gen_buffer_file;
-	gen_buffer_file.open( "hashtable.gen.hpp" );
+	gen_buffer_file.open( "hashtable.NonParsed.gen.hpp" );
 
 	gen_buffer_file.print( def_include( StrC::from("Bloat.hpp")) );
 	gen_buffer_file.print( def_include( StrC::from("Array.NonParsed.hpp")) );

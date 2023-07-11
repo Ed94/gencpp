@@ -70,7 +70,7 @@
 	</Type>
 
 	<Type Name="gen::Parser::TokArray">
-		<DisplayString>Current[ { Arr[Idx] } ]</DisplayString>
+		<DisplayString>Current[ { Arr[Idx] } ] Idx:{ Idx }</DisplayString>
 		<Expand>
 			<Synthetic Name="Header">
 				<DisplayString>{(ArrayHeader*)((char*)Arr - sizeof(ArrayHeader))}</DisplayString>

@@ -330,7 +330,7 @@ u32 gen_array_file()
 {
 	Builder
 	gen_array_file;
-	gen_array_file.open( "array.gen.hpp" );
+	gen_array_file.open( "array.NonParsed.gen.hpp" );
 
 	Code include_zpl = def_include( StrC::from("Bloat.hpp") );
 	gen_array_file.print( include_zpl );

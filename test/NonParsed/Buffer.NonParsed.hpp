@@ -235,7 +235,7 @@ u32 gen_buffer_file()
 {
 	Builder
 	gen_buffer_file;
-	gen_buffer_file.open( "buffer.gen.hpp" );
+	gen_buffer_file.open( "buffer.NonParsed.gen.hpp" );
 
 	gen_buffer_file.print( def_include( StrC::from("Bloat.hpp")) );
 	gen_buffer_file.print( gen__buffer_base() );

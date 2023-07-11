@@ -709,17 +709,27 @@ namespace gen
 
 			case Parameters:
 			{
-				result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
+				if ( Name )
+				{
+					result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
+				}
+				else
+					result.append_fmt( "%s", entry(0)->to_string() );
 
 				s32 index = 1;
 				s32 left  = num_entries() - 1;
 
 				while ( left-- )
 				{
-					result.append_fmt( ", %s %s"
-						, entry( index )->entry( 0 )->to_string()
-						, entry( index )->Name
-					);
+					if ( Name )
+						result.append_fmt( ", %s %s"
+							, entry( index )->entry( 0 )->to_string()
+							, entry( index )->Name
+						);
+
+					else
+						result.append_fmt( "%s", entry(0)->to_string() );
+
 					index++;
 				}
 			}
@@ -3213,6 +3223,7 @@ namespace gen
 		Entry( Decl_Namespace,        "namespace" )       \
 		Entry( Decl_Operator,         "operator" )        \
 		Entry( Decl_Struct,           "struct" )          \
+		Entry( Decl_Template,         "template" )        \
 		Entry( Decl_Typedef,          "typedef" )         \
 		Entry( Decl_Using,            "using" )           \
 		Entry( Decl_Union,            "union" )           \
@@ -3238,7 +3249,6 @@ namespace gen
 		Entry( Star,                  "*" )               \
 		Entry( Statement_End,         ";" )               \
 		Entry( String,                "__String__" )      \
-		Entry( Template,              "template" )        \
 		Entry( Type_Unsigned, 	      "unsigned" )        \
 		Entry( Type_Signed,           "signed" )          \
 		Entry( Type_Short,            "short" )           \
@@ -3293,6 +3303,9 @@ namespace gen
 			{
 				s32         lookup_len = lookup[index].Len - 1;
 				char const* lookup_str = lookup[index].Ptr;
+
+				if ( lookup_len != length )
+					continue;
 
 				if ( str_compare( word, lookup_str, lookup_len ) == 0 )
 					return scast(TokType, index);
@@ -3901,6 +3914,7 @@ namespace gen
 	internal Code parse_friend           ( Parser::TokArray& toks, char const* context );
 	internal Code parse_function         ( Parser::TokArray& toks, char const* context );
 	internal Code parse_namespace        ( Parser::TokArray& toks, char const* context );
+	internal Code parse_operator_cast    ( Parser::TokArray& toks, char const* context );
 	internal Code parse_struct           ( Parser::TokArray& toks, char const* context );
 	internal Code parse_variable         ( Parser::TokArray& toks, char const* context );
 	internal Code parse_template         ( Parser::TokArray& toks, char const* context );
@@ -4017,55 +4031,11 @@ namespace gen
 		if ( type == Code::Invalid )
 			return Code::Invalid;
 
-		Token name = currtok;
-		eat( TokType::Identifier );
+		Token name = { nullptr, 0, TokType::Invalid, false };
 
-		if ( currtok.IsAssign )
+		if ( check( TokType::Identifier )  )
 		{
-			eat( TokType::Operator );
-
-			Token value_tok = currtok;
-
-			if ( currtok.Type == TokType::Statement_End )
-			{
-				log_failure( "gen::%s: Expected value after assignment operator", context );
-				return Code::Invalid;
-			}
-
-			while ( left && currtok.Type != TokType::Statement_End )
-			{
-				value_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)value_tok.Text;
-				eat( currtok.Type );
-			}
-
-			value = parse_type( toks, context );
-		}
-
-		Code
-		result       = make_code();
-		result->Type = Parameters;
-		result->Name = get_cached_string( name );
-
-		result->add_entry( type );
-
-		if ( value )
-			result->add_entry( value );
-
-		while ( left
-			&& use_template_capture ?
-					currtok.Type != TokType::Operator && currtok.Text[0] !=  '>'
-				:	currtok.Type != TokType::Capture_End )
-		{
-			eat( TokType::Comma );
-
-			Code type  = { nullptr };
-			Code value = { nullptr };
-
-			type = parse_type( toks, context );
-			if ( type == Code::Invalid )
-				return Code::Invalid;
-
-			Token name = currtok;
+			name = currtok;
 			eat( TokType::Identifier );
 
 			if ( currtok.IsAssign )
@@ -4088,11 +4058,69 @@ namespace gen
 
 				value = parse_type( toks, context );
 			}
+		}
+
+		Code
+		result       = make_code();
+		result->Type = Parameters;
+
+		if ( name.Length > 0 )
+			result->Name = get_cached_string( name );
+
+		result->add_entry( type );
+
+		if ( value )
+			result->add_entry( value );
+
+		while ( left
+			&& use_template_capture ?
+					currtok.Type != TokType::Operator && currtok.Text[0] !=  '>'
+				:	currtok.Type != TokType::Capture_End )
+		{
+			eat( TokType::Comma );
+
+			Code type  = { nullptr };
+			Code value = { nullptr };
+
+			type = parse_type( toks, context );
+			if ( type == Code::Invalid )
+				return Code::Invalid;
+
+			name = { nullptr, 0, TokType::Invalid, false };
+
+			if ( check( TokType::Identifier )  )
+			{
+				name = currtok;
+				eat( TokType::Identifier );
+
+				if ( currtok.IsAssign )
+				{
+					eat( TokType::Operator );
+
+					Token value_tok = currtok;
+
+					if ( currtok.Type == TokType::Statement_End )
+					{
+						log_failure( "gen::%s: Expected value after assignment operator", context );
+						return Code::Invalid;
+					}
+
+					while ( left && currtok.Type != TokType::Statement_End )
+					{
+						value_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)value_tok.Text;
+						eat( currtok.Type );
+					}
+
+					value = parse_type( toks, context );
+				}
+			}
 
 			Code
 			param       = make_code();
 			param->Type = Parameters;
-			param->Name = get_cached_string( name );
+
+			if ( name.Length > 0 )
+				param->Name = get_cached_string( name );
 
 			param->add_entry( type );
 
@@ -4443,11 +4471,11 @@ namespace gen
 
 			while ( left && currtok.Type != TokType::Statement_End )
 			{
-				expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
 				eat( currtok.Type );
 			}
 
-			expr = untyped_str( expr_tok );
+			expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
+			expr            = untyped_str( expr_tok );
 		}
 
 		eat( TokType::Statement_End );
@@ -4611,11 +4639,15 @@ namespace gen
 					member = parse_friend( toks, context );
 				break;
 
+				case TokType::Decl_Operator:
+					member = parse_operator_cast( toks, context );
+				break;
+
 				case TokType::Decl_Struct:
 					member = parse_struct( toks, context );
 				break;
 
-				case TokType::Template:
+				case TokType::Decl_Template:
 					member = parse_template( toks, context );
 				break;
 
@@ -4717,6 +4749,7 @@ namespace gen
 				{
 					member = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, context );
 				}
+				break;
 
 				default:
 					Token untyped_tok = currtok;
@@ -4829,7 +4862,7 @@ namespace gen
 		Token start = currtok;
 
 		s32 level = 0;
-		while ( left && currtok.Type != TokType::BraceCurly_Close && level == 0 )
+		while ( left && ( currtok.Type != TokType::BraceCurly_Close || level > 0 ) )
 		{
 			if ( currtok.Type == TokType::BraceCurly_Open )
 				level++;
@@ -4862,7 +4895,8 @@ namespace gen
 		if ( which != Namespace_Body && which != Global_Body && which != Export_Body && which != Extern_Linkage_Body )
 			return Code::Invalid;
 
-		eat( TokType::BraceCurly_Open );
+		if ( which != Global_Body )
+			eat( TokType::BraceCurly_Open );
 
 		Code
 		result = make_code();
@@ -4906,7 +4940,7 @@ namespace gen
 					member = parse_struct( toks, context );
 				break;
 
-				case TokType::Template:
+				case TokType::Decl_Template:
 					member = parse_template( toks, context );
 				break;
 
@@ -5034,7 +5068,9 @@ namespace gen
 			result->add_entry( member );
 		}
 
-		eat( TokType::BraceCurly_Close );
+		if ( which != Global_Body )
+			eat( TokType::BraceCurly_Close );
+
 		return result;
 	}
 
@@ -5495,14 +5531,23 @@ namespace gen
 
 			Token body_str = currtok;
 
-			while ( ! check( TokType::BraceCurly_Close ) )
+			s32 level = 0;
+			while ( left && ( currtok.Type != TokType::BraceCurly_Close || level > 0 ) )
 			{
+				if ( currtok.Type == TokType::BraceCurly_Open )
+					level++;
+
+				else if ( currtok.Type == TokType::BraceCurly_Close && level > 0 )
+					level--;
+
 				eat( currtok.Type );
 			}
 
 			body_str.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)body_str.Text;
 
 			body = untyped_str( body_str );
+
+			eat( TokType::BraceCurly_Close );
 		}
 
 		Code result = make_code();
@@ -5515,8 +5560,9 @@ namespace gen
 		else
 		{
 			result->Type = ECode::Operator_Cast_Fwd;
-			result->add_entry( type );
 		}
+
+		result->add_entry( type );
 
 		return result;
 	}
@@ -5560,7 +5606,7 @@ namespace gen
 
 		// TODO : Parse Module specifier
 
-		eat( TokType::Template );
+		eat( TokType::Decl_Template );
 
 		Code params = parse_params( toks, txt(parse_template), UseTemplateCapture );
 		if ( params == Code::Invalid )
@@ -6110,281 +6156,7 @@ namespace gen
 		sw          Length;
 	};
 
-	typedef struct TokMapEntry
-	{
-		zpl::u64 key;
-		zpl::sw next;
-		TokEntry value;
-	} TokMapEntry;
-	typedef struct TokMap
-	{
-		zpl::sw *hashes;
-		TokMapEntry *entries;
-	} TokMap;
-	static void tokmap_init(TokMap *h, zpl::AllocatorInfo a);
-	static void tokmap_destroy(TokMap *h);
-	static void tokmap_clear(TokMap *h);
-	static TokEntry *tokmap_get(TokMap *h, zpl::u64 key);
-	static zpl::sw tokmap_slot(TokMap *h, zpl::u64 key);
-	static void tokmap_set(TokMap *h, zpl::u64 key, TokEntry value);
-	static void tokmap_grow(TokMap *h);
-	static void tokmap_rehash(TokMap *h, zpl::sw new_count);
-	static void tokmap_rehash_fast(TokMap *h);
-	static void tokmap_map(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry value));
-	static void tokmap_map_mut(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry *value));
-	static void tokmap_remove(TokMap *h, zpl::u64 key);
-	static void tokmap_remove_entry(TokMap *h, zpl::sw idx);
-	;
-	void tokmap_init(TokMap *h, zpl::AllocatorInfo a)
-	{
-		zpl::_array_init_reserve((void **)&(h->hashes), a, (zpl::sw)(sizeof(*(h->hashes))), ((2 * (0) + 8)));
-		zpl::_array_init_reserve((void **)&(h->entries), a, (zpl::sw)(sizeof(*(h->entries))), ((2 * (0) + 8)));
-	}
-	void tokmap_destroy(TokMap *h)
-	{
-		if (h->entries)
-			do
-			{
-				if (h->entries)
-				{
-					zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->entries) - 1);
-					zpl::free(_ah->allocator, _ah);
-				}
-			} while (0);
-		if (h->hashes)
-			do
-			{
-				if (h->hashes)
-				{
-					zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->hashes) - 1);
-					zpl::free(_ah->allocator, _ah);
-				}
-			} while (0);
-	}
-	void tokmap_clear(TokMap *h)
-	{
-		for (int i = 0; i < (((zpl::ArrayHeader *)(h->hashes) - 1)->count); i++)
-			h->hashes[i] = -1;
-		do
-		{
-			((zpl::ArrayHeader *)(h->entries) - 1)->count = 0;
-		} while (0);
-	}
-	zpl::sw tokmap_slot(TokMap *h, zpl::u64 key)
-	{
-		for (zpl::sw i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
-		{
-			if (h->entries[i].key == key)
-			{
-				return i;
-			}
-		}
-		return -1;
-	}
-	static zpl::sw tokmap__add_entry(TokMap *h, zpl::u64 key)
-	{
-		zpl::sw index;
-		TokMapEntry e = {0};
-		e.key = key;
-		e.next = -1;
-		index = (((zpl::ArrayHeader *)(h->entries) - 1)->count);
-		(zpl::_array_append_helper((void **)&(h->entries)) && (((h->entries)[(((zpl::ArrayHeader *)(h->entries) - 1)->count)++] = (e)), true));
-		return index;
-	}
-	static zpl::hash_table_find_result tokmap__find(TokMap *h, zpl::u64 key)
-	{
-		zpl::hash_table_find_result r = {-1, -1, -1};
-		if ((((zpl::ArrayHeader *)(h->hashes) - 1)->count) > 0)
-		{
-			r.hash_index = key % (((zpl::ArrayHeader *)(h->hashes) - 1)->count);
-			r.entry_index = h->hashes[r.hash_index];
-			while (r.entry_index >= 0)
-			{
-				if (h->entries[r.entry_index].key == key)
-					return r;
-				r.entry_prev = r.entry_index;
-				r.entry_index = h->entries[r.entry_index].next;
-			}
-		}
-		return r;
-	}
-	static zpl::b32 tokmap__full(TokMap *h) { return 0.75f * (((zpl::ArrayHeader *)(h->hashes) - 1)->count) < (((zpl::ArrayHeader *)(h->entries) - 1)->count); }
-	void tokmap_grow(TokMap *h)
-	{
-		zpl::sw new_count = (2 * ((((zpl::ArrayHeader *)(h->entries) - 1)->count)) + 8);
-		tokmap_rehash(h, new_count);
-	}
-	void tokmap_rehash(TokMap *h, zpl::sw new_count)
-	{
-		zpl::sw i, j;
-		TokMap nh = {0};
-		tokmap_init(&nh, (((zpl::ArrayHeader *)(h->hashes) - 1)->allocator));
-		zpl::_array_resize((void **)&(nh.hashes), (new_count));
-		zpl::_array_reserve((void **)&(nh.entries), ((((zpl::ArrayHeader *)(h->entries) - 1)->count)));
-		for (i = 0; i < new_count; i++)
-			nh.hashes[i] = -1;
-		for (i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
-		{
-			TokMapEntry *e;
-			zpl::hash_table_find_result fr;
-			if ((((zpl::ArrayHeader *)(nh.hashes) - 1)->count) == 0)
-				tokmap_grow(&nh);
-			e = &h->entries[i];
-			fr = tokmap__find(&nh, e->key);
-			j = tokmap__add_entry(&nh, e->key);
-			if (fr.entry_prev < 0)
-				nh.hashes[fr.hash_index] = j;
-			else
-				nh.entries[fr.entry_prev].next = j;
-			nh.entries[j].next = fr.entry_index;
-			nh.entries[j].value = e->value;
-		}
-		tokmap_destroy(h);
-		h->hashes = nh.hashes;
-		h->entries = nh.entries;
-	}
-	void tokmap_rehash_fast(TokMap *h)
-	{
-		zpl::sw i;
-		for (i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
-			h->entries[i].next = -1;
-		for (i = 0; i < (((zpl::ArrayHeader *)(h->hashes) - 1)->count); i++)
-			h->hashes[i] = -1;
-		for (i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); i++)
-		{
-			TokMapEntry *e;
-			zpl::hash_table_find_result fr;
-			e = &h->entries[i];
-			fr = tokmap__find(h, e->key);
-			if (fr.entry_prev < 0)
-				h->hashes[fr.hash_index] = i;
-			else
-				h->entries[fr.entry_prev].next = i;
-		}
-	}
-	TokEntry *tokmap_get(TokMap *h, zpl::u64 key)
-	{
-		zpl::sw index = tokmap__find(h, key).entry_index;
-		if (index >= 0)
-			return &h->entries[index].value;
-		return 0;
-	}
-	void tokmap_remove(TokMap *h, zpl::u64 key)
-	{
-		zpl::hash_table_find_result fr = tokmap__find(h, key);
-		if (fr.entry_index >= 0)
-		{
-			do
-			{
-				zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->entries) - 1);
-				do
-				{
-					if (!(fr.entry_index < _ah->count))
-					{
-						zpl::assert_handler("fr.entry_index < _ah->count", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, 0);
-						__debugbreak();
-					}
-				} while (0);
-				zpl::mem_move(h->entries + fr.entry_index, h->entries + fr.entry_index + 1, (zpl::sw)(sizeof(h->entries[0])) * (_ah->count - fr.entry_index - 1));
-				--_ah->count;
-			} while (0);
-			tokmap_rehash_fast(h);
-		}
-	}
-	void tokmap_remove_entry(TokMap *h, zpl::sw idx)
-	{
-		do
-		{
-			zpl::ArrayHeader *_ah = ((zpl::ArrayHeader *)(h->entries) - 1);
-			do
-			{
-				if (!(idx < _ah->count))
-				{
-					zpl::assert_handler("idx < _ah->count", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, 0);
-					__debugbreak();
-				}
-			} while (0);
-			zpl::mem_move(h->entries + idx, h->entries + idx + 1, (zpl::sw)(sizeof(h->entries[0])) * (_ah->count - idx - 1));
-			--_ah->count;
-		} while (0);
-	}
-	void tokmap_map(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry value))
-	{
-		do
-		{
-			if (!((h) != 0))
-			{
-				zpl::assert_handler("( h ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "h"
-																											   " must not be NULL");
-				__debugbreak();
-			}
-		} while (0);
-		do
-		{
-			if (!((map_proc) != 0))
-			{
-				zpl::assert_handler("( map_proc ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "map_proc"
-																													  " must not be NULL");
-				__debugbreak();
-			}
-		} while (0);
-		for (zpl::sw i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); ++i)
-		{
-			map_proc(h->entries[i].key, h->entries[i].value);
-		}
-	}
-	void tokmap_map_mut(TokMap *h, void (*map_proc)(zpl::u64 key, TokEntry *value))
-	{
-		do
-		{
-			if (!((h) != 0))
-			{
-				zpl::assert_handler("( h ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "h"
-																											   " must not be NULL");
-				__debugbreak();
-			}
-		} while (0);
-		do
-		{
-			if (!((map_proc) != 0))
-			{
-				zpl::assert_handler("( map_proc ) != NULL", "C:\\projects\\gencpp\\project\\gen.cpp", (zpl::s64)6113, "map_proc"
-																													  " must not be NULL");
-				__debugbreak();
-			}
-		} while (0);
-		for (zpl::sw i = 0; i < (((zpl::ArrayHeader *)(h->entries) - 1)->count); ++i)
-		{
-			map_proc(h->entries[i].key, &h->entries[i].value);
-		}
-	}
-	void tokmap_set(TokMap *h, zpl::u64 key, TokEntry value)
-	{
-		zpl::sw index;
-		zpl::hash_table_find_result fr;
-		if ((((zpl::ArrayHeader *)(h->hashes) - 1)->count) == 0)
-			tokmap_grow(h);
-		fr = tokmap__find(h, key);
-		if (fr.entry_index >= 0)
-		{
-			index = fr.entry_index;
-		}
-		else
-		{
-			index = tokmap__add_entry(h, key);
-			if (fr.entry_prev >= 0)
-			{
-				h->entries[fr.entry_prev].next = index;
-			}
-			else
-			{
-				h->hashes[fr.hash_index] = index;
-			}
-		}
-		h->entries[index].value = value;
-		if (tokmap__full(h))
-			tokmap_grow(h);
-	};
+	ZPL_TABLE( static, TokMap, tokmap_, TokEntry )
 
 	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va )
 	{
@@ -6478,7 +6250,7 @@ namespace gen
 
 		tokmap_clear( & tok_map );
 
-		sw result = buf_size - remaining;
+		sw result = buf_size - remaining + 1;
 
 		return result;
 	}
