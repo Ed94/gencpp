@@ -86,15 +86,14 @@ Inlined functions related to the AST datatype that required forwards for gen int
 
 ## gen.cpp
 
-* Static data defined at the top.
+* Static data
 * AST Body case macros are next.
-* AST implementation follows
+* AST implementation
 * Gen interface begins with its `init`, `deinit`, etc.. Until `make_code_entires`
 * operator__validate defined, which will be used to verify if an operator definition is constructible.
 * Allocator interface for data arrays, code pool, code entries, string arenas, and string table.
 * Helper macros used throughout the constructor API
 * Upfront constructors, following the same order as shown in the header.
-* Incremental constructors
 * Parsing constructors, it defines its own lexer, and has many helper functions for parsing not exposed through the header.
 * Untyped constructors
 * Builder

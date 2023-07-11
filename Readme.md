@@ -295,6 +295,7 @@ Interface :``
 * def_module
 * def_namespace
 * def_operator
+* def_operator_cast
 * def_param
 * def_params
 * def_specifier
@@ -349,12 +350,13 @@ Interface :
 * parse_function
 * parse_global_body
 * parse_namespace
-* parse_operator (Not ready)
+* parse_operator
+* parse_operator_cast
 * parse_struct
-* parse_template (Not ready)
+* parse_template
 * parse_type
 * parse_typedef
-* parse_union (Not ready)
+* parse_union
 * parse_using
 * parse_variable
 
