@@ -137,16 +137,16 @@ struct GenBufferRequest
 	StrC Dependency;
 	StrC Type;
 };
-Array(GenBufferRequest) GenBufferRequests;
+Array<GenBufferRequest> GenBufferRequests;
 
 void gen__buffer_request( StrC type, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenBufferRequests, Memory::GlobalAllocator );
+		GenBufferRequests = Array<GenBufferRequest>::init( Memory::GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < array_count( GenBufferRequests ); ++idx )
+	for ( sw idx = 0; idx < GenBufferRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenBufferRequests[ idx ].Type;
 
@@ -158,7 +158,7 @@ void gen__buffer_request( StrC type, StrC dep = {} )
 	}
 
 	GenBufferRequest request = { dep, type };
-	array_append( GenBufferRequests, request );
+	GenBufferRequests.append( request );
 }
 #define gen_buffer( type ) gen__buffer_request( { txt_to_StrC(type) } )
 
@@ -172,7 +172,7 @@ u32 gen_buffer_file()
 	gen_buffer_file.print( gen__buffer_base() );
 
 	GenBufferRequest* current = GenBufferRequests;
-	s32 left = array_count( GenBufferRequests );
+	s32 left = GenBufferRequests.num();
 	while (left--)
 	{
 		GenBufferRequest const& request = * current;

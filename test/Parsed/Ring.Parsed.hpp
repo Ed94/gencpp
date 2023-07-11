@@ -102,16 +102,16 @@ struct GenRingRequest
 	StrC Dependency;
 	StrC Type;
 };
-Array(GenRingRequest) GenRingRequests;
+Array<GenRingRequest> GenRingRequests;
 
 void gen__ring_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenRingRequests, Memory::GlobalAllocator );
+		GenRingRequests = Array<GenRingRequest>::init( Memory::GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < array_count( GenRingRequests ); ++idx )
+	for ( sw idx = 0; idx < GenRingRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenRingRequests[ idx ].Type;
 
@@ -126,7 +126,7 @@ void gen__ring_request( StrC type, sw size, StrC dep = {} )
 	gen__buffer_request( type, dep );
 
 	GenRingRequest request = { dep, type };
-	array_append( GenRingRequests, request );
+	GenRingRequests.append( request );
 }
 #define gen_ring( type ) gen__ring_request( { txt_to_StrC(type) }, sizeof( type ))
 
@@ -141,7 +141,7 @@ u32 gen_ring_file()
 	// gen_ring_file.print( gen__ring_base() );
 
 	GenRingRequest* current = GenRingRequests;
-	s32 left = array_count( GenRingRequests );
+	s32 left = GenRingRequests.num();
 	while (left--)
 	{
 		GenRingRequest const& request = * current;

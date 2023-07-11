@@ -300,16 +300,16 @@ struct GenArrayRequest
 	StrC Dependency;
 	StrC Type;
 };
-Array(GenArrayRequest) GenArrayRequests;
+Array<GenArrayRequest> GenArrayRequests;
 
 void gen__array_request( StrC type, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenArrayRequests, Memory::GlobalAllocator );
+		GenArrayRequests = Array<GenArrayRequest>::init( Memory::GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < array_count( GenArrayRequests ); ++idx )
+	for ( sw idx = 0; idx < GenArrayRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenArrayRequests[ idx ].Type;
 
@@ -321,7 +321,7 @@ void gen__array_request( StrC type, StrC dep = {} )
 	}
 
 	GenArrayRequest request = { dep, type };
-	array_append( GenArrayRequests, request );
+	GenArrayRequests.append( request );
 }
 #define gen_array( type ) gen__array_request( { txt_to_StrC(type) } )
 
@@ -338,7 +338,7 @@ u32 gen_array_file()
 	gen_array_file.print( array_base );
 
 	GenArrayRequest* current = GenArrayRequests;
-	s32 left = array_count( GenArrayRequests );
+	s32 left = GenArrayRequests.num();
 	while (left--)
 	{
 		GenArrayRequest const& request = * current;

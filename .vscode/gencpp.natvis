@@ -1,11 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
-	<Type Name="StrC">
+	<Type Name="gen::AllocatorInfo">
+		<DisplayString>Data:{Data} Proc:{Proc}</DisplayString>
+	</Type>
+
+	<Type Name="gen::Array&lt;*&gt;">
+		<DisplayString>Num:{((Header*)((char*)Data - sizeof(Header)))->Num}, Capacity:{((Header*)((char*)Data - sizeof(Header)))->Capacity}</DisplayString>
+		<Expand>
+			<Synthetic Name="Header">
+				<DisplayString>{(Header*)((char*)Data - sizeof(Header))}</DisplayString>
+				<Expand>
+					<Item Name="Allocator">((Header*)((char*)Data - sizeof(Header)))->Allocator</Item>
+					<Item Name="Capacity">((Header*)((char*)Data - sizeof(Header)))->Capacity</Item>
+					<Item Name="Num">((Header*)((char*)Data - sizeof(Header)))->Num</Item>
+				</Expand>
+			</Synthetic>
+			<ArrayItems>
+				<Size>((Header*)((char*)Data - sizeof(Header)))->Capacity</Size>
+				<ValuePointer>Data</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+
+	<Type Name="gen::StrC">
 		<DisplayString>Len:{Len} Ptr:{Ptr, [Len]s}</DisplayString>
 	</Type>
 
-	<Type Name="String">
+	<Type Name="gen::String">
 		<DisplayString Condition="Data == nullptr">null</DisplayString>
 		<DisplayString>{Data,na}</DisplayString>
 		<Expand>
@@ -20,7 +42,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="String::Header">
+	<Type Name="gen::String::Header">
 		<DisplayString>Length: {Length}, Capacity: {Capacity}</DisplayString>
 		<Expand>
 			<Item Name="Allocator">Allocator</Item>
@@ -41,7 +63,7 @@
 			<Item Name="ArrStatic" Condition="DynamicEntries == false">ArrStatic</Item>
 			<Item Name="Index" Condition="DynamicEntries == false">StaticIndex</Item>
 			<Item Name="ArrDyn" Condition="DynamicEntries == true">ArrDyn</Item>
-			<Item Name="Index" Condition="DynamicEntries == true">((ArrayHeader*)((char*)ArrDyn - sizeof(ArrayHeader)))->count</Item>
+			<Item Name="Index" Condition="DynamicEntries == true">ArrDyn.num()</Item>
 		</Expand>
 	</Type>
 
@@ -57,7 +79,7 @@
 			<Item Name="ArrStatic" Condition="ast->DynamicEntries == false">ast->ArrStatic</Item>
 			<Item Name="Index" Condition="ast->DynamicEntries == false">ast->StaticIndex</Item>
 			<Item Name="ArrDyn" Condition="ast->DynamicEntries == true">ast->ArrDyn</Item>
-			<Item Name="Index" Condition="ast->DynamicEntries == true">((ArrayHeader*)((char*)ast->ArrDyn - sizeof(ArrayHeader)))->count</Item>
+			<Item Name="Index" Condition="ast->DynamicEntries == true">ast->ArrDyn.num()</Item>
 		</Expand>
 	</Type>
 
@@ -71,21 +93,6 @@
 
 	<Type Name="gen::Parser::TokArray">
 		<DisplayString>Current[ { Arr[Idx] } ] Idx:{ Idx }</DisplayString>
-		<Expand>
-			<Synthetic Name="Header">
-				<DisplayString>{(ArrayHeader*)((char*)Arr - sizeof(ArrayHeader))}</DisplayString>
-				<Expand>
-					<Item Name="elem_size">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->elem_size</Item>
-					<Item Name="count">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->count</Item>
-					<Item Name="capacity">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->capacity</Item>
-					<Item Name="allocator">((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->allocator</Item>
-				</Expand>
-			</Synthetic>
-			<ArrayItems>
-				<Size>((ArrayHeader*)((char*)Arr - sizeof(ArrayHeader)))->count</Size>
-				<ValuePointer>Arr</ValuePointer>
-			</ArrayItems>
-		</Expand>
 	</Type>
 
 </AutoVisualizer>

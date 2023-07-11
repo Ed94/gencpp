@@ -378,7 +378,7 @@ namespace gen
 
 #pragma region Data Structures
 	// Implements basic string interning. Data structure is based off the ZPL Hashtable.
-	ZPL_TABLE_DECLARE( ZPL_EXTERN, StringTable, str_tbl_, String );
+	using StringTable = HashTable<String const>;
 
 	// Represents strings cached with the string table.
 	// Should never be modified, if changed string is desired, cache_string( str ) another.
@@ -428,7 +428,7 @@ namespace gen
 
 		s32 num_entries()
 		{
-			return DynamicEntries ? array_count( ArrDyn ) : StaticIndex;
+			return DynamicEntries ? ArrDyn.num() : StaticIndex;
 		}
 
 		// Parameter
@@ -548,7 +548,7 @@ namespace gen
 	#	define Using_AST_POD                           \
 		union {                                        \
 			AST*          ArrStatic[AST::ArrS_Cap];    \
-			Array(AST*)   ArrDyn;                      \
+			Array< AST* > ArrDyn;                      \
 			StringCached  Content;                     \
 			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; \
 		};                                             \
@@ -699,7 +699,7 @@ namespace gen
 
 	// This provides a fresh Code AST array for the entries field of the AST.
 	// This is done separately from the regular CodePool allocator.
-	Array(AST*) make_code_entries();
+	Array< AST* > make_code_entries();
 
 	// Set these before calling gen's init() procedure.
 	// Data
@@ -1071,7 +1071,7 @@ namespace gen
 			other->duplicate() : other;
 
 		if (DynamicEntries)
-			array_append( ArrDyn, to_add );
+			ArrDyn.append( to_add );
 
 		else
 		{
@@ -1087,11 +1087,11 @@ namespace gen
 				s32 index = 0;
 				do
 				{
-					array_append( ArrDyn, ArrStatic[index] );
+					ArrDyn.append( ArrStatic[index] );
 				}
 				while ( StaticIndex--, StaticIndex );
 
-				array_append( ArrDyn, to_add );
+				ArrDyn.append( to_add );
 			}
 		}
 

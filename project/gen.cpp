@@ -7,15 +7,15 @@
 
 namespace gen
 {
-	ZPL_TABLE_DEFINE( StringTable, str_tbl_, String );
+	// ZPL_TABLE_DEFINE( StringTable, str_tbl_, String );
 
 	namespace StaticData
 	{
-		global Array(Pool)  CodePools         = nullptr;
-		global Array(Arena) CodeEntriesArenas = nullptr;
-		global Array(Arena) StringArenas      = nullptr;
+		global Array< Pool >  CodePools         = { nullptr };
+		global Array< Arena > CodeEntriesArenas = { nullptr };
+		global Array< Arena > StringArenas      = { nullptr };
 
-		global StringTable StringMap;
+		global StringTable StringCache;
 
 		global AllocatorInfo Allocator_DataArrays       = heap();
 		global AllocatorInfo Allocator_CodePool         = heap();
@@ -837,13 +837,28 @@ namespace gen
 
 					result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
 
+					AST* type     = entry( 0);
+					AST* type_arr = type->entry( 0 );
+
+					// TODO : This problably needs to be an iteration for all entries of type.
+					if ( type->num_entries() && type_arr->Type == ECode::Untyped )
+						result.append_fmt( "[%s]", type_arr->to_string() );
+
 					if ( entry( idx ) )
 						result.append_fmt( " = %s;", entry( idx )->to_string() );
 
 					break;
 				}
 
-				result.append_fmt( "%s %s;", entry( 0 )->to_string(), Name );
+				AST* type     = entry( 0);
+				AST* type_arr = type->entry( 0 );
+
+				// TODO : This problably needs to be an iteration for all entries of type.
+				if ( type->num_entries() && type_arr->Type == ECode::Untyped )
+					result.append_fmt( "%s %s[%s];", type->to_string(), Name, type_arr->to_string() );
+
+				else
+					result.append_fmt( "%s %s;", entry( 0 )->to_string(), Name );
 			}
 			break;
 
@@ -1033,48 +1048,52 @@ namespace gen
 
 		// Setup the arrays
 		{
-			if (! array_init_reserve( CodePools, Allocator_DataArrays, InitSize_DataArrays ) )
+			CodePools = Array<Pool>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
+
+			if ( CodePools == nullptr )
 				fatal( "gen::init: Failed to initialize the CodePools array" );
 
-			if ( ! array_init_reserve( CodeEntriesArenas, Allocator_DataArrays, InitSize_DataArrays ) )
+			CodeEntriesArenas = Array<Arena>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
+
+			if ( CodeEntriesArenas == nullptr )
 				fatal( "gen::init: Failed to initialize the CodeEntriesPools array" );
 
-			if ( ! array_init_reserve( StringArenas, Allocator_DataArrays, InitSize_DataArrays ) )
+			StringArenas = Array<Arena>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
+
+			if ( StringArenas == nullptr )
 				fatal( "gen::init: Failed to initialize the StringArenas array" );
 		}
 
 		// Setup the code pool and code entries arena.
 		{
-			Pool code_pool;
-			pool_init( & code_pool, Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
+			Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
 
-			if ( code_pool.physical_start == nullptr )
+			if ( code_pool.PhysicalStart == nullptr )
 				fatal( "gen::init: Failed to initialize the code pool" );
 
-			array_append( CodePools, code_pool );
+			CodePools.append( code_pool );
 
-			Arena code_entires_arena;
-			arena_init_from_allocator( & code_entires_arena, Allocator_CodeEntriesArena, SizePer_CodeEntriresArena );
+			Arena code_entires_arena = Arena::init_from_allocator( Allocator_CodeEntriesArena, SizePer_CodeEntriresArena );
 
-			if ( code_entires_arena.physical_start == nullptr )
+			if ( code_entires_arena.PhysicalStart == nullptr )
 				fatal( "gen::init: Failed to initialize the code entries arena" );
 
-			array_append( CodeEntriesArenas, code_entires_arena );
+			CodeEntriesArenas.append( code_entires_arena );
 
-			Arena string_arena;
-			arena_init_from_allocator( & string_arena, Allocator_StringArena, SizePer_StringArena );
+			Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
-			if ( string_arena.physical_start == nullptr )
+			if ( string_arena.PhysicalStart == nullptr )
 				fatal( "gen::init: Failed to initialize the string arena" );
 
-			array_append( StringArenas, string_arena );
+			StringArenas.append( string_arena );
 		}
 
 		// Setup the hash tables
 		{
-			str_tbl_init ( & StringMap, Allocator_StringTable );
-			if ( StringMap.entries == nullptr )
-				fatal( "gen::init: Failed to initialize the StringMap");
+			StringCache = StringTable::init( Allocator_StringTable );
+
+			if ( StringCache.Entries == nullptr )
+				fatal( "gen::init: Failed to initialize the StringCache");
 		}
 
 		Code::Global          = make_code();
@@ -1195,41 +1214,40 @@ namespace gen
 		using namespace StaticData;
 
 		s32 index = 0;
-		s32 left  = array_count( CodePools );
+		s32 left  = CodePools.num();
 		do
 		{
 			Pool* code_pool = & CodePools[index];
-			pool_free( code_pool );
+			code_pool->free();
 			index++;
 		}
 		while ( left--, left );
 
 		index = 0;
-		left  = array_count( CodeEntriesArenas );
+		left  = CodeEntriesArenas.num();
 		do
 		{
 			Arena* code_entries_arena = & CodeEntriesArenas[index];
-			arena_free( code_entries_arena );
+			code_entries_arena->free();
 			index++;
 		}
 		while ( left--, left );
 
 		index = 0;
-		left  = array_count( StringArenas );
+		left  = StringArenas.num();
 		do
 		{
 			Arena* string_arena = & StringArenas[index];
-			arena_free( string_arena );
+			string_arena->free();
 			index++;
 		}
 		while ( left--, left );
 
-		str_tbl_destroy( & StringMap );
-		// type_tbl_destroy( & TypeMap );
+		StringCache.destroy();
 
-		array_free( CodePools );
-		array_free( CodeEntriesArenas );
-		array_free( StringArenas );
+		CodePools.free();
+		CodeEntriesArenas.free();
+		StringArenas.free();
 	}
 
 	inline
@@ -1237,29 +1255,30 @@ namespace gen
 	{
 		using namespace StaticData;
 
-		Arena* last = & array_back( StringArenas );
+		Arena& last = StringArenas.back();
 
-		if ( last->total_allocated + str_length > last->total_size )
+		if ( last.TotalUsed + str_length > last.TotalSize )
 		{
-			Arena new_arena;
-			arena_init_from_allocator( & new_arena, Allocator_StringArena, SizePer_StringArena );
+			Arena new_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
-			if ( ! array_append( StringArenas, new_arena ) )
+			if ( ! StringArenas.append( new_arena ) )
 				fatal( "gen::get_string_allocator: Failed to allocate a new string arena" );
 
-			last = & array_back( StringArenas );
+			last = StringArenas.back();
 		}
 
-		return arena_allocator( last );
+		return last;
 	}
 
 	// Will either make or retrive a code string.
 	StringCached get_cached_string( StrC str )
 	{
+		using namespace StaticData;
+
 		s32 hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
 		u32 key         = crc32( str.Ptr, hash_length );
 		{
-			String* result = str_tbl_get( & StaticData::StringMap, key );
+			StringCached* result = StringCache.get( key );
 
 			if ( result )
 				return * result;
@@ -1267,7 +1286,7 @@ namespace gen
 
 		String result = String::make( get_string_allocator( str.Len ), str );
 
-		str_tbl_set( & StaticData::StringMap, key, result );
+		StringCache.set( key, result );
 
 		return result;
 	}
@@ -1279,33 +1298,32 @@ namespace gen
 	{
 		using namespace StaticData;
 
-		AllocatorInfo allocator = { nullptr, nullptr };
+		AllocatorInfo allocator = CodePools.back();
 
 		s32 index = 0;
-		s32 left  = array_count( CodePools );
+		s32 left  = CodePools.num();
 		do
 		{
-			if ( CodePools[index].free_list != nullptr  )
+			if ( CodePools[index].FreeList != nullptr  )
 			{
-				allocator = zpl::pool_allocator( & CodePools[index] );
+				allocator = CodePools[index];
 				break;
 			}
 			index++;
 		}
 		while ( left--, left );
 
-		if ( allocator.data == nullptr )
+		if ( allocator.Data == nullptr )
 		{
-			Pool code_pool;
-			pool_init( & code_pool, Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
+			Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
 
-			if ( code_pool.physical_start == nullptr )
+			if ( code_pool.PhysicalStart == nullptr )
 				fatal( "gen::make_code: Failed to allocate a new code pool - CodePool allcoator returned nullptr." );
 
-			if ( ! array_append( CodePools, code_pool ) )
+			if ( ! CodePools.append( code_pool ) )
 				fatal( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
 
-			allocator = pool_allocator( CodePools );
+			allocator = * CodePools;
 		}
 
 		Code result { rcast( AST*, alloc( allocator, sizeof(AST) )) };
@@ -1323,37 +1341,34 @@ namespace gen
 		return result;
 	}
 
-	Array(AST*) make_code_entries()
+	Array< AST* > make_code_entries()
 	{
 		using namespace StaticData;
 
 		AllocatorInfo allocator = { nullptr, nullptr };
 
 		s32 index = 0;
-		s32 left  = array_count( CodeEntriesArenas );
+		s32 left  = CodeEntriesArenas.num();
 		do
 		{
-			if ( arena_size_remaining( & CodeEntriesArenas[index], ZPL_DEFAULT_MEMORY_ALIGNMENT) >= InitSize_CodeEntiresArray )
-				allocator = arena_allocator( & CodeEntriesArenas[index] );
+			if ( CodeEntriesArenas[index].size_remaining( ZPL_DEFAULT_MEMORY_ALIGNMENT) >= InitSize_CodeEntiresArray )
+				allocator = CodeEntriesArenas[index];
 			index++;
 		}
 		while( left--, left );
 
-		if ( allocator.data == nullptr )
+		if ( allocator.Data == nullptr )
 		{
-			Arena arena;
-			arena_init_from_allocator( & arena, Allocator_CodeEntriesArena, SizePer_CodeEntriresArena );
+			Arena arena = Arena::init_from_allocator( Allocator_CodeEntriesArena, SizePer_CodeEntriresArena );
 
-			if ( arena.physical_start == nullptr )
+			if ( arena.PhysicalStart == nullptr )
 				fatal( "gen::make_code: Failed to allocate a new code entries arena - CodeEntriesArena allcoator returned nullptr." );
 
-			allocator = arena_allocator( & arena );
-			array_append( CodeEntriesArenas, arena );
+			allocator = arena;
+			CodeEntriesArenas.append( arena );
 		}
 
-		Array(AST*) entry_array;
-		array_init( entry_array, allocator );
-
+		Array< AST* > entry_array = Array< AST* >::init( allocator );
 		return entry_array;
 	}
 
@@ -3357,12 +3372,12 @@ namespace gen
 
 		struct TokArray
 		{
-			Array(Token) Arr;
+			Array<Token> Arr;
 			s32          Idx;
 
 			bool __eat( TokType type, char const* context )
 			{
-				if ( array_count(Arr) - Idx <= 0 )
+				if ( Arr.num() - Idx <= 0 )
 				{
 					log_failure( "gen::%s: No tokens left", context );
 					return Code::Invalid;
@@ -3393,7 +3408,7 @@ namespace gen
 
 			Token* next()
 			{
-				return Idx + 1 < array_count(Arr) ? &Arr[Idx + 1] : nullptr;
+				return Idx + 1 < Arr.num() ? &Arr[Idx + 1] : nullptr;
 			}
 		};
 
@@ -3423,17 +3438,18 @@ namespace gen
 			}
 
 			do_once_start
-				arena_init_from_allocator( & LexAllocator, heap(), megabytes(10) );
+				// TODO : Use the global memory allocator for this...
+				LexAllocator = Arena::init_from_allocator( heap(), megabytes(10) );
 
-				if ( LexAllocator.physical_start == nullptr )
+				if ( LexAllocator.PhysicalStart == nullptr )
 				{
 					log_failure( "gen::lex: failed to allocate memory for parsing constructor's lexer");
-					return { nullptr, 0  };
+					return { { nullptr }, 0  };
 				}
 			do_once_end
 
 			local_persist thread_local
-			Array(Token) Tokens = nullptr;
+			Array<Token> Tokens = { nullptr };
 
 			s32         left    = content.Len -1;
 			char const* scanner = content.Ptr;
@@ -3445,13 +3461,13 @@ namespace gen
 			if ( left <= 0 )
 			{
 				log_failure( "gen::lex: no tokens found (only whitespace provided)" );
-				return { nullptr, 0 };
+				return { { nullptr }, 0 };
 			}
 
 			if ( Tokens )
-				array_clear( Tokens );
+				Tokens.clear();
 
-			array_init_reserve( Tokens, arena_allocator( & LexAllocator), content.Len / 8 );
+			Tokens = Array<Token>::init_reserve( LexAllocator, content.Len / 8 );
 
 			while (left )
 			{
@@ -3851,7 +3867,7 @@ namespace gen
 
 				if ( token.Type != TokType::Invalid )
 				{
-					array_append( Tokens, token );
+					Tokens.append( token );
 					continue;
 				}
 
@@ -3864,13 +3880,13 @@ namespace gen
 				}
 
 				token.Type = type;
-				array_append( Tokens, token );
+				Tokens.append( token );
 			}
 
-			if ( array_count(Tokens) == 0 )
+			if ( Tokens.num() == 0 )
 			{
 				log_failure( "Failed to lex any tokens" );
-				return { nullptr, 0 };
+				return { { nullptr }, 0 };
 			}
 
 			return { Tokens, 0 };
@@ -3898,7 +3914,7 @@ namespace gen
 #	define currtok      toks.current()
 #	define prevtok      toks.previous()
 #	define eat( Type_ ) toks.__eat( Type_, context )
-#	define left         ( array_count(toks.Arr) - toks.Idx )
+#	define left         ( toks.Arr.num() - toks.Idx )
 
 #	define check( Type_ ) ( left && currtok.Type == Type_ )
 #pragma endregion Helper Macros
@@ -3948,8 +3964,10 @@ namespace gen
 
 			while ( left && currtok.Type != TokType::BraceSquare_Close )
 			{
-				untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
+				eat( currtok.Type );
 			}
+
+			untyped_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)untyped_tok.Text;
 
 			Code array_expr = untyped_str( untyped_tok );
 
@@ -5729,8 +5747,8 @@ namespace gen
 		SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
 		s32        num_specifiers = 0;
 
-		Token name     = { nullptr, 0, TokType::Invalid };
-		Token func_sig = { currtok.Text, 0, TokType::Invalid };
+		Token name      = { nullptr, 0, TokType::Invalid };
+		Token brute_sig = { currtok.Text, 0, TokType::Invalid };
 
 		while ( left && tok_is_specifier( currtok ) )
 		{
@@ -5779,6 +5797,29 @@ namespace gen
 			name = parse_identifier( toks, context );
 			if ( ! name )
 				return Code::Invalid;
+
+			// Problably dealing with a templated symbol
+			if ( currtok.Type == TokType::Operator && currtok.Text[0] == '<' && currtok.Length == 1 )
+			{
+				eat( TokType::Operator );
+
+				s32 level = 0;
+				while ( left && ( currtok.Text[0] != '>' || level > 0 ))
+				{
+					if ( currtok.Text[0] == '<' )
+						level++;
+
+					if ( currtok.Text[0] == '>' )
+						level--;
+
+					eat( currtok.Type );
+				}
+
+				eat( TokType::Operator );
+
+				// Extend length of name to last token
+				name.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)name.Text;
+			}
 		}
 
 		while ( left && tok_is_specifier( currtok ) )
@@ -5837,7 +5878,7 @@ namespace gen
 
 			eat(TokType::Capture_End);
 
-			func_sig.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)func_sig.Text;
+			brute_sig.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)brute_sig.Text;
 		}
 
 		using namespace ECode;
@@ -5846,10 +5887,10 @@ namespace gen
 		result       = make_code();
 		result->Type = Typename;
 
-		if ( func_sig.Length > 0 )
+		if ( brute_sig.Length > 0 )
 		{
 			// Bruteforce all tokens together.
-			name = func_sig;
+			name = brute_sig;
 		}
 		else
 		{
@@ -6162,17 +6203,15 @@ namespace gen
 		sw          Length;
 	};
 
-	ZPL_TABLE( static, TokMap, tokmap_, TokEntry )
-
 	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va )
 	{
 		char const* buf_begin = buf;
 		sw          remaining = buf_size;
 
-		TokMap tok_map;
+		HashTable<TokEntry> tok_map;
 		{
 			// TODO : Switch this to use an arena that makes use of the stack (cap the size of the token table to around 4096 bytes)
-			tokmap_init( & tok_map, Memory::GlobalAllocator );
+			tok_map = HashTable<TokEntry>::init( Memory::GlobalAllocator );
 
 			s32 left = num_tokens;
 
@@ -6189,7 +6228,7 @@ namespace gen
 
 				u32 key = crc32( token, str_len(token, 32) );
 
-				tokmap_set( & tok_map, key, entry );
+				tok_map.set( key, entry );
 			}
 		}
 
@@ -6224,7 +6263,7 @@ namespace gen
 				char const* token = fmt + 1;
 
 				u32       key   = crc32( token, tok_len );
-				TokEntry* value = tokmap_get( & tok_map, key );
+				TokEntry* value = tok_map.get( key );
 
 				if ( value )
 				{
@@ -6254,7 +6293,7 @@ namespace gen
 			}
 		}
 
-		tokmap_clear( & tok_map );
+		tok_map.clear();
 
 		sw result = buf_size - remaining + 1;
 

@@ -4,6 +4,7 @@
 #include "Parsed\HashTable.Parsed.hpp"
 #include "Parsed\Ring.Parsed.hpp"
 #include "Parsed\Sanity.Parsed.hpp"
+#include "SOA.hpp"
 
 
 #ifdef gen_time
@@ -33,6 +34,31 @@ int gen_main()
 	gen_buffer_file();
 	gen_hashtable_file();
 	gen_ring_file();
+
+	Builder soa_test; soa_test.open( "SOA.gen.hpp" );
+
+	soa_test.print( parse_using( code(
+		using u16 = unsigned short;
+	)));
+
+	soa_test.print( def_include( StrC::from("Bloat.hpp")));
+
+	soa_test.print( def_using_namespace( name(gen) ) );
+
+	soa_test.print( gen_SOA(
+		parse_struct( code(
+			struct TestStruct
+			{
+				u8  A;
+				u16 B;
+				u32 C;
+				u64 D;
+			};
+		)),
+		true
+	));
+
+	soa_test.write();
 
 	gen::deinit();
 	Memory::cleanup();

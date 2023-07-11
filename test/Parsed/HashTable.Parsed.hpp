@@ -290,18 +290,18 @@ struct GenHashTableRequest
 	StrC Type;
 	sw   TypeSize;
 };
-Array(GenHashTableRequest) GenHashTableRequests;
+Array<GenHashTableRequest> GenHashTableRequests;
 
 void gen__hashtable_request( StrC type, sw size, StrC dep = {} )
 {
 	do_once_start
-		array_init( GenHashTableRequests, Memory::GlobalAllocator );
+		GenHashTableRequests = Array<GenHashTableRequest>::init( Memory::GlobalAllocator );
 
 		gen_array( sw );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < array_count( GenHashTableRequests ); ++idx )
+	for ( sw idx = 0; idx < GenHashTableRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenHashTableRequests[ idx ].Type;
 
@@ -313,7 +313,7 @@ void gen__hashtable_request( StrC type, sw size, StrC dep = {} )
 	}
 
 	GenHashTableRequest request = { dep, type, size};
-	array_append( GenHashTableRequests, request );
+	GenHashTableRequests.append( request );
 }
 #define gen_hashtable( type ) gen__hashtable_request( { txt_to_StrC(type) }, sizeof( type ))
 
@@ -329,7 +329,7 @@ u32 gen_hashtable_file()
 	gen_buffer_file.print( gen__hashtable_base());
 
 	GenHashTableRequest* current = GenHashTableRequests;
-	s32 left = array_count( GenHashTableRequests );
+	s32 left = GenHashTableRequests.num();
 	while (left--)
 	{
 		GenHashTableRequest const& request = * current;
