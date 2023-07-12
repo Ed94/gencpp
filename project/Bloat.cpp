@@ -215,6 +215,37 @@ namespace gen
 		return memcpy( dest, source, n );
 	}
 
+	void const* mem_find( void const* data, u8 c, sw n )
+	{
+		u8 const* s = zpl_cast( u8 const* ) data;
+		while ( ( zpl_cast( uptr ) s & ( sizeof( uw ) - 1 ) ) && n && *s != c )
+		{
+			s++;
+			n--;
+		}
+		if ( n && *s != c )
+		{
+			sw const* w;
+			sw        k = ZPL__ONES * c;
+			w           = zpl_cast( sw const* ) s;
+			while ( n >= size_of( sw ) && ! ZPL__HAS_ZERO( *w ^ k ) )
+			{
+				w++;
+				n -= size_of( sw );
+			}
+			s = zpl_cast( u8 const* ) w;
+			while ( n && *s != c )
+			{
+				s++;
+				n--;
+			}
+		}
+
+		return n ? zpl_cast( void const* ) s : NULL;
+	}
+
+	#define ZPL_HEAP_STATS_MAGIC 0xDEADC0DE
+
 	struct _heap_stats
 	{
 		u32 magic;
@@ -539,26 +570,26 @@ namespace gen
 #pragma region Printing
 	enum
 	{
-		ZPL_FMT_MINUS = ZPL_BIT( 0 ),
-		ZPL_FMT_PLUS  = ZPL_BIT( 1 ),
-		ZPL_FMT_ALT   = ZPL_BIT( 2 ),
-		ZPL_FMT_SPACE = ZPL_BIT( 3 ),
-		ZPL_FMT_ZERO  = ZPL_BIT( 4 ),
+		ZPL_FMT_MINUS = bit( 0 ),
+		ZPL_FMT_PLUS  = bit( 1 ),
+		ZPL_FMT_ALT   = bit( 2 ),
+		ZPL_FMT_SPACE = bit( 3 ),
+		ZPL_FMT_ZERO  = bit( 4 ),
 
-		ZPL_FMT_CHAR   = ZPL_BIT( 5 ),
-		ZPL_FMT_SHORT  = ZPL_BIT( 6 ),
-		ZPL_FMT_INT    = ZPL_BIT( 7 ),
-		ZPL_FMT_LONG   = ZPL_BIT( 8 ),
-		ZPL_FMT_LLONG  = ZPL_BIT( 9 ),
-		ZPL_FMT_SIZE   = ZPL_BIT( 10 ),
-		ZPL_FMT_INTPTR = ZPL_BIT( 11 ),
+		ZPL_FMT_CHAR   = bit( 5 ),
+		ZPL_FMT_SHORT  = bit( 6 ),
+		ZPL_FMT_INT    = bit( 7 ),
+		ZPL_FMT_LONG   = bit( 8 ),
+		ZPL_FMT_LLONG  = bit( 9 ),
+		ZPL_FMT_SIZE   = bit( 10 ),
+		ZPL_FMT_INTPTR = bit( 11 ),
 
-		ZPL_FMT_UNSIGNED = ZPL_BIT( 12 ),
-		ZPL_FMT_LOWER    = ZPL_BIT( 13 ),
-		ZPL_FMT_UPPER    = ZPL_BIT( 14 ),
-		ZPL_FMT_WIDTH    = ZPL_BIT( 15 ),
+		ZPL_FMT_UNSIGNED = bit( 12 ),
+		ZPL_FMT_LOWER    = bit( 13 ),
+		ZPL_FMT_UPPER    = bit( 14 ),
+		ZPL_FMT_WIDTH    = bit( 15 ),
 
-		ZPL_FMT_DONE = ZPL_BIT( 30 ),
+		ZPL_FMT_DONE = bit( 30 ),
 
 		ZPL_FMT_INTS = ZPL_FMT_CHAR | ZPL_FMT_SHORT | ZPL_FMT_INT | ZPL_FMT_LONG | ZPL_FMT_LLONG | ZPL_FMT_SIZE | ZPL_FMT_INTPTR
 	};
@@ -768,7 +799,7 @@ namespace gen
 		return ( text - text_begin );
 	}
 
-	ZPL_NEVER_INLINE sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
+	neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
 	{
 		char const* text_begin = text;
 		sw          remaining  = max_len, res;
@@ -1045,7 +1076,7 @@ namespace gen
 
 	char* str_fmt_buf_va( char const* fmt, va_list va )
 	{
-		local_persist zpl_thread_local char buffer[ ZPL_PRINTF_MAXLEN ];
+		local_persist thread_local char buffer[ ZPL_PRINTF_MAXLEN ];
 		str_fmt_va( buffer, size_of( buffer ), fmt, va );
 		return buffer;
 	}
@@ -1062,15 +1093,30 @@ namespace gen
 
 	sw str_fmt_file_va( struct FileInfo* f, char const* fmt, va_list va )
 	{
-		local_persist zpl_thread_local char buf[ ZPL_PRINTF_MAXLEN ];
-		sw                                  len = str_fmt_va( buf, size_of( buf ), fmt, va );
-		b32                                 res = file_write( f, buf, len - 1 );    // NOTE: prevent extra whitespace
+		local_persist thread_local char buf[ ZPL_PRINTF_MAXLEN ];
+		sw                              len = str_fmt_va( buf, size_of( buf ), fmt, va );
+		b32                             res = file_write( f, buf, len - 1 );    // NOTE: prevent extra whitespace
 		return res ? len : -1;
 	}
 
 	sw str_fmt_out_va( char const* fmt, va_list va )
 	{
 		return str_fmt_file_va( file_get_standard( EFileStandard_OUTPUT ), fmt, va );
+	}
+
+	sw str_fmt_out_err_va( char const* fmt, va_list va )
+	{
+		return str_fmt_file_va( file_get_standard( EFileStandard_ERROR ), fmt, va );
+	}
+
+	sw str_fmt_out_err( char const* fmt, ... )
+	{
+		sw      res;
+		va_list va;
+		va_start( va, fmt );
+		res = str_fmt_out_err_va( fmt, va );
+		va_end( va );
+		return res;
 	}
 #pragma endregion Printing
 
@@ -1202,7 +1248,7 @@ namespace gen
 
 	FileOperations const default_file_operations = { _win32_file_read, _win32_file_write, _win32_file_seek, _win32_file_close };
 
-	ZPL_NEVER_INLINE ZPL_FILE_OPEN_PROC( _win32_file_open )
+	neverinline ZPL_FILE_OPEN_PROC( _win32_file_open )
 	{
 		DWORD    desired_access;
 		DWORD    creation_disposition;
@@ -1513,12 +1559,14 @@ namespace gen
 			f->Ops = default_file_operations;
 		f->Ops.close( f->FD );
 
+	#if 0
 		if ( f->Dir )
 		{
 			_dirinfo_free_entry( f->Dir );
 			mfree( f->Dir );
 			f->Dir = NULL;
 		}
+	#endif
 
 		return EFileError_NONE;
 	}
@@ -1564,33 +1612,7 @@ namespace gen
 
 		return err;
 	}
-
-	internal void _dirinfo_free_entry( DirEntry* entry )
-	{
-		if ( entry->Info )
-		{
-			dirinfo_free( entry->Info );
-			mfree( entry->Info );
-			entry->Info = nullptr;
-		}
-	}
-
-	void dirinfo_free( DirInfo* dir )
-	{
-		ZPL_ASSERT_NOT_NULL( dir );
-
-		for ( sw i = 0; i < array_count( dir->Entries ); ++i )
-		{
-			_dirinfo_free_entry( dir->Entries + i );
-		}
-
-		array_free( dir->Entries );
-		array_free( dir->Filenames );
-		// string_free( dir->Buffer );
-		dir->Buffer.free();
-		mfree( ( void* )dir->FullPath );
-	}
-#pragma endreigon File Handling
+#pragma endregion File Handling
 
 #pragma region String
 	String String::fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... )

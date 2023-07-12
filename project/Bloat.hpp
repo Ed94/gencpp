@@ -25,7 +25,7 @@
 #		define ZPL_MODULE_CORE
 #		define ZPL_MODULE_TIMER
 #		define ZPL_MODULE_HASHING
-#include "zpl.h"
+// #include "zpl.h"
 
 #undef alloc_item
 #undef alloc_array
@@ -38,21 +38,21 @@
 #undef ZPL_DEBUG_TRAP
 #undef ZPL_PANIC
 
-using zpl::b32;
-using zpl::s8;
-using zpl::s16;
-using zpl::s32;
-using zpl::s64;
-using zpl::u8;
-using zpl::u16;
-using zpl::u32;
-using zpl::u64;
-using zpl::uw;
-using zpl::sw;
-using zpl::sptr;
-using zpl::uptr;
-using zpl::f32;
-using zpl::f64;
+// using zpl::b32;
+// using zpl::s8;
+// using zpl::s16;
+// using zpl::s32;
+// using zpl::s64;
+// using zpl::u8;
+// using zpl::u16;
+// using zpl::u32;
+// using zpl::u64;
+// using zpl::uw;
+// using zpl::sw;
+// using zpl::sptr;
+// using zpl::uptr;
+// using zpl::f32;
+// using zpl::f64;
 
 // using zpl::AllocType;
 // using zpl::Arena;
@@ -103,10 +103,10 @@ using zpl::f64;
 // using zpl::str_fmt_buf;
 // using zpl::str_fmt_va;
 // using zpl::str_fmt_out_va;
-using zpl::str_fmt_out_err;
-using zpl::str_fmt_out_err_va;
+// using zpl::str_fmt_out_err;
+// using zpl::str_fmt_out_err_va;
 // using zpl::str_len;
-using zpl::zero_size;
+// using zpl::zero_size;
 
 #if __clang__
 #	pragma clang diagnostic pop
@@ -123,6 +123,83 @@ using zpl::zero_size;
 #	pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
+#	if defined( ZPL_HAS_ATTRIBUTE )
+#		undef ZPL_HAS_ATTRIBUTE
+#	endif
+#	if defined( __has_attribute )
+#		define ZPL_HAS_ATTRIBUTE( attribute ) __has_attribute( attribute )
+#	else
+#		define ZPL_HAS_ATTRIBUTE( attribute ) ( 0 )
+#	endif
+
+/* Platform architecture */
+
+#if defined( _WIN64 ) || defined( __x86_64__ ) || defined( _M_X64 ) || defined( __64BIT__ ) || defined( __powerpc64__ ) || defined( __ppc64__ ) || defined( __aarch64__ )
+#	ifndef ZPL_ARCH_64_BIT
+#		define ZPL_ARCH_64_BIT 1
+#	endif
+#else
+#	ifndef ZPL_ARCH_32_BIT
+#		define ZPL_ARCH_32_BIT 1
+#	endif
+#endif
+
+/* Platform OS */
+
+#if defined( _WIN32 ) || defined( _WIN64 )
+#	ifndef ZPL_SYSTEM_WINDOWS
+#		define ZPL_SYSTEM_WINDOWS 1
+#	endif
+#elif defined( __APPLE__ ) && defined( __MACH__ )
+#	ifndef ZPL_SYSTEM_OSX
+#		define ZPL_SYSTEM_OSX 1
+#	endif
+#	ifndef ZPL_SYSTEM_MACOS
+#		define ZPL_SYSTEM_MACOS 1
+#	endif
+#	include <TargetConditionals.h>
+#	if TARGET_IPHONE_SIMULATOR == 1 || TARGET_OS_IPHONE == 1
+#		ifndef ZPL_SYSTEM_IOS
+#			define ZPL_SYSTEM_IOS 1
+#		endif
+#	endif
+#elif defined( __unix__ )
+#	ifndef ZPL_SYSTEM_UNIX
+#		define ZPL_SYSTEM_UNIX 1
+#	endif
+#	if defined( ANDROID ) || defined( __ANDROID__ )
+#		ifndef ZPL_SYSTEM_ANDROID
+#			define ZPL_SYSTEM_ANDROID 1
+#		endif
+#		ifndef ZPL_SYSTEM_LINUX
+#			define ZPL_SYSTEM_LINUX 1
+#		endif
+#	elif defined( __linux__ )
+#		ifndef ZPL_SYSTEM_LINUX
+#			define ZPL_SYSTEM_LINUX 1
+#		endif
+#	elif defined( __FreeBSD__ ) || defined( __FreeBSD_kernel__ )
+#		ifndef ZPL_SYSTEM_FREEBSD
+#			define ZPL_SYSTEM_FREEBSD 1
+#		endif
+#	elif defined( __OpenBSD__ )
+#		ifndef ZPL_SYSTEM_OPENBSD
+#			define ZPL_SYSTEM_OPENBSD 1
+#		endif
+#	elif defined( __EMSCRIPTEN__ )
+#		ifndef ZPL_SYSTEM_EMSCRIPTEN
+#			define ZPL_SYSTEM_EMSCRIPTEN 1
+#		endif
+#	elif defined( __CYGWIN__ )
+#		ifndef ZPL_SYSTEM_CYGWIN
+#			define ZPL_SYSTEM_CYGWIN 1
+#		endif
+#	else
+#		error This UNIX operating system is not supported
+#	endif
+#else
+#	error This operating system is not supported
+#endif
 
 /* Platform compiler */
 
@@ -140,13 +217,90 @@ using zpl::zero_size;
 #	error Unknown compiler
 #endif
 
+#	ifndef ZPL_DEF_INLINE
+#		if defined( ZPL_STATIC )
+#			define ZPL_DEF_INLINE
+#			define ZPL_IMPL_INLINE
+#		else
+#			define ZPL_DEF_INLINE  static
+#			define ZPL_IMPL_INLINE static inline
+#		endif
+#	endif
+
+#	if defined( ZPL_ALWAYS_INLINE )
+#		undef ZPL_ALWAYS_INLINE
+#	endif
+
+#ifdef ZPL_COMPILER_MSVC
+#	define forceinline __forceinline
+#elif defined(ZPL_COMPILER_GCC)
+#	define forceinline inline __attribute__((__always_inline__))
+#elif defined(ZPL_COMPILER_CLANG)
+#if __has_attribute(__always_inline__)
+#	define forceinline inline __attribute__((__always_inline__))
+#else
+#	define forceinline inline
+#endif
+#else
+#	define forceinline inline
+#endif
+
+
+#ifdef ZPL_COMPILER_MSVC
+#	define neverinline __declspec( noinline )
+#elif defined(ZPL_COMPILER_GCC)
+#	define forceinline inline __attribute__( ( __noinline__ ) )
+#elif defined(ZPL_COMPILER_CLANG)
+#if __has_attribute(__always_inline__)
+#	define forceinline inline __attribute__( ( __noinline__ ) )
+#else
+#	define forceinline inline
+#endif
+#else
+#	define forceinline inline
+#endif
+
+#ifndef count_of
+#	define count_of( x ) ( ( size_of( x ) / size_of( 0 [ x ] ) ) / ( ( sw )( ! ( size_of( x ) % size_of( 0 [ x ] ) ) ) ) )
+#endif
+
+#ifndef is_between
+#	define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )
+#endif
+
+#ifndef min
+#	define min( a, b ) ( ( a ) < ( b ) ? ( a ) : ( b ) )
+#endif
+
+#ifndef size_of
+#	define size_of( x ) ( sw )( sizeof( x ) )
+#endif
+
+#ifndef swap
+#	define swap( Type, a, b ) \
+		do                     \
+		{                      \
+			Type tmp = ( a );  \
+			( a )    = ( b );  \
+			( b )    = tmp;    \
+		} while ( 0 )
+#endif
+
 #ifndef zpl_cast
 #	define zpl_cast( Type ) ( Type )
 #endif
 
+#ifndef global
+#	define global static    // Global variables
+#endif
 
-#include "Banned.define.hpp"
+#ifndef internal
+#	define internal static    // Internal linkage
+#endif
 
+#ifndef local_persist
+#	define local_persist static    // Local Persisting variables
+#endif
 
 #if defined(__GNUC__) || defined(__clang__)
 	// Supports 0-10 arguments
@@ -184,17 +338,14 @@ using zpl::zero_size;
 	)
 #endif
 
-#define macro_expand( Expanded_ ) Expanded_
-
 #define bit( Value_ )                             ( 1 << Value_ )
 #define bitfield_is_equal( Type_, Field_, Mask_ ) ( (Type_(Mask_) & Type_(Field_)) == Type_(Mask_) )
-#define forceinline                               ZPL_ALWAYS_INLINE
 #define ccast( Type_, Value_ )                    * const_cast< Type_* >( & (Value_) )
 #define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
 #define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
 #define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
-#define GEN_STRINGIZE_VA( ... )                   #__VA_ARGS__
-#define stringize( ... )                          GEN_STRINGIZE_VA( __VA_ARGS__ )
+#define stringize_va( ... )                       #__VA_ARGS__
+#define stringize( ... )                          stringize_va( __VA_ARGS__ )
 #define do_once()      \
 do                     \
 {                      \
@@ -219,13 +370,145 @@ do                     \
 }                      \
 while(0);
 
+#pragma region Mandatory Includes
+#	include <stdarg.h>
+#	include <stddef.h>
+
+#	if defined( ZPL_SYSTEM_WINDOWS )
+#		include <intrin.h>
+#	endif
+#pragma endregion Mandatory Includes
+
+// #include "Banned.define.hpp"
+
 namespace gen
 {
 	constexpr
 	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
-	#pragma region Debug
+	#pragma region Basic Types
+	#ifndef ZPL_U8_MIN
+	#	define ZPL_U8_MIN 0u
+	#	define ZPL_U8_MAX 0xffu
+	#	define ZPL_I8_MIN ( -0x7f - 1 )
+	#	define ZPL_I8_MAX 0x7f
 
+	#	define ZPL_U16_MIN 0u
+	#	define ZPL_U16_MAX 0xffffu
+	#	define ZPL_I16_MIN ( -0x7fff - 1 )
+	#	define ZPL_I16_MAX 0x7fff
+
+	#	define ZPL_U32_MIN 0u
+	#	define ZPL_U32_MAX 0xffffffffu
+	#	define ZPL_I32_MIN ( -0x7fffffff - 1 )
+	#	define ZPL_I32_MAX 0x7fffffff
+
+	#	define ZPL_U64_MIN 0ull
+	#	define ZPL_U64_MAX 0xffffffffffffffffull
+	#	define ZPL_I64_MIN ( -0x7fffffffffffffffll - 1 )
+	#	define ZPL_I64_MAX 0x7fffffffffffffffll
+
+	#	if defined( ZPL_ARCH_32_BIT )
+	#		define ZPL_USIZE_MIN ZPL_U32_MIN
+	#		define ZPL_USIZE_MAX ZPL_U32_MAX
+	#		define ZPL_ISIZE_MIN ZPL_S32_MIN
+	#		define ZPL_ISIZE_MAX ZPL_S32_MAX
+	#	elif defined( ZPL_ARCH_64_BIT )
+	#		define ZPL_USIZE_MIN ZPL_U64_MIN
+	#		define ZPL_USIZE_MAX ZPL_U64_MAX
+	#		define ZPL_ISIZE_MIN ZPL_I64_MIN
+	#		define ZPL_ISIZE_MAX ZPL_I64_MAX
+	#	else
+	#		error Unknown architecture size. This library only supports 32 bit and 64 bit architectures.
+	#	endif
+
+	#	define ZPL_F32_MIN 1.17549435e-38f
+	#	define ZPL_F32_MAX 3.40282347e+38f
+
+	#	define ZPL_F64_MIN 2.2250738585072014e-308
+	#	define ZPL_F64_MAX 1.7976931348623157e+308
+	#endif
+
+	#if defined( ZPL_COMPILER_MSVC )
+	#	if _MSC_VER < 1300
+	typedef unsigned char  u8;
+	typedef signed char    s8;
+	typedef unsigned short u16;
+	typedef signed short   s16;
+	typedef unsigned int   u32;
+	typedef signed int     s32;
+	#    else
+	typedef unsigned __int8  u8;
+	typedef signed __int8    s8;
+	typedef unsigned __int16 u16;
+	typedef signed __int16   s16;
+	typedef unsigned __int32 u32;
+	typedef signed __int32   s32;
+	#    endif
+	typedef unsigned __int64 u64;
+	typedef signed __int64   s64;
+	#else
+	#	include <stdint.h>
+
+	typedef uint8_t  u8;
+	typedef int8_t   s8;
+	typedef uint16_t u16;
+	typedef int16_t  s16;
+	typedef uint32_t u32;
+	typedef int32_t  s32;
+	typedef uint64_t u64;
+	typedef int64_t  s64;
+	#endif
+
+	static_assert( sizeof( u8 ) == sizeof( s8 ), "sizeof(u8) != sizeof(s8)" );
+	static_assert( sizeof( u16 ) == sizeof( s16 ), "sizeof(u16) != sizeof(s16)" );
+	static_assert( sizeof( u32 ) == sizeof( s32 ), "sizeof(u32) != sizeof(s32)" );
+	static_assert( sizeof( u64 ) == sizeof( s64 ), "sizeof(u64) != sizeof(s64)" );
+
+	static_assert( sizeof( u8 ) == 1, "sizeof(u8) != 1" );
+	static_assert( sizeof( u16 ) == 2, "sizeof(u16) != 2" );
+	static_assert( sizeof( u32 ) == 4, "sizeof(u32) != 4" );
+	static_assert( sizeof( u64 ) == 8, "sizeof(u64) != 8" );
+
+	typedef size_t    uw;
+	typedef ptrdiff_t sw;
+
+	static_assert( sizeof( uw ) == sizeof( sw ), "sizeof(uw) != sizeof(sw)" );
+
+	// NOTE: (u)zpl_intptr is only here for semantic reasons really as this library will only support 32/64 bit OSes.
+	#if defined( _WIN64 )
+	typedef signed __int64   sptr;
+	typedef unsigned __int64 uptr;
+	#elif defined( _WIN32 )
+	// NOTE; To mark types changing their size, e.g. zpl_intptr
+	#	ifndef _W64
+	#		if ! defined( __midl ) && ( defined( _X86_ ) || defined( _M_IX86 ) ) && _MSC_VER >= 1300
+	#			define _W64 __w64
+	#		else
+	#			define _W64
+	#		endif
+	#	endif
+	typedef _W64 signed int   sptr;
+	typedef _W64 unsigned int uptr;
+	#else
+	typedef uintptr_t uptr;
+	typedef intptr_t  sptr;
+	#endif
+
+	static_assert( sizeof( uptr ) == sizeof( sptr ), "sizeof(uptr) != sizeof(sptr)" );
+
+	typedef float  f32;
+	typedef double f64;
+
+	static_assert( sizeof( f32 ) == 4, "sizeof(f32) != 4" );
+	static_assert( sizeof( f64 ) == 8, "sizeof(f64) != 8" );
+
+	typedef s8  b8;
+	typedef s16 b16;
+	typedef s32 b32;
+	#pragma endregion Basic Types
+
+	#pragma region Debug
 	#ifndef ZPL_DEBUG_TRAP
 	#	if defined( _MSC_VER )
 	#		if _MSC_VER < 1300
@@ -238,6 +521,10 @@ namespace gen
 	#	else
 	#		define ZPL_DEBUG_TRAP() __builtin_trap()
 	#	endif
+	#endif
+
+	#ifndef ZPL_ASSERT
+	#	define ZPL_ASSERT( cond ) ZPL_ASSERT_MSG( cond, NULL )
 	#endif
 
 	#ifndef ZPL_ASSERT_MSG
@@ -264,10 +551,20 @@ namespace gen
 	void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
 	s32  assert_crash( char const* condition );
 	void process_exit( u32 code );
-
 	#pragma endregion Debug
 
 	#pragma region Memory
+	#ifndef kilobytes
+	#	define kilobytes( x ) ( ( x ) * ( s64 )( 1024 ) )
+	#	define megabytes( x ) ( kilobytes( x ) * ( s64 )( 1024 ) )
+	#	define gigabytes( x ) ( megabytes( x ) * ( s64 )( 1024 ) )
+	#	define terabytes( x ) ( gigabytes( x ) * ( s64 )( 1024 ) )
+	#endif
+
+	#define ZPL__ONES          ( zpl_cast( uw ) - 1 / ZPL_U8_MAX )
+	#define ZPL__HIGHS         ( ZPL__ONES * ( ZPL_U8_MAX / 2 + 1 ) )
+	#define ZPL__HAS_ZERO( x ) ( ( ( x )-ZPL__ONES ) & ~( x )&ZPL__HIGHS )
+
 	//! Checks if value is power of 2.
 	ZPL_DEF_INLINE b32 is_power_of_two( sw x );
 
@@ -284,13 +581,25 @@ namespace gen
 	void* mem_copy( void* dest, void const* source, sw size );
 
 	//! Search for a constant value within the size limit at memory location.
-	ZPL_DEF void const* mem_find( void const* data, u8 byte_value, sw size );
+	void const* mem_find( void const* data, u8 byte_value, sw size );
 
 	//! Copy memory from source to destination.
 	ZPL_DEF_INLINE void* mem_move( void* dest, void const* source, sw size );
 
 	//! Set constant value at memory location with specified size.
 	ZPL_DEF_INLINE void* mem_set( void* data, u8 byte_value, sw size );
+
+	//! @param ptr Memory location to clear up.
+	//! @param size The size to clear up with.
+	ZPL_DEF_INLINE void zero_size( void* ptr, sw size );
+
+	#ifndef zero_item
+	//! Clears up an item.
+	#	define zero_item( t ) zero_size( ( t ), size_of( *( t ) ) )    // NOTE: Pass pointer of struct
+
+	//! Clears up an array.
+	#	define zero_array( a, count ) zero_size( ( a ), size_of( *( a ) ) * count )
+	#endif
 
 	enum AllocType : u8
 	{
@@ -315,6 +624,14 @@ namespace gen
 	{
 		ALLOCATOR_FLAG_CLEAR_TO_ZERO = bit( 0 ),
 	};
+
+	#ifndef ZPL_DEFAULT_MEMORY_ALIGNMENT
+	#	define ZPL_DEFAULT_MEMORY_ALIGNMENT ( 2 * size_of( void* ) )
+	#endif
+
+	#ifndef ZPL_DEFAULT_ALLOCATOR_FLAGS
+	#	define ZPL_DEFAULT_ALLOCATOR_FLAGS ( ALLOCATOR_FLAG_CLEAR_TO_ZERO )
+	#endif
 
 	//! Allocate memory with default alignment.
 	ZPL_DEF_INLINE void* alloc( AllocatorInfo a, sw size );
@@ -582,6 +899,11 @@ namespace gen
 			free( a, old_memory );
 			return new_memory;
 		}
+	}
+
+	ZPL_IMPL_INLINE void zero_size( void* ptr, sw size )
+	{
+		mem_set( ptr, 0, size );
 	}
 
 	struct Arena
@@ -2002,20 +2324,22 @@ namespace gen
 
 		return f->Ops.write_at( f->FD, buffer, size, offset, bytes_written );
 	}
-
-	void dirinfo_free( DirInfo* dir );
-
 	#pragma endregion File Handling
 
 	#pragma region Printing
+
+	#ifndef ZPL_PRINTF_MAXLEN
+	#	define ZPL_PRINTF_MAXLEN 65536
+	#endif
 
 	// NOTE: A locally persisting buffer is used internally
 	char* str_fmt_buf( char const* fmt, ... );
 	char* str_fmt_buf_va( char const* fmt, va_list va );
 	sw    str_fmt_va( char* str, sw n, char const* fmt, va_list va );
 	sw    str_fmt_out_va( char const* fmt, va_list va );
+	sw    str_fmt_out_err( char const* fmt, ... );
+	sw    str_fmt_out_err_va( char const* fmt, va_list va );
 	sw    str_fmt_file_va( FileInfo* f, char const* fmt, va_list va );
-
 	#pragma endregion Printing
 
 	namespace Memory
