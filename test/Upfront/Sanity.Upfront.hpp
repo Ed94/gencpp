@@ -218,10 +218,10 @@ u32 gen_sanity()
 				, def_comment( txt_StrC("Empty function body") )
 			);
 
-			Code params = def_params( 2
-				, def_param( t_u8, name(a) )
+			Code params = def_params( args(
+				  def_param( t_u8, name(a) )
 				, def_param( t_u8, name(b) )
-			);
+			));
 
 			def = def_function( name(test_function_wparams), params, __, body );
 

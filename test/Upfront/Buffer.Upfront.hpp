@@ -9,11 +9,12 @@ Code gen__buffer_base()
 {
 	Code t_allocator_info = def_type( name(AllocatorInfo) );
 
-	Code header = def_struct( name(BufferHeader), def_struct_body( 3
-		, def_variable( t_allocator_info, name(Backing) )
+	Code header = def_struct( name(BufferHeader), 
+	def_struct_body( args(
+		  def_variable( t_allocator_info, name(Backing) )
 		, def_variable( t_uw,             name(Capacity) )
 		, def_variable( t_uw,             name(Num) )
-	));
+	)));
 
 	return def_global_body( 1, header );
 }
@@ -49,10 +50,10 @@ Code gen__buffer( StrC type, sw type_size )
 
 		Code init;
 		{
-			Code params = def_params( 2
+			Code params = def_params( args(
 				, def_param( t_allocator_info, name(allocator))
 				, def_param( t_sw,             name(capacity))
-			);
+			));
 
 			Code body = def_execution( code(
 				Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + capacity * sizeof(Type) ) );
@@ -72,10 +73,10 @@ Code gen__buffer( StrC type, sw type_size )
 
 		Code init_copy;
 		{
-			Code params = def_params( 2
-				, def_param( t_allocator_info, name(allocator))
+			Code params = def_params( args(
+				  def_param( t_allocator_info, name(allocator))
 				, def_param( t_buffer_type,    name(other))
-			);
+			));
 
 			init_copy = def_function( name(init), params, t_buffer_type
 				, def_execution( code(
@@ -105,10 +106,10 @@ Code gen__buffer( StrC type, sw type_size )
 
 		Code appendv;
 		{
-			Code params = def_params( 2
-				, def_param( t_type_ptr, name( values))
+			Code params = def_params( args(
+				  def_param( t_type_ptr, name( values))
 				, def_param( t_sw, 	 name( num))
-			);
+			));
 
 			appendv = def_function( name(append), params, t_void
 				, def_execution( code(
@@ -176,8 +177,8 @@ Code gen__buffer( StrC type, sw type_size )
 			return Data;
 		)));
 
-		buffer = def_struct( name, def_struct_body( 14
-			, using_header
+		buffer = def_struct( name, def_struct_body( args(
+			  using_header
 			, using_type
 
 			, init
@@ -194,7 +195,7 @@ Code gen__buffer( StrC type, sw type_size )
 			, op_type_ptr
 
 			, data
-		));
+		)));
 	}
 
 	return buffer;

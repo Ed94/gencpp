@@ -45,10 +45,10 @@ Code gen__ring( StrC type )
 
 		Code init;
 		{
-			Code params = def_params( 2
+			Code params = def_params( args(
 				, def_param( t_allocator_info, name(allocator) )
 				, def_param( t_uw,             name(max_size) )
-			);
+			));
 
 			char const* tmpl = stringize(
 				<type> result = { 0 };
@@ -129,7 +129,7 @@ Code gen__ring( StrC type )
 			))
 		);
 
-		ring = def_struct( name, def_struct_body( 14,
+		ring = def_struct( name, def_struct_body( args(
 			using_type,
 
 			init,
@@ -147,7 +147,7 @@ Code gen__ring( StrC type )
 			head,
 			tail,
 			buffer
-		));
+		)));
 	}
 
 	return ring;

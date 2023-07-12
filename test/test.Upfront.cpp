@@ -1,4 +1,7 @@
-#include "Bloat.cpp"
+#ifdef gen_time
+#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+#define GEN_FEATURE_PARSING
+#include "gen.cpp"
 #include "Upfront\Array.Upfront.hpp"
 #include "Upfront\Buffer.Upfront.hpp"
 #include "Upfront\HashTable.Upfront.hpp"
@@ -6,8 +9,6 @@
 #include "Upfront\Sanity.Upfront.hpp"
 
 
-#ifdef gen_time
-#include "gen.cpp"
 
 using namespace gen;
 

@@ -50,11 +50,11 @@ Code gen__hashtable( StrC type )
 		StringCached ht_entry_name = get_cached_string({ len, name_str });
 
 		t_ht_entry = def_type( ht_entry_name );
-		ht_entry   = def_struct( ht_entry_name, def_struct_body( 3
-			, def_variable( t_u64,  name(Key))
+		ht_entry   = def_struct( ht_entry_name, def_struct_body( args(
+			  def_variable( t_u64,  name(Key))
 			, def_variable( t_sw,   name(Next))
 			, def_variable( t_type, name(Value))
-		));
+		)));
 
 		array_ht_entry   = gen__array( ht_entry_name );
 		t_array_ht_entry = def_type( array_ht_entry->Name );
@@ -102,7 +102,7 @@ Code gen__hashtable( StrC type )
 			);
 			Code body = def_execution( token_fmt( "type", (StrC)name, tmpl ) );
 
-			Code params = def_params( 2, def_param( t_allocator_info, name(allocator)), def_param( t_sw, name(num)));
+			Code params = def_params( args( def_param( t_allocator_info, name(allocator)), def_param( t_sw, name(num))));
 
 			init_reserve = def_function( name(init_reserve), params, t_ht_type, body, spec_static_member );
 		}
@@ -281,10 +281,10 @@ Code gen__hashtable( StrC type )
 
 		Code set;
 		{
-			Code params = def_params( 2
-				, def_param( t_u64,  name(key))
+			Code params = def_params( args(
+				  def_param( t_u64,  name(key))
 				, def_param( t_type, name(value))
-			);
+			));
 
 			Code body = def_execution( code(
 				sw idx;
@@ -372,7 +372,7 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		hashtable = def_struct( name, def_struct_body( 25
+		hashtable = def_struct( name, def_struct_body( args(
 			, using_entry
 			, using_array_entry
 			, using_find_result
@@ -402,10 +402,10 @@ Code gen__hashtable( StrC type )
 			, add_entry
 			, find
 			, full
-		));
+		)));
 	}
 
-	return def_global_body( 3, ht_entry, array_ht_entry, hashtable );
+	return def_global_body( args( ht_entry, array_ht_entry, hashtable ));
 }
 
 struct GenHashTableRequest

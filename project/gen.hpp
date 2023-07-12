@@ -3052,30 +3052,27 @@ namespace gen
 		, ModuleFlag mflags     = ModuleFlag::None );
 
 	Code def_class_body      ( s32 num, ... );
-	Code def_enum_body       ( s32 num, ... );
-	Code def_export_body     ( s32 num, ... );
-	Code def_extern_link_body( s32 num, ... );
-	Code def_function_body   ( s32 num, ... );
-	Code def_global_body     ( s32 num, ... );
-	Code def_namespace_body  ( s32 num, ... );
-	Code def_params          ( s32 num, ... );
-	Code def_specifiers      ( s32 num, ... );
-	Code def_struct_body     ( s32 num, ... );
-	Code def_union_body      ( s32 num, ... );
 	Code def_class_body      ( s32 num, Code* codes );
+	Code def_enum_body       ( s32 num, ... );
 	Code def_enum_body       ( s32 num, Code* codes );
+	Code def_export_body     ( s32 num, ... );
 	Code def_export_body     ( s32 num, Code* codes);
+	Code def_extern_link_body( s32 num, ... );
 	Code def_extern_link_body( s32 num, Code* codes );
+	Code def_function_body   ( s32 num, ... );
 	Code def_function_body   ( s32 num, Code* codes );
+	Code def_global_body     ( s32 num, ... );
 	Code def_global_body     ( s32 num, Code* codes );
+	Code def_namespace_body  ( s32 num, ... );
 	Code def_namespace_body  ( s32 num, Code* codes );
+	Code def_params          ( s32 num, ... );
 	Code def_params          ( s32 num, Code* params );
+	Code def_specifiers      ( s32 num, ... );
 	Code def_specifiers      ( s32 num, SpecifierT* specs );
+	Code def_struct_body     ( s32 num, ... );
 	Code def_struct_body     ( s32 num, Code* codes );
+	Code def_union_body      ( s32 num, ... );
 	Code def_union_body      ( s32 num, Code* codes );
-
-	// Use this to manually populate the entries on demand (will not be checked for validity).
-	Code def_empty_body( CodeT body_type );
 #	pragma endregion Upfront
 
 #	pragma region Parsing

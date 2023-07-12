@@ -84,14 +84,14 @@ Example using each construction interface:
 ```cpp
 Code t_uw           = def_type( name(uw) );
 Code t_allocator    = def_type( name(allocator) );
-Code t_string_cosnt = def_type( name(char), def_specifiers( ESpecifier::Const, ESpecifier::Ptr ) );
+Code t_string_const = def_type( name(char), def_specifiers( args( ESpecifier::Const, ESpecifier::Ptr ) ));
 
 Code header;
 {
     Code num       = def_variable( t_uw,        name(Num) );
     Code cap       = def_variable( t_uw,        name(Capacity) );
     Code mem_alloc = def_variable( t_allocator, name(Allocator) );
-    Code body      = def_struct_body( num, cap, mem_alloc );
+    Code body      = def_struct_body( args( num, cap, mem_alloc ) );
 
     header = def_struct( name(ArrayHeader), __, __, body );
 }
@@ -111,8 +111,6 @@ Code header = parse_struct( code(
 
 ```
 
-Parse will automatically generate any types that have not been used previously.
-
 ### Untyped
 
 ```cpp
@@ -127,7 +125,8 @@ Code header = untyped_str( code(
 ```
 
 `name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.  
-`code` is a helper macro for providing a string literal with its size, but intended for code string parameters.
+`code` is a helper macro for providing a string literal with its size, but intended for code string parameters.  
+`args` is a helper macro for providing the number of arguments to varadic constructors.
 
 All three constrcuton interfaces will generate the following C code:
 
@@ -152,7 +151,6 @@ The other one in the gen directory within test is the metaprogram's build specif
 Both of them build the same source file: `test.cpp`. The only differences are that gen needs a different relative path to the include directories and defines the macro definition: `gen_time`.
 
 This method is setup where all the metaprogram's code are the within the same files as the regular program's code.  
-If in your use case, you decide to have exclusive separation or partial separation of the metaprogam's code from the program's code files, then your build configuration would need to change to reflect that (specifically the sources).
 
 ## Outline
 
@@ -176,9 +174,9 @@ Keywords kept from "Modern C++":
 When it comes to expressions:
 
 **There is no support for validating expressions.**  
-**The reason:** Its difficult to parse with not much of a benefit from doing so.  
+**The reason:** Its difficult to parse without enough benefits.  
 Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions (which this library provides constructors to help validate, you can skip that process by using the untyped constructors).  
-Its not very much a priority to add such a level of complexity to the library when there isn't a high reward or need for it.  
+Its not a priority to add such a level of complexity to the library when there isn't a high reward or need for it.  
 Especially when the priority is to keep this library small and easy to grasp for what it is.
 
 When it comes to templates:
@@ -201,7 +199,7 @@ Use at your own mental peril...
 As mentioned in [Usage](#usage), the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
 The AST is managed by the library and provided the user via its interface.  
-However, the user may specificy memory configuration.
+However, the user may specifiy memory configuration.
 
 Data layout of AST struct:
 
@@ -225,7 +223,8 @@ u8                _Align_Pad[3];
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
-*`StringCahced` is a typedef for `char const*` to denote it is an interned string*
+*`StringCahced` is a typedef for `String const`, to denote it is an interned string*  
+*`String` is the dynamically allocated string type for the library.
 
 AST widths are setup to be AST_POD_Size.  
 The width dictates how much the static array can hold before it must give way to using an allocated array:
@@ -247,9 +246,6 @@ uw ArrS_Cap =
 ```
 
 *Ex: If the AST_POD_Size is 256 the capacity of the static array is 27.*
-
-ASTs can be set to readonly by calling Code's lock() member function.  
-Adding comments is always available even if the AST is set to readonly.
 
 Data Notes:
 
@@ -280,7 +276,7 @@ Otherwise the library is free of any templates.
 ### Upfront Construction
 
 All component ASTs must be previously constructed, and provided on creation of the code AST.
-The construction will fail and return InvalidCode otherwise.
+The construction will fail and return Code::Invalid otherwise.
 
 Interface :``
 
@@ -479,6 +475,8 @@ The following are provided predefined by the library as they are commonly used:
 * `t_bool`
 * `t_char`
 * `t_wchar_t`
+* `t_class`
+* `t_typename`
 
 Optionally the following may be defined if `GEN_DEFINE_LIBRARY_CODE_CONSTANTS` is defined
 

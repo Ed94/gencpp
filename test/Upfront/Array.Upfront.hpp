@@ -9,18 +9,19 @@ Code gen__array_base()
 {
 	Code t_allocator_info = def_type( name(AllocatorInfo) );
 
-	Code header = def_struct( name(ArrayHeader), def_struct_body( 3
-		, def_variable( t_allocator_info, name(Allocator) )
+	Code header = def_struct( name(ArrayHeader), 
+	def_struct_body( args(
+		  def_variable( t_allocator_info, name(Allocator) )
 		, def_variable( t_uw,             name(Capacity) )
 		, def_variable( t_uw,             name(Num) )
-	));
+	)));
 
 	Code grow_formula = def_function( name(array_grow_formula), def_param( t_uw, name(value)), t_uw
 		, def_execution( code( return 2 * value * 8; ) )
-		, def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline )
+		, def_specifiers( args( ESpecifier::Static_Member, ESpecifier::Inline ) )
 	);
 
-	return def_global_body( 2, header, grow_formula );
+	return def_global_body( args( header, grow_formula ) );
 }
 
 Code gen__array( StrC type )
@@ -71,10 +72,10 @@ Code gen__array( StrC type )
 
 		Code init_reserve;
 		{
-			Code params = def_params( 2
-				, def_param( t_allocator_info, name(allocator) )
+			Code params = def_params( args(
+				  def_param( t_allocator_info, name(allocator) )
 				, def_param( t_sw, name(capacity) )
-			);
+			));
 
 			Code body = def_execution( code(
 				Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) ));
@@ -264,8 +265,8 @@ Code gen__array( StrC type )
 			return Data;
 		)));
 
-		Code body = def_struct_body( 20
-			, using_header
+		Code body = def_struct_body( args(
+			  using_header
 			, using_type
 			, ct_grow_formula
 
@@ -289,7 +290,7 @@ Code gen__array( StrC type )
 			, op_ptr
 
 			, data
-		);
+		));
 		array = def_struct( name, body );
 	}
 
