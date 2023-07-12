@@ -11,7 +11,8 @@
 #ifdef gen_time
 #pragma region GENCPP DEPENDENCIES
 //! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
-#ifndef GENCPP_PROVIDE_DEPENDENCIES
+// Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
+#ifndef GENCPP_ROLL_OWN_DEPENDENCIES
 
 #if __clang__
 #	pragma clang diagnostic ignored "-Wunused-const-variable"
@@ -116,19 +117,19 @@
 #	error Unknown compiler
 #endif
 
-#	ifndef GEN_DEF_INLINE
-#		if defined( GEN_STATIC )
-#			define GEN_DEF_INLINE
-#			define GEN_IMPL_INLINE
-#		else
-#			define GEN_DEF_INLINE  static
-#			define GEN_IMPL_INLINE static inline
-#		endif
+#ifndef GEN_DEF_INLINE
+#	if defined( GEN_STATIC )
+#		define GEN_DEF_INLINE
+#		define GEN_IMPL_INLINE
+#	else
+#		define GEN_DEF_INLINE  static
+#		define GEN_IMPL_INLINE static inline
 #	endif
+#endif
 
-#	if defined( GEN_ALWAYS_INLINE )
-#		undef GEN_ALWAYS_INLINE
-#	endif
+#if defined( GEN_ALWAYS_INLINE )
+#	undef GEN_ALWAYS_INLINE
+#endif
 
 #ifdef GEN_COMPILER_MSVC
 #	define forceinline __forceinline
@@ -143,7 +144,6 @@
 #else
 #	define forceinline inline
 #endif
-
 
 #ifdef GEN_COMPILER_MSVC
 #	define neverinline __declspec( noinline )
@@ -277,8 +277,6 @@ while(0);
 #		include <intrin.h>
 #	endif
 #pragma endregion Mandatory Includes
-
-// #include "Banned.define.hpp"
 
 namespace gen
 {
@@ -3075,6 +3073,9 @@ namespace gen
 	Code def_specifiers      ( s32 num, SpecifierT* specs );
 	Code def_struct_body     ( s32 num, Code* codes );
 	Code def_union_body      ( s32 num, Code* codes );
+
+	// Use this to manually populate the entries on demand (will not be checked for validity).
+	Code def_empty_body( CodeT body_type );
 #	pragma endregion Upfront
 
 #	pragma region Parsing
@@ -3105,7 +3106,7 @@ namespace gen
 	//! Do not use directly. Use the token_fmt macro instead.
 	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
 	inline
-	StrC _token_fmt( sw num, ... )
+	StrC token_fmt_impl( sw num, ... )
 	{
 		local_persist thread_local
 		char buf[GEN_PRINTF_MAXLEN] = { 0 };
@@ -3260,7 +3261,7 @@ namespace gen
 #	define args( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
 
 // Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-#	define token_fmt( ... ) _token_fmt( (macro_num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+#	define token_fmt( ... ) token_fmt_impl( (macro_num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
 #pragma endregion Macros
 
 #pragma region Constants

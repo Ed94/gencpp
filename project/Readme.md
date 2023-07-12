@@ -32,6 +32,7 @@ While getting fleshed out, all feature macros are defined on the top of the head
 
 These macros are:
 
+* `GENCPP_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
 * `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
 * `GEN_FEATURE_PARSING` : Defines the parse constructors
 * `GEN_FEATURE_EDITOR` : Defines the file editing features for changing definitions based on ASTs
@@ -43,6 +44,8 @@ Due to the design of `gen.hpp` to support being written alongside runtime intend
 This can be used to auto-queue generation of dependent definitions for the symbols used.*
 
 ### Organization
+
+Dependencies : Mostly from the c-zpl library.
 
 log_failure definition : based on whether to always use fatal on all errors
 
@@ -86,6 +89,7 @@ Inlined functions related to the AST datatype that required forwards for gen int
 
 ## gen.cpp
 
+* Dependencies
 * Static data
 * AST Body case macros are next.
 * AST implementation

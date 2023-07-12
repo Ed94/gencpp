@@ -5,45 +5,46 @@
 
 #pragma region GENCPP DEPENDENCIES
 //! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
+//! Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GENCPP_PROVIDE_DEPENDENCIES
 
-#pragma region Macros
-#		include <stdio.h>
 // NOTE: Ensure we use standard methods for these calls if we use GEN_PICO
-#		if ! defined( GEN_PICO_CUSTOM_ROUTINES )
-#			if ! defined( GEN_MODULE_CORE )
-#				define _strlen                   strlen
-#				define _printf_err( fmt, ... )   fprintf( stderr, fmt, __VA_ARGS__ )
-#				define _printf_err_va( fmt, va ) vfprintf( stderr, fmt, va )
-#			else
-#				define _strlen                   str_len
-#				define _printf_err( fmt, ... )   str_fmt_out_err( fmt, __VA_ARGS__ )
-#				define _printf_err_va( fmt, va ) str_fmt_out_err_va( fmt, va )
-#			endif
+#pragma region Macros
+#	include <stdio.h>
+#	if ! defined( GEN_PICO_CUSTOM_ROUTINES )
+#		if ! defined( GEN_MODULE_CORE )
+#			define _strlen                   strlen
+#			define _printf_err( fmt, ... )   fprintf( stderr, fmt, __VA_ARGS__ )
+#			define _printf_err_va( fmt, va ) vfprintf( stderr, fmt, va )
+#		else
+#			define _strlen                   str_len
+#			define _printf_err( fmt, ... )   str_fmt_out_err( fmt, __VA_ARGS__ )
+#			define _printf_err_va( fmt, va ) str_fmt_out_err_va( fmt, va )
 #		endif
-
-#		include <errno.h>
-
-#		if defined( GEN_SYSTEM_UNIX ) || defined( GEN_SYSTEM_MACOS )
-#			include <unistd.h>
-#		elif defined( GEN_SYSTEM_WINDOWS )
-#			if ! defined( GEN_NO_WINDOWS_H )
-#				ifndef WIN32_LEAN_AND_MEAN
-#					ifndef NOMINMAX
-#						define NOMINMAX
-#					endif
-
-#					define WIN32_LEAN_AND_MEAN
-#					define WIN32_MEAN_AND_LEAN
-#					define VC_EXTRALEAN
+#	endif
+#
+#	include <errno.h>
+#
+#	if defined( GEN_SYSTEM_UNIX ) || defined( GEN_SYSTEM_MACOS )
+#		include <unistd.h>
+#	elif defined( GEN_SYSTEM_WINDOWS )
+#		if ! defined( GEN_NO_WINDOWS_H )
+#			ifndef WIN32_LEAN_AND_MEAN
+#				ifndef NOMINMAX
+#					define NOMINMAX
 #				endif
-#				include <windows.h>
-#				undef NOMINMAX
-#				undef WIN32_LEAN_AND_MEAN
-#				undef WIN32_MEAN_AND_LEAN
-#				undef VC_EXTRALEAN
+#
+#				define WIN32_LEAN_AND_MEAN
+#				define WIN32_MEAN_AND_LEAN
+#				define VC_EXTRALEAN
 #			endif
+#			include <windows.h>
+#			undef NOMINMAX
+#			undef WIN32_LEAN_AND_MEAN
+#			undef WIN32_MEAN_AND_LEAN
+#			undef VC_EXTRALEAN
 #		endif
+#	endif
 #pragma endregion Macros
 
 namespace gen

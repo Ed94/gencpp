@@ -21,21 +21,25 @@ These build up a code AST to then serialize with a file builder.
 
 ## Notes
 
-This project is not minimum feature complete yet.  
-Version 1 will have C and a subset of C++ features available to it.  
+The project has reached a sort of *alpha* state, all the current functionality works however there is some kinks with the design to iterate on.
 
-I will generate with this library a C99 or 11 variant when Version 1 is complete.  
-A single-header version will also be generated.
+The project has no external dependencies beyond:
 
-The size target is to stay under 5-6k sloc (data & interface code).  
-With the dependency code being under 10000 sloc. (Containers, Memory, String handling, Language bloat)
+* `stdarg.h`
+* `stddef.h`
+* `stdio.h`
+* `errno.h`
+* `unistd.h` (Linux/Mac)
+* `intrin.h` (Windows)
+* `windows.h` (Windows)
 
-Any dependencies from the zpl library will be exposed manually with using declarations into global scope.  
-They will be removed when the library is feature complete for version 1 (zero dependencies milestone).
+Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
+The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
 
-*Right now the constructors are working to some extent based on testing*
+When gencpp is in a stable state, I will make a C variant with the same feature set.  
+A single-header version will also be generated for both.
 
-***The editor and scanner will NOT be implemented by version 1. They require alot code and the focus for version 1 is to have a robust constructor API and builder, witch a wide suite of usage examples in the tests for the project.***
+***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
 
 ## Usage
 
@@ -69,7 +73,7 @@ u32 gen_main()
 
 ```
 
-The design uses a constructive builder sort of AST for the code to generate.  
+The design uses a constructive builder API for the code to generate.  
 The user is given `Code` objects that are used to build up the AST.
 
 Example using each construction interface:
@@ -80,14 +84,14 @@ Example using each construction interface:
 ```cpp
 Code t_uw           = def_type( name(uw) );
 Code t_allocator    = def_type( name(allocator) );
-Code t_string_cosnt = def_type( name(char), def_specifiers( 2, ESpecifier::Const, ESpecifier::Ptr ) );
+Code t_string_cosnt = def_type( name(char), def_specifiers( ESpecifier::Const, ESpecifier::Ptr ) );
 
 Code header;
 {
     Code num       = def_variable( t_uw,        name(Num) );
     Code cap       = def_variable( t_uw,        name(Capacity) );
     Code mem_alloc = def_variable( t_allocator, name(Allocator) );
-    Code body      = make_struct_body( num, cap, mem_alloc );
+    Code body      = def_struct_body( num, cap, mem_alloc );
 
     header = def_struct( name(ArrayHeader), __, __, body );
 }
@@ -112,14 +116,14 @@ Parse will automatically generate any types that have not been used previously.
 ### Untyped
 
 ```cpp
-Code header = untyped_str( R("
+Code header = untyped_str( code(
     struct ArrayHeader
     {
         uw        Num;
         uw        Capacity;
         allocator Allocator;
     };
-)");
+));
 ```
 
 `name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.  
@@ -255,12 +259,12 @@ Data Notes:
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
 * Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
-  * `StringArenas`, `StringMap`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
+  * `StringArenas`, `StringCache`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
 * Strings used for seralization and file buffers are not contained by those used for cached strings.
   * They are currently using `Memory::GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
   * Memory within the buckets is not resused, so its inherently wasteful (most likely will give non-cached strings their own tailored alloator later)
 
-Two generic templated containers throughout the library:
+Two generic templated containers are used throughout the library:
 
 * `template< class Type> struct Array`
 * `template< class Type> struct HashTable`
@@ -333,6 +337,14 @@ Code <name>
     <name> = def_<function name>( ... );
 }
 
+```
+
+When using the body functions, its recommended to use the args macro to auto determine the number of arguments for the varadic:
+```cpp
+def_global_body( args( ht_entry, array_ht_entry, hashtable ));
+
+// instead of:
+def_global_body( 3, ht_entry, array_ht_entry, hashtable );
 ```
 
 ### Parse construction
@@ -420,12 +432,13 @@ Code <name> = def_varaible( <type>, <name>, untyped_<function name>(
 Template metaprogramming in the traditional sense becomes possible with the use of `token_fmt` and parse constructors:
 
 ```cpp
-char const* token_key, token_value, ...;
+StrC value = txt_StrC("Something");
+
 char const* template_str = txt(
-    Code with {key} to replace with token_values
+    Code with <key> to replace with token_values
     ...
 );
-char const* gen_code_str = token_fmt( template, num_tokens, { token_key, token_value }, ... );
+char const* gen_code_str = token_fmt( "key", value, template_str );
 Code        <name>       = parse_<function name>( gen_code_str );
 ```
 
@@ -591,7 +604,6 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
 * Make a test suite thats covers some base cases and zpl containers (+ anything else suitable)
 * Finish support for module specifiers and standard/platform attributes.
-* Remove full ZPL dependency, move into Bloat header/source only what is used.
 * Generate a single-header library.
-* Actually get to version 1.
+* Improve the allocation strategy for strings in `AST::to_string`, `Parser::lex`, and `token_fmt_va`
 * May be in need of a better name, I found a few repos with this same one...

@@ -275,7 +275,7 @@ Code gen__hashtable( StrC type )
 		)
 	));
 
-	return def_global_body( 3, ht_entry, array_ht_entry, hashtable );
+	return def_global_body( args( ht_entry, array_ht_entry, hashtable ));
 }
 
 struct GenHashTableRequest

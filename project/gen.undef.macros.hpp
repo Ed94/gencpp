@@ -17,12 +17,5 @@
 #undef gigabytes
 #undef terabytes
 
-#undef global
-#undef internal
-#undef local_persist
-#undef forceinline
-
-#undef txt
-
 // gen_time
 #endif
