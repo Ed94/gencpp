@@ -140,7 +140,7 @@ Code gen__hashtable( StrC type )
 			char const* tmpl = stringize(
 				void (*) ( u64 key, <type> value )
 			);
-			Code value = untyped_str( token_fmt( "type", (StrC)t_type.to_string(), tmpl ) );
+			Code value = untyped_str( token_fmt( "type", (StrC)t_type->to_string(), tmpl ) );
 
 			using_map_proc = def_using ( name(MapProc), value);
 		}
@@ -166,7 +166,7 @@ Code gen__hashtable( StrC type )
 			char const* tmpl = stringize(
 				void (*) ( u64 key, <type> value )
 			);
-			Code value = untyped_str( token_fmt( "type", (StrC)t_type_ptr.to_string(), tmpl ) );
+			Code value = untyped_str( token_fmt( "type", (StrC)t_type_ptr->to_string(), tmpl ) );
 
 			using_map_mut_proc = def_using ( name(MapMutProc), value);
 		}
@@ -373,7 +373,7 @@ Code gen__hashtable( StrC type )
 		);
 
 		hashtable = def_struct( name, def_struct_body( args(
-			, using_entry
+			  using_entry
 			, using_array_entry
 			, using_find_result
 			, using_map_proc

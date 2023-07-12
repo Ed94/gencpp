@@ -2795,6 +2795,114 @@ namespace gen
 
 		return true;
 	}
+
+	bool AST::validate_body()
+	{
+		using namespace ECode;
+	#define CheckBodyType( BodyType )                                               \
+		if ( Type != BodyType )                                                     \
+		{                                                                           \
+			log_failure( "AST::validate_body: Invalid body type %s", debug_str() ); \
+			return false;                                                           \
+		}
+
+	#define CheckEntries( Unallowed_Types )                                                               \
+		do                                                                                                \
+		{                                                                                                 \
+			for ( s32 idx = 0; idx < num_entries(); idx++ )                                               \
+			{                                                                                             \
+				AST* elem = entry( idx );                                                                 \
+                                                                                                          \
+				switch ( elem->Type )                                                                     \
+				{                                                                                         \
+					Unallowed_Types                                                                       \
+						log_failure( "AST::validate_body: Invalid entry in body %s", elem->debug_str() ); \
+						return false;                                                                     \
+				}                                                                                         \
+			}                                                                                             \
+		}                                                                                                 \
+		while (0);
+
+		switch ( Type )
+		{
+			case Class_Body:
+				CheckBodyType( Class_Body );
+				CheckEntries( AST_BODY_CLASS_UNALLOWED_TYPES );
+			break;
+			case Enum_Body:
+				CheckBodyType( Enum_Body );
+				for ( s32 idx = 0; idx < body()->num_entries(); idx++ )
+				{
+					AST* elem = entry( idx );
+
+					if ( elem->Type != Untyped )
+					{
+						log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %s", elem->debug_str() );
+						return false;
+					}
+				}
+			break;
+			case Export_Body:
+				for ( s32 idx = 0; idx < num_entries(); idx++ )
+				{
+					AST* elem = entry( idx );
+
+					if ( elem->Type != Untyped )
+					{
+						log_failure( "AST::validate_body: Invalid entry in export body %s", elem->debug_str() );
+						return false;
+					}
+				}
+			break;
+			case Extern_Linkage:
+				CheckBodyType( Extern_Linkage );
+				CheckEntries( AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES );
+			break;
+			case Function_Body:
+				CheckBodyType( Function_Body );
+				CheckEntries( AST_BODY_FUNCTION_UNALLOWED_TYPES );
+			break;
+			case Global_Body:
+				for ( s32 idx = 0; idx < num_entries(); idx++ )
+				{
+					AST* elem = entry( idx );
+
+					if ( elem->Type != Untyped )
+					{
+						log_failure( "AST::validate_body: Invalid entry in global body %s", elem->debug_str() );
+						return false;
+					}
+				}
+			break;
+			case Namespace_Body:
+				CheckBodyType( Namespace_Body );
+				CheckEntries( AST_BODY_NAMESPACE_UNALLOWED_TYPES );
+			break;
+			case Struct_Body:
+				CheckBodyType( Struct_Body );
+				CheckEntries( AST_BODY_STRUCT_UNALLOWED_TYPES );
+			break;
+			case Union_Body:
+				CheckBodyType( Union_Body );
+				for ( s32 idx = 0; idx < body()->num_entries(); idx++ )
+				{
+					AST* elem = entry( idx );
+
+					if ( elem->Type != Untyped )
+					{
+						log_failure( "AST::validate_body: Invalid entry in union body (needs to be untyped or comment) %s", elem->debug_str() );
+						return false;
+					}
+				}
+			break;
+
+			default:
+				log_failure( "AST::validate_body: Invalid this AST does not have a body %s", debug_str() );
+				return false;
+		}
+
+		return false;
+	}
 #pragma endregion AST
 
 #pragma region Gen Interface
@@ -4404,7 +4512,7 @@ namespace gen
                                                                              \
 	if ( codes == nullptr )                                                  \
 	{                                                                        \
-		log_failure("gen::def_class_body: Provided a null array of codes");  \
+		log_failure("gen::" stringize(Name_)" : Provided a null array of codes");  \
 		return Code::Invalid;                                                \
 	}
 
@@ -4504,9 +4612,9 @@ namespace gen
 				return Code::Invalid;
 			}
 
-			if ( entry->Type != Untyped )
+			if ( entry->Type != Untyped && entry->Type != Comment )
 			{
-				log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped type.", entry->debug_str() ); \
+				log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry->debug_str() ); \
 				return Code::Invalid;
 			}
 
@@ -4536,7 +4644,7 @@ namespace gen
 				return Code::Invalid;
 			}
 
-			if ( entry->Type != Untyped )
+			if ( entry->Type != Untyped && entry->Type != Comment )
 			{
 				log_failure("gen::def_enum_body: Entry type is not allowed: %s", entry->debug_str() ); \
 				return Code::Invalid;
@@ -4906,7 +5014,7 @@ namespace gen
 
 			if ( entry->Type != Untyped && entry->Type != Comment )
 			{
-				log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped type.", entry->debug_str() ); \
+				log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry->debug_str() ); \
 				return Code::Invalid;
 			}
 
@@ -4936,7 +5044,7 @@ namespace gen
 				return Code::Invalid;
 			}
 
-			if ( entry->Type != Untyped )
+			if ( entry->Type != Untyped && entry->Type != Comment )
 			{
 				log_failure("gen::def_union_body: Entry type is not allowed: %s", entry->debug_str() ); \
 				return Code::Invalid;
@@ -8099,7 +8207,7 @@ namespace gen
 #pragma region Builder
 	void Builder::print( Code code )
 	{
-		Buffer.append_fmt( "%s\n", code.to_string() );
+		Buffer.append_fmt( "%s\n", code->to_string() );
 	}
 
 	void Builder::print_fmt( char const* fmt, ... )

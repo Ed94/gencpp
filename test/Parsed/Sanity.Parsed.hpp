@@ -36,7 +36,7 @@ u32 gen_sanity()
 			{};
 		));
 
-		empty_body.body()->add_entry( def_comment( txt_StrC("Empty class body") ) );
+		empty_body->body()->add_entry( def_comment( txt_StrC("Empty class body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -80,7 +80,7 @@ u32 gen_sanity()
 			};
 		));
 
-		c_extern.body()->add_entry( empty_comment );
+		c_extern->body()->add_entry( empty_comment );
 
 		gen_sanity_file.print(c_extern);
 	}
@@ -118,7 +118,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def.body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
+		def->body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -134,7 +134,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def.body()->add_entry( def_comment( txt_StrC("Empty namespace body") ) );
+		def->body()->add_entry( def_comment( txt_StrC("Empty namespace body") ) );
 
 		gen_sanity_file.print(def);
 	}
@@ -182,7 +182,7 @@ u32 gen_sanity()
 			};
 		));
 
-		class_def.body()->add_entry( op_ptr );
+		class_def->body()->add_entry( op_ptr );
 
 		gen_sanity_file.print(class_def);
 	}
@@ -201,7 +201,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def.body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
+		def->body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -237,7 +237,7 @@ u32 gen_sanity()
 			{};
 		));
 
-		empty_body.body()->add_entry( def_comment( txt_StrC("Empty struct body") ) );
+		empty_body->body()->add_entry( def_comment( txt_StrC("Empty struct body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -253,7 +253,7 @@ u32 gen_sanity()
 			};
 		));
 
-		empty.body()->add_entry( def_comment( txt_StrC("Empty union body") ) );
+		empty->body()->add_entry( def_comment( txt_StrC("Empty union body") ) );
 
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned short u16; )) );
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned long  u32; )) );

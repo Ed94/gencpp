@@ -51,7 +51,7 @@ Code gen__buffer( StrC type, sw type_size )
 		Code init;
 		{
 			Code params = def_params( args(
-				, def_param( t_allocator_info, name(allocator))
+				  def_param( t_allocator_info, name(allocator))
 				, def_param( t_sw,             name(capacity))
 			));
 

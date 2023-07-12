@@ -21,7 +21,7 @@ These build up a code AST to then serialize with a file builder.
 
 ## Notes
 
-The project has reached a sort of *alpha* state, all the current functionality works however there is some kinks with the design to iterate on.
+The project has reached a sort of *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.
 
 The project has no external dependencies beyond:
 
@@ -224,7 +224,7 @@ u8                _Align_Pad[3];
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
 *`StringCahced` is a typedef for `String const`, to denote it is an interned string*  
-*`String` is the dynamically allocated string type for the library.
+*`String` is the dynamically allocated string type for the library*
 
 AST widths are setup to be AST_POD_Size.  
 The width dictates how much the static array can hold before it must give way to using an allocated array:
@@ -322,6 +322,8 @@ Bodies:
 * def_struct_body
 * def_union_body
 
+* def_body
+
 Usage:
 
 ```cpp
@@ -342,6 +344,9 @@ def_global_body( args( ht_entry, array_ht_entry, hashtable ));
 // instead of:
 def_global_body( 3, ht_entry, array_ht_entry, hashtable );
 ```
+
+If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty body.  
+When the members have been populated use: `AST::validate_body` to verify that the members are valid entires for that type.
 
 ### Parse construction
 

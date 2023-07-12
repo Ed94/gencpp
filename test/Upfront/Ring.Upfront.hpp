@@ -46,7 +46,7 @@ Code gen__ring( StrC type )
 		Code init;
 		{
 			Code params = def_params( args(
-				, def_param( t_allocator_info, name(allocator) )
+				  def_param( t_allocator_info, name(allocator) )
 				, def_param( t_uw,             name(max_size) )
 			));
 

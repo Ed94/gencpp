@@ -3,7 +3,7 @@
 
 using namespace gen;
 
-u32 gen_sanity()
+u32 gen_sanity_upfront()
 {
 	Builder
 	gen_sanity_file;
@@ -27,7 +27,8 @@ u32 gen_sanity()
 		Code empty_body;
 		{
 			Code cmt  = def_comment( txt_StrC("Empty class body") );
-			Code body = def_class_body( 1, cmt );
+
+			Code body = def_class_body( args( cmt ) );
 
 			empty_body = def_class( name(TestEmptyClass), body );
 		}
@@ -87,9 +88,7 @@ u32 gen_sanity()
 	// Friend
 	{
 		Code fwd  = def_class( name(TestFriendFwd));
-		Code body = def_class_body( 1
-			, def_friend( fwd )
-		);
+		Code body = def_class_body( args( def_friend( fwd ) ) );
 
 		gen_sanity_file.print( def_class( name(TestFriend), body ) );
 	}
@@ -196,7 +195,7 @@ u32 gen_sanity()
 
 		Code op_ptr = def_operator_cast( t_u8_ptr, __ );
 
-		Code op_class = def_class( name(TestOperatorCast), def_class_body( 1, op_ptr ) );
+		Code op_class = def_class( name(TestOperatorCast), def_class_body( args( op_ptr) ) );
 
 		gen_sanity_file.print(op_class);
 	}
@@ -245,7 +244,7 @@ u32 gen_sanity()
 	{
 		Code fwd_fn         = def_function( name(test_function_specifiers), __, __, __, spec_inline );
 
-		// TODO: Need an op overload here
+		// TODO : Need an op overload here
 
 		Code u8_ptr         = def_type( name(u8), __, spec_ptr );
 		Code typedef_u8_ptr = def_typedef( name(ConstExprTest), u8_ptr );
@@ -262,7 +261,7 @@ u32 gen_sanity()
 		Code empty_body;
 		{
 			Code cmt  = def_comment( txt_StrC("Empty struct body") );
-			Code body = def_class_body( 1, cmt );
+			Code body = def_class_body( args( cmt ) );
 
 			empty_body = def_class( name(TestEmptyStruct), body );
 		}

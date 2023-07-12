@@ -8,24 +8,6 @@ All dependencies are currently held within `Bloat.hpp` and `Bloat.cpp`
 
 All the library code is contained in two files: `gen.hpp` and `gen.cpp`
 
-
-## Bloat.hpp/cpp
-
-Currently acts as the isolation header for thridparty dependencies along with code not directly related to the library.
-
-Organization:
-
-* ZPL inclusion and selective symbol exposure to global scope.
-* Utility macro definitions used throughout the library.
-* Global memory arena definition
-* StrC and String definitions
-* Token string formatter
-* Formatted and Fatal Logs
-
-The cpp contains the implementation of the global memory arena and the token formmatter.
-
-Any global symbol pollution will be removed when dependencies are intergrated properly into the library.
-
 ## gen.hpp
 
 While getting fleshed out, all feature macros are defined on the top of the header.

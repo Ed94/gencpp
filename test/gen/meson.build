@@ -5,7 +5,7 @@ project( 'test', 'c', 'cpp', default_options : ['buildtype=debug'] )
 includes = include_directories(
 [
 	'../../project',
-	'../../thirdparty'
+	# '../../thirdparty'
 ])
 
 # get_sources = files('./get_sources.ps1')

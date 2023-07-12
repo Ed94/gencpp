@@ -2666,6 +2666,61 @@ namespace gen
 	// Desired width of the AST data structure.
 	constexpr u32 AST_POD_Size = 256;
 
+	struct AST;
+
+	/*
+		AST* typedef as to not constantly have to add the '*' as this is written often..
+	*/
+	struct Code
+	{
+	#	pragma region Statics
+		// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
+		static Code Global;
+
+		// Used to identify invalid generated code.
+		static Code Invalid;
+	#	pragma endregion Statics
+
+	#	pragma region Member Functions
+		void set_global();
+
+		bool is_valid();
+
+		bool operator ==( Code other )
+		{
+			return ast == other.ast;
+		}
+
+		bool operator !=( Code other )
+		{
+			return ast != other.ast;
+		}
+
+		operator AST*()
+		{
+			return ast;
+		}
+
+		AST* operator->()
+		{
+			if ( ast == nullptr )
+			{
+				log_failure("Attempt to dereference a nullptr!");
+				return nullptr;
+			}
+
+			return ast;
+		}
+	#	pragma endregion Member Functions
+
+		AST* ast;
+	};
+
+	struct Code_POD
+	{
+		AST* ast;
+	};
+
 	// TODO: If perf needs it, convert layout an SOA format.
 	/*
 		Simple AST POD with functionality to seralize into C++ syntax.
@@ -2679,6 +2734,9 @@ namespace gen
 	struct AST
 	{
 	#	pragma region Member Functions
+		// add_entry with validation
+		void add( AST* other );
+
 		void add_entry( AST* other );
 
 		AST* body()
@@ -2688,7 +2746,7 @@ namespace gen
 
 		AST* duplicate();
 
-		AST*& entry( u32 idx )
+		AST* entry( u32 idx )
 		{
 			return DynamicEntries ? ArrDyn[ idx ] : ArrStatic[ idx ];
 		}
@@ -2696,11 +2754,6 @@ namespace gen
 		bool has_entries()
 		{
 			return num_entries();
-		}
-
-		bool is_invalid()
-		{
-			return Type != ECode::Invalid;
 		}
 
 		bool is_equal( AST* other );
@@ -2799,12 +2852,16 @@ namespace gen
 			);
 		}
 
+		String to_string();
+
 		char const* type_str()
 		{
 			return ECode::to_str( Type );
 		}
 
-		String to_string();
+		bool validate_body();
+
+		operator Code();
 	#	pragma endregion Member Functions
 
 		constexpr static
@@ -2852,105 +2909,9 @@ namespace gen
 
 	// Its intended for the AST to have equivalent size to its POD.
 	// All extra functionality within the AST namespace should just be syntatic sugar.
+	static_assert( sizeof(Code)    == sizeof(Code_POD), "ERROR: Code is not POD" );
 	static_assert( sizeof(AST)     == sizeof(AST_POD), "ERROR: AST IS NOT POD" );
 	static_assert( sizeof(AST_POD) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
-
-	/*
-		AST* typedef as to not constantly have to add the '*' as this is written often..
-	*/
-	struct Code
-	{
-	#	pragma region Statics
-		// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
-		static Code Global;
-
-		// Used to identify invalid generated code.
-		static Code Invalid;
-	#	pragma endregion Statics
-
-	#	pragma region Member Functions
-		Code body()
-		{
-			if ( ast == nullptr )
-			{
-				log_failure("Code::body: AST is null!");
-				return Invalid;
-			}
-
-			if ( ast->Type == ECode::Invalid )
-			{
-				log_failure("Code::body: Type is invalid, cannot get");
-				return Invalid;
-			}
-
-			return { ast->body() };
-		}
-
-		String to_string() const
-		{
-			return ast->to_string();
-		}
-
-		void set_global()
-		{
-			if ( ast == nullptr )
-			{
-				log_failure("Code::set_global: Cannot set code as global, AST is null!");
-				return;
-			}
-
-			ast->Parent = Global.ast;
-		}
-
-		bool is_valid()
-		{
-			// Originally intended to use operator bool(), however for some reason
-			// The C++ standard has operator Type*() with higher precedence than operator bool().
-			// Even when directly casting to bool. Amazing.
-			return ast != nullptr && ast->Type != ECode::Invalid;
-		}
-
-		operator bool() const
-		{
-			return ast != nullptr && ast->Type != ECode::Invalid;
-		}
-
-		bool operator ==( Code other )
-		{
-			return ast == other.ast;
-		}
-
-		bool operator !=( Code other )
-		{
-			return ast != other.ast;
-		}
-
-		operator AST*()
-		{
-			return ast;
-		}
-
-		AST* operator->()
-		{
-			if ( ast == nullptr )
-			{
-				log_failure("Attempt to dereference a nullptr!");
-				return nullptr;
-			}
-
-			return ast;
-		}
-	#	pragma endregion Member Functions
-
-		AST* ast;
-	};
-
-	struct Code_POD
-	{
-		AST_POD* ast;
-	};
-
-	static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 
 	// Used when the its desired when omission is allowed in a definition.
 	constexpr Code NoCode = { nullptr };
@@ -3051,8 +3012,11 @@ namespace gen
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_class_body      ( s32 num, ... );
-	Code def_class_body      ( s32 num, Code* codes );
+	// There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
+	/// or provide as an array of Code objects.
+
+	Code def_class_body     ( s32 num, ... );
+	Code def_class_body     ( s32 num, Code* codes );
 	Code def_enum_body       ( s32 num, ... );
 	Code def_enum_body       ( s32 num, Code* codes );
 	Code def_export_body     ( s32 num, ... );
@@ -3073,6 +3037,9 @@ namespace gen
 	Code def_struct_body     ( s32 num, Code* codes );
 	Code def_union_body      ( s32 num, ... );
 	Code def_union_body      ( s32 num, Code* codes );
+
+	// Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
+	Code def_body( CodeT type );
 #	pragma endregion Upfront
 
 #	pragma region Parsing
@@ -3098,24 +3065,8 @@ namespace gen
 #	pragma endregion Parsing
 
 #	pragma region Untyped text
-	sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va );
-
-	//! Do not use directly. Use the token_fmt macro instead.
-	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-	inline
-	StrC token_fmt_impl( sw num, ... )
-	{
-		local_persist thread_local
-		char buf[GEN_PRINTF_MAXLEN] = { 0 };
-		mem_set( buf, 0, GEN_PRINTF_MAXLEN );
-
-		va_list va;
-		va_start(va, num );
-		sw result = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num, va);
-		va_end(va);
-
-		return { result, buf };
-	}
+	sw   token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va );
+	StrC token_fmt_impl( sw, ... );
 
 	Code untyped_str      ( StrC content);
 	Code untyped_fmt      ( char const* fmt, ... );
@@ -3382,6 +3333,73 @@ namespace gen
 		}
 
 		to_add->Parent = this;
+	}
+
+	inline
+	void Code::set_global()
+	{
+		if ( ast == nullptr )
+		{
+			log_failure("Code::set_global: Cannot set code as global, AST is null!");
+			return;
+		}
+
+		ast->Parent = Global.ast;
+	}
+
+	inline
+	bool Code::is_valid()
+	{
+		return ast != nullptr && ast->Type != CodeT::Invalid;
+	}
+
+	AST::operator gen::Code()
+	{
+		return { this };
+	}
+
+	Code def_body( CodeT type )
+	{
+		switch ( type )
+		{
+			using namespace ECode;
+			case Class_Body:
+			case Enum_Body:
+			case Export_Body:
+			case Extern_Linkage:
+			case Function_Body:
+			case Global_Body:
+			case Namespace_Body:
+			case Struct_Body:
+			case Union_Body:
+			break;
+
+			default:
+				log_failure( "def_body: Invalid type %s", (char const*)ECode::to_str(type) );
+				return Code::Invalid;
+		}
+
+		Code
+		result       = make_code();
+		result->Type = type;
+		return result;
+	}
+
+	//! Do not use directly. Use the token_fmt macro instead.
+	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
+	inline
+	StrC token_fmt_impl( sw num, ... )
+	{
+		local_persist thread_local
+		char buf[GEN_PRINTF_MAXLEN] = { 0 };
+		mem_set( buf, 0, GEN_PRINTF_MAXLEN );
+
+		va_list va;
+		va_start(va, num );
+		sw result = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num, va);
+		va_end(va);
+
+		return { result, buf };
 	}
 }
 #pragma endregion Inlines

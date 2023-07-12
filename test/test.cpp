@@ -1,6 +1,7 @@
 #ifdef gen_time
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_FEATURE_PARSING
+#include "Upfront\Sanity.Upfront.hpp"
 #include "Parsed\Array.Parsed.hpp"
 #include "Parsed\Buffer.Parsed.hpp"
 #include "Parsed\HashTable.Parsed.hpp"
@@ -55,7 +56,7 @@ int gen_main()
 				u64 D;
 			};
 		)),
-		false
+		128
 	));
 
 	soa_test.write();

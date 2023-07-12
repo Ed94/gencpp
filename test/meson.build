@@ -6,7 +6,7 @@ includes = include_directories(
   [
     './gen',
     '../project',
-    '../thirdparty'
+    # '../thirdparty'
   ])
 
 # get_sources = files('./get_sources.ps1')
