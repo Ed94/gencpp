@@ -1,13 +1,12 @@
-#include "Bloat.cpp"
+#ifdef gen_time
+#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+#define GEN_FEATURE_PARSING
 #include "Parsed\Array.Parsed.hpp"
 #include "Parsed\Buffer.Parsed.hpp"
 #include "Parsed\HashTable.Parsed.hpp"
 #include "Parsed\Ring.Parsed.hpp"
 #include "Parsed\Sanity.Parsed.hpp"
 #include "SOA.hpp"
-
-
-#ifdef gen_time
 #include "gen.cpp"
 
 using namespace gen;
