@@ -30,17 +30,15 @@ Code gen_SOA( Code struct_def, bool use_dynamic = false )
 				Code entry_arr = { nullptr };
 				if ( use_dynamic)
 				{
-					entry_arr = parse_variable( token_fmt( "Array<<type>> <name>;", 2
-						, "type", (char const*)var_type->Name
-						, "name", (char const*)struct_mem->Name )
-					);
+					entry_arr = parse_variable( token_fmt( "type", (StrC)var_type->Name, "name", (StrC)struct_mem->Name,
+						stringize( Array<<type>> <name>; )
+					));
 				}
 				else
 				{
-					entry_arr = parse_variable( token_fmt( "<type> <name>[100];", 2
-						, "type", (char const*)var_type->Name
-						, "name", (char const*)struct_mem->Name )
-					);
+					entry_arr = parse_variable( token_fmt( "type", (StrC)var_type->Name, "name", (StrC)struct_mem->Name,
+						stringize( <type> <name>[100]; )
+					));
 				}
 
 				vars.append( entry_arr );
@@ -51,15 +49,14 @@ Code gen_SOA( Code struct_def, bool use_dynamic = false )
 
 	Code make;
 	{
-		make = parse_function( token_fmt(
-		txt(
-			static
-			<SOA_Type> make( AllocatorInfo allocator )
-			{
-				<SOA_Type> soa = {};
-			}
-		),
-			1, "SOA_Type", (char const*)name
+		make = parse_function( token_fmt("SOA_Type", name,
+			stringize(
+				static
+				<SOA_Type> make( AllocatorInfo allocator )
+				{
+					<SOA_Type> soa = {};
+				}
+			)
 		));
 
 		if ( use_dynamic )
@@ -68,9 +65,8 @@ Code gen_SOA( Code struct_def, bool use_dynamic = false )
 			{
 				Code member = vars[idx];
 
-				Code arr_init = def_execution( token_fmt( "soa.<var_name> = <var_type>::init( allocator );", 2
-					, "var_name", (char const*)member->Name
-					, "var_type", (char const*)member->entry(0)->Name
+				Code arr_init = def_execution( token_fmt( "var_name", (StrC)member->Name, "var_type", (StrC)member->entry(0)->Name,
+					stringize( soa.<var_name> = <var_type>::init( allocator ); )
 				));
 
 				make.body()->add_entry( arr_init );
@@ -94,8 +90,8 @@ Code gen_SOA( Code struct_def, bool use_dynamic = false )
 		{
 			Code member = vars[idx];
 
-			content.append_fmt( token_fmt( "<var_name>[idx],", 1
-				, "var_name", (char const*)member->Name
+			content.append_fmt( token_fmt( "var_name", (StrC)member->Name,
+				"<var_name>[idx],"
 			));
 		}
 

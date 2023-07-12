@@ -12,7 +12,6 @@
 			"args": [],
 			"cwd": "${workspaceFolder}/test/gen/",
 			"postRunCommands": [
-				"command script import \"${workspaceFolder}/.vscode/gencpp_lldbvis.py\""
 			]
 		},
 		{
@@ -22,16 +21,7 @@
 			"program": "${workspaceFolder}/test/gen/build/gencpp.exe",
 			"args": [],
 			"cwd": "${workspaceFolder}/test/gen/",
-			"visualizerFile": "${workspaceFolder}/.vscode/gencpp.natvis"
-		},
-		{
-			"type": "cppvsdbg",
-			"request": "launch",
-			"name": "Debug gentime parsed vsdbg",
-			"program": "${workspaceFolder}/test/gen/build/gencpp_parsed.exe",
-			"args": [],
-			"cwd": "${workspaceFolder}/test/gen/",
-			"visualizerFile": "${workspaceFolder}/.vscode/gencpp.natvis"
+			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		}
 	]
 }

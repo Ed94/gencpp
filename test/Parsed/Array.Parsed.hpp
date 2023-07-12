@@ -32,8 +32,8 @@ Code gen__array( StrC type )
 		name = { name_len, name_str };
 	};
 
-	Code array = parse_struct( token_fmt(
-		txt(
+	Code array = parse_struct( token_fmt( "ArrayType", name, "type", type,
+		stringize(
 			struct <ArrayType>
 			{
 				using Header = ArrayHeader;
@@ -208,11 +208,7 @@ Code gen__array( StrC type )
 					return Data;
 				}
 			};
-		),
-		// Tokens
-			2
-			, "ArrayType", (char const*) name
-			, "type",      (char const*) type
+		)
 	));
 
 	return array;
@@ -226,7 +222,7 @@ struct GenArrayRequest
 };
 Array<GenArrayRequest> GenArrayRequests;
 
-void gen__array_request( StrC type, sw size, StrC dep = {} )
+void gen__array_request( StrC type, StrC dep = {} )
 {
 	do_once_start
 		GenArrayRequests = Array<GenArrayRequest>::init( Memory::GlobalAllocator );
@@ -247,7 +243,7 @@ void gen__array_request( StrC type, sw size, StrC dep = {} )
 	GenArrayRequest request = { dep, type };
 	GenArrayRequests.append( request );
 }
-#define gen_array( type ) gen__array_request( { txt_to_StrC(type) }, sizeof(type) )
+#define gen_array( type ) gen__array_request( code(type) )
 
 u32 gen_array_file()
 {
@@ -255,8 +251,10 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.Parsed.gen.hpp" );
 
-	Code include_zpl = def_include( StrC::from("Bloat.hpp") );
+	Code include_zpl = def_include( txt_StrC("Bloat.hpp") );
 	gen_array_file.print( include_zpl );
+
+	gen_array_file.print( def_using_namespace( name(gen)));
 
 	Code array_base = gen__array_base();
 	gen_array_file.print( array_base );

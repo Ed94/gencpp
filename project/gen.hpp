@@ -97,7 +97,7 @@ namespace gen
 		{
 			static
 			StrC lookup[Num_Types] = {
-			#	define Entry( Type ) { txt_to_StrC( Type ) },
+			#	define Entry( Type ) { sizeof(stringize(Type)), stringize(Type) },
 				Define_Types
 			#	undef Entry
 			};
@@ -189,7 +189,7 @@ namespace gen
 		{
 			local_persist
 			char const* lookup[ Num_Ops ] = {
-			#	define Entry( Type_, Token_ ) txt(Token_),
+			#	define Entry( Type_, Token_ ) stringize(Token_),
 				Define_Operators
 			#	undef Entry
 				","
@@ -252,7 +252,7 @@ namespace gen
 			#	define internal      internal
 			#	define local_persist local_persist
 
-			#	define Entry( Spec_, Code_ ) { txt_to_StrC(Code_) },
+			#	define Entry( Spec_, Code_ ) { sizeof(stringize(Code_)), stringize(Code_) },
 				Define_Specifiers
 			#	undef Entry
 
@@ -352,9 +352,9 @@ namespace gen
 	#	define GEN_API_Import_Code   __declspec(dllimport)
 	#	define GEN_Attribute_Keyword __declspec
 
-		constexpr char const* API_Export = txt( GEN_API_Export_Code  );
-		constexpr char const* API_Import = txt( GEN_API_Import_Code  );
-		constexpr char const* Keyword    = txt( GEN_Attribute_Keyword);
+		constexpr char const* API_Export = stringize( GEN_API_Export_Code  );
+		constexpr char const* API_Import = stringize( GEN_API_Import_Code  );
+		constexpr char const* Keyword    = stringize( GEN_Attribute_Keyword);
 
 	#elif ZPL_HAS_ATTRIBUTE( visibility ) || ZPL_GCC_VERSION_CHECK( 3, 3, 0 ) || ZPL_INTEL_VERSION_CHECK( 13, 0, 0 )
 	#	define GEN_API_Export_Code   __attribute__ ((visibility ("default")))
@@ -501,7 +501,7 @@ namespace gen
 
 		char const* debug_str()
 		{
-			char const* fmt = txt(
+			char const* fmt = stringize(
 				\nCode Debug:
 				\nType    : %s
 				\nParent  : %s
@@ -773,26 +773,26 @@ namespace gen
 		, ModuleFlag mflags     = ModuleFlag::None );
 
 	Code def_class_body      ( s32 num, ... );
-	Code def_class_body      ( s32 num, Code* codes );
 	Code def_enum_body       ( s32 num, ... );
-	Code def_enum_body       ( s32 num, Code* codes );
 	Code def_export_body     ( s32 num, ... );
-	Code def_export_body     ( s32 num, Code* codes);
 	Code def_extern_link_body( s32 num, ... );
-	Code def_extern_link_body( s32 num, Code* codes );
 	Code def_function_body   ( s32 num, ... );
-	Code def_function_body   ( s32 num, Code* codes );
 	Code def_global_body     ( s32 num, ... );
-	Code def_global_body     ( s32 num, Code* codes );
 	Code def_namespace_body  ( s32 num, ... );
-	Code def_namespace_body  ( s32 num, Code* codes );
 	Code def_params          ( s32 num, ... );
-	Code def_params          ( s32 num, Code* params );
-	Code def_specifiers      ( s32 num , ... );
-	Code def_specifiers      ( s32 num, SpecifierT* specs );
+	Code def_specifiers      ( s32 num, ... );
 	Code def_struct_body     ( s32 num, ... );
-	Code def_struct_body     ( s32 num, Code* codes );
 	Code def_union_body      ( s32 num, ... );
+	Code def_class_body      ( s32 num, Code* codes );
+	Code def_enum_body       ( s32 num, Code* codes );
+	Code def_export_body     ( s32 num, Code* codes);
+	Code def_extern_link_body( s32 num, Code* codes );
+	Code def_function_body   ( s32 num, Code* codes );
+	Code def_global_body     ( s32 num, Code* codes );
+	Code def_namespace_body  ( s32 num, Code* codes );
+	Code def_params          ( s32 num, Code* params );
+	Code def_specifiers      ( s32 num, SpecifierT* specs );
+	Code def_struct_body     ( s32 num, Code* codes );
 	Code def_union_body      ( s32 num, Code* codes );
 #	pragma endregion Upfront
 
@@ -819,18 +819,20 @@ namespace gen
 #	pragma endregion Parsing
 
 #	pragma region Untyped text
-	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va );
+	sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va );
 
+	//! Do not use directly. Use the token_fmt macro instead.
+	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
 	inline
-	StrC token_fmt( char const* fmt, sw num_tokens, ... )
+	StrC _token_fmt( sw num, ... )
 	{
 		local_persist thread_local
 		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 		mem_set( buf, 0, ZPL_PRINTF_MAXLEN );
 
 		va_list va;
-		va_start(va, fmt);
-		sw result = token_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, num_tokens, va);
+		va_start(va, num );
+		sw result = token_fmt_va(buf, ZPL_PRINTF_MAXLEN, num, va);
 		va_end(va);
 
 		return { result, buf };
@@ -969,10 +971,15 @@ namespace gen
 
 //	Convienence for defining any name used with the gen api.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
-#	define name( Id_ )   { txt_to_StrC( Id_ ) }
+#	define name( Id_ )   { sizeof(stringize( Id_ )) - 1, stringize(Id_) }
 
 //  Same as name just used to indicate intention of literal for code instead of names.
-#	define code( ... ) { txt_to_StrC( __VA_ARGS__ ) }
+#	define code( ... ) { sizeof(stringize(__VA_ARGS__)) - 1, stringize( __VA_ARGS__ ) }
+
+#	define args( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
+
+// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
+#	define token_fmt( ... ) _token_fmt( (macro_num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
 #pragma endregion Macros
 
 #pragma region Constants

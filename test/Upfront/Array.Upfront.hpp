@@ -94,16 +94,18 @@ Code gen__array( StrC type )
 
 		Code append = def_function( name(append), def_param(t_alias, name(value)), t_bool
 			, def_execution( code(
-				Header& header = get_header();
+				Header* header = get_header();
 
-				if ( header.Num == header.Capacity )
+				if ( header->Num == header->Capacity )
 				{
-					if ( ! grow( header.Capacity ))
+					if ( ! grow( header->Capacity ))
 						return false;
+
+					header = get_header();
 				}
 
-				Data[ header.Num ] = value;
-				header.Num++;
+				Data[ header->Num ] = value;
+				header->Num++;
 
 				return true;
 			))
@@ -111,14 +113,14 @@ Code gen__array( StrC type )
 
 		Code back = def_function( name(back), __, t_alias_ref
 			, def_execution( code(
-				Header& header = get_header();
+				Header& header = * get_header();
 				return Data[ header.Num - 1 ];
 			))
 		);
 
 		Code clear = def_function( name(clear), __, t_void
 			, def_execution( code(
-				Header& header = get_header();
+				Header& header = * get_header();
 				header.Num = 0;
 			))
 		);
@@ -132,7 +134,7 @@ Code gen__array( StrC type )
 			);
 
 			Code body = untyped_str( code(
-				Header& header = get_header();
+				Header& header = * get_header();
 
 				if ( begin < 0 || end >= header.Num )
 					return false;
@@ -150,20 +152,20 @@ Code gen__array( StrC type )
 
 		Code free = def_function( name(free), __, t_void
 			, def_execution( code(
-				Header& header = get_header();
-				zpl::free( header.Allocator, & header );
+				Header* header = get_header();
+				gen::free( header->Allocator, header );
 			))
 		);
 
-		Code get_header = def_function( name(get_header), __, t_header_ref
+		Code get_header = def_function( name(get_header), __, t_header_ptr
 			, def_execution( code(
-				return * ( rcast( Header*, Data ) - 1 );
+				return rcast( Header*, Data ) - 1;
 			))
 		);
 
 		Code grow = def_function( name(grow), def_param( t_uw, name(min_capacity)), t_bool
 			, def_execution( code(
-				Header& header = get_header();
+				Header& header = * get_header();
 
 				uw new_capacity = grow_formula( header.Capacity );
 
@@ -176,13 +178,13 @@ Code gen__array( StrC type )
 
 		Code num = def_function( name(num), __, t_uw
 			, def_execution( code(
-				return get_header().Num;
+				return get_header()->Num;
 			))
 		);
 
 		Code pop = def_function( name(pop), __, t_bool
 			, def_execution( code(
-				Header& header = get_header();
+				Header& header = * get_header();
 
 				ZPL_ASSERT( header.Num > 0 );
 				header.Num--;
@@ -191,7 +193,7 @@ Code gen__array( StrC type )
 
 		Code remove_at = def_function( name(remove_at), def_param( t_uw, name(idx)), t_void
 			, def_execution( code(
-				Header* header = & get_header();
+				Header* header = get_header();
 				ZPL_ASSERT( idx < header->Num );
 
 				mem_move( header + idx, header + idx + 1, sizeof( Type ) * ( header->Num - idx - 1 ) );
@@ -201,7 +203,7 @@ Code gen__array( StrC type )
 
 		Code reserve = def_function( name(reserve), def_param( t_uw, name(new_capacity)), t_bool
 			, def_execution( code(
-				Header& header = get_header();
+				Header& header = * get_header();
 
 				if ( header.Capacity < new_capacity )
 					return set_capacity( new_capacity );
@@ -212,15 +214,17 @@ Code gen__array( StrC type )
 
 		Code resize = def_function( name(resize), def_param( t_uw, name(num)), t_bool
 			, def_execution( code(
-				Header& header = get_header();
+				Header* header = get_header();
 
-				if ( num > header.Capacity )
+				if ( num > header->Capacity )
 				{
-					if ( ! grow( header.Capacity ))
+					if ( ! grow( header->Capacity ))
 						return false;
+
+					header = get_header();
 				}
 
-				header.Num = num;
+				header->Num = num;
 				return true;
 			))
 		);
@@ -228,7 +232,7 @@ Code gen__array( StrC type )
 		Code set_capacity;
 		{
 			Code body = def_execution( code(
-				Header& header = get_header();
+				Header& header = * get_header();
 
 				if ( new_capacity == header.Capacity )
 					return true;
@@ -244,13 +248,11 @@ Code gen__array( StrC type )
 
 				mem_move( new_header, & header, sizeof( Header ) + sizeof(Type) * header.Num );
 
-				new_header->Allocator = header.Allocator;
-				new_header->Num       = header.Num;
-				new_header->Capacity  = new_capacity;
+				new_header->Capacity = new_capacity;
 
-				zpl::free( header.Allocator, & header );
+				gen::free( header.Allocator, & header );
 
-				Data = (Type*) new_header + 1;
+				Data = rcast( Type*, new_header + 1);
 
 				return true;
 			));
@@ -323,16 +325,18 @@ void gen__array_request( StrC type, StrC dep = {} )
 	GenArrayRequest request = { dep, type };
 	GenArrayRequests.append( request );
 }
-#define gen_array( type ) gen__array_request( { txt_to_StrC(type) } )
+#define gen_array( type ) gen__array_request( code(type) )
 
 u32 gen_array_file()
 {
 	Builder
 	gen_array_file;
-	gen_array_file.open( "array.NonParsed.gen.hpp" );
+	gen_array_file.open( "array.Upfront.gen.hpp" );
 
-	Code include_zpl = def_include( StrC::from("Bloat.hpp") );
+	Code include_zpl = def_include( txt_StrC("Bloat.hpp") );
 	gen_array_file.print( include_zpl );
+
+	gen_array_file.print( def_using_namespace( name(gen)));
 
 	Code array_base = gen__array_base();
 	gen_array_file.print( array_base );

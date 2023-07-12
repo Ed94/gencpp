@@ -208,7 +208,7 @@ struct GenBufferRequest
 };
 Array<GenBufferRequest> GenBufferRequests;
 
-void gen__buffer_request( StrC type, sw size, StrC dep = {} )
+void gen__buffer_request( StrC type, StrC dep = {} )
 {
 	do_once_start
 		GenBufferRequests = Array<GenBufferRequest>::init( Memory::GlobalAllocator );
@@ -226,18 +226,20 @@ void gen__buffer_request( StrC type, sw size, StrC dep = {} )
 			return;
 	}
 
-	GenBufferRequest request = { dep, type, size};
+	GenBufferRequest request = { dep, type};
 	GenBufferRequests.append( request );
 }
-#define gen_buffer( type ) gen__buffer_request( { txt_to_StrC(type) }, sizeof( type ))
+#define gen_buffer( type ) gen__buffer_request( code(type))
 
 u32 gen_buffer_file()
 {
 	Builder
 	gen_buffer_file;
-	gen_buffer_file.open( "buffer.NonParsed.gen.hpp" );
+	gen_buffer_file.open( "buffer.Upfront.gen.hpp" );
 
-	gen_buffer_file.print( def_include( StrC::from("Bloat.hpp")) );
+	gen_buffer_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_buffer_file.print( def_using_namespace( name(gen)) );
+
 	gen_buffer_file.print( gen__buffer_base() );
 
 	GenBufferRequest* current = GenBufferRequests;

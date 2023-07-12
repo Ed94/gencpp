@@ -50,7 +50,7 @@
     <ClInclude Include="thirdparty\zpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test\NonParsed\Sanity.hpp">
+    <ClInclude Include="test\Upfront\Sanity.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

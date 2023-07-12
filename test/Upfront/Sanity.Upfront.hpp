@@ -7,17 +7,17 @@ u32 gen_sanity()
 {
 	Builder
 	gen_sanity_file;
-	gen_sanity_file.open("./sanity.NonParsed.gen.hpp");
+	gen_sanity_file.open("./sanity.Upfront.gen.hpp");
 
 	// Comment
 	{
-		Code comment_test = def_comment( StrC::from("Sanity check: def_comment test") );
+		Code comment_test = def_comment( txt_StrC("Sanity check: def_comment test") );
 
 		gen_sanity_file.print(comment_test);
 	}
 
 	gen_sanity_file.print_fmt("\n");
-	gen_sanity_file.print( def_comment( StrC::from(
+	gen_sanity_file.print( def_comment( txt_StrC(
 		"The following will show a series of base cases for the gen api.\n"
 	)));
 
@@ -26,7 +26,7 @@ u32 gen_sanity()
 		Code fwd = def_class( name(TestEmptyClass) );
 		Code empty_body;
 		{
-			Code cmt  = def_comment( StrC::from("Empty class body") );
+			Code cmt  = def_comment( txt_StrC("Empty class body") );
 			Code body = def_class_body( 1, cmt );
 
 			empty_body = def_class( name(TestEmptyClass), body );
@@ -74,7 +74,7 @@ u32 gen_sanity()
 	// External Linkage
 	{
 		Code body = def_extern_link_body( 1
-			, def_comment( StrC::from("Empty extern body") )
+			, def_comment( txt_StrC("Empty extern body") )
 		);
 
 		Code c_extern = def_extern_link( name(C), body );
@@ -102,7 +102,7 @@ u32 gen_sanity()
 		Code def;
 		{
 			Code body = def_function_body( 1
-				, def_comment( StrC::from("Empty function body") )
+				, def_comment( txt_StrC("Empty function body") )
 			);
 
 			def = def_function( name(test_function), __, __, body );
@@ -116,7 +116,7 @@ u32 gen_sanity()
 
 	// Include
 	{
-		Code include = def_include( StrC::from("../DummyInclude.hpp") );
+		Code include = def_include( txt_StrC("../DummyInclude.hpp") );
 
 		gen_sanity_file.print(include);
 	}
@@ -144,7 +144,7 @@ u32 gen_sanity()
 		Code namespace_def;
 		{
 			Code body = def_namespace_body( 1
-				, def_comment( StrC::from("Empty namespace body") )
+				, def_comment( txt_StrC("Empty namespace body") )
 			);
 
 			namespace_def = def_namespace( name(TestNamespace), body );
@@ -215,7 +215,7 @@ u32 gen_sanity()
 		Code def, def2;
 		{
 			Code body = def_function_body( 1
-				, def_comment( StrC::from("Empty function body") )
+				, def_comment( txt_StrC("Empty function body") )
 			);
 
 			Code params = def_params( 2
@@ -261,7 +261,7 @@ u32 gen_sanity()
 		Code fwd = def_class( name(TestEmptyStruct) );
 		Code empty_body;
 		{
-			Code cmt  = def_comment( StrC::from("Empty struct body") );
+			Code cmt  = def_comment( txt_StrC("Empty struct body") );
 			Code body = def_class_body( 1, cmt );
 
 			empty_body = def_class( name(TestEmptyStruct), body );
@@ -276,7 +276,7 @@ u32 gen_sanity()
 	// Union
 	{
 		Code body = def_union_body( 1
-			, def_comment( StrC::from("Empty union body") )
+			, def_comment( txt_StrC("Empty union body") )
 		);
 
 		Code def = def_union( name(TestEmptyUnion), body );
@@ -314,7 +314,7 @@ u32 gen_sanity()
 
 		Code tmpl = def_template(  def_param( t_class, name(Type) )
 			, def_function( name(test_template), def_param( t_Type, name(a) ), __
-				, def_function_body(1, def_comment( StrC::from("Empty template function body")))
+				, def_function_body(1, def_comment( txt_StrC("Empty template function body")))
 			)
 		);
 
@@ -323,7 +323,7 @@ u32 gen_sanity()
 
 	gen_sanity_file.print_fmt("\n");
 
-	gen_sanity_file.print( def_comment( StrC::from(
+	gen_sanity_file.print( def_comment( txt_StrC(
 		"End of base case tests.\n"
 	)));
 

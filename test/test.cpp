@@ -12,6 +12,7 @@
 
 using namespace gen;
 
+// TODO : Rewrite this to include both upfront and parsed testing.
 
 int gen_main()
 {
@@ -41,7 +42,7 @@ int gen_main()
 		using u16 = unsigned short;
 	)));
 
-	soa_test.print( def_include( StrC::from("Bloat.hpp")));
+	soa_test.print( def_include( txt_StrC("Bloat.hpp")));
 
 	soa_test.print( def_using_namespace( name(gen) ) );
 
@@ -55,7 +56,7 @@ int gen_main()
 				u64 D;
 			};
 		)),
-		true
+		false
 	));
 
 	soa_test.write();

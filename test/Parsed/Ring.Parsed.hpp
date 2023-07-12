@@ -10,7 +10,7 @@ Code gen__ring( StrC type )
 {
 	static Code t_allocator_info = def_type( name(AllocatorInfo) );
 
-	String name;
+	StringCached name;
 	{
 		char const* name_str = str_fmt_buf( "Ring_%s\0", type.Ptr );
 		s32         name_len = str_len( name_str );
@@ -18,8 +18,10 @@ Code gen__ring( StrC type )
 		name = get_cached_string({ name_len, name_str });
 	};
 
-	Code ring = parse_struct( token_fmt(
-		txt(
+	StrC buffer_name = to_StrC( str_fmt_buf( "Buffer_%s", type.Ptr ));
+
+	Code ring = parse_struct( token_fmt( "RingName", (StrC)name, "type", type, "BufferName", buffer_name,
+		stringize(
 			struct <RingName>
 			{
 				using Type = <type>;
@@ -87,11 +89,7 @@ Code gen__ring( StrC type )
 				uw            Tail;
 				<BufferName>  Buffer;
 			};
-		),
-		3
-		, "RingName",   (char const*) name
-		, "type",       (char const*) type
-		, "BufferName", str_fmt_buf( "Buffer_%s", type.Ptr )
+		)
 	));
 
 	return ring;
@@ -104,7 +102,7 @@ struct GenRingRequest
 };
 Array<GenRingRequest> GenRingRequests;
 
-void gen__ring_request( StrC type, sw size, StrC dep = {} )
+void gen__ring_request( StrC type, StrC dep = {} )
 {
 	do_once_start
 		GenRingRequests = Array<GenRingRequest>::init( Memory::GlobalAllocator );
@@ -128,7 +126,7 @@ void gen__ring_request( StrC type, sw size, StrC dep = {} )
 	GenRingRequest request = { dep, type };
 	GenRingRequests.append( request );
 }
-#define gen_ring( type ) gen__ring_request( { txt_to_StrC(type) }, sizeof( type ))
+#define gen_ring( type ) gen__ring_request( code(type)  )
 
 u32 gen_ring_file()
 {
@@ -136,9 +134,11 @@ u32 gen_ring_file()
 	gen_ring_file;
 	gen_ring_file.open( "ring.Parsed.gen.hpp" );
 
-	gen_ring_file.print( def_include( StrC::from("Bloat.hpp")) );
-	gen_ring_file.print( def_include( StrC::from("buffer.Parsed.gen.hpp")) );
+	gen_ring_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_ring_file.print( def_include( txt_StrC("buffer.Parsed.gen.hpp")) );
 	// gen_ring_file.print( gen__ring_base() );
+
+	gen_ring_file.print( def_using_namespace( name(gen)));
 
 	GenRingRequest* current = GenRingRequests;
 	s32 left = GenRingRequests.num();

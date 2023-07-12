@@ -1097,7 +1097,7 @@ namespace gen
 		}
 
 		Code::Global          = make_code();
-		Code::Global->Name    = get_cached_string( name("Global Code") );
+		Code::Global->Name    = get_cached_string( txt_StrC("Global Code") );
 		Code::Global->Content = Code::Global->Name;
 
 		Code::Invalid = make_code();
@@ -1139,34 +1139,34 @@ namespace gen
 
 		access_private       = make_code();
 		access_private->Type = ECode::Access_Private;
-		access_private->Name = get_cached_string( StrC::from("private:") );
+		access_private->Name = get_cached_string( txt_StrC("private:") );
 		access_private.set_global();
 
 		access_protected = make_code();
 		access_protected->Type = ECode::Access_Protected;
-		access_protected->Name = get_cached_string( StrC::from("protected:") );
+		access_protected->Name = get_cached_string( txt_StrC("protected:") );
 		access_protected.set_global();
 
 		access_public = make_code();
 		access_public->Type = ECode::Access_Public;
-		access_public->Name = get_cached_string( StrC::from("public:") );
+		access_public->Name = get_cached_string( txt_StrC("public:") );
 		access_public.set_global();
 
 		module_global_fragment          = make_code();
 		module_global_fragment->Type    = ECode::Untyped;
-		module_global_fragment->Name    = get_cached_string( StrC::from("module;") );
+		module_global_fragment->Name    = get_cached_string( txt_StrC("module;") );
 		module_global_fragment->Content = module_global_fragment->Name;
 		module_global_fragment.set_global();
 
 		module_private_fragment          = make_code();
 		module_private_fragment->Type    = ECode::Untyped;
-		module_private_fragment->Name    = get_cached_string( StrC::from("module : private;") );
+		module_private_fragment->Name    = get_cached_string( txt_StrC("module : private;") );
 		module_private_fragment->Content = module_private_fragment->Name;
 		module_private_fragment.set_global();
 
 		pragma_once          = make_code();
 		pragma_once->Type    = ECode::Untyped;
-		pragma_once->Name    = get_cached_string( StrC::from("#pragma once") );
+		pragma_once->Name    = get_cached_string( txt_StrC("#pragma once") );
 		pragma_once->Content = pragma_once->Name;
 		pragma_once.set_global();
 
@@ -1733,13 +1733,13 @@ namespace gen
 	{                                                                                               \
 		if ( Name_.Len <= 0 )                                                                       \
 		{                                                                                           \
-			log_failure( "gen::" txt(Context_) ": Invalid name length provided - %d",  Name_.Len ); \
+			log_failure( "gen::" stringize(Context_) ": Invalid name length provided - %d",  Name_.Len ); \
 			return Code::Invalid;                                                                   \
 		}                                                                                           \
                                                                                                     \
 		if ( Name_.Ptr == nullptr )                                                                 \
 		{                                                                                           \
-			log_failure( "gen::" txt(Context_) ": name is null" );                                  \
+			log_failure( "gen::" stringize(Context_) ": name is null" );                                  \
 			return Code::Invalid;                                                                   \
 		}                                                                                           \
 	}
@@ -1747,7 +1747,7 @@ namespace gen
 #	define null_check( Context_, Code_ )                                              \
 		if ( ! Code_ )                                                                \
 		{                                                                             \
-			log_failure( "gen::" txt(Context_) ": " txt(Code_) " provided is null" ); \
+			log_failure( "gen::" stringize(Context_) ": " stringize(Code_) " provided is null" ); \
 			return Code::Invalid;                                                     \
 		}
 
@@ -1755,13 +1755,13 @@ namespace gen
 	{                                                                                   \
 		if ( ! Code_ )                                                                  \
 		{                                                                               \
-			log_failure( "gen::" txt(Context_) ": " txt(Code_) " provided is null" );   \
+			log_failure( "gen::" stringize(Context_) ": " stringize(Code_) " provided is null" );   \
 			return Code::Invalid;                                                       \
 		}                                                                               \
                                                                                         \
 		if ( Code_->is_invalid() )                                                      \
 		{                                                                               \
-			log_failure("gen::" txt(Context_) ": " txt(Code_) " provided is invalid" ); \
+			log_failure("gen::" stringize(Context_) ": " stringize(Code_) " provided is invalid" ); \
 			return Code::Invalid;                                                       \
 		}                                                                               \
 	}
@@ -2633,7 +2633,7 @@ namespace gen
 																            \
 	if ( num <= 0 )                                                         \
 	{                                                                       \
-		log_failure("gen::" txt(Name_) ": num cannot be zero or negative"); \
+		log_failure("gen::" stringize(Name_) ": num cannot be zero or negative"); \
 		return Code::Invalid;                                               \
 	}
 
@@ -2642,7 +2642,7 @@ namespace gen
 																             \
 	if ( num <= 0 )                                                          \
 	{                                                                        \
-		log_failure("gen::" txt(Name_) ": num cannot be zero or negative");  \
+		log_failure("gen::" stringize(Name_) ": num cannot be zero or negative");  \
 		return Code::Invalid;                                                \
 	}                                                                        \
                                                                              \
@@ -2660,7 +2660,7 @@ namespace gen
                                                                             \
 		if ( ! entry )                                                      \
 		{                                                                   \
-			log_failure("gen::" txt(Name_) ": Provided an null entry");     \
+			log_failure("gen::" stringize(Name_) ": Provided an null entry");     \
 			return Code::Invalid;                                           \
 		}                                                                   \
                                                                             \
@@ -2674,7 +2674,7 @@ namespace gen
                                                                             \
 		if ( ! entry )                                                      \
 		{                                                                   \
-			log_failure("gen::" txt(Name_) ": Provided an null entry");     \
+			log_failure("gen::" stringize(Name_) ": Provided an null entry");     \
 			return Code::Invalid;                                           \
 		}                                                                   \
                                                                             \
@@ -2682,7 +2682,7 @@ namespace gen
 		{
 
 #	define def_body_code_validation_end( Name_ )                                                        \
-				log_failure("gen::" txt(Name_) ": Entry type is not allowed: %s", entry->debug_str() ); \
+				log_failure("gen::" stringize(Name_) ": Entry type is not allowed: %s", entry->debug_str() ); \
 				return Code::Invalid;                                                                   \
                                                                                                         \
 			default:                                                                                    \
@@ -3451,7 +3451,7 @@ namespace gen
 			local_persist thread_local
 			Array<Token> Tokens = { nullptr };
 
-			s32         left    = content.Len -1;
+			s32         left    = content.Len;
 			char const* scanner = content.Ptr;
 
 			char const* word        = scanner;
@@ -3898,16 +3898,16 @@ namespace gen
 	}
 
 #pragma region Helper Macros
-#	define check_parse_args( func, def )                                 \
-	if ( def.Len <= 0 )                                                  \
-	{                                                                    \
-		log_failure( "gen::" txt(func) ": length must greater than 0" ); \
-		return Code::Invalid;                                            \
-	}                                                                    \
-	if ( def.Ptr == nullptr )                                            \
-	{                                                                    \
-		log_failure( "gen::" txt(func) ": def was null" );               \
-		return Code::Invalid;                                            \
+#	define check_parse_args( func, def )                                           \
+	if ( def.Len <= 0 )                                                            \
+	{                                                                              \
+		log_failure( "gen::" stringize(func) ": length must greater than 0" ); \
+		return Code::Invalid;                                                      \
+	}                                                                              \
+	if ( def.Ptr == nullptr )                                                      \
+	{                                                                              \
+		log_failure( "gen::" stringize(func) ": def was null" );               \
+		return Code::Invalid;                                                      \
 	}
 
 #	define nexttok 	    toks.next()
@@ -3950,13 +3950,13 @@ namespace gen
 
 			if ( left == 0 )
 			{
-				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", txt(parse_typedef) );
+				log_failure( "%s: Error, unexpected end of typedef definition ( '[]' scope started )", stringize(parse_typedef) );
 				return Code::Invalid;
 			}
 
 			if ( currtok.Type == TokType::BraceSquare_Close )
 			{
-				log_failure( "%s: Error, empty array expression in typedef definition", txt(parse_typedef) );
+				log_failure( "%s: Error, empty array expression in typedef definition", stringize(parse_typedef) );
 				return Code::Invalid;
 			}
 
@@ -3973,13 +3973,13 @@ namespace gen
 
 			if ( left == 0 )
 			{
-				log_failure( "%s: Error, unexpected end of type definition, expected ]", txt(parse_typedef) );
+				log_failure( "%s: Error, unexpected end of type definition, expected ]", stringize(parse_typedef) );
 				return Code::Invalid;
 			}
 
 			if ( currtok.Type != TokType::BraceSquare_Close )
 			{
-				log_failure( "%s: Error, expected ] in type definition, not %s", txt(parse_typedef), str_tok_type( currtok.Type ) );
+				log_failure( "%s: Error, expected ] in type definition, not %s", stringize(parse_typedef), str_tok_type( currtok.Type ) );
 				return Code::Invalid;
 			}
 
@@ -4179,12 +4179,12 @@ namespace gen
 	{
 		using namespace Parser;
 
-		Code params = parse_params( toks, txt(parse_function) );
+		Code params = parse_params( toks, stringize(parse_function) );
 
 		Code body = { nullptr };
 		if ( check( TokType::BraceCurly_Open ) )
 		{
-			body = parse_function_body( toks, txt(parse_function) );
+			body = parse_function_body( toks, stringize(parse_function) );
 			if ( body == Code::Invalid )
 				return Code::Invalid;
 		}
@@ -4438,13 +4438,13 @@ namespace gen
 		eat( TokType::Operator );
 
 		// Parse Params
-		Code params = parse_params( toks, txt(parse_operator) );
+		Code params = parse_params( toks, stringize(parse_operator) );
 
 		// Parse Body
 		Code body = { nullptr };
 		if ( check( TokType::BraceCurly_Open ) )
 		{
-			body = parse_function_body( toks, txt(parse_function) );
+			body = parse_function_body( toks, stringize(parse_function) );
 			if ( body == Code::Invalid )
 				return Code::Invalid;
 		}
@@ -4471,7 +4471,7 @@ namespace gen
 	{
 		using namespace Parser;
 
-		Code array_expr = parse_array_decl( toks, txt(parse_variable) );
+		Code array_expr = parse_array_decl( toks, stringize(parse_variable) );
 
 		Code expr = Code::Invalid;
 
@@ -4561,7 +4561,7 @@ namespace gen
 
 		Code result = Code::Invalid;
 
-		Code type = parse_type( toks, txt(parse_variable) );
+		Code type = parse_type( toks, stringize(parse_variable) );
 
 		if ( type == Code::Invalid )
 			return Code::Invalid;
@@ -4569,7 +4569,7 @@ namespace gen
 		if ( check( TokType::Operator) )
 		{
 			// Dealing with an operator overload
-			result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, type, toks, txt(parse_template) );
+			result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, type, toks, stringize(parse_template) );
 		}
 		else
 		{
@@ -4580,7 +4580,7 @@ namespace gen
 			{
 				// Dealing with a function
 
-				result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, txt(parse_template) );
+				result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, stringize(parse_template) );
 			}
 			else
 			{
@@ -4591,7 +4591,7 @@ namespace gen
 				}
 
 				// Dealing with a variable
-				result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, txt(parse_template) );
+				result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, stringize(parse_template) );
 			}
 		}
 
@@ -4746,7 +4746,7 @@ namespace gen
 							break;
 
 							default:
-								log_failure( "gen::parse_class_struct_body: invalid specifier " txt(spec) " for variable" );
+								log_failure( "gen::parse_class_struct_body: invalid specifier " "%s" " for variable", ESpecifier::to_str(spec) );
 								return Code::Invalid;
 						}
 
@@ -4948,7 +4948,7 @@ namespace gen
 
 				case TokType::Decl_Extern_Linkage:
 					if ( which == Extern_Linkage_Body )
-						log_failure( "gen::parse_extern_link_body: nested extern linkage" );
+						log_failure( "gen::parse_global_nspace: nested extern linkage" );
 
 					member = parse_extern_link_body( toks, context );
 				break;
@@ -4979,7 +4979,7 @@ namespace gen
 
 				case TokType::Module_Export:
 					if ( which == Export_Body )
-						log_failure( "gen::parse_extern_link_body: nested export declaration" );
+						log_failure( "gen::parse_global_nspace: nested export declaration" );
 
 					member = parse_export_body( toks, context );
 				break;
@@ -5054,7 +5054,7 @@ namespace gen
 							break;
 
 							default:
-								log_failure( "gen::parse_class_struct_body: invalid specifier " txt(spec) " for variable" );
+								log_failure( "gen::parse_global_nspace: invalid specifier " "%s" " for variable", ESpecifier::to_str(spec) );
 								return Code::Invalid;
 						}
 
@@ -5110,7 +5110,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_class_struct( TokType::Decl_Class, toks, txt(parse_class) );
+		return parse_class_struct( TokType::Decl_Class, toks, stringize(parse_class) );
 	}
 
 	internal
@@ -5155,7 +5155,7 @@ namespace gen
 		{
 			eat( TokType::Assign_Classifer );
 
-			type = parse_type( toks, txt(parse_enum) );
+			type = parse_type( toks, stringize(parse_enum) );
 			if ( type == Code::Invalid )
 				return Code::Invalid;
 		}
@@ -5229,7 +5229,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_enum( toks, txt(parse_enum) );
+		return parse_enum( toks, stringize(parse_enum) );
 	}
 
 	internal inline
@@ -5247,7 +5247,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_export_body( toks, txt(parse_export_body) );
+		return parse_export_body( toks, stringize(parse_export_body) );
 	}
 
 	internal inline
@@ -5295,7 +5295,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_extern_link( toks, txt(parse_extern_link) );
+		return parse_extern_link( toks, stringize(parse_extern_link) );
 	}
 
 	internal
@@ -5309,7 +5309,7 @@ namespace gen
 		Code function = { nullptr };
 
 		// Type declaration or return type
-		Code type = parse_type( toks, txt(parse_friend) );
+		Code type = parse_type( toks, stringize(parse_friend) );
 		if ( type == Code::Invalid )
 			return Code::Invalid;
 
@@ -5317,10 +5317,10 @@ namespace gen
 		if ( currtok.Type == TokType::Identifier )
 		{
 			// Name
-			Token name = parse_identifier( toks, txt(parse_friend) );
+			Token name = parse_identifier( toks, stringize(parse_friend) );
 
 			// Parameter list
-			Code params = parse_params( toks, txt(parse_friend) );
+			Code params = parse_params( toks, stringize(parse_friend) );
 
 			function       = make_code();
 			function->Type = Function_Fwd;
@@ -5355,7 +5355,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_friend( toks, txt(parse_friend) );
+		return parse_friend( toks, stringize(parse_friend) );
 	}
 
 	internal
@@ -5388,7 +5388,7 @@ namespace gen
 				break;
 
 				default:
-					log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
+					log_failure( "gen::parse_functon: invalid specifier " "%s" " for functon", ESpecifier::to_str(spec) );
 					return Code::Invalid;
 			}
 
@@ -5402,11 +5402,11 @@ namespace gen
 			specifiers = def_specifiers( num_specifiers, specs_found );
 		}
 
-		Code ret_type = parse_type( toks, txt(parse_function) );
+		Code ret_type = parse_type( toks, stringize(parse_function) );
 		if ( ret_type == Code::Invalid )
 			return Code::Invalid;
 
-		Token name = parse_identifier( toks, txt(parse_function) );
+		Token name = parse_identifier( toks, stringize(parse_function) );
 		if ( ! name )
 			return Code::Invalid;
 
@@ -5425,7 +5425,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_functon( toks, txt(parse_function) );
+		return parse_functon( toks, stringize(parse_function) );
 	}
 
 	Code parse_global_body( StrC def )
@@ -5437,7 +5437,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_global_nspace( ECode::Global_Body, toks, txt(parse_global_body) );
+		return parse_global_nspace( ECode::Global_Body, toks, stringize(parse_global_body) );
 	}
 
 	internal
@@ -5446,9 +5446,9 @@ namespace gen
 		using namespace Parser;
 		eat( TokType::Decl_Namespace );
 
-		Token name = parse_identifier( toks, txt(parse_namespace) );
+		Token name = parse_identifier( toks, stringize(parse_namespace) );
 
-		Code body = parse_global_nspace( ECode::Namespace_Body, toks, txt(parse_namespace) );
+		Code body = parse_global_nspace( ECode::Namespace_Body, toks, stringize(parse_namespace) );
 		if ( body == Code::Invalid )
 			return Code::Invalid;
 
@@ -5471,7 +5471,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_namespace( toks, txt(parse_namespace) );
+		return parse_namespace( toks, stringize(parse_namespace) );
 	}
 
 	internal
@@ -5500,7 +5500,7 @@ namespace gen
 				break;
 
 				default:
-					log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
+					log_failure( "gen::parse_operator: invalid specifier " "%s" " for operator", ESpecifier::to_str(spec) );
 					return Code::Invalid;
 			}
 
@@ -5515,7 +5515,7 @@ namespace gen
 		}
 
 		// Parse Return Type
-		Code ret_type = parse_type( toks, txt(parse_operator) );
+		Code ret_type = parse_type( toks, stringize(parse_operator) );
 
 		Code result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, ret_type, toks, context );
 		return result;
@@ -5530,7 +5530,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_operator( toks, txt(parse_operator) );
+		return parse_operator( toks, stringize(parse_operator) );
 	}
 
 	Code parse_operator_cast( Parser::TokArray& toks, char const* context )
@@ -5539,7 +5539,7 @@ namespace gen
 
 		eat( TokType::Decl_Operator );
 
-		Code type = parse_type( toks, txt(parse_operator_cast) );
+		Code type = parse_type( toks, stringize(parse_operator_cast) );
 
 		eat( TokType::Capture_Start );
 		eat( TokType::Capture_End );
@@ -5597,13 +5597,13 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_operator_cast( toks, txt(parse_operator_cast) );
+		return parse_operator_cast( toks, stringize(parse_operator_cast) );
 	}
 
 	internal inline
 	Code parse_struct( Parser::TokArray& toks, char const* context )
 	{
-		return parse_class_struct( Parser::TokType::Decl_Struct, toks, txt(parse_struct) );
+		return parse_class_struct( Parser::TokType::Decl_Struct, toks, stringize(parse_struct) );
 	}
 
 	Code parse_struct( StrC def )
@@ -5615,7 +5615,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_class_struct( TokType::Decl_Struct, toks, txt(parse_struct) );
+		return parse_class_struct( TokType::Decl_Struct, toks, stringize(parse_struct) );
 	}
 
 	internal
@@ -5629,7 +5629,7 @@ namespace gen
 
 		eat( TokType::Decl_Template );
 
-		Code params = parse_params( toks, txt(parse_template), UseTemplateCapture );
+		Code params = parse_params( toks, stringize(parse_template), UseTemplateCapture );
 		if ( params == Code::Invalid )
 			return Code::Invalid;
 
@@ -5639,19 +5639,19 @@ namespace gen
 		{
 			if ( check( TokType::Decl_Class ) )
 			{
-				definition = parse_class( toks, txt(parse_template) );
+				definition = parse_class( toks, stringize(parse_template) );
 				break;
 			}
 
 			if ( check( TokType::Decl_Struct ) )
 			{
-				definition = parse_enum( toks, txt(parse_template) );
+				definition = parse_enum( toks, stringize(parse_template) );
 				break;
 			}
 
 			if ( check( TokType::Decl_Using ))
 			{
-				definition = parse_using( toks, txt(parse_template) );
+				definition = parse_using( toks, stringize(parse_template) );
 				break;
 			}
 
@@ -5693,7 +5693,7 @@ namespace gen
 					break;
 
 					default:
-						log_failure( "gen::parse_template: invalid specifier " txt(spec) " for variable or function" );
+						log_failure( "gen::parse_template: invalid specifier %s for variable or function", ESpecifier::to_str( spec ) );
 						return Code::Invalid;
 				}
 
@@ -5711,7 +5711,7 @@ namespace gen
 				specifiers = def_specifiers( num_specifiers, specs_found );
 			}
 
-			definition = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, txt(parse_template) );
+			definition = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, stringize(parse_template) );
 			break;
 		}
 
@@ -5734,7 +5734,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_template( toks, txt(parse_template) );
+		return parse_template( toks, stringize(parse_template) );
 	}
 
 	internal
@@ -5915,7 +5915,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		Code result = parse_type( toks, txt(parse_type) );
+		Code result = parse_type( toks, stringize(parse_type) );
 
 		return result;
 	}
@@ -5931,7 +5931,7 @@ namespace gen
 
 		eat( TokType::Decl_Typedef );
 
-		type = parse_type( toks, txt(parse_typedef) );
+		type = parse_type( toks, stringize(parse_typedef) );
 
 		if ( ! check( TokType::Identifier ) )
 		{
@@ -5942,7 +5942,7 @@ namespace gen
 		name = currtok;
 		eat( TokType::Identifier );
 
-		array_expr = parse_array_decl( toks, txt(parse_typedef) );
+		array_expr = parse_array_decl( toks, stringize(parse_typedef) );
 
 		eat( TokType::Statement_End );
 
@@ -5970,7 +5970,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_typedef( toks, txt(parse_typedef) );
+		return parse_typedef( toks, stringize(parse_typedef) );
 	}
 
 	internal
@@ -6002,7 +6002,7 @@ namespace gen
 
 		while ( ! check( TokType::BraceCurly_Close ) )
 		{
-			Code entry = parse_variable( toks, txt(parse_union) );
+			Code entry = parse_variable( toks, stringize(parse_union) );
 
 			if ( entry )
 				body->add_entry( entry );
@@ -6036,7 +6036,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_union( toks, txt(parse_union) );
+		return parse_union( toks, stringize(parse_union) );
 	}
 
 	internal
@@ -6072,10 +6072,10 @@ namespace gen
 
 			eat( TokType::Operator );
 
-			type = parse_type( toks, txt(parse_typedef) );
+			type = parse_type( toks, stringize(parse_typedef) );
 		}
 
-		array_expr = parse_array_decl( toks, txt(parse_typedef) );
+		array_expr = parse_array_decl( toks, stringize(parse_typedef) );
 
 		eat( TokType::Statement_End );
 
@@ -6104,7 +6104,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_using( toks, txt(parse_using) );
+		return parse_using( toks, stringize(parse_using) );
 	}
 
 	internal
@@ -6144,7 +6144,7 @@ namespace gen
 				break;
 
 				default:
-					log_failure( "gen::parse_variable: invalid specifier " txt(spec) " for variable" );
+					log_failure( "gen::parse_variable: invalid specifier %s for variable", ESpecifier::to_str( spec ) );
 					return Code::Invalid;
 			}
 
@@ -6162,7 +6162,7 @@ namespace gen
 			specifiers = def_specifiers( num_specifiers, specs_found );
 		}
 
-		Code type = parse_type( toks, txt(parse_variable) );
+		Code type = parse_type( toks, stringize(parse_variable) );
 
 		if ( type == Code::Invalid )
 			return Code::Invalid;
@@ -6170,7 +6170,7 @@ namespace gen
 		name = currtok;
 		eat( TokType::Identifier );
 
-		Code result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, txt(parse_variable) );
+		Code result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, stringize(parse_variable) );
 
 		return result;
 	}
@@ -6184,7 +6184,7 @@ namespace gen
 		if ( toks.Arr == nullptr )
 			return Code::Invalid;
 
-		return parse_variable( toks, txt(parse_variable) );
+		return parse_variable( toks, stringize(parse_variable) );
 	}
 
 	// Undef helper macros
@@ -6197,42 +6197,31 @@ namespace gen
 #pragma endregion Parsing Constructors
 
 #pragma region Untyped Constructors
-	struct TokEntry
-	{
-		char const* Str;
-		sw          Length;
-	};
-
-	sw token_fmt_va( char* buf, uw buf_size, char const* fmt, s32 num_tokens, va_list va )
+	sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 	{
 		char const* buf_begin = buf;
 		sw          remaining = buf_size;
 
-		HashTable<TokEntry> tok_map;
+		HashTable<StrC> tok_map;
 		{
 			// TODO : Switch this to use an arena that makes use of the stack (cap the size of the token table to around 4096 bytes)
-			tok_map = HashTable<TokEntry>::init( Memory::GlobalAllocator );
+			tok_map = HashTable<StrC>::init( Memory::GlobalAllocator );
 
-			s32 left = num_tokens;
+			s32 left = num_tokens - 1;
 
 			while ( left-- )
 			{
 				char const* token = va_arg( va, char const* );
-				char const* value = va_arg( va, char const* );
+				StrC        value = va_arg( va, StrC );
 
-				TokEntry entry
-				{
-					value,
-					str_len(value, (sw)128)
-				};
+				u32 key = crc32( token, str_len(token) );
 
-				u32 key = crc32( token, str_len(token, 32) );
-
-				tok_map.set( key, entry );
+				tok_map.set( key, value );
 			}
 		}
 
-		char current = *fmt;
+		char const* fmt     = va_arg( va, char const* );
+		char        current = *fmt;
 
 		while ( current )
 		{
@@ -6263,12 +6252,12 @@ namespace gen
 				char const* token = fmt + 1;
 
 				u32       key   = crc32( token, tok_len );
-				TokEntry* value = tok_map.get( key );
+				StrC*     value = tok_map.get( key );
 
 				if ( value )
 				{
-					sw          left = value->Length;
-					char const* str  = value->Str;
+					sw          left = value->Len;
+					char const* str  = value->Ptr;
 
 					while ( left-- )
 					{
@@ -6295,7 +6284,7 @@ namespace gen
 
 		tok_map.clear();
 
-		sw result = buf_size - remaining + 1;
+		sw result = buf_size - remaining;
 
 		return result;
 	}
@@ -6330,21 +6319,21 @@ namespace gen
 		return result;
 	}
 
-	Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... )
+	Code untyped_token_fmt( s32 num_tokens, ... )
 	{
 		local_persist thread_local
 		char buf[ZPL_PRINTF_MAXLEN] = { 0 };
 
 		va_list va;
-		va_start(va, fmt);
-		sw length = token_fmt_va(buf, ZPL_PRINTF_MAXLEN, fmt, num_tokens, va);
+		va_start(va, num_tokens);
+		sw length = token_fmt_va(buf, ZPL_PRINTF_MAXLEN, num_tokens, va);
 		va_end(va);
 
 		Code
 		result          = make_code();
-		result->Name    = get_cached_string( { str_len(fmt, MaxNameLength), fmt } );
+		result->Name    = get_cached_string( { length, buf } );
 		result->Type    = ECode::Untyped;
-		result->Content = get_cached_string( { length, buf } );
+		result->Content = result->Name;
 
 		return result;
 	}

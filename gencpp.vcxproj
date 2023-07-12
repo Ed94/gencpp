@@ -113,12 +113,12 @@
     <ClInclude Include="project\Bloat.hpp" />
     <ClInclude Include="project\gen.hpp" />
     <ClInclude Include="test\DummyInclude.hpp" />
-    <ClInclude Include="test\NonParsed\Array.NonParsed.hpp" />
-    <ClInclude Include="test\NonParsed\Buffer.NonParsed.hpp" />
-    <ClInclude Include="test\NonParsed\HashTable.NonParsed.hpp" />
-    <ClInclude Include="test\NonParsed\Memory.NonParsed.hpp" />
-    <ClInclude Include="test\NonParsed\Ring.NonParsed.hpp" />
-    <ClInclude Include="test\NonParsed\Sanity.NonParsed.hpp" />
+    <ClInclude Include="test\Upfront\Array.Upfront.hpp" />
+    <ClInclude Include="test\Upfront\Buffer.Upfront.hpp" />
+    <ClInclude Include="test\Upfront\HashTable.Upfront.hpp" />
+    <ClInclude Include="test\Upfront\Memory.Upfront.hpp" />
+    <ClInclude Include="test\Upfront\Ring.Upfront.hpp" />
+    <ClInclude Include="test\Upfront\Sanity.Upfront.hpp" />
     <ClInclude Include="test\Parsed\Array.Parsed.hpp" />
     <ClInclude Include="test\Parsed\Sanity.Parsed.hpp" />
     <ClInclude Include="thirdparty\zpl.h" />
@@ -129,7 +129,7 @@
     <ClCompile Include="singleheader\gen\gen.singleheader.cpp" />
     <ClCompile Include="test\gen\build\meson-private\sanitycheckc.c" />
     <ClCompile Include="test\gen\build\meson-private\sanitycheckcpp.cc" />
-    <ClCompile Include="test\test.NonParsed.cpp" />
+    <ClCompile Include="test\test.Upfront.cpp" />
     <ClCompile Include="test\test.Parsed.cpp" />
   </ItemGroup>
   <ItemGroup>

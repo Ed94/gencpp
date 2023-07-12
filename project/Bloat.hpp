@@ -9,7 +9,7 @@
 #	define ZPL_IMPLEMENTATION
 #endif
 
-// TODO: This will be removed when making the library have zero dependencies.
+// TODO : This will be removed when making the library have zero dependencies.
 #pragma region 									ZPL INCLUDE
 #if __clang__
 #	pragma clang diagnostic push
@@ -27,10 +27,16 @@
 #		define ZPL_MODULE_HASHING
 #include "zpl.h"
 
-#undef Array
-#undef heap
 #undef alloc_item
 #undef alloc_array
+#undef Array
+#undef heap
+#undef malloc
+#undef mfree
+#undef ZPL_ASSERT_MSG
+#undef ZPL_ASSERT_NOT_NULL
+#undef ZPL_DEBUG_TRAP
+#undef ZPL_PANIC
 
 using zpl::b32;
 using zpl::s8;
@@ -38,12 +44,15 @@ using zpl::s16;
 using zpl::s32;
 using zpl::s64;
 using zpl::u8;
+using zpl::u16;
 using zpl::u32;
 using zpl::u64;
 using zpl::uw;
 using zpl::sw;
 using zpl::sptr;
 using zpl::uptr;
+using zpl::f32;
+using zpl::f64;
 
 // using zpl::AllocType;
 // using zpl::Arena;
@@ -63,39 +72,40 @@ using zpl::uptr;
 
 // using zpl::ZPL_ALLOCATOR_FLAG_CLEAR_TO_ZERO;
 
-using zpl::align_forward;
-using zpl::align_forward_i64;
+// using zpl::align_forward;
+// using zpl::align_forward_i64;
 // using zpl::alloc;
 // using zpl::alloc_align;
 // using zpl::arena_allocator;
 // using zpl::arena_init_from_memory;
 // using zpl::arena_init_from_allocator;
 // using zpl::arena_free;
-using zpl::assert_crash;
-using zpl::char_first_occurence;
-using zpl::char_is_alpha;
-using zpl::char_is_alphanumeric;
-using zpl::char_is_digit;
-using zpl::char_is_hex_digit;
-using zpl::char_is_space;
-using zpl::crc32;
+// using zpl::assert_crash;
+// using zpl::char_first_occurence;
+// using zpl::char_is_alpha;
+// using zpl::char_is_alphanumeric;
+// using zpl::char_is_digit;
+// using zpl::char_is_hex_digit;
+// using zpl::char_is_space;
+// using zpl::crc32;
 // using zpl::free_all;
-using zpl::is_power_of_two;
-using zpl::mem_copy;
-using zpl::mem_move;
-using zpl::mem_set;
-using zpl::pointer_add;
+// using zpl::is_power_of_two;
+// using zpl::mem_copy;
+// using zpl::mem_move;
+// using zpl::mem_set;
+// using zpl::pointer_add;
 // using zpl::pool_allocator;
 // using zpl::pool_init;
 // using zpl::pool_free;
-using zpl::process_exit;
-using zpl::str_compare;
-using zpl::str_copy;
-using zpl::str_fmt_buf;
-using zpl::str_fmt_va;
-using zpl::str_fmt_out_va;
+// using zpl::process_exit;
+// using zpl::str_compare;
+// using zpl::str_copy;
+// using zpl::str_fmt_buf;
+// using zpl::str_fmt_va;
+// using zpl::str_fmt_out_va;
+using zpl::str_fmt_out_err;
 using zpl::str_fmt_out_err_va;
-using zpl::str_len;
+// using zpl::str_len;
 using zpl::zero_size;
 
 #if __clang__
@@ -111,6 +121,27 @@ using zpl::zero_size;
 #   pragma clang diagnostic ignored "-Wunknown-pragmas"
 #	pragma clang diagnostic ignored "-Wvarargs"
 #	pragma clang diagnostic ignored "-Wunused-function"
+#endif
+
+
+/* Platform compiler */
+
+#if defined( _MSC_VER )
+#	define ZPL_COMPILER_MSVC 1
+#elif defined( __GNUC__ )
+#	define ZPL_COMPILER_GCC 1
+#elif defined( __clang__ )
+#	define ZPL_COMPILER_CLANG 1
+#elif defined( __MINGW32__ )
+#	define ZPL_COMPILER_MINGW 1
+#elif defined( __TINYC__ )
+#	define ZPL_COMPILER_TINYC 1
+#else
+#	error Unknown compiler
+#endif
+
+#ifndef zpl_cast
+#	define zpl_cast( Type ) ( Type )
 #endif
 
 
@@ -163,8 +194,7 @@ using zpl::zero_size;
 #define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
 #define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
 #define GEN_STRINGIZE_VA( ... )                   #__VA_ARGS__
-#define txt( ... )                                GEN_STRINGIZE_VA( __VA_ARGS__ )
-#define txt_to_StrC( ... )		                  sizeof( GEN_STRINGIZE_VA( __VA_ARGS__ ) ), GEN_STRINGIZE_VA( __VA_ARGS__ )
+#define stringize( ... )                          GEN_STRINGIZE_VA( __VA_ARGS__ )
 #define do_once()      \
 do                     \
 {                      \
@@ -194,7 +224,73 @@ namespace gen
 	constexpr
 	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
+	#pragma region Debug
+
+	#ifndef ZPL_DEBUG_TRAP
+	#	if defined( _MSC_VER )
+	#		if _MSC_VER < 1300
+	#			define ZPL_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
+	#		else
+	#			define ZPL_DEBUG_TRAP() __debugbreak()
+	#		endif
+	#	elif defined( ZPL_COMPILER_TINYC )
+	#		define ZPL_DEBUG_TRAP() process_exit( 1 )
+	#	else
+	#		define ZPL_DEBUG_TRAP() __builtin_trap()
+	#	endif
+	#endif
+
+	#ifndef ZPL_ASSERT_MSG
+	#	define ZPL_ASSERT_MSG( cond, msg, ... )                                                      \
+			do                                                                                       \
+			{                                                                                        \
+				if ( ! ( cond ) )                                                                    \
+				{                                                                                    \
+					assert_handler( #cond, __FILE__, zpl_cast( s64 ) __LINE__, msg, ##__VA_ARGS__ ); \
+					ZPL_DEBUG_TRAP();                                                                \
+				}                                                                                    \
+			} while ( 0 )
+	#endif
+
+	#ifndef ZPL_ASSERT_NOT_NULL
+	#	define ZPL_ASSERT_NOT_NULL( ptr ) ZPL_ASSERT_MSG( ( ptr ) != NULL, #ptr " must not be NULL" )
+	#endif
+
+	// NOTE: Things that shouldn't happen with a message!
+	#ifndef ZPL_PANIC
+	#	define ZPL_PANIC( msg, ... ) ZPL_ASSERT_MSG( 0, msg, ##__VA_ARGS__ )
+	#endif
+
+	void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
+	s32  assert_crash( char const* condition );
+	void process_exit( u32 code );
+
+	#pragma endregion Debug
+
 	#pragma region Memory
+	//! Checks if value is power of 2.
+	ZPL_DEF_INLINE b32 is_power_of_two( sw x );
+
+	//! Aligns address to specified alignment.
+	ZPL_DEF_INLINE void* align_forward( void* ptr, sw alignment );
+
+	//! Aligns value to a specified alignment.
+	ZPL_DEF_INLINE s64 align_forward_i64( s64 value, sw alignment );
+
+	//! Moves pointer forward by bytes.
+	ZPL_DEF_INLINE void* pointer_add( void* ptr, sw bytes );
+
+	//! Copy non-overlapping memory from source to destination.
+	void* mem_copy( void* dest, void const* source, sw size );
+
+	//! Search for a constant value within the size limit at memory location.
+	ZPL_DEF void const* mem_find( void const* data, u8 byte_value, sw size );
+
+	//! Copy memory from source to destination.
+	ZPL_DEF_INLINE void* mem_move( void* dest, void const* source, sw size );
+
+	//! Set constant value at memory location with specified size.
+	ZPL_DEF_INLINE void* mem_set( void* data, u8 byte_value, sw size );
 
 	enum AllocType : u8
 	{
@@ -246,7 +342,6 @@ namespace gen
 	#	define alloc_array( allocator_, Type, count ) ( Type* )alloc( allocator_, size_of( Type ) * ( count ) )
 	#endif
 
-
 	/* heap memory analysis tools */
 	/* define ZPL_HEAP_ANALYSIS to enable this feature */
 	/* call zpl_heap_stats_init at the beginning of the entry point */
@@ -266,17 +361,168 @@ namespace gen
 	//! The heap allocator backed by operating system's memory manager.
 	constexpr AllocatorInfo heap( void ) { return { heap_allocator_proc, nullptr }; }
 
-	// #ifndef malloc
+	#ifndef malloc
+	//! Helper to allocate memory using heap allocator.
+	#	define malloc( sz ) alloc( heap(), sz )
 
-	// //! Helper to allocate memory using heap allocator.
-	// #	define malloc( sz ) ZPL_NS( alloc )( ZPL_NS( heap_allocator )(), sz )
+	//! Helper to free memory allocated by heap allocator.
+	#	define mfree( ptr ) free( heap(), ptr )
+	#endif
 
-	// //! Helper to free memory allocated by heap allocator.
-	// #	define mfree( ptr ) ZPL_NS( free )( ZPL_NS( heap_allocator )(), ptr )
+	ZPL_IMPL_INLINE b32 is_power_of_two( sw x )
+	{
+		if ( x <= 0 )
+			return false;
+		return ! ( x & ( x - 1 ) );
+	}
 
-	// //! Alias to heap allocator.
-	// #	define heap ZPL_NS( heap_allocator )
-	// #endif
+	ZPL_IMPL_INLINE void* align_forward( void* ptr, sw alignment )
+	{
+		uptr p;
+
+		ZPL_ASSERT( is_power_of_two( alignment ) );
+
+		p = zpl_cast( uptr ) ptr;
+		return zpl_cast( void* )( ( p + ( alignment - 1 ) ) & ~( alignment - 1 ) );
+	}
+
+	ZPL_IMPL_INLINE s64 align_forward_i64( s64 value, sw alignment )
+	{
+		return value + ( alignment - value % alignment ) % alignment;
+	}
+
+	ZPL_IMPL_INLINE void* pointer_add( void* ptr, sw bytes )
+	{
+		return zpl_cast( void* )( zpl_cast( u8* ) ptr + bytes );
+	}
+
+	ZPL_IMPL_INLINE void* mem_move( void* dest, void const* source, sw n )
+	{
+		if ( dest == NULL )
+		{
+			return NULL;
+		}
+
+		u8*       d = zpl_cast( u8* ) dest;
+		u8 const* s = zpl_cast( u8 const* ) source;
+
+		if ( d == s )
+			return d;
+		if ( s + n <= d || d + n <= s )    // NOTE: Non-overlapping
+			return mem_copy( d, s, n );
+
+		if ( d < s )
+		{
+			if ( zpl_cast( uptr ) s % size_of( sw ) == zpl_cast( uptr ) d % size_of( sw ) )
+			{
+				while ( zpl_cast( uptr ) d % size_of( sw ) )
+				{
+					if ( ! n-- )
+						return dest;
+					*d++ = *s++;
+				}
+				while ( n >= size_of( sw ) )
+				{
+					*zpl_cast( sw* ) d  = *zpl_cast( sw* ) s;
+					n                  -= size_of( sw );
+					d                  += size_of( sw );
+					s                  += size_of( sw );
+				}
+			}
+			for ( ; n; n-- )
+				*d++ = *s++;
+		}
+		else
+		{
+			if ( ( zpl_cast( uptr ) s % size_of( sw ) ) == ( zpl_cast( uptr ) d % size_of( sw ) ) )
+			{
+				while ( zpl_cast( uptr )( d + n ) % size_of( sw ) )
+				{
+					if ( ! n-- )
+						return dest;
+					d[ n ] = s[ n ];
+				}
+				while ( n >= size_of( sw ) )
+				{
+					n                         -= size_of( sw );
+					*zpl_cast( sw* )( d + n )  = *zpl_cast( sw* )( s + n );
+				}
+			}
+			while ( n )
+				n--, d[ n ] = s[ n ];
+		}
+
+		return dest;
+	}
+
+	ZPL_IMPL_INLINE void* mem_set( void* dest, u8 c, sw n )
+	{
+		if ( dest == NULL )
+		{
+			return NULL;
+		}
+
+		u8* s = zpl_cast( u8* ) dest;
+		sw  k;
+		u32 c32 = ( ( u32 )-1 ) / 255 * c;
+
+		if ( n == 0 )
+			return dest;
+		s[ 0 ] = s[ n - 1 ] = c;
+		if ( n < 3 )
+			return dest;
+		s[ 1 ] = s[ n - 2 ] = c;
+		s[ 2 ] = s[ n - 3 ] = c;
+		if ( n < 7 )
+			return dest;
+		s[ 3 ] = s[ n - 4 ] = c;
+		if ( n < 9 )
+			return dest;
+
+		k  = -zpl_cast( sptr ) s & 3;
+		s += k;
+		n -= k;
+		n &= -4;
+
+		*zpl_cast( u32* )( s + 0 )     = c32;
+		*zpl_cast( u32* )( s + n - 4 ) = c32;
+		if ( n < 9 )
+			return dest;
+		*zpl_cast( u32* )( s + 4 )      = c32;
+		*zpl_cast( u32* )( s + 8 )      = c32;
+		*zpl_cast( u32* )( s + n - 12 ) = c32;
+		*zpl_cast( u32* )( s + n - 8 )  = c32;
+		if ( n < 25 )
+			return dest;
+		*zpl_cast( u32* )( s + 12 )     = c32;
+		*zpl_cast( u32* )( s + 16 )     = c32;
+		*zpl_cast( u32* )( s + 20 )     = c32;
+		*zpl_cast( u32* )( s + 24 )     = c32;
+		*zpl_cast( u32* )( s + n - 28 ) = c32;
+		*zpl_cast( u32* )( s + n - 24 ) = c32;
+		*zpl_cast( u32* )( s + n - 20 ) = c32;
+		*zpl_cast( u32* )( s + n - 16 ) = c32;
+
+		k  = 24 + ( zpl_cast( uptr ) s & 4 );
+		s += k;
+		n -= k;
+
+		{
+			u64 c64 = ( zpl_cast( u64 ) c32 << 32 ) | c32;
+			while ( n > 31 )
+			{
+				*zpl_cast( u64* )( s + 0 )  = c64;
+				*zpl_cast( u64* )( s + 8 )  = c64;
+				*zpl_cast( u64* )( s + 16 ) = c64;
+				*zpl_cast( u64* )( s + 24 ) = c64;
+
+				n -= 32;
+				s += 32;
+			}
+		}
+
+		return dest;
+	}
 
 	ZPL_IMPL_INLINE void* alloc_align( AllocatorInfo a, sw size, sw alignment )
 	{
@@ -337,14 +583,6 @@ namespace gen
 			return new_memory;
 		}
 	}
-
-	// ZPL_IMPL_INLINE AllocatorInfo heap( void )
-	// {
-	// 	AllocatorInfo a;
-	// 	a.Proc = heap_allocator_proc;
-	// 	a.Data = nullptr;
-	// 	return a;
-	// }
 
 	struct Arena
 	{
@@ -466,8 +704,233 @@ namespace gen
 			return { allocator_proc, this };
 		}
 	};
-
 	#pragma endregion Memory
+
+	#pragma region String Ops
+	ZPL_DEF_INLINE const char* char_first_occurence( const char* str, char c );
+
+	ZPL_DEF_INLINE b32   char_is_alpha( char c );
+	ZPL_DEF_INLINE b32   char_is_alphanumeric( char c );
+	ZPL_DEF_INLINE b32   char_is_digit( char c );
+	ZPL_DEF_INLINE b32   char_is_hex_digit( char c );
+	ZPL_DEF_INLINE b32   char_is_space( char c );
+	ZPL_DEF_INLINE char  char_to_lower( char c );
+	ZPL_DEF_INLINE char  char_to_upper( char c );
+
+	ZPL_DEF_INLINE s32  digit_to_int( char c );
+	ZPL_DEF_INLINE s32  hex_digit_to_int( char c );
+
+	ZPL_DEF_INLINE s32   str_compare( const char* s1, const char* s2 );
+	ZPL_DEF_INLINE s32   str_compare( const char* s1, const char* s2, sw len );
+	ZPL_DEF_INLINE char* str_copy( char* dest, const char* source, sw len );
+	ZPL_DEF_INLINE sw    str_copy_nulpad( char* dest, const char* source, sw len );
+	ZPL_DEF_INLINE sw    str_len( const char* str );
+	ZPL_DEF_INLINE sw    str_len( const char* str, sw max_len );
+	ZPL_DEF_INLINE char* str_reverse( char* str );    // NOTE: ASCII only
+
+	// NOTE: ASCII only
+	ZPL_DEF_INLINE void str_to_lower( char* str );
+	ZPL_DEF_INLINE void str_to_upper( char* str );
+
+	s64  str_to_i64( const char* str, char** end_ptr, s32 base );    // TODO : Support more than just decimal and hexadecimal
+	void i64_to_str( s64 value, char* string, s32 base );
+	void u64_to_str( u64 value, char* string, s32 base );
+
+	ZPL_IMPL_INLINE const char* char_first_occurence( const char* s, char c )
+	{
+		char ch = c;
+		for ( ; *s != ch; s++ )
+		{
+			if ( *s == '\0' )
+				return NULL;
+		}
+		return s;
+	}
+
+	ZPL_IMPL_INLINE b32 char_is_alpha( char c )
+	{
+		if ( ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' ) )
+			return true;
+		return false;
+	}
+
+	ZPL_IMPL_INLINE b32 char_is_alphanumeric( char c )
+	{
+		return char_is_alpha( c ) || char_is_digit( c );
+	}
+
+	ZPL_IMPL_INLINE b32 char_is_digit( char c )
+	{
+		if ( c >= '0' && c <= '9' )
+			return true;
+		return false;
+	}
+
+	ZPL_IMPL_INLINE b32 char_is_hex_digit( char c )
+	{
+		if ( char_is_digit( c ) || ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' ) )
+			return true;
+		return false;
+	}
+
+	ZPL_IMPL_INLINE b32 char_is_space( char c )
+	{
+		if ( c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v' )
+			return true;
+		return false;
+	}
+
+	ZPL_IMPL_INLINE char char_to_lower( char c )
+	{
+		if ( c >= 'A' && c <= 'Z' )
+			return 'a' + ( c - 'A' );
+		return c;
+	}
+
+	ZPL_IMPL_INLINE char char_to_upper( char c )
+	{
+		if ( c >= 'a' && c <= 'z' )
+			return 'A' + ( c - 'a' );
+		return c;
+	}
+
+	ZPL_IMPL_INLINE s32 digit_to_int( char c )
+	{
+		return char_is_digit( c ) ? c - '0' : c - 'W';
+	}
+
+	ZPL_IMPL_INLINE s32 hex_digit_to_int( char c )
+	{
+		if ( char_is_digit( c ) )
+			return digit_to_int( c );
+		else if ( is_between( c, 'a', 'f' ) )
+			return c - 'a' + 10;
+		else if ( is_between( c, 'A', 'F' ) )
+			return c - 'A' + 10;
+		return -1;
+	}
+
+	ZPL_IMPL_INLINE s32 str_compare( const char* s1, const char* s2 )
+	{
+		while ( *s1 && ( *s1 == *s2 ) )
+		{
+			s1++, s2++;
+		}
+		return *( u8* )s1 - *( u8* )s2;
+	}
+
+	ZPL_IMPL_INLINE s32 str_compare( const char* s1, const char* s2, sw len )
+	{
+		for ( ; len > 0; s1++, s2++, len-- )
+		{
+			if ( *s1 != *s2 )
+				return ( ( s1 < s2 ) ? -1 : +1 );
+			else if ( *s1 == '\0' )
+				return 0;
+		}
+		return 0;
+	}
+
+	ZPL_IMPL_INLINE char* str_copy( char* dest, const char* source, sw len )
+	{
+		ZPL_ASSERT_NOT_NULL( dest );
+		if ( source )
+		{
+			char* str = dest;
+			while ( len > 0 && *source )
+			{
+				*str++ = *source++;
+				len--;
+			}
+			while ( len > 0 )
+			{
+				*str++ = '\0';
+				len--;
+			}
+		}
+		return dest;
+	}
+
+	ZPL_IMPL_INLINE sw str_copy_nulpad( char* dest, const char* source, sw len )
+	{
+		sw result = 0;
+		ZPL_ASSERT_NOT_NULL( dest );
+		if ( source )
+		{
+			const char* source_start = source;
+			char*       str          = dest;
+			while ( len > 0 && *source )
+			{
+				*str++ = *source++;
+				len--;
+			}
+			while ( len > 0 )
+			{
+				*str++ = '\0';
+				len--;
+			}
+
+			result = source - source_start;
+		}
+		return result;
+	}
+
+	ZPL_IMPL_INLINE sw str_len( const char* str )
+	{
+		if ( str == NULL )
+		{
+			return 0;
+		}
+		const char* p = str;
+		while ( *str )
+			str++;
+		return str - p;
+	}
+
+	ZPL_IMPL_INLINE sw str_len( const char* str, sw max_len )
+	{
+		const char* end = zpl_cast( const char* ) mem_find( str, 0, max_len );
+		if ( end )
+			return end - str;
+		return max_len;
+	}
+
+	ZPL_IMPL_INLINE char* str_reverse( char* str )
+	{
+		sw    len  = str_len( str );
+		char* a    = str + 0;
+		char* b    = str + len - 1;
+		len       /= 2;
+		while ( len-- )
+		{
+			swap( char, *a, *b );
+			a++, b--;
+		}
+		return str;
+	}
+
+	ZPL_IMPL_INLINE void str_to_lower( char* str )
+	{
+		if ( ! str )
+			return;
+		while ( *str )
+		{
+			*str = char_to_lower( *str );
+			str++;
+		}
+	}
+
+	ZPL_IMPL_INLINE void str_to_upper( char* str )
+	{
+		if ( ! str )
+			return;
+		while ( *str )
+		{
+			*str = char_to_upper( *str );
+			str++;
+		}
+	}
+	#pragma endregion String Ops
 
 	#pragma region Containers
 	#pragma push_macro("template")
@@ -551,7 +1014,6 @@ namespace gen
 			{
 				Data[ idx ] = value;
 			}
-			// mem_set( Data + begin, value, end - begin)
 
 			return true;
 		}
@@ -618,6 +1080,8 @@ namespace gen
 			{
 				if ( ! grow( num ) )
 					return false;
+
+				header = get_header();
 			}
 
 			header->Num = num;
@@ -635,7 +1099,7 @@ namespace gen
 				header.Num = new_capacity;
 
 			sw      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
-			Header* new_header = reinterpret_cast< Header* >( alloc( header.Allocator, size ) );
+			Header* new_header = rcast( Header*, alloc( header.Allocator, size ) );
 
 			if ( new_header == nullptr )
 				return false;
@@ -703,6 +1167,19 @@ namespace gen
 			return result;
 		}
 
+		static
+		HashTable init_reserve( AllocatorInfo allocator, sw num )
+		{
+			HashTable<Type> result = { { nullptr }, { nullptr } };
+
+			result.Hashes  = Array<sw>::init_reserve( allocator, num );
+			result.Hashes.get_header()->Num = num;
+
+			result.Entries = Array<Entry>::init_reserve( allocator, num );
+
+			return result;
+		}
+
 		void clear( void )
 		{
 			for ( sw idx = 0; idx < Hashes.num(); idx++ )
@@ -764,10 +1241,7 @@ namespace gen
 			sw idx;
 			sw last_added_index;
 
-			HashTable<Type> new_ht = init( Hashes.get_header()->Allocator );
-
-			new_ht.Hashes.resize( new_num );
-			new_ht.Entries.reserve( new_ht.Hashes.num() );
+			HashTable<Type> new_ht = init_reserve( Hashes.get_header()->Allocator, new_num );
 
 			Array<sw>::Header* hash_header = new_ht.Hashes.get_header();
 
@@ -798,8 +1272,6 @@ namespace gen
 			}
 
 			destroy();
-			// Hashes  = new_ht.Hashes;
-			// Entries = new_ht.Entries;
 			*this = new_ht;
 		}
 
@@ -926,6 +1398,12 @@ namespace gen
 	#pragma pop_macro("template")
 	#pragma endregion Containers
 
+	#pragma region Hashing
+
+	u32 crc32( void const* data, sw len );
+
+	#pragma endregion Hashing
+
 	#pragma region String
 		// Constant string with length.
 		struct StrC
@@ -933,17 +1411,19 @@ namespace gen
 			sw          Len;
 			char const* Ptr;
 
-			static constexpr
-			StrC from( char const* str )
-			{
-				return { str_len( str ), str };
-			}
-
 			operator char const* () const
 			{
 				return Ptr;
 			}
 		};
+
+		#define txt_StrC( text ) \
+			(StrC){ sizeof( text ) - 1, text }
+
+		StrC to_StrC( char const* str )
+		{
+			return { str_len( str ), str };
+		}
 
 		// Dynamic String
 		// This is directly based off the ZPL string api.
@@ -1023,29 +1503,10 @@ namespace gen
 			}
 
 			static
-			String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... )
-			{
-				va_list va;
-				va_start( va, fmt );
-				str_fmt_va( buf, buf_size, fmt, va );
-				va_end( va );
-
-				return make( allocator, buf );
-			}
+			String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... );
 
 			static
-			String fmt_buf( AllocatorInfo allocator, char const* fmt, ... )
-			{
-				local_persist thread_local
-				char buf[ ZPL_PRINTF_MAXLEN ] = { 0 };
-
-				va_list va;
-				va_start( va, fmt );
-				str_fmt_va( buf, ZPL_PRINTF_MAXLEN, fmt, va );
-				va_end( va );
-
-				return make( allocator, buf );
-			}
+			String fmt_buf( AllocatorInfo allocator, char const* fmt, ... );
 
 			static
 			String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue )
@@ -1151,18 +1612,7 @@ namespace gen
 				return append( other.Data, other.length() );
 			}
 
-			bool append_fmt( char const* fmt, ... )
-			{
-				sw   res;
-				char buf[ ZPL_PRINTF_MAXLEN ] = { 0 };
-
-				va_list va;
-				va_start( va, fmt );
-				res = str_fmt_va( buf, count_of( buf ) - 1, fmt, va ) - 1;
-				va_end( va );
-
-				return append( buf, res );
-			}
+			bool append_fmt( char const* fmt, ... );
 
 			sw avail_space() const
 			{
@@ -1424,6 +1874,22 @@ namespace gen
 		DirEntry*   Dir;
 	};
 
+	enum FileStandardType
+	{
+		EFileStandard_INPUT,
+		EFileStandard_OUTPUT,
+		EFileStandard_ERROR,
+
+		EFileStandard_COUNT,
+	};
+
+	/**
+	 * Get standard file I/O.
+	 * @param  std Check zpl_file_standard_type
+	 * @return     File handle to standard I/O
+	 */
+	FileInfo* file_get_standard( FileStandardType std );
+
 	/**
 	 * Closes the file
 	 * @param  file
@@ -1533,12 +1999,24 @@ namespace gen
 	{
 		if ( ! f->Ops.read_at )
 			f->Ops = default_file_operations;
+
 		return f->Ops.write_at( f->FD, buffer, size, offset, bytes_written );
 	}
 
 	void dirinfo_free( DirInfo* dir );
 
 	#pragma endregion File Handling
+
+	#pragma region Printing
+
+	// NOTE: A locally persisting buffer is used internally
+	char* str_fmt_buf( char const* fmt, ... );
+	char* str_fmt_buf_va( char const* fmt, va_list va );
+	sw    str_fmt_va( char* str, sw n, char const* fmt, va_list va );
+	sw    str_fmt_out_va( char const* fmt, va_list va );
+	sw    str_fmt_file_va( FileInfo* f, char const* fmt, va_list va );
+
+	#pragma endregion Printing
 
 	namespace Memory
 	{
@@ -1555,7 +2033,6 @@ namespace gen
 		void setup();
 		void cleanup();
 	}
-
 
 	inline
 	sw log_fmt(char const* fmt, ...)

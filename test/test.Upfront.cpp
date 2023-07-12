@@ -1,9 +1,9 @@
 #include "Bloat.cpp"
-#include "NonParsed\Array.NonParsed.hpp"
-#include "NonParsed\Buffer.NonParsed.hpp"
-#include "NonParsed\HashTable.NonParsed.hpp"
-#include "NonParsed\Ring.NonParsed.hpp"
-#include "NonParsed\Sanity.NonParsed.hpp"
+#include "Upfront\Array.Upfront.hpp"
+#include "Upfront\Buffer.Upfront.hpp"
+#include "Upfront\HashTable.Upfront.hpp"
+#include "Upfront\Ring.Upfront.hpp"
+#include "Upfront\Sanity.Upfront.hpp"
 
 
 #ifdef gen_time
@@ -20,7 +20,7 @@ int gen_main()
 	gen_sanity();
 
 	gen_array( u8 );
-	// gen_array( sw );
+	gen_array( sw );
 
 	gen_buffer( u8 );
 

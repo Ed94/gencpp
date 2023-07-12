@@ -8,7 +8,4 @@ be better on in c++ as templates, since the templates they generate are trivial 
 An exmaple of a non-trival generation is a container for elements with SOA or AOS policy for layout.
 (If a unified element syntax is desired)
 
-The test is divided between two major sets of tests: Parsed and Nonparsed.
-
-Parsed uses the parsing api strictly.
-NonParsed only uses the upfront and incremental constructors.
+The test is divided between two major sets of tests: Parsed and Upfront.

@@ -18,7 +18,7 @@ Code gen__hashtable_base()
 	));
 }
 
-Code gen__hashtable( StrC type, sw type_size )
+Code gen__hashtable( StrC type )
 {
 	StringCached name;
 	{
@@ -28,26 +28,23 @@ Code gen__hashtable( StrC type, sw type_size )
 		name = get_cached_string({ len, name_str });
 	}
 
-	Code ht_entry = parse_struct( token_fmt(
-		txt(
+	Code ht_entry = parse_struct( token_fmt( "HashTableName", (StrC)name, "type", type,
+		stringize(
 			struct <HashTableName>_Entry
 			{
 				u64 Key;
 				sw  Next;
 				<type> Value;
 			};
-		),
-		2
-		, "HashTableName", (char const*) name
-		, "type",          (char const*) type
+		)
 	));
 
-	StringCached ht_entry_name = get_cached_string( token_fmt( "<HashTableName>_Entry", 1, "HashTableName", name ) );
+	StringCached ht_entry_name = get_cached_string( token_fmt( "HashTableName", (StrC)name, "<HashTableName>_Entry" ));
 
 	Code array_ht_entry = gen__array( ht_entry_name );
 
-	Code hashtable = parse_struct( token_fmt(
-		txt(
+	Code hashtable = parse_struct( token_fmt( "HashTableName", (StrC)name, "type", type,
+		stringize(
 			struct <HashTableName>
 			{
 				using Type        = <type>;
@@ -275,10 +272,7 @@ Code gen__hashtable( StrC type, sw type_size )
 					return 0.75f * Hashes.num() < Entries.num();
 				}
 			};
-		),
-		2
-		, "HashTableName", (char const*) name
-		, "type",          (char const*) type
+		)
 	));
 
 	return def_global_body( 3, ht_entry, array_ht_entry, hashtable );
@@ -288,11 +282,10 @@ struct GenHashTableRequest
 {
 	StrC Dependency;
 	StrC Type;
-	sw   TypeSize;
 };
 Array<GenHashTableRequest> GenHashTableRequests;
 
-void gen__hashtable_request( StrC type, sw size, StrC dep = {} )
+void gen__hashtable_request( StrC type, StrC dep = {} )
 {
 	do_once_start
 		GenHashTableRequests = Array<GenHashTableRequest>::init( Memory::GlobalAllocator );
@@ -312,21 +305,24 @@ void gen__hashtable_request( StrC type, sw size, StrC dep = {} )
 			return;
 	}
 
-	GenHashTableRequest request = { dep, type, size};
+	GenHashTableRequest request = { dep, type };
 	GenHashTableRequests.append( request );
 }
-#define gen_hashtable( type ) gen__hashtable_request( { txt_to_StrC(type) }, sizeof( type ))
+#define gen_hashtable( type ) gen__hashtable_request( code(type) )
 
 u32 gen_hashtable_file()
 {
 	Builder
-	gen_buffer_file;
-	gen_buffer_file.open( "hashtable.Parsed.gen.hpp" );
+	gen_hashtable_file;
+	gen_hashtable_file.open( "hashtable.Parsed.gen.hpp" );
 
-	gen_buffer_file.print( def_include( StrC::from("Bloat.hpp")) );
-	gen_buffer_file.print( def_include( StrC::from("Array.Parsed.hpp")) );
-	gen_buffer_file.print( def_include( StrC::from("array.Parsed.gen.hpp")) );
-	gen_buffer_file.print( gen__hashtable_base());
+	gen_hashtable_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_hashtable_file.print( def_include( txt_StrC("Array.Parsed.hpp")) );
+	gen_hashtable_file.print( def_include( txt_StrC("array.Parsed.gen.hpp")) );
+
+	gen_hashtable_file.print( def_using_namespace( name(gen)));
+
+	gen_hashtable_file.print( gen__hashtable_base());
 
 	GenHashTableRequest* current = GenHashTableRequests;
 	s32 left = GenHashTableRequests.num();
@@ -334,7 +330,7 @@ u32 gen_hashtable_file()
 	{
 		GenHashTableRequest const& request = * current;
 
-		Code generated_buffer = gen__hashtable( current->Type, current->TypeSize );
+		Code generated_buffer = gen__hashtable( current->Type );
 
 		if ( request.Dependency )
 		{
@@ -344,15 +340,15 @@ u32 gen_hashtable_file()
 			Code cmt     = def_comment( { cmt_len, cmt_str } );
 			Code include = def_include( request.Dependency );
 
-			gen_buffer_file.print( cmt );
-			gen_buffer_file.print( include );
+			gen_hashtable_file.print( cmt );
+			gen_hashtable_file.print( include );
 		}
 
-		gen_buffer_file.print( generated_buffer );
+		gen_hashtable_file.print( generated_buffer );
 		current++;
 	}
 
-	gen_buffer_file.write();
+	gen_hashtable_file.write();
 	return 0;
 }
 

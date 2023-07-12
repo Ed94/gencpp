@@ -2,11 +2,11 @@
 
 #if gen_time
 #include "gen.hpp"
-#include "Buffer.NonParsed.hpp"
+#include "Buffer.Upfront.hpp"
 
 using namespace gen;
 
-Code gen__ring( StrC type, sw type_size )
+Code gen__ring( StrC type )
 {
 	static Code t_allocator_info = def_type( name(AllocatorInfo) );
 
@@ -50,7 +50,7 @@ Code gen__ring( StrC type, sw type_size )
 				, def_param( t_uw,             name(max_size) )
 			);
 
-			char const* tmpl = txt(
+			char const* tmpl = stringize(
 				<type> result = { 0 };
 
 				result.Backing = allocator;
@@ -64,10 +64,7 @@ Code gen__ring( StrC type, sw type_size )
 
 				return result;
 			);
-			Code body = def_execution( token_fmt( tmpl, 2
-				, "type", (char const*)name
-				, "data_type", (char const*)type
-			));
+			Code body = def_execution( token_fmt( "type", (StrC)name, "data_type", type, tmpl ));
 
 			init = def_function( name(init), params, t_ring_type, body, spec_static_member );
 		}
@@ -160,11 +157,10 @@ struct GenRingRequest
 {
 	StrC Dependency;
 	StrC Type;
-	sw   TypeSize;
 };
 Array<GenRingRequest> GenRingRequests;
 
-void gen__ring_request( StrC type, sw size, StrC dep = {} )
+void gen__ring_request( StrC type, StrC dep = {} )
 {
 	do_once_start
 		GenRingRequests = Array<GenRingRequest>::init( Memory::GlobalAllocator );
@@ -183,22 +179,23 @@ void gen__ring_request( StrC type, sw size, StrC dep = {} )
 	}
 
 	// Ring definition depends on a array and buffer definition.
-	gen__buffer_request( type, size, dep );
+	gen__buffer_request( type, dep );
 
-	GenRingRequest request = { dep, type, size};
+	GenRingRequest request = { dep, type };
 	GenRingRequests.append( request );
 }
-#define gen_ring( type ) gen__ring_request( { txt_to_StrC(type) }, sizeof( type ))
+#define gen_ring( type ) gen__ring_request( code(type) )
 
 u32 gen_ring_file()
 {
 	Builder
 	gen_ring_file;
-	gen_ring_file.open( "ring.NonParsed.gen.hpp" );
+	gen_ring_file.open( "ring.Upfront.gen.hpp" );
 
-	gen_ring_file.print( def_include( StrC::from("Bloat.hpp")) );
-	gen_ring_file.print( def_include( StrC::from("buffer.NonParsed.gen.hpp")) );
-	// gen_ring_file.print( gen__ring_base() );
+	gen_ring_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_ring_file.print( def_include( txt_StrC("buffer.Upfront.gen.hpp")) );
+
+	gen_ring_file.print( def_using_namespace( name(gen)));
 
 	GenRingRequest* current = GenRingRequests;
 	s32 left = GenRingRequests.num();
@@ -206,7 +203,7 @@ u32 gen_ring_file()
 	{
 		GenRingRequest const& request = * current;
 
-		Code generated_ring = gen__ring( current->Type, current->TypeSize );
+		Code generated_ring = gen__ring( current->Type );
 
 		if ( request.Dependency )
 		{

@@ -2,7 +2,7 @@
 
 #if gen_time
 #include "gen.hpp"
-#include "Array.NonParsed.hpp"
+#include "Array.Upfront.hpp"
 
 using namespace gen;
 
@@ -74,7 +74,7 @@ Code gen__hashtable( StrC type )
 
 		Code init;
 		{
-			char const* tmpl = txt(
+			char const* tmpl = stringize(
 				<type> result = { 0 };
 
 				result.Hashes  = Array_sw   ::init( allocator );
@@ -82,9 +82,29 @@ Code gen__hashtable( StrC type )
 
 				return result;
 			);
-			Code body = def_execution( token_fmt( tmpl, 1, "type", name ) );
+			Code body = def_execution( token_fmt( "type", (StrC)name, tmpl ) );
 
 			init = def_function( name(init), def_param( t_allocator_info, name(allocator)), t_ht_type, body, spec_static_member );
+		}
+
+
+		Code init_reserve;
+		{
+			char const* tmpl = stringize(
+				<type> result = { { nullptr }, { nullptr } };
+
+				result.Hashes  = Array_sw::init_reserve( allocator, num );
+				result.Hashes.get_header()->Num = num;
+
+				result.Entries = Array_Entry::init_reserve( allocator, num );
+
+				return result;
+			);
+			Code body = def_execution( token_fmt( "type", (StrC)name, tmpl ) );
+
+			Code params = def_params( 2, def_param( t_allocator_info, name(allocator)), def_param( t_sw, name(num)));
+
+			init_reserve = def_function( name(init_reserve), params, t_ht_type, body, spec_static_member );
 		}
 
 		Code clear = def_function( name(clear), __, t_void
@@ -98,9 +118,9 @@ Code gen__hashtable( StrC type )
 
 		Code destroy = def_function( name(destroy), __, t_void
 			, def_execution( code(
-				if ( Hashes )
+				if ( Hashes && Hashes.get_header()->Capacity )
 					Hashes.free();
-				if ( Entries )
+				if ( Entries && Hashes.get_header()->Capacity )
 					Entries.free();
 			))
 		);
@@ -108,7 +128,7 @@ Code gen__hashtable( StrC type )
 		Code get = def_function( name(get), def_param( t_u64, name(key)), t_type_ptr
 			, def_execution( code(
 				sw idx = find( key ).EntryIndex;
-				if ( idx > 0 )
+				if ( idx >= 0 )
 					return & Entries[ idx ].Value;
 
 				return nullptr;
@@ -117,10 +137,10 @@ Code gen__hashtable( StrC type )
 
 		Code using_map_proc;
 		{
-			char const* tmpl = txt(
+			char const* tmpl = stringize(
 				void (*) ( u64 key, <type> value )
 			);
-			Code value = untyped_str( token_fmt( tmpl, 1, "type", t_type.to_string() ) );
+			Code value = untyped_str( token_fmt( "type", (StrC)t_type.to_string(), tmpl ) );
 
 			using_map_proc = def_using ( name(MapProc), value);
 		}
@@ -143,10 +163,10 @@ Code gen__hashtable( StrC type )
 
 		Code using_map_mut_proc;
 		{
-			char const* tmpl = txt(
+			char const* tmpl = stringize(
 				void (*) ( u64 key, <type> value )
 			);
-			Code value = untyped_str( token_fmt( tmpl, 1, "type", t_type_ptr.to_string() ) );
+			Code value = untyped_str( token_fmt( "type", (StrC)t_type_ptr.to_string(), tmpl ) );
 
 			using_map_mut_proc = def_using ( name(MapMutProc), value);
 		}
@@ -176,14 +196,13 @@ Code gen__hashtable( StrC type )
 
 		Code rehash;
 		{
-			char const* tmpl = txt(
+			char const* tmpl = stringize(
 				sw idx;
 				sw last_added_index;
 
-				<type> new_ht = <type>::init( Hashes.get_header().Allocator );
+				<type> new_ht = init_reserve( Hashes.get_header()->Allocator, new_num );
 
-				new_ht.Hashes.resize( new_num );
-				new_ht.Entries.reserve( new_ht.Hashes.num() );
+				Array_sw::Header* hash_header = new_ht.Hashes.get_header();
 
 				for ( idx = 0; idx < new_ht.Hashes.num(); ++idx )
 					new_ht.Hashes[ idx ] = -1;
@@ -211,22 +230,17 @@ Code gen__hashtable( StrC type )
 					new_ht.Entries[ last_added_index ].Value = entry.Value;
 				}
 
-				// *this = new_ht;
-
-				// old_ht.destroy();
-
 				destroy();
-				Hashes  = new_ht.Hashes;
-				Entries = new_ht.Entries;
+				*this = new_ht;
 			);
-			Code body = def_execution( token_fmt( tmpl, 1, "type", name ) );
+			Code body = def_execution( token_fmt( "type", (StrC)name, tmpl ) );
 
 			rehash = def_function( name(rehash), def_param( t_sw, name(new_num)), t_void, body );
 		}
 
 		Code rehash_fast;
 		{
-			char const* tmpl = txt(
+			char const* tmpl = stringize(
 				sw idx;
 
 				for ( idx = 0; idx < Entries.num(); idx++ )
@@ -242,7 +256,7 @@ Code gen__hashtable( StrC type )
 					FindResult find_result;
 				}
 			);
-			Code body = def_execution( token_fmt( tmpl, 1, "type", name ) );
+			Code body = def_execution( token_fmt( "type", name, tmpl ) );
 
 			rehash_fast = def_function( name(rehash_fast), __, t_void, body );
 		}
@@ -358,7 +372,7 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		hashtable = def_struct( name, def_struct_body( 24
+		hashtable = def_struct( name, def_struct_body( 25
 			, using_entry
 			, using_array_entry
 			, using_find_result
@@ -366,6 +380,7 @@ Code gen__hashtable( StrC type )
 			, using_map_mut_proc
 
 			, init
+			, init_reserve
 
 			, clear
 			, destroy
@@ -423,19 +438,21 @@ void gen__hashtable_request( StrC type, StrC dep = {} )
 	GenHashTableRequest request = { dep, type };
 	GenHashTableRequests.append( request );
 }
-#define gen_hashtable( type ) gen__hashtable_request( { txt_to_StrC(type) } )
+#define gen_hashtable( type ) gen__hashtable_request( code(type))
 
 u32 gen_hashtable_file()
 {
 	Builder
-	gen_buffer_file;
-	gen_buffer_file.open( "hashtable.NonParsed.gen.hpp" );
+	gen_hashtable_file;
+	gen_hashtable_file.open( "hashtable.Upfront.gen.hpp" );
 
-	gen_buffer_file.print( def_include( StrC::from("Bloat.hpp")) );
-	gen_buffer_file.print( def_include( StrC::from("Array.NonParsed.hpp")) );
-	gen_buffer_file.print( def_include( StrC::from("array.NonParsed.gen.hpp")) );
+	gen_hashtable_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_hashtable_file.print( def_include( txt_StrC("Array.Upfront.hpp")) );
+	gen_hashtable_file.print( def_include( txt_StrC("array.Upfront.gen.hpp")) );
 
-	gen_buffer_file.print( gen__hashtable_base());
+	gen_hashtable_file.print( def_using_namespace( name(gen)));
+
+	gen_hashtable_file.print( gen__hashtable_base());
 
 	GenHashTableRequest* current = GenHashTableRequests;
 	s32 left = GenHashTableRequests.num();
@@ -453,15 +470,15 @@ u32 gen_hashtable_file()
 			Code cmt     = def_comment( { cmt_len, cmt_str } );
 			Code include = def_include( request.Dependency );
 
-			gen_buffer_file.print( cmt );
-			gen_buffer_file.print( include );
+			gen_hashtable_file.print( cmt );
+			gen_hashtable_file.print( include );
 		}
 
-		gen_buffer_file.print( generated_buffer );
+		gen_hashtable_file.print( generated_buffer );
 		current++;
 	}
 
-	gen_buffer_file.write();
+	gen_hashtable_file.write();
 	return 0;
 }
 

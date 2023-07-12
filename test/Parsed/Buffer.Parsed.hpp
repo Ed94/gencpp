@@ -27,8 +27,8 @@ Code gen__buffer( StrC type )
 		name = { name_len, name_str };
 	};
 
-	Code buffer = parse_struct( token_fmt( 
-		txt(
+	Code buffer = parse_struct( token_fmt( "BufferName", name, "type", type,
+		stringize(
 			struct <BufferName>
 			{
 				using Header = BufferHeader;
@@ -123,10 +123,7 @@ Code gen__buffer( StrC type )
 
 				Type* Data;
 			};
-		),
-		2
-		, "BufferName", (char const*) name
-		, "type", 	    (char const*) type
+		)
 	));
 
 	return buffer;
@@ -160,7 +157,7 @@ void gen__buffer_request( StrC type, StrC dep = {} )
 	GenBufferRequest request = { dep, type };
 	GenBufferRequests.append( request );
 }
-#define gen_buffer( type ) gen__buffer_request( { txt_to_StrC(type) } )
+#define gen_buffer( type ) gen__buffer_request( code(type) )
 
 u32 gen_buffer_file()
 {
@@ -168,7 +165,9 @@ u32 gen_buffer_file()
 	gen_buffer_file;
 	gen_buffer_file.open( "buffer.Parsed.gen.hpp" );
 
-	gen_buffer_file.print( def_include( StrC::from("Bloat.hpp")) );
+	gen_buffer_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_buffer_file.print( def_using_namespace( name(gen)));
+
 	gen_buffer_file.print( gen__buffer_base() );
 
 	GenBufferRequest* current = GenBufferRequests;

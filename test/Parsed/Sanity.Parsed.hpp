@@ -10,7 +10,7 @@ u32 gen_sanity()
 	gen_sanity_file;
 	gen_sanity_file.open("./sanity.Parsed.gen.hpp");
 
-	gen_sanity_file.print( def_comment( StrC::from(
+	gen_sanity_file.print( def_comment( txt_StrC(
 		"The following will show a series of base cases for the gen parsed api.\n"
 	)));
 
@@ -36,7 +36,7 @@ u32 gen_sanity()
 			{};
 		));
 
-		empty_body.body()->add_entry( def_comment( StrC::from("Empty class body") ) );
+		empty_body.body()->add_entry( def_comment( txt_StrC("Empty class body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -72,7 +72,7 @@ u32 gen_sanity()
 
 	// External Linkage
 	{
-		Code empty_comment = def_comment( StrC::from("Empty external linkage") );
+		Code empty_comment = def_comment( txt_StrC("Empty external linkage") );
 
 		Code c_extern = parse_extern_link( code(
 			extern "C"
@@ -118,7 +118,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def.body()->add_entry( def_comment( StrC::from("Empty function body") ) );
+		def.body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -134,7 +134,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def.body()->add_entry( def_comment( StrC::from("Empty namespace body") ) );
+		def.body()->add_entry( def_comment( txt_StrC("Empty namespace body") ) );
 
 		gen_sanity_file.print(def);
 	}
@@ -201,7 +201,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def.body()->add_entry( def_comment( StrC::from("Empty function body") ) );
+		def.body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -237,7 +237,7 @@ u32 gen_sanity()
 			{};
 		));
 
-		empty_body.body()->add_entry( def_comment( StrC::from("Empty struct body") ) );
+		empty_body.body()->add_entry( def_comment( txt_StrC("Empty struct body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -253,7 +253,7 @@ u32 gen_sanity()
 			};
 		));
 
-		empty.body()->add_entry( def_comment( StrC::from("Empty union body") ) );
+		empty.body()->add_entry( def_comment( txt_StrC("Empty union body") ) );
 
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned short u16; )) );
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned long  u32; )) );
@@ -330,7 +330,7 @@ u32 gen_sanity()
 
 	gen_sanity_file.print_fmt("\n");
 
-	gen_sanity_file.print( def_comment( StrC::from(
+	gen_sanity_file.print( def_comment( txt_StrC(
 		"End of base case tests\n"
 	)));
 

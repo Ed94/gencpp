@@ -204,7 +204,7 @@ Data layout of AST struct:
 ```cpp
 union {
     AST*          ArrStatic[AST::ArrS_Cap];
-    Array<AST*>   ArrDyn;
+    Array< AST* > ArrDyn;
     StringCached  Content;
     SpecifierT    ArrSpecs[AST::ArrSpecs_Cap];
 };
