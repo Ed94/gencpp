@@ -12,7 +12,7 @@
 #pragma region GENCPP DEPENDENCIES
 //! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
-#ifndef GENCPP_ROLL_OWN_DEPENDENCIES
+#ifndef GEN_ROLL_OWN_DEPENDENCIES
 
 #if __clang__
 #	pragma clang diagnostic ignored "-Wunused-const-variable"
@@ -23,14 +23,8 @@
 #	pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
-#if defined( GEN_HAS_ATTRIBUTE )
-#	undef GEN_HAS_ATTRIBUTE
-#endif
-#if defined( __has_attribute )
-#	define GEN_HAS_ATTRIBUTE( attribute ) __has_attribute( attribute )
-#else
-#	define GEN_HAS_ATTRIBUTE( attribute ) ( 0 )
-#endif
+
+#pragma region Platform Detection
 
 /* Platform architecture */
 
@@ -117,6 +111,15 @@
 #	error Unknown compiler
 #endif
 
+#if defined( GEN_HAS_ATTRIBUTE )
+#	undef GEN_HAS_ATTRIBUTE
+#endif
+#if defined( __has_attribute )
+#	define GEN_HAS_ATTRIBUTE( attribute ) __has_attribute( attribute )
+#else
+#	define GEN_HAS_ATTRIBUTE( attribute ) ( 0 )
+#endif
+
 #ifndef GEN_DEF_INLINE
 #	if defined( GEN_STATIC )
 #		define GEN_DEF_INLINE
@@ -159,48 +162,13 @@
 #	define forceinline inline
 #endif
 
-#ifndef count_of
-#	define count_of( x ) ( ( size_of( x ) / size_of( 0 [ x ] ) ) / ( ( sw )( ! ( size_of( x ) % size_of( 0 [ x ] ) ) ) ) )
-#endif
-
-#ifndef is_between
-#	define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )
-#endif
-
-#ifndef min
-#	define min( a, b ) ( ( a ) < ( b ) ? ( a ) : ( b ) )
-#endif
-
-#ifndef size_of
-#	define size_of( x ) ( sw )( sizeof( x ) )
-#endif
-
-#ifndef swap
-#	define swap( Type, a, b ) \
-		do                     \
-		{                      \
-			Type tmp = ( a );  \
-			( a )    = ( b );  \
-			( b )    = tmp;    \
-		} while ( 0 )
-#endif
+#pragma endregion Platform Detection
 
 #ifndef zpl_cast
 #	define zpl_cast( Type ) ( Type )
 #endif
 
-#ifndef global
-#	define global static    // Global variables
-#endif
-
-#ifndef internal
-#	define internal static    // Internal linkage
-#endif
-
-#ifndef local_persist
-#	define local_persist static    // Local Persisting variables
-#endif
-
+// num_args macro
 #if defined(__GNUC__) || defined(__clang__)
 	// Supports 0-10 arguments
 	#define macro_num_args_impl( _0,                      \
@@ -237,14 +205,27 @@
 	)
 #endif
 
+// Bits
+
 #define bit( Value_ )                             ( 1 << Value_ )
 #define bitfield_is_equal( Type_, Field_, Mask_ ) ( (Type_(Mask_) & Type_(Field_)) == Type_(Mask_) )
+
+// Casting
 #define ccast( Type_, Value_ )                    * const_cast< Type_* >( & (Value_) )
-#define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
+
 #define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
+#define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
 #define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
+
+// Keywords
+
+#define global                                    static    // Global variables
+#define internal static    // Internal linkage
+#define local_persist static    // Local Persisting variables
+
 #define stringize_va( ... )                       #__VA_ARGS__
 #define stringize( ... )                          stringize_va( __VA_ARGS__ )
+
 #define do_once()      \
 do                     \
 {                      \
@@ -280,8 +261,31 @@ while(0);
 
 namespace gen
 {
-	constexpr
-	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
+	#ifndef count_of
+	#	define count_of( x ) ( ( size_of( x ) / size_of( 0 [ x ] ) ) / ( ( sw )( ! ( size_of( x ) % size_of( 0 [ x ] ) ) ) ) )
+	#endif
+
+	#ifndef is_between
+	#	define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )
+	#endif
+
+	#ifndef min
+	#	define min( a, b ) ( ( a ) < ( b ) ? ( a ) : ( b ) )
+	#endif
+
+	#ifndef size_of
+	#	define size_of( x ) ( sw )( sizeof( x ) )
+	#endif
+
+	#ifndef swap
+	#	define swap( Type, a, b ) \
+			do                     \
+			{                      \
+				Type tmp = ( a );  \
+				( a )    = ( b );  \
+				( b )    = tmp;    \
+			} while ( 0 )
+	#endif
 
 	#pragma region Basic Types
 	#ifndef GEN_U8_MIN
@@ -406,6 +410,9 @@ namespace gen
 	#pragma endregion Basic Types
 
 	#pragma region Debug
+	constexpr
+	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
+
 	#ifndef GEN_DEBUG_TRAP
 	#	if defined( _MSC_VER )
 	#		if _MSC_VER < 1300
@@ -3012,6 +3019,9 @@ namespace gen
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
+	// Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
+	Code def_body( CodeT type );
+
 	// There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 	/// or provide as an array of Code objects.
 
@@ -3037,9 +3047,6 @@ namespace gen
 	Code def_struct_body     ( s32 num, Code* codes );
 	Code def_union_body      ( s32 num, ... );
 	Code def_union_body      ( s32 num, Code* codes );
-
-	// Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
-	Code def_body( CodeT type );
 #	pragma endregion Upfront
 
 #	pragma region Parsing

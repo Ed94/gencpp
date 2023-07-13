@@ -1,18 +1,10 @@
 # Documentation
 
-This library is currently in a bootstrapping phase.
-
-Eventually it will have zero dependencies and have its code size severely constricted.
-
-All dependencies are currently held within `Bloat.hpp` and `Bloat.cpp`
-
 All the library code is contained in two files: `gen.hpp` and `gen.cpp`
 
 ## gen.hpp
 
-While getting fleshed out, all feature macros are defined on the top of the header.
-
-These macros are:
+Feature Macros:
 
 * `GENCPP_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
 * `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage

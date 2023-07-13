@@ -311,6 +311,7 @@ Interface :``
 
 Bodies:
 
+* def_body
 * def_class_body
 * def_enum_body
 * def_export_body
@@ -321,8 +322,6 @@ Bodies:
 * def_namespace_body
 * def_struct_body
 * def_union_body
-
-* def_body
 
 Usage:
 

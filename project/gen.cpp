@@ -6,7 +6,7 @@
 #pragma region GENCPP DEPENDENCIES
 //! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
 //! Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
-#ifndef GENCPP_PROVIDE_DEPENDENCIES
+#ifndef GEN_ROLL_OWN_DEPENDENCIES
 
 // NOTE: Ensure we use standard methods for these calls if we use GEN_PICO
 #pragma region Macros
