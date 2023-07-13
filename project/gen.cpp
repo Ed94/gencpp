@@ -1458,52 +1458,6 @@ namespace gen
 		return &_std_files[ std ];
 	}
 
-	// void file_connect_handle( FileInfo* file, void* handle )
-	// {
-	// 	GEN_ASSERT_NOT_NULL( file );
-	// 	GEN_ASSERT_NOT_NULL( handle );
-
-	// 	if ( file->is_temp )
-	// 		return;
-
-	// 	zero_item( file );
-
-	// 	file->fd.p = handle;
-	// 	file->ops  = default_file_operations;
-	// }
-
-	// FileError file_truncate( FileInfo* f, s64 size )
-	// {
-	// 	FileError err         = EFileError_NONE;
-	// 	s64       prev_offset = file_tell( f );
-	// 	file_seek( f, size );
-	// 	if ( ! SetEndOfFile( f ) )
-	// 		err = EFileError_TRUNCATION_FAILURE;
-	// 	file_seek( f, prev_offset );
-	// 	return err;
-	// }
-
-	// b32 fs_exists( char const* name )
-	// {
-	// 	WIN32_FIND_DATAW data;
-	// 	wchar_t*         w_text;
-	// 	void*            handle;
-	// 	b32              found = false;
-	// 	AllocatorInfo    a     = heap_allocator();
-
-	// 	w_text = _alloc_utf8_to_ucs2( a, name, NULL );
-	// 	if ( w_text == NULL )
-	// 	{
-	// 		return false;
-	// 	}
-	// 	handle = FindFirstFileW( w_text, &data );
-	// 	free( a, w_text );
-	// 	found = handle != INVALID_HANDLE_VALUE;
-	// 	if ( found )
-	// 		FindClose( handle );
-	// 	return found;
-	// }
-
 	#else    // POSIX
 
 	FileInfo* file_get_standard( FileStandardType std )
@@ -1521,20 +1475,6 @@ namespace gen
 		}
 		return &_std_files[ std ];
 	}
-
-	// FileError file_truncate( FileInfo* f, s64 size )
-	// {
-	// 	FileError err = EFileError_NONE;
-	// 	int       i   = ftruncate( f->fd.i, size );
-	// 	if ( i != 0 )
-	// 		err = EFileError_TRUNCATION_FAILURE;
-	// 	return err;
-	// }
-
-	// b32 fs_exists( char const* name )
-	// {
-	// 	return access( name, F_OK ) != -1;
-	// }
 
 	#endif
 
@@ -3042,7 +2982,7 @@ namespace gen
 	#	define local_persist local_persist
 
 	#	define def_constant_spec( Type_, ... )                                    \
-		spec_##Type_ = def_specifiers( macro_num_args(__VA_ARGS__), __VA_ARGS__); \
+		spec_##Type_ = def_specifiers( num_args(__VA_ARGS__), __VA_ARGS__); \
 		spec_##Type_.set_global();
 
 		def_constant_spec( const,            ESpecifier::Const );
@@ -3296,7 +3236,7 @@ namespace gen
 
 		switch ( op )
 		{
-		#	define specs( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
+		#	define specs( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
 			case Assign:
 				check_params();
 

@@ -16,7 +16,8 @@
 		"tuple": "cpp",
 		"xmemory": "cpp",
 		"algorithm": "cpp",
-		"limits": "cpp"
+		"limits": "cpp",
+		"concepts": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

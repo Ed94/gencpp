@@ -23,7 +23,6 @@
 #	pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
-
 #pragma region Platform Detection
 
 /* Platform architecture */
@@ -105,150 +104,38 @@
 #	define GEN_COMPILER_CLANG 1
 #elif defined( __MINGW32__ )
 #	define GEN_COMPILER_MINGW 1
-#elif defined( __TINYC__ )
-#	define GEN_COMPILER_TINYC 1
-#else
 #	error Unknown compiler
 #endif
 
-#if defined( GEN_HAS_ATTRIBUTE )
-#	undef GEN_HAS_ATTRIBUTE
-#endif
 #if defined( __has_attribute )
 #	define GEN_HAS_ATTRIBUTE( attribute ) __has_attribute( attribute )
 #else
 #	define GEN_HAS_ATTRIBUTE( attribute ) ( 0 )
 #endif
 
-#ifndef GEN_DEF_INLINE
-#	if defined( GEN_STATIC )
-#		define GEN_DEF_INLINE
-#		define GEN_IMPL_INLINE
-#	else
-#		define GEN_DEF_INLINE  static
-#		define GEN_IMPL_INLINE static inline
-#	endif
-#endif
-
-#if defined( GEN_ALWAYS_INLINE )
-#	undef GEN_ALWAYS_INLINE
-#endif
+#define GEN_DEF_INLINE  static
+#define GEN_IMPL_INLINE static inline
 
 #ifdef GEN_COMPILER_MSVC
 #	define forceinline __forceinline
-#elif defined(GEN_COMPILER_GCC)
-#	define forceinline inline __attribute__((__always_inline__))
-#elif defined(GEN_COMPILER_CLANG)
-#if __has_attribute(__always_inline__)
-#	define forceinline inline __attribute__((__always_inline__))
-#else
-#	define forceinline inline
-#endif
-#else
-#	define forceinline inline
-#endif
-
-#ifdef GEN_COMPILER_MSVC
 #	define neverinline __declspec( noinline )
 #elif defined(GEN_COMPILER_GCC)
-#	define forceinline inline __attribute__( ( __noinline__ ) )
+#	define forceinline inline __attribute__((__always_inline__))
+#	define neverinline __attribute__( ( __noinline__ ) )
 #elif defined(GEN_COMPILER_CLANG)
 #if __has_attribute(__always_inline__)
-#	define forceinline inline __attribute__( ( __noinline__ ) )
+#	define forceinline inline __attribute__((__always_inline__))
+#	define neverinline __attribute__( ( __noinline__ ) )
 #else
-#	define forceinline inline
+#	define forceinline
+#	define neverinline
 #endif
 #else
-#	define forceinline inline
+#	define forceinline
+#	define neverinline
 #endif
 
 #pragma endregion Platform Detection
-
-#ifndef zpl_cast
-#	define zpl_cast( Type ) ( Type )
-#endif
-
-// num_args macro
-#if defined(__GNUC__) || defined(__clang__)
-	// Supports 0-10 arguments
-	#define macro_num_args_impl( _0,                      \
-		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,  \
-		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-		N, ...                                            \
-	) N
-	// _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, \
-	// _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
-	// _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,
-
-	// ## deletes preceding comma if _VA_ARGS__ is empty (GCC, Clang)
-	#define macro_num_args(...)                 \
- 	macro_num_args_impl(_, ## __VA_ARGS__,      \
-		20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
-		10,  9,  8,  7,  6,  5,  4,  3,  2,  1, \
-		0                                       \
-	)
-  	// 50, 49, 48, 47, 46, 45, 44, 43, 42, 41,              \
-  	// 40, 39, 38, 37, 36, 35, 34, 33, 32, 31,              \
-  	// 30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
-#else
-	// Supports 1-10 arguments
-  	#define macro_num_args_impl(                          \
-  		 _1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10, \
-		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
- 		 N, ...                                           \
-	) N
-
-	#define macro_num_args(...)                 \
-	macro_num_args_impl( __VA_ARGS__,           \
-		20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
-		10,  9,  8,  7,  6,  5,  4,  3,  2,  1  \
-	)
-#endif
-
-// Bits
-
-#define bit( Value_ )                             ( 1 << Value_ )
-#define bitfield_is_equal( Type_, Field_, Mask_ ) ( (Type_(Mask_) & Type_(Field_)) == Type_(Mask_) )
-
-// Casting
-#define ccast( Type_, Value_ )                    * const_cast< Type_* >( & (Value_) )
-
-#define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
-#define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
-#define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
-
-// Keywords
-
-#define global                                    static    // Global variables
-#define internal static    // Internal linkage
-#define local_persist static    // Local Persisting variables
-
-#define stringize_va( ... )                       #__VA_ARGS__
-#define stringize( ... )                          stringize_va( __VA_ARGS__ )
-
-#define do_once()      \
-do                     \
-{                      \
-	static             \
-	bool Done = false; \
-	if ( Done )        \
-		return;        \
-	Done = true;       \
-}                      \
-while(0)
-
-#define do_once_start  \
-do                     \
-{                      \
-	static             \
-	bool Done = false; \
-	if ( Done )        \
-		break;         \
-	Done = true;
-
-#define do_once_end    \
-}                      \
-while(0);
 
 #pragma region Mandatory Includes
 #	include <stdarg.h>
@@ -261,74 +148,143 @@ while(0);
 
 namespace gen
 {
-	#ifndef count_of
-	#	define count_of( x ) ( ( size_of( x ) / size_of( 0 [ x ] ) ) / ( ( sw )( ! ( size_of( x ) % size_of( 0 [ x ] ) ) ) ) )
+	#define zpl_cast( Type ) ( Type )
+
+	// Keywords
+
+	#define global        static    // Global variables
+	#define internal      static    // Internal linkage
+	#define local_persist static    // Local Persisting variables
+
+	// Bits
+
+	#define bit( Value_ )                             ( 1 << Value_ )
+	#define bitfield_is_equal( Type_, Field_, Mask_ ) ( (Type_(Mask_) & Type_(Field_)) == Type_(Mask_) )
+
+	// Casting
+	#define ccast( Type_, Value_ )                    * const_cast< Type_* >( & (Value_) )
+	#define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
+	#define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
+	#define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
+
+	// Num Arguments (Varadics)
+	#if defined(__GNUC__) || defined(__clang__)
+		// Supports 0-10 arguments
+		#define num_args_impl( _0,                      \
+			_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,  \
+			_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
+			N, ...                                            \
+		) N
+		// _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, \
+		// _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, \
+		// _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,
+
+		// ## deletes preceding comma if _VA_ARGS__ is empty (GCC, Clang)
+		#define num_args(...)                 \
+		num_args_impl(_, ## __VA_ARGS__,      \
+			20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
+			10,  9,  8,  7,  6,  5,  4,  3,  2,  1, \
+			0                                       \
+		)
+		// 50, 49, 48, 47, 46, 45, 44, 43, 42, 41,              \
+		// 40, 39, 38, 37, 36, 35, 34, 33, 32, 31,              \
+		// 30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
+	#else
+		// Supports 1-10 arguments
+		#define num_args_impl(                          \
+			_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10, \
+			_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
+			N, ...                                           \
+		) N
+
+		#define num_args(...)                 \
+		num_args_impl( __VA_ARGS__,           \
+			20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
+			10,  9,  8,  7,  6,  5,  4,  3,  2,  1  \
+		)
 	#endif
 
-	#ifndef is_between
-	#	define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )
-	#endif
+	// Stringizing
+	#define stringize_va( ... )                       #__VA_ARGS__
+	#define stringize( ... )                          stringize_va( __VA_ARGS__ )
 
-	#ifndef min
-	#	define min( a, b ) ( ( a ) < ( b ) ? ( a ) : ( b ) )
-	#endif
+	// Function do once
 
-	#ifndef size_of
-	#	define size_of( x ) ( sw )( sizeof( x ) )
-	#endif
+	#define do_once()      \
+	do                     \
+	{                      \
+		static             \
+		bool Done = false; \
+		if ( Done )        \
+			return;        \
+		Done = true;       \
+	}                      \
+	while(0)
 
-	#ifndef swap
-	#	define swap( Type, a, b ) \
-			do                     \
-			{                      \
-				Type tmp = ( a );  \
-				( a )    = ( b );  \
-				( b )    = tmp;    \
-			} while ( 0 )
-	#endif
+	#define do_once_start  \
+	do                     \
+	{                      \
+		static             \
+		bool Done = false; \
+		if ( Done )        \
+			break;         \
+		Done = true;
+
+	#define do_once_end    \
+	}                      \
+	while(0);
+
+	#define count_of( x )                 ( ( size_of( x ) / size_of( 0 [ x ] ) ) / ( ( sw )( ! ( size_of( x ) % size_of( 0 [ x ] ) ) ) ) )
+	#define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )
+	#define min( a, b )                   ( ( a ) < ( b ) ? ( a ) : ( b ) )
+	#define size_of( x )                  ( sw )( sizeof( x ) )
+	#define swap( Type, a, b ) \
+		do                     \
+		{                      \
+			Type tmp = ( a );  \
+			( a )    = ( b );  \
+			( b )    = tmp;    \
+		} while ( 0 )
 
 	#pragma region Basic Types
-	#ifndef GEN_U8_MIN
-	#	define GEN_U8_MIN 0u
-	#	define GEN_U8_MAX 0xffu
-	#	define GEN_I8_MIN ( -0x7f - 1 )
-	#	define GEN_I8_MAX 0x7f
+	#define GEN_U8_MIN 0u
+	#define GEN_U8_MAX 0xffu
+	#define GEN_I8_MIN ( -0x7f - 1 )
+	#define GEN_I8_MAX 0x7f
 
-	#	define GEN_U16_MIN 0u
-	#	define GEN_U16_MAX 0xffffu
-	#	define GEN_I16_MIN ( -0x7fff - 1 )
-	#	define GEN_I16_MAX 0x7fff
+	#define GEN_U16_MIN 0u
+	#define GEN_U16_MAX 0xffffu
+	#define GEN_I16_MIN ( -0x7fff - 1 )
+	#define GEN_I16_MAX 0x7fff
 
-	#	define GEN_U32_MIN 0u
-	#	define GEN_U32_MAX 0xffffffffu
-	#	define GEN_I32_MIN ( -0x7fffffff - 1 )
-	#	define GEN_I32_MAX 0x7fffffff
+	#define GEN_U32_MIN 0u
+	#define GEN_U32_MAX 0xffffffffu
+	#define GEN_I32_MIN ( -0x7fffffff - 1 )
+	#define GEN_I32_MAX 0x7fffffff
 
-	#	define GEN_U64_MIN 0ull
-	#	define GEN_U64_MAX 0xffffffffffffffffull
-	#	define GEN_I64_MIN ( -0x7fffffffffffffffll - 1 )
-	#	define GEN_I64_MAX 0x7fffffffffffffffll
+	#define GEN_U64_MIN 0ull
+	#define GEN_U64_MAX 0xffffffffffffffffull
+	#define GEN_I64_MIN ( -0x7fffffffffffffffll - 1 )
+	#define GEN_I64_MAX 0x7fffffffffffffffll
 
-	#	if defined( GEN_ARCH_32_BIT )
-	#		define GEN_USIZE_MIN GEN_U32_MIN
-	#		define GEN_USIZE_MAX GEN_U32_MAX
-	#		define GEN_ISIZE_MIN GEN_S32_MIN
-	#		define GEN_ISIZE_MAX GEN_S32_MAX
-	#	elif defined( GEN_ARCH_64_BIT )
-	#		define GEN_USIZE_MIN GEN_U64_MIN
-	#		define GEN_USIZE_MAX GEN_U64_MAX
-	#		define GEN_ISIZE_MIN GEN_I64_MIN
-	#		define GEN_ISIZE_MAX GEN_I64_MAX
-	#	else
-	#		error Unknown architecture size. This library only supports 32 bit and 64 bit architectures.
-	#	endif
-
-	#	define GEN_F32_MIN 1.17549435e-38f
-	#	define GEN_F32_MAX 3.40282347e+38f
-
-	#	define GEN_F64_MIN 2.2250738585072014e-308
-	#	define GEN_F64_MAX 1.7976931348623157e+308
+	#if defined( GEN_ARCH_32_BIT )
+	#	define GEN_USIZE_MIN GEN_U32_MIN
+	#	define GEN_USIZE_MAX GEN_U32_MAX
+	#	define GEN_ISIZE_MIN GEN_S32_MIN
+	#	define GEN_ISIZE_MAX GEN_S32_MAX
+	#elif defined( GEN_ARCH_64_BIT )
+	#	define GEN_USIZE_MIN GEN_U64_MIN
+	#	define GEN_USIZE_MAX GEN_U64_MAX
+	#	define GEN_ISIZE_MIN GEN_I64_MIN
+	#	define GEN_ISIZE_MAX GEN_I64_MAX
+	#else
+	#	error Unknown architecture size. This library only supports 32 bit and 64 bit architectures.
 	#endif
+
+	#define GEN_F32_MIN 1.17549435e-38f
+	#define GEN_F32_MAX 3.40282347e+38f
+	#define GEN_F64_MIN 2.2250738585072014e-308
+	#define GEN_F64_MAX 1.7976931348623157e+308
 
 	#if defined( GEN_COMPILER_MSVC )
 	#	if _MSC_VER < 1300
@@ -410,47 +366,34 @@ namespace gen
 	#pragma endregion Basic Types
 
 	#pragma region Debug
-	constexpr
-	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
-
-	#ifndef GEN_DEBUG_TRAP
-	#	if defined( _MSC_VER )
-	#		if _MSC_VER < 1300
-	#			define GEN_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
-	#		else
-	#			define GEN_DEBUG_TRAP() __debugbreak()
-	#		endif
-	#	elif defined( GEN_COMPILER_TINYC )
-	#		define GEN_DEBUG_TRAP() process_exit( 1 )
+	#if defined( _MSC_VER )
+	#	if _MSC_VER < 1300
+	#		define GEN_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
 	#	else
-	#		define GEN_DEBUG_TRAP() __builtin_trap()
+	#		define GEN_DEBUG_TRAP() __debugbreak()
 	#	endif
+	#elif defined( GEN_COMPILER_TINYC )
+	#	define GEN_DEBUG_TRAP() process_exit( 1 )
+	#else
+	#	define GEN_DEBUG_TRAP() __builtin_trap()
 	#endif
 
-	#ifndef GEN_ASSERT
-	#	define GEN_ASSERT( cond ) GEN_ASSERT_MSG( cond, NULL )
-	#endif
+	#define GEN_ASSERT( cond ) GEN_ASSERT_MSG( cond, NULL )
 
-	#ifndef GEN_ASSERT_MSG
-	#	define GEN_ASSERT_MSG( cond, msg, ... )                                                      \
-			do                                                                                       \
-			{                                                                                        \
-				if ( ! ( cond ) )                                                                    \
-				{                                                                                    \
-					assert_handler( #cond, __FILE__, zpl_cast( s64 ) __LINE__, msg, ##__VA_ARGS__ ); \
-					GEN_DEBUG_TRAP();                                                                \
-				}                                                                                    \
-			} while ( 0 )
-	#endif
+	#define GEN_ASSERT_MSG( cond, msg, ... )                                                      \
+		do                                                                                       \
+		{                                                                                        \
+			if ( ! ( cond ) )                                                                    \
+			{                                                                                    \
+				assert_handler( #cond, __FILE__, zpl_cast( s64 ) __LINE__, msg, ##__VA_ARGS__ ); \
+				GEN_DEBUG_TRAP();                                                                \
+			}                                                                                    \
+		} while ( 0 )
 
-	#ifndef GEN_ASSERT_NOT_NULL
-	#	define GEN_ASSERT_NOT_NULL( ptr ) GEN_ASSERT_MSG( ( ptr ) != NULL, #ptr " must not be NULL" )
-	#endif
+	#define GEN_ASSERT_NOT_NULL( ptr ) GEN_ASSERT_MSG( ( ptr ) != NULL, #ptr " must not be NULL" )
 
 	// NOTE: Things that shouldn't happen with a message!
-	#ifndef GEN_PANIC
-	#	define GEN_PANIC( msg, ... ) GEN_ASSERT_MSG( 0, msg, ##__VA_ARGS__ )
-	#endif
+	#define GEN_PANIC( msg, ... ) GEN_ASSERT_MSG( 0, msg, ##__VA_ARGS__ )
 
 	void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
 	s32  assert_crash( char const* condition );
@@ -458,12 +401,10 @@ namespace gen
 	#pragma endregion Debug
 
 	#pragma region Memory
-	#ifndef kilobytes
-	#	define kilobytes( x ) ( ( x ) * ( s64 )( 1024 ) )
-	#	define megabytes( x ) ( kilobytes( x ) * ( s64 )( 1024 ) )
-	#	define gigabytes( x ) ( megabytes( x ) * ( s64 )( 1024 ) )
-	#	define terabytes( x ) ( gigabytes( x ) * ( s64 )( 1024 ) )
-	#endif
+	#define kilobytes( x ) ( ( x ) * ( s64 )( 1024 ) )
+	#define megabytes( x ) ( kilobytes( x ) * ( s64 )( 1024 ) )
+	#define gigabytes( x ) ( megabytes( x ) * ( s64 )( 1024 ) )
+	#define terabytes( x ) ( gigabytes( x ) * ( s64 )( 1024 ) )
 
 	#define GEN__ONES          ( zpl_cast( uw ) - 1 / GEN_U8_MAX )
 	#define GEN__HIGHS         ( GEN__ONES * ( GEN_U8_MAX / 2 + 1 ) )
@@ -497,13 +438,11 @@ namespace gen
 	//! @param size The size to clear up with.
 	GEN_DEF_INLINE void zero_size( void* ptr, sw size );
 
-	#ifndef zero_item
 	//! Clears up an item.
-	#	define zero_item( t ) zero_size( ( t ), size_of( *( t ) ) )    // NOTE: Pass pointer of struct
+	#define zero_item( t ) zero_size( ( t ), size_of( *( t ) ) )    // NOTE: Pass pointer of struct
 
 	//! Clears up an array.
-	#	define zero_array( a, count ) zero_size( ( a ), size_of( *( a ) ) * count )
-	#endif
+	#define zero_array( a, count ) zero_size( ( a ), size_of( *( a ) ) * count )
 
 	enum AllocType : u8
 	{
@@ -555,13 +494,11 @@ namespace gen
 	//! Resize an allocated memory with specified alignment.
 	GEN_DEF_INLINE void* resize_align( AllocatorInfo a, void* ptr, sw old_size, sw new_size, sw alignment );
 
-	#ifndef alloc_item
 	//! Allocate memory for an item.
-	#	define alloc_item( allocator_, Type ) ( Type* )alloc( allocator_, size_of( Type ) )
+	#define alloc_item( allocator_, Type ) ( Type* )alloc( allocator_, size_of( Type ) )
 
 	//! Allocate memory for an array of items.
-	#	define alloc_array( allocator_, Type, count ) ( Type* )alloc( allocator_, size_of( Type ) * ( count ) )
-	#endif
+	#define alloc_array( allocator_, Type, count ) ( Type* )alloc( allocator_, size_of( Type ) * ( count ) )
 
 	/* heap memory analysis tools */
 	/* define GEN_HEAP_ANALYSIS to enable this feature */
@@ -582,13 +519,11 @@ namespace gen
 	//! The heap allocator backed by operating system's memory manager.
 	constexpr AllocatorInfo heap( void ) { return { heap_allocator_proc, nullptr }; }
 
-	#ifndef malloc
 	//! Helper to allocate memory using heap allocator.
-	#	define malloc( sz ) alloc( heap(), sz )
+	#define malloc( sz ) alloc( heap(), sz )
 
 	//! Helper to free memory allocated by heap allocator.
-	#	define mfree( ptr ) free( heap(), ptr )
-	#endif
+	#define mfree( ptr ) free( heap(), ptr )
 
 	GEN_IMPL_INLINE b32 is_power_of_two( sw x )
 	{
@@ -1159,9 +1094,6 @@ namespace gen
 	#pragma endregion String Ops
 
 	#pragma region Containers
-	#pragma push_macro("template")
-	#undef template
-
 	template<class Type>
 	struct Array
 	{
@@ -1620,8 +1552,6 @@ namespace gen
 			return 0.75f * Hashes.num() < Entries.num();
 		}
 	};
-
-	#pragma pop_macro("template")
 	#pragma endregion Containers
 
 	#pragma region Hashing
@@ -2261,6 +2191,9 @@ namespace gen
 		void setup();
 		void cleanup();
 	}
+
+	constexpr
+	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
 	inline
 	sw log_fmt(char const* fmt, ...)
@@ -3213,10 +3146,10 @@ namespace gen
 //  Same as name just used to indicate intention of literal for code instead of names.
 #	define code( ... ) { sizeof(stringize(__VA_ARGS__)) - 1, stringize( __VA_ARGS__ ) }
 
-#	define args( ... ) macro_num_args( __VA_ARGS__ ), __VA_ARGS__
+#	define args( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
 
 // Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-#	define token_fmt( ... ) token_fmt_impl( (macro_num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+#	define token_fmt( ... ) token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
 #pragma endregion Macros
 
 #pragma region Constants
