@@ -2420,7 +2420,7 @@ namespace gen
 		alignas
 	*/
 
-	#	define Define_Specifiers                    \
+	#	define Define_Specifiers                     \
 		Entry( Invalid,          INVALID )           \
 		Entry( Const,            const )             \
 		Entry( Consteval,        consteval )         \
@@ -2597,7 +2597,7 @@ namespace gen
 	struct AST;
 	struct Code;
 
-	// These are to offer strong type safety for the AST.
+	// These are to offer ease of use and optionally strong type safety for the AST.
 	struct CodeAttributes;
 	struct CodeComment;
 	struct CodeClass;
@@ -2621,6 +2621,7 @@ namespace gen
 	struct CodeUsing;
 	struct CodeUsingNamespace;
 	struct CodeVar;
+	struct CodeBody;
 	struct CodeClassBody;
 	struct CodeEnumBody;
 	struct CodeExportBody;
@@ -2634,27 +2635,30 @@ namespace gen
 	// Desired width of the AST data structure.
 	constexpr u32 AST_POD_Size = 256;
 
-	/*
-		Simple AST POD with functionality to seralize into C++ syntax.
-	*/
-	struct AST
+	namespace EEntry
 	{
-		enum Entry : u32
+		enum Type : u32
 		{
 			Entry_Array_Expression,
 			Entry_Attributes,
 			Entry_Body,
 			Entry_Parameters,
 			Entry_Parameter_Type,
-			Entry_Parent_Type,
+			Entry_Parent,
 			Entry_Return_Type,
 			Entry_Specifiers,
 			Entry_Value,
 		};
+	}
+	using EntryT = EEntry::Type;
 
+	/*
+		Simple AST POD with functionality to seralize into C++ syntax.
+	*/
+	struct AST
+	{
 	#	pragma region Member Functions
 		void  add_entry( AST* other );
-		// AST*  body();
 		AST*  duplicate();
 		AST*& entry( u32 idx );
 		bool  has_entries();
@@ -2691,9 +2695,17 @@ namespace gen
 			return ECode::to_str( Type );
 		}
 
+		// Validation
+
 		bool validate_body();
 
 		operator Code();
+
+		template< class Type >
+		Type cast()
+		{
+			return (Type) { this };
+		}
 	#	pragma endregion Member Functions
 
 		constexpr static
@@ -2731,6 +2743,53 @@ namespace gen
 		u8                _Align_Pad[3];
 
 		Using_AST_POD
+	};
+
+	struct AST_Experimental
+	{
+		using AST = AST_Experimental;
+
+		static constexpr uw ArrSpecs_Cap = sizeof( AST* ) * 9;
+
+		// Should only be used for body types.
+		void add( AST* other )
+		{
+			Back->Right = other;
+			Back        = other;
+		}
+
+		union {
+			struct
+			{
+				AST* ArrExpr;
+				AST* Attributes;
+				AST* Parameters;
+				AST* ParameterType;
+				AST* ParentType;
+				AST* ReturnType;
+				AST* Specifiers;
+				AST* Value;
+			};
+			struct
+			{
+				AST* Left;
+				AST* Right;
+			};
+			struct
+			{
+				AST* Front;
+				AST* Back;
+			};
+			StringCached 	Content;
+			SpecifierT		ArrSpecs[ArrSpecs_Cap];
+		};
+		AST*             Parent;
+		StringCached      Name;
+		CodeT             Type;
+		OperatorT         Op;
+		ModuleFlag        ModuleFlags;
+		AccessSpec        ParentAccess;
+		u32               NumEntries;
 	};
 
 	struct AST_POD
@@ -2798,6 +2857,11 @@ namespace gen
 
 		Using_Code;
 
+		#define GEN_ENFORCE_STRONG_CODE_TYPES
+
+	#ifdef GEN_ENFORCE_STRONG_CODE_TYPES
+		#define operator explicit operator
+	#endif
 		operator CodeAttributes() const;
 		operator CodeComment() const;
 		operator CodeClass() const;
@@ -2831,6 +2895,8 @@ namespace gen
 		operator CodeNamespaceBody() const;
 		operator CodeStructBody() const;
 		operator CodeUnionBody() const;
+
+		#undef operator
 	};
 
 	struct Code_POD
@@ -2840,23 +2906,22 @@ namespace gen
 
 	static_assert( sizeof(Code)    == sizeof(Code_POD), "ERROR: Code is not POD" );
 
-	// Used when the its desired when omission is allowed in a definition.
-	constexpr Code NoCode = { nullptr };
+	#ifdef GEN_ENFORCE_STRONG_CODE_TYPES
+		// Used when the its desired when omission is allowed in a definition.
+		#define NoCode { nullptr }
+		#define CodeInvalid { Code::Invalid.ast }
+	#else
+		// Used when the its desired when omission is allowed in a definition.
+		constexpr Code NoCode      = { nullptr };
+		constexpr Code CodeInvalid = Code::Invalid;
+	#endif
 
 #pragma region Code Types
-#ifndef GEN_ENFORCE_STRONG_CODE_TYPES
 	#define Define_ParentCast          \
 	operator Code()                    \
 	{                                  \
 		return * rcast( Code*, this ); \
 	}
-#else
-	#define Define_ParentCast          \
-	explicit operator Code()           \
-	{                                  \
-		return * rcast( Code*, this ); \
-	}
-#endif
 
 	#define Define_CodeBodyType( Name )                              \
 	struct Code##Name                                                \
@@ -2942,7 +3007,7 @@ namespace gen
 		Using_Code;
 		Define_ParentCast;
 
-		Code definition();
+		Code symbol();
 	};
 
 	struct CodeFn
@@ -3086,6 +3151,7 @@ namespace gen
 		CodeAttributes attributes();
 		CodeSpecifiers specifiers();
 		CodeType       type();
+		Code 		   value();
 	};
 
 	#undef Define_CodeBodyType
@@ -3134,23 +3200,23 @@ namespace gen
 	CodeComment    def_comment   ( StrC content );
 
 	CodeClass def_class( StrC name
-		, CodeClassBody  body         = NoCode
+		, Code           body         = NoCode
 		, CodeType       parent       = NoCode, AccessSpec access = AccessSpec::Default
 		, CodeAttributes attributes   = NoCode
 		, ModuleFlag mflags = ModuleFlag::None );
 
 	CodeEnum def_enum( StrC
-		, Code       body      = NoCode,      Code type       = NoCode
-		, EnumT      specifier = EnumRegular, Code attributes = NoCode
-		, ModuleFlag mflags    = ModuleFlag::None );
+		, Code         body      = NoCode,      CodeType       type       = NoCode
+		, EnumT        specifier = EnumRegular, CodeAttributes attributes = NoCode
+		, ModuleFlag   mflags    = ModuleFlag::None );
 
 	CodeExec   def_execution  ( StrC content );
 	CodeExtern def_extern_link( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 	CodeFriend def_friend     ( Code symbol );
 
 	CodeFn def_function( StrC name
-		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
-		, Code       specifiers = NoCode, Code attributes = NoCode
+		, CodeParams     params     = NoCode, CodeType       ret_type   = NoCode, CodeFnBody body = NoCode
+		, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
 	CodeInclude   def_include  ( StrC content );
@@ -3158,9 +3224,9 @@ namespace gen
 	CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 
 	CodeOperator def_operator( OperatorT op
-		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
-		, Code       specifiers = NoCode, Code attributes = NoCode
-		, ModuleFlag mflags     = ModuleFlag::None );
+		, CodeParams     params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
+		, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
+		, ModuleFlag     mflags     = ModuleFlag::None );
 
 	CodeOpCast def_operator_cast( Code type, Code body = NoCode );
 
@@ -3168,27 +3234,27 @@ namespace gen
 	CodeSpecifiers def_specifier( SpecifierT specifier );
 
 	CodeStruct def_struct( StrC name
-		, Code       body
-		, Code       parent     = NoCode, AccessSpec access = AccessSpec::Default
-		, Code       attributes = NoCode
-		, ModuleFlag mflags     = ModuleFlag::None );
+		, Code           body
+		, CodeType       parent     = NoCode, AccessSpec access = AccessSpec::Default
+		, CodeAttributes attributes = NoCode
+		, ModuleFlag     mflags     = ModuleFlag::None );
 
-	CodeTemplate def_template( Code params, Code body, ModuleFlag mflags = ModuleFlag::None );
+	CodeTemplate def_template( CodeParams params, Code definition, ModuleFlag mflags = ModuleFlag::None );
 
-	CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode, Code attributes = NoCode );
-	CodeTypedef def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode );
+	CodeTypedef def_typedef( StrC name, CodeType type, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
-	CodeUnion def_union( StrC name, Code body, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	CodeUnion def_union( StrC name, Code body, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
-	CodeUsing def_using( StrC name, Code type = NoCode
-		, Code       attributess = NoCode
-		, ModuleFlag mflags      = ModuleFlag::None );
+	CodeUsing def_using( StrC name, CodeType type = NoCode
+		, CodeAttributes attributess = NoCode
+		, ModuleFlag     mflags      = ModuleFlag::None );
 
 	CodeUsingNamespace def_using_namespace( StrC name );
 
-	CodeVar def_variable( Code type, StrC name, Code value = NoCode
-		, Code       specifiers = NoCode, Code attributes = NoCode
-		, ModuleFlag mflags     = ModuleFlag::None );
+	CodeVar def_variable( CodeType type, StrC name, Code value = NoCode
+		, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
+		, ModuleFlag     mflags     = ModuleFlag::None );
 
 	// Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
 	CodeBody def_body( CodeT type );
@@ -3211,7 +3277,7 @@ namespace gen
 	CodeNamespace  def_namespace_body  ( s32 num, ... );
 	CodeNamespace  def_namespace_body  ( s32 num, Code* codes );
 	CodeParams     def_params          ( s32 num, ... );
-	CodeParams     def_params          ( s32 num, Code* params );
+	CodeParams     def_params          ( s32 num, CodeParams* params );
 	CodeSpecifiers def_specifiers      ( s32 num, ... );
 	CodeSpecifiers def_specifiers      ( s32 num, SpecifierT* specs );
 	CodeStructBody def_struct_body     ( s32 num, ... );
@@ -3439,8 +3505,6 @@ namespace gen
 	constexpr s32 MaxUntypedStrLength       = kilobytes(640);
 	constexpr s32 StringTable_MaxHashLength = kilobytes(1);
 
-	// Predefined Codes. Are set to readonly and are setup during gen::init()
-
 	extern CodeType t_auto;
 	extern CodeType t_void;
 	extern CodeType t_int;
@@ -3482,7 +3546,6 @@ namespace gen
 #pragma region Inlines
 namespace gen
 {
-	inline
 	void AST::add_entry( AST* other )
 	{
 		AST* to_add = other->Parent ?
@@ -3546,7 +3609,7 @@ namespace gen
 		if ( index <= 0 )
 			return * this;
 
-		return (Code){ ast->entry( index + 1 ) };
+		return (CodeParams){ ast->entry( index + 1 ) };
 	}
 
 	inline
@@ -3612,7 +3675,7 @@ namespace gen
 	Define_CodeCast( CodeUsing );
 	Define_CodeCast( CodeUsingNamespace );
 	Define_CodeCast( CodeVar );
-	Define_CodeCast( CodeBody );
+	Define_CodeCast( CodeBody);
 	Define_CodeCast( CodeClassBody );
 	Define_CodeCast( CodeEnumBody );
 	Define_CodeCast( CodeExportBody );
@@ -3622,7 +3685,6 @@ namespace gen
 	Define_CodeCast( CodeNamespaceBody );
 	Define_CodeCast( CodeStructBody );
 	Define_CodeCast( CodeUnionBody );
-
 	#undef Define_CodeCast
 #pragma endregion Operater Cast Impl
 
@@ -3644,13 +3706,13 @@ namespace gen
 
 			default:
 				log_failure( "def_body: Invalid type %s", (char const*)ECode::to_str(type) );
-				return Code::Invalid;
+				return (CodeBody)Code::Invalid;
 		}
 
 		Code
 		result       = make_code();
 		result->Type = type;
-		return result;
+		return (CodeBody)result;
 	}
 
 	//! Do not use directly. Use the token_fmt macro instead.

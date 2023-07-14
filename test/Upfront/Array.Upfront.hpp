@@ -9,14 +9,14 @@ Code gen__array_base()
 {
 	Code t_allocator_info = def_type( name(AllocatorInfo) );
 
-	Code header = def_struct( name(ArrayHeader), 
+	CodeStruct header = def_struct( name(ArrayHeader), 
 	def_struct_body( args(
 		  def_variable( t_allocator_info, name(Allocator) )
 		, def_variable( t_uw,             name(Capacity) )
 		, def_variable( t_uw,             name(Num) )
 	)));
 
-	Code grow_formula = def_function( name(array_grow_formula), def_param( t_uw, name(value)), t_uw
+	CodeFn grow_formula = def_function( name(array_grow_formula), def_param( t_uw, name(value)), t_uw
 		, def_execution( code( return 2 * value * 8; ) )
 		, def_specifiers( args( ESpecifier::Static_Member, ESpecifier::Inline ) )
 	);
@@ -26,15 +26,15 @@ Code gen__array_base()
 
 Code gen__array( StrC type )
 {
-	static Code t_allocator_info = def_type( name(AllocatorInfo) );
-	static Code v_nullptr        = code_str( code(nullptr));
+	static CodeType t_allocator_info = def_type( name(AllocatorInfo) );
+	static Code     v_nullptr        = code_str(nullptr);
 
-	static Code spec_ct_member     = def_specifiers( 2, ESpecifier::Constexpr, ESpecifier::Static_Member );
-	static Code spec_static_inline = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
-	static Code spec_static        = def_specifier( ESpecifier::Static_Member );
+	static CodeSpecifiers spec_ct_member     = def_specifiers( 2, ESpecifier::Constexpr, ESpecifier::Static_Member );
+	static CodeSpecifiers spec_static_inline = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
+	static CodeSpecifiers spec_static        = def_specifier( ESpecifier::Static_Member );
 
-	static Code using_header    = def_using( name(Header), def_type( name(ArrayHeader) ) );
-	static Code ct_grow_formula = def_variable( t_auto, name(grow_formula), code_str( code( & array_grow_formula )), spec_ct_member );
+	static CodeUsing using_header    = def_using( name(Header), def_type( name(ArrayHeader) ) );
+	static CodeVar ct_grow_formula = def_variable( t_auto, name(grow_formula), untyped_str( code( & array_grow_formula )), spec_ct_member );
 
 	StrC name;
 	{
@@ -134,7 +134,7 @@ Code gen__array( StrC type )
 				, def_param( t_alias, name(value) )
 			);
 
-			Code body = code_str( code(
+			Code body = untyped_str( code(
 				Header& header = * get_header();
 
 				if ( begin < 0 || end >= header.Num )

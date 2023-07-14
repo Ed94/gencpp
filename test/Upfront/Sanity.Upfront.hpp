@@ -23,12 +23,11 @@ u32 gen_sanity_upfront()
 
 	// Class
 	{
-		Code fwd = def_class( name(TestEmptyClass) );
-		Code empty_body;
+		CodeClass fwd = def_class( name(TestEmptyClass) );
+		CodeClass empty_body;
 		{
-			Code cmt  = def_comment( txt_StrC("Empty class body") );
-
-			Code body = def_class_body( args( cmt ) );
+			CodeComment   cmt  = def_comment( txt_StrC("Empty class body") );
+			CodeClassBody body = def_class_body( args( cmt ) );
 
 			empty_body = def_class( name(TestEmptyClass), body );
 		}
@@ -41,8 +40,8 @@ u32 gen_sanity_upfront()
 
 	// Typedef
 	{
-		Code t_unsigned_char = def_type( name(unsigned char) );
-		Code u8_typedef      = def_typedef( name(u8), t_unsigned_char );
+		CodeType    t_unsigned_char = def_type( name(unsigned char) );
+		CodeTypedef u8_typedef      = def_typedef( name(u8), t_unsigned_char );
 
 		gen_sanity_file.print(u8_typedef);
 	}
@@ -52,9 +51,9 @@ u32 gen_sanity_upfront()
 	// Enum
 	{
 		Code fwd = def_enum( name(ETestEnum), NoCode, t_u8 );
-		Code def;
+		CodeEnum def;
 		{
-			Code body = code_str( code(
+			Code body = untyped_str( code(
 				A,
 				B,
 				C
@@ -87,8 +86,8 @@ u32 gen_sanity_upfront()
 
 	// Friend
 	{
-		Code fwd  = def_class( name(TestFriendFwd));
-		Code body = def_class_body( args( def_friend( fwd ) ) );
+		CodeClass     fwd  = def_class( name(TestFriendFwd));
+		CodeClassBody body = def_class_body( args( def_friend( fwd ) ) );
 
 		gen_sanity_file.print( def_class( name(TestFriend), body ) );
 	}
@@ -97,10 +96,10 @@ u32 gen_sanity_upfront()
 
 	// Function
 	{
-		Code fwd = def_function( name(test_function) );
-		Code def;
+		CodeFn fwd = def_function( name(test_function) );
+		CodeFn def;
 		{
-			Code body = def_function_body( 1
+			CodeFnBody body = def_function_body( 1
 				, def_comment( txt_StrC("Empty function body") )
 			);
 
@@ -160,7 +159,7 @@ u32 gen_sanity_upfront()
 
 		Code bitflagtest;
 		{
-			Code body = def_enum_body( 1, code_str( code(
+			Code body = def_enum_body( 1, untyped_str( code(
 				A = 1 << 0,
 				B = 1 << 1,
 				C = 1 << 2
@@ -169,15 +168,15 @@ u32 gen_sanity_upfront()
 		}
 		Code t_bitflag = def_type( name(EBitFlagtest) );
 
-		Code op_fwd, op_or;
+		CodeOperator op_fwd, op_or;
 		{
-			Code params = def_params( 2,
+			CodeParams params = def_params( 2,
 				def_param( t_bitflag, name(a) ),
 				def_param( t_bitflag, name(b) )
 			);
 
 			op_fwd = def_operator( EOperator::BOr, params, t_bitflag );
-			op_or  = def_operator( EOperator::BOr, params, t_bitflag, code_str( code(
+			op_or  = def_operator( EOperator::BOr, params, t_bitflag, untyped_str( code(
 				return EBitFlagtest( (u8)a | (u8)b );
 			)));
 		}
@@ -299,7 +298,7 @@ u32 gen_sanity_upfront()
 	// Variable
 	{
 		Code bss  = def_variable( t_u8, name(test_variable) );
-		Code data = def_variable( t_u8, name(test_variable2), code_str( code( 0x12 )) );
+		Code data = def_variable( t_u8, name(test_variable2), untyped_str( code( 0x12 )) );
 
 		gen_sanity_file.print(bss);
 		gen_sanity_file.print(data);
