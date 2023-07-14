@@ -1,5 +1,9 @@
 root = true
 
+[*.refactor]
+indent_style = space
+indent_size  = 4
+
 [*.md]
 indent_style = space
 indent_size  = 4
@@ -21,5 +25,9 @@ indent_style = tab
 indent_size  = 4
 
 [*.ps1]
+indent_style = tab
+indent_size  = 4
+
+[*.natvis]
 indent_style = tab
 indent_size  = 4

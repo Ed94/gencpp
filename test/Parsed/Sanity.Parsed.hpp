@@ -27,16 +27,16 @@ u32 gen_sanity()
 
 	// Class
 	{
-		Code fwd = parse_class( code(
+		CodeClass fwd = parse_class( code(
 			class TestEmptyClass;
 		));
 
-		Code empty_body = parse_class( code(
+		CodeClass empty_body = parse_class( code(
 			class TestEmptyClass
 			{};
 		));
 
-		empty_body->body()->add_entry( def_comment( txt_StrC("Empty class body") ) );
+		empty_body.body()->add_entry( def_comment( txt_StrC("Empty class body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -72,15 +72,15 @@ u32 gen_sanity()
 
 	// External Linkage
 	{
-		Code empty_comment = def_comment( txt_StrC("Empty external linkage") );
+		CodeComment empty_comment = def_comment( txt_StrC("Empty external linkage") );
 
-		Code c_extern = parse_extern_link( code(
+		CodeExtern c_extern = parse_extern_link( code(
 			extern "C"
 			{
 			};
 		));
 
-		c_extern->body()->add_entry( empty_comment );
+		c_extern.body()->add_entry( empty_comment );
 
 		gen_sanity_file.print(c_extern);
 	}
@@ -108,17 +108,17 @@ u32 gen_sanity()
 
 	// Function
 	{
-		Code fwd = parse_function( code(
+		CodeFn fwd = parse_function( code(
 			void test_function();
 		));
 
-		Code def = parse_function( code(
+		CodeFn def = parse_function( code(
 			void test_function()
 			{
 			}
 		));
 
-		def->body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
+		def.body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -128,13 +128,13 @@ u32 gen_sanity()
 
 	// Namespace
 	{
-		Code def = parse_namespace( code(
+		CodeNamespace def = parse_namespace( code(
 			namespace TestNamespace
 			{
 			}
 		));
 
-		def->body()->add_entry( def_comment( txt_StrC("Empty namespace body") ) );
+		def.body()->add_entry( def_comment( txt_StrC("Empty namespace body") ) );
 
 		gen_sanity_file.print(def);
 	}
@@ -172,17 +172,17 @@ u32 gen_sanity()
 
 	// Operator cast
 	{
-		Code op_ptr = parse_operator_cast( code(
+		CodeClass op_ptr = parse_operator_cast( code(
 			operator u8* ();
 		));
 
-		Code class_def = parse_class( code(
+		CodeClass class_def = parse_class( code(
 			class TestClass
 			{
 			};
 		));
 
-		class_def->body()->add_entry( op_ptr );
+		class_def.body()->add_entry( op_ptr );
 
 		gen_sanity_file.print(class_def);
 	}
@@ -191,17 +191,17 @@ u32 gen_sanity()
 
 	// Parameters
 	{
-		Code fwd = parse_function( code(
+		CodeFn fwd = parse_function( code(
 			void test_function_param( int a );
 		));
 
-		Code def = parse_function( code(
+		CodeFn def = parse_function( code(
 			void test_function_param2( int a, int b )
 			{
 			}
 		));
 
-		def->body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
+		def.body()->add_entry( def_comment( txt_StrC("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -228,16 +228,16 @@ u32 gen_sanity()
 
 	// Struct
 	{
-		Code fwd = parse_struct( code(
+		CodeStruct fwd = parse_struct( code(
 			struct TestEmptyStruct;
 		));
 
-		Code empty_body = parse_struct( code(
+		CodeStruct empty_body = parse_struct( code(
 			struct TestEmptyStruct
 			{};
 		));
 
-		empty_body->body()->add_entry( def_comment( txt_StrC("Empty struct body") ) );
+		empty_body.body()->add_entry( def_comment( txt_StrC("Empty struct body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -247,13 +247,13 @@ u32 gen_sanity()
 
 	// Union
 	{
-		Code empty = parse_union( code(
+		CodeUnion empty = parse_union( code(
 			union TestEmptyUnion
 			{
 			};
 		));
 
-		empty->body()->add_entry( def_comment( txt_StrC("Empty union body") ) );
+		empty.body()->add_entry( def_comment( txt_StrC("Empty union body") ) );
 
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned short u16; )) );
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned long  u32; )) );

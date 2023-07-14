@@ -30,16 +30,15 @@ Major enum definitions and their associated functions used with the AST data
 * `ESpecifier` : Used with specifier ASTs for all specifiers the user may tag an associated
 AST with.
 * `AccessSpec` : Used with class and struct ASTs to denote the public, protected, or private fields.
+* `EnumT` : Used with def_enum to determine if constructing a regular enum or an enum class.
 * `ModuleFlag` : Used with any valid definition that can have export or import related keywords assoicated with it.
 
 #### Data Structures
 
-`StringTable` : Hash table for cached strings. (`StringCached` typedef used to denote strings managed by it)
+`StringCache` : Hash table for cached strings. (`StringCached` typedef used to denote strings managed by it)
 
 `AST` : The node data strucuture for the code.
 `Code` : Wrapper for `AST` with functionality for handling it appropriately.
-
-`TypeTable` : Hash table for cached typename ASTs.
 
 #### Gen Interface
 

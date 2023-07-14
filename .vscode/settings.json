@@ -17,7 +17,8 @@
 		"xmemory": "cpp",
 		"algorithm": "cpp",
 		"limits": "cpp",
-		"concepts": "cpp"
+		"concepts": "cpp",
+		"*.rh": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

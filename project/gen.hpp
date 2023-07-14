@@ -2338,15 +2338,6 @@ namespace gen
 	constexpr EnumT EnumClass   = EnumT::Class;
 	constexpr EnumT EnumRegular = EnumT::Regular;
 
-	enum class UsingT : u8
-	{
-		Regular,
-		Namespace
-	};
-
-	constexpr UsingT UsingRegular   = UsingT::Regular;
-	constexpr UsingT UsingNamespace = UsingT::Namespace;
-
 	namespace EOperator
 	{
 	#	define Define_Operators       \
@@ -2603,171 +2594,72 @@ namespace gen
 	// Should never be modified, if changed string is desired, cache_string( str ) another.
 	using StringCached = String const;
 
+	struct AST;
+	struct Code;
+
+	// These are to offer strong type safety for the AST.
+	struct CodeAttributes;
+	struct CodeComment;
+	struct CodeClass;
+	struct CodeExec;
+	struct CodeEnum;
+	struct CodeExtern;
+	struct CodeInclude;
+	struct CodeFriend;
+	struct CodeFn;
+	struct CodeModule;
+	struct CodeNamespace;
+	struct CodeOperator;
+	struct CodeOpCast;
+	struct CodeParams;
+	struct CodeSpecifiers;
+	struct CodeStruct;
+	struct CodeTemplate;
+	struct CodeType;
+	struct CodeTypedef;
+	struct CodeUnion;
+	struct CodeUsing;
+	struct CodeUsingNamespace;
+	struct CodeVar;
+	struct CodeClassBody;
+	struct CodeEnumBody;
+	struct CodeExportBody;
+	struct CodeExternBody;
+	struct CodeFnBody;
+	struct CodeGlobalBody;
+	struct CodeNamespaceBody;
+	struct CodeStructBody;
+	struct CodeUnionBody;
+
 	// Desired width of the AST data structure.
 	constexpr u32 AST_POD_Size = 256;
 
-	struct AST;
-
-	/*
-		AST* typedef as to not constantly have to add the '*' as this is written often..
-	*/
-	struct Code
-	{
-	#	pragma region Statics
-		// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
-		static Code Global;
-
-		// Used to identify invalid generated code.
-		static Code Invalid;
-	#	pragma endregion Statics
-
-	#	pragma region Member Functions
-		void set_global();
-
-		bool is_valid();
-
-		bool operator ==( Code other )
-		{
-			return ast == other.ast;
-		}
-
-		bool operator !=( Code other )
-		{
-			return ast != other.ast;
-		}
-
-		operator AST*()
-		{
-			return ast;
-		}
-
-		AST* operator->()
-		{
-			if ( ast == nullptr )
-			{
-				log_failure("Attempt to dereference a nullptr!");
-				return nullptr;
-			}
-
-			return ast;
-		}
-	#	pragma endregion Member Functions
-
-		AST* ast;
-	};
-
-	struct Code_POD
-	{
-		AST* ast;
-	};
-
-	// TODO: If perf needs it, convert layout an SOA format.
 	/*
 		Simple AST POD with functionality to seralize into C++ syntax.
-
-		ASTs are currently stored as an AOS. They are always reconstructed on demand.
-		Thus redundant AST can easily occur.
-		Not sure if its better to store them in a hashmap.
-
-		Any type specific functions assume the construction of the AST was done correctly.
 	*/
 	struct AST
 	{
+		enum Entry : u32
+		{
+			Entry_Array_Expression,
+			Entry_Attributes,
+			Entry_Body,
+			Entry_Parameters,
+			Entry_Parameter_Type,
+			Entry_Parent_Type,
+			Entry_Return_Type,
+			Entry_Specifiers,
+			Entry_Value,
+		};
+
 	#	pragma region Member Functions
-		// add_entry with validation
-		void add( AST* other );
-
-		void add_entry( AST* other );
-
-		AST* body()
-		{
-			return entry( 0 );
-		}
-
-		AST* duplicate();
-
-		AST* entry( u32 idx )
-		{
-			return DynamicEntries ? ArrDyn[ idx ] : ArrStatic[ idx ];
-		}
-
-		bool has_entries()
-		{
-			return num_entries();
-		}
-
-		bool is_equal( AST* other );
-
-		s32 num_entries()
-		{
-			return DynamicEntries ? ArrDyn.num() : StaticIndex;
-		}
-
-		// Parameter
-
-		AST* get_param( s32 index )
-		{
-			if ( index <= 0 )
-				return this;
-
-			return entry( index + 1 );
-		}
-
-		s32 param_count()
-		{
-			// The first entry (which holds the type) represents the first parameter.
-			return num_entries();
-		}
-
-		AST* param_type()
-		{
-			return entry( 0 );
-		}
-
-		// Specifiers
-
-		bool add_specifier( SpecifierT spec )
-		{
-			if ( StaticIndex == AST::ArrSpecs_Cap )
-			{
-				log_failure("AST::add_specifier: Attempted to add over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
-				return false;
-			}
-
-			ArrSpecs[ StaticIndex ] = spec;
-			StaticIndex++;
-			return true;
-		}
-
-		s32 has_specifier( SpecifierT spec )
-		{
-			for ( s32 idx = 0; idx < StaticIndex; idx++ )
-			{
-				if ( ArrSpecs[StaticIndex] == spec )
-					return idx;
-			}
-
-			return -1;
-		}
-
-		// Typename
-
-		bool typename_is_ptr()
-		{
-			assert_crash("not implemented");
-			return false;
-		}
-
-		bool typename_is_ref()
-		{
-			assert_crash("not implemented");
-			return false;
-		}
-
-		AST* typename_specifiers()
-		{
-			return entry( 0 );
-		}
+		void  add_entry( AST* other );
+		// AST*  body();
+		AST*  duplicate();
+		AST*& entry( u32 idx );
+		bool  has_entries();
+		bool  is_equal( AST* other );
+		s32   num_entries();
 
 		// Serialization
 
@@ -2849,12 +2741,358 @@ namespace gen
 
 	// Its intended for the AST to have equivalent size to its POD.
 	// All extra functionality within the AST namespace should just be syntatic sugar.
-	static_assert( sizeof(Code)    == sizeof(Code_POD), "ERROR: Code is not POD" );
 	static_assert( sizeof(AST)     == sizeof(AST_POD), "ERROR: AST IS NOT POD" );
 	static_assert( sizeof(AST_POD) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
 
+	/*
+		AST* typedef as to not constantly have to add the '*' as this is written often..
+	*/
+	struct Code
+	{
+	#	pragma region Statics
+		// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
+		static Code Global;
+
+		// Used to identify invalid generated code.
+		static Code Invalid;
+	#	pragma endregion Statics
+
+		#define Using_Code                                                                \
+		void set_global()                                                                 \
+		{                                                                                 \
+			if ( ast == nullptr )                                                         \
+			{                                                                             \
+				log_failure("Code::set_global: Cannot set code as global, AST is null!"); \
+				return;                                                                   \
+			}                                                                             \
+                                                                                          \
+			ast->Parent = Code::Global.ast;                                               \
+		}                                                                                 \
+		bool is_valid()                                                                   \
+		{                                                                                 \
+			return ast != nullptr && ast->Type != CodeT::Invalid;                         \
+		}                                                                                 \
+		bool operator ==( Code other )                                                    \
+		{                                                                                 \
+			return ast == other.ast;                                                      \
+		}                                                                                 \
+		bool operator !=( Code other )                                                    \
+		{                                                                                 \
+			return ast != other.ast;                                                      \
+		}                                                                                 \
+		AST* operator->()                                                                 \
+		{                                                                                 \
+			if ( ast == nullptr )                                                         \
+			{                                                                             \
+				log_failure("Attempt to dereference a nullptr!");                         \
+				return nullptr;                                                           \
+			}                                                                             \
+                                                                                          \
+			return ast;                                                                   \
+		}                                                                                 \
+		operator AST*()                                                                   \
+		{                                                                                 \
+			return ast;                                                                   \
+		}                                                                                 \
+		AST* ast
+
+		Using_Code;
+
+		operator CodeAttributes() const;
+		operator CodeComment() const;
+		operator CodeClass() const;
+		operator CodeExec() const;
+		operator CodeEnum() const;
+		operator CodeExtern() const;
+		operator CodeInclude() const;
+		operator CodeFriend() const;
+		operator CodeFn() const;
+		operator CodeModule() const;
+		operator CodeNamespace() const;
+		operator CodeOperator() const;
+		operator CodeOpCast() const;
+		operator CodeParams() const;
+		operator CodeSpecifiers() const;
+		operator CodeStruct() const;
+		operator CodeTemplate() const;
+		operator CodeType() const;
+		operator CodeTypedef() const;
+		operator CodeUnion() const;
+		operator CodeUsing() const;
+		operator CodeUsingNamespace() const;
+		operator CodeVar() const;
+		operator CodeBody() const;
+		operator CodeClassBody() const;
+		operator CodeEnumBody() const;
+		operator CodeExportBody() const;
+		operator CodeExternBody() const;
+		operator CodeFnBody() const;
+		operator CodeGlobalBody() const;
+		operator CodeNamespaceBody() const;
+		operator CodeStructBody() const;
+		operator CodeUnionBody() const;
+	};
+
+	struct Code_POD
+	{
+		AST* ast;
+	};
+
+	static_assert( sizeof(Code)    == sizeof(Code_POD), "ERROR: Code is not POD" );
+
 	// Used when the its desired when omission is allowed in a definition.
 	constexpr Code NoCode = { nullptr };
+
+#pragma region Code Types
+#ifndef GEN_ENFORCE_STRONG_CODE_TYPES
+	#define Define_ParentCast          \
+	operator Code()                    \
+	{                                  \
+		return * rcast( Code*, this ); \
+	}
+#else
+	#define Define_ParentCast          \
+	explicit operator Code()           \
+	{                                  \
+		return * rcast( Code*, this ); \
+	}
+#endif
+
+	#define Define_CodeBodyType( Name )                              \
+	struct Code##Name                                                \
+	{                                                                \
+		Using_Code;                                                  \
+		Define_ParentCast;                                           \
+                                                                     \
+		Code* begin()                                                \
+		{                                                            \
+			return rcast( Code*, ast->entry(0));                     \
+		}                                                            \
+		Code* end()                                                  \
+		{                                                            \
+			return rcast( Code*, ast->entry( ast->num_entries() ) ); \
+		}                                                            \
+	}
+
+	Define_CodeBodyType( Body );
+	Define_CodeBodyType( ClassBody );
+	Define_CodeBodyType( EnumBody );
+	Define_CodeBodyType( ExportBody );
+	Define_CodeBodyType( ExternBody );
+	Define_CodeBodyType( FnBody );
+	Define_CodeBodyType( GlobalBody );
+	Define_CodeBodyType( NamespaceBody );
+	Define_CodeBodyType( StructBody );
+	Define_CodeBodyType( UnionBody );
+
+	struct CodeAttributes
+	{
+		Using_Code;
+		Define_ParentCast;
+	};
+
+	struct CodeComment
+	{
+		Using_Code;
+		Define_ParentCast;
+	};
+
+	struct CodeClass
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeClassBody  body();
+		CodeType       parent();
+	};
+
+	struct CodeExec
+	{
+		Using_Code;
+		Define_ParentCast;
+	};
+
+	struct CodeEnum
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeEnumBody   body();
+		CodeType       type();
+	};
+
+	struct CodeExtern
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeExternBody body();
+	};
+
+	struct CodeInclude
+	{
+		Using_Code;
+		Define_ParentCast;
+	};
+
+	struct CodeFriend
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		Code definition();
+	};
+
+	struct CodeFn
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeFnBody     body();
+		CodeParams     params();
+		CodeType       return_type();
+		CodeSpecifiers specifiers();
+	};
+
+	struct CodeModule
+	{
+		Using_Code;
+		Define_ParentCast;
+	};
+
+	struct CodeNamespace
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeNamespaceBody body();
+	};
+
+	struct CodeUsingNamespace
+	{
+		Using_Code;
+		Define_ParentCast;
+	};
+
+	struct CodeOperator
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeFnBody     body();
+		CodeParams     params();
+		CodeType       return_type();
+		CodeSpecifiers specifiers();
+	};
+
+	struct CodeOpCast
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeFnBody body();
+		CodeType   type();
+	};
+
+	struct CodeParams
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		void       add_param( CodeParams param );
+		bool       has_params();
+		CodeParams get( s32 idx );
+		s32        num();
+		CodeType   type();
+	};
+
+	struct CodeSpecifiers
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		SpecifierT begin();
+		SpecifierT end();
+
+		bool add( SpecifierT spec );
+		s32  has( SpecifierT spec );
+	};
+
+	struct CodeStruct
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeStructBody body();
+		CodeType       parent();
+	};
+
+	struct CodeTemplate
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		Code definition();
+		Code params();
+	};
+
+	struct CodeType
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		Code           array_expr();
+		CodeAttributes attributes();
+		CodeSpecifiers specifiers();
+	};
+
+	struct CodeTypedef
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeType       type();
+	};
+
+	struct CodeUnion
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeUnionBody  body();
+	};
+
+	struct CodeUsing
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		Code attributes();
+		Code type();
+	};
+
+	struct CodeVar
+	{
+		Using_Code;
+		Define_ParentCast;
+
+		CodeAttributes attributes();
+		CodeSpecifiers specifiers();
+		CodeType       type();
+	};
+
+	#undef Define_CodeBodyType
+	#undef Define_ParentCast
+	#undef Using_Code
+#pragma endregion Code Types
+
 #pragma endregion Data Structures
 
 #pragma region Gen Interface
@@ -2892,115 +3130,115 @@ namespace gen
 	void set_allocator_type_table        ( AllocatorInfo type_reg_allocator );
 
 #	pragma region Upfront
-	Code def_attributes( StrC content );
-	Code def_comment   ( StrC content );
+	CodeAttributes def_attributes( StrC content );
+	CodeComment    def_comment   ( StrC content );
 
-	Code def_class( StrC name
-		, Code body         = NoCode
-		, Code parent       = NoCode, AccessSpec access = AccessSpec::Default
-		, Code attributes   = NoCode
+	CodeClass def_class( StrC name
+		, CodeClassBody  body         = NoCode
+		, CodeType       parent       = NoCode, AccessSpec access = AccessSpec::Default
+		, CodeAttributes attributes   = NoCode
 		, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_enum( StrC
+	CodeEnum def_enum( StrC
 		, Code       body      = NoCode,      Code type       = NoCode
 		, EnumT      specifier = EnumRegular, Code attributes = NoCode
 		, ModuleFlag mflags    = ModuleFlag::None );
 
-	Code def_execution  ( StrC content );
-	Code def_extern_link( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
-	Code def_friend     ( Code symbol );
+	CodeExec   def_execution  ( StrC content );
+	CodeExtern def_extern_link( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
+	CodeFriend def_friend     ( Code symbol );
 
-	Code def_function( StrC name
+	CodeFn def_function( StrC name
 		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_include  ( StrC content );
-	Code def_module   ( StrC name,            ModuleFlag mflags = ModuleFlag::None );
-	Code def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
+	CodeInclude   def_include  ( StrC content );
+	CodeModule    def_module   ( StrC name,            ModuleFlag mflags = ModuleFlag::None );
+	CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_operator( OperatorT op
+	CodeOperator def_operator( OperatorT op
 		, Code       params     = NoCode, Code ret_type   = NoCode, Code body = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_operator_cast( Code type, Code body = NoCode );
+	CodeOpCast def_operator_cast( Code type, Code body = NoCode );
 
-	Code def_param    ( Code type, StrC name, Code value = NoCode );
-	Code def_specifier( SpecifierT specifier );
+	CodeParams     def_param    ( Code type, StrC name, Code value = NoCode );
+	CodeSpecifiers def_specifier( SpecifierT specifier );
 
-	Code def_struct( StrC name
+	CodeStruct def_struct( StrC name
 		, Code       body
 		, Code       parent     = NoCode, AccessSpec access = AccessSpec::Default
 		, Code       attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
-	Code def_template( Code params, Code body, ModuleFlag mflags = ModuleFlag::None );
+	CodeTemplate def_template( Code params, Code body, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode, Code attributes = NoCode );
-	Code def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, Code specifiers = NoCode, Code attributes = NoCode );
+	CodeTypedef def_typedef( StrC name, Code type, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_union( StrC name, Code body, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	CodeUnion def_union( StrC name, Code body, Code attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
-	Code def_using( StrC name, Code type = NoCode
+	CodeUsing def_using( StrC name, Code type = NoCode
 		, Code       attributess = NoCode
 		, ModuleFlag mflags      = ModuleFlag::None );
 
-	Code def_using_namespace( StrC name );
+	CodeUsingNamespace def_using_namespace( StrC name );
 
-	Code def_variable( Code type, StrC name, Code value = NoCode
+	CodeVar def_variable( Code type, StrC name, Code value = NoCode
 		, Code       specifiers = NoCode, Code attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
 	// Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
-	Code def_body( CodeT type );
+	CodeBody def_body( CodeT type );
 
 	// There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 	/// or provide as an array of Code objects.
 
-	Code def_class_body     ( s32 num, ... );
-	Code def_class_body     ( s32 num, Code* codes );
-	Code def_enum_body       ( s32 num, ... );
-	Code def_enum_body       ( s32 num, Code* codes );
-	Code def_export_body     ( s32 num, ... );
-	Code def_export_body     ( s32 num, Code* codes);
-	Code def_extern_link_body( s32 num, ... );
-	Code def_extern_link_body( s32 num, Code* codes );
-	Code def_function_body   ( s32 num, ... );
-	Code def_function_body   ( s32 num, Code* codes );
-	Code def_global_body     ( s32 num, ... );
-	Code def_global_body     ( s32 num, Code* codes );
-	Code def_namespace_body  ( s32 num, ... );
-	Code def_namespace_body  ( s32 num, Code* codes );
-	Code def_params          ( s32 num, ... );
-	Code def_params          ( s32 num, Code* params );
-	Code def_specifiers      ( s32 num, ... );
-	Code def_specifiers      ( s32 num, SpecifierT* specs );
-	Code def_struct_body     ( s32 num, ... );
-	Code def_struct_body     ( s32 num, Code* codes );
-	Code def_union_body      ( s32 num, ... );
-	Code def_union_body      ( s32 num, Code* codes );
+	CodeClassBody  def_class_body      ( s32 num, ... );
+	CodeClassBody  def_class_body      ( s32 num, Code* codes );
+	CodeEnumBody   def_enum_body       ( s32 num, ... );
+	CodeEnumBody   def_enum_body       ( s32 num, Code* codes );
+	CodeExportBody def_export_body     ( s32 num, ... );
+	CodeExportBody def_export_body     ( s32 num, Code* codes);
+	CodeExternBody def_extern_link_body( s32 num, ... );
+	CodeExternBody def_extern_link_body( s32 num, Code* codes );
+	CodeFnBody     def_function_body   ( s32 num, ... );
+	CodeFnBody     def_function_body   ( s32 num, Code* codes );
+	CodeGlobalBody def_global_body     ( s32 num, ... );
+	CodeGlobalBody def_global_body     ( s32 num, Code* codes );
+	CodeNamespace  def_namespace_body  ( s32 num, ... );
+	CodeNamespace  def_namespace_body  ( s32 num, Code* codes );
+	CodeParams     def_params          ( s32 num, ... );
+	CodeParams     def_params          ( s32 num, Code* params );
+	CodeSpecifiers def_specifiers      ( s32 num, ... );
+	CodeSpecifiers def_specifiers      ( s32 num, SpecifierT* specs );
+	CodeStructBody def_struct_body     ( s32 num, ... );
+	CodeStructBody def_struct_body     ( s32 num, Code* codes );
+	CodeUnionBody  def_union_body      ( s32 num, ... );
+	CodeUnionBody  def_union_body      ( s32 num, Code* codes );
 #	pragma endregion Upfront
 
 #	pragma region Parsing
 #	ifdef GEN_FEATURE_PARSING
-	Code parse_class        ( StrC class_def     );
-	Code parse_enum         ( StrC enum_def      );
-	Code parse_export_body  ( StrC export_def    );
-	Code parse_extern_link  ( StrC exten_link_def);
-	Code parse_friend       ( StrC friend_def    );
-	Code parse_function     ( StrC fn_def        );
-	Code parse_global_body  ( StrC body_def      );
-	Code parse_namespace    ( StrC namespace_def );
-	Code parse_operator     ( StrC operator_def  );
-	Code parse_operator_cast( StrC operator_def  );
-	Code parse_struct       ( StrC struct_def    );
-	Code parse_template     ( StrC template_def  );
-	Code parse_type         ( StrC type_def      );
-	Code parse_typedef      ( StrC typedef_def   );
-	Code parse_union        ( StrC union_def     );
-	Code parse_using        ( StrC using_def     );
-	Code parse_variable     ( StrC var_def       );
+	CodeClass      parse_class        ( StrC class_def     );
+	CodeEnum       parse_enum         ( StrC enum_def      );
+	CodeExportBody parse_export_body  ( StrC export_def    );
+	CodeExtern     parse_extern_link  ( StrC exten_link_def);
+	CodeFriend     parse_friend       ( StrC friend_def    );
+	CodeFn         parse_function     ( StrC fn_def        );
+	CodeGlobalBody parse_global_body  ( StrC body_def      );
+	CodeNamespace  parse_namespace    ( StrC namespace_def );
+	CodeOperator   parse_operator     ( StrC operator_def  );
+	CodeOpCast     parse_operator_cast( StrC operator_def  );
+	CodeStruct     parse_struct       ( StrC struct_def    );
+	CodeTemplate   parse_template     ( StrC template_def  );
+	CodeType       parse_type         ( StrC type_def      );
+	CodeTypedef    parse_typedef      ( StrC typedef_def   );
+	CodeUnion      parse_union        ( StrC union_def     );
+	CodeUsing      parse_using        ( StrC using_def     );
+	CodeVar        parse_variable     ( StrC var_def       );
 #	endif
 #	pragma endregion Parsing
 
@@ -3148,8 +3386,11 @@ namespace gen
 
 #	define args( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
 
+#	define code_str( ... ) gen::untyped_str( code( __VA_ARGS__ ) )
+#	define code_fmt( ... ) gen::untyped_str( token_fmt( __VA_ARGS__ ) )
+
 // Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-#	define token_fmt( ... ) token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+#	define token_fmt( ... ) gen::token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
 #pragma endregion Macros
 
 #pragma region Constants
@@ -3158,23 +3399,23 @@ namespace gen
 {
 	// Predefined typename codes. Are set to readonly and are setup during gen::init()
 
-	extern Code t_b32;
+	extern CodeType t_b32;
 
-	extern Code t_s8;
-	extern Code t_s16;
-	extern Code t_s32;
-	extern Code t_s64;
+	extern CodeType t_s8;
+	extern CodeType t_s16;
+	extern CodeType t_s32;
+	extern CodeType t_s64;
 
-	extern Code t_u8;
-	extern Code t_u16;
-	extern Code t_u32;
-	extern Code t_u64;
+	extern CodeType t_u8;
+	extern CodeType t_u16;
+	extern CodeType t_u32;
+	extern CodeType t_u64;
 
-	extern Code t_sw;
-	extern Code t_uw;
+	extern CodeType t_sw;
+	extern CodeType t_uw;
 
-	extern Code t_f32;
-	extern Code t_f64;
+	extern CodeType t_f32;
+	extern CodeType t_f64;
 }
 #endif
 
@@ -3200,14 +3441,14 @@ namespace gen
 
 	// Predefined Codes. Are set to readonly and are setup during gen::init()
 
-	extern Code t_auto;
-	extern Code t_void;
-	extern Code t_int;
-	extern Code t_bool;
-	extern Code t_char;
-	extern Code t_wchar_t;
-	extern Code t_class;
-	extern Code t_typename;
+	extern CodeType t_auto;
+	extern CodeType t_void;
+	extern CodeType t_int;
+	extern CodeType t_bool;
+	extern CodeType t_char;
+	extern CodeType t_wchar_t;
+	extern CodeType t_class;
+	extern CodeType t_typename;
 
 	extern Code access_public;
 	extern Code access_protected;
@@ -3218,23 +3459,23 @@ namespace gen
 
 	extern Code pragma_once;
 
-	extern Code spec_const;
-	extern Code spec_consteval;
-	extern Code spec_constexpr;
-	extern Code spec_constinit;
-	extern Code spec_extern_linkage;
-	extern Code spec_global;
-	extern Code spec_inline;
-	extern Code spec_internal_linkage;
-	extern Code spec_local_persist;
-	extern Code spec_mutable;
-	extern Code spec_ptr;
-	extern Code spec_ref;
-	extern Code spec_register;
-	extern Code spec_rvalue;
-	extern Code spec_static_member;
-	extern Code spec_thread_local;
-	extern Code spec_volatile;
+	extern CodeSpecifiers spec_const;
+	extern CodeSpecifiers spec_consteval;
+	extern CodeSpecifiers spec_constexpr;
+	extern CodeSpecifiers spec_constinit;
+	extern CodeSpecifiers spec_extern_linkage;
+	extern CodeSpecifiers spec_global;
+	extern CodeSpecifiers spec_inline;
+	extern CodeSpecifiers spec_internal_linkage;
+	extern CodeSpecifiers spec_local_persist;
+	extern CodeSpecifiers spec_mutable;
+	extern CodeSpecifiers spec_ptr;
+	extern CodeSpecifiers spec_ref;
+	extern CodeSpecifiers spec_register;
+	extern CodeSpecifiers spec_rvalue;
+	extern CodeSpecifiers spec_static_member;
+	extern CodeSpecifiers spec_thread_local;
+	extern CodeSpecifiers spec_volatile;
 }
 #pragma endregion Constants
 
@@ -3276,29 +3517,116 @@ namespace gen
 	}
 
 	inline
-	void Code::set_global()
+	bool AST::has_entries()
 	{
-		if ( ast == nullptr )
-		{
-			log_failure("Code::set_global: Cannot set code as global, AST is null!");
-			return;
-		}
-
-		ast->Parent = Global.ast;
+		return num_entries();
 	}
 
 	inline
-	bool Code::is_valid()
+	AST*& AST::entry( u32 idx )
 	{
-		return ast != nullptr && ast->Type != CodeT::Invalid;
+		return DynamicEntries ? ArrDyn[ idx ] : ArrStatic[ idx ];
 	}
 
-	AST::operator gen::Code()
+	inline
+	s32 AST::num_entries()
+	{
+		return DynamicEntries ? ArrDyn.num() : StaticIndex;
+	}
+
+	inline
+	AST::operator Code()
 	{
 		return { this };
 	}
 
-	Code def_body( CodeT type )
+	inline
+	CodeParams CodeParams::get( s32 index )
+	{
+		if ( index <= 0 )
+			return * this;
+
+		return (Code){ ast->entry( index + 1 ) };
+	}
+
+	inline
+	s32 CodeParams::num()
+	{
+		// The first entry (which holds the type) represents the first parameter.
+		return ast->num_entries();
+	}
+
+	inline
+	bool CodeSpecifiers::add( SpecifierT spec )
+	{
+		if ( ast->StaticIndex == AST::ArrSpecs_Cap )
+		{
+			log_failure("AST::add_specifier: Attempted to add over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
+			return false;
+		}
+
+		ast->ArrSpecs[ ast->StaticIndex ] = spec;
+		ast->StaticIndex++;
+		return true;
+	}
+
+	inline
+	s32 CodeSpecifiers::has( SpecifierT spec )
+	{
+		for ( s32 idx = 0; idx < ast->StaticIndex; idx++ )
+		{
+			if ( ast->ArrSpecs[ ast->StaticIndex ] == spec )
+				return idx;
+		}
+
+		return -1;
+	}
+
+#pragma region Operater Cast Impl
+	#define Define_CodeCast( type )    \
+	inline Code::operator type() const \
+	{                                  \
+		return * rcast( type*, ast );  \
+	}
+
+	Define_CodeCast( CodeAttributes );
+	Define_CodeCast( CodeComment );
+	Define_CodeCast( CodeClass );
+	Define_CodeCast( CodeExec );
+	Define_CodeCast( CodeEnum );
+	Define_CodeCast( CodeExtern );
+	Define_CodeCast( CodeInclude );
+	Define_CodeCast( CodeFriend );
+	Define_CodeCast( CodeFn );
+	Define_CodeCast( CodeModule );
+	Define_CodeCast( CodeNamespace );
+	Define_CodeCast( CodeOperator );
+	Define_CodeCast( CodeOpCast );
+	Define_CodeCast( CodeParams );
+	Define_CodeCast( CodeSpecifiers );
+	Define_CodeCast( CodeStruct );
+	Define_CodeCast( CodeTemplate );
+	Define_CodeCast( CodeType );
+	Define_CodeCast( CodeTypedef );
+	Define_CodeCast( CodeUnion );
+	Define_CodeCast( CodeUsing );
+	Define_CodeCast( CodeUsingNamespace );
+	Define_CodeCast( CodeVar );
+	Define_CodeCast( CodeBody );
+	Define_CodeCast( CodeClassBody );
+	Define_CodeCast( CodeEnumBody );
+	Define_CodeCast( CodeExportBody );
+	Define_CodeCast( CodeExternBody );
+	Define_CodeCast( CodeFnBody );
+	Define_CodeCast( CodeGlobalBody );
+	Define_CodeCast( CodeNamespaceBody );
+	Define_CodeCast( CodeStructBody );
+	Define_CodeCast( CodeUnionBody );
+
+	#undef Define_CodeCast
+#pragma endregion Operater Cast Impl
+
+	CodeBody def_body( CodeT type )
 	{
 		switch ( type )
 		{

@@ -54,7 +54,7 @@ u32 gen_sanity_upfront()
 		Code fwd = def_enum( name(ETestEnum), NoCode, t_u8 );
 		Code def;
 		{
-			Code body = untyped_str( code(
+			Code body = code_str( code(
 				A,
 				B,
 				C
@@ -160,7 +160,7 @@ u32 gen_sanity_upfront()
 
 		Code bitflagtest;
 		{
-			Code body = def_enum_body( 1, untyped_str( code(
+			Code body = def_enum_body( 1, code_str( code(
 				A = 1 << 0,
 				B = 1 << 1,
 				C = 1 << 2
@@ -177,7 +177,7 @@ u32 gen_sanity_upfront()
 			);
 
 			op_fwd = def_operator( EOperator::BOr, params, t_bitflag );
-			op_or  = def_operator( EOperator::BOr, params, t_bitflag, untyped_str( code(
+			op_or  = def_operator( EOperator::BOr, params, t_bitflag, code_str( code(
 				return EBitFlagtest( (u8)a | (u8)b );
 			)));
 		}
@@ -299,7 +299,7 @@ u32 gen_sanity_upfront()
 	// Variable
 	{
 		Code bss  = def_variable( t_u8, name(test_variable) );
-		Code data = def_variable( t_u8, name(test_variable2), untyped_str( code( 0x12 )) );
+		Code data = def_variable( t_u8, name(test_variable2), code_str( code( 0x12 )) );
 
 		gen_sanity_file.print(bss);
 		gen_sanity_file.print(data);

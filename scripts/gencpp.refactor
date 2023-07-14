@@ -240,7 +240,6 @@
 // word StringTable  new_name
 // word UsingRegular   new_name
 // word UsingNamespace new_name
-// word UsingT         new_name
 
 // gencpp Data
 

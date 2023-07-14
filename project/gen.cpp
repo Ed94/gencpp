@@ -1722,33 +1722,33 @@ namespace gen
 	}
 
 #pragma region Constants
-	global Code t_auto;
-	global Code t_void;
-	global Code t_int;
-	global Code t_bool;
-	global Code t_char;
-	global Code t_wchar_t;
-	global Code t_class;
-	global Code t_typename;
+	global CodeType t_auto;
+	global CodeType t_void;
+	global CodeType t_int;
+	global CodeType t_bool;
+	global CodeType t_char;
+	global CodeType t_wchar_t;
+	global CodeType t_class;
+	global CodeType t_typename;
 
 	#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-	global Code t_b32;
+	global CodeType t_b32;
 
-	global Code t_s8;
-	global Code t_s16;
-	global Code t_s32;
-	global Code t_s64;
+	global CodeType t_s8;
+	global CodeType t_s16;
+	global CodeType t_s32;
+	global CodeType t_s64;
 
-	global Code t_u8;
-	global Code t_u16;
-	global Code t_u32;
-	global Code t_u64;
+	global CodeType t_u8;
+	global CodeType t_u16;
+	global CodeType t_u32;
+	global CodeType t_u64;
 
-	global Code t_sw;
-	global Code t_uw;
+	global CodeType t_sw;
+	global CodeType t_uw;
 
-	global Code t_f32;
-	global Code t_f64;
+	global CodeType t_f32;
+	global CodeType t_f64;
 	#endif
 
 	global Code access_public;
@@ -1760,23 +1760,23 @@ namespace gen
 
 	global Code pragma_once;
 
-	global Code spec_const;
-	global Code spec_consteval;
-	global Code spec_constexpr;
-	global Code spec_constinit;
-	global Code spec_extern_linkage;
-	global Code spec_global;
-	global Code spec_inline;
-	global Code spec_internal_linkage;
-	global Code spec_local_persist;
-	global Code spec_mutable;
-	global Code spec_ptr;
-	global Code spec_ref;
-	global Code spec_register;
-	global Code spec_rvalue;
-	global Code spec_static_member;
-	global Code spec_thread_local;
-	global Code spec_volatile;
+	global CodeSpecifiers spec_const;
+	global CodeSpecifiers spec_consteval;
+	global CodeSpecifiers spec_constexpr;
+	global CodeSpecifiers spec_constinit;
+	global CodeSpecifiers spec_extern_linkage;
+	global CodeSpecifiers spec_global;
+	global CodeSpecifiers spec_inline;
+	global CodeSpecifiers spec_internal_linkage;
+	global CodeSpecifiers spec_local_persist;
+	global CodeSpecifiers spec_mutable;
+	global CodeSpecifiers spec_ptr;
+	global CodeSpecifiers spec_ref;
+	global CodeSpecifiers spec_register;
+	global CodeSpecifiers spec_rvalue;
+	global CodeSpecifiers spec_static_member;
+	global CodeSpecifiers spec_thread_local;
+	global CodeSpecifiers spec_volatile;
 #pragma endregion Constants
 
 #pragma region AST Body Case Macros
@@ -3184,7 +3184,7 @@ namespace gen
 	};
 
 	inline
-	OpValidateResult operator__validate( OperatorT op, Code params_code, Code ret_type, Code specifier )
+	OpValidateResult operator__validate( OperatorT op, CodeParams params_code, Code ret_type, Code specifier )
 	{
 		using namespace EOperator;
 
@@ -3208,7 +3208,7 @@ namespace gen
 		}
 
 	#	define check_param_eq_ret()                                                                    \
-		if ( ! is_member_symbol && params_code->param_type() != ret_type )                             \
+		if ( ! is_member_symbol && params_code.type() != ret_type )                             \
 		{                                                                                              \
 			log_failure("gen_def_operator: operator%s requires first parameter to equal return type\n" \
 				"param types: %s\n"                                                                    \
@@ -3240,7 +3240,7 @@ namespace gen
 			case Assign:
 				check_params();
 
-				if ( params_code->param_count() > 1 )
+				if ( params_code.num() > 1 )
 				{
 					log_failure("gen::def_operator: "
 						"operator%s does not support non-member definition (more than one parameter provided) - %s",
@@ -3265,17 +3265,17 @@ namespace gen
 			case Assign_RShift:
 				check_params();
 
-				if ( params_code->param_count() == 1 )
+				if ( params_code.num() == 1 )
 					is_member_symbol = true;
 
 				else
 					check_param_eq_ret();
 
-				if (params_code->param_count() > 2 )
+				if (params_code.num() > 2 )
 				{
 					log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
 						, to_str(op)
-						, params_code->param_count()
+						, params_code.num()
 						, params_code->debug_str()
 					);
 					return OpValidateResult::Fail;
@@ -3296,10 +3296,10 @@ namespace gen
 						return OpValidateResult::Fail;
 					}
 
-					switch ( params_code->param_count() )
+					switch ( params_code.num() )
 					{
 						case 1:
-							if ( params_code->param_type()->is_equal( t_int ) )
+							if ( params_code.type()->is_equal( t_int ) )
 								is_member_symbol = true;
 
 							else
@@ -3309,7 +3309,7 @@ namespace gen
 						case 2:
 							check_param_eq_ret();
 
-							if ( ! params_code->get_param(1)->is_equal( t_int ) )
+							if ( ! params_code.get(1)->is_equal( t_int ) )
 							{
 								log_failure("gen::def_operator: "
 									"operator%s requires second parameter of non-member definition to be int for post-decrement",
@@ -3320,9 +3320,9 @@ namespace gen
 						break;
 
 						default:
-							log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
+							log_failure("gen::def_operator: operator%s recieved unexpected number of parameters recived %d instead of 0-2"
 								, to_str(op)
-								, params_code->param_count()
+								, params_code.num()
 							);
 							return OpValidateResult::Fail;
 					}
@@ -3343,7 +3343,7 @@ namespace gen
 						return OpValidateResult::Fail;
 					}
 
-					if ( params_code->param_type()->is_equal( ret_type ) )
+					if ( params_code.type()->is_equal( ret_type ) )
 					{
 						log_failure("gen::def_operator: "
 							"operator%s is non-member symbol yet first paramter does not equal return type\n"
@@ -3355,11 +3355,11 @@ namespace gen
 						return OpValidateResult::Fail;
 					}
 
-					if ( params_code->param_count() > 1 )
+					if ( params_code.num() > 1 )
 					{
 						log_failure("gen::def_operator: operator%s may not have more than one parameter - param count: %d"
 							, to_str(op)
-							, params_code->param_count()
+							, params_code.num()
 						);
 						return OpValidateResult::Fail;
 					}
@@ -3378,14 +3378,14 @@ namespace gen
 			case RShift:
 				check_params();
 
-				switch ( params_code->param_count() )
+				switch ( params_code.num() )
 				{
 					case 1:
 						is_member_symbol = true;
 					break;
 
 					case 2:
-						if ( ! params_code->param_type()->is_equal( ret_type ) )
+						if ( ! params_code.type()->is_equal( ret_type ) )
 						{
 							log_failure("gen::def_operator: "
 								"operator%s is non-member symbol yet first paramter does not equal return type\n"
@@ -3401,7 +3401,7 @@ namespace gen
 					default:
 						log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
 							, to_str(op)
-							, params_code->param_count()
+							, params_code.num()
 						);
 						return OpValidateResult::Fail;
 				}
@@ -3588,7 +3588,7 @@ namespace gen
 	The largest of the functions is related to operator overload definitions.
 	The library validates a good protion of their form and thus the argument processing for is quite a bit.
 */
-	Code def_attributes( StrC content )
+	CodeAttributes def_attributes( StrC content )
 	{
 		if ( content.Len <= 0 || content.Ptr == nullptr )
 		{
@@ -3605,7 +3605,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_comment( StrC content )
+	CodeComment def_comment( StrC content )
 	{
 		if ( content.Len <= 0 || content.Ptr == nullptr )
 		{
@@ -3622,7 +3622,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_class( StrC name
+	CodeClass def_class( StrC name
 		, Code body
 		, Code parent, AccessSpec parent_access
 		, Code attributes
@@ -3682,7 +3682,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_enum( StrC name
+	CodeEnum def_enum( StrC name
 		, Code body, Code type
 		, EnumT specifier, Code attributes
 		, ModuleFlag mflags )
@@ -3748,7 +3748,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_execution( StrC content )
+	CodeExec def_execution( StrC content )
 	{
 		if ( content.Len <= 0 || content.Ptr == nullptr )
 		{
@@ -3765,7 +3765,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_extern_link( StrC name, Code body, ModuleFlag mflags )
+	CodeExtern def_extern_link( StrC name, Code body, ModuleFlag mflags )
 	{
 		using namespace ECode;
 
@@ -3784,12 +3784,12 @@ namespace gen
 		result->Name        = get_cached_string( name );
 		result->ModuleFlags = mflags;
 
-		result->add_entry( body );
+		result->entry( AST::Entry_Body ) = body;
 
 		return result;
 	}
 
-	Code def_friend( Code declaration )
+	CodeFriend def_friend( Code declaration )
 	{
 		using namespace ECode;
 
@@ -5773,7 +5773,7 @@ namespace gen
 
 			untyped_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)untyped_tok.Text;
 
-			Code array_expr = untyped_str( untyped_tok );
+			Code array_expr = code_str( untyped_tok );
 
 			if ( left == 0 )
 			{
@@ -6297,7 +6297,7 @@ namespace gen
 			}
 
 			expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
-			expr            = untyped_str( expr_tok );
+			expr            = code_str( expr_tok );
 		}
 
 		eat( TokType::Statement_End );
@@ -6352,7 +6352,7 @@ namespace gen
 				eat( currtok.Type );
 			}
 
-			expr = untyped_str( expr_tok );
+			expr = code_str( expr_tok );
 		}
 
 		return expr;
@@ -6585,7 +6585,7 @@ namespace gen
 						eat( currtok.Type );
 					}
 
-					member = untyped_str( untyped_tok );
+					member = code_str( untyped_tok );
 				break;
 			}
 
@@ -7006,7 +7006,7 @@ namespace gen
 		{
 			// mem_copy( entries_code, body.Text, body.Length );
 
-			Code untyped_body = untyped_str( body );
+			Code untyped_body = code_str( body );
 
 			result->Type = is_enum_class ? Enum_Class : Enum;
 			result->add_entry( untyped_body );
@@ -7370,7 +7370,7 @@ namespace gen
 
 			body_str.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)body_str.Text;
 
-			body = untyped_str( body_str );
+			body = code_str( body_str );
 
 			eat( TokType::BraceCurly_Close );
 		}
@@ -8093,7 +8093,7 @@ namespace gen
 		return result;
 	}
 
-	Code untyped_str( StrC content )
+	Code code_str( StrC content )
 	{
 		Code
 		result          = make_code();
@@ -8104,7 +8104,7 @@ namespace gen
 		return result;
 	}
 
-	Code untyped_fmt( char const* fmt, ...)
+	Code code_fmt( char const* fmt, ...)
 	{
 		local_persist thread_local
 		char buf[GEN_PRINTF_MAXLEN] = { 0 };

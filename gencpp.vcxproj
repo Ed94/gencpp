@@ -121,7 +121,6 @@
     <ClInclude Include="test\Upfront\Sanity.Upfront.hpp" />
     <ClInclude Include="test\Parsed\Array.Parsed.hpp" />
     <ClInclude Include="test\Parsed\Sanity.Parsed.hpp" />
-    <ClInclude Include="thirdparty\zpl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="project\Bloat.cpp" />
