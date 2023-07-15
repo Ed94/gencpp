@@ -7,9 +7,9 @@ using namespace gen;
 
 Code gen__array_base()
 {
-	Code t_allocator_info = def_type( name(AllocatorInfo) );
+	CodeType t_allocator_info = def_type( name(AllocatorInfo) );
 
-	CodeStruct header = def_struct( name(ArrayHeader), 
+	CodeStruct header = def_struct( name(ArrayHeader),
 	def_struct_body( args(
 		  def_variable( t_allocator_info, name(Allocator) )
 		, def_variable( t_uw,             name(Capacity) )
@@ -29,9 +29,9 @@ Code gen__array( StrC type )
 	static CodeType t_allocator_info = def_type( name(AllocatorInfo) );
 	static Code     v_nullptr        = code_str(nullptr);
 
-	static CodeSpecifiers spec_ct_member     = def_specifiers( 2, ESpecifier::Constexpr, ESpecifier::Static_Member );
-	static CodeSpecifiers spec_static_inline = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
-	static CodeSpecifiers spec_static        = def_specifier( ESpecifier::Static_Member );
+	static CodeSpecifier spec_ct_member     = def_specifiers( 2, ESpecifier::Constexpr, ESpecifier::Static_Member );
+	static CodeSpecifier spec_static_inline = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
+	static CodeSpecifier spec_static        = def_specifier( ESpecifier::Static_Member );
 
 	static CodeUsing using_header    = def_using( name(Header), def_type( name(ArrayHeader) ) );
 	static CodeVar ct_grow_formula = def_variable( t_auto, name(grow_formula), untyped_str( code( & array_grow_formula )), spec_ct_member );
@@ -44,35 +44,35 @@ Code gen__array( StrC type )
 		name = { name_len, name_str };
 	};
 
-	Code t_array_type = def_type( name );
+	CodeType t_array_type = def_type( name );
 
-	Code t_type     = def_type( type );
-	Code t_type_ptr = def_type( type, __, spec_ptr );
-	Code t_type_ref = def_type( type, __, spec_ref );
+	CodeType t_type     = def_type( type );
+	CodeType t_type_ptr = def_type( type, __, spec_ptr );
+	CodeType t_type_ref = def_type( type, __, spec_ref );
 
-	Code t_alias     = def_type( name(Type) );
-	Code t_alias_ptr = def_type( name(Type), __, spec_ptr );
-	Code t_alias_ref = def_type( name(Type), __, spec_ref );
+	CodeType t_alias     = def_type( name(Type) );
+	CodeType t_alias_ptr = def_type( name(Type), __, spec_ptr );
+	CodeType t_alias_ref = def_type( name(Type), __, spec_ref );
 
-	Code t_header     = def_type( name(Header) );
-	Code t_header_ptr = def_type( name(Header), __, spec_ptr );
-	Code t_header_ref = def_type( name(Header), __, spec_ref );
+	CodeType t_header     = def_type( name(Header) );
+	CodeType t_header_ptr = def_type( name(Header), __, spec_ptr );
+	CodeType t_header_ref = def_type( name(Header), __, spec_ref );
 
-	Code array = {0};
+	CodeStruct array = {0};
 	{
-		Code using_type = def_using( name(Type), t_type );
-		Code data       = def_variable( t_alias_ptr, name(Data) );
+		CodeUsing using_type = def_using( name(Type), t_type );
+		CodeVar   data       = def_variable( t_alias_ptr, name(Data) );
 
-		Code init = def_function( name(init), def_param( t_allocator_info, name(allocator) ), t_array_type
+		CodeFn init = def_function( name(init), def_param( t_allocator_info, name(allocator) ), t_array_type
 			, def_execution( code(
 				return init_reserve( allocator, grow_formula(0) );
 			))
 			, spec_static
 		);
 
-		Code init_reserve;
+		CodeFn init_reserve;
 		{
-			Code params = def_params( args(
+			CodeParam params = def_params( args(
 				  def_param( t_allocator_info, name(allocator) )
 				, def_param( t_sw, name(capacity) )
 			));
@@ -93,7 +93,7 @@ Code gen__array( StrC type )
 			init_reserve = def_function( name(init_reserve), params, t_array_type, body, spec_static );
 		}
 
-		Code append = def_function( name(append), def_param(t_alias, name(value)), t_bool
+		CodeFn append = def_function( name(append), def_param(t_alias, name(value)), t_bool
 			, def_execution( code(
 				Header* header = get_header();
 
@@ -112,23 +112,23 @@ Code gen__array( StrC type )
 			))
 		);
 
-		Code back = def_function( name(back), __, t_alias_ref
+		CodeFn back = def_function( name(back), __, t_alias_ref
 			, def_execution( code(
 				Header& header = * get_header();
 				return Data[ header.Num - 1 ];
 			))
 		);
 
-		Code clear = def_function( name(clear), __, t_void
+		CodeFn clear = def_function( name(clear), __, t_void
 			, def_execution( code(
 				Header& header = * get_header();
 				header.Num = 0;
 			))
 		);
 
-		Code fill;
+		CodeFn fill;
 		{
-			Code params = def_params( 3
+			CodeParam params = def_params( 3
 				, def_param( t_uw,    name(begin) )
 				, def_param( t_uw,    name(end) )
 				, def_param( t_alias, name(value) )
@@ -151,20 +151,20 @@ Code gen__array( StrC type )
 			fill = def_function( name(fill), params, t_bool, body );
 		}
 
-		Code free = def_function( name(free), __, t_void
+		CodeFn free = def_function( name(free), __, t_void
 			, def_execution( code(
 				Header* header = get_header();
 				gen::free( header->Allocator, header );
 			))
 		);
 
-		Code get_header = def_function( name(get_header), __, t_header_ptr
+		CodeFn get_header = def_function( name(get_header), __, t_header_ptr
 			, def_execution( code(
 				return rcast( Header*, Data ) - 1;
 			))
 		);
 
-		Code grow = def_function( name(grow), def_param( t_uw, name(min_capacity)), t_bool
+		CodeFn grow = def_function( name(grow), def_param( t_uw, name(min_capacity)), t_bool
 			, def_execution( code(
 				Header& header = * get_header();
 
@@ -177,13 +177,13 @@ Code gen__array( StrC type )
 			))
 		);
 
-		Code num = def_function( name(num), __, t_uw
+		CodeFn num = def_function( name(num), __, t_uw
 			, def_execution( code(
 				return get_header()->Num;
 			))
 		);
 
-		Code pop = def_function( name(pop), __, t_bool
+		CodeFn pop = def_function( name(pop), __, t_bool
 			, def_execution( code(
 				Header& header = * get_header();
 
@@ -192,7 +192,7 @@ Code gen__array( StrC type )
 			))
 		);
 
-		Code remove_at = def_function( name(remove_at), def_param( t_uw, name(idx)), t_void
+		CodeFn remove_at = def_function( name(remove_at), def_param( t_uw, name(idx)), t_void
 			, def_execution( code(
 				Header* header = get_header();
 				ZPL_ASSERT( idx < header->Num );
@@ -202,7 +202,7 @@ Code gen__array( StrC type )
 			))
 		);
 
-		Code reserve = def_function( name(reserve), def_param( t_uw, name(new_capacity)), t_bool
+		CodeFn reserve = def_function( name(reserve), def_param( t_uw, name(new_capacity)), t_bool
 			, def_execution( code(
 				Header& header = * get_header();
 
@@ -213,7 +213,7 @@ Code gen__array( StrC type )
 			))
 		);
 
-		Code resize = def_function( name(resize), def_param( t_uw, name(num)), t_bool
+		CodeFn resize = def_function( name(resize), def_param( t_uw, name(num)), t_bool
 			, def_execution( code(
 				Header* header = get_header();
 
@@ -230,7 +230,7 @@ Code gen__array( StrC type )
 			))
 		);
 
-		Code set_capacity;
+		CodeFn set_capacity;
 		{
 			Code body = def_execution( code(
 				Header& header = * get_header();
@@ -261,11 +261,11 @@ Code gen__array( StrC type )
 			set_capacity = def_function( name(set_capacity), def_param( t_uw, name(new_capacity)), t_bool, body );
 		}
 
-		Code op_ptr = def_operator_cast( t_type_ptr, def_execution( code(
+		CodeOpCast op_ptr = def_operator_cast( t_type_ptr, def_execution( code(
 			return Data;
 		)));
 
-		Code body = def_struct_body( args(
+		CodeBody body = def_struct_body( args(
 			  using_header
 			, using_type
 			, ct_grow_formula
@@ -334,7 +334,7 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.Upfront.gen.hpp" );
 
-	Code include_zpl = def_include( txt_StrC("Bloat.hpp") );
+	CodeInclude include_zpl = def_include( txt_StrC("Bloat.hpp") );
 	gen_array_file.print( include_zpl );
 
 	gen_array_file.print( def_using_namespace( name(gen)));
@@ -355,8 +355,8 @@ u32 gen_array_file()
 			char const* cmt_str = str_fmt_buf( "// Dependency for %s type", request.Type );
 			s32         cmt_len = str_len( cmt_str );
 
-			Code cmt     = def_comment( { cmt_len, cmt_str } );
-			Code include = def_include( request.Dependency );
+			CodeComment cmt     = def_comment( { cmt_len, cmt_str } );
+			CodeInclude include = def_include( request.Dependency );
 
 			gen_array_file.print( cmt );
 			gen_array_file.print( include );

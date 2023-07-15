@@ -26,8 +26,8 @@ u32 gen_sanity_upfront()
 		CodeClass fwd = def_class( name(TestEmptyClass) );
 		CodeClass empty_body;
 		{
-			CodeComment   cmt  = def_comment( txt_StrC("Empty class body") );
-			CodeClassBody body = def_class_body( args( cmt ) );
+			CodeComment cmt  = def_comment( txt_StrC("Empty class body") );
+			CodeBody    body = def_class_body( args( cmt ) );
 
 			empty_body = def_class( name(TestEmptyClass), body );
 		}
@@ -77,7 +77,7 @@ u32 gen_sanity_upfront()
 			, def_comment( txt_StrC("Empty extern body") )
 		);
 
-		Code c_extern = def_extern_link( name(C), body );
+		CodeExtern c_extern = def_extern_link( name(C), body );
 
 		gen_sanity_file.print(c_extern);
 	}
@@ -86,8 +86,8 @@ u32 gen_sanity_upfront()
 
 	// Friend
 	{
-		CodeClass     fwd  = def_class( name(TestFriendFwd));
-		CodeClassBody body = def_class_body( args( def_friend( fwd ) ) );
+		CodeClass fwd  = def_class( name(TestFriendFwd));
+		CodeBody  body = def_class_body( args( def_friend( fwd ) ) );
 
 		gen_sanity_file.print( def_class( name(TestFriend), body ) );
 	}
@@ -99,7 +99,7 @@ u32 gen_sanity_upfront()
 		CodeFn fwd = def_function( name(test_function) );
 		CodeFn def;
 		{
-			CodeFnBody body = def_function_body( 1
+			CodeBody body = def_function_body( 1
 				, def_comment( txt_StrC("Empty function body") )
 			);
 
@@ -166,14 +166,14 @@ u32 gen_sanity_upfront()
 			)));
 			bitflagtest = def_enum( name(EBitFlagtest), body, t_u8,  EnumClass );
 		}
-		Code t_bitflag = def_type( name(EBitFlagtest) );
+		CodeType t_bitflag = def_type( name(EBitFlagtest) );
 
 		CodeOperator op_fwd, op_or;
 		{
-			CodeParams params = def_params( 2,
+			CodeParam params = def_params( args(
 				def_param( t_bitflag, name(a) ),
 				def_param( t_bitflag, name(b) )
-			);
+			));
 
 			op_fwd = def_operator( EOperator::BOr, params, t_bitflag );
 			op_or  = def_operator( EOperator::BOr, params, t_bitflag, untyped_str( code(
@@ -203,31 +203,31 @@ u32 gen_sanity_upfront()
 
 	// Parameters
 	{
-		Code fwd;
+		CodeFn fwd;
 		{
-			Code params = def_param( t_u8, name(a) );
+			CodeParam params = def_param( t_u8, name(a) );
 
 			fwd = def_function( name(test_function_wparam), params );
 		}
 
-		Code def, def2;
+		CodeFn def, def2;
 		{
-			Code body = def_function_body( 1
+			CodeBody body = def_function_body( 1
 				, def_comment( txt_StrC("Empty function body") )
 			);
 
-			Code params = def_params( args(
+			CodeParam params = def_params( args(
 				  def_param( t_u8, name(a) )
 				, def_param( t_u8, name(b) )
 			));
 
 			def = def_function( name(test_function_wparams), params, __, body );
 
-			Code param_a = def_param( t_u8, name(a));
-			Code param_b = def_param( t_u8, name(b));
-			Code params_arr[2] = { param_a, param_b };
+			CodeParam param_a = def_param( t_u8, name(a));
+			CodeParam param_b = def_param( t_u8, name(b));
+			CodeParam params_arr[2] = { param_a, param_b };
 
-			Code params2 = def_params( 2, params_arr );
+			CodeParam params2 = def_params( 2, params_arr );
 
 			def2 = def_function( name(test_function_wparams2), params2, __, body );
 		}
@@ -241,12 +241,12 @@ u32 gen_sanity_upfront()
 
 	// Specifiers
 	{
-		Code fwd_fn         = def_function( name(test_function_specifiers), __, __, __, spec_inline );
+		CodeFn fwd_fn = def_function( name(test_function_specifiers), __, __, __, spec_inline );
 
 		// TODO : Need an op overload here
 
-		Code u8_ptr         = def_type( name(u8), __, spec_ptr );
-		Code typedef_u8_ptr = def_typedef( name(ConstExprTest), u8_ptr );
+		CodeType    u8_ptr         = def_type( name(u8), __, spec_ptr );
+		CodeTypedef typedef_u8_ptr = def_typedef( name(ConstExprTest), u8_ptr );
 
 		gen_sanity_file.print(fwd_fn);
 		gen_sanity_file.print(typedef_u8_ptr);
@@ -256,11 +256,11 @@ u32 gen_sanity_upfront()
 
 	// Struct
 	{
-		Code fwd = def_class( name(TestEmptyStruct) );
-		Code empty_body;
+		CodeClass fwd = def_class( name(TestEmptyStruct) );
+		CodeClass empty_body;
 		{
-			Code cmt  = def_comment( txt_StrC("Empty struct body") );
-			Code body = def_class_body( args( cmt ) );
+			CodeComment cmt  = def_comment( txt_StrC("Empty struct body") );
+			CodeBody    body = def_class_body( args( cmt ) );
 
 			empty_body = def_class( name(TestEmptyStruct), body );
 		}
@@ -273,11 +273,11 @@ u32 gen_sanity_upfront()
 
 	// Union
 	{
-		Code body = def_union_body( 1
+		CodeBody body = def_union_body( 1
 			, def_comment( txt_StrC("Empty union body") )
 		);
 
-		Code def = def_union( name(TestEmptyUnion), body );
+		CodeUnion def = def_union( name(TestEmptyUnion), body );
 
 		gen_sanity_file.print(def);
 	}
@@ -286,8 +286,8 @@ u32 gen_sanity_upfront()
 
 	// Using
 	{
-		Code reg    = def_using( name(TestUsing), t_u8 );
-		Code nspace = def_using_namespace( name(TestNamespace) );
+		CodeUsing          reg    = def_using( name(TestUsing), t_u8 );
+		CodeUsingNamespace nspace = def_using_namespace( name(TestNamespace) );
 
 		gen_sanity_file.print(reg);
 		gen_sanity_file.print(nspace);
@@ -308,7 +308,7 @@ u32 gen_sanity_upfront()
 
 	// Template
 	{
-		Code t_Type = def_type( name(Type) );
+		CodeType t_Type = def_type( name(Type) );
 
 		Code tmpl = def_template(  def_param( t_class, name(Type) )
 			, def_function( name(test_template), def_param( t_Type, name(a) ), __

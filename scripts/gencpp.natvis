@@ -743,7 +743,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::CodeSpecifiers">
+	<Type Name="gen::CodeSpecifier">
 		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
 		<Expand>
 			<ArrayItems Name="ArrSpecs" Condition="ast != nullptr" Size="ast->NumEntries">

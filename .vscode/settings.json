@@ -22,5 +22,6 @@
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
-	"C_Cpp.errorSquiggles": "enabled"
+	"C_Cpp.errorSquiggles": "enabled",
+	"godot_tools.scene_file_config": ""
 }

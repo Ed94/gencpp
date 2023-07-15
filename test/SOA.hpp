@@ -11,7 +11,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 	));
 
 	Code
-	soa_entry = { struct_def->duplicate() };
+	soa_entry = { struct_def.raw()->duplicate() };
 	soa_entry->Name = get_cached_string( name(Entry) );
 
 	constexpr s32 Num_Vars_Cap = 128;
@@ -26,11 +26,11 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 
 	CodeStruct soa = def_struct( name, def_body( ECode::Struct_Body ));
 	{
-		for ( Code struct_mem : struct_def.body() )
+		for ( Code struct_mem : struct_def->Body )
 		{
 			if ( struct_mem->Type == ECode::Variable )
 			{
-				CodeType var_type        = CodeVar(struct_mem).type();
+				CodeType var_type        = struct_mem->cast<CodeVar>()->ValueType;
 				StrC     num_entries_str = to_StrC( str_fmt_buf( "%d", num_entries ) );
 
 				CodeVar entry_arr = { nullptr };
@@ -48,7 +48,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 				}
 
 				vars.append( entry_arr );
-				soa.body()->add_entry( entry_arr );
+				soa->Body.append( entry_arr );
 			}
 		}
 	}
@@ -69,15 +69,15 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 		{
 			for ( CodeVar member : vars )
 			{
-				Code arr_init = def_execution( token_fmt( "var_name", (StrC)member->Name, "var_type", (StrC)member->entry(0)->Name,
+				Code arr_init = def_execution( token_fmt( "var_name", (StrC)member->Name, "var_type", (StrC)member->ValueType->Name,
 					stringize( soa.<var_name> = <var_type>::init( allocator ); )
 				));
 
-				make.body()->add_entry( arr_init );
+				make->Body.append( arr_init );
 			}
 		}
 
-		make.body()->add_entry( def_execution( code( return soa; ) ));
+		make->Body.append( def_execution( code( return soa; ) ));
 	}
 
 	CodeFn get;
@@ -101,12 +101,12 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 
 		CodeExec ret = def_execution( content );
 
-		get.body()->add_entry( ret );
+		get->Body.append( ret );
 	}
 
-	soa.body()->add_entry( make );
-	soa.body()->add_entry( get );
-	soa.body()->validate_body();
+	soa->Body.append( make );
+	soa->Body.append( get );
+	soa->Body.raw()->validate_body();
 	vars.free();
 
 	return soa;

@@ -7,9 +7,9 @@ using namespace gen;
 
 Code gen__buffer_base()
 {
-	Code t_allocator_info = def_type( name(AllocatorInfo) );
+	CodeType t_allocator_info = def_type( name(AllocatorInfo) );
 
-	Code header = def_struct( name(BufferHeader), 
+	Code header = def_struct( name(BufferHeader),
 	def_struct_body( args(
 		  def_variable( t_allocator_info, name(Backing) )
 		, def_variable( t_uw,             name(Capacity) )
@@ -21,9 +21,9 @@ Code gen__buffer_base()
 
 Code gen__buffer( StrC type, sw type_size )
 {
-	static Code t_allocator_info = def_type( name(AllocatorInfo));
+	static CodeType t_allocator_info = def_type( name(AllocatorInfo));
 
-	static Code using_header = def_using( name(Header), def_type( name(BufferHeader) ) );
+	static CodeUsing using_header = def_using( name(Header), def_type( name(BufferHeader) ) );
 
 	StrC name;
 	{
@@ -33,24 +33,24 @@ Code gen__buffer( StrC type, sw type_size )
 		name = { name_len, name_str };
 	};
 
-	Code t_buffer_type = def_type( name );
+	CodeType t_buffer_type = def_type( name );
 
-	Code t_type        = def_type( type );
-	Code t_type_ptr    = def_type( type, __, spec_ptr );
-	Code t_type_ref    = def_type( type, __, spec_ref );
+	CodeType t_type        = def_type( type );
+	CodeType t_type_ptr    = def_type( type, __, spec_ptr );
+	CodeType t_type_ref    = def_type( type, __, spec_ref );
 
-	Code t_header      = def_type( name(Header) );
-	Code t_header_ptr  = def_type( name(Header), __, spec_ptr );
-	Code t_header_ref  = def_type( name(Header), __, spec_ref );
+	CodeType t_header      = def_type( name(Header) );
+	CodeType t_header_ptr  = def_type( name(Header), __, spec_ptr );
+	CodeType t_header_ref  = def_type( name(Header), __, spec_ref );
 
-	Code buffer = {0};
+	CodeStruct buffer = {0};
 	{
-		Code using_type = def_using( name(Type), t_type );
-		Code data       = def_variable( t_type_ptr, name(Data) );
+		CodeUsing using_type = def_using( name(Type), t_type );
+		CodeVar   data       = def_variable( t_type_ptr, name(Data) );
 
-		Code init;
+		CodeFn init;
 		{
-			Code params = def_params( args(
+			CodeParam params = def_params( args(
 				  def_param( t_allocator_info, name(allocator))
 				, def_param( t_sw,             name(capacity))
 			));
