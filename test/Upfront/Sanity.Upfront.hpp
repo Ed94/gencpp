@@ -190,7 +190,7 @@ u32 gen_sanity_upfront()
 
 	// Operator cast
 	{
-		Code t_u8_ptr = def_type( name(u8), __, spec_ptr );
+		CodeType t_u8_ptr = def_type( name(u8), __, spec_ptr );
 
 		Code op_ptr = def_operator_cast( t_u8_ptr, __ );
 

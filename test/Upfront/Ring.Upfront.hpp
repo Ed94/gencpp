@@ -8,7 +8,7 @@ using namespace gen;
 
 Code gen__ring( StrC type )
 {
-	static Code t_allocator_info = def_type( name(AllocatorInfo) );
+	static CodeType t_allocator_info = def_type( name(AllocatorInfo) );
 
 	String name;
 	{
@@ -18,14 +18,14 @@ Code gen__ring( StrC type )
 		name = get_cached_string({ name_len, name_str });
 	};
 
-	Code t_ring_type     = def_type( name );
-	Code t_ring_type_ptr = def_type( name, __, spec_ptr );
+	CodeType t_ring_type     = def_type( name );
+	CodeType t_ring_type_ptr = def_type( name, __, spec_ptr );
 
-	Code t_type       = def_type( type );
-	Code t_type_ptr   = def_type( type, __, spec_ptr );
-	Code t_type_ref   = def_type( type, __, spec_ref );
+	CodeType t_type       = def_type( type );
+	CodeType t_type_ptr   = def_type( type, __, spec_ptr );
+	CodeType t_type_ref   = def_type( type, __, spec_ref );
 
-	Code t_buffer_type;
+	CodeType t_buffer_type;
 	{
 		char const* name_str = str_fmt_buf( "Buffer_%s\0", type.Ptr );
 		s32         len      = str_len( name_str );
@@ -33,19 +33,19 @@ Code gen__ring( StrC type )
 		t_buffer_type = def_type( { len, name_str } );
 	}
 
-	Code ring = {0};
+	CodeStruct ring = {0};
 	{
-		Code using_type = def_using( name(Type), t_type );
+		CodeUsing using_type = def_using( name(Type), t_type );
 
-		Code backing  = def_variable( t_allocator_info, name(Backing) );
-		Code capacity = def_variable( t_uw, name(Capacity) );
-		Code head     = def_variable( t_uw, name(Head) );
-		Code tail     = def_variable( t_uw, name(Tail) );
-		Code buffer   = def_variable( t_buffer_type, name(Buffer) );
+		CodeVar backing  = def_variable( t_allocator_info, name(Backing) );
+		CodeVar capacity = def_variable( t_uw, name(Capacity) );
+		CodeVar head     = def_variable( t_uw, name(Head) );
+		CodeVar tail     = def_variable( t_uw, name(Tail) );
+		CodeVar buffer   = def_variable( t_buffer_type, name(Buffer) );
 
-		Code init;
+		CodeFn init;
 		{
-			Code params = def_params( args(
+			CodeParam params = def_params( args(
 				  def_param( t_allocator_info, name(allocator) )
 				, def_param( t_uw,             name(max_size) )
 			));
@@ -69,7 +69,7 @@ Code gen__ring( StrC type )
 			init = def_function( name(init), params, t_ring_type, body, spec_static_member );
 		}
 
-		Code append = def_function( name(append), def_param( t_type, name(value)), t_void
+		CodeFn append = def_function( name(append), def_param( t_type, name(value)), t_void
 			, def_execution( code(
 				Buffer[ Head ] = value;
 				Head = ( Head + 1 ) % Capacity;
@@ -79,9 +79,9 @@ Code gen__ring( StrC type )
 			))
 		);
 
-		Code appendv;
+		CodeFn appendv;
 		{
-			Code params = def_params( 2
+			CodeParam params = def_params( 2
 				, def_param( t_type_ptr, name(values))
 				, def_param( t_sw,       name(num))
 			);
@@ -94,25 +94,25 @@ Code gen__ring( StrC type )
 			appendv = def_function( name(append), params, t_void, body, spec_inline );
 		}
 
-		Code empty = def_function( name(empty), __, t_bool
+		CodeFn empty = def_function( name(empty), __, t_bool
 			, def_execution( code(
 				return Head == Tail;
 			))
 		);
 
-		Code free = def_function( name(free), __, t_void
+		CodeFn free = def_function( name(free), __, t_void
 			, def_execution( code(
 				Buffer.free();
 			))
 		);
 
-		Code full = def_function( name(full), __, t_bool
+		CodeFn full = def_function( name(full), __, t_bool
 			, def_execution( code(
 				return (Head + 1) % Capacity == Tail;
 			))
 		);
 
-		Code get = def_function( name(get), __, t_type_ref
+		CodeFn get = def_function( name(get), __, t_type_ref
 			, def_execution( code(
 				Type& data = Buffer[ Tail ];
 				Tail = ( Tail + 1 ) % Capacity;
@@ -121,7 +121,7 @@ Code gen__ring( StrC type )
 			))
 		);
 
-		Code wipe = def_function( name(wipe), __, t_void
+		CodeFn wipe = def_function( name(wipe), __, t_void
 			, def_execution( code(
 				Head = 0;
 				Tail = 0;

@@ -3322,8 +3322,8 @@ namespace gen
 	}
 
 	CodeEnum def_enum( StrC name
-		, Code       body,      CodeType type
-		, EnumT      specifier, Code     attributes
+		, Code       body,      CodeType       type
+		, EnumT      specifier, CodeAttributes attributes
 		, ModuleFlag mflags )
 	{
 		using namespace ECode;

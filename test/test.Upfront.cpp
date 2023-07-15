@@ -18,7 +18,7 @@ int gen_main()
 	Memory::setup();
 	gen::init();
 
-	gen_sanity();
+	gen_sanity_upfront();
 
 	gen_array( u8 );
 	gen_array( sw );

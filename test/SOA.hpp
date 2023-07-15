@@ -30,7 +30,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 		{
 			if ( struct_mem->Type == ECode::Variable )
 			{
-				CodeType var_type        = struct_mem->cast<CodeVar>()->ValueType;
+				CodeType var_type        = struct_mem.cast<CodeVar>()->ValueType;
 				StrC     num_entries_str = to_StrC( str_fmt_buf( "%d", num_entries ) );
 
 				CodeVar entry_arr = { nullptr };

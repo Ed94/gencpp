@@ -11,7 +11,7 @@ includes = include_directories(
 # get_sources = files('./get_sources.ps1')
 # sources     = files(run_command('powershell', get_sources, check: true).stdout().strip().split('\n'))
 
-sources = [ '../test.cpp' ]
+sources = [ '../test.Upfront.cpp' ]
 
 if get_option('buildtype').startswith('debug')
 

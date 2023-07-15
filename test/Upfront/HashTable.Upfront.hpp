@@ -8,11 +8,11 @@ using namespace gen;
 
 Code gen__hashtable_base()
 {
-	Code hashIndex   = def_variable( t_sw, name(HashIndex) );
-	Code entry_prev  = def_variable( t_sw, name(PrevIndex) );
-	Code entry_index = def_variable( t_sw, name(EntryIndex) );
+	CodeVar hashIndex   = def_variable( t_sw, name(HashIndex) );
+	CodeVar entry_prev  = def_variable( t_sw, name(PrevIndex) );
+	CodeVar entry_index = def_variable( t_sw, name(EntryIndex) );
 
-	Code find_result = def_struct( name(HashTable_FindResult), def_struct_body( 3
+	CodeStruct find_result = def_struct( name(HashTable_FindResult), def_struct_body( 3
 		, hashIndex
 		, entry_prev
 		, entry_index
@@ -23,9 +23,9 @@ Code gen__hashtable_base()
 
 Code gen__hashtable( StrC type )
 {
-	static Code t_allocator_info = def_type( name(AllocatorInfo) );
+	static CodeType t_allocator_info = def_type( name(AllocatorInfo) );
 
-	Code t_find_result = def_type( name(HashTable_FindResult) );
+	CodeType t_find_result = def_type( name(HashTable_FindResult) );
 
 	StringCached name;
 	{
@@ -35,14 +35,15 @@ Code gen__hashtable( StrC type )
 		name = get_cached_string({ len, name_str });
 	}
 
-	Code t_ht_type = def_type( name );
+	CodeType t_ht_type = def_type( name );
 
-	Code t_type     = def_type( type );
-	Code t_type_ptr = def_type( type, __, spec_ptr );
-	Code t_type_ref = def_type( type, __, spec_ref );
+	CodeType t_type     = def_type( type );
+	CodeType t_type_ptr = def_type( type, __, spec_ptr );
+	CodeType t_type_ref = def_type( type, __, spec_ref );
 
 	// Hash table depends on array container for its entry structure.
-	Code t_ht_entry, ht_entry, array_ht_entry, t_array_ht_entry;
+	CodeType t_ht_entry, t_array_ht_entry;
+	CodeStruct ht_entry, array_ht_entry;
 	{
 		char const* name_str = str_fmt_buf( "HashTable_%s_Entry", type.Ptr );
 		s32         len      = str_len( name_str );
@@ -60,19 +61,19 @@ Code gen__hashtable( StrC type )
 		t_array_ht_entry = def_type( array_ht_entry->Name );
 	}
 
-	Code hashtable = {0};
+	CodeStruct hashtable = {0};
 	{
-		Code using_entry       = def_using( name(Entry), t_ht_entry );
-		Code using_array_entry = def_using( name(Array_Entry), t_array_ht_entry );
-		Code using_find_result = def_using( name(FindResult), t_find_result );
+		CodeUsing using_entry       = def_using( name(Entry), t_ht_entry );
+		CodeUsing using_array_entry = def_using( name(Array_Entry), t_array_ht_entry );
+		CodeUsing using_find_result = def_using( name(FindResult), t_find_result );
 
-		Code t_array_sw    = def_type( name(Array_sw) );
-		Code t_array_entry = def_type( name(Array_Entry) );
+		CodeType t_array_sw    = def_type( name(Array_sw) );
+		CodeType t_array_entry = def_type( name(Array_Entry) );
 
-		Code hashes  = def_variable( t_array_sw, name(Hashes) );
-		Code entries = def_variable( t_array_entry, name(Entries));
+		CodeVar hashes  = def_variable( t_array_sw, name(Hashes) );
+		CodeVar entries = def_variable( t_array_entry, name(Entries));
 
-		Code init;
+		CodeFn init;
 		{
 			char const* tmpl = stringize(
 				<type> result = { 0 };
@@ -88,7 +89,7 @@ Code gen__hashtable( StrC type )
 		}
 
 
-		Code init_reserve;
+		CodeFn init_reserve;
 		{
 			char const* tmpl = stringize(
 				<type> result = { { nullptr }, { nullptr } };
@@ -102,12 +103,12 @@ Code gen__hashtable( StrC type )
 			);
 			Code body = def_execution( token_fmt( "type", (StrC)name, tmpl ) );
 
-			Code params = def_params( args( def_param( t_allocator_info, name(allocator)), def_param( t_sw, name(num))));
+			CodeParam params = def_params( args( def_param( t_allocator_info, name(allocator)), def_param( t_sw, name(num))));
 
 			init_reserve = def_function( name(init_reserve), params, t_ht_type, body, spec_static_member );
 		}
 
-		Code clear = def_function( name(clear), __, t_void
+		CodeFn clear = def_function( name(clear), __, t_void
 			, def_execution( code(
 				for ( s32 idx = 0; idx < Hashes.num(); idx++ )
 					Hashes[ idx ] = -1;
@@ -116,7 +117,7 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		Code destroy = def_function( name(destroy), __, t_void
+		CodeFn destroy = def_function( name(destroy), __, t_void
 			, def_execution( code(
 				if ( Hashes && Hashes.get_header()->Capacity )
 					Hashes.free();
@@ -125,7 +126,7 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		Code get = def_function( name(get), def_param( t_u64, name(key)), t_type_ptr
+		CodeFn get = def_function( name(get), def_param( t_u64, name(key)), t_type_ptr
 			, def_execution( code(
 				sw idx = find( key ).EntryIndex;
 				if ( idx >= 0 )
@@ -135,19 +136,19 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		Code using_map_proc;
+		CodeUsing using_map_proc;
 		{
 			char const* tmpl = stringize(
 				void (*) ( u64 key, <type> value )
 			);
-			Code value = untyped_str( token_fmt( "type", (StrC)t_type->to_string(), tmpl ) );
+			CodeType value = def_type( token_fmt( "type", (StrC)t_type.to_string(), tmpl ) );
 
 			using_map_proc = def_using ( name(MapProc), value);
 		}
 
-		Code map;
+		CodeFn map;
 		{
-			Code t_map_proc = def_type( name(MapProc) );
+			CodeType t_map_proc = def_type( name(MapProc) );
 
 			Code body = def_execution( code(
 				ZPL_ASSERT_NOT_NULL( map_proc );
@@ -161,19 +162,19 @@ Code gen__hashtable( StrC type )
 			map = def_function( name(map), def_param( t_map_proc, name(map_proc) ), t_void, body );
 		}
 
-		Code using_map_mut_proc;
+		CodeUsing using_map_mut_proc;
 		{
 			char const* tmpl = stringize(
 				void (*) ( u64 key, <type> value )
 			);
-			Code value = untyped_str( token_fmt( "type", (StrC)t_type_ptr->to_string(), tmpl ) );
+			CodeType value = def_type( token_fmt( "type", (StrC)t_type_ptr.to_string(), tmpl ) );
 
 			using_map_mut_proc = def_using ( name(MapMutProc), value);
 		}
 
-		Code map_mut;
+		CodeFn map_mut;
 		{
-			Code t_map_mut_proc = def_type( name(MapMutProc));
+			CodeType t_map_mut_proc = def_type( name(MapMutProc));
 
 			Code body = def_execution( code(
 				ZPL_ASSERT_NOT_NULL( map_proc );
@@ -187,14 +188,14 @@ Code gen__hashtable( StrC type )
 			map_mut = def_function( name(map_mut), def_param( t_map_mut_proc, name(map_proc)), t_void, body );
 		}
 
-		Code grow = def_function( name(grow), __, t_void
+		CodeFn grow = def_function( name(grow), __, t_void
 			, def_execution( code(
 				sw new_num = array_grow_formula( Entries.num() );
 				rehash( new_num );
 			))
 		);
 
-		Code rehash;
+		CodeFn rehash;
 		{
 			char const* tmpl = stringize(
 				sw idx;
@@ -238,7 +239,7 @@ Code gen__hashtable( StrC type )
 			rehash = def_function( name(rehash), def_param( t_sw, name(new_num)), t_void, body );
 		}
 
-		Code rehash_fast;
+		CodeFn rehash_fast;
 		{
 			char const* tmpl = stringize(
 				sw idx;
@@ -261,7 +262,7 @@ Code gen__hashtable( StrC type )
 			rehash_fast = def_function( name(rehash_fast), __, t_void, body );
 		}
 
-		Code remove = def_function( name(remove), def_param( t_u64, name(key)), t_void
+		CodeFn remove = def_function( name(remove), def_param( t_u64, name(key)), t_void
 			, def_execution( code(
 				FindResult find_result = find( key);
 
@@ -273,15 +274,15 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		Code remove_entry = def_function( name(remove_entry), def_param( t_sw, name(idx)), t_void
+		CodeFn remove_entry = def_function( name(remove_entry), def_param( t_sw, name(idx)), t_void
 			, def_execution( code(
 				Entries.remove_at( idx );
 			))
 		);
 
-		Code set;
+		CodeFn set;
 		{
-			Code params = def_params( args(
+			CodeParam params = def_params( args(
 				  def_param( t_u64,  name(key))
 				, def_param( t_type, name(value))
 			));
@@ -322,7 +323,7 @@ Code gen__hashtable( StrC type )
 			set = def_function( name(set), params, t_void, body );
 		}
 
-		Code slot = def_function( name(slot), def_param( t_u64, name(key)), t_sw
+		CodeFn slot = def_function( name(slot), def_param( t_u64, name(key)), t_sw
 			, def_execution( code(
 				for ( sw idx = 0; idx < Hashes.num(); ++idx )
 					if ( Hashes[ idx ] == key )
@@ -332,7 +333,7 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		Code add_entry = def_function( name(add_entry), def_param( t_u64, name(key)), t_sw
+		CodeFn add_entry = def_function( name(add_entry), def_param( t_u64, name(key)), t_sw
 			, def_execution( code(
 				sw idx;
 				Entry entry = { key, -1 };
@@ -343,7 +344,7 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		Code find = def_function( name(find), def_param( t_u64, name(key)), t_find_result
+		CodeFn find = def_function( name(find), def_param( t_u64, name(key)), t_find_result
 			, def_execution( code(
 				FindResult result = { -1, -1, -1 };
 
@@ -366,7 +367,7 @@ Code gen__hashtable( StrC type )
 			))
 		);
 
-		Code full = def_function( name(full), __, t_b32
+		CodeFn full = def_function( name(full), __, t_b32
 			, def_execution( code(
 				return 0.75f * Hashes.num() < Entries.num();
 			))

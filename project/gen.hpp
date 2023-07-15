@@ -2701,31 +2701,6 @@ namespace gen
 
 		AST* ast;
 
-		// operator AST_Body*();
-		// operator AST_Attributes*();
-		// operator AST_Comment*();
-		// operator AST_Class*();
-		// operator AST_Enum*();
-		// operator AST_Exec*();
-		// operator AST_Extern*();
-		// operator AST_Include*();
-		// operator AST_Friend*();
-		// operator AST_Fn*();
-		// operator AST_Module*();
-		// operator AST_Namespace*();
-		// operator AST_Operator*();
-		// operator AST_OpCast*();
-		// operator AST_Param*();
-		// operator AST_Specifier*();
-		// operator AST_Struct*();
-		// operator AST_Template*();
-		// operator AST_Type*();
-		// operator AST_Typedef*();
-		// operator AST_Union*();
-		// operator AST_Using*();
-		// operator AST_UsingNamespace*();
-		// operator AST_Var*();
-
 	#ifdef GEN_ENFORCE_STRONG_CODE_TYPES
 	#	define operator explicit operator
 	#endif
@@ -2785,7 +2760,7 @@ namespace gen
 		template< class Type >
 		Type cast()
 		{
-			return (Type) { this };
+			return (Type)(Code){ this };
 		}
 
 		operator Code();
@@ -2827,51 +2802,6 @@ namespace gen
 		)
 		/ sizeof(SpecifierT);
 
-#if 0
-		union {
-			struct
-			{
-				Code      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-				Code      Specs;          // Function, Operator, Type symbol, Variable
-				union {
-					Code  ParentType;     // Class, Struct
-					Code  ReturnType;     // Function, Operator
-					Code  UnderlyingType; // Enum, Typedef
-					Code  ValueType;      // Parameter, Variable
-				};
-				Code      Params;         // Function, Operator, Template
-				union {
-					Code  ArrExpr;        // Type Symbol
-					Code  Body;           // Class, Enum, Function, Namespace, Struct, Union
-					Code  Declaration;    // Friend, Template
-					Code  Value;          // Parameter, Variable
-				};
-			};
-			StringCached  Content;        // Attributes, Comment, Execution, Include
-			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
-		};
-		union {
-			// Entry Node
-			struct {
-				Code      Prev;
-				Code      Next;
-			};
-			// Body Node
-			struct {
-				Code      Front;
-				Code      Back;
-			};
-		};
-		Code              Parent;
-		StringCached      Name;
-		CodeT             Type;
-		ModuleFlag        ModuleFlags;
-		union {
-			OperatorT     Op;
-			AccessSpec    ParentAccess;
-			u32           NumEntries;
-		};
-	#else
 		union {
 			struct
 			{
@@ -2915,7 +2845,6 @@ namespace gen
 			AccessSpec    ParentAccess;
 			u32           NumEntries;
 		};
-	#endif
 	};
 
 	void assign( AST* field, AST* other )
@@ -3717,7 +3646,7 @@ namespace gen
 		, CodeAttributes attributes   = NoCode
 		, ModuleFlag mflags = ModuleFlag::None );
 
-	CodeEnum def_enum( StrC
+	CodeEnum def_enum( StrC name
 		, Code         body      = NoCode,      CodeType       type       = NoCode
 		, EnumT        specifier = EnumRegular, CodeAttributes attributes = NoCode
 		, ModuleFlag   mflags    = ModuleFlag::None );
@@ -3740,9 +3669,9 @@ namespace gen
 		, CodeSpecifier specifiers = NoCode, CodeAttributes attributes = NoCode
 		, ModuleFlag     mflags     = ModuleFlag::None );
 
-	CodeOpCast def_operator_cast( Code type, Code body = NoCode );
+	CodeOpCast def_operator_cast( CodeType type, Code body = NoCode );
 
-	CodeParam      def_param    ( Code type, StrC name, Code value = NoCode );
+	CodeParam      def_param    ( CodeType type, StrC name, Code value = NoCode );
 	CodeSpecifier def_specifier( SpecifierT specifier );
 
 	CodeStruct def_struct( StrC name
@@ -4101,17 +4030,17 @@ namespace gen
 
 	Code& AST::entry( u32 idx )
 	{
-		AST* current = Front;
+		AST** current = & Front;
 		while ( idx >= 0 && current != nullptr )
 		{
 			if ( idx == 0 )
-				return * rcast( Code*, & current);
+				return * rcast( Code*, current);
 
-			current = current->Next;
+			current = & ( * current )->Next;
 			idx--;
 		}
 
-		return * rcast( Code*, & current);
+		return * rcast( Code*, current);
 	}
 
 	bool AST::has_entries()
@@ -4206,18 +4135,6 @@ namespace gen
 	{                                                                                    \
 		return (AST*) ast != other.ast;                                                  \
 	}
-
-
-	// Typename::operator AST*()                                                            \
-	// {                                                                                    \
-	// 	return (AST*) ast;                                                               \
-	// }
-
-	// Typename& Typename::operator =( AST* other )                                         \
-	// {                                                                                    \
-	// 	ast = rcast( decltype(ast), other);                                              \
-	// 	return * this;                                                                   \
-	// }                                                                                    \
 
 	Define_CodeImpl( Code );
 	Define_CodeImpl( CodeBody);

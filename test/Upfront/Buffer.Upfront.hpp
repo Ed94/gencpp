@@ -71,9 +71,9 @@ Code gen__buffer( StrC type, sw type_size )
 			init = def_function( name(init), params, t_buffer_type, body, spec_static_member );
 		}
 
-		Code init_copy;
+		CodeFn init_copy;
 		{
-			Code params = def_params( args(
+			CodeParam params = def_params( args(
 				  def_param( t_allocator_info, name(allocator))
 				, def_param( t_buffer_type,    name(other))
 			));
@@ -96,7 +96,7 @@ Code gen__buffer( StrC type, sw type_size )
 			);
 		}
 
-		Code append = def_function( name(append), def_param( t_type, name(value)), t_void
+		CodeFn append = def_function( name(append), def_param( t_type, name(value)), t_void
 			, def_execution( code(
 				Header& header = get_header();
 				Data[ header.Num ] = value;
@@ -104,9 +104,9 @@ Code gen__buffer( StrC type, sw type_size )
 			))
 		);
 
-		Code appendv;
+		CodeFn appendv;
 		{
-			Code params = def_params( args(
+			CodeParam params = def_params( args(
 				  def_param( t_type_ptr, name( values))
 				, def_param( t_sw, 	 name( num))
 			));
@@ -124,40 +124,40 @@ Code gen__buffer( StrC type, sw type_size )
 			);
 		}
 
-		Code clear = def_function( name(clear), __, t_void
+		CodeFn clear = def_function( name(clear), __, t_void
 			, def_execution( code(
 				Header& header = get_header();
 				header.Num = 0;
 			))
 		);
 
-		Code end = def_function( name(end), __, t_type_ref
+		CodeFn end = def_function( name(end), __, t_type_ref
 			, def_execution( code(
 				Header& header = get_header();
 				return Data[ header.Num - 1 ];
 			))
 		);
 
-		Code free = def_function( name(free), __, t_void
+		CodeFn free = def_function( name(free), __, t_void
 			, def_execution( code(
 				Header& header = get_header();
 				zpl::free( header.Backing, & header );
 			))
 		);
 
-		Code get_header = def_function( name(get_header), __, t_header_ref
+		CodeFn get_header = def_function( name(get_header), __, t_header_ref
 			, def_execution( code(
 				return * ( rcast( Header*, Data ) - 1 );
 			))
 		);
 
-		Code num = def_function( name(num), __, t_sw
+		CodeFn num = def_function( name(num), __, t_sw
 			, def_execution( code(
 				return get_header().Num;
 			))
 		);
 
-		Code pop = def_function( name(pop), __, t_type
+		CodeFn pop = def_function( name(pop), __, t_type
 			, def_execution( code(
 				Header& header = get_header();
 				header.Num--;
@@ -165,7 +165,7 @@ Code gen__buffer( StrC type, sw type_size )
 			))
 		);
 
-		Code wipe = def_function( name(wipe), __, t_void
+		CodeFn wipe = def_function( name(wipe), __, t_void
 			, def_execution( code(
 				Header& header = get_header();
 				header.Num = 0;
@@ -173,7 +173,7 @@ Code gen__buffer( StrC type, sw type_size )
 			))
 		);
 
-		Code op_type_ptr = def_operator_cast( t_type_ptr, def_execution( code(
+		CodeOpCast op_type_ptr = def_operator_cast( t_type_ptr, def_execution( code(
 			return Data;
 		)));
 
