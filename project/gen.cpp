@@ -1708,14 +1708,12 @@ namespace gen
 	namespace StaticData
 	{
 		global Array< Pool >  CodePools         = { nullptr };
-		global Array< Arena > CodeEntriesArenas = { nullptr };
 		global Array< Arena > StringArenas      = { nullptr };
 
 		global StringTable StringCache;
 
 		global AllocatorInfo Allocator_DataArrays       = heap();
 		global AllocatorInfo Allocator_CodePool         = heap();
-		global AllocatorInfo Allocator_CodeEntriesArena = heap();
 		global AllocatorInfo Allocator_StringArena      = heap();
 		global AllocatorInfo Allocator_StringTable      = heap();
 		global AllocatorInfo Allocator_TypeTable        = heap();
@@ -1781,7 +1779,7 @@ namespace gen
 
 #pragma region AST Body Case Macros
 #	define AST_BODY_CLASS_UNALLOWED_TYPES \
-	case Attributes:                      \
+	case PlatformAttributes:                      \
 	case Class_Body:                      \
 	case Enum_Body:                       \
 	case Extern_Linkage:                  \
@@ -1801,7 +1799,7 @@ namespace gen
 	case Access_Public:                      \
 	case Access_Protected:                   \
 	case Access_Private:                     \
-	case Attributes:                         \
+	case PlatformAttributes:                         \
 	case Class_Body:                         \
 	case Enum_Body:                          \
 	case Extern_Linkage:                     \
@@ -1824,7 +1822,7 @@ namespace gen
 	case Access_Public: 				   \
 	case Access_Protected: 				   \
 	case Access_Private: 				   \
-	case Attributes:                       \
+	case PlatformAttributes:                       \
 	case Class_Body: 					   \
 	case Enum_Body: 					   \
 	case Execution: 					   \
@@ -1854,91 +1852,11 @@ namespace gen
 	{
 		using namespace ECode;
 
-		Code
-		result           = make_code();
-		result->Parent   = Parent;
-		result->Name     = Name;
-		result->Type     = Type;
-		result->Op       = Op;
+		Code result = make_code();
 
-		switch ( Type )
-		{
-			case Invalid:
-				log_failure( "AST::duplicate: Cannot duplicate an invalid AST." );
-				return nullptr;
+		mem_copy( (AST*)result, this, sizeof( AST ) );
 
-			case Access_Public:
-			case Access_Protected:
-			case Access_Private:
-			case Attributes:
-			case Comment:
-			case Execution:
-			case Module:
-			case Preprocessor_Include:
-			case Untyped:
-				// Can just be the same, as its a cached string.
-				result->Content = Content;
-				return result;
-
-			case Specifiers:
-				// Need to memcpy the specifiers.
-				mem_copy( result->ArrSpecs, ArrSpecs, sizeof( ArrSpecs ) );
-				result->StaticIndex = StaticIndex;
-				return result;
-
-			// The main purpose of this is to make sure entires in the AST are unique,
-			// So that we can assign the new parent without corrupting the existing AST.
-			case Class:
-			case Class_Fwd:
-			case Class_Body:
-			case Enum:
-			case Enum_Fwd:
-			case Enum_Body:
-			case Enum_Class:
-			case Enum_Class_Fwd:
-			case Export_Body:
-			case Extern_Linkage:
-			case Extern_Linkage_Body:
-			case Friend:
-			case Function:
-			case Function_Fwd:
-			case Function_Body:
-			case Global_Body:
-			case Namespace:
-			case Namespace_Body:
-			case Operator:
-			case Operator_Fwd:
-			case Operator_Cast:
-			case Operator_Cast_Fwd:
-			case Operator_Member:
-			case Operator_Member_Fwd:
-			case Parameters:
-			case Struct:
-			case Struct_Fwd:
-			case Struct_Body:
-			case Template:
-			case Typedef:
-			case Typename:
-			case Union:
-			case Union_Body:
-			case Using:
-			case Using_Namespace:
-			case Variable:
-				s32 index = 0;
-				s32 left  = num_entries();
-				while ( left -- )
-				{
-					// This will naturally duplicate the entire chain duplicate all of the ast nodes.
-					// It may not be the most optimal way for memory reasons, however figuring out the heuristic
-					// For when it should reparent all nodes or not is not within the simple scope of this library.
-					result->add_entry( entry(index)->duplicate() );
-					index++;
-				}
-				return result;
-		}
-
-		log_failure( "AST::duplicate: Unknown AST type %s.", type_str() );
-		return nullptr;
+		return result;
 	}
 
 	String AST::to_string()
@@ -1995,41 +1913,39 @@ namespace gen
 				result.append( Name );
 			break;
 
-			case Attributes:
+			case PlatformAttributes:
 				result.append( Content );
 
 			case Class:
 			{
 				ProcessModuleFlags();
 
-				CodeClass self = cast<CodeClass>();
-
-				if ( self.attributes() || self.parent() )
+				if ( Attributes || ParentType )
 				{
 					result.append( "class " );
 
-					if ( self.attributes() )
-						result.append_fmt( "%s ", self.attributes()->to_string() );
+					if ( Attributes )
+						result.append_fmt( "%s ", Attributes->to_string() );
 
-					if ( self.parent() )
+					if ( ParentType )
 					{
 						char const* access_level = to_str( ParentAccess );
 
 						result.append_fmt( "%s : %s %s\n{\n%s\n};"
 							, Name
 							, access_level
-							, self.parent()->to_string()
-							, self.body()->to_string()
+							, ParentType->to_string()
+							, Body->to_string()
 						);
 					}
 					else
 					{
-						result.append_fmt( "%s \n{\n%s\n};", Name, self.body()->to_string() );
+						result.append_fmt( "%s \n{\n%s\n};", Name, Body->to_string() );
 					}
 				}
 				else
 				{
-					result.append_fmt( "class %s\n{\n%s\n};", Name, self.body()->to_string() );
+					result.append_fmt( "class %s\n{\n%s\n};", Name, Body->to_string() );
 				}
 			}
 			break;
@@ -2038,10 +1954,8 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeClass self = cast<CodeClass>();
-
-				if ( self.attributes() )
-					result.append_fmt( "class %s %s;", self.attributes()->to_string(), Name );
+				if ( Attributes )
+					result.append_fmt( "class %s %s;", Attributes->to_string(), Name );
 
 				else result.append_fmt( "class %s;", Name );
 			}
@@ -2051,29 +1965,27 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeEnum self = cast<CodeEnum>();
-
-				if ( num_entries() > 1 )
+				if ( Attributes || UnderlyingType )
 				{
 					result.append( "enum " );
 
-					if ( self.attributes() )
-						result.append_fmt( "%s ", self.attributes()->to_string() );
+					if ( Attributes )
+						result.append_fmt( "%s ", Attributes->to_string() );
 
-					if ( self.type() )
+					if ( UnderlyingType )
 						result.append_fmt( "%s : %s\n{\n"
 							, Name
-							, self.type()->to_string()
+							, UnderlyingType->to_string()
 						);
 
 					else result.append_fmt( "%s\n{\n%s\n};"
 						, Name
-						, self.body()->to_string()
+						, Body->to_string()
 					);
 				}
 				else result.append_fmt( "enum %s\n{\n%s\n};"
 					, Name
-					, self.body()->to_string()
+					, Body->to_string()
 				);
 			}
 			break;
@@ -2082,12 +1994,10 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeEnum self = cast<CodeEnum>();
+				if ( Attributes )
+					result.append_fmt( "%s ", Attributes->to_string() );
 
-				if ( self.attributes() )
-					result.append_fmt( "%s ", self.attributes()->to_string() );
-
-				result.append_fmt( "enum %s : %s;", Name, self.type()->to_string() );
+				result.append_fmt( "enum %s : %s;", Name, UnderlyingType->to_string() );
 			}
 			break;
 
@@ -2095,37 +2005,35 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeEnum self = cast<CodeEnum>();
-
-				if ( self.attributes() || self.type() )
+				if ( Attributes || UnderlyingType )
 				{
 					result.append( "enum class " );
 
-					if ( self.attributes() )
+					if ( Attributes )
 					{
-						result.append_fmt( "%s ", self.attributes()->to_string() );
+						result.append_fmt( "%s ", Attributes->to_string() );
 					}
 
-					if ( self.type() )
+					if ( UnderlyingType )
 					{
 						result.append_fmt( "%s : %s\n{\n%s\n};"
 							, Name
-							, self.type()->to_string()
-							, self.body()->to_string()
+							, UnderlyingType->to_string()
+							, Body->to_string()
 						);
 					}
 					else
 					{
 						result.append_fmt( "%s\n{\n$s\n};"
 							, Name
-							, self.body()->to_string()
+							, Body->to_string()
 						);
 					}
 				}
 				else
 				{
 					result.append_fmt( "enum class %s\n{\n%s\n};"
-						, self.body()->to_string()
+						, Body->to_string()
 					);
 				}
 			}
@@ -2135,14 +2043,12 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeEnum self = cast<CodeEnum>();
-
 				result.append( "enum class " );
 
-				if ( self.attributes() )
-					result.append_fmt( "%s ", self.attributes()->to_string() );
+				if ( Attributes )
+					result.append_fmt( "%s ", Attributes->to_string() );
 
-				result.append_fmt( "%s : %s;", Name, self.type()->to_string() );
+				result.append_fmt( "%s : %s;", Name, UnderlyingType->to_string() );
 			}
 			break;
 
@@ -2150,12 +2056,12 @@ namespace gen
 			{
 				result.append_fmt( "export\n{\n" );
 
-				s32 index = 0;
-				s32 left  = num_entries();
-				while ( left -- )
+				Code curr = cast<Code>();
+				s32  left = NumEntries;
+				while ( left-- )
 				{
-					result.append_fmt( "%s\n", entry( index )->to_string() );
-					index++;
+					result.append_fmt( "%s\n", curr->to_string() );
+					++curr;
 				}
 
 				result.append_fmt( "};" );
@@ -2167,40 +2073,38 @@ namespace gen
 
 				result.append_fmt( "extern \"%s\"\n{\n%s\n}"
 					, Name
-					, cast<CodeExtern>().body()->to_string()
+					, Body->to_string()
 				);
 			break;
 
 			case Friend:
-				result.append_fmt( "friend %s;", cast<CodeFriend>().symbol()->to_string() );
+				result.append_fmt( "friend %s;", Declaration->to_string() );
 			break;
 
 			case Function:
 			{
 				ProcessModuleFlags();
 
-				CodeFn self = cast<CodeFn>();
+				if ( Attributes )
+					result.append_fmt( "%s ", Attributes->to_string() );
 
-				if ( self.attributes() )
-					result.append_fmt( "%s ", self.attributes()->to_string() );
+				if ( Specs )
+					result.append_fmt( "%s\n", Specs->to_string() );
 
-				if ( self.specifiers() )
-					result.append_fmt( "%s\n", self.specifiers()->to_string() );
-
-				if ( self.return_type() )
-					result.append_fmt( "%s %s", self.return_type()->to_string(), Name );
+				if ( ReturnType )
+					result.append_fmt( "%s %s", ReturnType->to_string(), Name );
 
 				else
 					result.append_fmt( "%s(", Name );
 
-				if ( self.params() )
-					result.append_fmt( "%s", self.params()->to_string() );
+				if ( Params )
+					result.append_fmt( "%s", Params->to_string() );
 
 				else
 					result.append( "void" );
 
 				result.append_fmt( ")\n{\n%s\n}"
-					, self.body()->to_string()
+					, Body->to_string()
 				);
 			}
 			break;
@@ -2209,22 +2113,20 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeFn self = cast<CodeFn>();
+				if ( Attributes )
+					result.append_fmt( "%s ", Attributes->to_string() );
 
-				if ( self.attributes() )
-					result.append_fmt( "%s ", self.attributes()->to_string() );
+				if ( Specs )
+					result.append_fmt( "%s\n", Specs->to_string() );
 
-				if ( self.specifiers() )
-					result.append_fmt( "%s\n", self.specifiers()->to_string() );
-
-				if ( self.return_type() )
-					result.append_fmt( "%s %s(", self.return_type()->to_string(), Name );
+				if ( ReturnType )
+					result.append_fmt( "%s %s(", ReturnType->to_string(), Name );
 
 				else
 					result.append_fmt( "%s(", Name );
 
-				if ( self.params() )
-					result.append_fmt( "%s", self.params()->to_string() );
+				if ( Params )
+					result.append_fmt( "%s", Params->to_string() );
 
 				else
 					result.append( "void" );
@@ -2248,7 +2150,7 @@ namespace gen
 
 				result.append_fmt( "namespace %s\n{\n%s}"
 					, Name
-					, cast<CodeNamespace>().body()->to_string()
+					, Body->to_string()
 				);
 			break;
 
@@ -2257,25 +2159,23 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeOperator self = cast<CodeOperator>();
+				if ( Attributes )
+					result.append_fmt( "%s ", Attributes->to_string() );
 
-				if ( self.attributes() )
-					result.append_fmt( "%s ", self.attributes()->to_string() );
+				if ( Attributes )
+					result.append_fmt( "%s\n", Attributes->to_string() );
 
-				if ( self.specifiers() )
-					result.append_fmt( "%s\n", self.specifiers()->to_string() );
+				if ( ReturnType )
+					result.append_fmt( "%s %s (", ReturnType->to_string(), Name );
 
-				if ( self.return_type() )
-					result.append_fmt( "%s %s (", self.return_type()->to_string(), Name );
-
-				if ( self.params() )
-					result.append_fmt( "%s", self.params()->to_string() );
+				if ( Params )
+					result.append_fmt( "%s", Params->to_string() );
 
 				else
 					result.append( "void" );
 
 				result.append_fmt( ")\n{\n%s\n}"
-					, self.body()->to_string()
+					, Body->to_string()
 				);
 			}
 			break;
@@ -2285,18 +2185,16 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
-				CodeOperator self = cast<CodeOperator>();
+				if ( Attributes )
+					result.append_fmt( "%s ", Attributes->to_string() );
 
-				if ( self.attributes() )
-					result.append_fmt( "%s ", self.attributes()->to_string() );
+				if ( Specs )
+					result.append_fmt( "%s", Specs->to_string() );
 
-				if ( self.specifiers() )
-					result.append_fmt( "%s", self.specifiers()->to_string() );
+				result.append_fmt( "%s %s (", ReturnType->to_string(), Name );
 
-				result.append_fmt( "%s %s (", self.specifiers()->to_string(), Name );
-
-				if ( self.params() )
-					result.append_fmt( "%s);", self.params()->to_string() );
+				if ( Params )
+					result.append_fmt( "%s);", Params->to_string() );
 
 				else
 					result.append_fmt( "void);" );
@@ -2305,44 +2203,29 @@ namespace gen
 
 			case Operator_Cast:
 			{
-				CodeOpCast self = cast<CodeOpCast>();
-				result.append_fmt("operator %s(){\n%s\n}", self.type()->to_string(), self.body()->to_string() );
+				result.append_fmt("operator %s(){\n%s\n}", ValueType->to_string(), Body->to_string() );
 			}
 			break;
 
 			case Operator_Cast_Fwd:
-				result.append_fmt("operator %s();", cast<CodeOpCast>().type()->to_string() );
+				result.append_fmt("operator %s();", ValueType->to_string() );
 			break;
 
 			case Parameters:
 			{
-				CodeParams self = cast<CodeParams>();
+				// TODO : Parameters can have default values.
 
 				if ( Name )
-				{
-					result.append_fmt( "%s %s", self.type()->to_string(), Name );
-				}
+					result.append_fmt( "%s %s", ValueType->to_string(), Name );
+
 				else
-					result.append_fmt( "%s", self.type()->to_string() );
+					result.append_fmt( "%s", ValueType->to_string() );
 
-				s32 index = 1;
-				s32 left  = num_entries() - 1;
-
-				while ( left-- )
-				{
-					CodeParams next = entry( index )->cast<CodeParams>();
-
-					if ( Name )
-						result.append_fmt( ", %s %s"
-							, next->to_string()
-							, next->Name
-						);
-
-					else
-						result.append_fmt( "%s", self.type()->to_string() );
-
-					index++;
-				}
+				if ( NumEntries )
+					for ( CodeParam param : cast<CodeParam>() )
+					{
+						result.append(param->to_string());
+					}
 			}
 			break;
 
@@ -2353,7 +2236,7 @@ namespace gen
 			case Specifiers:
 			{
 				s32 idx  = 0;
-				s32 left = StaticIndex;
+				s32 left = NumEntries;
 				while ( left-- )
 				{
 					result.append_fmt( "%s ", (char const*)ESpecifier::to_str( ArrSpecs[idx]) );
@@ -2368,32 +2251,34 @@ namespace gen
 
 				CodeStruct self = cast<CodeStruct>();
 
-				if ( self.attributes() || self.parent() )
+				if ( Attributes || ParentType )
 				{
 					result.append( "struct " );
 
-					if ( self.attributes() )
-						result.append_fmt( "%s ", self.attributes()->to_string() );
+					if ( ParentType )
+						result.append_fmt( "%s ", Attributes->to_string() );
 
-					if ( self.parent() )
+					// TODO : Structs can be anonymous, so we need to check for that
+
+					if ( ParentType )
 					{
 						char const* access_level = to_str( ParentAccess );
 
 						result.append_fmt( "%s : %s %s\n{\n%s\n};"
 							, Name
 							, access_level
-							, self.parent()->to_string()
-							, self.body()->to_string()
+							, ParentType->to_string()
+							, Body->to_string()
 						);
 					}
 					else
 					{
-						result.append_fmt( "%s \n{\n%s\n};", Name, self.body()->to_string() );
+						result.append_fmt( "%s \n{\n%s\n};", Name, Body->to_string() );
 					}
 				}
 				else
 				{
-					result.append_fmt( "struct %s\n{\n%s\n};", Name, self.body()->to_string() );
+					result.append_fmt( "struct %s\n{\n%s\n};", Name, Body->to_string() );
 				}
 			}
 			break;
@@ -2404,49 +2289,10 @@ namespace gen
 
 				CodeStruct self = cast<CodeStruct>();
 
-				if ( self.attributes() )
-					result.append_fmt( "struct %s %s;", self.attributes()->to_string(), Name );
+				if ( Attributes )
+					result.append_fmt( "struct %s %s;", Attributes->to_string(), Name );
 
 				else result.append_fmt( "struct %s;", Name );
-			}
-			break;
-
-			case Variable:
-			{
-				ProcessModuleFlags();
-
-				CodeVar self = cast<CodeVar>();
-
-				if ( self.attributes() || self.specifiers() )
-				{
-					if ( self.attributes() )
-						result.append_fmt( "%s ", self.attributes()->to_string() );
-
-					if ( self.specifiers() )
-						result.append_fmt( "%s\n", self.specifiers()->to_string() );
-
-					result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
-
-					AST* type     = entry( 0);
-					AST* type_arr = type->entry( 0 );
-
-					if ( self.type().array_expr() )
-						result.append_fmt( "[%s]", type_arr->to_string() );
-
-					if ( self.value() )
-						result.append_fmt( " = %s;", self.value()->to_string() );
-
-					break;
-				}
-
-				CodeType type     = self.type();
-				Code     type_arr = type.array_expr();
-
-				if ( type_arr )
-					result.append_fmt( "%s %s[%s];", type->to_string(), Name, type_arr->to_string() );
-
-				else
-					result.append_fmt( "%s %s;", entry( 0 )->to_string(), Name );
 			}
 			break;
 
@@ -2488,61 +2334,49 @@ namespace gen
 
 			case Typename:
 			{
-
-			}
-				CodeType sef = cast<CodeType>();
+				CodeType self = cast<CodeType>();
 
 				if ( self.attributes() || self.specifiers() )
 				{
-					s32 idx = 0;
-
 					if ( self.attributes() )
-					{
 						result.append_fmt( "%s ", self.attributes()->to_string() );
-					}
 
 					if ( self.specifiers() )
-					{
 						result.append_fmt( "%s %s", Name, self.specifiers()->to_string() );
-					}
-					else
-					{
-						result.append_fmt( "%s", Name );
-					}
 
+					else
+						result.append_fmt( "%s", Name );
 				}
 				else
 				{
 					result.append_fmt( "%s", Name );
 				}
+			}
 			break;
 
 			case Union:
 			{
 				ProcessModuleFlags();
 
-				s32 idx = 0;
+				CodeUnion self = cast<CodeUnion>();
 
 				result.append( "union " );
 
-				if ( entry( idx )->Type == Attributes )
-				{
-					result.append_fmt( "%s ", entry( idx )->to_string() );
-					idx++;
-				}
+				if ( self.attributes() )
+					result.append_fmt( "%s ", self.attributes()->to_string() );
 
 				if ( Name )
 				{
 					result.append_fmt( "%s\n{\n%s\n};"
 						, Name
-						, body()->to_string()
+						, self.body()->to_string()
 					);
 				}
 				else
 				{
 					// Anonymous union
 					result.append_fmt( "\n{\n%s\n};"
-						, body()->to_string()
+						, self.body()->to_string()
 					);
 				}
 			}
@@ -2554,7 +2388,7 @@ namespace gen
 
 				AST* type = entry( 0 );
 
-				if ( entry( 1 ) && entry( 1 )->Type == Attributes )
+				if ( entry( 1 ) && entry( 1 )->Type == PlatformAttributes )
 				{
 					result.append_fmt( "%s ", entry( 1 )->to_string() );
 				}
@@ -2577,6 +2411,45 @@ namespace gen
 				result.append_fmt( "using namespace %s;", Name );
 			break;
 
+			case Variable:
+			{
+				ProcessModuleFlags();
+
+				CodeVar self = cast<CodeVar>();
+
+				if ( self.attributes() || self.specifiers() )
+				{
+					if ( self.attributes() )
+						result.append_fmt( "%s ", self.attributes()->to_string() );
+
+					if ( self.specifiers() )
+						result.append_fmt( "%s\n", self.specifiers()->to_string() );
+
+					result.append_fmt( "%s %s", entry( 0 )->to_string(), Name );
+
+					AST* type     = entry( 0);
+					AST* type_arr = type->entry( 0 );
+
+					if ( self.type().array_expr() )
+						result.append_fmt( "[%s]", type_arr->to_string() );
+
+					if ( self.value() )
+						result.append_fmt( " = %s;", self.value()->to_string() );
+
+					break;
+				}
+
+				CodeType type     = self.type();
+				Code     type_arr = type.array_expr();
+
+				if ( type_arr )
+					result.append_fmt( "%s %s[%s];", type->to_string(), Name, type_arr->to_string() );
+
+				else
+					result.append_fmt( "%s %s;", entry( 0 )->to_string(), Name );
+			}
+			break;
+
 			case Class_Body:
 			case Enum_Body:
 			case Extern_Linkage_Body:
@@ -2586,12 +2459,12 @@ namespace gen
 			case Struct_Body:
 			case Union_Body:
 			{
-				s32 index = 0;
-				s32 left  = num_entries();
+				Code curr = Front->cast<Code>();
+				s32  left = NumEntries;
 				while ( left -- )
 				{
-					result.append_fmt( "%s\n", entry( index )->to_string() );
-					index++;
+					result.append_fmt( "%s\n", curr->to_string() );
+					++curr;
 				}
 			}
 			break;
@@ -2609,20 +2482,12 @@ namespace gen
 
 		switch ( Type )
 		{
+			// TODO : Finish this...
 			case ECode::Typedef:
 			case ECode::Typename:
 			{
 				if ( Name != other->Name )
 					return false;
-
-				if ( num_entries() != other->num_entries() )
-					return false;
-
-				for ( s32 i = 0; i < num_entries(); ++i )
-				{
-					if ( entry( i ) != other->entry( i ) )
-						return false;
-				}
 
 				return true;
 			}
@@ -2637,7 +2502,6 @@ namespace gen
 	bool AST::validate_body()
 	{
 		using namespace ECode;
-		using namespace EEntry;
 
 	#define CheckBodyType( BodyType )                                               \
 		if ( Type != BodyType )                                                     \
@@ -2646,21 +2510,19 @@ namespace gen
 			return false;                                                           \
 		}
 
-	#define CheckEntries( Unallowed_Types )                                                               \
-		do                                                                                                \
-		{                                                                                                 \
-			for ( s32 idx = 0; idx < num_entries(); idx++ )                                               \
-			{                                                                                             \
-				AST* elem = entry( idx );                                                                 \
-                                                                                                          \
-				switch ( elem->Type )                                                                     \
-				{                                                                                         \
-					Unallowed_Types                                                                       \
-						log_failure( "AST::validate_body: Invalid entry in body %s", elem->debug_str() ); \
-						return false;                                                                     \
-				}                                                                                         \
-			}                                                                                             \
-		}                                                                                                 \
+	#define CheckEntries( Unallowed_Types )                                                                \
+		do                                                                                                 \
+		{                                                                                                  \
+			for ( Code entry : Body->cast<CodeBody>() )                                                    \
+			{                                                                                              \
+				switch ( entry->Type )                                                                     \
+				{                                                                                          \
+					Unallowed_Types                                                                        \
+						log_failure( "AST::validate_body: Invalid entry in body %s", entry->debug_str() ); \
+						return false;                                                                      \
+				}                                                                                          \
+			}                                                                                              \
+		}                                                                                                  \
 		while (0);
 
 		switch ( Type )
@@ -2671,25 +2533,21 @@ namespace gen
 			break;
 			case Enum_Body:
 				CheckBodyType( Enum_Body );
-				for ( s32 idx = 0; idx < entry( Entry_Body )->num_entries(); idx++ )
+				for ( Code entry : Body->cast<CodeBody>() )
 				{
-					AST* elem = entry( idx );
-
-					if ( elem->Type != Untyped )
+					if ( entry->Type != Untyped )
 					{
-						log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %s", elem->debug_str() );
+						log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %s", entry->debug_str() );
 						return false;
 					}
 				}
 			break;
 			case Export_Body:
-				for ( s32 idx = 0; idx < num_entries(); idx++ )
+				for ( Code entry : Body->cast<CodeBody>() )
 				{
-					AST* elem = entry( idx );
-
-					if ( elem->Type != Untyped )
+					if ( entry->Type != Untyped )
 					{
-						log_failure( "AST::validate_body: Invalid entry in export body %s", elem->debug_str() );
+						log_failure( "AST::validate_body: Invalid entry in export body %s", entry->debug_str() );
 						return false;
 					}
 				}
@@ -2703,7 +2561,7 @@ namespace gen
 				CheckEntries( AST_BODY_FUNCTION_UNALLOWED_TYPES );
 			break;
 			case Global_Body:
-				for ( s32 idx = 0; idx < num_entries(); idx++ )
+				for ( s32 idx = 0; idx < NumEntries; idx++ )
 				{
 					AST* elem = entry( idx );
 
@@ -2776,13 +2634,6 @@ namespace gen
 				fatal( "gen::init: Failed to initialize the code pool" );
 
 			CodePools.append( code_pool );
-
-			Arena code_entires_arena = Arena::init_from_allocator( Allocator_CodeEntriesArena, SizePer_CodeEntriresArena );
-
-			if ( code_entires_arena.PhysicalStart == nullptr )
-				fatal( "gen::init: Failed to initialize the code entries arena" );
-
-			CodeEntriesArenas.append( code_entires_arena );
 
 			Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
@@ -2928,16 +2779,6 @@ namespace gen
 		while ( left--, left );
 
 		index = 0;
-		left  = CodeEntriesArenas.num();
-		do
-		{
-			Arena* code_entries_arena = & CodeEntriesArenas[index];
-			code_entries_arena->free();
-			index++;
-		}
-		while ( left--, left );
-
-		index = 0;
 		left  = StringArenas.num();
 		do
 		{
@@ -3039,41 +2880,9 @@ namespace gen
 		result->Op             = EOperator::Invalid;
 		result->ModuleFlags    = ModuleFlag::Invalid;
 		result->ParentAccess   = AccessSpec::Invalid;
-		result->StaticIndex    = 0;
-		result->DynamicEntries = false;
+		result->NumEntries      = 0;
 
 		return result;
-	}
-
-	Array< AST* > make_code_entries()
-	{
-		using namespace StaticData;
-
-		AllocatorInfo allocator = { nullptr, nullptr };
-
-		s32 index = 0;
-		s32 left  = CodeEntriesArenas.num();
-		do
-		{
-			if ( CodeEntriesArenas[index].size_remaining( GEN_DEFAULT_MEMORY_ALIGNMENT) >= InitSize_CodeEntiresArray )
-				allocator = CodeEntriesArenas[index];
-			index++;
-		}
-		while( left--, left );
-
-		if ( allocator.Data == nullptr )
-		{
-			Arena arena = Arena::init_from_allocator( Allocator_CodeEntriesArena, SizePer_CodeEntriresArena );
-
-			if ( arena.PhysicalStart == nullptr )
-				fatal( "gen::make_code: Failed to allocate a new code entries arena - CodeEntriesArena allcoator returned nullptr." );
-
-			allocator = arena;
-			CodeEntriesArenas.append( arena );
-		}
-
-		Array< AST* > entry_array = Array< AST* >::init( allocator );
-		return entry_array;
 	}
 
 	enum class OpValidateResult : u32
@@ -3498,7 +3307,7 @@ namespace gen
 
 		Code
 		result = make_code();
-		result->Type    = ECode::Attributes;
+		result->Type    = ECode::PlatformAttributes;
 		result->Name    = get_cached_string( content );
 		result->Content = result->Name;
 
@@ -3533,9 +3342,9 @@ namespace gen
 
 		name_check( def_class, name );
 
-		if ( attributes && attributes->Type != Attributes )
+		if ( attributes && attributes->Type != PlatformAttributes )
 		{
-			log_failure( "gen::def_class: attributes was not a 'Attributes' type: %s", attributes->debug_str() );
+			log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", attributes->debug_str() );
 			return CodeInvalid;
 		}
 
@@ -3599,9 +3408,9 @@ namespace gen
 			return CodeInvalid;
 		}
 
-		if ( attributes && attributes->Type != Attributes )
+		if ( attributes && attributes->Type != PlatformAttributes )
 		{
-			log_failure( "gen::def_enum: attributes was not a 'Attributes' type: %s", attributes->debug_str() );
+			log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", attributes->debug_str() );
 			return CodeInvalid;
 		}
 
@@ -3753,9 +3562,9 @@ namespace gen
 			return CodeInvalid;
 		}
 
-		if ( attributes && attributes->Type != Attributes )
+		if ( attributes && attributes->Type != PlatformAttributes )
 		{
-			log_failure( "gen::def_function: attributes was not a `Attributes` type: %s", attributes->debug_str() );
+			log_failure( "gen::def_function: attributes was not a `PlatformAttributes` type: %s", attributes->debug_str() );
 			return CodeInvalid;
 		}
 
@@ -3859,7 +3668,7 @@ namespace gen
 		result->Name        = get_cached_string( name );
 		result->ModuleFlags = mflags;
 
-		result->add_entry( body );
+		result->entry( EEntry::Entry_Body ) = body;
 
 		return (CodeNamespace) result;
 	}
@@ -3871,9 +3680,9 @@ namespace gen
 	{
 		using namespace ECode;
 
-		if ( attributes && attributes->Type != Attributes )
+		if ( attributes && attributes->Type != PlatformAttributes )
 		{
-			log_failure( "gen::def_operator: Attributes was provided but its not of attributes type: %s", attributes->debug_str() );
+			log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", attributes->debug_str() );
 			return CodeInvalid;
 		}
 
@@ -3909,7 +3718,7 @@ namespace gen
 				default:
 				{
 					log_failure("gen::def_operator: body must be either of Function_Body, Execution, or Untyped type. %s", body->debug_str());
-					return Code::Invalid;
+					return CodeInvalid;
 				}
 			}
 
@@ -3935,10 +3744,10 @@ namespace gen
 		if (params_code)
 			result->add_entry( params_code );
 
-		return result;
+		return (CodeOperator) result;
 	}
 
-	Code def_operator_cast( Code type, Code body )
+	CodeOpCast def_operator_cast( Code type, Code body )
 	{
 		using namespace ECode;
 		null_check( def_operator_cast, type );
@@ -3946,7 +3755,7 @@ namespace gen
 		if ( type->Type != Typename )
 		{
 			log_failure( "gen::def_operator_cast: type is not a typename - %s", type->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		Code result = make_code();
@@ -3958,7 +3767,7 @@ namespace gen
 			if ( body->Type != Function_Body && body->Type != Execution )
 			{
 				log_failure( "gen::def_operator_cast: body is not of function body or execution type - %s", body->debug_str() );
-				return Code::Invalid;
+				return CodeInvalid;
 			}
 
 			result->add_entry( body );
@@ -3969,10 +3778,10 @@ namespace gen
 		}
 
 		result->add_entry( type );
-		return result;
+		return (CodeOpCast) result;
 	}
 
-	Code def_param( Code type, StrC name, Code value )
+	CodeParams def_param( Code type, StrC name, Code value )
 	{
 		using namespace ECode;
 
@@ -3982,13 +3791,13 @@ namespace gen
 		if ( type->Type != Typename )
 		{
 			log_failure( "gen::def_param: type is not a typename - %s", type->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		if ( value && value->Type != Untyped )
 		{
 			log_failure( "gen::def_param: value is not untyped - %s", value->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		Code
@@ -4001,16 +3810,15 @@ namespace gen
 		if ( value )
 			result->add_entry( value );
 
-		return result;
+		return (CodeParams) result;
 	}
 
-	Code def_specifier( SpecifierT spec )
+	CodeSpecifiers def_specifier( SpecifierT spec )
 	{
-		Code
-		result       = make_code();
+		CodeSpecifiers
+		result       = (CodeSpecifiers) make_code();
 		result->Type = ECode::Specifiers;
-
-		result->add_specifier( spec );
+		result.add( spec );
 
 		return result;
 	}
@@ -4026,9 +3834,9 @@ namespace gen
 
 		name_check( def_struct, name );
 
-		if ( attributes && attributes->Type != Attributes )
+		if ( attributes && attributes->Type != PlatformAttributes )
 		{
-			log_failure( "gen::def_struct: attributes was not a `Attributes` type" );
+			log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type" );
 			return CodeInvalid;
 		}
 
@@ -4071,14 +3879,16 @@ namespace gen
 		return (CodeStruct) result;
 	}
 
-	Code def_template( Code params, Code definition, ModuleFlag mflags )
+	CodeTemplate def_template( Code params, Code definition, ModuleFlag mflags )
 	{
+		using namespace EEntry;
+
 		null_check( def_template, definition );
 
 		if ( params && params->Type != ECode::Parameters )
 		{
 			log_failure( "gen::def_template: params is not of parameters type - %s", params->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		switch (definition->Type )
@@ -4099,32 +3909,34 @@ namespace gen
 		result->Type        = ECode::Template;
 		result->ModuleFlags = mflags;
 
-		result->add_entry( definition );
+		result->entry( Entry_Value ) = definition;
 		result->add_entry( params );
 
-		return result;
+		return (CodeTemplate) result;
 	}
 
-	Code def_type( StrC name, Code arrayexpr, Code specifiers, Code attributes )
+	CodeType def_type( StrC name, Code arrayexpr, Code specifiers, Code attributes )
 	{
+		using namespace EEntry;
+
 		name_check( def_type, name );
 
-		if ( attributes && attributes->Type != ECode::Attributes )
+		if ( attributes && attributes->Type != ECode::PlatformAttributes )
 		{
 			log_failure( "gen::def_type: attributes is not of attributes type - %s", attributes->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		if ( specifiers && specifiers->Type != ECode::Specifiers )
 		{
 			log_failure( "gen::def_type: specifiers is not of specifiers type - %s", specifiers->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		if ( arrayexpr && arrayexpr->Type != ECode::Untyped )
 		{
 			log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", arrayexpr->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		Code
@@ -4133,32 +3945,34 @@ namespace gen
 		result->Type = ECode::Typename;
 
 		if ( attributes )
-			result->add_entry( attributes );
+			result->entry( Entry_Attributes) = attributes;
 
 		if ( specifiers )
-			result->add_entry( specifiers );
+			result->entry( Entry_Specifiers ) =  specifiers;
 
 		if ( arrayexpr )
-			result->add_entry( arrayexpr );
+			result->entry( Entry_Array_Expression) = arrayexpr;
 
-		return result;
+		return (CodeType) result;
 	}
 
-	Code def_typedef( StrC name, Code type, Code attributes, ModuleFlag mflags )
+	CodeTypedef def_typedef( StrC name, Code type, Code attributes, ModuleFlag mflags )
 	{
+		using namespace EEntry;
+
 		name_check( def_typedef, name );
 		null_check( def_typedef, type );
 
 		if ( type->Type != ECode::Typename )
 		{
 			log_failure( "gen::def_typedef: type was not a Typename" );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
-		if ( attributes && attributes->Type != ECode::Attributes )
+		if ( attributes && attributes->Type != ECode::PlatformAttributes )
 		{
-			log_failure( "gen::def_typedef: attributes was not a Attributes" );
-			return Code::Invalid;
+			log_failure( "gen::def_typedef: attributes was not a PlatformAttributes" );
+			return CodeInvalid;
 		}
 
 		// Registering the type.
@@ -4167,7 +3981,7 @@ namespace gen
 		if ( ! registered_type )
 		{
 			log_failure( "gen::def_typedef: failed to register type" );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		Code
@@ -4176,28 +3990,30 @@ namespace gen
 		result->Type        = ECode::Typedef;
 		result->ModuleFlags = mflags;
 
-		result->add_entry( type );
+		result->entry( Entry_Value ) = type;
 
 		if ( attributes )
-			result->add_entry( attributes );
+			result->entry( Entry_Attributes ) = attributes;
 
-		return result;
+		return (CodeTypedef) result;
 	}
 
-	Code def_union( StrC name, Code body, Code attributes, ModuleFlag mflags )
+	CodeUnion def_union( StrC name, Code body, Code attributes, ModuleFlag mflags )
 	{
+		using namespace EEntry;
+
 		null_check( def_union, body );
 
 		if ( body->Type != ECode::Union_Body )
 		{
 			log_failure( "gen::def_union: body was not a Union_Body type - %s", body->debug_str() );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
-		if ( attributes && attributes->Type != ECode::Attributes )
+		if ( attributes && attributes->Type != ECode::PlatformAttributes )
 		{
-			log_failure( "gen::def_union: attributes was not a Attributes type - %s", attributes->debug_str() );
-			return Code::Invalid;
+			log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", attributes->debug_str() );
+			return CodeInvalid;
 		}
 
 		Code
@@ -4208,18 +4024,20 @@ namespace gen
 		if ( name.Ptr )
 			result->Name = get_cached_string( name );
 
-		result->add_entry( body );
+		result->entry( Entry_Body ) = body;
 
 		if ( attributes )
-			result->add_entry( attributes );
+			result->entry( Entry_Attributes ) = attributes;
 
-		return result;
+		return (CodeUnion) result;
 	}
 
-	Code def_using( StrC name, Code type
+	CodeUsing def_using( StrC name, Code type
 		, Code attributes
 		, ModuleFlag mflags )
 	{
+		using namespace EEntry;
+
 		name_check( def_using, name );
 		null_check( def_using, type );
 
@@ -4228,13 +4046,13 @@ namespace gen
 		if ( ! register_type )
 		{
 			log_failure( "gen::def_using: failed to register type" );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
-		if ( attributes && attributes->Type != ECode::Attributes )
+		if ( attributes && attributes->Type != ECode::PlatformAttributes )
 		{
-			log_failure( "gen::def_using: attributes was not a Attributes type - %s", attributes->debug_str() );
-			return Code::Invalid;
+			log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", attributes->debug_str() );
+			return CodeInvalid;
 		}
 
 		Code
@@ -4244,15 +4062,15 @@ namespace gen
 		result->Type = ECode::Using;
 
 		if ( type )
-			result->add_entry( type );
+			result->entry( Entry_Value ) = type;
 
 		if ( attributes )
 			result->add_entry( attributes );
 
-		return result;
+		return (CodeUsing) result;
 	}
 
-	Code def_using_namespace( StrC name )
+	CodeUsingNamespace def_using_namespace( StrC name )
 	{
 		name_check( def_using_namespace, name );
 
@@ -4262,38 +4080,40 @@ namespace gen
 		result->Content = result->Name;
 		result->Type    = ECode::Using_Namespace;
 
-		return result;
+		return (CodeUsingNamespace) result;
 	}
 
-	Code def_variable( Code type, StrC name, Code value
+	CodeVar def_variable( Code type, StrC name, Code value
 		, Code specifiers, Code attributes
 		, ModuleFlag mflags )
 	{
+		using namespace EEntry;
+
 		name_check( def_variable, name );
 		null_check( def_variable, type );
 
-		if ( attributes && attributes->Type != ECode::Attributes )
+		if ( attributes && attributes->Type != ECode::PlatformAttributes )
 		{
-			log_failure( "gen::def_variable: attributes was not a `Attributes` type" );
-			return Code::Invalid;
+			log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type" );
+			return CodeInvalid;
 		}
 
 		if ( specifiers && specifiers->Type != ECode::Specifiers )
 		{
 			log_failure( "gen::def_variable: specifiers was not a `Specifiers` type" );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		if ( type->Type != ECode::Typename )
 		{
 			log_failure( "gen::def_variable: type was not a Typename" );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		if ( value && value->Type != ECode::Untyped )
 		{
 			log_failure( "gen::def_variable: value was not a `Untyped` type" );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		Code
@@ -4302,18 +4122,18 @@ namespace gen
 		result->Type        = ECode::Variable;
 		result->ModuleFlags = mflags;
 
-		result->add_entry( type );
+		result->entry( Entry_Type ) = type;
 
 		if ( attributes )
-			result->add_entry( attributes );
+			result->entry( Entry_Attributes ) = attributes;
 
 		if ( specifiers )
-			result->add_entry( specifiers );
+			result->entry( Entry_Specifiers ) =  specifiers;
 
 		if ( value )
-			result->add_entry( value );
+			result->entry( Entry_Value) = value;
 
-		return result;
+		return (CodeVar) result;
 	}
 
 /*
@@ -4668,8 +4488,9 @@ namespace gen
 		return result;
 	}
 
-	Code def_params( s32 num, ... )
+	CodeParams def_params( s32 num, ... )
 	{
+		using namespace EEntry;
 		def_body_start( def_params );
 
 		va_list va;
@@ -4683,7 +4504,7 @@ namespace gen
 		if ( param->Type != Parameters )
 		{
 			log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		Code result = { param->duplicate() };
@@ -4696,14 +4517,14 @@ namespace gen
 			if ( param->Type != Parameters )
 			{
 				log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
-				return Code::Invalid;
+				return CodeInvalid;
 			}
 
-			result->add_entry( param );
+			result->entry( Entry_Parameters ) = param;
 		}
 		va_end(va);
 
-		return result;
+		return (CodeParams) result;
 	}
 
 	Code def_params( s32 num, Code* codes )
@@ -4743,22 +4564,22 @@ namespace gen
 		return result;
 	}
 
-	Code def_specifiers( s32 num, ... )
+	CodeSpecifiers def_specifiers( s32 num, ... )
 	{
 		if ( num <= 0 )
 		{
 			log_failure("gen::def_specifiers: num cannot be zero or less");
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		if ( num > AST::ArrSpecs_Cap )
 		{
 			log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
-		Code
-		result       = make_code();
+		CodeSpecifiers
+		result       = (CodeSpecifiers) make_code();
 		result->Type = ECode::Specifiers;
 
 		va_list va;
@@ -4767,7 +4588,7 @@ namespace gen
 		{
 			SpecifierT type = (SpecifierT)va_arg(va, int);
 
-			result->add_specifier( type );
+			result.add( type );
 		}
 		while ( --num, num );
 		va_end(va);
@@ -4775,28 +4596,28 @@ namespace gen
 		return result;
 	}
 
-	Code def_specifiers( s32 num, SpecifierT* specs )
+	CodeSpecifiers def_specifiers( s32 num, SpecifierT* specs )
 	{
 		if ( num <= 0 )
 		{
 			log_failure("gen::def_specifiers: num cannot be zero or less");
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
 		if ( num > AST::ArrSpecs_Cap )
 		{
 			log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
-			return Code::Invalid;
+			return CodeInvalid;
 		}
 
-		Code
-		result       = make_code();
+		CodeSpecifiers
+		result       = (CodeSpecifiers) make_code();
 		result->Type = ECode::Specifiers;
 
 		s32 idx = 0;
 		do
 		{
-			result->add_specifier( specs[idx] );
+			result.add( specs[idx] );
 			idx++;
 		}
 		while ( --num, num );
@@ -4804,7 +4625,7 @@ namespace gen
 		return result;
 	}
 
-	Code def_struct_body( s32 num, ... )
+	CodeStructBody def_struct_body( s32 num, ... )
 	{
 		def_body_start( def_struct_body );
 
@@ -4819,10 +4640,10 @@ namespace gen
 		def_body_code_validation_end( def_struct_body );
 		va_end(va);
 
-		return result;
+		return (CodeStructBody) result;
 	}
 
-	Code def_struct_body( s32 num, Code* codes )
+	CodeStructBody def_struct_body( s32 num, Code* codes )
 	{
 		def_body_code_array_start( def_struct_body );
 
@@ -4834,7 +4655,7 @@ namespace gen
 			AST_BODY_STRUCT_UNALLOWED_TYPES
 		def_body_code_validation_end( def_struct_body );
 
-		return result;
+		return (CodeStructBody) result;
 	}
 
 	Code def_union_body( s32 num, ... )

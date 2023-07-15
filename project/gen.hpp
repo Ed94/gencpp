@@ -8,6 +8,8 @@
 */
 #pragma once
 
+#define GEN_FEATURE_PARSING
+
 #ifdef gen_time
 #pragma region GENCPP DEPENDENCIES
 //! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
@@ -2259,7 +2261,7 @@ namespace gen
 		Entry( Access_Private )       \
 		Entry( Access_Protected )     \
 		Entry( Access_Public )        \
-		Entry( Attributes )           \
+		Entry( PlatformAttributes )   \
 		Entry( Class )                \
 		Entry( Class_Fwd )            \
 		Entry( Class_Body )           \
@@ -2611,7 +2613,7 @@ namespace gen
 	struct CodeNamespace;
 	struct CodeOperator;
 	struct CodeOpCast;
-	struct CodeParams;
+	struct CodeParam;
 	struct CodeSpecifiers;
 	struct CodeStruct;
 	struct CodeTemplate;
@@ -2622,35 +2624,9 @@ namespace gen
 	struct CodeUsingNamespace;
 	struct CodeVar;
 	struct CodeBody;
-	struct CodeClassBody;
-	struct CodeEnumBody;
-	struct CodeExportBody;
-	struct CodeExternBody;
-	struct CodeFnBody;
-	struct CodeGlobalBody;
-	struct CodeNamespaceBody;
-	struct CodeStructBody;
-	struct CodeUnionBody;
 
 	// Desired width of the AST data structure.
-	constexpr u32 AST_POD_Size = 256;
-
-	namespace EEntry
-	{
-		enum Type : u32
-		{
-			Entry_Array_Expression,
-			Entry_Attributes,
-			Entry_Body,
-			Entry_Parameters,
-			Entry_Parameter_Type,
-			Entry_Parent,
-			Entry_Return_Type,
-			Entry_Specifiers,
-			Entry_Value,
-		};
-	}
-	using EntryT = EEntry::Type;
+	constexpr u32 AST_POD_Size = 128;
 
 	/*
 		Simple AST POD with functionality to seralize into C++ syntax.
@@ -2658,144 +2634,130 @@ namespace gen
 	struct AST
 	{
 	#	pragma region Member Functions
-		void  add_entry( AST* other );
-		AST*  duplicate();
-		AST*& entry( u32 idx );
-		bool  has_entries();
-		bool  is_equal( AST* other );
-		s32   num_entries();
-
-		// Serialization
-
-		char const* debug_str()
-		{
-			char const* fmt = stringize(
-				\nCode Debug:
-				\nType    : %s
-				\nParent  : %s
-				\nName    : %s
-				\nComment : %s
-			);
-
-			// These should be used immediately in a log.
-			// Thus if its desired to keep the debug str
-			// for multiple calls to bprintf,
-			// allocate this to proper string.
-			return str_fmt_buf( fmt
-			,	type_str()
-			,	Parent   ? Parent->Name : ""
-			,	Name     ? Name         : ""
-			);
-		}
-
-		String to_string();
-
+		void        add        ( AST* other );
+		AST*        duplicate  ();
+		AST*&       entry      ( u32 idx );
+		bool        has_entries();
+		bool        is_equal   ( AST* other );
+		char const* debug_str  ();
+		String      to_string  ();
 		char const* type_str()
 		{
 			return ECode::to_str( Type );
 		}
-
-		// Validation
-
-		bool validate_body();
-
-		operator Code();
+		bool        validate_body();
 
 		template< class Type >
 		Type cast()
 		{
 			return (Type) { this };
 		}
+
+		operator Code();
 	#	pragma endregion Member Functions
 
 		constexpr static
-		uw ArrS_Cap =
-		( 	AST_POD_Size
-			- sizeof(AST*)         // Parent
-			- sizeof(StringCached) // Name
-			- sizeof(CodeT) 	   // Type
-			- sizeof(OperatorT)    // Op
-			- sizeof(ModuleFlag)   // ModuleFlags
-			- sizeof(AccessSpec)   // ParentAccess
-			- sizeof(u32) 		   // StaticIndex
-			- sizeof(bool)         // DynamicEntries
-			- sizeof(u8) * 3 )     // _Align_Pad
-		/ sizeof(AST*);
-
-		constexpr static
-		uw ArrSpecs_Cap = ArrS_Cap * (sizeof(AST*) / sizeof(SpecifierT));
-
-	#	define Using_AST_POD                           \
-		union {                                        \
-			AST*          ArrStatic[AST::ArrS_Cap];    \
-			Array< AST* > ArrDyn;                      \
-			StringCached  Content;                     \
-			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; \
-		};                                             \
-		AST*              Parent;                      \
-		StringCached      Name;                        \
-		CodeT             Type;                        \
-		OperatorT         Op;                          \
-		ModuleFlag        ModuleFlags;                 \
-		AccessSpec        ParentAccess;				   \
-		u32               StaticIndex;                 \
-		bool              DynamicEntries;              \
-		u8                _Align_Pad[3];
-
-		Using_AST_POD
-	};
-
-	struct AST_Experimental
-	{
-		using AST = AST_Experimental;
-
-		static constexpr uw ArrSpecs_Cap = sizeof( AST* ) * 9;
-
-		// Should only be used for body types.
-		void add( AST* other )
-		{
-			Back->Right = other;
-			Back        = other;
-		}
+		uw ArrSpecs_Cap =
+		(
+			 AST_POD_Size
+			 - sizeof(AST*) * 4
+			 - sizeof(StringCached)
+			 - sizeof(CodeT)
+			 - sizeof(ModuleFlag)
+			 - sizeof(u32)
+		)
+		/ sizeof(SpecifierT);
 
 		union {
 			struct
 			{
-				AST* ArrExpr;
-				AST* Attributes;
-				AST* Parameters;
-				AST* ParameterType;
-				AST* ParentType;
-				AST* ReturnType;
-				AST* Specifiers;
-				AST* Value;
+				AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+				AST*      Specs;          // Function, Operator, Type symbol, Variable
+				union {
+					AST*  ParentType;     // Class, Struct
+					AST*  ReturnType;     // Function, Operator
+					AST*  UnderlyingType; // Enum, Typedef
+					AST*  ValueType;      // Parameter, Variable
+				};
+				AST*      Params;         // Function, Operator, Template
+				union {
+					AST*  ArrExpr;        // Type Symbol
+					AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
+					AST*  Declaration;    // Friend, Template
+					AST*  Value;          // Parameter, Variable
+				};
 			};
-			struct
-			{
-				AST* Left;
-				AST* Right;
-			};
-			struct
-			{
-				AST* Front;
-				AST* Back;
-			};
-			StringCached 	Content;
-			SpecifierT		ArrSpecs[ArrSpecs_Cap];
+			StringCached  Content;        // Attributes, Comment, Execution, Include
+			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 		};
-		AST*             Parent;
+		union {
+			// Entry Node
+			struct {
+				AST*      Prev;
+				AST*      Next;
+			};
+			// Body Node
+			struct {
+				AST*      Front;
+				AST*      Back;
+			};
+		};
+		AST*              Parent;
 		StringCached      Name;
 		CodeT             Type;
-		OperatorT         Op;
 		ModuleFlag        ModuleFlags;
-		AccessSpec        ParentAccess;
-		u32               NumEntries;
+		union {
+			OperatorT     Op;
+			AccessSpec    ParentAccess;
+			u32           NumEntries;
+		};
 	};
 
 	struct AST_POD
 	{
-		Using_AST_POD
-	#	undef Using_CodePOD
+		union {
+			struct
+			{
+				AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+				AST*      Specs;          // Function, Operator, Type symbol, Variable
+				union {
+					AST*  ParentType;     // Class, Struct
+					AST*  ReturnType;     // Function, Operator
+					AST*  UnderlyingType; // Enum, Typedef
+					AST*  ValueType;      // Parameter, Variable
+				};
+				AST*      Params;         // Function, Operator, Template
+				union {
+					AST*  ArrExpr;        // Type Symbol
+					AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
+					AST*  Declaration;    // Friend, Template
+					AST*  Value;          // Parameter, Variable
+				};
+			};
+			StringCached  Content;        // Attributes, Comment, Execution, Include
+			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+		};
+		union {
+			// Entry Node
+			struct {
+				AST*      Prev;
+				AST*      Next;
+			};
+			// Body Node
+			struct {
+				AST*      Front;
+				AST*      Back;
+			};
+		};
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		union {
+			OperatorT     Op;
+			AccessSpec    ParentAccess;
+			u32           NumEntries;
+		};
 	};
 
 	// Its intended for the AST to have equivalent size to its POD.
@@ -2824,20 +2786,20 @@ namespace gen
 				log_failure("Code::set_global: Cannot set code as global, AST is null!"); \
 				return;                                                                   \
 			}                                                                             \
-                                                                                          \
+																						  \
 			ast->Parent = Code::Global.ast;                                               \
 		}                                                                                 \
 		bool is_valid()                                                                   \
 		{                                                                                 \
-			return ast != nullptr && ast->Type != CodeT::Invalid;                         \
+			return (AST*) ast != nullptr && ast->Type != CodeT::Invalid;                  \
 		}                                                                                 \
 		bool operator ==( Code other )                                                    \
 		{                                                                                 \
-			return ast == other.ast;                                                      \
+			return (AST*) ast == other.ast;                                               \
 		}                                                                                 \
 		bool operator !=( Code other )                                                    \
 		{                                                                                 \
-			return ast != other.ast;                                                      \
+			return (AST*) ast != other.ast;                                               \
 		}                                                                                 \
 		AST* operator->()                                                                 \
 		{                                                                                 \
@@ -2846,16 +2808,25 @@ namespace gen
 				log_failure("Attempt to dereference a nullptr!");                         \
 				return nullptr;                                                           \
 			}                                                                             \
-                                                                                          \
-			return ast;                                                                   \
+																						  \
+			return (AST*) ast;                                                            \
 		}                                                                                 \
 		operator AST*()                                                                   \
 		{                                                                                 \
-			return ast;                                                                   \
-		}                                                                                 \
-		AST* ast
+			return (AST*) ast;                                                            \
+		}
+
+		Code& operator++()
+		{
+			if ( ast )
+				ast = ast->Next;
+
+			return *this;
+		}
 
 		Using_Code;
+
+		AST* ast;
 
 		#define GEN_ENFORCE_STRONG_CODE_TYPES
 
@@ -2875,7 +2846,7 @@ namespace gen
 		operator CodeNamespace() const;
 		operator CodeOperator() const;
 		operator CodeOpCast() const;
-		operator CodeParams() const;
+		operator CodeParam() const;
 		operator CodeSpecifiers() const;
 		operator CodeStruct() const;
 		operator CodeTemplate() const;
@@ -2886,15 +2857,6 @@ namespace gen
 		operator CodeUsingNamespace() const;
 		operator CodeVar() const;
 		operator CodeBody() const;
-		operator CodeClassBody() const;
-		operator CodeEnumBody() const;
-		operator CodeExportBody() const;
-		operator CodeExternBody() const;
-		operator CodeFnBody() const;
-		operator CodeGlobalBody() const;
-		operator CodeNamespaceBody() const;
-		operator CodeStructBody() const;
-		operator CodeUnionBody() const;
 
 		#undef operator
 	};
@@ -2904,17 +2866,480 @@ namespace gen
 		AST* ast;
 	};
 
-	static_assert( sizeof(Code)    == sizeof(Code_POD), "ERROR: Code is not POD" );
+	static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 
 	#ifdef GEN_ENFORCE_STRONG_CODE_TYPES
 		// Used when the its desired when omission is allowed in a definition.
-		#define NoCode { nullptr }
+		#define NoCode      { nullptr }
 		#define CodeInvalid { Code::Invalid.ast }
 	#else
 		// Used when the its desired when omission is allowed in a definition.
 		constexpr Code NoCode      = { nullptr };
 		constexpr Code CodeInvalid = Code::Invalid;
 	#endif
+
+#pragma region Filtered ASTs
+	struct AST_Body
+	{
+		char              _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		AST*              Front;
+		AST*              Back;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Body) == sizeof(AST), "ERROR: AST_Filtered is not the same size as AST");
+
+	struct AST_Attributes
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			StringCached  Content;
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Attributes) == sizeof(AST), "ERROR: AST_Attributes is not the same size as AST");
+
+	struct AST_Comment
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			StringCached  Content;
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Comment) == sizeof(AST), "ERROR: AST_Comment is not the same size as AST");
+
+	struct AST_Class
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				char 	  _PAD_SPECS_ [ sizeof(AST*) ];
+				AST*      ParentType;
+				char 	  _PAD_PARAMS_[ sizeof(AST*) ];
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		AccessSpec        ParentAccess;
+	};
+	static_assert( sizeof(AST_Class) == sizeof(AST), "ERROR: AST_Class is not the same size as AST");
+
+	struct AST_Exec
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Exec) == sizeof(AST), "ERROR: AST_Exec is not the same size as AST");
+
+	struct AST_Enum
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				char      _PAD_SPEC_  [ sizeof(AST*) ];
+				AST*      UnderlyingType;
+				char	  _PAD_PARAMS_[ sizeof(AST*) ];
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Enum) == sizeof(AST), "ERROR: AST_Enum is not the same size as AST");
+
+	struct AST_Extern
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Extern) == sizeof(AST), "ERROR: AST_Extern is not the same size as AST");
+
+	struct AST_Include
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			StringCached  Content;
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Include) == sizeof(AST), "ERROR: AST_Include is not the same size as AST");
+
+	struct AST_Friend
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
+				AST*      Declaration;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Friend) == sizeof(AST), "ERROR: AST_Friend is not the same size as AST");
+
+	struct AST_Fn
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				AST*      Specs;
+				AST*      ReturnType;
+				AST* 	  Params;
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Fn) == sizeof(AST), "ERROR: AST_Fn is not the same size as AST");
+
+	struct AST_Module
+	{
+		char              _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Module) == sizeof(AST), "ERROR: AST_Module is not the same size as AST");
+
+	struct AST_Namespace
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			AST*          Body;
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Namespace) == sizeof(AST), "ERROR: AST_Namespace is not the same size as AST");
+
+	struct AST_Operator
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				AST*      Specs;
+				AST*      ReturnType;
+				AST*      Params;
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		OperatorT         Op;
+	};
+	static_assert( sizeof(AST_Operator) == sizeof(AST), "ERROR: AST_Operator is not the same size as AST");
+
+	struct AST_OpCast
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
+				AST*      ValueType;
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_OpCast) == sizeof(AST), "ERROR: AST_OpCast is not the same size as AST");
+
+	struct AST_Param
+	{
+		union {
+			char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
+				AST*      ValueType;
+				AST*      Value;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		u32               NumEntries;
+	};
+	static_assert( sizeof(AST_Param) == sizeof(AST), "ERROR: AST_Param is not the same size as AST");
+
+	struct AST_Specifiers
+	{
+		SpecifierT        ArrSpecs[ AST::ArrSpecs_Cap ];
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		u32               NumEntries;
+	};
+		static_assert( sizeof(AST_Specifiers) == sizeof(AST), "ERROR: AST_Specifiers is not the same size as AST");
+
+	struct AST_Struct
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				char 	  _PAD_SPECS_ [ sizeof(AST*) ];
+				AST*      ParentType;
+				char 	  _PAD_PARAMS_[ sizeof(AST*) ];
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		AccessSpec        ParentAccess;
+	};
+	static_assert( sizeof(AST_Struct) == sizeof(AST), "ERROR: AST_Struct is not the same size as AST");
+
+	struct AST_Template
+	{
+		union {
+			char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				AST*      ReturnType;
+				AST*      Specs;
+				AST* 	  Params;
+				AST*      Declaration;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Template) == sizeof(AST), "ERROR: AST_Template is not the same size as AST");
+
+	struct AST_Type
+	{
+		union {
+			char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				AST*      Specs;
+				char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+				AST*     ArrExpr;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same size as AST");
+
+	struct AST_Typedef
+	{
+		union {
+			char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				char 	  _PAD_SPECS_     [ sizeof(AST*) ];
+				AST*      UnderlyingType;
+				char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Typedef) == sizeof(AST), "ERROR: AST_Typedef is not the same size as AST");
+
+	struct AST_Union
+	{
+		union {
+			char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
+				AST*      Body;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Union) == sizeof(AST), "ERROR: AST_Union is not the same size as AST");
+
+	struct AST_Using
+	{
+		union {
+			char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				char 	  _PAD_SPECS_     [ sizeof(AST*) ];
+				AST*      UnderlyingType;
+				char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		union {
+			OperatorT     Op;
+			AccessSpec    ParentAccess;
+			u32           NumEntries;
+		};
+	};
+	static_assert( sizeof(AST_Using) == sizeof(AST), "ERROR: AST_Using is not the same size as AST");
+
+	struct AST_UsingNamespace
+	{
+		char              _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_UsingNamespace) == sizeof(AST), "ERROR: AST_UsingNamespace is not the same size as AST");
+
+	struct AST_Var
+	{
+		union {
+			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+			struct
+			{
+				AST*      Attributes;
+				AST*      Specs;
+				AST*      ValueType;
+				char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+				AST*      Value;
+			};
+		};
+		AST*              Prev;
+		AST*              Next;
+		AST*              Parent;
+		StringCached      Name;
+		CodeT             Type;
+		ModuleFlag        ModuleFlags;
+		char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	};
+	static_assert( sizeof(AST_Var) == sizeof(AST), "ERROR: AST_Var is not the same size as AST");
+#pragma endregion Filtered ASTs
 
 #pragma region Code Types
 	#define Define_ParentCast          \
@@ -2923,156 +3348,81 @@ namespace gen
 		return * rcast( Code*, this ); \
 	}
 
-	#define Define_CodeBodyType( Name )                              \
-	struct Code##Name                                                \
-	{                                                                \
-		Using_Code;                                                  \
-		Define_ParentCast;                                           \
-                                                                     \
-		Code* begin()                                                \
-		{                                                            \
-			return rcast( Code*, ast->entry(0));                     \
-		}                                                            \
-		Code* end()                                                  \
-		{                                                            \
-			return rcast( Code*, ast->entry( ast->num_entries() ) ); \
-		}                                                            \
+	#define Define_CodeType( name ) \
+	struct Code##name               \
+	{                               \
+		Using_Code;                 \
+		Define_ParentCast;          \
+		AST_##name* ast;            \
 	}
 
-	Define_CodeBodyType( Body );
-	Define_CodeBodyType( ClassBody );
-	Define_CodeBodyType( EnumBody );
-	Define_CodeBodyType( ExportBody );
-	Define_CodeBodyType( ExternBody );
-	Define_CodeBodyType( FnBody );
-	Define_CodeBodyType( GlobalBody );
-	Define_CodeBodyType( NamespaceBody );
-	Define_CodeBodyType( StructBody );
-	Define_CodeBodyType( UnionBody );
-
-	struct CodeAttributes
+	struct CodeBody
 	{
 		Using_Code;
 		Define_ParentCast;
+
+		Code* begin()
+		{
+			if ( ast )
+				return rcast( Code*, ast->Front );
+
+			return { nullptr };
+		}
+		Code* end()
+		{
+			return nullptr;
+		}
+
+		AST_Body* ast;
 	};
 
-	struct CodeComment
-	{
-		Using_Code;
-		Define_ParentCast;
-	};
+	Define_CodeType( Attributes );
+	Define_CodeType( Comment );
+	Define_CodeType( Class );
+	Define_CodeType( Enum );
+	Define_CodeType( Exec );
+	Define_CodeType( Extern );
+	Define_CodeType( Include );
+	Define_CodeType( Friend );
+	Define_CodeType( Fn );
+	Define_CodeType( Module );
+	Define_CodeType( Namespace );
+	Define_CodeType( Operator );
+	Define_CodeType( OpCast );
+	Define_CodeType( Struct );
+	Define_CodeType( Template );
+	Define_CodeType( Type );
+	Define_CodeType( Typedef );
+	Define_CodeType( Union );
+	Define_CodeType( Using );
+	Define_CodeType( UsingNamespace );
+	Define_CodeType( Var );
 
-	struct CodeClass
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeClassBody  body();
-		CodeType       parent();
-	};
-
-	struct CodeExec
-	{
-		Using_Code;
-		Define_ParentCast;
-	};
-
-	struct CodeEnum
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeEnumBody   body();
-		CodeType       type();
-	};
-
-	struct CodeExtern
+	struct CodeParam
 	{
 		Using_Code;
 		Define_ParentCast;
 
-		CodeExternBody body();
-	};
+		CodeParam* begin()
+		{
+			if ( ast )
+				return rcast( CodeParam*, ast );
 
-	struct CodeInclude
-	{
-		Using_Code;
-		Define_ParentCast;
-	};
+			return { nullptr };
+		}
+		CodeParam* end()
+		{
+			return nullptr;
+		}
+		CodeParam& operator++()
+		{
+			if ( ast && ast->Next )
+				ast = rcast( AST_Param*, ast->Next );
 
-	struct CodeFriend
-	{
-		Using_Code;
-		Define_ParentCast;
+			return * this;
+		}
 
-		Code symbol();
-	};
-
-	struct CodeFn
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeFnBody     body();
-		CodeParams     params();
-		CodeType       return_type();
-		CodeSpecifiers specifiers();
-	};
-
-	struct CodeModule
-	{
-		Using_Code;
-		Define_ParentCast;
-	};
-
-	struct CodeNamespace
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeNamespaceBody body();
-	};
-
-	struct CodeUsingNamespace
-	{
-		Using_Code;
-		Define_ParentCast;
-	};
-
-	struct CodeOperator
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeFnBody     body();
-		CodeParams     params();
-		CodeType       return_type();
-		CodeSpecifiers specifiers();
-	};
-
-	struct CodeOpCast
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeFnBody body();
-		CodeType   type();
-	};
-
-	struct CodeParams
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		void       add_param( CodeParams param );
-		bool       has_params();
-		CodeParams get( s32 idx );
-		s32        num();
-		CodeType   type();
+		AST_Param* ast;
 	};
 
 	struct CodeSpecifiers
@@ -3080,81 +3430,43 @@ namespace gen
 		Using_Code;
 		Define_ParentCast;
 
-		SpecifierT begin();
-		SpecifierT end();
+		bool add( SpecifierT spec )
+		{
+			if ( ast->NumEntries == AST::ArrSpecs_Cap )
+			{
+				log_failure("CodeSpecifiers: Attempted to add over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
+				return false;
+			}
 
-		bool add( SpecifierT spec );
-		s32  has( SpecifierT spec );
+			ast->ArrSpecs[ ast->NumEntries ] = spec;
+			ast->NumEntries++;
+			return true;
+		}
+		s32  has( SpecifierT spec )
+		{
+			for ( s32 idx = 0; idx < ast->NumEntries; idx++ )
+			{
+				if ( ast->ArrSpecs[ ast->NumEntries ] == spec )
+					return idx;
+			}
+
+			return -1;
+		}
+		SpecifierT* begin()
+		{
+			if ( ast )
+				return & ast->ArrSpecs[0];
+
+			return nullptr;
+		}
+		SpecifierT* end()
+		{
+			return ast->ArrSpecs + ast->NumEntries;
+		}
+
+		AST_Specifiers* ast;
 	};
 
-	struct CodeStruct
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeStructBody body();
-		CodeType       parent();
-	};
-
-	struct CodeTemplate
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		Code definition();
-		Code params();
-	};
-
-	struct CodeType
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		Code           array_expr();
-		CodeAttributes attributes();
-		CodeSpecifiers specifiers();
-	};
-
-	struct CodeTypedef
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeType       type();
-	};
-
-	struct CodeUnion
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeUnionBody  body();
-	};
-
-	struct CodeUsing
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		Code attributes();
-		Code type();
-	};
-
-	struct CodeVar
-	{
-		Using_Code;
-		Define_ParentCast;
-
-		CodeAttributes attributes();
-		CodeSpecifiers specifiers();
-		CodeType       type();
-		Code 		   value();
-	};
-
-	#undef Define_CodeBodyType
 	#undef Define_ParentCast
 	#undef Using_Code
 #pragma endregion Code Types
@@ -3181,16 +3493,11 @@ namespace gen
 	*/
 	Code make_code();
 
-	// This provides a fresh Code AST array for the entries field of the AST.
-	// This is done separately from the regular CodePool allocator.
-	Array< AST* > make_code_entries();
-
 	// Set these before calling gen's init() procedure.
 	// Data
 
 	void set_allocator_data_arrays       ( AllocatorInfo data_array_allocator );
 	void set_allocator_code_pool         ( AllocatorInfo pool_allocator );
-	void set_allocator_code_enrties_arena( AllocatorInfo pool_allocator );
 	void set_allocator_string_arena      ( AllocatorInfo string_allocator );
 	void set_allocator_string_table      ( AllocatorInfo string_allocator );
 	void set_allocator_type_table        ( AllocatorInfo type_reg_allocator );
@@ -3215,7 +3522,7 @@ namespace gen
 	CodeFriend def_friend     ( Code symbol );
 
 	CodeFn def_function( StrC name
-		, CodeParams     params     = NoCode, CodeType       ret_type   = NoCode, CodeFnBody body = NoCode
+		, CodeParam      params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
 		, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 		, ModuleFlag mflags     = ModuleFlag::None );
 
@@ -3224,22 +3531,22 @@ namespace gen
 	CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 
 	CodeOperator def_operator( OperatorT op
-		, CodeParams     params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
+		, CodeParam      params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
 		, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 		, ModuleFlag     mflags     = ModuleFlag::None );
 
 	CodeOpCast def_operator_cast( Code type, Code body = NoCode );
 
-	CodeParams     def_param    ( Code type, StrC name, Code value = NoCode );
+	CodeParam      def_param    ( Code type, StrC name, Code value = NoCode );
 	CodeSpecifiers def_specifier( SpecifierT specifier );
 
 	CodeStruct def_struct( StrC name
-		, Code           body
+		, Code           body       = NoCode
 		, CodeType       parent     = NoCode, AccessSpec access = AccessSpec::Default
 		, CodeAttributes attributes = NoCode
 		, ModuleFlag     mflags     = ModuleFlag::None );
 
-	CodeTemplate def_template( CodeParams params, Code definition, ModuleFlag mflags = ModuleFlag::None );
+	CodeTemplate def_template( CodeParam params, Code definition, ModuleFlag mflags = ModuleFlag::None );
 
 	CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode );
 	CodeTypedef def_typedef( StrC name, CodeType type, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
@@ -3262,39 +3569,39 @@ namespace gen
 	// There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 	/// or provide as an array of Code objects.
 
-	CodeClassBody  def_class_body      ( s32 num, ... );
-	CodeClassBody  def_class_body      ( s32 num, Code* codes );
-	CodeEnumBody   def_enum_body       ( s32 num, ... );
-	CodeEnumBody   def_enum_body       ( s32 num, Code* codes );
-	CodeExportBody def_export_body     ( s32 num, ... );
-	CodeExportBody def_export_body     ( s32 num, Code* codes);
-	CodeExternBody def_extern_link_body( s32 num, ... );
-	CodeExternBody def_extern_link_body( s32 num, Code* codes );
-	CodeFnBody     def_function_body   ( s32 num, ... );
-	CodeFnBody     def_function_body   ( s32 num, Code* codes );
-	CodeGlobalBody def_global_body     ( s32 num, ... );
-	CodeGlobalBody def_global_body     ( s32 num, Code* codes );
-	CodeNamespace  def_namespace_body  ( s32 num, ... );
-	CodeNamespace  def_namespace_body  ( s32 num, Code* codes );
-	CodeParams     def_params          ( s32 num, ... );
-	CodeParams     def_params          ( s32 num, CodeParams* params );
+	CodeBody       def_class_body      ( s32 num, ... );
+	CodeBody       def_class_body      ( s32 num, Code* codes );
+	CodeBody       def_enum_body       ( s32 num, ... );
+	CodeBody       def_enum_body       ( s32 num, Code* codes );
+	CodeBody       def_export_body     ( s32 num, ... );
+	CodeBody       def_export_body     ( s32 num, Code* codes);
+	CodeBody       def_extern_link_body( s32 num, ... );
+	CodeBody       def_extern_link_body( s32 num, Code* codes );
+	CodeBody       def_function_body   ( s32 num, ... );
+	CodeBody       def_function_body   ( s32 num, Code* codes );
+	CodeBody       def_global_body     ( s32 num, ... );
+	CodeBody       def_global_body     ( s32 num, Code* codes );
+	CodeBody       def_namespace_body  ( s32 num, ... );
+	CodeBody       def_namespace_body  ( s32 num, Code* codes );
+	CodeParam      def_params          ( s32 num, ... );
+	CodeParam      def_params          ( s32 num, CodeParam* params );
 	CodeSpecifiers def_specifiers      ( s32 num, ... );
 	CodeSpecifiers def_specifiers      ( s32 num, SpecifierT* specs );
-	CodeStructBody def_struct_body     ( s32 num, ... );
-	CodeStructBody def_struct_body     ( s32 num, Code* codes );
-	CodeUnionBody  def_union_body      ( s32 num, ... );
-	CodeUnionBody  def_union_body      ( s32 num, Code* codes );
+	CodeBody       def_struct_body     ( s32 num, ... );
+	CodeBody       def_struct_body     ( s32 num, Code* codes );
+	CodeBody       def_union_body      ( s32 num, ... );
+	CodeBody       def_union_body      ( s32 num, Code* codes );
 #	pragma endregion Upfront
 
 #	pragma region Parsing
 #	ifdef GEN_FEATURE_PARSING
 	CodeClass      parse_class        ( StrC class_def     );
 	CodeEnum       parse_enum         ( StrC enum_def      );
-	CodeExportBody parse_export_body  ( StrC export_def    );
+	CodeBody       parse_export_body  ( StrC export_def    );
 	CodeExtern     parse_extern_link  ( StrC exten_link_def);
 	CodeFriend     parse_friend       ( StrC friend_def    );
 	CodeFn         parse_function     ( StrC fn_def        );
-	CodeGlobalBody parse_global_body  ( StrC body_def      );
+	CodeBody       parse_global_body  ( StrC body_def      );
 	CodeNamespace  parse_namespace    ( StrC namespace_def );
 	CodeOperator   parse_operator     ( StrC operator_def  );
 	CodeOpCast     parse_operator_cast( StrC operator_def  );
@@ -3496,8 +3803,6 @@ namespace gen
 	constexpr s32 InitSize_TypeTable   = megabytes(4);
 
 	constexpr s32 CodePool_NumBlocks        = 4096;
-	constexpr s32 InitSize_CodeEntiresArray = 512;
-	constexpr s32 SizePer_CodeEntriresArena = megabytes(16);
 	constexpr s32 SizePer_StringArena       = megabytes(32);
 
 	constexpr s32 MaxCommentLineLength      = 1024;
@@ -3546,103 +3851,74 @@ namespace gen
 #pragma region Inlines
 namespace gen
 {
-	void AST::add_entry( AST* other )
+	void AST::add( AST* other )
 	{
-		AST* to_add = other->Parent ?
-			other->duplicate() : other;
+			if ( other->Parent )
+				other = other->duplicate();
 
-		if (DynamicEntries)
-			ArrDyn.append( to_add );
-
-		else
-		{
-			if ( StaticIndex < ArrS_Cap )
+			if ( Front == nullptr )
 			{
-				ArrStatic[StaticIndex] = to_add;
-				StaticIndex++;
+				Front = other;
+				Back = other;
+
+				return;
 			}
-			else
-			{
-				ArrDyn = make_code_entries();
 
-				s32 index = 0;
-				do
-				{
-					ArrDyn.append( ArrStatic[index] );
-				}
-				while ( StaticIndex--, StaticIndex );
-
-				ArrDyn.append( to_add );
-			}
-		}
-
-		to_add->Parent = this;
+			AST*
+			Current       = Back;
+			Current->Next = other;
+			other->Prev   = Current;
+			Back          = other;
 	}
 
 	inline
 	bool AST::has_entries()
 	{
-		return num_entries();
+		return NumEntries;
 	}
 
 	inline
 	AST*& AST::entry( u32 idx )
 	{
-		return DynamicEntries ? ArrDyn[ idx ] : ArrStatic[ idx ];
+		AST* current = Front;
+		while ( idx >= 0 && current != nullptr )
+		{
+			if ( idx == 0 )
+				return current;
+
+			current = current->Next;
+			idx--;
+		}
+
+		return current;
 	}
 
 	inline
-	s32 AST::num_entries()
+	char const* AST::debug_str()
 	{
-		return DynamicEntries ? ArrDyn.num() : StaticIndex;
+		char const* fmt = stringize(
+			\nCode Debug:
+			\nType    : %s
+			\nParent  : %s
+			\nName    : %s
+			\nComment : %s
+		);
+
+		// These should be used immediately in a log.
+		// Thus if its desired to keep the debug str
+		// for multiple calls to bprintf,
+		// allocate this to proper string.
+		return str_fmt_buf( fmt
+		,	type_str()
+		,	Parent   ? Parent->Name : ""
+		,	Name     ? Name         : ""
+		);
 	}
 
 	inline
 	AST::operator Code()
 	{
 		return { this };
-	}
-
-	inline
-	CodeParams CodeParams::get( s32 index )
-	{
-		if ( index <= 0 )
-			return * this;
-
-		return (CodeParams){ ast->entry( index + 1 ) };
-	}
-
-	inline
-	s32 CodeParams::num()
-	{
-		// The first entry (which holds the type) represents the first parameter.
-		return ast->num_entries();
-	}
-
-	inline
-	bool CodeSpecifiers::add( SpecifierT spec )
-	{
-		if ( ast->StaticIndex == AST::ArrSpecs_Cap )
-		{
-			log_failure("AST::add_specifier: Attempted to add over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
-			return false;
-		}
-
-		ast->ArrSpecs[ ast->StaticIndex ] = spec;
-		ast->StaticIndex++;
-		return true;
-	}
-
-	inline
-	s32 CodeSpecifiers::has( SpecifierT spec )
-	{
-		for ( s32 idx = 0; idx < ast->StaticIndex; idx++ )
-		{
-			if ( ast->ArrSpecs[ ast->StaticIndex ] == spec )
-				return idx;
-		}
-
-		return -1;
 	}
 
 #pragma region Operater Cast Impl
@@ -3665,7 +3941,7 @@ namespace gen
 	Define_CodeCast( CodeNamespace );
 	Define_CodeCast( CodeOperator );
 	Define_CodeCast( CodeOpCast );
-	Define_CodeCast( CodeParams );
+	Define_CodeCast( CodeParam );
 	Define_CodeCast( CodeSpecifiers );
 	Define_CodeCast( CodeStruct );
 	Define_CodeCast( CodeTemplate );
@@ -3676,15 +3952,6 @@ namespace gen
 	Define_CodeCast( CodeUsingNamespace );
 	Define_CodeCast( CodeVar );
 	Define_CodeCast( CodeBody);
-	Define_CodeCast( CodeClassBody );
-	Define_CodeCast( CodeEnumBody );
-	Define_CodeCast( CodeExportBody );
-	Define_CodeCast( CodeExternBody );
-	Define_CodeCast( CodeFnBody );
-	Define_CodeCast( CodeGlobalBody );
-	Define_CodeCast( CodeNamespaceBody );
-	Define_CodeCast( CodeStructBody );
-	Define_CodeCast( CodeUnionBody );
 	#undef Define_CodeCast
 #pragma endregion Operater Cast Impl
 
