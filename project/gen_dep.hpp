@@ -1,7 +1,7 @@
 #pragma once
 
 #if gen_time
-
+#define GEN_BENCHMARK
 #if __clang__
 #	pragma clang diagnostic ignored "-Wunused-const-variable"
 #	pragma clang diagnostic ignored "-Wswitch"
@@ -1340,9 +1340,10 @@ namespace gen
 		void destroy( void )
 		{
 			if ( Hashes && Hashes.get_header()->Capacity )
+			{
 				Hashes.free();
-			if ( Entries && Hashes.get_header()->Capacity )
 				Entries.free();
+			}
 		}
 
 		Type* get( u64 key )
@@ -1547,6 +1548,7 @@ namespace gen
 	#pragma region Hashing
 
 	u32 crc32( void const* data, sw len );
+	u64 crc64( void const* data, sw len );
 
 	#pragma endregion Hashing
 
@@ -1586,6 +1588,13 @@ namespace gen
 				sw            Length;
 				sw            Capacity;
 			};
+
+			static
+			uw grow_formula( uw value )
+			{
+				// Using a very aggressive growth formula to reduce time mem_copying with recursive calls to append in this library.
+				return 4 * value + 8;
+			}
 
 			static
 			String make( AllocatorInfo allocator, char const* str )
@@ -1634,9 +1643,6 @@ namespace gen
 				if ( allocation == nullptr )
 					return { nullptr };
 
-				if ( ! str )
-					mem_set( allocation, 0, alloc_size );
-
 				Header&
 				header = * rcast(Header*, allocation);
 				header = { allocator, length, length };
@@ -1645,6 +1651,8 @@ namespace gen
 
 				if ( length && str )
 					mem_copy( result, str, length );
+				else
+					mem_set( result, 0, alloc_size - header_size );
 
 				result[ length ] = '\0';
 
@@ -1686,70 +1694,14 @@ namespace gen
 				return true;
 			}
 
-			bool make_space_for( char const* str, sw add_len )
-			{
-				sw available = avail_space();
-
-				// NOTE: Return if there is enough space left
-				if ( available >= add_len )
-				{
-					return true;
-				}
-				else
-				{
-					sw new_len, old_size, new_size;
-
-					void* ptr;
-					void* new_ptr;
-
-					AllocatorInfo allocator = get_header().Allocator;
-					Header*       header	= nullptr;
-
-					new_len  = length() + add_len;
-					ptr      = & get_header();
-					old_size = size_of( Header ) + length() + 1;
-					new_size = size_of( Header ) + new_len + 1;
-
-					new_ptr = resize( allocator, ptr, old_size, new_size );
-
-					if ( new_ptr == nullptr )
-						return false;
-
-					header            = zpl_cast( Header* ) new_ptr;
-					header->Allocator = allocator;
-					header->Capacity  = new_len;
-
-					Data = rcast( char*, header + 1 );
-
-					return str;
-				}
-			}
+			bool make_space_for( char const* str, sw add_len );
 
 			bool append( char const* str )
 			{
 				return append( str, str_len( str ) );
 			}
 
-			bool append( char const* str, sw length )
-			{
-				if ( sptr(str) > 0 )
-				{
-					sw curr_len = this->length();
-
-					if ( ! make_space_for( str, length ) )
-						return false;
-
-					Header& header = get_header();
-
-					mem_copy( Data + curr_len, str, length );
-
-					Data[ curr_len + length ] = '\0';
-
-					header.Length = curr_len + length;
-				}
-
-				return str;
-			}
+			bool append( char const* str, sw length );
 
 			bool append( StrC str)
 			{
@@ -2169,11 +2121,23 @@ namespace gen
 	sw    str_fmt_file_va( FileInfo* f, char const* fmt, va_list va );
 	#pragma endregion Printing
 
+#ifdef GEN_BENCHMARK
+	//! Return CPU timestamp.
+	u64 read_cpu_time_stamp_counter( void );
+
+	//! Return relative time (in seconds) since the application start.
+	f64 time_rel( void );
+
+	//! Return relative time since the application start.
+	u64 time_rel_ms( void );
+#endif
+
 	namespace Memory
 	{
-		// NOTE: This limits the size of the string that can be read from a file or generated to 10 megs.
+		// NOTE: This limits the maximum size of an allocation
 		// If you are generating a string larger than this, increase the size of the bucket here.
-		constexpr uw BucketSize = megabytes(10);
+		constexpr uw Global_BucketSize = megabytes(10);
+
 
 		// Global allocator used for data with process lifetime.
 		extern AllocatorInfo GlobalAllocator;
@@ -2224,6 +2188,66 @@ namespace gen
 		exit(1);
 		return -1;
 	#endif
+	}
+
+	bool String::make_space_for( char const* str, sw add_len )
+	{
+		sw available = avail_space();
+
+		// NOTE: Return if there is enough space left
+		if ( available >= add_len )
+		{
+			return true;
+		}
+		else
+		{
+			sw new_len, old_size, new_size;
+
+			void* ptr;
+			void* new_ptr;
+
+			AllocatorInfo allocator = get_header().Allocator;
+			Header*       header	= nullptr;
+
+			new_len  = grow_formula( length() + add_len );
+			ptr      = & get_header();
+			old_size = size_of( Header ) + length() + 1;
+			new_size = size_of( Header ) + new_len + 1;
+
+			new_ptr = resize( allocator, ptr, old_size, new_size );
+
+			if ( new_ptr == nullptr )
+				return false;
+
+			header            = zpl_cast( Header* ) new_ptr;
+			header->Allocator = allocator;
+			header->Capacity  = new_len;
+
+			Data = rcast( char*, header + 1 );
+
+			return str;
+		}
+	}
+
+	bool String::append( char const* str, sw length )
+	{
+		u64 time_start = time_rel_ms();
+		if ( sptr(str) > 0 )
+		{
+			sw curr_len = this->length();
+
+			if ( ! make_space_for( str, length ) )
+				return false;
+
+			Header& header = get_header();
+
+			mem_copy( Data + curr_len, str, length );
+
+			Data[ curr_len + length ] = '\0';
+
+			header.Length = curr_len + length;
+		}
+		return str;
 	}
 
 // gen namespace

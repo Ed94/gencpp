@@ -386,6 +386,10 @@ namespace gen
 		local_persist thread_local
 		char SerializationLevel = 0;
 
+	#if defined(GEN_BENCHMARK) && defined(GEN_BENCHMARK_SERIALIZATION)
+		u64 time_start = time_rel_ms();
+	#endif
+
 		// TODO : Need to refactor so that intermeidate strings are freed conviently.
 		String result = String::make( Memory::GlobalAllocator, "" );
 
@@ -980,8 +984,10 @@ namespace gen
 			break;
 		}
 
+	#if defined(GEN_BENCHMARK) && defined(GEN_BENCHMARK_SERIALIZATION)
+		log_fmt("AST::to_string() time taken: %llu for: %s\n", time_rel_ms() - time_start, result );
+	#endif
 		return result;
-
 	#undef ProcessModuleFlags
 	}
 
@@ -1282,19 +1288,21 @@ namespace gen
 	{
 		using namespace StaticData;
 
-		Arena& last = StringArenas.back();
+		Arena* last = & StringArenas.back();
 
-		if ( last.TotalUsed + str_length > last.TotalSize )
+		uw size_req = str_length + sizeof(String::Header) + sizeof(char*);
+
+		if ( last->TotalUsed + size_req > last->TotalSize )
 		{
 			Arena new_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
 			if ( ! StringArenas.append( new_arena ) )
 				fatal( "gen::get_string_allocator: Failed to allocate a new string arena" );
 
-			last = StringArenas.back();
+			last = & StringArenas.back();
 		}
 
-		return last;
+		return * last;
 	}
 
 	// Will either make or retrive a code string.
@@ -1303,7 +1311,7 @@ namespace gen
 		using namespace StaticData;
 
 		s32 hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
-		u32 key         = crc32( str.Ptr, hash_length );
+		u64 key         = crc32( str.Ptr, hash_length );
 		{
 			StringCached* result = StringCache.get( key );
 
@@ -1325,22 +1333,8 @@ namespace gen
 	{
 		using namespace StaticData;
 
-		AllocatorInfo allocator = CodePools.back();
-
-		s32 index = 0;
-		s32 left  = CodePools.num();
-		do
-		{
-			if ( CodePools[index].FreeList != nullptr  )
-			{
-				allocator = CodePools[index];
-				break;
-			}
-			index++;
-		}
-		while ( left--, left );
-
-		if ( allocator.Data == nullptr )
+		Pool* allocator = & CodePools.back();
+		if ( allocator->FreeList == nullptr )
 		{
 			Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
 
@@ -1350,10 +1344,10 @@ namespace gen
 			if ( ! CodePools.append( code_pool ) )
 				fatal( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
 
-			allocator = * CodePools;
+			allocator = & CodePools.back();
 		}
 
-		Code result { rcast( AST*, alloc( allocator, sizeof(AST) )) };
+		Code result { rcast( AST*, alloc( * allocator, sizeof(AST) )) };
 
 		result->Content         = { nullptr };
 		result->Prev            = { nullptr };
@@ -3425,16 +3419,6 @@ namespace gen
 				log_failure( "gen::" txt(Context_) ": " Msg_, __VA_ARGS__ ); \
 				return { 0, nullptr };                                       \
 			}
-
-			// do_once_start
-			// 	LexAllocator = Arena::init_from_allocator( heap(), megabytes(10) );
-
-			// 	if ( LexAllocator.PhysicalStart == nullptr )
-			// 	{
-			// 		log_failure( "gen::lex: failed to allocate memory for parsing constructor's lexer");
-			// 		return { { nullptr }, 0  };
-			// 	}
-			// do_once_end
 
 			local_persist thread_local
 			Array<Token> Tokens = { nullptr };
@@ -6380,7 +6364,7 @@ namespace gen
 			return false;
 		}
 
-		Buffer = String::make( Memory::GlobalAllocator, "" );
+		Buffer = String::make_reserve( Memory::GlobalAllocator, Builder_StrBufferReserve );
 
 		return true;
 	}
@@ -6393,6 +6377,7 @@ namespace gen
 			log_failure("gen::File::write - Failed to write to file: %s", file_name( & File ) );
 
 		file_close( & File );
+		Buffer.free();
 	}
 #pragma endregion Builder
 

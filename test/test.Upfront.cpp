@@ -1,6 +1,9 @@
 #ifdef gen_time
-#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_FEATURE_PARSING
+#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+#define GEN_ENFORCE_STRONG_CODE_TYPES
+#define GEN_EXPOSE_BACKEND
+#define GEN_BENCHMARK
 #include "gen.cpp"
 #include "Upfront\Array.Upfront.hpp"
 #include "Upfront\Buffer.Upfront.hpp"

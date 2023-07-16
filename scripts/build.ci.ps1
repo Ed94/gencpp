@@ -48,7 +48,7 @@ Push-location $path_gen
 # Run meta-program
 	$gencpp = Join-Path $path_gen_build gencpp.exe
 
-	Write-Host `nGenerating files -- Parsed...
+	Write-Host `nRunning tests...
 	& $gencpp
 
 # Format generated files

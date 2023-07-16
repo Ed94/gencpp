@@ -5,6 +5,18 @@
 		<DisplayString>Data:{Data} Proc:{Proc}</DisplayString>
 	</Type>
 
+	<Type Name="gen::Pool">
+		<DisplayString>NumBlocks: {NumBlocks} TotalSize: {TotalSize}</DisplayString>
+		<Expand>
+			<LinkedListItems>
+				<Size>NumBlocks</Size>
+				<HeadPointer>FreeList</HeadPointer>
+				<NextPointer>FreeList</NextPointer>
+				<ValueNode>PhysicalStart</ValueNode>
+			</LinkedListItems>
+		</Expand>
+	</Type>
+
 	<Type Name="gen::Array&lt;*&gt;">
 		<DisplayString>Num:{((Header*)((char*)Data - sizeof(Header)))->Num},
 			Capacity:{((Header*)((char*)Data - sizeof(Header)))->Capacity}</DisplayString>
@@ -70,7 +82,8 @@
 			<Item Name="Content">ast->Content</Item>
 			<Item Name="Body">ast->Body</Item>
 			<Item Name="Parent">ast->Parent</Item>
-			<Item Name="ModuleFlags" Condition="ast->ModuleFlags != ModuleFlag::Invalid">ast->ModuleFlags</Item>
+			<Item Name="ModuleFlags" Condition="ast->ModuleFlags != ModuleFlag::Invalid">
+				ast->ModuleFlags</Item>
 			<Item Name="ArrSpecs" Condition="ast->ArrSpecs[0] &lt; 18">ast->ArrSpecs</Item>
 			<Item Name="Prev">ast->Prev</Item>
 			<Item Name="Next">ast->Next</Item>

@@ -24,4 +24,7 @@
 		<Name>gen::Code.*::to_string</Name>
 		<Action>NoStepInto</Action>
 	</Function>
+	<Function>
+		<Name>gen::String::operator .*</Name>
+	</Function>
 </StepFilter>

@@ -8,10 +8,6 @@
 */
 #pragma once
 
-#define GEN_FEATURE_PARSING
-#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-#define GEN_ENFORCE_STRONG_CODE_TYPES
-
 #ifdef gen_time
 //! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
@@ -1659,8 +1655,8 @@ namespace gen
 	constexpr s32 InitSize_DataArrays  = 16;
 	constexpr s32 InitSize_StringTable = megabytes(4);
 
-	constexpr s32 CodePool_NumBlocks        = 4096;
-	constexpr s32 SizePer_StringArena       = megabytes(32);
+	constexpr s32 CodePool_NumBlocks        = kilobytes(4);
+	constexpr s32 SizePer_StringArena       = megabytes(1);
 
 	constexpr s32 MaxCommentLineLength      = 1024;
 	constexpr s32 MaxNameLength             = 128;
@@ -1668,6 +1664,7 @@ namespace gen
 	constexpr s32 StringTable_MaxHashLength = kilobytes(1);
 	constexpr s32 TokenFmt_TokenMap_MemSize	= kilobytes(4);
 	constexpr s32 LexAllocator_Size         = megabytes(10);
+	constexpr s32 Builder_StrBufferReserve  = megabytes(1);
 
 	extern CodeType t_auto;
 	extern CodeType t_void;
@@ -2053,3 +2050,30 @@ namespace gen
 // end: gen_time
 #endif
 
+#ifdef GEN_EXPOSE_BACKEND
+namespace gen
+{
+	namespace Memory
+	{
+		extern Array<Arena> Global_AllocatorBuckets;
+	}
+
+	namespace StaticData
+	{
+		extern Array< Pool >  CodePools;
+		extern Array< Arena > StringArenas;
+
+		extern StringTable StringCache;
+
+		extern Arena LexArena;
+
+		extern AllocatorInfo Allocator_DataArrays;
+		extern AllocatorInfo Allocator_CodePool;
+		extern AllocatorInfo Allocator_Lexer;
+		extern AllocatorInfo Allocator_StringArena;
+		extern AllocatorInfo Allocator_StringTable;
+		extern AllocatorInfo Allocator_TypeTable;
+	}
+}
+
+#endif

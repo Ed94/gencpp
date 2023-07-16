@@ -23,6 +23,9 @@ These build up a code AST to then serialize with a file builder.
 
 The project has reached an *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.
 
+Note: Do not trying to do any large generations with this (at least not without changing the serialization implementation).
+It does not resue any memory yet for dynamic strings and thus any signficant size memory will result in massive consumption. 
+
 The project has no external dependencies beyond:
 
 * `stdarg.h`
@@ -287,6 +290,12 @@ Data Notes:
   * Memory within the buckets is not resused, so its inherently wasteful (most likely will give non-cached strings their own tailored allocator later)
 * Linked lists used children nodes on bodies, and parameters.
 * Its intended to generate the AST in one go and serialize after. The contructors and serializer are designed to be a "one pass, front to back" setup.
+* When benchmarking, the three most significant var to tune are:
+  * `Memory::Global_BlockSize` (found gen_dep.hpp) : Used by the GlobalAllocator for the size of each global arena.
+  * `SizePer_StringArena` (found in gen.hpp under the constants region) : Used by the string cache to store strings.
+  * `CodePool_NumBlocks` (found in gen.hpp under constants region) : Used by code pool to store ASTs.
+  * The default values can handled generating for a stirng up to a size of ~650 kbs (bottleneck is serialization).
+  * Increasing the values can generate files upwards of over a million lines without issue (the formatter will most likely run slower than it)
 
 Two generic templated containers are used throughout the library:
 

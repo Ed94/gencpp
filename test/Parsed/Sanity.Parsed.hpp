@@ -3,6 +3,8 @@
 #define GEN_FEATURE_PARSING
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
+#define GEN_EXPOSE_BACKEND
+#define GEN_BENCHMARK
 #include "gen.hpp"
 
 using namespace gen;
@@ -289,7 +291,7 @@ u32 gen_sanity()
 
 		));
 
-		CodeUsingNamespace npspace_using = (CodeUsingNamespace) parse_using( code(
+		CodeUsing npspace_using = parse_using( code(
 			using namespace TestNamespace;
 		));
 
