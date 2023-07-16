@@ -39,6 +39,8 @@ The majority of the dependency's implementation was derived from the [c-zpl libr
 When gencpp is in a stable state, I will make a C variant with the same feature set.  
 A single-header version will also be generated for both.
 
+A `natvis` and `natstepfilter` are provided in the scripts directory.
+
 ***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
 
 ## Usage
@@ -205,20 +207,45 @@ Data layout of AST struct:
 
 ```cpp
 union {
-    AST*          ArrStatic[AST::ArrS_Cap];
-    Array< AST* > ArrDyn;
-    StringCached  Content;
-    SpecifierT    ArrSpecs[AST::ArrSpecs_Cap];
+    struct
+    {
+        AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+        AST*      Specs;          // Function, Operator, Type symbol, Variable
+        union {
+            AST*  ParentType;     // Class, Struct
+            AST*  ReturnType;     // Function, Operator
+            AST*  UnderlyingType; // Enum, Typedef
+            AST*  ValueType;      // Parameter, Variable
+        };
+        AST*      Params;         // Function, Operator, Template
+        union {
+            AST*  ArrExpr;        // Type Symbol
+            AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
+            AST*  Declaration;    // Friend, Template
+            AST*  Value;          // Parameter, Variable
+        };
+    };
+    StringCached  Content;        // Attributes, Comment, Execution, Include
+    SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+};
+union {
+    AST* Prev;
+    AST* Front; // Used by CodeBody
+    AST* Last;  // Used by CodeParam
+};
+union {
+    AST* Next;
+    AST* Back;  // Used by CodeBody
 };
 AST*              Parent;
 StringCached      Name;
 CodeT             Type;
-OperatorT         Op;
 ModuleFlag        ModuleFlags;
-AccessSpec        ParentAccess;
-u32               StaticIndex;
-bool              DynamicEntries;
-u8                _Align_Pad[3];
+union {
+    OperatorT     Op;
+    AccessSpec    ParentAccess;
+    s32           NumEntries;
+};
 ```
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
@@ -226,31 +253,29 @@ u8                _Align_Pad[3];
 *`StringCahced` is a typedef for `String const`, to denote it is an interned string*  
 *`String` is the dynamically allocated string type for the library*
 
-AST widths are setup to be AST_POD_Size.  
+AST widths are setup to be AST_POD_Size.
 The width dictates how much the static array can hold before it must give way to using an allocated array:
 
 ```cpp
 constexpr static
-uw ArrS_Cap =
-(     AST_POD_Size
-    - sizeof(AST*)         // Parent
-    - sizeof(StringCached) // Name
-    - sizeof(CodeT)        // Type
-    - sizeof(OperatorT)    // Op
-    - sizeof(ModuleFlag)   // ModuleFlags
-    - sizeof(AccessSpec)   // ParentAccess
-    - sizeof(u32)          // StaticIndex
-    - sizeof(bool)         // DynamicEntries
-    - sizeof(u8) * 3 )     // _Align_Pad
-/ sizeof(AST*);
+uw ArrSpecs_Cap =
+(
+        AST_POD_Size
+        - sizeof(AST*) * 3
+        - sizeof(StringCached)
+        - sizeof(CodeT)
+        - sizeof(ModuleFlag)
+        - sizeof(s32)
+)
+/ sizeof(SpecifierT) -1; // -1 for 4 extra bytes (Odd num of AST*)
 ```
 
-*Ex: If the AST_POD_Size is 256 the capacity of the static array is 27.*
+*Ex: If the AST_POD_Size is 128 the capacity of the static array is 20.*
 
 Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
-  * You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`, and `make_code_entries`.
+  * You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`.
 * ASTs are wrapped for the user in a Code struct which is a warpper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
@@ -258,14 +283,49 @@ Data Notes:
   * `StringArenas`, `StringCache`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
 * Strings used for seralization and file buffers are not contained by those used for cached strings.
   * They are currently using `Memory::GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
-  * Memory within the buckets is not resused, so its inherently wasteful (most likely will give non-cached strings their own tailored alloator later)
+  * Memory within the buckets is not resused, so its inherently wasteful (most likely will give non-cached strings their own tailored allocator later)
+* Linked lists used children nodes on bodies, and parameters.
+* Its intended to generate the AST in one go and serialize after. The contructors and serializer are designed to be a "one pass, front to back" setup.
 
 Two generic templated containers are used throughout the library:
 
 * `template< class Type> struct Array`
 * `template< class Type> struct HashTable`
 
+Both Code and AST definitions have a `template< class Type> Code/AST cast()`. Its just an alternative way to explictly cast to each other.
+
 Otherwise the library is free of any templates.
+
+The following CodeTypes are used which the user may optionally use strong typeing with if they enable: `GEN_ENFORCE_STRONG_CODE_TYPES`
+
+* CodeBody : Has support for `for-range` iterating across Code objects.
+* CodeAttributes
+* CodeComment
+* CodeClass
+* CodeEnum
+* CodeExec
+* CodeExtern
+* CodeInclude
+* CodeFriend
+* CodeFn
+* CodeModule
+* CodeNamespace
+* CodeOperator
+* CodeOpCast
+* CodeParam : Has suppor for `for-range` iterating across parameters.
+* CodeSpecifier : Has support for `for-range` iterating across specifiers.
+* CodeStruct
+* CodeTemplate
+* CodeType
+* CodeTypedef
+* CodeUnion
+* CodeUsing
+* CodeUsingNamespace
+* CodeVar
+
+Each Code boy has an assoicated "filtered AST" with the naming convention: `AST_<CodeName>`
+Unrelated fields of the AST for that node type are omitted and only necesary padding members are defined otherwise.
+Retreiving a raw version of the ast can be done using the `raw()` function defined in each AST.
 
 ## There are three sets of interfaces for Code AST generation the library provides
 

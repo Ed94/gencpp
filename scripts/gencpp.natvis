@@ -253,6 +253,7 @@
 	<Type Name="gen::AST_Specifiers">
 		<DisplayString>{Name} Type: {Type}</DisplayString>
 		<Expand>
+			<Item Name="Specs">Specs</Item>
 			<Item Name="NumEntries">NumEntries</Item>
 			<Item Name="Parent">Parent</Item>
 			<Item Name="Prev">Prev</Item>
@@ -541,6 +542,7 @@
 		<DisplayString Condition="ast == nullptr">Null</DisplayString>
 		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
 		<Expand>
+			<Item Name="Specs">ast->Specs</Item>
 			<Item Name="Parent">ast->Parent</Item>
 			<Item Name="Prev">ast->Prev</Item>
 			<Item Name="Next">ast->Next</Item>

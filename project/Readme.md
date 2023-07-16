@@ -6,8 +6,9 @@ All the library code is contained in two files: `gen.hpp` and `gen.cpp`
 
 Feature Macros:
 
-* `GENCPP_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
+* `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
 * `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
+* `GEN_ENFORCE_STRONG_CODE_TYPES` : Enforces casts to filtered code types.
 * `GEN_FEATURE_PARSING` : Defines the parse constructors
 * `GEN_FEATURE_EDITOR` : Defines the file editing features for changing definitions based on ASTs
 * `GEN_FEATURE_SCANNER` : Defines the file scanning features for generating ASTs
@@ -37,8 +38,10 @@ AST with.
 
 `StringCache` : Hash table for cached strings. (`StringCached` typedef used to denote strings managed by it)
 
-`AST` : The node data strucuture for the code.
-`Code` : Wrapper for `AST` with functionality for handling it appropriately.
+`Code` : Wrapper for `AST` with functionality for handling it appropriately.  
+`AST` : The node data strucuture for the code.  
+`Code Types` : Codes with typed ASTs. Body, Param, and Specifier have unique implementation, the rest use `Define_CodeType`  
+`AST Types` : Filtered AST definitions.  
 
 #### Gen Interface
 

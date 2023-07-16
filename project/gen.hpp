@@ -2798,13 +2798,13 @@ namespace gen
 		uw ArrSpecs_Cap =
 		(
 			 AST_POD_Size
-			 - sizeof(AST*) * 4
+			 - sizeof(AST*) * 3
 			 - sizeof(StringCached)
 			 - sizeof(CodeT)
 			 - sizeof(ModuleFlag)
-			 - sizeof(u32)
+			 - sizeof(s32)
 		)
-		/ sizeof(SpecifierT);
+		/ sizeof(SpecifierT) -1; // -1 for 4 extra bytes
 
 		union {
 			struct
