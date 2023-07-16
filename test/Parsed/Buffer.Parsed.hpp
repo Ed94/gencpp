@@ -75,7 +75,7 @@ Code gen__buffer( StrC type )
 				void append( Type* values, sw num )
 				{
 					Header& header = get_header();
-					ZPL_ASSERT( header.Num + num <= header.Capacity);
+					GEN_ASSERT( header.Num + num <= header.Capacity);
 
 					mem_copy( Data + header.Num, values, num * sizeof( Type ) );
 					header.Num += num;
@@ -96,7 +96,7 @@ Code gen__buffer( StrC type )
 				void free( void )
 				{
 					Header& header = get_header();
-					zpl::free( header.Backing, &header );
+					gen::free( header.Backing, &header );
 				}
 
 				Header& get_header( void )

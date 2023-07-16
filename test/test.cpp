@@ -1,7 +1,6 @@
 #ifdef gen_time
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_FEATURE_PARSING
-#include "Upfront\Sanity.Upfront.hpp"
 #include "Parsed\Array.Parsed.hpp"
 #include "Parsed\Buffer.Parsed.hpp"
 #include "Parsed\HashTable.Parsed.hpp"
@@ -42,7 +41,7 @@ int gen_main()
 		using u16 = unsigned short;
 	)));
 
-	soa_test.print( def_include( txt_StrC("Bloat.hpp")));
+	soa_test.print( def_include( txt_StrC("gen.hpp")));
 
 	soa_test.print( def_using_namespace( name(gen) ) );
 
@@ -55,8 +54,7 @@ int gen_main()
 				u32 C;
 				u64 D;
 			};
-		)),
-		128
+		))
 	));
 
 	soa_test.write();

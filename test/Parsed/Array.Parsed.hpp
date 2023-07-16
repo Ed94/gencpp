@@ -32,7 +32,7 @@ Code gen__array( StrC type )
 		name = { name_len, name_str };
 	};
 
-	Code array = parse_struct( token_fmt( "ArrayType", name, "type", type,
+	CodeStruct array = parse_struct( token_fmt( "ArrayType", name, "type", type,
 		stringize(
 			struct <ArrayType>
 			{
@@ -108,7 +108,7 @@ Code gen__array( StrC type )
 				void free( void )
 				{
 					Header& header = get_header();
-					zpl::free( header.Allocator, &header );
+					gen::free( header.Allocator, &header );
 				}
 
 				Header& get_header( void )
@@ -136,14 +136,14 @@ Code gen__array( StrC type )
 				{
 					Header& header = get_header();
 
-					ZPL_ASSERT( header.Num > 0 );
+					GEN_ASSERT( header.Num > 0 );
 					header.Num--;
 				}
 
 				void remove_at( uw idx )
 				{
 					Header* header = &get_header();
-					ZPL_ASSERT( idx < header->Num );
+					GEN_ASSERT( idx < header->Num );
 
 					mem_move( header + idx, header + idx + 1, sizeof( Type ) * ( header->Num - idx - 1 ) );
 					header->Num--;
@@ -195,7 +195,7 @@ Code gen__array( StrC type )
 					new_header->Num       = header.Num;
 					new_header->Capacity  = new_capacity;
 
-					zpl::free( header.Allocator, &header );
+					gen::free( header.Allocator, &header );
 
 					Data = ( Type* )new_header + 1;
 					return true;
@@ -251,8 +251,8 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.Parsed.gen.hpp" );
 
-	Code include_zpl = def_include( txt_StrC("gen.hpp") );
-	gen_array_file.print( include_zpl );
+	Code include_gen = def_include( txt_StrC("gen.hpp") );
+	gen_array_file.print( include_gen );
 
 	gen_array_file.print( def_using_namespace( name(gen)));
 

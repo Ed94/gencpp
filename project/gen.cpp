@@ -2079,6 +2079,9 @@ namespace gen
 
 			case Friend:
 				result.append_fmt( "friend %s", Declaration->to_string() );
+
+				if ( result[ result.length() -1 ] != ';' )
+					result.append( ";" );
 			break;
 
 			case Function:
@@ -2221,7 +2224,7 @@ namespace gen
 				else
 					result.append_fmt( "%s", ValueType->to_string() );
 
-				if ( NumEntries - 1)
+				if ( NumEntries - 1 > 0)
 				{
 					for ( CodeParam param : Next->cast<CodeParam>() )
 					{
@@ -5382,7 +5385,7 @@ namespace gen
 	internal CodeType      parse_type             ( Parser::TokArray& toks, char const* context );
 	internal CodeTypedef   parse_typedef          ( Parser::TokArray& toks, char const* context );
 	internal CodeUnion     parse_union            ( Parser::TokArray& toks, char const* context );
-	internal CodeUsing     parse_using            ( Parser::TokArray& toks, char const* context );
+	internal Code          parse_using            ( Parser::TokArray& toks, char const* context );
 
 	internal inline
 	Code parse_array_decl( Parser::TokArray& toks, char const* context )
@@ -5534,6 +5537,8 @@ namespace gen
 
 		if ( value )
 			result->Value = value;
+
+		result->NumEntries++;
 
 		while ( left
 			&& use_template_capture ?
@@ -7490,7 +7495,7 @@ namespace gen
 	}
 
 	internal
-	CodeUsing parse_using( Parser::TokArray& toks, char const* context )
+	Code parse_using( Parser::TokArray& toks, char const* context )
 	{
 		using namespace Parser;
 
@@ -7531,21 +7536,30 @@ namespace gen
 
 		using namespace ECode;
 
-		CodeUsing
-		result       = (CodeUsing) make_code();
-		result->Type = is_namespace ? Using_Namespace : Using;
+		Code
+		result       = make_code();
 		result->Name = get_cached_string( name );
 
-		if ( type )
-			result->UnderlyingType = type;
+		if ( is_namespace)
+		{
+			result->Type = Using_Namespace;
+		}
+		else
+		{
+			result->Type = Using;
 
-		if ( array_expr )
-			type->ArrExpr = array_expr;
+			CodeUsing using_code = (CodeUsing) result;
 
+			if ( type )
+				using_code->UnderlyingType = type;
+
+			if ( array_expr )
+				type->ArrExpr = array_expr;
+		}
 		return result;
 	}
 
-	CodeUsing parse_using( StrC def )
+	Code parse_using( StrC def )
 	{
 		check_parse_args( parse_using, def );
 		using namespace Parser;

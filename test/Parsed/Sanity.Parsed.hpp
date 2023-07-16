@@ -16,7 +16,7 @@ u32 gen_sanity()
 
 	// Typedef
 	{
-		Code u8_typedef = parse_typedef( code(
+		CodeTypedef u8_typedef = parse_typedef( code(
 			typedef unsigned char u8;
 		));
 
@@ -46,11 +46,11 @@ u32 gen_sanity()
 
 	// Enum
 	{
-		Code fwd = parse_enum( code(
+		CodeEnum fwd = parse_enum( code(
 			enum ETestEnum : u8;
 		));
 
-		Code def = parse_enum( code(
+		CodeEnum def = parse_enum( code(
 			enum ETestEnum : u8
 			{
 				A,
@@ -59,7 +59,7 @@ u32 gen_sanity()
 			};
 		));
 
-		Code fwd_enum_class = parse_enum( code(
+		CodeEnum fwd_enum_class = parse_enum( code(
 			enum class ETestEnumClass : u8;
 		));
 
@@ -89,11 +89,11 @@ u32 gen_sanity()
 
 	// Friend
 	{
-		Code fwd = parse_class( code(
+		CodeClass fwd = parse_class( code(
 			class TestFriendClass;
 		));
 
-		Code def = parse_class( code(
+		CodeClass def = parse_class( code(
 			class TestFriend
 			{
 				friend class TestFriendClass;
@@ -143,7 +143,7 @@ u32 gen_sanity()
 
 	// Operator
 	{
-		Code bitflagtest = parse_enum( code(
+		CodeEnum bitflagtest = parse_enum( code(
 			enum class EBitFlagTest : u8
 			{
 				A = 1 << 0,
@@ -152,11 +152,11 @@ u32 gen_sanity()
 			};
 		));
 
-		Code op_fwd = parse_operator( code(
+		CodeOperator op_fwd = parse_operator( code(
 			EBitFlagTest operator | ( EBitFlagTest a, EBitFlagTest b );
 		));
 
-		Code op_or = parse_operator( code(
+		CodeOperator op_or = parse_operator( code(
 			EBitFlagTest operator | ( EBitFlagTest a, EBitFlagTest b )
 			{
 				return EBitFlagTest( (u8)a | (u8)b );
@@ -211,12 +211,12 @@ u32 gen_sanity()
 
 	// Specifiers
 	{
-		Code fwd_fn = parse_function( code(
+		CodeFn fwd_fn = parse_function( code(
 			inline
 			void test_function_specifiers();
 		));
 
-		Code typedef_u8_ptr = parse_typedef( code(
+		CodeTypedef typedef_u8_ptr = parse_typedef( code(
 			typedef u8* u8_ptr;
 		));
 
@@ -258,7 +258,7 @@ u32 gen_sanity()
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned short u16; )) );
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned long  u32; )) );
 
-		Code def = parse_union( code(
+		CodeUnion def = parse_union( code(
 			union TestUnion
 			{
 				u8  a;
@@ -275,18 +275,18 @@ u32 gen_sanity()
 
 	// Using
 	{
-		Code reg = parse_using( code(
+		CodeUsing reg = (CodeUsing) parse_using( code(
 			using TestUsing = u8;
 		));
 
-		Code nspace = parse_namespace( code(
+		CodeNamespace nspace = parse_namespace( code(
 			namespace TestNamespace
 			{
 			};
 
 		));
 
-		Code npspace_using = parse_using( code(
+		CodeUsingNamespace npspace_using = (CodeUsingNamespace) parse_using( code(
 			using namespace TestNamespace;
 		));
 
@@ -299,11 +299,11 @@ u32 gen_sanity()
 
 	// Variable
 	{
-		Code bss = parse_variable( code(
+		CodeVar bss = parse_variable( code(
 			u8 test_variable;
 		));
 
-		Code data = parse_variable( code(
+		CodeVar data = parse_variable( code(
 			u8 test_variable = 0x12;
 		));
 
@@ -317,7 +317,7 @@ u32 gen_sanity()
 	{
 	#pragma push_macro("template")
 	#undef template
-		Code tmpl = parse_template( code(
+		CodeTemplate tmpl = parse_template( code(
 			template< typename Type >
 			void test_template( Type a )
 			{

@@ -2683,7 +2683,6 @@ namespace gen
 		{                                      \
 			return ast != nullptr;             \
 		}
-		// operator AST*();
 
 		template< class Type >
 		Type cast()
@@ -2696,6 +2695,10 @@ namespace gen
 			return ast;
 		}
 		Code& operator ++();
+		Code& operator*()
+		{
+			return *this;
+		}
 
 		Using_Code( Code );
 
@@ -2841,7 +2844,7 @@ namespace gen
 		union {
 			OperatorT     Op;
 			AccessSpec    ParentAccess;
-			u32           NumEntries;
+			s32           NumEntries;
 		};
 	};
 
@@ -2896,7 +2899,7 @@ namespace gen
 		union {
 			OperatorT     Op;
 			AccessSpec    ParentAccess;
-			u32           NumEntries;
+			s32           NumEntries;
 		};
 	};
 
@@ -2966,16 +2969,16 @@ namespace gen
 			return * rcast( Code*, this );
 		}
 	#pragma region Iterator
-		Code* begin()
+		Code begin()
 		{
 			if ( ast )
-				return rcast( Code*, & rcast( AST*, ast)->Front );
+				return { rcast( AST*, ast)->Front };
 
-			return nullptr;
+			return { nullptr };
 		}
-		Code* end()
+		Code end()
 		{
-			return nullptr;
+			return { rcast(AST*, ast)->Back->Next };
 		}
 	#pragma endregion Iterator
 
@@ -3130,7 +3133,8 @@ namespace gen
 		Code              Parent;
 		StringCached      Name;
 		CodeT             Type;
-		char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+		char              _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+		s32 			  NumEntries;
 	};
 	static_assert( sizeof(AST_Body) == sizeof(AST), "ERROR: AST_Filtered is not the same size as AST");
 
@@ -3399,7 +3403,7 @@ namespace gen
 		StringCached      Name;
 		CodeT             Type;
 		char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
-		u32               NumEntries;
+		s32               NumEntries;
 	};
 	static_assert( sizeof(AST_Param) == sizeof(AST), "ERROR: AST_Param is not the same size as AST");
 
@@ -3412,7 +3416,7 @@ namespace gen
 		StringCached      Name;
 		CodeT             Type;
 		char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
-		u32               NumEntries;
+		s32               NumEntries;
 	};
 		static_assert( sizeof(AST_Specifier) == sizeof(AST), "ERROR: AST_Specifier is not the same size as AST");
 
@@ -3721,7 +3725,7 @@ namespace gen
 	CodeType       parse_type         ( StrC type_def      );
 	CodeTypedef    parse_typedef      ( StrC typedef_def   );
 	CodeUnion      parse_union        ( StrC union_def     );
-	CodeUsing      parse_using        ( StrC using_def     );
+	Code           parse_using        ( StrC using_def     );
 	CodeVar        parse_variable     ( StrC var_def       );
 #	endif
 #	pragma endregion Parsing

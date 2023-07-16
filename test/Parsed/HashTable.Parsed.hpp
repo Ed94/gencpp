@@ -99,7 +99,7 @@ Code gen__hashtable( StrC type )
 
 				void map( MapProc map_proc )
 				{
-					ZPL_ASSERT_NOT_NULL( map_proc );
+					GEN_ASSERT_NOT_NULL( map_proc );
 
 					for ( sw idx = 0; idx < Entries.num(); idx++ )
 					{
@@ -109,7 +109,7 @@ Code gen__hashtable( StrC type )
 
 				void map_mut( MapMutProc map_proc )
 				{
-					ZPL_ASSERT_NOT_NULL( map_proc );
+					GEN_ASSERT_NOT_NULL( map_proc );
 
 					for ( sw idx = 0; idx < Entries.num(); idx++ )
 					{

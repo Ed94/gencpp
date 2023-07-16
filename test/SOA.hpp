@@ -24,7 +24,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 
 	Array<CodeVar> vars = Array<CodeVar>::init( var_arena );;
 
-	CodeStruct soa = def_struct( name, def_body( ECode::Struct_Body ));
+	CodeStruct soa = def_struct( name, def_struct_body( args( soa_entry ) ));
 	{
 		for ( Code struct_mem : struct_def->Body )
 		{
