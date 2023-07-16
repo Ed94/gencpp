@@ -165,7 +165,7 @@ u32 gen_buffer_file()
 	gen_buffer_file;
 	gen_buffer_file.open( "buffer.Parsed.gen.hpp" );
 
-	gen_buffer_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_buffer_file.print( def_include( txt_StrC("gen.hpp")) );
 	gen_buffer_file.print( def_using_namespace( name(gen)));
 
 	gen_buffer_file.print( gen__buffer_base() );

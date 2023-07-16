@@ -2826,16 +2826,13 @@ namespace gen
 			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 		};
 		union {
-			// Entry Node
-			struct {
-				AST*      Prev;
-				AST*      Next;
-			};
-			// Body Node
-			struct {
-				AST*      Front;
-				AST*      Back;
-			};
+			AST* Prev;
+			AST* Front;
+			AST* Last;
+		};
+		union {
+			AST* Next;
+			AST* Back;
 		};
 		AST*              Parent;
 		StringCached      Name;
@@ -2884,16 +2881,13 @@ namespace gen
 			SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 		};
 		union {
-			// Entry Node
-			struct {
-				AST*      Prev;
-				AST*      Next;
-			};
-			// Body Node
-			struct {
-				AST*      Front;
-				AST*      Back;
-			};
+			AST* Prev;
+			AST* Front;
+			AST* Last;
+		};
+		union {
+			AST* Next;
+			AST* Back;
 		};
 		AST*              Parent;
 		StringCached      Name;
@@ -3014,28 +3008,10 @@ namespace gen
 	{
 		Using_Code( CodeParam );
 
-		void append( CodeParam other )
-		{
-			rcast( AST*, ast )->append( (AST*) other.ast );
-		}
-		CodeParam get( s32 idx )
-		{
-			CodeParam param = *this;
-			do
-			{
-				if ( ! ++ param )
-					return { nullptr };
+		void append( CodeParam other );
 
-				return { (AST_Param*) param.raw()->Next };
-			}
-			while ( --idx );
-
-			return { nullptr };
-		}
-		bool has_entries()
-		{
-			return rcast( AST*, ast )->has_entries();
-		}
+		CodeParam get( s32 idx );
+		bool has_entries();
 		AST* raw()
 		{
 			return rcast( AST*, ast );
@@ -3063,13 +3039,9 @@ namespace gen
 		}
 		CodeParam end()
 		{
-			return { (AST_Param*) rcast( AST*, ast)->Next };
+			return { (AST_Param*) rcast( AST*, ast)->Last };
 		}
-		CodeParam& operator++()
-		{
-			ast = (AST_Param*) rcast( AST*, ast )->Next;
-			return * this;
-		}
+		CodeParam& operator++();
 		CodeParam operator*()
 		{
 			return * this;
@@ -3245,7 +3217,7 @@ namespace gen
 			struct
 			{
 				char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
-				Code      Body;
+				Code      Value;
 			};
 		};
 		Code              Prev;
@@ -3264,7 +3236,7 @@ namespace gen
 			struct
 			{
 				char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
-				Code      Body;
+				CodeBody  Body;
 			};
 		};
 		Code              Prev;
@@ -3421,8 +3393,8 @@ namespace gen
 				Code      Value;
 			};
 		};
-		Code              Prev;
-		Code              Next;
+		CodeParam         Last;
+		CodeParam         Next;
 		Code              Parent;
 		StringCached      Name;
 		CodeT             Type;
@@ -3473,7 +3445,7 @@ namespace gen
 			char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 			struct
 			{
-				char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+				char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
 				CodeParam 	   Params;
 				Code           Declaration;
 			};
@@ -3595,7 +3567,7 @@ namespace gen
 				CodeAttributes Attributes;
 				CodeSpecifier  Specs;
 				CodeType       ValueType;
-				char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+				char 	       _PAD_PROPERTIES_[ sizeof(AST*) ];
 				Code           Value;
 			};
 		};
@@ -3995,6 +3967,8 @@ namespace gen
 		if ( other->Parent )
 			other = other->duplicate();
 
+		other->Parent = this;
+
 		if ( Front == nullptr )
 		{
 			Front = other;
@@ -4071,6 +4045,7 @@ namespace gen
 		return *this;
 	}
 
+#pragma region AST & Code Gen Common
 	#define Define_CodeImpl( Typename )                                                  \
 	char const* Typename::debug_str()                                                    \
 	{                                                                                    \
@@ -4200,7 +4175,6 @@ namespace gen
 	Define_AST_Cast( Var );
 	#undef Define_AST_Cast
 
-#pragma region Code Operator Cast Impj
 
 	#define Define_CodeCast( type )           \
 	Code::operator Code ## type() const       \
@@ -4233,7 +4207,56 @@ namespace gen
 	Define_CodeCast( Var );
 	Define_CodeCast( Body);
 	#undef Define_CodeCast
-#pragma endregion Code Operater Cast Impl
+#pragma endregion AST & Code Gen Common
+
+	void CodeParam::append( CodeParam other )
+	{
+		AST* self  = (AST*) ast;
+		AST* entry = (AST*) other.ast;
+
+		if ( entry->Parent )
+			entry = entry->duplicate();
+
+		entry->Parent = self;
+
+		if ( self->Last == nullptr )
+		{
+			self->Last = entry;
+			self->Next = entry;
+			self->NumEntries++;
+			return;
+		}
+
+		self->Last->Next = entry;
+		self->Last       = entry;
+		self->NumEntries++;
+	}
+
+	CodeParam CodeParam::get( s32 idx )
+	{
+		CodeParam param = *this;
+		do
+		{
+			if ( ! ++ param )
+				return { nullptr };
+
+			return { (AST_Param*) param.raw()->Next };
+		}
+		while ( --idx );
+
+		return { nullptr };
+	}
+
+	bool CodeParam::has_entries()
+	{
+		return ast->NumEntries > 0;
+	}
+
+	CodeParam& CodeParam::operator ++()
+	{
+		ast = ast->Next.ast;
+		return *this;
+	}
 
 	CodeBody def_body( CodeT type )
 	{

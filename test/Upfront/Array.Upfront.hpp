@@ -128,11 +128,11 @@ Code gen__array( StrC type )
 
 		CodeFn fill;
 		{
-			CodeParam params = def_params( 3
-				, def_param( t_uw,    name(begin) )
+			CodeParam params = def_params( args(
+				  def_param( t_uw,    name(begin) )
 				, def_param( t_uw,    name(end) )
 				, def_param( t_alias, name(value) )
-			);
+			));
 
 			Code body = untyped_str( code(
 				Header& header = * get_header();
@@ -187,7 +187,7 @@ Code gen__array( StrC type )
 			, def_execution( code(
 				Header& header = * get_header();
 
-				ZPL_ASSERT( header.Num > 0 );
+				GEN_ASSERT( header.Num > 0 );
 				header.Num--;
 			))
 		);
@@ -195,7 +195,7 @@ Code gen__array( StrC type )
 		CodeFn remove_at = def_function( name(remove_at), def_param( t_uw, name(idx)), t_void
 			, def_execution( code(
 				Header* header = get_header();
-				ZPL_ASSERT( idx < header->Num );
+				GEN_ASSERT( idx < header->Num );
 
 				mem_move( header + idx, header + idx + 1, sizeof( Type ) * ( header->Num - idx - 1 ) );
 				header->Num--;
@@ -334,8 +334,8 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.Upfront.gen.hpp" );
 
-	CodeInclude include_zpl = def_include( txt_StrC("Bloat.hpp") );
-	gen_array_file.print( include_zpl );
+	CodeInclude include_gen = def_include( txt_StrC("gen.hpp") );
+	gen_array_file.print( include_gen );
 
 	gen_array_file.print( def_using_namespace( name(gen)));
 

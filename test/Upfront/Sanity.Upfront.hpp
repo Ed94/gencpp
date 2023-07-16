@@ -11,7 +11,7 @@ u32 gen_sanity_upfront()
 
 	// Comment
 	{
-		Code comment_test = def_comment( txt_StrC("Sanity check: def_comment test") );
+		CodeComment comment_test = def_comment( txt_StrC("Sanity check: def_comment test") );
 
 		gen_sanity_file.print(comment_test);
 	}
@@ -50,7 +50,7 @@ u32 gen_sanity_upfront()
 
 	// Enum
 	{
-		Code fwd = def_enum( name(ETestEnum), NoCode, t_u8 );
+		CodeEnum fwd = def_enum( name(ETestEnum), NoCode, t_u8 );
 		CodeEnum def;
 		{
 			Code body = untyped_str( code(
@@ -62,7 +62,7 @@ u32 gen_sanity_upfront()
 			def = def_enum( name(ETestEnum), body, t_u8 );
 		}
 
-		Code fwd_enum_class = def_enum( name(ETestEnumClass), NoCode, t_u8, EnumClass );
+		CodeEnum fwd_enum_class = def_enum( name(ETestEnumClass), NoCode, t_u8, EnumClass );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -73,7 +73,7 @@ u32 gen_sanity_upfront()
 
 	// External Linkage
 	{
-		Code body = def_extern_link_body( 1
+		CodeBody body = def_extern_link_body( 1
 			, def_comment( txt_StrC("Empty extern body") )
 		);
 
@@ -114,7 +114,7 @@ u32 gen_sanity_upfront()
 
 	// Include
 	{
-		Code include = def_include( txt_StrC("../DummyInclude.hpp") );
+		CodeInclude include = def_include( txt_StrC("../DummyInclude.hpp") );
 
 		gen_sanity_file.print(include);
 	}
@@ -124,9 +124,9 @@ u32 gen_sanity_upfront()
 	// Module
 	if (0)
 	{
-		Code module_export = def_module( name(TestModule), ModuleFlag::Export );
-		Code module_import = def_module( name(TestModule), ModuleFlag::Import );
-		Code module_both   = def_module( name(TestModule), ModuleFlag::Export | ModuleFlag::Import );
+		CodeModule module_export = def_module( name(TestModule), ModuleFlag::Export );
+		CodeModule module_import = def_module( name(TestModule), ModuleFlag::Import );
+		CodeModule module_both   = def_module( name(TestModule), ModuleFlag::Export | ModuleFlag::Import );
 
 		gen_sanity_file.print(module_global_fragment);
 		gen_sanity_file.print(module_private_fragment);
@@ -141,7 +141,7 @@ u32 gen_sanity_upfront()
 	{
 		CodeNamespace namespace_def;
 		{
-			Code body = def_namespace_body( 1
+			CodeBody body = def_namespace_body( 1
 				, def_comment( txt_StrC("Empty namespace body") )
 			);
 
@@ -157,9 +157,9 @@ u32 gen_sanity_upfront()
 	{
 		// Going to make a bit flag set of overloads for this.
 
-		Code bitflagtest;
+		CodeEnum bitflagtest;
 		{
-			Code body = def_enum_body( 1, untyped_str( code(
+			CodeBody body = def_enum_body( 1, untyped_str( code(
 				A = 1 << 0,
 				B = 1 << 1,
 				C = 1 << 2
@@ -192,9 +192,9 @@ u32 gen_sanity_upfront()
 	{
 		CodeType t_u8_ptr = def_type( name(u8), __, spec_ptr );
 
-		Code op_ptr = def_operator_cast( t_u8_ptr, __ );
+		CodeOpCast op_ptr = def_operator_cast( t_u8_ptr, __ );
 
-		Code op_class = def_class( name(TestOperatorCast), def_class_body( args( op_ptr) ) );
+		CodeClass op_class = def_class( name(TestOperatorCast), def_class_body( args( op_ptr) ) );
 
 		gen_sanity_file.print(op_class);
 	}
@@ -297,8 +297,8 @@ u32 gen_sanity_upfront()
 
 	// Variable
 	{
-		Code bss  = def_variable( t_u8, name(test_variable) );
-		Code data = def_variable( t_u8, name(test_variable2), untyped_str( code( 0x12 )) );
+		CodeVar bss  = def_variable( t_u8, name(test_variable) );
+		CodeVar data = def_variable( t_u8, name(test_variable2), untyped_str( code( 0x12 )) );
 
 		gen_sanity_file.print(bss);
 		gen_sanity_file.print(data);
@@ -310,7 +310,7 @@ u32 gen_sanity_upfront()
 	{
 		CodeType t_Type = def_type( name(Type) );
 
-		Code tmpl = def_template(  def_param( t_class, name(Type) )
+		CodeTemplate tmpl = def_template(  def_param( t_class, name(Type) )
 			, def_function( name(test_template), def_param( t_Type, name(a) ), __
 				, def_function_body(1, def_comment( txt_StrC("Empty template function body")))
 			)

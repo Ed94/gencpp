@@ -316,7 +316,7 @@ u32 gen_hashtable_file()
 	gen_hashtable_file;
 	gen_hashtable_file.open( "hashtable.Parsed.gen.hpp" );
 
-	gen_hashtable_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_hashtable_file.print( def_include( txt_StrC("gen.hpp")) );
 	gen_hashtable_file.print( def_include( txt_StrC("Array.Parsed.hpp")) );
 	gen_hashtable_file.print( def_include( txt_StrC("array.Parsed.gen.hpp")) );
 

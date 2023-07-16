@@ -244,7 +244,7 @@
 			<Item Name="ValueType">ValueType</Item>
 			<Item Name="Value">Value</Item>
 			<Item Name="Parent">Parent</Item>
-			<Item Name="Prev">Prev</Item>
+			<Item Name="Last">Last</Item>
 			<Item Name="Next">Next</Item>
 			<Item Name="NumEntries">NumEntries</Item>
 		</Expand>
@@ -531,7 +531,7 @@
 			<Item Name="ValueType">ast->ValueType</Item>
 			<Item Name="Value">ast->Value</Item>
 			<Item Name="Parent">ast->Parent</Item>
-			<Item Name="Prev">ast->Prev</Item>
+			<Item Name="Last">ast->Last</Item>
 			<Item Name="Next">ast->Next</Item>
 			<Item Name="NumEntries">ast->NumEntries</Item>
 		</Expand>
@@ -568,6 +568,7 @@
 		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
 		<Expand>
 			<Item Name="ModuleFlags">ast->ModuleFlags</Item>
+			<Item Name="Params">ast->Params</Item>
 			<Item Name="Declaration">ast->Declaration</Item>
 			<Item Name="Parent">ast->Parent</Item>
 			<Item Name="Prev">ast->Prev</Item>

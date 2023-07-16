@@ -151,7 +151,7 @@ Code gen__hashtable( StrC type )
 			CodeType t_map_proc = def_type( name(MapProc) );
 
 			Code body = def_execution( code(
-				ZPL_ASSERT_NOT_NULL( map_proc );
+				GEN_ASSERT_NOT_NULL( map_proc );
 
 				for ( sw idx = 0; idx < Entries.num(); idx++ )
 				{
@@ -177,7 +177,7 @@ Code gen__hashtable( StrC type )
 			CodeType t_map_mut_proc = def_type( name(MapMutProc));
 
 			Code body = def_execution( code(
-				ZPL_ASSERT_NOT_NULL( map_proc );
+				GEN_ASSERT_NOT_NULL( map_proc );
 
 				for ( sw idx = 0; idx < Entries.num(); idx++ )
 				{
@@ -447,7 +447,7 @@ u32 gen_hashtable_file()
 	gen_hashtable_file;
 	gen_hashtable_file.open( "hashtable.Upfront.gen.hpp" );
 
-	gen_hashtable_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_hashtable_file.print( def_include( txt_StrC("gen.hpp")) );
 	gen_hashtable_file.print( def_include( txt_StrC("Array.Upfront.hpp")) );
 	gen_hashtable_file.print( def_include( txt_StrC("array.Upfront.gen.hpp")) );
 

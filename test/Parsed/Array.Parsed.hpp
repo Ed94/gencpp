@@ -251,7 +251,7 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.Parsed.gen.hpp" );
 
-	Code include_zpl = def_include( txt_StrC("Bloat.hpp") );
+	Code include_zpl = def_include( txt_StrC("gen.hpp") );
 	gen_array_file.print( include_zpl );
 
 	gen_array_file.print( def_using_namespace( name(gen)));

@@ -115,7 +115,7 @@ Code gen__buffer( StrC type, sw type_size )
 				, def_execution( code(
 					Header& header = get_header();
 
-					ZPL_ASSERT( header.Num + num <= header.Capacity);
+					GEN_ASSERT( header.Num + num <= header.Capacity);
 
 					mem_copy( Data + header.Num, values, num * sizeof( Type ) );
 
@@ -141,7 +141,7 @@ Code gen__buffer( StrC type, sw type_size )
 		CodeFn free = def_function( name(free), __, t_void
 			, def_execution( code(
 				Header& header = get_header();
-				zpl::free( header.Backing, & header );
+				gen::free( header.Backing, & header );
 			))
 		);
 
@@ -238,7 +238,7 @@ u32 gen_buffer_file()
 	gen_buffer_file;
 	gen_buffer_file.open( "buffer.Upfront.gen.hpp" );
 
-	gen_buffer_file.print( def_include( txt_StrC("Bloat.hpp")) );
+	gen_buffer_file.print( def_include( txt_StrC("gen.hpp")) );
 	gen_buffer_file.print( def_using_namespace( name(gen)) );
 
 	gen_buffer_file.print( gen__buffer_base() );

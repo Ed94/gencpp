@@ -1974,9 +1974,10 @@ namespace gen
 						result.append_fmt( "%s ", Attributes->to_string() );
 
 					if ( UnderlyingType )
-						result.append_fmt( "%s : %s\n{\n"
+						result.append_fmt( "%s : %s\n{\n%s\n};"
 							, Name
 							, UnderlyingType->to_string()
+							, Body->to_string()
 						);
 
 					else result.append_fmt( "%s\n{\n%s\n};"
@@ -2025,7 +2026,7 @@ namespace gen
 					}
 					else
 					{
-						result.append_fmt( "%s\n{\n$s\n};"
+						result.append_fmt( "%s\n{\n%s\n};"
 							, Name
 							, Body->to_string()
 						);
@@ -2077,7 +2078,7 @@ namespace gen
 			break;
 
 			case Friend:
-				result.append_fmt( "friend %s;", Declaration->to_string() );
+				result.append_fmt( "friend %s", Declaration->to_string() );
 			break;
 
 			case Function:
@@ -2091,7 +2092,7 @@ namespace gen
 					result.append_fmt( "%s\n", Specs->to_string() );
 
 				if ( ReturnType )
-					result.append_fmt( "%s %s", ReturnType->to_string(), Name );
+					result.append_fmt( "%s %s(", ReturnType->to_string(), Name );
 
 				else
 					result.append_fmt( "%s(", Name );
@@ -2414,7 +2415,9 @@ namespace gen
 						result.append_fmt( "[%s]", ValueType->ArrExpr->to_string() );
 
 					if ( Value )
-						result.append_fmt( " = %s;", Value->to_string() );
+						result.append_fmt( " = %s", Value->to_string() );
+
+					result.append( ";" );
 
 					break;
 				}
@@ -3737,7 +3740,7 @@ namespace gen
 
 		result->NumEntries++;
 
-		return (CodeParam) result;
+		return result;
 	}
 
 	CodeSpecifier def_specifier( SpecifierT spec )
@@ -3802,7 +3805,7 @@ namespace gen
 			result->ParentType   = parent;
 		}
 
-		return (CodeStruct) result;
+		return result;
 	}
 
 	CodeTemplate def_template( CodeParam params, Code declaration, ModuleFlag mflags )
@@ -3835,7 +3838,7 @@ namespace gen
 		result->Params      = params;
 		result->Declaration = declaration;
 
-		return (CodeTemplate) result;
+		return result;
 	}
 
 	CodeType def_type( StrC name, Code arrayexpr, CodeSpecifier specifiers, CodeAttributes attributes )
@@ -3982,7 +3985,7 @@ namespace gen
 		if ( attributes )
 			result->Attributes = attributes;
 
-		return (CodeUsing) result;
+		return result;
 	}
 
 	CodeUsingNamespace def_using_namespace( StrC name )
@@ -4436,7 +4439,7 @@ namespace gen
 		}
 		va_end(va);
 
-		return (CodeParam) result;
+		return result;
 	}
 
 	CodeParam def_params( s32 num, CodeParam* codes )
