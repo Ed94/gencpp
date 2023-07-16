@@ -3,5 +3,16 @@
   Building Test
   
   ninja: Entering directory `C:\projects\gencpp\test\gen\build'
-  [1/2] Compiling C++ object gencpp.exe.p/.._test.cpp.obj
+  [1/2] Compiling C++ object gencpp.exe.p/.._test.Upfront.cpp.obj
   [2/2] Linking target gencpp.exe
+  
+  Generating files Parsed...
+  
+  Beginning format...
+  Formatting [1/5] C:\projects\gencpp\test\gen\array.Upfront.gen.hpp
+  Formatting [2/5] C:\projects\gencpp\test\gen\buffer.Upfront.gen.hpp
+  Formatting [3/5] C:\projects\gencpp\test\gen\hashtable.Upfront.gen.hpp
+  Formatting [4/5] C:\projects\gencpp\test\gen\ring.Upfront.gen.hpp
+  Formatting [5/5] C:\projects\gencpp\test\gen\sanity.Upfront.gen.hpp
+  
+  Formatting complete

@@ -1854,6 +1854,7 @@ namespace gen
 
 		Code result = make_code();
 
+		// TODO : Bring back some of the old way, we need to recursively duplicate the children.
 		mem_copy( result.ast, this, sizeof( AST ) );
 
 		return result.ast;
@@ -2219,11 +2220,13 @@ namespace gen
 				else
 					result.append_fmt( "%s", ValueType->to_string() );
 
-				if ( NumEntries )
-					for ( CodeParam param : cast<CodeParam>() )
+				if ( NumEntries - 1)
+				{
+					for ( CodeParam param : Next->cast<CodeParam>() )
 					{
-						result.append( param.to_string() );
+						result.append_fmt( ", %s", param.to_string() );
 					}
+				}
 			}
 			break;
 
@@ -3731,6 +3734,8 @@ namespace gen
 
 		if ( value )
 			result->Value = value;
+
+		result->NumEntries++;
 
 		return (CodeParam) result;
 	}
@@ -7839,3 +7844,4 @@ namespace gen
 }
 // End: gen_time
 #endif
+
