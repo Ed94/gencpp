@@ -1,6 +1,5 @@
 #if gen_time
 // This undefines the macros used by the gen library but are not necessary for the user.
-// TODO : This is incomplete until all dependencies are brough in from ZPL into bloat.
 
 #undef GEN_ARCH_64_BIT
 #undef GEN_ARCH_32_BIT

@@ -1,6 +1,9 @@
 #pragma once
 
 #if gen_time
+#define GEN_FEATURE_PARSING
+#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+#define GEN_ENFORCE_STRONG_CODE_TYPES
 #include "gen.hpp"
 #include "Array.Parsed.hpp"
 

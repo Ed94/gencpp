@@ -8,10 +8,6 @@
 */
 #pragma once
 
-#define GEN_FEATURE_PARSING
-#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-#define GEN_ENFORCE_STRONG_CODE_TYPES
-
 #ifdef gen_time
 #pragma region GENCPP DEPENDENCIES
 //! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
@@ -1587,6 +1583,9 @@ namespace gen
 			return { str_len( str ), str };
 		}
 
+		// Currently sed with strings as a parameter to indicate to free after append.
+		constexpr sw FreeAfter = 0xF4EEAF7E4;
+
 		// Dynamic String
 		// This is directly based off the ZPL string api.
 		// They used a header pattern
@@ -1771,7 +1770,7 @@ namespace gen
 
 			bool append( const String other )
 			{
-				return append( other.Data, other.length() );
+				return append( other.Data, other.length() );;
 			}
 
 			bool append_fmt( char const* fmt, ... );
@@ -2442,7 +2441,7 @@ namespace gen
 		Entry( Ref,              & )                 \
 		Entry( Register,         register )          \
 		Entry( RValue,           && )                \
-		Entry( Static_Member,    static  )           \
+		Entry( Static,           static  )           \
 		Entry( Thread_Local,     thread_local )      \
 		Entry( Volatile,         volatile )
 
@@ -2757,6 +2756,7 @@ namespace gen
 		bool        has_entries();
 		bool        is_equal   ( AST* other );
 		String      to_string  ();
+		// String      to_string  ( BatchFreeStrings& defer ); // TODO : Implement BatchFree sub version.
 		char const* type_str();
 		bool        validate_body();
 
@@ -2848,17 +2848,6 @@ namespace gen
 		};
 	};
 
-	void assign( AST* field, AST* other )
-	{
-		if ( other->Parent )
-		{
-			field = other->duplicate();
-			return;
-		}
-
-		field = other;
-	}
-
 	struct AST_POD
 	{
 		union {
@@ -2908,16 +2897,9 @@ namespace gen
 	static_assert( sizeof(AST)     == sizeof(AST_POD), "ERROR: AST IS NOT POD" );
 	static_assert( sizeof(AST_POD) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
 
-	#ifdef GEN_ENFORCE_STRONG_CODE_TYPES
-		// Used when the its desired when omission is allowed in a definition.
-		#define NoCode      { nullptr }
-		#define CodeInvalid (* Code::Invalid.ast)
-	#else
-		// Used when the its desired when omission is allowed in a definition.
-		constexpr Code NoCode      = { nullptr };
-		constexpr Code CodeInvalid = Code::Invalid;
-	#endif
-
+	// Used when the its desired when omission is allowed in a definition.
+	#define NoCode      { nullptr }
+	#define CodeInvalid (* Code::Invalid.ast)
 
 #pragma region Code Types
 	#define Define_CodeType( Typename )                           \
@@ -3220,8 +3202,7 @@ namespace gen
 			char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 			struct
 			{
-				char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
-				Code      Value;
+				char      _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
 			};
 		};
 		Code              Prev;
@@ -3613,6 +3594,7 @@ namespace gen
 
 	void set_allocator_data_arrays       ( AllocatorInfo data_array_allocator );
 	void set_allocator_code_pool         ( AllocatorInfo pool_allocator );
+	void set_allocator_lexer             ( AllocatorInfo lex_allocator );
 	void set_allocator_string_arena      ( AllocatorInfo string_allocator );
 	void set_allocator_string_table      ( AllocatorInfo string_allocator );
 	void set_allocator_type_table        ( AllocatorInfo type_reg_allocator );
@@ -3915,7 +3897,6 @@ namespace gen
 
 	constexpr s32 InitSize_DataArrays  = 16;
 	constexpr s32 InitSize_StringTable = megabytes(4);
-	constexpr s32 InitSize_TypeTable   = megabytes(4);
 
 	constexpr s32 CodePool_NumBlocks        = 4096;
 	constexpr s32 SizePer_StringArena       = megabytes(32);
@@ -3924,6 +3905,8 @@ namespace gen
 	constexpr s32 MaxNameLength             = 128;
 	constexpr s32 MaxUntypedStrLength       = kilobytes(640);
 	constexpr s32 StringTable_MaxHashLength = kilobytes(1);
+	constexpr s32 TokenFmt_TokenMap_MemSize	= kilobytes(4);
+	constexpr s32 LexAllocator_Size         = megabytes(10);
 
 	extern CodeType t_auto;
 	extern CodeType t_void;
@@ -4105,10 +4088,12 @@ namespace gen
 	Typename& Typename::operator =( Code other )                                         \
 	{                                                                                    \
 		if ( other.ast && other->Parent )                                                \
+		{                                                                                \
 			ast = rcast( decltype(ast), other.ast->duplicate() );                        \
+			rcast( AST*, ast)->Parent = nullptr;                                         \
+		}                                                                                \
                                                                                          \
 		ast = rcast( decltype(ast), other.ast );                                         \
-                                                                                         \
 		return *this;                                                                    \
 	}                                                                                    \
 	bool Typename::operator ==( Code other )                                             \

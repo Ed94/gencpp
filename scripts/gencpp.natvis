@@ -365,8 +365,8 @@
 		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
 		<Expand>
 			<Item Name="Parent">ast->Parent</Item>
-			<Item Name="Prev">ast->Front</Item>
-			<Item Name="Next">ast->Back</Item>
+			<Item Name="Front">ast->Front</Item>
+			<Item Name="Back">ast->Back</Item>
 			<Item Name="NumEntries">ast->NumEntries</Item>
 		</Expand>
 	</Type>

@@ -21,7 +21,7 @@ These build up a code AST to then serialize with a file builder.
 
 ## Notes
 
-The project has reached a sort of *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.
+The project has reached an *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.
 
 The project has no external dependencies beyond:
 
@@ -36,12 +36,11 @@ The project has no external dependencies beyond:
 Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
 The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
 
-When gencpp is in a stable state, I will make a C variant with the same feature set.  
-A single-header version will also be generated for both.
-
 A `natvis` and `natstepfilter` are provided in the scripts directory.
 
 ***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
+
+A C variant is hosted [here](https://github.com/Ed94/genc); I haven't gotten headwind on it, should be easier to make than this...
 
 ## Usage
 
@@ -159,10 +158,12 @@ This method is setup where all the metaprogram's code are the within the same fi
 ### *WHAT IS NOT PROVIDED*
 
 * Lambdas
-* Vendor provided dynamic dispatch (virtuals) : `override` and `final` specifiers complicate the specifier parsing and serialization. (I'll problably end up adding in later)
+* Lang provided dynamic dispatch (virtuals) : `override` and `final` specifiers complicate the specifier parsing and serialization. (Its a todo)
+* Suffix specifiers for functions (Ex: void() const ). Same reason as virtual/override/final missing for now.
 * RTTI
 * Exceptions
 * Execution statement validation              : Execution expressions are defined using the untyped API.
+* Parsing support for module specifiers and attributes. (Its a todo)
 
 Keywords kept from "Modern C++":
 
@@ -664,8 +665,9 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 # TODO
 
 * Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
-* Make a test suite thats covers some base cases and zpl containers (+ anything else suitable)
-* Finish support for module specifiers and standard/platform attributes.
+* Make a more robust test suite.
 * Generate a single-header library.
-* Improve the allocation strategy for strings in `AST::to_string`, `Parser::lex`, and `token_fmt_va`
+* Improve the allocation strategy for strings in `Builder`, `AST::to_string`, `Parser::lex`, all three can use some form of slab allocation strategy...
 * May be in need of a better name, I found a few repos with this same one...
+* Support module and attribute parsing (Marked with TODOs for now..)
+* Suffix specifiers for functions (const, override, final)

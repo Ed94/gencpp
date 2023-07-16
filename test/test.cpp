@@ -1,6 +1,7 @@
 #ifdef gen_time
-#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_FEATURE_PARSING
+#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+#define GEN_ENFORCE_STRONG_CODE_TYPES
 #include "Parsed\Array.Parsed.hpp"
 #include "Parsed\Buffer.Parsed.hpp"
 #include "Parsed\HashTable.Parsed.hpp"
@@ -11,11 +12,10 @@
 
 using namespace gen;
 
-// TODO : Rewrite this to include both upfront and parsed testing.
+// TODO : Need to make a more robust test suite
 
 int gen_main()
 {
-	Memory::setup();
 	gen::init();
 
 	gen_sanity();
@@ -60,7 +60,6 @@ int gen_main()
 	soa_test.write();
 
 	gen::deinit();
-	Memory::cleanup();
 	return 0;
 }
 #endif

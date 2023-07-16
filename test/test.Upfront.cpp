@@ -15,7 +15,6 @@ using namespace gen;
 
 int gen_main()
 {
-	Memory::setup();
 	gen::init();
 
 	gen_sanity_upfront();
@@ -35,7 +34,6 @@ int gen_main()
 	gen_ring_file();
 
 	gen::deinit();
-	Memory::cleanup();
 	return 0;
 }
 #endif

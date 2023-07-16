@@ -1,6 +1,9 @@
 #pragma once
 
 #ifdef gen_time
+#define GEN_FEATURE_PARSING
+#define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+#define GEN_ENFORCE_STRONG_CODE_TYPES
 #include "gen.hpp"
 using namespace gen;
 
@@ -11,7 +14,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 	));
 
 	Code
-	soa_entry = { struct_def.raw()->duplicate() };
+	soa_entry = { struct_def.duplicate() };
 	soa_entry->Name = get_cached_string( name(Entry) );
 
 	constexpr s32 Num_Vars_Cap = 128;

@@ -1712,8 +1712,13 @@ namespace gen
 
 		global StringTable StringCache;
 
+		// TODO : Need to implement String memory management for seriaization intermediates.
+
+		global Arena LexArena;
+
 		global AllocatorInfo Allocator_DataArrays       = heap();
 		global AllocatorInfo Allocator_CodePool         = heap();
+		global AllocatorInfo Allocator_Lexer            = heap();
 		global AllocatorInfo Allocator_StringArena      = heap();
 		global AllocatorInfo Allocator_StringTable      = heap();
 		global AllocatorInfo Allocator_TypeTable        = heap();
@@ -1852,12 +1857,215 @@ namespace gen
 	{
 		using namespace ECode;
 
-		Code result = make_code();
+		AST*
+		result = make_code().ast;
+	#ifndef GEN_USE_RECURSIVE_AST_DUPLICATION
+		mem_copy( result, this, sizeof( AST ) );
+		result->Parent = nullptr;
+	#else
+		switch ( Type )
+		{
+			case Invalid:
+				log_failure("Attempted to duplicate invalid code! - \n%s", Parent ? Parent->debug_str() : Name );
+				return nullptr
+			case Untyped:
+			case Comment:
+			case Execution:
+			case Access_Private:
+			case Access_Protected:
+			case Access_Public:
+			case PlatformAttributes:
+			case Preprocessor_Include:
+			case Module:
+			case Specifiers:
+			case Using_Namespace:
+				mem_copy( result, this, sizeof( AST ) );
+			break;
 
-		// TODO : Bring back some of the old way, we need to recursively duplicate the children.
-		mem_copy( result.ast, this, sizeof( AST ) );
+			case Extern_Linkage:
+			case Friend:
+				mem_copy( result, this, sizeof( AST ) );
 
-		return result.ast;
+				if (Value)
+					result->Value = Value->duplicate();
+			break;
+
+			case Class:
+			case Struct:
+			case Enum:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if ( Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				if ( ParentType )
+					result->ParentType = ParentType->duplicate();
+
+				result->Body = Body->duplicate();
+			break;
+
+			case Enum_Fwd:
+			case Class_Fwd:
+			case Struct_Fwd:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if ( Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				if ( ParentType )
+					result->ParentType = ParentType->duplicate();
+			break;
+
+			case Function:
+			case Operator:
+			case Operator_Member:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if ( Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				if ( Specs )
+					result->ParentType = ParentType->duplicate();
+
+				if ( ReturnType )
+					result->ReturnType = ReturnType->duplicate();
+
+				if ( Params )
+					result->Params = Params->duplicate();
+
+				result->Body = Body->duplicate();
+			break;
+
+			case Function_Fwd:
+			case Operator_Fwd:
+			case Operator_Member_Fwd:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if ( Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				if ( Specs )
+					result->ParentType = ParentType->duplicate();
+
+				if ( ReturnType )
+					result->ReturnType = ReturnType->duplicate();
+
+				if ( Params )
+					result->Params = Params->duplicate();
+			break;
+
+			case Namespace:
+				mem_copy( result, this, sizeof( AST ) );
+
+				result->Body = Body->duplicate();
+			break;
+
+			case Operator_Cast:
+				mem_copy( result, this, sizeof( AST ) );
+
+				result->ValueType = ValueType->duplicate();
+				result->Body      = Body->duplicate();
+			break;
+			case Operator_Cast_Fwd:
+				mem_copy( result, this, sizeof( AST ) );
+
+				result->ValueType = ValueType->duplicate();
+			break;
+
+			case Parameters:
+				mem_copy( result, this, sizeof( AST ) );
+
+				result->NumEntries = 0;
+				result->Last = nullptr;
+				result->Next = nullptr;
+
+				if ( NumEntries - 1 > 0 )
+				{
+					CodeParam parent = result->cast<CodeParam>();
+					for ( CodeParam param : Next->cast<CodeParam>() )
+					{
+						parent.append( param );
+					}
+				}
+			break;
+
+			case Template:
+				mem_copy( result, this, sizeof( AST ) );
+
+				result->Params      = Params->duplicate();
+				result->Declaration = Declaration->duplicate();
+			break;
+
+			case Typename:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if (Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				if ( Specs )
+					result->Specs = Specs->duplicate();
+
+				if ( ArrExpr )
+					result->ArrExpr = ArrExpr->duplicate();
+			break;
+
+			case Typedef:
+			case Using:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if (Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				if ( UnderlyingType )
+					result->UnderlyingType = UnderlyingType->duplicate();
+			break;
+
+			case Union:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if ( Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				result->Body = Body->duplicate();
+			break;
+
+			case Variable:
+				mem_copy( result, this, sizeof( AST ) );
+
+				if (Attributes)
+					result->Attributes = Attributes->duplicate();
+
+				if ( Specs )
+					result->Specs = Specs->duplicate();
+
+				result->ValueType = UnderlyingType->duplicate();
+
+				if ( Value )
+					result->Value = Value->duplicate();
+			break;
+
+			case Class_Body:
+			case Enum_Body:
+			case Export_Body:
+			case Extern_Linkage_Body:
+			case Function_Body:
+			case Global_Body:
+			case Namespace_Body:
+			case Struct_Body:
+			case Union_Body:
+				CodeBody
+				body         = cast<CodeBody>();
+				body->Name   = Name;
+				body->Type   = Type;
+				for ( Code entry : cast<CodeBody>() )
+				{
+					result->append( entry.ast );
+				}
+			break;
+		}
+	#endif
+
+		return result;
 	}
 
 	String AST::to_string()
@@ -1869,6 +2077,7 @@ namespace gen
 		if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Import ))  \
 			result.append( "import " );             \
 
+		// TODO : Need to refactor so that intermeidate strings are freed conviently.
 		String result = String::make( Memory::GlobalAllocator, "" );
 
 		switch ( Type )
@@ -1876,7 +2085,7 @@ namespace gen
 			using namespace ECode;
 
 			case Invalid:
-				log_failure("Attempted to serialize invalid code! - %s", Name);
+				log_failure("Attempted to serialize invalid code! - %s", Parent ? Parent->debug_str() : Name );
 			break;
 
 			case Untyped:
@@ -1926,7 +2135,9 @@ namespace gen
 					result.append( "class " );
 
 					if ( Attributes )
+					{
 						result.append_fmt( "%s ", Attributes->to_string() );
+					}
 
 					if ( ParentType )
 					{
@@ -2216,13 +2427,14 @@ namespace gen
 
 			case Parameters:
 			{
-				// TODO : Parameters can have default values.
-
 				if ( Name )
 					result.append_fmt( "%s %s", ValueType->to_string(), Name );
 
 				else
 					result.append_fmt( "%s", ValueType->to_string() );
+
+				if ( Value )
+					result.append_fmt( "= %s", Value->to_string() );
 
 				if ( NumEntries - 1 > 0)
 				{
@@ -2254,14 +2466,18 @@ namespace gen
 			{
 				ProcessModuleFlags();
 
+				if ( Name == nullptr)
+				{
+					result.append( "struct\n{\n%s\n};", Body->to_string() );
+					break;
+				}
+
 				if ( Attributes || ParentType )
 				{
 					result.append( "struct " );
 
-					if ( ParentType )
+					if ( Attributes )
 						result.append_fmt( "%s ", Attributes->to_string() );
-
-					// TODO : Structs can be anonymous, so we need to check for that
 
 					if ( ParentType )
 					{
@@ -2276,6 +2492,8 @@ namespace gen
 					}
 					else
 					{
+						if ( Name )
+
 						result.append_fmt( "%s \n{\n%s\n};", Name, Body->to_string() );
 					}
 				}
@@ -2465,7 +2683,6 @@ namespace gen
 
 		switch ( Type )
 		{
-			// TODO : Finish this...
 			case ECode::Typedef:
 			case ECode::Typename:
 			{
@@ -2559,6 +2776,8 @@ namespace gen
 	{
 		using namespace StaticData;
 
+		Memory::setup();
+
 		// Setup the arrays
 		{
 			CodePools = Array<Pool>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
@@ -2580,6 +2799,10 @@ namespace gen
 				fatal( "gen::init: Failed to initialize the code pool" );
 
 			CodePools.append( code_pool );
+
+		#ifdef GEN_FEATURE_PARSING
+			LexArena = Arena::init_from_allocator( Allocator_Lexer, LexAllocator_Size );
+		#endif
 
 			Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
@@ -2696,7 +2919,7 @@ namespace gen
 		def_constant_spec( ref,              ESpecifier::Ref );
 		def_constant_spec( register,         ESpecifier::Register );
 		def_constant_spec( rvalue,           ESpecifier::RValue );
-		def_constant_spec( static_member,    ESpecifier::Static_Member );
+		def_constant_spec( static_member,    ESpecifier::Static );
 		def_constant_spec( thread_local,     ESpecifier::Thread_Local );
 		def_constant_spec( volatile, 	     ESpecifier::Volatile)
 
@@ -2738,6 +2961,12 @@ namespace gen
 
 		CodePools.free();
 		StringArenas.free();
+
+	#ifdef GEN_FEATURE_PARSING
+		LexArena.free();
+	#endif
+
+		Memory::cleanup();
 	}
 
 	AllocatorInfo get_string_allocator( s32 str_length )
@@ -3167,6 +3396,11 @@ namespace gen
 	void set_allocator_code_pool( AllocatorInfo allocator )
 	{
 		StaticData::Allocator_CodePool = allocator;
+	}
+
+	void set_allocator_lexer( AllocatorInfo allocator )
+	{
+		StaticData::Allocator_Lexer = allocator;
 	}
 
 	void set_allocator_string_arena( AllocatorInfo allocator )
@@ -3764,8 +3998,6 @@ namespace gen
 	{
 		using namespace ECode;
 
-		name_check( def_struct, name );
-
 		if ( attributes && attributes->Type != PlatformAttributes )
 		{
 			log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", attributes.debug_str() );
@@ -3786,8 +4018,10 @@ namespace gen
 
 		CodeStruct
 		result              = (CodeStruct) make_code();
-		result->Name        = get_cached_string( name );
 		result->ModuleFlags = mflags;
+
+		if ( name )
+			result->Name = get_cached_string( name );
 
 		if ( body )
 		{
@@ -4816,7 +5050,6 @@ namespace gen
 			return scast(AccessSpec, tok.Type);
 		}
 
-		Arena LexAllocator;
 
 		struct TokArray
 		{
@@ -4885,16 +5118,15 @@ namespace gen
 				return { 0, nullptr };                                       \
 			}
 
-			do_once_start
-				// TODO : Use the global memory allocator for this...
-				LexAllocator = Arena::init_from_allocator( heap(), megabytes(10) );
+			// do_once_start
+			// 	LexAllocator = Arena::init_from_allocator( heap(), megabytes(10) );
 
-				if ( LexAllocator.PhysicalStart == nullptr )
-				{
-					log_failure( "gen::lex: failed to allocate memory for parsing constructor's lexer");
-					return { { nullptr }, 0  };
-				}
-			do_once_end
+			// 	if ( LexAllocator.PhysicalStart == nullptr )
+			// 	{
+			// 		log_failure( "gen::lex: failed to allocate memory for parsing constructor's lexer");
+			// 		return { { nullptr }, 0  };
+			// 	}
+			// do_once_end
 
 			local_persist thread_local
 			Array<Token> Tokens = { nullptr };
@@ -4913,9 +5145,11 @@ namespace gen
 			}
 
 			if ( Tokens )
-				Tokens.clear();
+			{
+				Tokens.free();
+			}
 
-			Tokens = Array<Token>::init_reserve( LexAllocator, content.Len / 8 );
+			Tokens = Array<Token>::init_reserve( StaticData::LexArena, content.Len / 6 );
 
 			while (left )
 			{
@@ -6192,7 +6426,7 @@ namespace gen
 							case ESpecifier::Constinit:
 							case ESpecifier::Inline:
 							case ESpecifier::Mutable:
-							case ESpecifier::Static_Member:
+							case ESpecifier::Static:
 							case ESpecifier::Volatile:
 							break;
 
@@ -6279,7 +6513,8 @@ namespace gen
 
 		// TODO : Parse attributes
 
-		name = parse_identifier( toks, context );
+		if ( check( TokType::Identifier ) )
+			name = parse_identifier( toks, context );
 
 		AccessSpec access     = AccessSpec::Default;
 		Token      parent_tok = { nullptr, 0, TokType::Invalid };
@@ -6500,7 +6735,7 @@ namespace gen
 							case ESpecifier::Constinit:
 							case ESpecifier::Inline:
 							case ESpecifier::Mutable:
-							case ESpecifier::Static_Member:
+							case ESpecifier::Static:
 							case ESpecifier::Volatile:
 							break;
 
@@ -6839,7 +7074,7 @@ namespace gen
 				case ESpecifier::Constexpr:
 				case ESpecifier::External_Linkage:
 				case ESpecifier::Inline:
-				case ESpecifier::Static_Member:
+				case ESpecifier::Static:
 				break;
 
 				default:
@@ -6951,7 +7186,7 @@ namespace gen
 				case ESpecifier::Const:
 				case ESpecifier::Constexpr:
 				case ESpecifier::Inline:
-				case ESpecifier::Static_Member:
+				case ESpecifier::Static:
 				break;
 
 				default:
@@ -7138,7 +7373,7 @@ namespace gen
 					case ESpecifier::Inline:
 					case ESpecifier::Local_Persist:
 					case ESpecifier::Mutable:
-					case ESpecifier::Static_Member:
+					case ESpecifier::Static:
 					case ESpecifier::Thread_Local:
 					case ESpecifier::Volatile:
 					break;
@@ -7602,7 +7837,7 @@ namespace gen
 				case ESpecifier::Inline:
 				case ESpecifier::Local_Persist:
 				case ESpecifier::Mutable:
-				case ESpecifier::Static_Member:
+				case ESpecifier::Static:
 				case ESpecifier::Thread_Local:
 				case ESpecifier::Volatile:
 				break;
@@ -7666,10 +7901,15 @@ namespace gen
 		char const* buf_begin = buf;
 		sw          remaining = buf_size;
 
+		static Arena tok_map_arena;
+
 		HashTable<StrC> tok_map;
 		{
-			// TODO : Switch this to use an arena that makes use of the stack (cap the size of the token table to around 4096 bytes)
-			tok_map = HashTable<StrC>::init( Memory::GlobalAllocator );
+			static char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
+
+			tok_map_arena = Arena::init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
+
+			tok_map = HashTable<StrC>::init( tok_map_arena );
 
 			s32 left = num_tokens - 1;
 
@@ -7747,6 +7987,7 @@ namespace gen
 		}
 
 		tok_map.clear();
+		tok_map_arena.free();
 
 		sw result = buf_size - remaining;
 

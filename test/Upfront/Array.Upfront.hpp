@@ -18,7 +18,7 @@ Code gen__array_base()
 
 	CodeFn grow_formula = def_function( name(array_grow_formula), def_param( t_uw, name(value)), t_uw
 		, def_execution( code( return 2 * value * 8; ) )
-		, def_specifiers( args( ESpecifier::Static_Member, ESpecifier::Inline ) )
+		, def_specifiers( args( ESpecifier::Static, ESpecifier::Inline ) )
 	);
 
 	return def_global_body( args( header, grow_formula ) );
@@ -29,9 +29,9 @@ Code gen__array( StrC type )
 	static CodeType t_allocator_info = def_type( name(AllocatorInfo) );
 	static Code     v_nullptr        = code_str(nullptr);
 
-	static CodeSpecifier spec_ct_member     = def_specifiers( 2, ESpecifier::Constexpr, ESpecifier::Static_Member );
-	static CodeSpecifier spec_static_inline = def_specifiers( 2, ESpecifier::Static_Member, ESpecifier::Inline );
-	static CodeSpecifier spec_static        = def_specifier( ESpecifier::Static_Member );
+	static CodeSpecifier spec_ct_member     = def_specifiers( 2, ESpecifier::Constexpr, ESpecifier::Static );
+	static CodeSpecifier spec_static_inline = def_specifiers( 2, ESpecifier::Static, ESpecifier::Inline );
+	static CodeSpecifier spec_static        = def_specifier( ESpecifier::Static );
 
 	static CodeUsing using_header    = def_using( name(Header), def_type( name(ArrayHeader) ) );
 	static CodeVar ct_grow_formula = def_variable( t_auto, name(grow_formula), untyped_str( code( & array_grow_formula )), spec_ct_member );
