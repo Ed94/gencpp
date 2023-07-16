@@ -13,6 +13,9 @@ Feature Macros:
 * `GEN_FEATURE_EDITOR` : Defines the file editing features for changing definitions based on ASTs
 * `GEN_FEATURE_SCANNER` : Defines the file scanning features for generating ASTs
 
+`GEN_USE_RECURSIVE_AST_DUPLICATION` is available but its not well tested and should not need to be used.
+If constructing ASTs properly. There should be no modification of ASTs, and thus this would never become an issue.
+
 Due to the design of `gen.hpp` to support being written alongside runtime intended code (in the same file), all the code is wrapped in a `gen_time` `#ifdef` and then wrapped further in a `gen` namespace to avoid pollution of the global scope.
 
 *Note: Its possible with the scanner feature to support parsing runtime files that use "generic" macros or identifiers with certain patterns.  

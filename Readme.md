@@ -589,6 +589,8 @@ Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FE
 
 ### Editor is for editing a series of files based on a set of requests provided to it
 
+**Note: Not implemented yet**
+
 * The purpose is to overrite a specific file, it places its contents in a buffer to scan.
 * Requests are populated using the following interface:
   * add : Add code.
@@ -610,6 +612,8 @@ Refactor is based of the refactor library and uses its interface.
 It will on call add a request to the queue to run the refactor script on the file.
 
 ### Scanner allows the user to generate Code ASTs by reading files
+
+**Note: Not implemented yet**
 
 * The purpose is to grab definitions to generate metadata or generate new code from these definitions.
 * Requests are populated using the add( SymbolInfo, Policy ) function. The symbol info is the same as the one used for the editor. So is the case with Policy.
@@ -668,6 +672,9 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Make a more robust test suite.
 * Generate a single-header library.
 * Improve the allocation strategy for strings in `Builder`, `AST::to_string`, `Parser::lex`, all three can use some form of slab allocation strategy...
+  * Can most likely use a simple slag allocator.
 * May be in need of a better name, I found a few repos with this same one...
 * Support module and attribute parsing (Marked with TODOs for now..)
 * Suffix specifiers for functions (const, override, final)
+* Implement the Scanner
+* Implement the Editor
