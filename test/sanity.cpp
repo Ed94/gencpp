@@ -26,10 +26,11 @@ void check_sanity()
 	// must be adjusted to gigabytes(2), kilobytes(512), and gigabyte(1) for good performance without crashing.
 	/*
 		Typical usage (megabytes(10), kilobytes(4), megabytes(1), for 650000 (the limit of 10 meg partition buckets in global arena) )
-		Num Global Arenas       : 2 TotalSize: 4294967296 !
-		Num Code Pools          : 144 TotalSize: 9663676416 !
-		Num String Cache Arenas : 2 TotalSize: 2147483648 !
-		Num String Cache        : 30000025
+		Memory after builder:
+		Num Global Arenas       : 14 TotalSize: 146800640 !
+		Num Code Pools          : 794 TotalSize: 416284672 !
+		Num String Cache Arenas : 60 TotalSize: 62914560 !
+		Num String Cache        : 1300007
 
 		Memory usage to expect at 15 mil file:
 		Num Global Arenas       : 2 TotalSize: 4294967296 !
