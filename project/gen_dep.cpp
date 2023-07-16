@@ -2,10 +2,8 @@
 
 #ifdef gen_time
 
-#ifdef GEN_BENCHMARK
-
 // NOTE: Ensure we use standard methods for these calls if we use GEN_PICO
-#pragma region Macros
+#pragma region Macros & Includes
 #	include <stdio.h>
 #	if ! defined( GEN_PICO_CUSTOM_ROUTINES )
 #		if ! defined( GEN_MODULE_CORE )
@@ -41,8 +39,10 @@
 #			undef VC_EXTRALEAN
 #		endif
 #	endif
-#pragma endregion Macros
+#pragma endregion Macros & Includes
 
+#ifdef GEN_BENCHMARK
+// Timing includes
 #if defined( GEN_SYSTEM_MACOS ) || GEN_SYSTEM_UNIX
 #	include <time.h>
 #	include <sys/time.h>
@@ -62,7 +62,6 @@
 #	include <timezoneapi.h>
 #endif
 #endif
-
 
 namespace gen
 {
