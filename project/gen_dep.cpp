@@ -1626,6 +1626,19 @@ namespace gen
 
 		return err;
 	}
+
+	s64 file_size( FileInfo* f )
+	{
+		s64 size        = 0;
+		s64 prev_offset = file_tell( f );
+
+		file_seek_to_end( f );
+		size = file_tell( f );
+
+		file_seek( f, prev_offset );
+
+		return size;
+	}
 #pragma endregion File Handling
 
 #pragma region String

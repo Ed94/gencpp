@@ -5754,6 +5754,7 @@ namespace gen
 		}
 
 		if (   currtok.Type == TokType::Decl_Class
+			|| currtok.Type == TokType::Decl_Enum
 			|| currtok.Type == TokType::Decl_Struct )
 		{
 			name = currtok;

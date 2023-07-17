@@ -2016,11 +2016,52 @@ namespace gen
 	FileError file_open_mode( FileInfo* file, FileMode mode, char const* filename );
 
 	/**
+	 * Reads from a file
+	 * @param  file
+	 * @param  buffer Buffer to read to
+	 * @param  size   Size to read
+	 */
+	GEN_DEF_INLINE b32 file_read( FileInfo* file, void* buffer, sw size );
+
+	/**
+	 * Reads file at a specific offset
+	 * @param  file
+	 * @param  buffer     Buffer to read to
+	 * @param  size       Size to read
+	 * @param  offset     Offset to read from
+	 * @param  bytes_read How much data we've actually read
+	 */
+	GEN_DEF_INLINE b32 file_read_at( FileInfo* file, void* buffer, sw size, s64 offset );
+
+	/**
+	 * Reads file safely
+	 * @param  file
+	 * @param  buffer     Buffer to read to
+	 * @param  size       Size to read
+	 * @param  offset     Offset to read from
+	 * @param  bytes_read How much data we've actually read
+	 */
+	GEN_DEF_INLINE b32 file_read_at_check( FileInfo* file, void* buffer, sw size, s64 offset, sw* bytes_read );
+
+	/**
+	 * Returns a size of the file
+	 * @param  file
+	 * @return      File size
+	 */
+	s64 file_size( FileInfo* file );
+
+	/**
 	 * Seeks the file cursor from the beginning of file to a specific position
 	 * @param  file
 	 * @param  offset Offset to seek to
 	 */
 	GEN_DEF_INLINE s64 file_seek( FileInfo* file, s64 offset );
+
+	/**
+	 * Seeks the file cursor to the end of the file
+	 * @param  file
+	 */
+	GEN_DEF_INLINE s64 file_seek_to_end( FileInfo* file );
 
 	/**
 	 * Returns the length from the beginning of the file we've read so far
@@ -2069,6 +2110,18 @@ namespace gen
 		return new_offset;
 	}
 
+	GEN_IMPL_INLINE s64 file_seek_to_end( FileInfo* f )
+	{
+		s64 new_offset = 0;
+
+		if ( ! f->Ops.read_at )
+			f->Ops = default_file_operations;
+
+		f->Ops.seek( f->FD, 0, ESeekWhence_END, &new_offset );
+
+		return new_offset;
+	}
+
 	GEN_IMPL_INLINE s64 file_tell( FileInfo* f )
 	{
 		s64 new_offset = 0;
@@ -2079,6 +2132,26 @@ namespace gen
 		f->Ops.seek( f->FD, 0, ESeekWhence_CURRENT, &new_offset );
 
 		return new_offset;
+	}
+
+	GEN_IMPL_INLINE b32 file_read( FileInfo* f, void* buffer, sw size )
+	{
+		s64 cur_offset = file_tell( f );
+		b32 result     = file_read_at( f, buffer, size, file_tell( f ) );
+		file_seek( f, cur_offset + size );
+		return result;
+	}
+
+	GEN_IMPL_INLINE b32 file_read_at( FileInfo* f, void* buffer, sw size, s64 offset )
+	{
+		return file_read_at_check( f, buffer, size, offset, NULL );
+	}
+
+	GEN_IMPL_INLINE b32 file_read_at_check( FileInfo* f, void* buffer, sw size, s64 offset, sw* bytes_read )
+	{
+		if ( ! f->Ops.read_at )
+			f->Ops = default_file_operations;
+		return f->Ops.read_at( f->FD, buffer, size, offset, bytes_read, false );
 	}
 
 	GEN_IMPL_INLINE b32 file_write( FileInfo* f, void const* buffer, sw size )

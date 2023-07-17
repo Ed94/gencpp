@@ -687,3 +687,4 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Suffix specifiers for functions (const, override, final)
 * Implement the Scanner
 * Implement the Editor
+* Support parsing full enum definitions inside a typedef. (For C patterns)
