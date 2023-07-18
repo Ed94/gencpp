@@ -533,8 +533,7 @@ namespace gen
 		template< class Type >
 		Type cast()
 		{
-			AST* ast = this;
-			return * rcast( Type*, & ast );
+			return * this;
 		}
 
 		operator Code();
@@ -669,7 +668,7 @@ namespace gen
 
 	// Used when the its desired when omission is allowed in a definition.
 	#define NoCode      { nullptr }
-	#define CodeInvalid (* Code::Invalid.ast)
+	#define CodeInvalid (* Code::Invalid.ast) // Uses an implicitly overloaded cast from the AST to the desired code type.
 
 #pragma region Code Types
 	#define Define_CodeType( Typename )                           \
@@ -1243,7 +1242,7 @@ namespace gen
 			{
 				CodeAttributes Attributes;
 				char 	       _PAD_SPECS_     [ sizeof(AST*) ];
-				CodeType       UnderlyingType;
+				Code           UnderlyingType;
 				char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
 			};
 		};
@@ -1335,6 +1334,10 @@ namespace gen
 	// However on Windows at least, it doesn't need to occur as the OS will clean up after the process.
 	void deinit();
 
+	// Clears the allocations, but doesn't return to the heap, the calls init() again.
+	// Ease of use.
+	void reset();
+
 	// Used internally to retrive or make string allocations.
 	// Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
 	StringCached get_cached_string( StrC str );
@@ -1403,7 +1406,7 @@ namespace gen
 	CodeTemplate def_template( CodeParam params, Code definition, ModuleFlag mflags = ModuleFlag::None );
 
 	CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, CodeSpecifier specifiers = NoCode, CodeAttributes attributes = NoCode );
-	CodeTypedef def_typedef( StrC name, CodeType type, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
+	CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
 	CodeUnion def_union( StrC name, Code body, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
@@ -1655,6 +1658,9 @@ namespace gen
 	constexpr s32 InitSize_DataArrays  = 16;
 	constexpr s32 InitSize_StringTable = megabytes(4);
 
+	// NOTE: This limits the maximum size of an allocation
+	// If you are generating a string larger than this, increase the size of the bucket here.
+	constexpr uw Global_BucketSize          = megabytes(10);
 	constexpr s32 CodePool_NumBlocks        = kilobytes(4);
 	constexpr s32 SizePer_StringArena       = megabytes(1);
 
@@ -1920,7 +1926,6 @@ namespace gen
 	Define_AST_Cast( Var );
 	#undef Define_AST_Cast
 
-
 	#define Define_CodeCast( type )           \
 	Code::operator Code ## type() const       \
 	{                                         \
@@ -1999,7 +2004,7 @@ namespace gen
 	CodeParam& CodeParam::operator ++()
 	{
 		ast = ast->Next.ast;
-		return *this;
+		return * this;
 	}
 
 	CodeBody def_body( CodeT type )
@@ -2053,27 +2058,21 @@ namespace gen
 #ifdef GEN_EXPOSE_BACKEND
 namespace gen
 {
-	namespace Memory
-	{
-		extern Array<Arena> Global_AllocatorBuckets;
-	}
+	// Global allocator used for data with process lifetime.
+	extern AllocatorInfo  GlobalAllocator;
+	extern Array< Arena > Global_AllocatorBuckets;
+	extern Array< Pool >  CodePools;
+	extern Array< Arena > StringArenas;
 
-	namespace StaticData
-	{
-		extern Array< Pool >  CodePools;
-		extern Array< Arena > StringArenas;
+	extern StringTable StringCache;
 
-		extern StringTable StringCache;
+	extern Arena LexArena;
 
-		extern Arena LexArena;
-
-		extern AllocatorInfo Allocator_DataArrays;
-		extern AllocatorInfo Allocator_CodePool;
-		extern AllocatorInfo Allocator_Lexer;
-		extern AllocatorInfo Allocator_StringArena;
-		extern AllocatorInfo Allocator_StringTable;
-		extern AllocatorInfo Allocator_TypeTable;
-	}
+	extern AllocatorInfo Allocator_DataArrays;
+	extern AllocatorInfo Allocator_CodePool;
+	extern AllocatorInfo Allocator_Lexer;
+	extern AllocatorInfo Allocator_StringArena;
+	extern AllocatorInfo Allocator_StringTable;
+	extern AllocatorInfo Allocator_TypeTable;
 }
-
 #endif

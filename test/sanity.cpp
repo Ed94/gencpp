@@ -41,14 +41,14 @@ void check_sanity()
 	constexpr
 	s32 num_iterations = 650000;
 
-	Array<CodeTypedef> typedefs = Array<CodeTypedef>::init_reserve( Memory::GlobalAllocator, num_iterations * 2 );
+	Array<CodeTypedef> typedefs = Array<CodeTypedef>::init_reserve( GlobalAllocator, num_iterations * 2 );
 
 	s32 idx = num_iterations;
 	while( --idx )
 	{
 		// Stress testing string allocation
-		String type_name = String::fmt_buf( Memory::GlobalAllocator, "type_%d", idx );
-		String typedef_name = String::fmt_buf( Memory::GlobalAllocator, "typedef_%d", idx );
+		String type_name = String::fmt_buf( GlobalAllocator, "type_%ld", idx );
+		String typedef_name = String::fmt_buf(GlobalAllocator, "typedef_%ld", idx );
 
 		CodeTypedef type_as_int = def_typedef( type_name, t_int );
 		CodeType    type        = def_type( type_name );
@@ -59,17 +59,17 @@ void check_sanity()
 	}
 
 	log_fmt("\nMemory before builder:\n");
-	log_fmt("Num Global Arenas       : %llu TotalSize: %llu !\n", Memory::Global_AllocatorBuckets.num(), Memory::Global_AllocatorBuckets.num() * Memory::Global_BucketSize);
-	log_fmt("Num Code Pools          : %llu TotalSize: %llu !\n", StaticData::CodePools.num(), StaticData::CodePools.num() * CodePool_NumBlocks * StaticData::CodePools.back().BlockSize);
-	log_fmt("Num String Cache Arenas : %llu TotalSize: %llu !\n", StaticData::StringArenas.num(), StaticData::StringArenas.num() * SizePer_StringArena);
-	log_fmt("Num String Cache        : %llu\n", StaticData::StringCache.Entries.num(), StaticData::StringCache);
+	log_fmt("Num Global Arenas       : %llu TotalSize: %llu !\n", Global_AllocatorBuckets.num(), Global_AllocatorBuckets.num() * Global_BucketSize);
+	log_fmt("Num Code Pools          : %llu TotalSize: %llu !\n", CodePools.num(), CodePools.num() * CodePool_NumBlocks * CodePools.back().BlockSize);
+	log_fmt("Num String Cache Arenas : %llu TotalSize: %llu !\n", StringArenas.num(), StringArenas.num() * SizePer_StringArena);
+	log_fmt("Num String Cache        : %llu\n", StringCache.Entries.num(), StringCache);
 
 	Builder builder;
 	builder.open( "sanity.gen.hpp" );
 
-	idx = num_iterations;
+	idx = typedefs.num();
 #ifdef GEN_BENCHMARK
-	u64 time_start     = time_rel_ms();
+	u64 time_start = time_rel_ms();
 #endif
 	while( --idx )
 	{
@@ -82,10 +82,10 @@ void check_sanity()
 #endif
 
 	log_fmt("\nMemory after builder:\n");
-	log_fmt("Num Global Arenas       : %llu TotalSize: %llu !\n", Memory::Global_AllocatorBuckets.num(), Memory::Global_AllocatorBuckets.num() * Memory::Global_BucketSize);
-	log_fmt("Num Code Pools          : %llu TotalSize: %llu !\n", StaticData::CodePools.num(), StaticData::CodePools.num() * CodePool_NumBlocks * StaticData::CodePools.back().BlockSize);
-	log_fmt("Num String Cache Arenas : %llu TotalSize: %llu !\n", StaticData::StringArenas.num(), StaticData::StringArenas.num() * SizePer_StringArena);
-	log_fmt("Num String Cache        : %llu\n", StaticData::StringCache.Entries.num(), StaticData::StringCache);
+	log_fmt("Num Global Arenas       : %llu TotalSize: %llu !\n", Global_AllocatorBuckets.num(), Global_AllocatorBuckets.num() * Global_BucketSize);
+	log_fmt("Num Code Pools          : %llu TotalSize: %llu !\n", CodePools.num(), CodePools.num() * CodePool_NumBlocks * CodePools.back().BlockSize);
+	log_fmt("Num String Cache Arenas : %llu TotalSize: %llu !\n", StringArenas.num(), StringArenas.num() * SizePer_StringArena);
+	log_fmt("Num String Cache        : %llu\n", StringCache.Entries.num(), StringCache);
 
 	log_fmt("\nSanity passed!\n");
 	gen::deinit();

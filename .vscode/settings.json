@@ -23,5 +23,6 @@
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
 	"C_Cpp.errorSquiggles": "enabled",
-	"godot_tools.scene_file_config": ""
+	"godot_tools.scene_file_config": "",
+	"C_Cpp.default.compilerPath": "cl.exe"
 }

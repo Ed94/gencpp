@@ -11,24 +11,25 @@
 
 namespace gen
 {
-	namespace StaticData
-	{
-		global Array< Pool >  CodePools         = { nullptr };
-		global Array< Arena > StringArenas      = { nullptr };
+#pragma region StaticData
+	// TODO : Convert global allocation strategy to use the dual-scratch allocator for a contextual scope.
+	global AllocatorInfo  GlobalAllocator;
+	global Array<Arena>   Global_AllocatorBuckets;
 
-		global StringTable StringCache;
+	global Array< Pool >  CodePools         = { nullptr };
+	global Array< Arena > StringArenas      = { nullptr };
 
-		// TODO : Need to implement String memory management for seriaization intermediates.
+	global StringTable StringCache;
 
-		global Arena LexArena;
+	global Arena LexArena;
 
-		global AllocatorInfo Allocator_DataArrays       = heap();
-		global AllocatorInfo Allocator_CodePool         = heap();
-		global AllocatorInfo Allocator_Lexer            = heap();
-		global AllocatorInfo Allocator_StringArena      = heap();
-		global AllocatorInfo Allocator_StringTable      = heap();
-		global AllocatorInfo Allocator_TypeTable        = heap();
-	}
+	global AllocatorInfo Allocator_DataArrays       = heap();
+	global AllocatorInfo Allocator_CodePool         = heap();
+	global AllocatorInfo Allocator_Lexer            = heap();
+	global AllocatorInfo Allocator_StringArena      = heap();
+	global AllocatorInfo Allocator_StringTable      = heap();
+	global AllocatorInfo Allocator_TypeTable        = heap();
+#pragma endregion StaticData
 
 #pragma region Constants
 	global CodeType t_auto;
@@ -169,6 +170,7 @@ namespace gen
 		mem_copy( result, this, sizeof( AST ) );
 		result->Parent = nullptr;
 	#else
+		// TODO : Stress test this...
 		switch ( Type )
 		{
 			case Invalid:
@@ -391,7 +393,7 @@ namespace gen
 	#endif
 
 		// TODO : Need to refactor so that intermeidate strings are freed conviently.
-		String result = String::make( Memory::GlobalAllocator, "" );
+		String result = String::make( GlobalAllocator, "" );
 
 		switch ( Type )
 		{
@@ -582,7 +584,7 @@ namespace gen
 			{
 				result.append_fmt( "export\n{\n" );
 
-				Code curr = cast<Code>();
+				Code curr = { this };
 				s32  left = NumEntries;
 				while ( left-- )
 				{
@@ -751,7 +753,7 @@ namespace gen
 
 				if ( NumEntries - 1 > 0)
 				{
-					for ( CodeParam param : Next->cast<CodeParam>() )
+					for ( CodeParam param : (CodeParam){ (AST_Param*)Next } )
 					{
 						result.append_fmt( ", %s", param.to_string() );
 					}
@@ -849,7 +851,7 @@ namespace gen
 
 				result.append_fmt( "%s %s", UnderlyingType->to_string(), Name );
 
-				if ( UnderlyingType->ArrExpr )
+				if ( UnderlyingType->Type == Typename && UnderlyingType->ArrExpr )
 				{
 					result.append_fmt( "[%s];", UnderlyingType->ArrExpr->to_string() );
 				}
@@ -1087,54 +1089,70 @@ namespace gen
 #pragma endregion AST
 
 #pragma region Gen Interface
-	void init()
+	internal void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
 	{
-		using namespace StaticData;
+		Arena& last = Global_AllocatorBuckets.back();
 
-		Memory::setup();
-
-		// Setup the arrays
+		switch ( type )
 		{
-			CodePools = Array<Pool>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
+			case EAllocation_ALLOC:
+			{
+				if ( last.TotalUsed + size > last.TotalSize )
+				{
+					Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
 
-			if ( CodePools == nullptr )
-				fatal( "gen::init: Failed to initialize the CodePools array" );
+					if ( bucket.PhysicalStart == nullptr )
+						fatal( "Failed to create bucket for Global_AllocatorBuckets");
 
-			StringArenas = Array<Arena>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
+					if ( ! Global_AllocatorBuckets.append( bucket ) )
+						fatal( "Failed to append bucket to Global_AllocatorBuckets");
 
-			if ( StringArenas == nullptr )
-				fatal( "gen::init: Failed to initialize the StringArenas array" );
+					last = Global_AllocatorBuckets.back();
+				}
+
+				return alloc_align( last, size, alignment );
+			}
+			case EAllocation_FREE:
+			{
+				// Doesn't recycle.
+			}
+			break;
+			case EAllocation_FREE_ALL:
+			{
+				// Memory::cleanup instead.
+			}
+			break;
+			case EAllocation_RESIZE:
+			{
+				if ( last.TotalUsed + size > last.TotalSize )
+				{
+					Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
+
+					if ( bucket.PhysicalStart == nullptr )
+						fatal( "Failed to create bucket for Global_AllocatorBuckets");
+
+					if ( ! Global_AllocatorBuckets.append( bucket ) )
+						fatal( "Failed to append bucket to Global_AllocatorBuckets");
+
+					last = Global_AllocatorBuckets.back();
+				}
+
+				void* result = alloc_align( last.Backing, size, alignment );
+
+				if ( result != nullptr && old_memory != nullptr )
+				{
+					mem_copy( result, old_memory, old_size );
+				}
+
+				return result;
+			}
 		}
 
-		// Setup the code pool and code entries arena.
-		{
-			Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
+		return nullptr;
+	}
 
-			if ( code_pool.PhysicalStart == nullptr )
-				fatal( "gen::init: Failed to initialize the code pool" );
-
-			CodePools.append( code_pool );
-
-		#ifdef GEN_FEATURE_PARSING
-			LexArena = Arena::init_from_allocator( Allocator_Lexer, LexAllocator_Size );
-		#endif
-
-			Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
-
-			if ( string_arena.PhysicalStart == nullptr )
-				fatal( "gen::init: Failed to initialize the string arena" );
-
-			StringArenas.append( string_arena );
-		}
-
-		// Setup the hash tables
-		{
-			StringCache = StringTable::init( Allocator_StringTable );
-
-			if ( StringCache.Entries == nullptr )
-				fatal( "gen::init: Failed to initialize the StringCache");
-		}
-
+	internal void define_constants()
+	{
 		Code::Global          = make_code();
 		Code::Global->Name    = get_cached_string( txt_StrC("Global Code") );
 		Code::Global->Content = Code::Global->Name;
@@ -1248,10 +1266,73 @@ namespace gen
 	#	undef def_constant_spec
 	}
 
+	void init()
+	{
+		// Setup global allocator
+		{
+			GlobalAllocator = AllocatorInfo { & Global_Allocator_Proc, nullptr };
+
+			Global_AllocatorBuckets = Array<Arena>::init_reserve( heap(), 128 );
+
+			if ( Global_AllocatorBuckets == nullptr )
+				fatal( "Failed to reserve memory for Global_AllocatorBuckets");
+
+			Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
+
+			if ( bucket.PhysicalStart == nullptr )
+				fatal( "Failed to create first bucket for Global_AllocatorBuckets");
+
+			Global_AllocatorBuckets.append( bucket );
+
+		}
+
+		// Setup the arrays
+		{
+			CodePools = Array<Pool>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
+
+			if ( CodePools == nullptr )
+				fatal( "gen::init: Failed to initialize the CodePools array" );
+
+			StringArenas = Array<Arena>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
+
+			if ( StringArenas == nullptr )
+				fatal( "gen::init: Failed to initialize the StringArenas array" );
+		}
+
+		// Setup the code pool and code entries arena.
+		{
+			Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
+
+			if ( code_pool.PhysicalStart == nullptr )
+				fatal( "gen::init: Failed to initialize the code pool" );
+
+			CodePools.append( code_pool );
+
+		#ifdef GEN_FEATURE_PARSING
+			LexArena = Arena::init_from_allocator( Allocator_Lexer, LexAllocator_Size );
+		#endif
+
+			Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
+
+			if ( string_arena.PhysicalStart == nullptr )
+				fatal( "gen::init: Failed to initialize the string arena" );
+
+			StringArenas.append( string_arena );
+		}
+
+		// Setup the hash tables
+		{
+			StringCache = StringTable::init( Allocator_StringTable );
+
+			if ( StringCache.Entries == nullptr )
+				fatal( "gen::init: Failed to initialize the StringCache");
+		}
+
+		define_constants();
+	}
+
 	void deinit()
 	{
-		using namespace StaticData;
-
 		s32 index = 0;
 		s32 left  = CodePools.num();
 		do
@@ -1281,13 +1362,48 @@ namespace gen
 		LexArena.free();
 	#endif
 
-		Memory::cleanup();
+		index = 0;
+		left  = Global_AllocatorBuckets.num();
+		do
+		{
+			Arena* bucket = & Global_AllocatorBuckets[ index ];
+			bucket->free();
+			index++;
+		}
+		while ( left--, left );
+
+		Global_AllocatorBuckets.free();
+	}
+
+	void reset()
+	{
+		s32 index = 0;
+		s32 left  = CodePools.num();
+		do
+		{
+			Pool* code_pool = & CodePools[index];
+			code_pool->clear();
+			index++;
+		}
+		while ( left--, left );
+
+		index = 0;
+		left  = StringArenas.num();
+		do
+		{
+			Arena* string_arena = & StringArenas[index];
+			string_arena->TotalUsed = 0;;
+			index++;
+		}
+		while ( left--, left );
+
+		StringCache.clear();
+
+		define_constants();
 	}
 
 	AllocatorInfo get_string_allocator( s32 str_length )
 	{
-		using namespace StaticData;
-
 		Arena* last = & StringArenas.back();
 
 		uw size_req = str_length + sizeof(String::Header) + sizeof(char*);
@@ -1308,8 +1424,6 @@ namespace gen
 	// Will either make or retrive a code string.
 	StringCached get_cached_string( StrC str )
 	{
-		using namespace StaticData;
-
 		s32 hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
 		u64 key         = crc32( str.Ptr, hash_length );
 		{
@@ -1331,8 +1445,6 @@ namespace gen
 	*/
 	Code make_code()
 	{
-		using namespace StaticData;
-
 		Pool* allocator = & CodePools.back();
 		if ( allocator->FreeList == nullptr )
 		{
@@ -1693,30 +1805,30 @@ namespace gen
 
 	void set_allocator_data_arrays( AllocatorInfo allocator )
 	{
-		StaticData::Allocator_DataArrays = allocator;
+		Allocator_DataArrays = allocator;
 	}
 
 	void set_allocator_code_pool( AllocatorInfo allocator )
 	{
-		StaticData::Allocator_CodePool = allocator;
+		Allocator_CodePool = allocator;
 	}
 
 	void set_allocator_lexer( AllocatorInfo allocator )
 	{
-		StaticData::Allocator_Lexer = allocator;
+		Allocator_Lexer = allocator;
 	}
 
 	void set_allocator_string_arena( AllocatorInfo allocator )
 	{
-		StaticData::Allocator_StringArena = allocator;
+		Allocator_StringArena = allocator;
 	}
 
 	void set_allocator_string_table( AllocatorInfo allocator )
 	{
-		StaticData::Allocator_StringArena = allocator;
+		Allocator_StringArena = allocator;
 	}
 
-#pragma region Helper Marcos
+#pragma region Helper Marcojs
 	// This snippet is used in nearly all the functions.
 #	define name_check( Context_, Name_ )                                                                  \
 	{                                                                                                     \
@@ -2420,7 +2532,7 @@ namespace gen
 		return result;
 	}
 
-	CodeTypedef def_typedef( StrC name, CodeType type, CodeAttributes attributes, ModuleFlag mflags )
+	CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, ModuleFlag mflags )
 	{
 		name_check( def_typedef, name );
 		null_check( def_typedef, type );
@@ -3194,67 +3306,71 @@ namespace gen
 	/*
 		This is a simple lexer that focuses on tokenizing only tokens relevant to the library.
 		It will not be capable of lexing C++ code with unsupported features.
+
+		For the sake of scanning files, it can scan preprocessor directives
 	*/
 
 	#	define Define_TokType \
-		Entry( Access_Private,        "private" )         \
-		Entry( Access_Protected,      "protected" )       \
-		Entry( Access_Public,         "public" )          \
-		Entry( Access_MemberSymbol,   "." )               \
-		Entry( Access_StaticSymbol,   "::")               \
-		Entry( Ampersand,             "&" )               \
-		Entry( Ampersand_DBL,         "&&" )              \
-		Entry( Assign_Classifer,      ":" )               \
-		Entry( BraceCurly_Open,       "{" )               \
-		Entry( BraceCurly_Close,      "}" )               \
-		Entry( BraceSquare_Open,      "[" )               \
-		Entry( BraceSquare_Close,     "]" )               \
-		Entry( Capture_Start,         "(" )               \
-		Entry( Capture_End,           ")" )               \
-		Entry( Comment,               "__comment__" )     \
-		Entry( Char,                  "__char__" )        \
-		Entry( Comma,                 "," )               \
-		Entry( Decl_Class,            "class" )           \
-		Entry( Decl_Enum,             "enum" )            \
-		Entry( Decl_Extern_Linkage,   "extern" )          \
-		Entry( Decl_Friend,           "friend" )          \
-		Entry( Decl_Module,           "module" )          \
-		Entry( Decl_Namespace,        "namespace" )       \
-		Entry( Decl_Operator,         "operator" )        \
-		Entry( Decl_Struct,           "struct" )          \
-		Entry( Decl_Template,         "template" )        \
-		Entry( Decl_Typedef,          "typedef" )         \
-		Entry( Decl_Using,            "using" )           \
-		Entry( Decl_Union,            "union" )           \
-		Entry( Identifier,            "__SymID__" )       \
-		Entry( Module_Import,         "import" )          \
-		Entry( Module_Export,         "export" )          \
-		Entry( Number,                "number" )          \
-		Entry( Operator,              "operator" )        \
-		Entry( Spec_Alignas,          "alignas" )         \
-		Entry( Spec_Const,            "const" )           \
-		Entry( Spec_Consteval,        "consteval" )       \
-		Entry( Spec_Constexpr,        "constexpr" )       \
-		Entry( Spec_Constinit,        "constinit" )       \
-		Entry( Spec_Extern,           "extern" )          \
-		Entry( Spec_Global, 		  "global" )          \
-		Entry( Spec_Inline,           "inline" )          \
-		Entry( Spec_Internal_Linkage, "internal" )        \
-		Entry( Spec_LocalPersist,     "local_persist" )   \
-		Entry( Spec_Mutable,          "mutable" )         \
-		Entry( Spec_Static,           "static" )          \
-		Entry( Spec_ThreadLocal,      "thread_local" )    \
-		Entry( Spec_Volatile,         "volatile")         \
-		Entry( Star,                  "*" )               \
-		Entry( Statement_End,         ";" )               \
-		Entry( String,                "__String__" )      \
-		Entry( Type_Unsigned, 	      "unsigned" )        \
-		Entry( Type_Signed,           "signed" )          \
-		Entry( Type_Short,            "short" )           \
-		Entry( Type_Long,             "long" )            \
-		Entry( Type_char, 			  "char" )            \
-		Entry( Type_int, 			  "int" )             \
-		Entry( Type_double, 		  "double" )
+		Entry( Access_Private,         "private" )         \
+		Entry( Access_Protected,       "protected" )       \
+		Entry( Access_Public,          "public" )          \
+		Entry( Access_MemberSymbol,    "." )               \
+		Entry( Access_StaticSymbol,    "::")               \
+		Entry( Ampersand,              "&" )               \
+		Entry( Ampersand_DBL,          "&&" )              \
+		Entry( Assign_Classifer,       ":" )               \
+		Entry( BraceCurly_Open,        "{" )               \
+		Entry( BraceCurly_Close,       "}" )               \
+		Entry( BraceSquare_Open,       "[" )               \
+		Entry( BraceSquare_Close,      "]" )               \
+		Entry( Capture_Start,          "(" )               \
+		Entry( Capture_End,            ")" )               \
+		Entry( Comment,                "__comment__" )     \
+		Entry( Char,                   "__char__" )        \
+		Entry( Comma,                  "," )               \
+		Entry( Decl_Class,             "class" )           \
+		Entry( Decl_Enum,              "enum" )            \
+		Entry( Decl_Extern_Linkage,    "extern" )          \
+		Entry( Decl_Friend,            "friend" )          \
+		Entry( Decl_Module,            "module" )          \
+		Entry( Decl_Namespace,         "namespace" )       \
+		Entry( Decl_Operator,          "operator" )        \
+		Entry( Decl_Struct,            "struct" )          \
+		Entry( Decl_Template,          "template" )        \
+		Entry( Decl_Typedef,           "typedef" )         \
+		Entry( Decl_Using,             "using" )           \
+		Entry( Decl_Union,             "union" )           \
+		Entry( Identifier,             "__identifier__" )  \
+		Entry( Module_Import,          "import" )          \
+		Entry( Module_Export,          "export" )          \
+		Entry( Number,                 "number" )          \
+		Entry( Operator,               "operator" )        \
+		Entry( Preprocessor_Directive, "#")                \
+		Entry( Preprocessor_Include,   "include" )         \
+		Entry( Spec_Alignas,           "alignas" )         \
+		Entry( Spec_Const,             "const" )           \
+		Entry( Spec_Consteval,         "consteval" )       \
+		Entry( Spec_Constexpr,         "constexpr" )       \
+		Entry( Spec_Constinit,         "constinit" )       \
+		Entry( Spec_Extern,            "extern" )          \
+		Entry( Spec_Global, 		   "global" )          \
+		Entry( Spec_Inline,            "inline" )          \
+		Entry( Spec_Internal_Linkage,  "internal" )        \
+		Entry( Spec_LocalPersist,      "local_persist" )   \
+		Entry( Spec_Mutable,           "mutable" )         \
+		Entry( Spec_Static,            "static" )          \
+		Entry( Spec_ThreadLocal,       "thread_local" )    \
+		Entry( Spec_Volatile,          "volatile")         \
+		Entry( Star,                   "*" )               \
+		Entry( Statement_End,          ";" )               \
+		Entry( String,                 "__string__" )      \
+		Entry( Type_Unsigned, 	       "unsigned" )        \
+		Entry( Type_Signed,            "signed" )          \
+		Entry( Type_Short,             "short" )           \
+		Entry( Type_Long,              "long" )            \
+		Entry( Type_char, 			   "char" )            \
+		Entry( Type_int, 			   "int" )             \
+		Entry( Type_double, 		   "double" )
 
 		enum class TokType : u32
 		{
@@ -3368,7 +3484,7 @@ namespace gen
 
 				if ( Arr[Idx].Type != type )
 				{
-					String token_str = String::make( Memory::GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
+					String token_str = String::make( GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
 
 					log_failure( "gen::%s: expected %s, got %s", context, str_tok_type(type), str_tok_type(Arr[Idx].Type) );
 
@@ -3395,7 +3511,7 @@ namespace gen
 			}
 		};
 
-		TokArray lex( StrC content )
+		TokArray lex( StrC content, bool keep_preprocess_directives = false )
 		{
 		#	define current ( * scanner )
 
@@ -3441,7 +3557,7 @@ namespace gen
 				Tokens.free();
 			}
 
-			Tokens = Array<Token>::init_reserve( StaticData::LexArena, content.Len / 6 );
+			Tokens = Array<Token>::init_reserve( LexArena, content.Len / 6 );
 
 			while (left )
 			{
@@ -3453,6 +3569,29 @@ namespace gen
 
 				switch ( current )
 				{
+					case '#':
+						token.Text   = scanner;
+						token.Length = 1;
+						token.Type   = TokType::Preprocessor_Directive;
+						move_forward();
+
+						while (left && current != '\n' )
+						{
+							if ( current == '\\'  )
+							{
+								move_forward();
+
+								if ( current != '\n' && keep_preprocess_directives )
+								{
+									log_failure( "gen::lex: invalid preprocessor directive, will still grab but will not compile %s", token.Text );
+								}
+							}
+
+							move_forward();
+							token.Length++;
+						}
+						goto FoundToken;
+
 					case '.':
 						token.Text   = scanner;
 						token.Length = 1;
@@ -3826,7 +3965,7 @@ namespace gen
 				}
 				else
 				{
-					String context_str = String::fmt_buf( Memory::GlobalAllocator, "%s", scanner, min( 100, left ) );
+					String context_str = String::fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
 
 					log_failure( "Failed to lex token %s", context_str );
 
@@ -3841,6 +3980,9 @@ namespace gen
 
 				if ( token.Type != TokType::Invalid )
 				{
+					if ( token.Type == TokType::Preprocessor_Directive && keep_preprocess_directives == false )
+						continue;
+
 					Tokens.append( token );
 					continue;
 				}
@@ -3848,10 +3990,7 @@ namespace gen
 				TokType type = get_tok_type( token.Text, token.Length );
 
 				if ( type == TokType::Invalid)
-				{
-					// Its most likely an identifier...
 					type = TokType::Identifier;
-				}
 
 				token.Type = type;
 				Tokens.append( token );
@@ -3892,6 +4031,12 @@ namespace gen
 
 #	define check( Type_ ) ( left && currtok.Type == Type_ )
 #pragma endregion Helper Macros
+
+	struct ParseContext
+	{
+		ParseContext* Parent;
+		char const*   Fn;
+	};
 
 	internal Code parse_function_body    ( Parser::TokArray& toks, char const* context );
 	internal Code parse_global_nspace    ( Parser::TokArray& toks, char const* context );
@@ -5908,13 +6053,23 @@ namespace gen
 	{
 		using namespace Parser;
 
-		Token    name       = { nullptr, 0, TokType::Invalid };
-		Code     array_expr = { nullptr };
-		CodeType type       = { nullptr };
+		Token name       = { nullptr, 0, TokType::Invalid };
+		Code  array_expr = { nullptr };
+		Code  type       = { nullptr };
 
 		eat( TokType::Decl_Typedef );
 
-		type = parse_type( toks, stringize(parse_typedef) );
+		if ( check( TokType::Decl_Enum ) )
+			type = parse_enum( toks, context );
+
+		else if ( check(TokType::Decl_Struct ) )
+			type = parse_enum( toks, context );
+
+		else if ( check(TokType::Decl_Union) )
+			type = parse_union( toks, context );
+
+		else
+			type = parse_type( toks, context );
 
 		if ( ! check( TokType::Identifier ) )
 		{
@@ -5925,7 +6080,7 @@ namespace gen
 		name = currtok;
 		eat( TokType::Identifier );
 
-		array_expr = parse_array_decl( toks, stringize(parse_typedef) );
+		array_expr = parse_array_decl( toks, context );
 
 		eat( TokType::Statement_End );
 
@@ -5938,8 +6093,8 @@ namespace gen
 
 		result->UnderlyingType = type;
 
-		if ( array_expr && array_expr->Type != Invalid )
-			type->ArrExpr = array_expr;
+		if ( type->Type == Typename && array_expr && array_expr->Type != Invalid )
+			type.cast<CodeType>()->ArrExpr = array_expr;
 
 		return result;
 	}
@@ -5985,7 +6140,7 @@ namespace gen
 
 		while ( ! check( TokType::BraceCurly_Close ) )
 		{
-			Code entry = parse_variable( toks, stringize(parse_union) );
+			Code entry = parse_variable( toks, context );
 
 			if ( entry )
 				body.append( entry );
@@ -6055,10 +6210,10 @@ namespace gen
 
 			eat( TokType::Operator );
 
-			type = parse_type( toks, stringize(parse_typedef) );
+			type = parse_type( toks, context );
 		}
 
-		array_expr = parse_array_decl( toks, stringize(parse_typedef) );
+		array_expr = parse_array_decl( toks, context );
 
 		eat( TokType::Statement_End );
 
@@ -6152,7 +6307,7 @@ namespace gen
 			specifiers = def_specifiers( num_specifiers, specs_found );
 		}
 
-		CodeType type = parse_type( toks, stringize(parse_variable) );
+		CodeType type = parse_type( toks, context );
 
 		if ( type == Code::Invalid )
 			return CodeInvalid;
@@ -6160,7 +6315,7 @@ namespace gen
 		name = currtok;
 		eat( TokType::Identifier );
 
-		CodeVar result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, stringize(parse_variable) );
+		CodeVar result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, context );
 
 		return result;
 	}
@@ -6365,7 +6520,7 @@ namespace gen
 			return false;
 		}
 
-		Buffer = String::make_reserve( Memory::GlobalAllocator, Builder_StrBufferReserve );
+		Buffer = String::make_reserve( GlobalAllocator, Builder_StrBufferReserve );
 
 		return true;
 	}
@@ -6394,4 +6549,3 @@ namespace gen
 }
 // End: gen_time
 #endif
-

@@ -147,14 +147,14 @@ namespace gen
 
 	// Bits
 
-	#define bit( Value_ )                             ( 1 << Value_ )
-	#define bitfield_is_equal( Type_, Field_, Mask_ ) ( (Type_(Mask_) & Type_(Field_)) == Type_(Mask_) )
+	#define bit( Value )                             ( 1 << Value )
+	#define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
 
 	// Casting
-	#define ccast( Type_, Value_ )                    * const_cast< Type_* >( & (Value_) )
-	#define pcast( Type_, Value_ )                    ( * (Type_*)( & (Value_) ) )
-	#define rcast( Type_, Value_ )			          reinterpret_cast< Type_ >( Value_ )
-	#define scast( Type_, Value_ )			          static_cast< Type_ >( Value_ )
+	#define ccast( Type, Value ) ( * const_cast< Type* >( & (Value) ) )
+	#define pcast( Type, Value ) ( * reinterpret_cast< Type* >( & ( Value ) ) )
+	#define rcast( Type, Value ) reinterpret_cast< Type >( Value )
+	#define scast( Type, Value ) static_cast< Type >( Value )
 
 	// Num Arguments (Varadics)
 	#if defined(__GNUC__) || defined(__clang__)
@@ -194,8 +194,8 @@ namespace gen
 	#endif
 
 	// Stringizing
-	#define stringize_va( ... )                       #__VA_ARGS__
-	#define stringize( ... )                          stringize_va( __VA_ARGS__ )
+	#define stringize_va( ... ) #__VA_ARGS__
+	#define stringize( ... )    stringize_va( __VA_ARGS__ )
 
 	// Function do once
 
@@ -227,13 +227,21 @@ namespace gen
 	#define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )
 	#define min( a, b )                   ( ( a ) < ( b ) ? ( a ) : ( b ) )
 	#define size_of( x )                  ( sw )( sizeof( x ) )
-	#define swap( Type, a, b ) \
-		do                     \
-		{                      \
-			Type tmp = ( a );  \
-			( a )    = ( b );  \
-			( b )    = tmp;    \
-		} while ( 0 )
+	// #define swap( Type, a, b ) \
+	// 	do                     \
+	// 	{                      \
+	// 		Type tmp = ( a );  \
+	// 		( a )    = ( b );  \
+	// 		( b )    = tmp;    \
+	// 	} while ( 0 )
+
+	template< class Type >
+	void swap( Type a, Type b )
+	{
+		Type tmp = a;
+		a = b;
+		b = tmp;
+	}
 	#pragma endregion Macros
 
 	#pragma region Basic Types
@@ -834,6 +842,8 @@ namespace gen
 		static
 		Pool init_align( AllocatorInfo backing, sw num_blocks, sw block_size, sw block_align );
 
+		void clear();
+
 		void free()
 		{
 			if ( Backing.Proc )
@@ -1054,7 +1064,7 @@ namespace gen
 		len       /= 2;
 		while ( len-- )
 		{
-			swap( char, *a, *b );
+			swap( *a, *b );
 			a++, b--;
 		}
 		return str;
@@ -1082,6 +1092,64 @@ namespace gen
 		}
 	}
 	#pragma endregion String Ops
+
+	#pragma region Printing
+	struct FileInfo;
+
+	#ifndef GEN_PRINTF_MAXLEN
+	#	define GEN_PRINTF_MAXLEN 65536
+	#endif
+
+	// NOTE: A locally persisting buffer is used internally
+	char* str_fmt_buf( char const* fmt, ... );
+	char* str_fmt_buf_va( char const* fmt, va_list va );
+	sw    str_fmt_va( char* str, sw n, char const* fmt, va_list va );
+	sw    str_fmt_out_va( char const* fmt, va_list va );
+	sw    str_fmt_out_err( char const* fmt, ... );
+	sw    str_fmt_out_err_va( char const* fmt, va_list va );
+	sw    str_fmt_file_va( FileInfo* f, char const* fmt, va_list va );
+
+	constexpr
+	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
+
+	inline
+	sw log_fmt(char const* fmt, ...)
+	{
+		sw res;
+		va_list va;
+
+		va_start(va, fmt);
+		res = str_fmt_out_va(fmt, va);
+		va_end(va);
+
+		return res;
+	}
+
+	inline
+	sw fatal(char const* fmt, ...)
+	{
+		local_persist thread_local
+		char buf[GEN_PRINTF_MAXLEN] = { 0 };
+
+		va_list va;
+
+	#if Build_Debug
+		va_start(va, fmt);
+		str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
+		va_end(va);
+
+		assert_crash(buf);
+		return -1;
+	#else
+		va_start(va, fmt);
+		str_fmt_out_err_va( fmt, va);
+		va_end(va);
+
+		exit(1);
+		return -1;
+	#endif
+	}
+	#pragma endregion Printing
 
 	#pragma region Containers
 	template<class Type>
@@ -1573,8 +1641,10 @@ namespace gen
 			return { str_len( str ), str };
 		}
 
-		// Currently sed with strings as a parameter to indicate to free after append.
-		constexpr sw FreeAfter = 0xF4EEAF7E4;
+		sw StrC_len( char const* str )
+		{
+			return (sw) ( str - 1 );
+		}
 
 		// Dynamic String
 		// This is directly based off the ZPL string api.
@@ -1694,14 +1764,69 @@ namespace gen
 				return true;
 			}
 
-			bool make_space_for( char const* str, sw add_len );
+			bool make_space_for( char const* str, sw add_len )
+			{
+				sw available = avail_space();
+
+				// NOTE: Return if there is enough space left
+				if ( available >= add_len )
+				{
+					return true;
+				}
+				else
+				{
+					sw new_len, old_size, new_size;
+
+					void* ptr;
+					void* new_ptr;
+
+					AllocatorInfo allocator = get_header().Allocator;
+					Header*       header	= nullptr;
+
+					new_len  = grow_formula( length() + add_len );
+					ptr      = & get_header();
+					old_size = size_of( Header ) + length() + 1;
+					new_size = size_of( Header ) + new_len + 1;
+
+					new_ptr = resize( allocator, ptr, old_size, new_size );
+
+					if ( new_ptr == nullptr )
+						return false;
+
+					header            = zpl_cast( Header* ) new_ptr;
+					header->Allocator = allocator;
+					header->Capacity  = new_len;
+
+					Data = rcast( char*, header + 1 );
+
+					return str;
+				}
+			}
 
 			bool append( char const* str )
 			{
 				return append( str, str_len( str ) );
 			}
 
-			bool append( char const* str, sw length );
+			bool append( char const* str, sw length )
+			{
+				if ( sptr(str) > 0 )
+				{
+					sw curr_len = this->length();
+
+					if ( ! make_space_for( str, length ) )
+						return false;
+
+					Header& header = get_header();
+
+					mem_copy( Data + curr_len, str, length );
+
+					Data[ curr_len + length ] = '\0';
+
+					header.Length = curr_len + length;
+				}
+				return str;
+			}
 
 			bool append( StrC str)
 			{
@@ -1961,7 +2086,7 @@ namespace gen
 
 		// Internals
 		char** Filenames;    // zpl_array
-		String Buffer;
+		char*  Buffer;       // zpl_string
 	};
 
 	struct FileInfo
@@ -2178,21 +2303,189 @@ namespace gen
 	}
 	#pragma endregion File Handling
 
-	#pragma region Printing
+	#pragma region ADT
+	enum ADT_Type : u32
+	{
+		EADTTYPE_UNINITIALISED, /* node was not initialised, this is a programming error! */
+		EADTTYPE_ARRAY,
+		EADTTYPE_OBJECT,
+		EADTTYPE_STRING,
+		EADTTYPE_MULTISTRING,
+		EADTTYPE_INTEGER,
+		EADTTYPE_REAL,
+	};
 
-	#ifndef GEN_PRINTF_MAXLEN
-	#	define GEN_PRINTF_MAXLEN 65536
+	enum ADT_Props : u32
+	{
+		EADTPROPS_NONE,
+		EADTPROPS_NAN,
+		EADTPROPS_NAN_NEG,
+		EADTPROPS_INFINITY,
+		EADTPROPS_INFINITY_NEG,
+		EADTPROPS_FALSE,
+		EADTPROPS_TRUE,
+		EADTPROPS_NULL,
+		EADTPROPS_IS_EXP,
+		EADTPROPS_IS_HEX,
+
+		// Used internally so that people can fill in real numbers they plan to write.
+		EADTPROPS_IS_PARSED_REAL,
+	};
+
+	enum ADT_NamingStyle : u32
+	{
+		EADTNAME_STYLE_DOUBLE_QUOTE,
+		EADTNAME_STYLE_SINGLE_QUOTE,
+		EADTNAME_STYLE_NO_QUOTES,
+	};
+
+	enum ADT_AssignStyle : u32
+	{
+		EADTASSIGN_STYLE_COLON,
+		EADTASSIGN_STYLE_EQUALS,
+		EADTASSIGN_STYLE_LINE,
+	};
+
+	enum ADT_DelimStyle : u32
+	{
+		EADTDELIM_STYLE_COMMA,
+		EADTDELIM_STYLE_LINE,
+		EADTDELIM_STYLE_NEWLINE,
+	};
+
+	enum ADT_Error : u32
+	{
+		EADTERROR_NONE,
+		EADTERROR_INTERNAL,
+		EADTERROR_ALREADY_CONVERTED,
+		EADTERROR_INVALID_TYPE,
+		EADTERROR_OUT_OF_MEMORY,
+	};
+
+	struct ADT_Node
+	{
+		static ADT_Node* make_branch( AllocatorInfo backing, char const* name, b32 is_array );
+		static ADT_Node* make_leaf( AllocatorInfo backing, char const* name, u8 type );
+
+		static ADT_Node* set_arr( char const* name, AllocatorInfo backing );
+		static ADT_Node* set_flt( char const* name, f64 value );
+		static ADT_Node* set_int( char const* name, s64 value );
+		static ADT_Node* set_obj( char const* name, AllocatorInfo backing );
+		static ADT_Node* set_str( char const* name, char const* value );
+
+		static void swap( ADT_Node* node, ADT_Node* other );
+
+		ADT_Node* append_arr( char const* name );
+		ADT_Node* append_flt( char const* name, f64 value );
+		ADT_Node* append_int( char const* name, s64 value );
+		ADT_Node* append_obj( char const* name );
+		ADT_Node* append_str( char const* name, char const* value );
+
+		ADT_Node* destroy();
+
+		ADT_Node* query( char const* uri );
+
+		ADT_Node* find( char const* name, b32 deep_search );
+
+		ADT_Node* alloc();
+		ADT_Node* alloc_at( sw  index );
+
+		ADT_Node* move_node( ADT_Node* new_parent );
+
+		ADT_Node* move_node_at( ADT_Node* new_parent, sw index );
+
+		char* parse_number( char* base );
+
+		void remove( ADT_Node* node );
+
+		ADT_Error str_to_number();
+
+		ADT_Error print_number( FileInfo* file );
+		ADT_Error print_string( FileInfo* file, char const* escapsed_chars, char const* escape_symbol );
+
+	#pragma region Layout
+		char const* name;
+		ADT_Node*   parent;
+
+		/* properties */
+		ADT_Type  type;
+		ADT_Props props;
+	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+		u8 cfg_mode          : 1;
+		u8 name_style        : 2;
+		u8 assign_style      : 2;
+		u8 delim_style       : 2;
+		u8 delim_line_width  : 4;
+		u8 assign_line_width : 4;
 	#endif
 
-	// NOTE: A locally persisting buffer is used internally
-	char* str_fmt_buf( char const* fmt, ... );
-	char* str_fmt_buf_va( char const* fmt, va_list va );
-	sw    str_fmt_va( char* str, sw n, char const* fmt, va_list va );
-	sw    str_fmt_out_va( char const* fmt, va_list va );
-	sw    str_fmt_out_err( char const* fmt, ... );
-	sw    str_fmt_out_err_va( char const* fmt, va_list va );
-	sw    str_fmt_file_va( FileInfo* f, char const* fmt, va_list va );
-	#pragma endregion Printing
+		/* adt data */
+		union
+		{
+			char const*      string;
+			struct ADT_Node* nodes;    ///< zpl_array
+
+			struct
+			{
+				union
+				{
+					f64 real;
+					s64 integer;
+				};
+
+			#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+				/* number analysis */
+				s32 base;
+				s32 base2;
+				u8  base2_offset : 4;
+				s8  exp          : 4;
+				u8  neg_zero     : 1;
+				u8  lead_digit   : 1;
+			#endif
+			};
+		};
+	#pragma endregion Layout
+	};
+
+	#pragma endregion ADT
+
+	#pragma region CSV
+	enum CSV_Error : u32
+	{
+		ECSV_Error__NONE,
+		ECSV_Error__INTERNAL,
+		ECSV_Error__UNEXPECTED_END_OF_INPUT,
+		ECSV_Error__MISMATCHED_ROWS,
+	};
+
+	typedef ADT_Node CSV_Object;
+
+	GEN_DEF_INLINE u8 csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header );
+	u8                csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim );
+	void              csv_free( CSV_Object* obj );
+
+	GEN_DEF_INLINE void   csv_write( FileInfo* file, CSV_Object* obj );
+	GEN_DEF_INLINE String csv_write_string( AllocatorInfo a, CSV_Object* obj );
+	void                  csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delim );
+	String                csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delim );
+
+	/* inline */
+
+	GEN_IMPL_INLINE u8 csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header )
+	{
+		return csv_parse_delimiter( root, text, allocator, has_header, ',' );
+	}
+
+	GEN_IMPL_INLINE void csv_write( FileInfo* file, CSV_Object* obj )
+	{
+		csv_write_delimiter( file, obj, ',' );
+	}
+
+	GEN_IMPL_INLINE String csv_write_string( AllocatorInfo a, CSV_Object* obj )
+	{
+		return csv_write_string_delimiter( a, obj, ',' );
+	}
+	#pragma endregion CSV
 
 #ifdef GEN_BENCHMARK
 	//! Return CPU timestamp.
@@ -2204,124 +2497,6 @@ namespace gen
 	//! Return relative time since the application start.
 	u64 time_rel_ms( void );
 #endif
-
-	namespace Memory
-	{
-		// NOTE: This limits the maximum size of an allocation
-		// If you are generating a string larger than this, increase the size of the bucket here.
-		constexpr uw Global_BucketSize = megabytes(10);
-
-
-		// Global allocator used for data with process lifetime.
-		extern AllocatorInfo GlobalAllocator;
-
-		// Heap allocator is being used for now to isolate errors from being memory related (tech debt till ready to address)
-		// #define g_allocator heap()
-
-		void setup();
-		void cleanup();
-	}
-
-	constexpr
-	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
-
-	inline
-	sw log_fmt(char const* fmt, ...)
-	{
-		sw res;
-		va_list va;
-
-		va_start(va, fmt);
-		res = str_fmt_out_va(fmt, va);
-		va_end(va);
-
-		return res;
-	}
-
-	inline
-	sw fatal(char const* fmt, ...)
-	{
-		local_persist thread_local
-		char buf[GEN_PRINTF_MAXLEN] = { 0 };
-
-		va_list va;
-
-	#if Build_Debug
-		va_start(va, fmt);
-		str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
-		va_end(va);
-
-		assert_crash(buf);
-		return -1;
-	#else
-		va_start(va, fmt);
-		str_fmt_out_err_va( fmt, va);
-		va_end(va);
-
-		exit(1);
-		return -1;
-	#endif
-	}
-
-	bool String::make_space_for( char const* str, sw add_len )
-	{
-		sw available = avail_space();
-
-		// NOTE: Return if there is enough space left
-		if ( available >= add_len )
-		{
-			return true;
-		}
-		else
-		{
-			sw new_len, old_size, new_size;
-
-			void* ptr;
-			void* new_ptr;
-
-			AllocatorInfo allocator = get_header().Allocator;
-			Header*       header	= nullptr;
-
-			new_len  = grow_formula( length() + add_len );
-			ptr      = & get_header();
-			old_size = size_of( Header ) + length() + 1;
-			new_size = size_of( Header ) + new_len + 1;
-
-			new_ptr = resize( allocator, ptr, old_size, new_size );
-
-			if ( new_ptr == nullptr )
-				return false;
-
-			header            = zpl_cast( Header* ) new_ptr;
-			header->Allocator = allocator;
-			header->Capacity  = new_len;
-
-			Data = rcast( char*, header + 1 );
-
-			return str;
-		}
-	}
-
-	bool String::append( char const* str, sw length )
-	{
-		u64 time_start = time_rel_ms();
-		if ( sptr(str) > 0 )
-		{
-			sw curr_len = this->length();
-
-			if ( ! make_space_for( str, length ) )
-				return false;
-
-			Header& header = get_header();
-
-			mem_copy( Data + curr_len, str, length );
-
-			Data[ curr_len + length ] = '\0';
-
-			header.Length = curr_len + length;
-		}
-		return str;
-	}
 
 // gen namespace
 }

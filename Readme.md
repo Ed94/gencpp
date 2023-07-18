@@ -18,13 +18,11 @@ These build up a code AST to then serialize with a file builder.
 * [On multithreading](#on-multi-threading)
 * [Extending the library](#extending-the-library)
 * [TODO](#todo)
+* [Thoughts](#thoughts)
 
 ## Notes
 
 The project has reached an *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.
-
-Note: Do not trying to do any large generations with this (at least not without changing the serialization implementation).
-It does not resue any memory yet for dynamic strings and thus any signficant size memory will result in massive consumption. 
 
 The project has no external dependencies beyond:
 
@@ -680,11 +678,28 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
 * Make a more robust test suite.
 * Generate a single-header library.
-* Improve the allocation strategy for strings in `Builder`, `AST::to_string`, `Parser::lex`, all three can use some form of slab allocation strategy...
-  * Can most likely use a simple slag allocator.
+* Convert global allocation strategy to use the dual-scratch allocator for a contextual scope.
 * May be in need of a better name, I found a few repos with this same one...
 * Support module and attribute parsing (Marked with TODOs for now..)
-* Suffix specifiers for functions (const, override, final)
+* Trailing specifiers (postfix ) for functions (const, override, final)
 * Implement the Scanner
 * Implement the Editor
-* Support parsing full enum definitions inside a typedef. (For C patterns)
+* Support defining/parsing full definitions inside a typedef. (For C patterns)
+* Make the libray boostrap itself? It would make the code generated have less macros.
+  * Easier to tailor make the library for other projects.
+  * Most code can be in componentized into files and then scanned in.
+  * Can offer a more c-like version for the implementation, make namespaces optional, etc. (Good way to stress test it)
+
+# Thoughts
+
+This project came about for a few reasons:
+
+* I've been trying out the "handmade" approach to programming to see whats its like in practice vs what I have to use at work, and what I learned before getting exposed to the community.
+  * Its very hard to unlearn OOP.
+  * Not a fan of pure C, maybe I'll succumb to the drawbacks.
+  * All alternatives to C/C++ are too opionionated instead of providing a lax frontend, or a proper compiler backend with a frontend api to quickly roll your own forntend.
+* One of the core issues I've always had with programming is there has always been a need for metaprogramming, but every single tool has horrible error deduction for the user (backend blackbox from codebase size or closed-source, error log nightmare).
+* I spend an obnoxious amount of time trying to express code that cannot be expressed well in templates or macros and still have an adequate editor experience, even with full blown IDEs.
+* I wanted to be able to easily refactor interated with projects with some form of curation, and still have the ability to not maintain a separate fork (IF the scanner gets implemetned, that is possible).
+* I did not use Metadesk as it was an esoteric library for me to use as a dependency when I didn't fully grasp the vision for how this library would end up. (Not much practice doing metaprogramming or code gen/transform development)
+  * I have no issue rewritting the library to use it as a backend if its worth while but its most likely better to just make an extension for it.
