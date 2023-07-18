@@ -223,6 +223,93 @@ namespace gen
 
 		str_reverse( string );
 	}
+
+	f64 str_to_f64( const char* str, char** end_ptr )
+	{
+		f64 result, value, sign, scale;
+		s32 frac;
+
+		while ( char_is_space( *str ) )
+		{
+			str++;
+		}
+
+		sign = 1.0;
+		if ( *str == '-' )
+		{
+			sign = -1.0;
+			str++;
+		}
+		else if ( *str == '+' )
+		{
+			str++;
+		}
+
+		for ( value = 0.0; char_is_digit( *str ); str++ )
+		{
+			value = value * 10.0 + ( *str - '0' );
+		}
+
+		if ( *str == '.' )
+		{
+			f64 pow10 = 10.0;
+			str++;
+			while ( char_is_digit( *str ) )
+			{
+				value += ( *str - '0' ) / pow10;
+				pow10 *= 10.0;
+				str++;
+			}
+		}
+
+		frac  = 0;
+		scale = 1.0;
+		if ( ( *str == 'e' ) || ( *str == 'E' ) )
+		{
+			u32 exp;
+
+			str++;
+			if ( *str == '-' )
+			{
+				frac = 1;
+				str++;
+			}
+			else if ( *str == '+' )
+			{
+				str++;
+			}
+
+			for ( exp = 0; char_is_digit( *str ); str++ )
+			{
+				exp = exp * 10 + ( *str - '0' );
+			}
+			if ( exp > 308 )
+				exp = 308;
+
+			while ( exp >= 50 )
+			{
+				scale *= 1e50;
+				exp   -= 50;
+			}
+			while ( exp >= 8 )
+			{
+				scale *= 1e8;
+				exp   -= 8;
+			}
+			while ( exp > 0 )
+			{
+				scale *= 10.0;
+				exp   -= 1;
+			}
+		}
+
+		result = sign * ( frac ? ( value / scale ) : ( value * scale ) );
+
+		if ( end_ptr )
+			*end_ptr = zpl_cast( char* ) str;
+
+		return result;
+	}
 #pragma endregion String Ops
 
 #pragma region Printing
@@ -757,6 +844,16 @@ namespace gen
 		return res ? len : -1;
 	}
 
+	sw str_fmt_file( struct FileInfo* f, char const* fmt, ... )
+	{
+		sw      res;
+		va_list va;
+		va_start( va, fmt );
+		res = str_fmt_file_va( f, fmt, va );
+		va_end( va );
+		return res;
+	}
+
 	sw str_fmt_out_va( char const* fmt, va_list va )
 	{
 		return str_fmt_file_va( file_get_standard( EFileStandard_OUTPUT ), fmt, va );
@@ -1167,7 +1264,787 @@ namespace gen
 #pragma endregion Memory
 
 #pragma region ADT
+	#define _adt_fprintf( s_, fmt_, ... )                      \
+		do                                                     \
+		{                                                      \
+			if ( str_fmt_file( s_, fmt_, ##__VA_ARGS__ ) < 0 ) \
+				return EADT_ERROR_OUT_OF_MEMORY;               \
+		} while ( 0 )
 
+	u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32 is_array )
+	{
+		ADT_Type type = EADT_TYPE_OBJECT;
+		if ( is_array )
+			type = EADT_TYPE_ARRAY;
+
+		ADT_Node* parent = node->parent;
+		zero_item( node );
+
+		node->type   = type;
+		node->name   = name;
+		node->parent = parent;
+		node->nodes  = Array<ADT_Node>::init( backing );
+
+		if ( ! node->nodes )
+			return EADT_ERROR_OUT_OF_MEMORY;
+
+		return 0;
+	}
+
+	u8 adt_destroy_branch( ADT_Node* node )
+	{
+		GEN_ASSERT_NOT_NULL( node );
+		if ( ( node->type == EADT_TYPE_OBJECT || node->type == EADT_TYPE_ARRAY ) && node->nodes )
+		{
+			for ( sw i = 0; i < node->nodes.num(); ++i )
+			{
+				adt_destroy_branch( node->nodes + i );
+			}
+
+			node->nodes.free();
+		}
+		return 0;
+	}
+
+	u8 adt_make_leaf( ADT_Node* node, char const* name, ADT_Type type )
+	{
+		GEN_ASSERT( type != EADT_TYPE_OBJECT && type != EADT_TYPE_ARRAY );
+
+		ADT_Node* parent = node->parent;
+		zero_item( node );
+
+		node->type   = type;
+		node->name   = name;
+		node->parent = parent;
+		return 0;
+	}
+
+	ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search )
+	{
+		if ( node->type != EADT_TYPE_OBJECT )
+		{
+			return NULL;
+		}
+
+		for ( sw i = 0; i < node->nodes.num(); i++ )
+		{
+			if ( ! str_compare( node->nodes[ i ].name, name ) )
+			{
+				return ( node->nodes + i );
+			}
+		}
+
+		if ( deep_search )
+		{
+			for ( sw i = 0; i < node->nodes.num(); i++ )
+			{
+				ADT_Node* res = adt_find( node->nodes + i, name, deep_search );
+
+				if ( res != NULL )
+					return res;
+			}
+		}
+
+		return NULL;
+	}
+
+	internal ADT_Node* _adt_get_value( ADT_Node* node, char const* value )
+	{
+		switch ( node->type )
+		{
+			case EADT_TYPE_MULTISTRING :
+			case EADT_TYPE_STRING :
+				{
+					if ( node->string && ! str_compare( node->string, value ) )
+					{
+						return node;
+					}
+				}
+				break;
+			case EADT_TYPE_INTEGER :
+			case EADT_TYPE_REAL :
+				{
+					char     back[ 4096 ] = { 0 };
+					FileInfo tmp;
+
+					/* allocate a file descriptor for a memory-mapped number to string conversion, input source buffer is not cloned, however. */
+					file_stream_open( &tmp, heap(), ( u8* )back, size_of( back ), EFileStream_WRITABLE );
+					adt_print_number( &tmp, node );
+
+					sw  fsize = 0;
+					u8* buf   = file_stream_buf( &tmp, &fsize );
+
+					if ( ! str_compare( ( char const* )buf, value ) )
+					{
+						file_close( &tmp );
+						return node;
+					}
+
+					file_close( &tmp );
+				}
+				break;
+			default :
+				break; /* node doesn't support value based lookup */
+		}
+
+		return NULL;
+	}
+
+	internal ADT_Node* _adt_get_field( ADT_Node* node, char* name, char* value )
+	{
+		for ( sw i = 0; i < node->nodes.num(); i++ )
+		{
+			if ( ! str_compare( node->nodes[ i ].name, name ) )
+			{
+				ADT_Node* child = &node->nodes[ i ];
+				if ( _adt_get_value( child, value ) )
+				{
+					return node; /* this object does contain a field of a specified value! */
+				}
+			}
+		}
+
+		return NULL;
+	}
+
+	ADT_Node* adt_query( ADT_Node* node, char const* uri )
+	{
+		GEN_ASSERT_NOT_NULL( uri );
+
+		if ( *uri == '/' )
+		{
+			uri++;
+		}
+
+		if ( *uri == 0 )
+		{
+			return node;
+		}
+
+		if ( ! node || ( node->type != EADT_TYPE_OBJECT && node->type != EADT_TYPE_ARRAY ) )
+		{
+			return NULL;
+		}
+
+	#if defined EADT_URI_DEBUG || 0
+		str_fmt_out( "uri: %s\n", uri );
+	#endif
+
+		char *    p = ( char* )uri, *b = p, *e = p;
+		ADT_Node* found_node = NULL;
+
+		b = p;
+		p = e     = ( char* )str_skip( p, '/' );
+		char* buf = str_fmt_buf( "%.*s", ( int )( e - b ), b );
+
+		/* handle field value lookup */
+		if ( *b == '[' )
+		{
+			char *l_p = buf + 1, *l_b = l_p, *l_e = l_p, *l_b2 = l_p, *l_e2 = l_p;
+			l_e  = ( char* )str_skip( l_p, '=' );
+			l_e2 = ( char* )str_skip( l_p, ']' );
+
+			if ( ( ! *l_e && node->type != EADT_TYPE_ARRAY ) || ! *l_e2 )
+			{
+				GEN_ASSERT_MSG( 0, "Invalid field value lookup" );
+				return NULL;
+			}
+
+			*l_e2 = 0;
+
+			/* [field=value] */
+			if ( *l_e )
+			{
+				*l_e = 0;
+				l_b2 = l_e + 1;
+
+				/* run a value comparison against our own fields */
+				if ( node->type == EADT_TYPE_OBJECT )
+				{
+					found_node = _adt_get_field( node, l_b, l_b2 );
+				}
+
+				/* run a value comparison against any child that is an object node */
+				else if ( node->type == EADT_TYPE_ARRAY )
+				{
+					for ( sw i = 0; i < node->nodes.num(); i++ )
+					{
+						ADT_Node* child = &node->nodes[ i ];
+						if ( child->type != EADT_TYPE_OBJECT )
+						{
+							continue;
+						}
+
+						found_node = _adt_get_field( child, l_b, l_b2 );
+
+						if ( found_node )
+							break;
+					}
+				}
+			}
+			/* [value] */
+			else
+			{
+				for ( sw i = 0; i < node->nodes.num(); i++ )
+				{
+					ADT_Node* child = &node->nodes[ i ];
+					if ( _adt_get_value( child, l_b2 ) )
+					{
+						found_node = child;
+						break; /* we found a matching value in array, ignore the rest of it */
+					}
+				}
+			}
+
+			/* go deeper if uri continues */
+			if ( *e )
+			{
+				return adt_query( found_node, e + 1 );
+			}
+		}
+		/* handle field name lookup */
+		else if ( node->type == EADT_TYPE_OBJECT )
+		{
+			found_node = adt_find( node, buf, false );
+
+			/* go deeper if uri continues */
+			if ( *e )
+			{
+				return adt_query( found_node, e + 1 );
+			}
+		}
+		/* handle array index lookup */
+		else
+		{
+			sw idx = ( sw )str_to_i64( buf, NULL, 10 );
+			if ( idx >= 0 && idx < node->nodes.num() )
+			{
+				found_node = &node->nodes[ idx ];
+
+				/* go deeper if uri continues */
+				if ( *e )
+				{
+					return adt_query( found_node, e + 1 );
+				}
+			}
+		}
+
+		return found_node;
+	}
+
+	ADT_Node* adt_alloc_at( ADT_Node* parent, sw index )
+	{
+		if ( ! parent || ( parent->type != EADT_TYPE_OBJECT && parent->type != EADT_TYPE_ARRAY ) )
+		{
+			return NULL;
+		}
+
+		if ( ! parent->nodes )
+			return NULL;
+
+		if ( index < 0 || index > parent->nodes.num() )
+			return NULL;
+
+		ADT_Node o = { 0 };
+		o.parent   = parent;
+		if ( ! parent->nodes.append_at( o, index ) )
+			return NULL;
+
+		return parent->nodes + index;
+	}
+
+	ADT_Node* adt_alloc( ADT_Node* parent )
+	{
+		if ( ! parent || ( parent->type != EADT_TYPE_OBJECT && parent->type != EADT_TYPE_ARRAY ) )
+		{
+			return NULL;
+		}
+
+		if ( ! parent->nodes )
+			return NULL;
+
+		return adt_alloc_at( parent, parent->nodes.num() );
+	}
+
+	b8 adt_set_obj( ADT_Node* obj, char const* name, AllocatorInfo backing )
+	{
+		return adt_make_branch( obj, backing, name, 0 );
+	}
+
+	b8 adt_set_arr( ADT_Node* obj, char const* name, AllocatorInfo backing )
+	{
+		return adt_make_branch( obj, backing, name, 1 );
+	}
+
+	b8 adt_set_str( ADT_Node* obj, char const* name, char const* value )
+	{
+		adt_make_leaf( obj, name, EADT_TYPE_STRING );
+		obj->string = value;
+		return true;
+	}
+
+	b8 adt_set_flt( ADT_Node* obj, char const* name, f64 value )
+	{
+		adt_make_leaf( obj, name, EADT_TYPE_REAL );
+		obj->real = value;
+		return true;
+	}
+
+	b8 adt_set_int( ADT_Node* obj, char const* name, s64 value )
+	{
+		adt_make_leaf( obj, name, EADT_TYPE_INTEGER );
+		obj->integer = value;
+		return true;
+	}
+
+	ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, sw index )
+	{
+		GEN_ASSERT_NOT_NULL( node );
+		GEN_ASSERT_NOT_NULL( new_parent );
+		ADT_Node* old_parent = node->parent;
+		ADT_Node* new_node   = adt_alloc_at( new_parent, index );
+		*new_node            = *node;
+		new_node->parent     = new_parent;
+		if ( old_parent )
+		{
+			adt_remove_node( node );
+		}
+		return new_node;
+	}
+
+	ADT_Node* adt_move_node( ADT_Node* node, ADT_Node* new_parent )
+	{
+		GEN_ASSERT_NOT_NULL( node );
+		GEN_ASSERT_NOT_NULL( new_parent );
+		GEN_ASSERT( new_parent->type == EADT_TYPE_ARRAY || new_parent->type == EADT_TYPE_OBJECT );
+		return adt_move_node_at( node, new_parent, new_parent->nodes.num() );
+	}
+
+	void adt_swap_nodes( ADT_Node* node, ADT_Node* other_node )
+	{
+		GEN_ASSERT_NOT_NULL( node );
+		GEN_ASSERT_NOT_NULL( other_node );
+		ADT_Node* parent                     = node->parent;
+		ADT_Node* other_parent               = other_node->parent;
+		sw        index                      = ( pointer_diff( parent->nodes, node ) / size_of( ADT_Node ) );
+		sw        index2                     = ( pointer_diff( other_parent->nodes, other_node ) / size_of( ADT_Node ) );
+		ADT_Node  temp                       = parent->nodes[ index ];
+		temp.parent                          = other_parent;
+		other_parent->nodes[ index2 ].parent = parent;
+		parent->nodes[ index ]               = other_parent->nodes[ index2 ];
+		other_parent->nodes[ index2 ]        = temp;
+	}
+
+	void adt_remove_node( ADT_Node* node )
+	{
+		GEN_ASSERT_NOT_NULL( node );
+		GEN_ASSERT_NOT_NULL( node->parent );
+		ADT_Node* parent = node->parent;
+		sw        index  = ( pointer_diff( parent->nodes, node ) / size_of( ADT_Node ) );
+		parent->nodes.remove_at( index );
+	}
+
+	ADT_Node* adt_append_obj( ADT_Node* parent, char const* name )
+	{
+		ADT_Node* o = adt_alloc( parent );
+		if ( ! o )
+			return NULL;
+		if ( adt_set_obj( o, name, parent->nodes.get_header()->Allocator ) )
+		{
+			adt_remove_node( o );
+			return NULL;
+		}
+		return o;
+	}
+
+	ADT_Node* adt_append_arr( ADT_Node* parent, char const* name )
+	{
+		ADT_Node* o = adt_alloc( parent );
+		if ( ! o )
+			return NULL;
+		if ( adt_set_arr( o, name, parent->nodes.get_header()->Allocator ) )
+		{
+			adt_remove_node( o );
+			return NULL;
+		}
+		return o;
+	}
+
+	ADT_Node* adt_append_str( ADT_Node* parent, char const* name, char const* value )
+	{
+		ADT_Node* o = adt_alloc( parent );
+		if ( ! o )
+			return NULL;
+		adt_set_str( o, name, value );
+		return o;
+	}
+
+	ADT_Node* adt_append_flt( ADT_Node* parent, char const* name, f64 value )
+	{
+		ADT_Node* o = adt_alloc( parent );
+		if ( ! o )
+			return NULL;
+		adt_set_flt( o, name, value );
+		return o;
+	}
+
+	ADT_Node* adt_append_int( ADT_Node* parent, char const* name, s64 value )
+	{
+		ADT_Node* o = adt_alloc( parent );
+		if ( ! o )
+			return NULL;
+		adt_set_int( o, name, value );
+		return o;
+	}
+
+	/* parser helpers */
+	char* adt_parse_number_strict( ADT_Node* node, char* base_str )
+	{
+		GEN_ASSERT_NOT_NULL( node );
+		GEN_ASSERT_NOT_NULL( base_str );
+		char *p = base_str, *e = p;
+
+		while ( *e )
+			++e;
+
+		while ( *p && ( str_find( "eE.+-", *p ) || char_is_hex_digit( *p ) ) )
+		{
+			++p;
+		}
+
+		if ( p >= e )
+		{
+			return adt_parse_number( node, base_str );
+		}
+
+		return base_str;
+	}
+
+	char* adt_parse_number( ADT_Node* node, char* base_str )
+	{
+		GEN_ASSERT_NOT_NULL( node );
+		GEN_ASSERT_NOT_NULL( base_str );
+		char *p = base_str, *e = p;
+
+		s32       base         = 0;
+		s32       base2        = 0;
+		u8        base2_offset = 0;
+		s8        exp = 0, orig_exp = 0;
+		u8        neg_zero   = 0;
+		u8        lead_digit = 0;
+		ADT_Type  node_type  = EADT_TYPE_UNINITIALISED;
+		u8        node_props = 0;
+
+		/* skip false positives and special cases */
+		if ( ! ! str_find( "eE", *p ) || ( ! ! str_find( ".+-", *p ) && ! char_is_hex_digit( *( p + 1 ) ) && *( p + 1 ) != '.' ) )
+		{
+			return ++base_str;
+		}
+
+		node_type = EADT_TYPE_INTEGER;
+		neg_zero  = false;
+
+		sw   ib        = 0;
+		char buf[ 48 ] = { 0 };
+
+		if ( *e == '+' )
+			++e;
+		else if ( *e == '-' )
+		{
+			buf[ ib++ ] = *e++;
+		}
+
+		if ( *e == '.' )
+		{
+			node_type   = EADT_TYPE_REAL;
+			node_props  = EADT_PROPS_IS_PARSED_REAL;
+			lead_digit  = false;
+			buf[ ib++ ] = '0';
+			do
+			{
+				buf[ ib++ ] = *e;
+			} while ( char_is_digit( *++e ) );
+		}
+		else
+		{
+			if ( ! str_compare( e, "0x", 2 ) || ! str_compare( e, "0X", 2 ) )
+			{
+				node_props = EADT_PROPS_IS_HEX;
+			}
+			while ( char_is_hex_digit( *e ) || char_to_lower( *e ) == 'x' )
+			{
+				buf[ ib++ ] = *e++;
+			}
+
+			if ( *e == '.' )
+			{
+				node_type  = EADT_TYPE_REAL;
+				lead_digit = true;
+				u32 step   = 0;
+
+				do
+				{
+					buf[ ib++ ] = *e;
+					++step;
+				} while ( char_is_digit( *++e ) );
+
+				if ( step < 2 )
+				{
+					buf[ ib++ ] = '0';
+				}
+			}
+		}
+
+		/* check if we have a dot here, this is a false positive (IP address, ...) */
+		if ( *e == '.' )
+		{
+			return ++base_str;
+		}
+
+		f32  eb          = 10;
+		char expbuf[ 6 ] = { 0 };
+		sw   expi        = 0;
+
+		if ( *e && ! ! str_find( "eE", *e ) )
+		{
+			++e;
+			if ( *e == '+' || *e == '-' || char_is_digit( *e ) )
+			{
+				if ( *e == '-' )
+				{
+					eb = 0.1f;
+				}
+				if ( ! char_is_digit( *e ) )
+				{
+					++e;
+				}
+				while ( char_is_digit( *e ) )
+				{
+					expbuf[ expi++ ] = *e++;
+				}
+			}
+
+			orig_exp = exp = ( u8 )str_to_i64( expbuf, NULL, 10 );
+		}
+
+		if ( node_type == EADT_TYPE_INTEGER )
+		{
+			node->integer = str_to_i64( buf, 0, 0 );
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
+			/* special case: negative zero */
+			if ( node->integer == 0 && buf[ 0 ] == '-' )
+			{
+				neg_zero = true;
+			}
+	#endif
+			while ( orig_exp-- > 0 )
+			{
+				node->integer *= ( s64 )eb;
+			}
+		}
+		else
+		{
+			node->real = str_to_f64( buf, 0 );
+
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
+			char *q = buf, *base_string = q, *base_string2 = q;
+			base_string           = zpl_cast( char* ) str_skip( base_string, '.' );
+			*base_string          = '\0';
+			base_string2          = base_string + 1;
+			char* base_string_off = base_string2;
+			while ( *base_string_off++ == '0' )
+				base2_offset++;
+
+			base  = ( s32 )str_to_i64( q, 0, 0 );
+			base2 = ( s32 )str_to_i64( base_string2, 0, 0 );
+			if ( exp )
+			{
+				exp        = exp * ( ! ( eb == 10.0f ) ? -1 : 1 );
+				node_props = EADT_PROPS_IS_EXP;
+			}
+
+			/* special case: negative zero */
+			if ( base == 0 && buf[ 0 ] == '-' )
+			{
+				neg_zero = true;
+			}
+	#endif
+			while ( orig_exp-- > 0 )
+			{
+				node->real *= eb;
+			}
+		}
+
+		node->type  = node_type;
+		node->props = node_props;
+
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
+		node->base         = base;
+		node->base2        = base2;
+		node->base2_offset = base2_offset;
+		node->exp          = exp;
+		node->neg_zero     = neg_zero;
+		node->lead_digit   = lead_digit;
+	#else
+		unused( base );
+		unused( base2 );
+		unused( base2_offset );
+		unused( exp );
+		unused( neg_zero );
+		unused( lead_digit );
+	#endif
+		return e;
+	}
+
+	ADT_Error adt_print_number( FileInfo* file, ADT_Node* node )
+	{
+		GEN_ASSERT_NOT_NULL( file );
+		GEN_ASSERT_NOT_NULL( node );
+		if ( node->type != EADT_TYPE_INTEGER && node->type != EADT_TYPE_REAL )
+		{
+			return EADT_ERROR_INVALID_TYPE;
+		}
+
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
+		if ( node->neg_zero )
+		{
+			_adt_fprintf( file, "-" );
+		}
+	#endif
+
+		switch ( node->type )
+		{
+			case EADT_TYPE_INTEGER :
+				{
+					if ( node->props == EADT_PROPS_IS_HEX )
+					{
+						_adt_fprintf( file, "0x%llx", ( long long )node->integer );
+					}
+					else
+					{
+						_adt_fprintf( file, "%lld", ( long long )node->integer );
+					}
+				}
+				break;
+
+			case EADT_TYPE_REAL :
+				{
+					if ( node->props == EADT_PROPS_NAN )
+					{
+						_adt_fprintf( file, "NaN" );
+					}
+					else if ( node->props == EADT_PROPS_NAN_NEG )
+					{
+						_adt_fprintf( file, "-NaN" );
+					}
+					else if ( node->props == EADT_PROPS_INFINITY )
+					{
+						_adt_fprintf( file, "Infinity" );
+					}
+					else if ( node->props == EADT_PROPS_INFINITY_NEG )
+					{
+						_adt_fprintf( file, "-Infinity" );
+					}
+					else if ( node->props == EADT_PROPS_TRUE )
+					{
+						_adt_fprintf( file, "true" );
+					}
+					else if ( node->props == EADT_PROPS_FALSE )
+					{
+						_adt_fprintf( file, "false" );
+					}
+					else if ( node->props == EADT_PROPS_NULL )
+					{
+						_adt_fprintf( file, "null" );
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
+					}
+					else if ( node->props == EADT_PROPS_IS_EXP )
+					{
+						_adt_fprintf( file, "%lld.%0*d%llde%lld", ( long long )node->base, node->base2_offset, 0, ( long long )node->base2, ( long long )node->exp );
+					}
+					else if ( node->props == EADT_PROPS_IS_PARSED_REAL )
+					{
+						if ( ! node->lead_digit )
+							_adt_fprintf( file, ".%0*d%lld", node->base2_offset, 0, ( long long )node->base2 );
+						else
+							_adt_fprintf( file, "%lld.%0*d%lld", ( long long int )node->base2_offset, 0, ( int )node->base, ( long long )node->base2 );
+	#endif
+					}
+					else
+					{
+						_adt_fprintf( file, "%f", node->real );
+					}
+				}
+				break;
+		}
+
+		return EADT_ERROR_NONE;
+	}
+
+	ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_chars, char const* escape_symbol )
+	{
+		GEN_ASSERT_NOT_NULL( file );
+		GEN_ASSERT_NOT_NULL( node );
+		GEN_ASSERT_NOT_NULL( escaped_chars );
+		if ( node->type != EADT_TYPE_STRING && node->type != EADT_TYPE_MULTISTRING )
+		{
+			return EADT_ERROR_INVALID_TYPE;
+		}
+
+		/* escape string */
+		char const *p = node->string, *b = p;
+
+		if ( ! p )
+			return EADT_ERROR_NONE;
+
+		do
+		{
+			p = str_skip_any( p, escaped_chars );
+			_adt_fprintf( file, "%.*s", pointer_diff( b, p ), b );
+			if ( *p && ! ! str_find( escaped_chars, *p ) )
+			{
+				_adt_fprintf( file, "%s%c", escape_symbol, *p );
+				p++;
+			}
+			b = p;
+		} while ( *p );
+
+		return EADT_ERROR_NONE;
+	}
+
+	ADT_Error adt_str_to_number( ADT_Node* node )
+	{
+		GEN_ASSERT( node );
+
+		if ( node->type == EADT_TYPE_REAL || node->type == EADT_TYPE_INTEGER )
+			return EADT_ERROR_ALREADY_CONVERTED; /* this is already converted/parsed */
+		if ( node->type != EADT_TYPE_STRING && node->type != EADT_TYPE_MULTISTRING )
+		{
+			return EADT_ERROR_INVALID_TYPE;
+		}
+
+		adt_parse_number( node, ( char* )node->string );
+
+		return EADT_ERROR_NONE;
+	}
+
+	ADT_Error adt_str_to_number_strict( ADT_Node* node )
+	{
+		GEN_ASSERT( node );
+
+		if ( node->type == EADT_TYPE_REAL || node->type == EADT_TYPE_INTEGER )
+			return EADT_ERROR_ALREADY_CONVERTED; /* this is already converted/parsed */
+		if ( node->type != EADT_TYPE_STRING && node->type != EADT_TYPE_MULTISTRING )
+		{
+			return EADT_ERROR_INVALID_TYPE;
+		}
+
+		adt_parse_number_strict( node, ( char* )node->string );
+
+		return EADT_ERROR_NONE;
+	}
+
+	#undef _adt_fprintf
 #pragma endregion ADT
 
 #pragma region CSV
@@ -1546,8 +2423,8 @@ namespace gen
 		if ( ! _std_file_set )
 		{
 	#	define GEN__SET_STD_FILE( type, v ) \
-			_std_files[ type ].FD.p = v;     \
-			_std_files[ type ].Ops  = default_file_operations
+			_std_files[ type ].fd.p = v;     \
+			_std_files[ type ].ops  = default_file_operations
 			GEN__SET_STD_FILE( EFileStandard_INPUT, GetStdHandle( STD_INPUT_HANDLE ) );
 			GEN__SET_STD_FILE( EFileStandard_OUTPUT, GetStdHandle( STD_OUTPUT_HANDLE ) );
 			GEN__SET_STD_FILE( EFileStandard_ERROR, GetStdHandle( STD_ERROR_HANDLE ) );
@@ -1582,26 +2459,26 @@ namespace gen
 		if ( ! f )
 			return EFileError_INVALID;
 
-		if ( f->Filename )
-			free( heap(), zpl_cast( char* ) f->Filename );
+		if ( f->filename )
+			free( heap(), zpl_cast( char* ) f->filename );
 
 	#if defined( GEN_SYSTEM_WINDOWS )
-		if ( f->FD.p == INVALID_HANDLE_VALUE )
+		if ( f->fd.p == INVALID_HANDLE_VALUE )
 			return EFileError_INVALID;
 	#else
 		if ( f->fd.i < 0 )
 			return EFileError_INVALID;
 	#endif
 
-		if ( f->IsTemp )
+		if ( f->is_temp )
 		{
-			f->Ops.close( f->FD );
+			f->ops.close( f->fd );
 			return EFileError_NONE;
 		}
 
-		if ( ! f->Ops.read_at )
-			f->Ops = default_file_operations;
-		f->Ops.close( f->FD );
+		if ( ! f->ops.read_at )
+			f->ops = default_file_operations;
+		f->ops.close( f->fd );
 
 	#if 0
 		if ( f->Dir )
@@ -1620,12 +2497,12 @@ namespace gen
 		FileError err = EFileError_NONE;
 		sw        len = str_len( filename );
 
-		f->Ops             = ops;
-		f->FD              = fd;
-		f->Dir             = nullptr;
-		f->LastWriteTime   = 0;
-		f->Filename        = alloc_array( heap(), char, len + 1 );
-		mem_copy( zpl_cast( char* ) f->Filename, zpl_cast( char* ) filename, len + 1 );
+		f->ops             = ops;
+		f->fd              = fd;
+		f->dir             = nullptr;
+		f->last_write_time = 0;
+		f->filename        = alloc_array( heap(), char, len + 1 );
+		mem_copy( zpl_cast( char* ) f->filename, zpl_cast( char* ) filename, len + 1 );
 
 		return err;
 	}
@@ -1646,13 +2523,13 @@ namespace gen
 		FileError err;
 
 	#if defined( GEN_SYSTEM_WINDOWS ) || defined( GEN_SYSTEM_CYGWIN )
-		err = _win32_file_open( &f->FD, &f->Ops, mode, filename );
+		err = _win32_file_open( &f->fd, &f->ops, mode, filename );
 	#else
 		err = _posix_file_open( &f->fd, &f->ops, mode, filename );
 	#endif
 
 		if ( err == EFileError_NONE )
-			return file_new( f, f->FD, f->Ops, filename );
+			return file_new( f, f->fd, f->ops, filename );
 
 		return err;
 	}
@@ -1669,6 +2546,196 @@ namespace gen
 
 		return size;
 	}
+
+	struct _memory_fd
+	{
+		u8            magic;
+		u8*           buf;    //< zpl_array OR plain buffer if we can't write
+		sw            cursor;
+		AllocatorInfo allocator;
+
+		FileStreamFlags flags;
+		sw              cap;
+	};
+
+	#define GEN__FILE_STREAM_FD_MAGIC 37
+
+	GEN_DEF_INLINE FileDescriptor _file_stream_fd_make( _memory_fd* d );
+	GEN_DEF_INLINE _memory_fd*    _file_stream_from_fd( FileDescriptor fd );
+
+	GEN_IMPL_INLINE FileDescriptor _file_stream_fd_make( _memory_fd* d )
+	{
+		FileDescriptor fd = { 0 };
+		fd.p              = ( void* )d;
+		return fd;
+	}
+
+	GEN_IMPL_INLINE _memory_fd* _file_stream_from_fd( FileDescriptor fd )
+	{
+		_memory_fd* d = ( _memory_fd* )fd.p;
+		GEN_ASSERT( d->magic == GEN__FILE_STREAM_FD_MAGIC );
+		return d;
+	}
+
+	b8 file_stream_new( FileInfo* file, AllocatorInfo allocator )
+	{
+		GEN_ASSERT_NOT_NULL( file );
+
+		_memory_fd* d = ( _memory_fd* )alloc( allocator, size_of( _memory_fd ) );
+
+		if ( ! d )
+			return false;
+
+		zero_item( file );
+		d->magic     = GEN__FILE_STREAM_FD_MAGIC;
+		d->allocator = allocator;
+		d->flags     = EFileStream_CLONE_WRITABLE;
+		d->cap       = 0;
+		d->buf       = Array<u8>::init( allocator );
+
+		if ( ! d->buf )
+			return false;
+
+		file->ops             = memory_file_operations;
+		file->fd              = _file_stream_fd_make( d );
+		file->dir             = NULL;
+		file->last_write_time = 0;
+		file->filename        = NULL;
+		file->is_temp         = true;
+		return true;
+	}
+
+	b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, sw size, FileStreamFlags flags )
+	{
+		GEN_ASSERT_NOT_NULL( file );
+		_memory_fd* d = ( _memory_fd* )alloc( allocator, size_of( _memory_fd ) );
+		if ( ! d )
+			return false;
+		zero_item( file );
+		d->magic     = GEN__FILE_STREAM_FD_MAGIC;
+		d->allocator = allocator;
+		d->flags     = flags;
+		if ( d->flags & EFileStream_CLONE_WRITABLE )
+		{
+			Array<u8> arr = Array<u8>::init_reserve( allocator, size );
+			d->buf = arr;
+
+			if ( ! d->buf )
+				return false;
+
+			mem_copy( d->buf, buffer, size );
+			d->cap = size;
+
+			arr.get_header()->Num = size;
+		}
+		else
+		{
+			d->buf = buffer;
+			d->cap = size;
+		}
+		file->ops             = memory_file_operations;
+		file->fd              = _file_stream_fd_make( d );
+		file->dir             = NULL;
+		file->last_write_time = 0;
+		file->filename        = NULL;
+		file->is_temp         = true;
+		return true;
+	}
+
+	u8* file_stream_buf( FileInfo* file, sw* size )
+	{
+		GEN_ASSERT_NOT_NULL( file );
+		_memory_fd* d = _file_stream_from_fd( file->fd );
+		if ( size )
+			*size = d->cap;
+		return d->buf;
+	}
+
+	internal GEN_FILE_SEEK_PROC( _memory_file_seek )
+	{
+		_memory_fd* d      = _file_stream_from_fd( fd );
+		sw          buflen = d->cap;
+
+		if ( whence == ESeekWhence_BEGIN )
+			d->cursor = 0;
+		else if ( whence == ESeekWhence_END )
+			d->cursor = buflen;
+
+		d->cursor = max( 0, clamp( d->cursor + offset, 0, buflen ) );
+		if ( new_offset )
+			*new_offset = d->cursor;
+		return true;
+	}
+
+	internal GEN_FILE_READ_AT_PROC( _memory_file_read )
+	{
+		// unused( stop_at_newline );
+		_memory_fd* d = _file_stream_from_fd( fd );
+		mem_copy( buffer, d->buf + offset, size );
+		if ( bytes_read )
+			*bytes_read = size;
+		return true;
+	}
+
+	internal GEN_FILE_WRITE_AT_PROC( _memory_file_write )
+	{
+		_memory_fd* d = _file_stream_from_fd( fd );
+
+		if ( ! ( d->flags & ( EFileStream_CLONE_WRITABLE | EFileStream_WRITABLE ) ) )
+			return false;
+
+		sw buflen   = d->cap;
+		sw extralen = max( 0, size - ( buflen - offset ) );
+		sw rwlen    = size - extralen;
+		sw new_cap  = buflen + extralen;
+
+		if ( d->flags & EFileStream_CLONE_WRITABLE )
+		{
+			Array<u8> arr = { d->buf };
+
+			if ( arr.get_header()->Capacity < new_cap )
+			{
+				if ( ! arr.grow( ( s64 )( new_cap ) ) )
+					return false;
+				d->buf = arr;
+			}
+		}
+
+		mem_copy( d->buf + offset, buffer, rwlen );
+
+		if ( ( d->flags & EFileStream_CLONE_WRITABLE ) && extralen > 0 )
+		{
+			Array<u8> arr = { d->buf };
+
+			mem_copy( d->buf + offset + rwlen, pointer_add_const( buffer, rwlen ), extralen );
+			d->cap = new_cap;
+			arr.get_header()->Capacity = new_cap;
+		}
+		else
+		{
+			extralen = 0;
+		}
+
+		if ( bytes_written )
+			*bytes_written = ( rwlen + extralen );
+		return true;
+	}
+
+	internal GEN_FILE_CLOSE_PROC( _memory_file_close )
+	{
+		_memory_fd*   d         = _file_stream_from_fd( fd );
+		AllocatorInfo allocator = d->allocator;
+
+		if ( d->flags & EFileStream_CLONE_WRITABLE )
+		{
+			Array<u8> arr = { d->buf };
+			arr.free();
+		}
+
+		free( allocator, d );
+	}
+
+	FileOperations const memory_file_operations = { _memory_file_read, _memory_file_write, _memory_file_seek, _memory_file_close };
 #pragma endregion File Handling
 
 #pragma region String

@@ -223,17 +223,12 @@ namespace gen
 	}                      \
 	while(0);
 
+	#define clamp( x, lower, upper )      min( max( ( x ), ( lower ) ), ( upper ) )
 	#define count_of( x )                 ( ( size_of( x ) / size_of( 0 [ x ] ) ) / ( ( sw )( ! ( size_of( x ) % size_of( 0 [ x ] ) ) ) ) )
 	#define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )
+	#define max( a, b )                   ( ( a ) > ( b ) ? ( a ) : ( b ) )
 	#define min( a, b )                   ( ( a ) < ( b ) ? ( a ) : ( b ) )
 	#define size_of( x )                  ( sw )( sizeof( x ) )
-	// #define swap( Type, a, b ) \
-	// 	do                     \
-	// 	{                      \
-	// 		Type tmp = ( a );  \
-	// 		( a )    = ( b );  \
-	// 		( b )    = tmp;    \
-	// 	} while ( 0 )
 
 	template< class Type >
 	void swap( Type a, Type b )
@@ -420,6 +415,12 @@ namespace gen
 	//! Moves pointer forward by bytes.
 	GEN_DEF_INLINE void* pointer_add( void* ptr, sw bytes );
 
+	//! Moves pointer forward by bytes.
+	GEN_DEF_INLINE void const* pointer_add_const( void const* ptr, sw bytes );
+
+	//! Calculates difference between two addresses.
+	GEN_DEF_INLINE sw pointer_diff( void const* begin, void const* end );
+
 	//! Copy non-overlapping memory from source to destination.
 	void* mem_copy( void* dest, void const* source, sw size );
 
@@ -548,6 +549,16 @@ namespace gen
 	GEN_IMPL_INLINE void* pointer_add( void* ptr, sw bytes )
 	{
 		return zpl_cast( void* )( zpl_cast( u8* ) ptr + bytes );
+	}
+
+	GEN_IMPL_INLINE void const* pointer_add_const( void const* ptr, sw bytes )
+	{
+		return zpl_cast( void const* )( zpl_cast( u8 const* ) ptr + bytes );
+	}
+
+	GEN_IMPL_INLINE sw pointer_diff( void const* begin, void const* end )
+	{
+		return zpl_cast( sw )( zpl_cast( u8 const* ) end - zpl_cast( u8 const* ) begin );
 	}
 
 	GEN_IMPL_INLINE void* mem_move( void* dest, void const* source, sw n )
@@ -869,6 +880,7 @@ namespace gen
 
 	#pragma region String Ops
 	GEN_DEF_INLINE const char* char_first_occurence( const char* str, char c );
+	constexpr auto str_find = &char_first_occurence;
 
 	GEN_DEF_INLINE b32   char_is_alpha( char c );
 	GEN_DEF_INLINE b32   char_is_alphanumeric( char c );
@@ -881,21 +893,24 @@ namespace gen
 	GEN_DEF_INLINE s32  digit_to_int( char c );
 	GEN_DEF_INLINE s32  hex_digit_to_int( char c );
 
-	GEN_DEF_INLINE s32   str_compare( const char* s1, const char* s2 );
-	GEN_DEF_INLINE s32   str_compare( const char* s1, const char* s2, sw len );
-	GEN_DEF_INLINE char* str_copy( char* dest, const char* source, sw len );
-	GEN_DEF_INLINE sw    str_copy_nulpad( char* dest, const char* source, sw len );
-	GEN_DEF_INLINE sw    str_len( const char* str );
-	GEN_DEF_INLINE sw    str_len( const char* str, sw max_len );
-	GEN_DEF_INLINE char* str_reverse( char* str );    // NOTE: ASCII only
+	GEN_DEF_INLINE s32         str_compare( const char* s1, const char* s2 );
+	GEN_DEF_INLINE s32         str_compare( const char* s1, const char* s2, sw len );
+	GEN_DEF_INLINE char*       str_copy( char* dest, const char* source, sw len );
+	GEN_DEF_INLINE sw          str_copy_nulpad( char* dest, const char* source, sw len );
+	GEN_DEF_INLINE sw          str_len( const char* str );
+	GEN_DEF_INLINE sw          str_len( const char* str, sw max_len );
+	GEN_DEF_INLINE char*       str_reverse( char* str );    // NOTE: ASCII only
+	GEN_DEF_INLINE char const* str_skip( char const* str, char c );
+	GEN_DEF_INLINE char const* str_skip_any( char const* str, char const* char_list );
 
 	// NOTE: ASCII only
 	GEN_DEF_INLINE void str_to_lower( char* str );
 	GEN_DEF_INLINE void str_to_upper( char* str );
 
-	s64  str_to_i64( const char* str, char** end_ptr, s32 base );    // TODO : Support more than just decimal and hexadecimal
+	s64  str_to_i64( const char* str, char** end_ptr, s32 base );
 	void i64_to_str( s64 value, char* string, s32 base );
 	void u64_to_str( u64 value, char* string, s32 base );
+	f64  str_to_f64( const char* str, char** end_ptr );
 
 	GEN_IMPL_INLINE const char* char_first_occurence( const char* s, char c )
 	{
@@ -1070,6 +1085,27 @@ namespace gen
 		return str;
 	}
 
+	GEN_IMPL_INLINE char const* str_skip( char const* str, char c )
+	{
+		while ( *str && *str != c )
+		{
+			++str;
+		}
+		return str;
+	}
+
+	GEN_IMPL_INLINE char const* str_skip_any( char const* str, char const* char_list )
+	{
+		char const* closest_ptr     = zpl_cast( char const* ) pointer_add( ( void* )str, str_len( str ) );
+		sw          char_list_count = str_len( char_list );
+		for ( sw i = 0; i < char_list_count; i++ )
+		{
+			char const* p = str_skip( str, char_list[ i ] );
+			closest_ptr   = min( closest_ptr, p );
+		}
+		return closest_ptr;
+	}
+
 	GEN_IMPL_INLINE void str_to_lower( char* str )
 	{
 		if ( ! str )
@@ -1101,13 +1137,14 @@ namespace gen
 	#endif
 
 	// NOTE: A locally persisting buffer is used internally
-	char* str_fmt_buf( char const* fmt, ... );
-	char* str_fmt_buf_va( char const* fmt, va_list va );
-	sw    str_fmt_va( char* str, sw n, char const* fmt, va_list va );
-	sw    str_fmt_out_va( char const* fmt, va_list va );
-	sw    str_fmt_out_err( char const* fmt, ... );
+	char* str_fmt_buf       ( char const* fmt, ... );
+	char* str_fmt_buf_va    ( char const* fmt, va_list va );
+	sw    str_fmt_va        ( char* str, sw n, char const* fmt, va_list va );
+	sw    str_fmt_file       ( FileInfo* f, char const* fmt, ... );
+	sw    str_fmt_file_va    ( FileInfo* f, char const* fmt, va_list va );
+	sw    str_fmt_out_va    ( char const* fmt, va_list va );
+	sw    str_fmt_out_err   ( char const* fmt, ... );
 	sw    str_fmt_out_err_va( char const* fmt, va_list va );
-	sw    str_fmt_file_va( FileInfo* f, char const* fmt, va_list va );
 
 	constexpr
 	char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
@@ -1207,6 +1244,77 @@ namespace gen
 			return true;
 		}
 
+		bool append( Type* items, uw item_num )
+		{
+			Header* header = get_header();
+
+			if ( header->Num + item_num > header->Capacity )
+			{
+				if ( ! grow( header->Capacity + item_num ))
+					return false;
+
+				header = get_header();
+			}
+
+			mem_copy( Data + header->Num, items, item_num * sizeof(Type) );
+			header->Num += item_num;
+
+			return true;
+		}
+
+		bool append_at( Type item, sw idx )
+		{
+			Header* header = get_header();
+
+			if ( idx >= header->Num )
+				idx = header->Num - 1;
+
+			if ( idx < 0 )
+				idx = 0;
+
+			if ( header->Capacity < header->Num + 1 )
+			{
+				if ( ! grow( header->Capacity + 1 ))
+					return false;
+
+				header = get_header();
+			}
+
+			Type* target = Data + idx;
+
+			mem_move( target + 1, target, (header->Num - idx) * sizeof(Type) );
+
+			return true;
+		}
+
+		bool append_at( Type* items, uw item_num, sw idx )
+		{
+			Header* header = get_header();
+
+			if ( idx >= header->Num )
+			{
+				return append( items, item_num );
+			}
+
+			if ( item_num > header->Capacity )
+			{
+				if ( ! grow( header->Capacity + item_num ) )
+					return false;
+
+				header = get_header();
+			}
+
+			Type* target = Data + idx + item_num;
+			Type* src    = Data + idx;
+
+			mem_move( target, src, (header->Num - idx) * sizeof(Type) );
+			mem_copy( src, items, item_num * sizeof(Type) );
+
+			header->Num += item_num;
+
+			return true;
+		}
+
 		Type& back( void )
 		{
 			Header& header = * get_header();
@@ -1238,6 +1346,7 @@ namespace gen
 		{
 			Header& header = * get_header();
 			gen::free( header.Allocator, &header );
+			Data = nullptr;
 		}
 
 		Header* get_header( void )
@@ -2074,30 +2183,30 @@ namespace gen
 
 	struct DirEntry
 	{
-		char const* FileName;
-		DirInfo*    Info;
-		u8          Type;
+		char const*     filename;
+		struct DirInfo* dir_info;
+		u8              type;
 	};
 
 	struct DirInfo
 	{
-		char const* FullPath;
-		DirEntry*   Entries;    // zpl_array
+		char const* fullpath;
+		DirEntry*   entries;    // zpl_array
 
 		// Internals
-		char** Filenames;    // zpl_array
-		char*  Buffer;       // zpl_string
+		char** filenames;    // zpl_array
+		String buf;
 	};
 
 	struct FileInfo
 	{
-		FileOperations Ops;
-		FileDescriptor FD;
-		b32            IsTemp;
+		FileOperations ops;
+		FileDescriptor fd;
+		b32            is_temp;
 
-		char const* Filename;
-		FileTime    LastWriteTime;
-		DirEntry*   Dir;
+		char const* filename;
+		FileTime    last_write_time;
+		DirEntry*   dir;
 	};
 
 	enum FileStandardType
@@ -2129,7 +2238,7 @@ namespace gen
 	inline
 	char const* file_name( FileInfo* file )
 	{
-		return file->Filename ? file->Filename : "";
+		return file->filename ? file->filename : "";
 	}
 
 	/**
@@ -2227,10 +2336,10 @@ namespace gen
 	{
 		s64 new_offset = 0;
 
-		if ( ! f->Ops.read_at )
-			f->Ops = default_file_operations;
+		if ( ! f->ops.read_at )
+			f->ops = default_file_operations;
 
-		f->Ops.seek( f->FD, offset, ESeekWhence_BEGIN, &new_offset );
+		f->ops.seek( f->fd, offset, ESeekWhence_BEGIN, &new_offset );
 
 		return new_offset;
 	}
@@ -2239,10 +2348,10 @@ namespace gen
 	{
 		s64 new_offset = 0;
 
-		if ( ! f->Ops.read_at )
-			f->Ops = default_file_operations;
+		if ( ! f->ops.read_at )
+			f->ops = default_file_operations;
 
-		f->Ops.seek( f->FD, 0, ESeekWhence_END, &new_offset );
+		f->ops.seek( f->fd, 0, ESeekWhence_END, &new_offset );
 
 		return new_offset;
 	}
@@ -2251,10 +2360,10 @@ namespace gen
 	{
 		s64 new_offset = 0;
 
-		if ( ! f->Ops.read_at )
-			f->Ops = default_file_operations;
+		if ( ! f->ops.read_at )
+			f->ops = default_file_operations;
 
-		f->Ops.seek( f->FD, 0, ESeekWhence_CURRENT, &new_offset );
+		f->ops.seek( f->fd, 0, ESeekWhence_CURRENT, &new_offset );
 
 		return new_offset;
 	}
@@ -2274,9 +2383,9 @@ namespace gen
 
 	GEN_IMPL_INLINE b32 file_read_at_check( FileInfo* f, void* buffer, sw size, s64 offset, sw* bytes_read )
 	{
-		if ( ! f->Ops.read_at )
-			f->Ops = default_file_operations;
-		return f->Ops.read_at( f->FD, buffer, size, offset, bytes_read, false );
+		if ( ! f->ops.read_at )
+			f->ops = default_file_operations;
+		return f->ops.read_at( f->fd, buffer, size, offset, bytes_read, false );
 	}
 
 	GEN_IMPL_INLINE b32 file_write( FileInfo* f, void const* buffer, sw size )
@@ -2296,120 +2405,116 @@ namespace gen
 
 	GEN_IMPL_INLINE b32 file_write_at_check( FileInfo* f, void const* buffer, sw size, s64 offset, sw* bytes_written )
 	{
-		if ( ! f->Ops.read_at )
-			f->Ops = default_file_operations;
+		if ( ! f->ops.read_at )
+			f->ops = default_file_operations;
 
-		return f->Ops.write_at( f->FD, buffer, size, offset, bytes_written );
+		return f->ops.write_at( f->fd, buffer, size, offset, bytes_written );
 	}
+
+	enum FileStreamFlags : u32
+	{
+		/* Allows us to write to the buffer directly. Beware: you can not append a new data! */
+		EFileStream_WRITABLE = bit( 0 ),
+
+		/* Clones the input buffer so you can write (zpl_file_write*) data into it. */
+		/* Since we work with a clone, the buffer size can dynamically grow as well. */
+		EFileStream_CLONE_WRITABLE = bit( 1 ),
+	};
+
+	/**
+	 * Opens a new memory stream
+	 * @param file
+	 * @param allocator
+	 */
+	b8 file_stream_new( FileInfo* file, AllocatorInfo allocator );
+
+	/**
+	 * Opens a memory stream over an existing buffer
+	 * @param  file
+	 * @param  allocator
+	 * @param  buffer   Memory to create stream from
+	 * @param  size     Buffer's size
+	 * @param  flags
+	 */
+	b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, sw size, FileStreamFlags flags );
+
+	/**
+	 * Retrieves the stream's underlying buffer and buffer size.
+	 * @param file memory stream
+	 * @param size (Optional) buffer size
+	 */
+	u8* file_stream_buf( FileInfo* file, sw* size );
+
+	extern FileOperations const memory_file_operations;
 	#pragma endregion File Handling
 
 	#pragma region ADT
 	enum ADT_Type : u32
 	{
-		EADTTYPE_UNINITIALISED, /* node was not initialised, this is a programming error! */
-		EADTTYPE_ARRAY,
-		EADTTYPE_OBJECT,
-		EADTTYPE_STRING,
-		EADTTYPE_MULTISTRING,
-		EADTTYPE_INTEGER,
-		EADTTYPE_REAL,
+		EADT_TYPE_UNINITIALISED, /* node was not initialised, this is a programming error! */
+		EADT_TYPE_ARRAY,
+		EADT_TYPE_OBJECT,
+		EADT_TYPE_STRING,
+		EADT_TYPE_MULTISTRING,
+		EADT_TYPE_INTEGER,
+		EADT_TYPE_REAL,
 	};
 
 	enum ADT_Props : u32
 	{
-		EADTPROPS_NONE,
-		EADTPROPS_NAN,
-		EADTPROPS_NAN_NEG,
-		EADTPROPS_INFINITY,
-		EADTPROPS_INFINITY_NEG,
-		EADTPROPS_FALSE,
-		EADTPROPS_TRUE,
-		EADTPROPS_NULL,
-		EADTPROPS_IS_EXP,
-		EADTPROPS_IS_HEX,
+		EADT_PROPS_NONE,
+		EADT_PROPS_NAN,
+		EADT_PROPS_NAN_NEG,
+		EADT_PROPS_INFINITY,
+		EADT_PROPS_INFINITY_NEG,
+		EADT_PROPS_FALSE,
+		EADT_PROPS_TRUE,
+		EADT_PROPS_NULL,
+		EADT_PROPS_IS_EXP,
+		EADT_PROPS_IS_HEX,
 
 		// Used internally so that people can fill in real numbers they plan to write.
-		EADTPROPS_IS_PARSED_REAL,
+		EADT_PROPS_IS_PARSED_REAL,
 	};
 
 	enum ADT_NamingStyle : u32
 	{
-		EADTNAME_STYLE_DOUBLE_QUOTE,
-		EADTNAME_STYLE_SINGLE_QUOTE,
-		EADTNAME_STYLE_NO_QUOTES,
+		EADT_NAME_STYLE_DOUBLE_QUOTE,
+		EADT_NAME_STYLE_SINGLE_QUOTE,
+		EADT_NAME_STYLE_NO_QUOTES,
 	};
 
 	enum ADT_AssignStyle : u32
 	{
-		EADTASSIGN_STYLE_COLON,
-		EADTASSIGN_STYLE_EQUALS,
-		EADTASSIGN_STYLE_LINE,
+		EADT_ASSIGN_STYLE_COLON,
+		EADT_ASSIGN_STYLE_EQUALS,
+		EADT_ASSIGN_STYLE_LINE,
 	};
 
 	enum ADT_DelimStyle : u32
 	{
-		EADTDELIM_STYLE_COMMA,
-		EADTDELIM_STYLE_LINE,
-		EADTDELIM_STYLE_NEWLINE,
+		EADT_DELIM_STYLE_COMMA,
+		EADT_DELIM_STYLE_LINE,
+		EADT_DELIM_STYLE_NEWLINE,
 	};
 
 	enum ADT_Error : u32
 	{
-		EADTERROR_NONE,
-		EADTERROR_INTERNAL,
-		EADTERROR_ALREADY_CONVERTED,
-		EADTERROR_INVALID_TYPE,
-		EADTERROR_OUT_OF_MEMORY,
+		EADT_ERROR_NONE,
+		EADT_ERROR_INTERNAL,
+		EADT_ERROR_ALREADY_CONVERTED,
+		EADT_ERROR_INVALID_TYPE,
+		EADT_ERROR_OUT_OF_MEMORY,
 	};
 
 	struct ADT_Node
 	{
-		static ADT_Node* make_branch( AllocatorInfo backing, char const* name, b32 is_array );
-		static ADT_Node* make_leaf( AllocatorInfo backing, char const* name, u8 type );
-
-		static ADT_Node* set_arr( char const* name, AllocatorInfo backing );
-		static ADT_Node* set_flt( char const* name, f64 value );
-		static ADT_Node* set_int( char const* name, s64 value );
-		static ADT_Node* set_obj( char const* name, AllocatorInfo backing );
-		static ADT_Node* set_str( char const* name, char const* value );
-
-		static void swap( ADT_Node* node, ADT_Node* other );
-
-		ADT_Node* append_arr( char const* name );
-		ADT_Node* append_flt( char const* name, f64 value );
-		ADT_Node* append_int( char const* name, s64 value );
-		ADT_Node* append_obj( char const* name );
-		ADT_Node* append_str( char const* name, char const* value );
-
-		ADT_Node* destroy();
-
-		ADT_Node* query( char const* uri );
-
-		ADT_Node* find( char const* name, b32 deep_search );
-
-		ADT_Node* alloc();
-		ADT_Node* alloc_at( sw  index );
-
-		ADT_Node* move_node( ADT_Node* new_parent );
-
-		ADT_Node* move_node_at( ADT_Node* new_parent, sw index );
-
-		char* parse_number( char* base );
-
-		void remove( ADT_Node* node );
-
-		ADT_Error str_to_number();
-
-		ADT_Error print_number( FileInfo* file );
-		ADT_Error print_string( FileInfo* file, char const* escapsed_chars, char const* escape_symbol );
-
-	#pragma region Layout
-		char const* name;
-		ADT_Node*   parent;
+		char const*      name;
+		struct ADT_Node* parent;
 
 		/* properties */
-		ADT_Type  type;
-		ADT_Props props;
+		ADT_Type type  : 4;
+		u8 props : 4;
 	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
 		u8 cfg_mode          : 1;
 		u8 name_style        : 2;
@@ -2422,8 +2527,8 @@ namespace gen
 		/* adt data */
 		union
 		{
-			char const*      string;
-			struct ADT_Node* nodes;    ///< zpl_array
+			char const*     string;
+			Array<ADT_Node> nodes;    ///< zpl_array
 
 			struct
 			{
@@ -2433,7 +2538,7 @@ namespace gen
 					s64 integer;
 				};
 
-			#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
 				/* number analysis */
 				s32 base;
 				s32 base2;
@@ -2441,12 +2546,290 @@ namespace gen
 				s8  exp          : 4;
 				u8  neg_zero     : 1;
 				u8  lead_digit   : 1;
-			#endif
+	#endif
 			};
 		};
-	#pragma endregion Layout
 	};
 
+	/* ADT NODE LIMITS
+	* delimiter and assignment segment width is limited to 128 whitespace symbols each.
+	* real number limits decimal position to 128 places.
+	* real number exponent is limited to 64 digits.
+	*/
+
+	/**
+	 * @brief Initialise an ADT object or array
+	 *
+	 * @param node
+	 * @param backing Memory allocator used for descendants
+	 * @param name Node's name
+	 * @param is_array
+	 * @return error code
+	 */
+	u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32 is_array );
+
+	/**
+	 * @brief Destroy an ADT branch and its descendants
+	 *
+	 * @param node
+	 * @return error code
+	 */
+	u8 adt_destroy_branch( ADT_Node* node );
+
+	/**
+	 * @brief Initialise an ADT leaf
+	 *
+	 * @param node
+	 * @param name Node's name
+	 * @param type Node's type (use zpl_adt_make_branch for container nodes)
+	 * @return error code
+	 */
+	u8 adt_make_leaf( ADT_Node* node, char const* name, ADT_Type type );
+
+
+	/**
+	 * @brief Fetch a node using provided URI string.
+	 *
+	 * This method uses a basic syntax to fetch a node from the ADT. The following features are available
+	 * to retrieve the data:
+	 *
+	 * - "a/b/c" navigates through objects "a" and "b" to get to "c"
+	 * - "arr/[foo=123]/bar" iterates over "arr" to find any object with param "foo" that matches the value "123", then gets its field called "bar"
+	 * - "arr/3" retrieves the 4th element in "arr"
+	 * - "arr/[apple]" retrieves the first element of value "apple" in "arr"
+	 *
+	 * @param node ADT node
+	 * @param uri Locator string as described above
+	 * @return zpl_adt_node*
+	 *
+	 * @see code/apps/examples/json_get.c
+	 */
+	ADT_Node* adt_query( ADT_Node* node, char const* uri );
+
+	/**
+	 * @brief Find a field node within an object by the given name.
+	 *
+	 * @param node
+	 * @param name
+	 * @param deep_search Perform search recursively
+	 * @return zpl_adt_node * node
+	 */
+	 ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search );
+
+	/**
+	 * @brief Allocate an unitialised node within a container at a specified index.
+	 *
+	 * @param parent
+	 * @param index
+	 * @return zpl_adt_node * node
+	 */
+	ADT_Node* adt_alloc_at( ADT_Node* parent, sw index );
+
+	/**
+	 * @brief Allocate an unitialised node within a container.
+	 *
+	 * @param parent
+	 * @return zpl_adt_node * node
+	 */
+	ADT_Node* adt_alloc( ADT_Node* parent );
+
+	/**
+	 * @brief Move an existing node to a new container at a specified index.
+	 *
+	 * @param node
+	 * @param new_parent
+	 * @param index
+	 * @return zpl_adt_node * node
+	 */
+	ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, sw index );
+
+	/**
+	 * @brief Move an existing node to a new container.
+	 *
+	 * @param node
+	 * @param new_parent
+	 * @return zpl_adt_node * node
+	 */
+	ADT_Node* adt_move_node( ADT_Node* node, ADT_Node* new_parent );
+
+	/**
+	 * @brief Swap two nodes.
+	 *
+	 * @param node
+	 * @param other_node
+	 * @return
+	 */
+	void adt_swap_nodes( ADT_Node* node, ADT_Node* other_node );
+
+	/**
+	 * @brief Remove node from container.
+	 *
+	 * @param node
+	 * @return
+	 */
+	void adt_remove_node( ADT_Node* node );
+
+	/**
+	 * @brief Initialise a node as an object
+	 *
+	 * @param obj
+	 * @param name
+	 * @param backing
+	 * @return
+	 */
+	b8 adt_set_obj( ADT_Node* obj, char const* name, AllocatorInfo backing );
+
+	/**
+	 * @brief Initialise a node as an array
+	 *
+	 * @param obj
+	 * @param name
+	 * @param backing
+	 * @return
+	 */
+	b8 adt_set_arr( ADT_Node* obj, char const* name, AllocatorInfo backing );
+
+	/**
+	 * @brief Initialise a node as a string
+	 *
+	 * @param obj
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	b8 adt_set_str( ADT_Node* obj, char const* name, char const* value );
+
+	/**
+	 * @brief Initialise a node as a float
+	 *
+	 * @param obj
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	b8 adt_set_flt( ADT_Node* obj, char const* name, f64 value );
+
+	/**
+	 * @brief Initialise a node as a signed integer
+	 *
+	 * @param obj
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	 b8 adt_set_int( ADT_Node* obj, char const* name, s64 value );
+
+	/**
+	 * @brief Append a new node to a container as an object
+	 *
+	 * @param parent
+	 * @param name
+	 * @return*
+	 */
+	ADT_Node* adt_append_obj( ADT_Node* parent, char const* name );
+
+	/**
+	 * @brief Append a new node to a container as an array
+	 *
+	 * @param parent
+	 * @param name
+	 * @return*
+	 */
+	ADT_Node* adt_append_arr( ADT_Node* parent, char const* name );
+
+	/**
+	 * @brief Append a new node to a container as a string
+	 *
+	 * @param parent
+	 * @param name
+	 * @param value
+	 * @return*
+	 */
+	ADT_Node* adt_append_str( ADT_Node* parent, char const* name, char const* value );
+
+	/**
+	 * @brief Append a new node to a container as a float
+	 *
+	 * @param parent
+	 * @param name
+	 * @param value
+	 * @return*
+	 */
+	ADT_Node* adt_append_flt( ADT_Node* parent, char const* name, f64 value );
+
+	/**
+	 * @brief Append a new node to a container as a signed integer
+	 *
+	 * @param parent
+	 * @param name
+	 * @param value
+	 * @return*
+	 */
+	ADT_Node* adt_append_int( ADT_Node* parent, char const* name, s64 value );
+
+	/* parser helpers */
+
+	/**
+	 * @brief Parses a text and stores the result into an unitialised node.
+	 *
+	 * @param node
+	 * @param base
+	 * @return*
+	 */
+	char* adt_parse_number( ADT_Node* node, char* base );
+
+	/**
+	 * @brief Parses a text and stores the result into an unitialised node.
+	 * This function expects the entire input to be a number.
+	 *
+	 * @param node
+	 * @param base
+	 * @return*
+	 */
+	char* adt_parse_number_strict( ADT_Node* node, char* base_str );
+
+	/**
+	 * @brief Parses and converts an existing string node into a number.
+	 *
+	 * @param node
+	 * @return
+	 */
+	ADT_Error adt_str_to_number( ADT_Node* node );
+
+	/**
+	 * @brief Parses and converts an existing string node into a number.
+	 * This function expects the entire input to be a number.
+	 *
+	 * @param node
+	 * @return
+	 */
+	ADT_Error adt_str_to_number_strict( ADT_Node* node );
+
+	/**
+	 * @brief Prints a number into a file stream.
+	 *
+	 * The provided file handle can also be a memory mapped stream.
+	 *
+	 * @see zpl_file_stream_new
+	 * @param file
+	 * @param node
+	 * @return
+	 */
+	ADT_Error adt_print_number( FileInfo* file, ADT_Node* node );
+
+	/**
+	 * @brief Prints a string into a file stream.
+	 *
+	 * The provided file handle can also be a memory mapped stream.
+	 *
+	 * @see zpl_file_stream_new
+	 * @param file
+	 * @param node
+	 * @param escaped_chars
+	 * @param escape_symbol
+	 * @return
+	 */
+	ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_chars, char const* escape_symbol );
 	#pragma endregion ADT
 
 	#pragma region CSV

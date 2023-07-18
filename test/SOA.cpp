@@ -1,9 +1,9 @@
-#pragma once
-
-#ifdef gen_time
+#if gen_time
 #define GEN_FEATURE_PARSING
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
+#define GEN_EXPOSE_BACKEND
+#define GEN_BENCHMARK
 #include "gen.hpp"
 using namespace gen;
 
@@ -91,7 +91,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 			}
 		));
 
-		String content = String::make( Memory::GlobalAllocator, "return\n{\n" );
+		String content = String::make( GlobalAllocator, "return\n{\n" );
 
 		for ( CodeVar member : vars )
 		{
@@ -113,5 +113,32 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 	vars.free();
 
 	return soa;
+}
+
+void check_SOA()
+{
+	gen::init();
+	Builder soa_test; soa_test.open( "SOA.gen.hpp" );
+
+	soa_test.print( parse_using( code(
+		using u16 = unsigned short;
+	)));
+	soa_test.print( def_include( txt_StrC("gen.hpp")));
+	soa_test.print( def_using_namespace( name(gen) ) );
+
+	soa_test.print( gen_SOA(
+		parse_struct( code(
+			struct TestStruct
+			{
+				u8  A;
+				u16 B;
+				u32 C;
+				u64 D;
+			};
+		))
+	));
+
+	soa_test.write();
+	gen::deinit();
 }
 #endif

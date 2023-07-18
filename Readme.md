@@ -699,7 +699,8 @@ This project came about for a few reasons:
   * Not a fan of pure C, maybe I'll succumb to the drawbacks.
   * All alternatives to C/C++ are too opionionated instead of providing a lax frontend, or a proper compiler backend with a frontend api to quickly roll your own forntend.
 * One of the core issues I've always had with programming is there has always been a need for metaprogramming, but every single tool has horrible error deduction for the user (backend blackbox from codebase size or closed-source, error log nightmare).
-* I spend an obnoxious amount of time trying to express code that cannot be expressed well in templates or macros and still have an adequate editor experience, even with full blown IDEs.
-* I wanted to be able to easily refactor interated with projects with some form of curation, and still have the ability to not maintain a separate fork (IF the scanner gets implemetned, that is possible).
+* I spend an obnoxious amount of time trying to express code that cannot be expressed well in templates or macros. The experience is inadequate; even with full blown IDEs.
+* I wanted to be able to easily refactor libraries interated in projects with some form of curation. While still having the ability to not maintain a separate fork (IF the scanner gets implemetned, that is possible).
 * I did not use Metadesk as it was an esoteric library for me to use as a dependency when I didn't fully grasp the vision for how this library would end up. (Not much practice doing metaprogramming or code gen/transform development)
   * I have no issue rewritting the library to use it as a backend if its worth while but its most likely better to just make an extension for it.
+* This project showed me rewwriting code isn't as expensive as people make it out to be (vs using a bloated toolchain)
