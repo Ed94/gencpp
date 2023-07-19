@@ -1,6 +1,6 @@
 #pragma once
 
-#if gen_time
+#if GEN_TIME
 #include "gen.hpp"
 
 using namespace gen;
@@ -271,4 +271,4 @@ u32 gen_buffer_file()
 	return 0;
 }
 
-#endif // gen_time
+#endif // GEN_TIME

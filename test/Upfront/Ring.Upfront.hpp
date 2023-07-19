@@ -1,6 +1,6 @@
 #pragma once
 
-#if gen_time
+#if GEN_TIME
 #include "gen.hpp"
 #include "Buffer.Upfront.hpp"
 
@@ -225,4 +225,4 @@ u32 gen_ring_file()
 	return 0;
 }
 
-#endif // gen_time
+#endif // GEN_TIME

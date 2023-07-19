@@ -1,4 +1,4 @@
-#ifdef gen_time
+#ifdef GEN_TIME
 #include "gen.hpp"
 
 using namespace gen;

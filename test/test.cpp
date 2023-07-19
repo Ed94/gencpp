@@ -7,7 +7,7 @@
 #include "sanity.cpp"
 #include "SOA.cpp"
 
-#if gen_time
+#if GEN_TIME
 int gen_main()
 {
 	using namespace gen;
@@ -23,7 +23,7 @@ int gen_main()
 
 
 // This only has to be done if symbol conflicts occur.
-#ifndef gen_time
+#ifndef GEN_TIME
 int main()
 {
 

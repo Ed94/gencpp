@@ -1,4 +1,4 @@
-#ifdef gen_time
+#ifdef GEN_TIME
 #define GEN_FEATURE_PARSING
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
@@ -9,7 +9,7 @@
 #include "Parsed\HashTable.Parsed.hpp"
 #include "Parsed\Ring.Parsed.hpp"
 #include "Parsed\Sanity.Parsed.hpp"
-#include "SOA.hpp"
+#include "SOA.cpp"
 #include "gen.cpp"
 
 using namespace gen;

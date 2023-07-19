@@ -1,6 +1,6 @@
 #pragma once
 
-#if gen_time
+#if GEN_TIME
 #define GEN_FEATURE_PARSING
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
@@ -203,4 +203,4 @@ u32 gen_buffer_file()
 	return 0;
 }
 
-#endif // gen_time
+#endif // GEN_TIME
