@@ -1096,13 +1096,13 @@ namespace gen
 #pragma region Gen Interface
 	internal void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
 	{
-		Arena& last = Global_AllocatorBuckets.back();
+		Arena* last = & Global_AllocatorBuckets.back();
 
 		switch ( type )
 		{
 			case EAllocation_ALLOC:
 			{
-				if ( last.TotalUsed + size > last.TotalSize )
+				if ( ( last->TotalUsed + size ) > last->TotalSize )
 				{
 					Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
 
@@ -1112,10 +1112,10 @@ namespace gen
 					if ( ! Global_AllocatorBuckets.append( bucket ) )
 						fatal( "Failed to append bucket to Global_AllocatorBuckets");
 
-					last = Global_AllocatorBuckets.back();
+					last = & Global_AllocatorBuckets.back();
 				}
 
-				return alloc_align( last, size, alignment );
+				return alloc_align( * last, size, alignment );
 			}
 			case EAllocation_FREE:
 			{
@@ -1129,7 +1129,7 @@ namespace gen
 			break;
 			case EAllocation_RESIZE:
 			{
-				if ( last.TotalUsed + size > last.TotalSize )
+				if ( last->TotalUsed + size > last->TotalSize )
 				{
 					Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
 
@@ -1139,10 +1139,10 @@ namespace gen
 					if ( ! Global_AllocatorBuckets.append( bucket ) )
 						fatal( "Failed to append bucket to Global_AllocatorBuckets");
 
-					last = Global_AllocatorBuckets.back();
+					last = & Global_AllocatorBuckets.back();
 				}
 
-				void* result = alloc_align( last.Backing, size, alignment );
+				void* result = alloc_align( last->Backing, size, alignment );
 
 				if ( result != nullptr && old_memory != nullptr )
 				{
@@ -1336,8 +1336,8 @@ namespace gen
 
 	void deinit()
 	{
-		s32 index = 0;
-		s32 left  = CodePools.num();
+		uw index = 0;
+		uw left  = CodePools.num();
 		do
 		{
 			Pool* code_pool = & CodePools[index];
@@ -1361,9 +1361,7 @@ namespace gen
 		CodePools.free();
 		StringArenas.free();
 
-	#ifdef GEN_FEATURE_PARSING
 		LexArena.free();
-	#endif
 
 		index = 0;
 		left  = Global_AllocatorBuckets.num();

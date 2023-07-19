@@ -117,6 +117,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 
 void check_SOA()
 {
+	log_fmt("\ncheck_SOA:");
 	gen::init();
 	Builder soa_test; soa_test.open( "SOA.gen.hpp" );
 
@@ -140,5 +141,6 @@ void check_SOA()
 
 	soa_test.write();
 	gen::deinit();
+	log_fmt(" passed!\n");
 }
 #endif

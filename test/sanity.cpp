@@ -87,7 +87,7 @@ void check_sanity()
 	log_fmt("Num String Cache Arenas : %llu TotalSize: %llu !\n", StringArenas.num(), StringArenas.num() * SizePer_StringArena);
 	log_fmt("Num String Cache        : %llu\n", StringCache.Entries.num(), StringCache);
 
-	log_fmt("\nSanity passed!\n");
 	gen::deinit();
+	log_fmt("\nSanity passed!\n");
 }
 #endif
