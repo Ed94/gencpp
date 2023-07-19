@@ -688,7 +688,7 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Convert global allocation strategy to use the dual-scratch allocator for a contextual scope.
 * May be in need of a better name, I found a few repos with this same one...
 * Support module and attribute parsing (Marked with TODOs for now..)
-* Trailing specifiers (postfix ) for functions (const, override, final)
+* Trailing specifiers ( postfix ) for functions (const, override, final)
 * Implement the Scanner
 * Implement the Editor
 * Support defining/parsing full definitions inside a typedef. (For C patterns)
@@ -696,3 +696,6 @@ Names or Content fields are interned strings and thus showed be cached using `ge
   * Easier to tailor make the library for other projects.
   * Most code can be in componentized into files and then scanned in.
   * Can offer a more c-like version for the implementation, make namespaces optional, etc. (Good way to stress test it)
+* Should the builder be an "extension" header?
+  * Technically the library doesn't require it and the user can use their own filesystem library.
+  * It would allow me to remove the filesystem dependencies and related functions outside of gen base headers. ( At least 1k loc reduced )
