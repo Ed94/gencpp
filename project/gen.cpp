@@ -1,10 +1,15 @@
 // ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
 
-#ifdef gen_time
+#if ! defined(GEN_DONT_ENFORCE_GEN_TIME_GUARD) && ! defined(GEN_TIME)
+#error Gen.hpp : GEN_TIME not defined
+#endif
+
+#include "gen.push_ignores.inline.hpp"
+
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 //! Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
-#	include "gen_dep.cpp"
+#	include "gen.dep.cpp"
 #endif
 
 #include "gen.hpp"
@@ -753,7 +758,7 @@ namespace gen
 
 				if ( NumEntries - 1 > 0)
 				{
-					for ( CodeParam param : (CodeParam){ (AST_Param*)Next } )
+					for ( CodeParam param :  CodeParam { (AST_Param*) Next } )
 					{
 						result.append_fmt( ", %s", param.to_string() );
 					}
@@ -6536,16 +6541,6 @@ namespace gen
 		Buffer.free();
 	}
 #pragma endregion Builder
-
-#pragma region Editor
-#ifdef GEN_FEATURE_EDITOR
-#endif
-#pragma endregion Editor
-
-#pragma region Scanner
-#ifdef GEN_FEATURE_SCANNER
-#endif
-#pragma endregion Scanner
 }
-// End: gen_time
-#endif
+
+#include "gen.pop_ignores.inline.hpp"

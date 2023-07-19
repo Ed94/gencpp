@@ -1,6 +1,5 @@
-#include "gen_dep.hpp"
-
-#ifdef gen_time
+// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)
+#include "gen.dep.hpp"
 
 // NOTE: Ensure we use standard methods for these calls if we use GEN_PICO
 #pragma region Macros & Includes
@@ -39,7 +38,6 @@
 #			undef VC_EXTRALEAN
 #		endif
 #	endif
-#pragma endregion Macros & Includes
 
 #ifdef GEN_BENCHMARK
 // Timing includes
@@ -62,9 +60,12 @@
 #	include <timezoneapi.h>
 #endif
 #endif
+#pragma endregion Macros & Includes
 
-namespace gen
-{
+
+
+namespace gen {
+
 #pragma region Debug
 	void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... )
 	{
@@ -2048,7 +2049,279 @@ namespace gen
 #pragma endregion ADT
 
 #pragma region CSV
+	#ifdef GEN_CSV_DEBUG
+	#	define GEN_CSV_ASSERT( msg ) GEN_PANIC( msg )
+	#else
+	#	define GEN_CSV_ASSERT( msg )
+	#endif
 
+
+	u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim )
+	{
+		CSV_Error err = ECSV_Error__NONE;
+		GEN_ASSERT_NOT_NULL( root );
+		GEN_ASSERT_NOT_NULL( text );
+		zero_item( root );
+		adt_make_branch( root, allocator, NULL, has_header ? false : true );
+		char *p = text, *b = p, *e = p;
+		sw    colc = 0, total_colc = 0;
+
+		do
+		{
+			char d = 0;
+			p      = zpl_cast( char* ) str_trim( p, false );
+			if ( *p == 0 )
+				break;
+			ADT_Node row_item = { 0 };
+			row_item.type     = EADT_TYPE_STRING;
+	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+			row_item.name_style = EADT_NAME_STYLE_NO_QUOTES;
+	#endif
+
+			/* handle string literals */
+			if ( *p == '"' )
+			{
+				p = b = e       = p + 1;
+				row_item.string = b;
+	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+				row_item.name_style = EADT_NAME_STYLE_DOUBLE_QUOTE;
+	#endif
+				do
+				{
+					e = zpl_cast( char* ) str_skip( e, '"' );
+					if ( *e && *( e + 1 ) == '"' )
+					{
+						e += 2;
+					}
+					else
+						break;
+				} while ( *e );
+				if ( *e == 0 )
+				{
+					GEN_CSV_ASSERT( "unmatched quoted string" );
+					err = ECSV_Error__UNEXPECTED_END_OF_INPUT;
+					return err;
+				}
+				*e = 0;
+				p  = zpl_cast( char* ) str_trim( e + 1, true );
+				d  = *p;
+
+				/* unescape escaped quotes (so that unescaped text escapes :) */
+				{
+					char* ep = b;
+					do
+					{
+						if ( *ep == '"' && *( ep + 1 ) == '"' )
+						{
+							mem_move( ep, ep + 1, str_len( ep ) );
+						}
+						ep++;
+					} while ( *ep );
+				}
+			}
+			else if ( *p == delim )
+			{
+				d               = *p;
+				row_item.string = "";
+			}
+			else if ( *p )
+			{
+				/* regular data */
+				b = e           = p;
+				row_item.string = b;
+				do
+				{
+					e++;
+				} while ( *e && *e != delim && *e != '\n' );
+				if ( *e )
+				{
+					p = zpl_cast( char* ) str_trim( e, true );
+					while ( char_is_space( *( e - 1 ) ) )
+					{
+						e--;
+					}
+					d  = *p;
+					*e = 0;
+				}
+				else
+				{
+					d = 0;
+					p = e;
+				}
+
+				/* check if number and process if so */
+				b32   skip_number = false;
+				char* num_p       = b;
+				do
+				{
+					if ( ! char_is_hex_digit( *num_p ) && ( ! str_find( "+-.eExX", *num_p ) ) )
+					{
+						skip_number = true;
+						break;
+					}
+				} while ( *num_p++ );
+
+				if ( ! skip_number )
+				{
+					adt_str_to_number( &row_item );
+				}
+			}
+
+			if ( colc >= root->nodes.num() )
+			{
+				adt_append_arr( root, NULL );
+			}
+
+			root->nodes[ colc ].nodes.append( row_item );
+
+			if ( d == delim )
+			{
+				colc++;
+				p++;
+			}
+			else if ( d == '\n' || d == 0 )
+			{
+				/* check if number of rows is not mismatched */
+				if ( total_colc < colc )
+					total_colc = colc;
+				else if ( total_colc != colc )
+				{
+					GEN_CSV_ASSERT( "mismatched rows" );
+					err = ECSV_Error__MISMATCHED_ROWS;
+					return err;
+				}
+				colc = 0;
+				if ( d != 0 )
+					p++;
+			}
+		} while ( *p );
+
+		if ( root->nodes.num() == 0 )
+		{
+			GEN_CSV_ASSERT( "unexpected end of input. stream is empty." );
+			err = ECSV_Error__UNEXPECTED_END_OF_INPUT;
+			return err;
+		}
+
+		/* consider first row as a header. */
+		if ( has_header )
+		{
+			for ( sw i = 0; i < root->nodes.num(); i++ )
+			{
+				CSV_Object* col = root->nodes + i;
+				CSV_Object* hdr = col->nodes;
+				col->name       = hdr->string;
+				col->nodes.remove_at( 0 );
+			}
+		}
+
+		return err;
+	}
+
+	void csv_free( CSV_Object* obj )
+	{
+		adt_destroy_branch( obj );
+	}
+
+	void _csv_write_record( FileInfo* file, CSV_Object* node )
+	{
+		switch ( node->type )
+		{
+			case EADT_TYPE_STRING :
+				{
+	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+					switch ( node->name_style )
+					{
+						case EADT_NAME_STYLE_DOUBLE_QUOTE :
+							{
+								str_fmt_file( file, "\"" );
+								adt_print_string( file, node, "\"", "\"" );
+								str_fmt_file( file, "\"" );
+							}
+							break;
+
+						case EADT_NAME_STYLE_NO_QUOTES :
+							{
+	#endif
+								str_fmt_file( file, "%s", node->string );
+	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+							}
+							break;
+					}
+	#endif
+				}
+				break;
+
+			case EADT_TYPE_REAL :
+			case EADT_TYPE_INTEGER :
+				{
+					adt_print_number( file, node );
+				}
+				break;
+		}
+	}
+
+	void _csv_write_header( FileInfo* file, CSV_Object* header )
+	{
+		CSV_Object temp = *header;
+		temp.string     = temp.name;
+		temp.type       = EADT_TYPE_STRING;
+		_csv_write_record( file, &temp );
+	}
+
+	void csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delimiter )
+	{
+		GEN_ASSERT_NOT_NULL( file );
+		GEN_ASSERT_NOT_NULL( obj );
+		GEN_ASSERT( obj->nodes );
+		sw cols = obj->nodes.num();
+		if ( cols == 0 )
+			return;
+
+		sw rows = obj->nodes[ 0 ].nodes.num();
+		if ( rows == 0 )
+			return;
+
+		b32 has_headers = obj->nodes[ 0 ].name != NULL;
+
+		if ( has_headers )
+		{
+			for ( sw i = 0; i < cols; i++ )
+			{
+				_csv_write_header( file, &obj->nodes[ i ] );
+				if ( i + 1 != cols )
+				{
+					str_fmt_file( file, "%c", delimiter );
+				}
+			}
+			str_fmt_file( file, "\n" );
+		}
+
+		for ( sw r = 0; r < rows; r++ )
+		{
+			for ( sw i = 0; i < cols; i++ )
+			{
+				_csv_write_record( file, &obj->nodes[ i ].nodes[ r ] );
+				if ( i + 1 != cols )
+				{
+					str_fmt_file( file, "%c", delimiter );
+				}
+			}
+			str_fmt_file( file, "\n" );
+		}
+	}
+
+	String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimiter )
+	{
+		FileInfo tmp;
+		file_stream_new( &tmp, a );
+		csv_write_delimiter( &tmp, obj, delimiter );
+		sw     fsize;
+		u8*    buf    = file_stream_buf( &tmp, &fsize );
+		String output = String::make_length( a, ( char* )buf, fsize );
+		file_close( &tmp );
+		return output;
+	}
 #pragma endregion CSV
 
 #pragma region Hashing
@@ -2507,6 +2780,11 @@ namespace gen
 		return err;
 	}
 
+	FileError file_open( FileInfo* f, char const* filename )
+	{
+		return file_open_mode( f, EFileMode_READ, filename );
+	}
+
 	FileError file_open_mode( FileInfo* f, FileMode mode, char const* filename )
 	{
 		FileInfo file_ =
@@ -2545,6 +2823,33 @@ namespace gen
 		file_seek( f, prev_offset );
 
 		return size;
+	}
+
+	FileContents file_read_contents( AllocatorInfo a, b32 zero_terminate, char const* filepath )
+	{
+		FileContents result;
+		FileInfo     file  ;
+
+		result.allocator = a;
+
+		if ( file_open( &file, filepath ) == EFileError_NONE )
+		{
+			sw fsize = zpl_cast( sw ) file_size( &file );
+			if ( fsize > 0 )
+			{
+				result.data = alloc( a, zero_terminate ? fsize + 1 : fsize );
+				result.size = fsize;
+				file_read_at( &file, result.data, result.size, 0 );
+				if ( zero_terminate )
+				{
+					u8* str      = zpl_cast( u8* ) result.data;
+					str[ fsize ] = '\0';
+				}
+			}
+			file_close( &file );
+		}
+
+		return result;
 	}
 
 	struct _memory_fd
@@ -2776,8 +3081,8 @@ namespace gen
 	}
 #pragma endregion String
 
-#ifdef GEN_BENCHMARK
 #pragma region Timing
+#ifdef GEN_BENCHMARK
 	#if defined( GEN_COMPILER_MSVC ) && ! defined( __clang__ )
 	u64 read_cpu_time_stamp_counter( void )
 	{
@@ -2934,11 +3239,8 @@ namespace gen
 	{
 		return ( f64 )( time_rel_ms() * 1e-3 );
 	}
-#pragma endregion Timing
 #endif
+#pragma endregion Timing
 
 // namespace gen
 }
-
-// gen_time
-#endif

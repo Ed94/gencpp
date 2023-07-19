@@ -9,7 +9,7 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "gen_time"
+                "GEN_TIME"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Users/Ed/scoop/apps/llvm/current/bin/clang++.exe",

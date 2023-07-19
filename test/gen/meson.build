@@ -22,6 +22,6 @@ endif
   # add_project_arguments('-E', language : ['c', 'cpp'])
   # add_global_arguments( '-E', language : ['cpp'])
 
-add_project_arguments('-Dgen_time', language : ['c', 'cpp'])
+add_project_arguments('-DGEN_TIME', language : ['c', 'cpp'])
 
 executable( 'gencpp', sources, include_directories : includes )
