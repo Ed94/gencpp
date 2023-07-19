@@ -352,7 +352,7 @@
 // gencpp macros
 
 // word gen_main     new_name
-// word gen_time     new_name
+// word GEN_TIME     new_name
 
 // word __           new_name
 // word code         new_name

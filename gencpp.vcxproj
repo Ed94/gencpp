@@ -79,7 +79,7 @@
     <NMakeBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
-    <NMakePreprocessorDefinitions>gen_time;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(ProjectDir)thirdparty;$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)project;$(ProjectDir)test;$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -87,7 +87,7 @@
     <NMakeBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
-    <NMakePreprocessorDefinitions>gen_time;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(ProjectDir)thirdparty;$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)project;$(ProjectDir)test;$(SourcePath)</SourcePath>
   </PropertyGroup>

@@ -2,7 +2,7 @@
 
 An attempt at simple staged metaprogramming for c/c++.
 
-The library API is a compositon of code element constructors.  
+The library API is a composition of code element constructors.  
 These build up a code AST to then serialize with a file builder.
 
 ### TOC
@@ -45,7 +45,7 @@ A C variant is hosted [here](https://github.com/Ed94/genc); I haven't gotten hea
 
 ## Usage
 
-A metaprogram is built to generate files before the main program is built. We'll term runtime for this program as `gen_time`. The metaprogram's core implementation are within `gen.hpp` and `gen.cpp` in the project directory.
+A metaprogram is built to generate files before the main program is built. We'll term runtime for this program as `GEN_TIME`. The metaprogram's core implementation are within `gen.hpp` and `gen.cpp` in the project directory.
 
 `gen.cpp` \`s  `main()` is defined as `gen_main()` which the user will have to define once for their program. There they will dictate everything that should be generated.
 
@@ -54,9 +54,8 @@ In order to keep the locality of this code within the same files the following p
 Within `program.cpp` :
 
 ```cpp
+#ifdef GEN_TIME
 #include "gen.hpp"
-
-#ifdef gen_time
 
 ...
 
@@ -66,8 +65,7 @@ u32 gen_main()
 }
 #endif
 
-
-#ifndef gen_time
+#ifndef GEN_TIME
 #include "program.gen.cpp"
 
     // Regular runtime dependent on the generated code here.
@@ -126,7 +124,7 @@ Code header = untyped_str( code(
 ));
 ```
 
-`name` is a helper macro for providing a string literal with its size, intended for the name paraemter of functions.  
+`name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.  
 `code` is a helper macro for providing a string literal with its size, but intended for code string parameters.  
 `args` is a helper macro for providing the number of arguments to varadic constructors.
 
@@ -150,7 +148,7 @@ An example of building is provided in the test directory.
 There are two meson build files the one within test is the program's build specification.  
 The other one in the gen directory within test is the metaprogram's build specification.
 
-Both of them build the same source file: `test.cpp`. The only differences are that gen needs a different relative path to the include directories and defines the macro definition: `gen_time`.
+Both of them build the same source file: `test.cpp`. The only differences are that gen needs a different relative path to the include directories and defines the macro definition: `GEN_TIME`.
 
 This method is setup where all the metaprogram's code are the within the same files as the regular program's code.  
 
@@ -185,7 +183,7 @@ Especially when the priority is to keep this library small and easy to grasp for
 
 When it comes to templates:
 
-Only trivial template support is provided. the intention is for only simple, non-recursive subsitution.  
+Only trivial template support is provided. the intention is for only simple, non-recursive substitution.  
 The parameters of the template are treated like regular parameter AST entries.  
 This means that the typename entry for the parameter AST would be either:
 
@@ -196,7 +194,7 @@ This means that the typename entry for the parameter AST would be either:
 Anything beyond this usage is not supported by parse_template for arguments (at least not intentionally).  
 Use at your own mental peril...
 
-*Concepts and Constraints are not supported, its usage is non-tirival substiution.*
+*Concepts and Constraints are not supported, its usage is non-trivial substitution.*
 
 ### The Data & Interface
 
@@ -278,21 +276,21 @@ Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
   * You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`.
-* ASTs are wrapped for the user in a Code struct which is a warpper for a AST* type.
+* ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
 * Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
   * `StringArenas`, `StringCache`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
-* Strings used for seralization and file buffers are not contained by those used for cached strings.
+* Strings used for serialization and file buffers are not contained by those used for cached strings.
   * They are currently using `Memory::GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
-  * Memory within the buckets is not resused, so its inherently wasteful (most likely will give non-cached strings their own tailored allocator later)
+  * Memory within the buckets is not reused, so its inherently wasteful (most likely will give non-cached strings their own tailored allocator later)
 * Linked lists used children nodes on bodies, and parameters.
-* Its intended to generate the AST in one go and serialize after. The contructors and serializer are designed to be a "one pass, front to back" setup.
+* Its intended to generate the AST in one go and serialize after. The constructors and serializer are designed to be a "one pass, front to back" setup.
 * When benchmarking, the three most significant var to tune are:
   * `Memory::Global_BlockSize` (found gen_dep.hpp) : Used by the GlobalAllocator for the size of each global arena.
   * `SizePer_StringArena` (found in gen.hpp under the constants region) : Used by the string cache to store strings.
   * `CodePool_NumBlocks` (found in gen.hpp under constants region) : Used by code pool to store ASTs.
-  * The default values can handled generating for a stirng up to a size of ~650 kbs (bottleneck is serialization).
+  * The default values can handled generating for a string up to a size of ~650 kbs (bottleneck is serialization).
   * Increasing the values can generate files upwards of over a million lines without issue (the formatter will most likely run slower than it)
 
 Two generic templated containers are used throughout the library:
@@ -300,11 +298,11 @@ Two generic templated containers are used throughout the library:
 * `template< class Type> struct Array`
 * `template< class Type> struct HashTable`
 
-Both Code and AST definitions have a `template< class Type> Code/AST cast()`. Its just an alternative way to explictly cast to each other.
+Both Code and AST definitions have a `template< class Type> Code/AST cast()`. Its just an alternative way to explicitly cast to each other.
 
 Otherwise the library is free of any templates.
 
-The following CodeTypes are used which the user may optionally use strong typeing with if they enable: `GEN_ENFORCE_STRONG_CODE_TYPES`
+The following CodeTypes are used which the user may optionally use strong typing with if they enable: `GEN_ENFORCE_STRONG_CODE_TYPES`
 
 * CodeBody : Has support for `for-range` iterating across Code objects.
 * CodeAttributes
@@ -320,7 +318,7 @@ The following CodeTypes are used which the user may optionally use strong typein
 * CodeNamespace
 * CodeOperator
 * CodeOpCast
-* CodeParam : Has suppor for `for-range` iterating across parameters.
+* CodeParam : Has support for `for-range` iterating across parameters.
 * CodeSpecifier : Has support for `for-range` iterating across specifiers.
 * CodeStruct
 * CodeTemplate
@@ -331,9 +329,9 @@ The following CodeTypes are used which the user may optionally use strong typein
 * CodeUsingNamespace
 * CodeVar
 
-Each Code boy has an assoicated "filtered AST" with the naming convention: `AST_<CodeName>`
-Unrelated fields of the AST for that node type are omitted and only necesary padding members are defined otherwise.
-Retreiving a raw version of the ast can be done using the `raw()` function defined in each AST.
+Each Code boy has an associated "filtered AST" with the naming convention: `AST_<CodeName>`
+Unrelated fields of the AST for that node type are omitted and only necessary padding members are defined otherwise.
+Retrieving a raw version of the ast can be done using the `raw()` function defined in each AST.
 
 ## There are three sets of interfaces for Code AST generation the library provides
 
@@ -349,7 +347,7 @@ The construction will fail and return Code::Invalid otherwise.
 Interface :``
 
 * def_attributes
-  * *This is preappened right before the function symbol, or placed after the class or struct keyword for any flavor of attributes used.*
+  * *This is pre-appended right before the function symbol, or placed after the class or struct keyword for any flavor of attributes used.*
   * *Its up to the user to use the desired attribute formatting: `[[]]` (standard), `__declspec` (Microsoft), or `__attribute__` (GNU).*
 * def_comment
 * def_class
@@ -449,7 +447,7 @@ The lexing and parsing takes shortcuts from whats expected in the standard.
   * Assumed to *come before specifiers* (`const`, `constexpr`, `extern`, `static`, etc) for a function
   * Or in the usual spot for class, structs, (*right after the declaration keyword*)
   * typedefs have attributes with the type (`parse_type`)
-* As a general rule; if its not available from the upfront contructors, its not available in the parsing constructors.
+* As a general rule; if its not available from the upfront constructors, its not available in the parsing constructors.
   * *Upfront constructors are not necessarily used in the parsing constructors, this is just a good metric to know what can be parsed.*
 
 Usage:
@@ -492,9 +490,18 @@ These restrictions help prevent abuse of untyped code to some extent.
 Usage Conventions:
 
 ```cpp
-Code <name> = def_varaible( <type>, <name>, untyped_<function name>(
+Code <name> = def_variable( <type>, <name>, untyped_<function name>(
     <string with code>
 ));
+
+Code <name> = untyped_str( code(
+    <some code without "" quotes>
+));
+```
+
+Optionally, `code_str`, and `code_fmt` macros can be used so that the code macro doesn't have to be used:
+```cpp
+Code <name> = code_str( <some code without "" quotes > )
 ```
 
 Template metaprogramming in the traditional sense becomes possible with the use of `token_fmt` and parse constructors:
@@ -590,9 +597,9 @@ Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FE
 ### Builder is a similar object to the jai language's string_builder
 
 * The purpose of it is to generate a file.
-* A file is specified and opened for writting using the open( file_path) ) function.
-* The code is provided via print( code ) function  will be seralized to its buffer.
-* When all seralization is finished, use the write() command to write the buffer to the file.
+* A file is specified and opened for writing using the open( file_path) ) function.
+* The code is provided via print( code ) function  will be serialized to its buffer.
+* When all serialization is finished, use the write() command to write the buffer to the file.
 
 ### Editor is for editing a series of files based on a set of requests provided to it
 
@@ -625,7 +632,7 @@ It will on call add a request to the queue to run the refactor script on the fil
 * The purpose is to grab definitions to generate metadata or generate new code from these definitions.
 * Requests are populated using the add( SymbolInfo, Policy ) function. The symbol info is the same as the one used for the editor. So is the case with Policy.
 
-The file will only be read from, no writting supported.
+The file will only be read from, no writing supported.
 
 One great use case is for example: generating the single-header library for gencpp!
 
@@ -643,10 +650,10 @@ Request queue in both Editor and Scanner are cleared once process_requests compl
 
 Currently unsupported. The following changes would have to be made:
 
-* Setup static data accesss with fences if more than one thread will generate ASTs ( or keep a different set for each thread)
-* Make sure local peristent data of functions are also thread local.
+* Setup static data access with fences if more than one thread will generate ASTs ( or keep a different set for each thread)
+* Make sure local persistent data of functions are also thread local.
 * The builder should be done on a per-thread basis.
-* Due to the design of the editor and scanner, it will most likely be best to make each file a job to process request entries on. Receipts should have an an array to store per thread. They can be combined to the final reciepts array when all files have been processed.
+* Due to the design of the editor and scanner, it will most likely be best to make each file a job to process request entries on. Receipts should have an an array to store per thread. They can be combined to the final receipts array when all files have been processed.
 
 ## Extending the library
 
@@ -667,11 +674,11 @@ The convention you'll see used throughout the API of the library is as follows:
 1. Check name or parameters to make sure they are valid for the construction requested
 2. Create a code object using `make_code`.
 3. Populate immediate fields (Name, Type, ModuleFlags, etc)
-4. Populate sub-entires using `add_entry`. If using the default seralization function `to_string`, follow the order at which entires are expected to appear (there is a strong ordering expected).
+4. Populate sub-entires using `add_entry`. If using the default serialization function `to_string`, follow the order at which entires are expected to appear (there is a strong ordering expected).
 
 Names or Content fields are interned strings and thus showed be cached using `get_cached_string` if its desired to preserve that behavior.
 
-`def_operator` is the most sophisitacated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
+`def_operator` is the most sophisticated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
 # TODO
 
@@ -685,22 +692,7 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 * Implement the Scanner
 * Implement the Editor
 * Support defining/parsing full definitions inside a typedef. (For C patterns)
-* Make the libray boostrap itself? It would make the code generated have less macros.
+* Make the library bootstrap itself? It would make the code generated have less macros.
   * Easier to tailor make the library for other projects.
   * Most code can be in componentized into files and then scanned in.
   * Can offer a more c-like version for the implementation, make namespaces optional, etc. (Good way to stress test it)
-
-# Thoughts
-
-This project came about for a few reasons:
-
-* I've been trying out the "handmade" approach to programming to see whats its like in practice vs what I have to use at work, and what I learned before getting exposed to the community.
-  * Its very hard to unlearn OOP.
-  * Not a fan of pure C, maybe I'll succumb to the drawbacks.
-  * All alternatives to C/C++ are too opionionated instead of providing a lax frontend, or a proper compiler backend with a frontend api to quickly roll your own forntend.
-* One of the core issues I've always had with programming is there has always been a need for metaprogramming, but every single tool has horrible error deduction for the user (backend blackbox from codebase size or closed-source, error log nightmare).
-* I spend an obnoxious amount of time trying to express code that cannot be expressed well in templates or macros. The experience is inadequate; even with full blown IDEs.
-* I wanted to be able to easily refactor libraries interated in projects with some form of curation. While still having the ability to not maintain a separate fork (IF the scanner gets implemetned, that is possible).
-* I did not use Metadesk as it was an esoteric library for me to use as a dependency when I didn't fully grasp the vision for how this library would end up. (Not much practice doing metaprogramming or code gen/transform development)
-  * I have no issue rewritting the library to use it as a backend if its worth while but its most likely better to just make an extension for it.
-* This project showed me rewwriting code isn't as expensive as people make it out to be (vs using a bloated toolchain)

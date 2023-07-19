@@ -1,6 +1,6 @@
 # Scripts
 
-Build and cleanup scripts for the test deirectory are found here along with `natvis` and `natstepfilter` files for debugging.
+Build and cleanup scripts for the test directory are found here along with `natvis` and `natstepfilter` files for debugging.
 
 The build works as follows:
 
@@ -9,4 +9,4 @@ The build works as follows:
 * Build a program that uses some the generated definitions. (Have not done yet)
 
 The `test/gen` directory has the meson.build config for the meta-program
-The `test` directory has the one for the depdendent-program.
+The `test` directory has the one for the dependent-program.

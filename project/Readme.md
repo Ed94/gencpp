@@ -6,17 +6,16 @@ All the library code is contained in two files: `gen.hpp` and `gen.cpp`
 
 Feature Macros:
 
+* `GEN_DONT_ENFORCE_GEN_TIME_GUARD` : By default, the library ( gen.hpp/ gen.cpp ) expects the macro `GEN_TIME` to be defined, this disables that.
 * `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
 * `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
 * `GEN_ENFORCE_STRONG_CODE_TYPES` : Enforces casts to filtered code types.
-* `GEN_FEATURE_PARSING` : Defines the parse constructors
-* `GEN_FEATURE_EDITOR` : Defines the file editing features for changing definitions based on ASTs
-* `GEN_FEATURE_SCANNER` : Defines the file scanning features for generating ASTs
 
 `GEN_USE_RECURSIVE_AST_DUPLICATION` is available but its not well tested and should not need to be used.
 If constructing ASTs properly. There should be no modification of ASTs, and thus this would never become an issue.
+(I will probably remove down the line...)
 
-Due to the design of `gen.hpp` to support being written alongside runtime intended code (in the same file), all the code is wrapped in a `gen_time` `#ifdef` and then wrapped further in a `gen` namespace to avoid pollution of the global scope.
+Due to the design of `gen.hpp` to support being written alongside runtime intended code (in the same file), all the code is wrapped in a `GEN_TIME` `#ifdef` and then wrapped further in a `gen` namespace to avoid pollution of the global scope.
 
 *Note: Its possible with the scanner feature to support parsing runtime files that use "generic" macros or identifiers with certain patterns.  
 This can be used to auto-queue generation of dependent definitions for the symbols used.*
@@ -30,27 +29,27 @@ log_failure definition : based on whether to always use fatal on all errors
 Major enum definitions and their associated functions used with the AST data
 
 * `ECode` : Used to tag ASTs by their type
-* `EOperator` : Used to tag operator overloads with thier op type
+* `EOperator` : Used to tag operator overloads with their op type
 * `ESpecifier` : Used with specifier ASTs for all specifiers the user may tag an associated
 AST with.
 * `AccessSpec` : Used with class and struct ASTs to denote the public, protected, or private fields.
 * `EnumT` : Used with def_enum to determine if constructing a regular enum or an enum class.
-* `ModuleFlag` : Used with any valid definition that can have export or import related keywords assoicated with it.
+* `ModuleFlag` : Used with any valid definition that can have export or import related keywords associated with it.
 
 #### Data Structures
 
 `StringCache` : Hash table for cached strings. (`StringCached` typedef used to denote strings managed by it)
 
 `Code` : Wrapper for `AST` with functionality for handling it appropriately.  
-`AST` : The node data strucuture for the code.  
+`AST` : The node data structure for the code.  
 `Code Types` : Codes with typed ASTs. Body, Param, and Specifier have unique implementation, the rest use `Define_CodeType`  
 `AST Types` : Filtered AST definitions.  
 
 #### Gen Interface
 
-First set of fowards are either backend functions used for various aspects of AST generation or configurating allocators used for different containers.
+First set of forwards are either backend functions used for various aspects of AST generation or configurations allocators used for different containers.
 
-Interface fowards defined in order of: Upfront, Parsing, Untyped.
+Interface forwards defined in order of: Upfront, Parsing, Untyped.
 
 From there forwards for the File handlers are defined: Builder, Editor, Scanner.
 

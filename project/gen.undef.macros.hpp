@@ -1,4 +1,4 @@
-#if gen_time
+#if GEN_TIME
 // This undefines the macros used by the gen library but are not necessary for the user.
 
 #undef GEN_ARCH_64_BIT
@@ -66,11 +66,15 @@
 #undef stringize_va
 #undef txt_StrC
 
-#undef __
-#undef args
+#undef GEN_TIME
 #undef gen_main
-#undef gen_time
+#undef __
+#undef name
+#undef code
+#undef args
+#undef code_str
+#undef code_fmt
 #undef token_fmt
 
-// gen_time
+// GEN_TIME
 #endif

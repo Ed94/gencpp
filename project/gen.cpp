@@ -1313,9 +1313,7 @@ namespace gen
 
 			CodePools.append( code_pool );
 
-		#ifdef GEN_FEATURE_PARSING
 			LexArena = Arena::init_from_allocator( Allocator_Lexer, LexAllocator_Size );
-		#endif
 
 			Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
@@ -3300,14 +3298,12 @@ namespace gen
 #pragma endregion Upfront Constructors
 
 #pragma region Parsing Constructors
-#ifdef GEN_FEATURE_PARSING
 /*
-	These constructors are the most implementation intensive other than the edtior or scanner.
+	These constructors are the most implementation intensive other than the editor or scanner.
 */
 
 	namespace Parser
 	{
-
 	/*
 		This is a simple lexer that focuses on tokenizing only tokens relevant to the library.
 		It will not be capable of lexing C++ code with unsupported features.
@@ -6342,8 +6338,6 @@ namespace gen
 #	undef curr_tok
 #	undef eat
 #	undef left
-//	End GEN_FEATURE_PARSING
-#endif
 #pragma endregion Parsing Constructors
 
 #pragma region Untyped Constructors

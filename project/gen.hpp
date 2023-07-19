@@ -1458,7 +1458,6 @@ CodeBody      def_union_body      ( s32 num, Code* codes );
 #pragma endregion Upfront
 
 #pragma region Parsing
-#	ifdef GEN_FEATURE_PARSING
 CodeClass      parse_class        ( StrC class_def     );
 CodeEnum       parse_enum         ( StrC enum_def      );
 CodeBody       parse_export_body  ( StrC export_def    );
@@ -1476,7 +1475,6 @@ CodeTypedef    parse_typedef      ( StrC typedef_def   );
 CodeUnion      parse_union        ( StrC union_def     );
 CodeUsing      parse_using        ( StrC using_def     );
 CodeVar        parse_variable     ( StrC var_def       );
-#endif
 #pragma endregion Parsing
 
 #pragma region Untyped text
@@ -1931,6 +1929,27 @@ namespace gen
 }
 #pragma endregion Constants
 
+#pragma region Macros
+#	define gen_main main
+
+#	define __ NoCode
+
+//	Convienence for defining any name used with the gen api.
+//  Lets you provide the length and string literal to the functions without the need for the DSL.
+#	define name( Id_ )   { sizeof(stringize( Id_ )) - 1, stringize(Id_) }
+
+//  Same as name just used to indicate intention of literal for code instead of names.
+#	define code( ... ) { sizeof(stringize(__VA_ARGS__)) - 1, stringize( __VA_ARGS__ ) }
+
+#	define args( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
+
+#	define code_str( ... ) gen::untyped_str( code( __VA_ARGS__ ) )
+#	define code_fmt( ... ) gen::untyped_str( token_fmt( __VA_ARGS__ ) )
+
+// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
+#	define token_fmt( ... ) gen::token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+#pragma endregion Macros
+
 #ifdef GEN_EXPOSE_BACKEND
 namespace gen
 {
@@ -1952,26 +1971,5 @@ namespace gen
 	extern AllocatorInfo Allocator_TypeTable;
 }
 #endif
-
-#pragma region Macros
-#	define gen_main main
-
-#	define __ NoCode
-
-//	Convienence for defining any name used with the gen api.
-//  Lets you provide the length and string literal to the functions without the need for the DSL.
-#	define name( Id_ )   { sizeof(stringize( Id_ )) - 1, stringize(Id_) }
-
-//  Same as name just used to indicate intention of literal for code instead of names.
-#	define code( ... ) { sizeof(stringize(__VA_ARGS__)) - 1, stringize( __VA_ARGS__ ) }
-
-#	define args( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
-
-#	define code_str( ... ) gen::untyped_str( code( __VA_ARGS__ ) )
-#	define code_fmt( ... ) gen::untyped_str( token_fmt( __VA_ARGS__ ) )
-
-// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-#	define token_fmt( ... ) gen::token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
-#pragma endregion Macros
 
 #include "gen.pop_ignores.inline.hpp"
