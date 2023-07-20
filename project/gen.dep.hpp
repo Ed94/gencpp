@@ -10,7 +10,7 @@
 #		define GEN_ARCH_64_BIT 1
 #	endif
 #else
-#	ifndef GEN_ARCH_32_BIT
+#	ifndef GEN_ARCH_32_BItxt_StrCaT
 #		define GEN_ARCH_32_BIT 1
 #	endif
 #endif
@@ -91,6 +91,15 @@
 #	define GEN_HAS_ATTRIBUTE( attribute ) ( 0 )
 #endif
 
+#if defined(GEN_GCC_VERSION_CHECK)
+#  undef GEN_GCC_VERSION_CHECK
+#endif
+#if defined(GEN_GCC_VERSION)
+#  define GEN_GCC_VERSION_CHECK(major,minor,patch) (GEN_GCC_VERSION >= GEN_VERSION_ENCODE(major, minor, patch))
+#else
+#  define GEN_GCC_VERSION_CHECK(major,minor,patch) (0)
+#endif
+
 #define GEN_DEF_INLINE  static
 #define GEN_IMPL_INLINE static inline
 
@@ -149,7 +158,7 @@ namespace gen {
 // Num Arguments (Varadics)
 #if defined(__GNUC__) || defined(__clang__)
 	// Supports 0-10 arguments
-	#define num_args_impl( _0,                      \
+	#define num_args_impl( _0,                            \
 		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,  \
 		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
 		N, ...                                            \
@@ -159,8 +168,8 @@ namespace gen {
 	// _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,
 
 	// ## deletes preceding comma if _VA_ARGS__ is empty (GCC, Clang)
-	#define num_args(...)                 \
-	num_args_impl(_, ## __VA_ARGS__,      \
+	#define num_args(...)                       \
+	num_args_impl(_, ## __VA_ARGS__,            \
 		20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
 		10,  9,  8,  7,  6,  5,  4,  3,  2,  1, \
 		0                                       \
@@ -170,14 +179,14 @@ namespace gen {
 	// 30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
 #else
 	// Supports 1-10 arguments
-	#define num_args_impl(                          \
-		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10, \
+	#define num_args_impl(                                \
+		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,  \
 		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20, \
-		N, ...                                           \
+		N, ...                                            \
 	) N
 
-	#define num_args(...)                 \
-	num_args_impl( __VA_ARGS__,           \
+	#define num_args(...)                       \
+	num_args_impl( __VA_ARGS__,                 \
 		20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
 		10,  9,  8,  7,  6,  5,  4,  3,  2,  1  \
 	)
@@ -1283,6 +1292,7 @@ struct Array
 		Type* target = Data + idx;
 
 		mem_move( target + 1, target, (header->Num - idx) * sizeof(Type) );
+		header->Num++;
 
 		return true;
 	}
@@ -1309,7 +1319,6 @@ struct Array
 
 		mem_move( target, src, (header->Num - idx) * sizeof(Type) );
 		mem_copy( src, items, item_num * sizeof(Type) );
-
 		header->Num += item_num;
 
 		return true;
@@ -1730,378 +1739,378 @@ u64 crc64( void const* data, sw len );
 #pragma endregion Hashing
 
 #pragma region String
-	// Constant string with length.
-	struct StrC
-	{
-		sw          Len;
-		char const* Ptr;
+// Constant string with length.
+struct StrC
+{
+	sw          Len;
+	char const* Ptr;
 
-		operator char const* () const
-		{
-			return Ptr;
-		}
+	operator char const* () const
+	{
+		return Ptr;
+	}
+};
+
+#define txt_StrC( text ) \
+	StrC { sizeof( text ) - 1, text }
+
+StrC to_StrC( char const* str )
+{
+	return { str_len( str ), str };
+}
+
+sw StrC_len( char const* str )
+{
+	return (sw) ( str - 1 );
+}
+
+// Dynamic String
+// This is directly based off the ZPL string api.
+// They used a header pattern
+// I kept it for simplicty of porting but its not necessary to keep it that way.
+struct String
+{
+	struct Header
+	{
+		AllocatorInfo Allocator;
+		sw            Length;
+		sw            Capacity;
 	};
 
-	#define txt_StrC( text ) \
-		(StrC){ sizeof( text ) - 1, text }
-
-	StrC to_StrC( char const* str )
+	static
+	uw grow_formula( uw value )
 	{
-		return { str_len( str ), str };
+		// Using a very aggressive growth formula to reduce time mem_copying with recursive calls to append in this library.
+		return 4 * value + 8;
 	}
 
-	sw StrC_len( char const* str )
+	static
+	String make( AllocatorInfo allocator, char const* str )
 	{
-		return (sw) ( str - 1 );
+		sw length = str ? str_len( str ) : 0;
+		return make_length( allocator, str, length );
 	}
 
-	// Dynamic String
-	// This is directly based off the ZPL string api.
-	// They used a header pattern
-	// I kept it for simplicty of porting but its not necessary to keep it that way.
-	struct String
+	static
+	String make( AllocatorInfo allocator, StrC str )
 	{
-		struct Header
-		{
-			AllocatorInfo Allocator;
-			sw            Length;
-			sw            Capacity;
-		};
+		return make_length( allocator, str.Ptr, str.Len );
+	}
 
-		static
-		uw grow_formula( uw value )
+	static
+	String make_reserve( AllocatorInfo allocator, sw capacity )
+	{
+		constexpr sw header_size = sizeof( Header );
+
+		s32   alloc_size = header_size + capacity + 1;
+		void* allocation = alloc( allocator, alloc_size );
+
+		if ( allocation == nullptr )
+			return { nullptr };
+
+		mem_set( allocation, 0, alloc_size );
+
+		Header*
+		header            = rcast(Header*, allocation);
+		header->Allocator = allocator;
+		header->Capacity  = capacity;
+		header->Length    = 0;
+
+		String result = { (char*)allocation + header_size };
+		return result;
+	}
+
+	static
+	String make_length( AllocatorInfo allocator, char const* str, sw length )
+	{
+		constexpr sw header_size = sizeof( Header );
+
+		s32   alloc_size = header_size + length + 1;
+		void* allocation = alloc( allocator, alloc_size );
+
+		if ( allocation == nullptr )
+			return { nullptr };
+
+		Header&
+		header = * rcast(Header*, allocation);
+		header = { allocator, length, length };
+
+		String  result = { rcast( char*, allocation) + header_size };
+
+		if ( length && str )
+			mem_copy( result, str, length );
+		else
+			mem_set( result, 0, alloc_size - header_size );
+
+		result[ length ] = '\0';
+
+		return result;
+	}
+
+	static
+	String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... );
+
+	static
+	String fmt_buf( AllocatorInfo allocator, char const* fmt, ... );
+
+	static
+	String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue )
+	{
+		String result = make( allocator, "" );
+
+		for ( sw idx = 0; idx < num_parts; ++idx )
 		{
-			// Using a very aggressive growth formula to reduce time mem_copying with recursive calls to append in this library.
-			return 4 * value + 8;
+			result.append( parts[ idx ] );
+
+			if ( idx < num_parts - 1 )
+				result.append( glue );
 		}
 
-		static
-		String make( AllocatorInfo allocator, char const* str )
-		{
-			sw length = str ? str_len( str ) : 0;
-			return make_length( allocator, str, length );
-		}
+		return result;
+	}
 
-		static
-		String make( AllocatorInfo allocator, StrC str )
-		{
-			return make_length( allocator, str.Ptr, str.Len );
-		}
+	static
+	bool are_equal( String lhs, String rhs )
+	{
+		if ( lhs.length() != rhs.length() )
+			return false;
 
-		static
-		String make_reserve( AllocatorInfo allocator, sw capacity )
-		{
-			constexpr sw header_size = sizeof( Header );
-
-			s32   alloc_size = header_size + capacity + 1;
-			void* allocation = alloc( allocator, alloc_size );
-
-			if ( allocation == nullptr )
-				return { nullptr };
-
-			mem_set( allocation, 0, alloc_size );
-
-			Header*
-			header            = rcast(Header*, allocation);
-			header->Allocator = allocator;
-			header->Capacity  = capacity;
-			header->Length    = 0;
-
-			String result = { (char*)allocation + header_size };
-			return result;
-		}
-
-		static
-		String make_length( AllocatorInfo allocator, char const* str, sw length )
-		{
-			constexpr sw header_size = sizeof( Header );
-
-			s32   alloc_size = header_size + length + 1;
-			void* allocation = alloc( allocator, alloc_size );
-
-			if ( allocation == nullptr )
-				return { nullptr };
-
-			Header&
-			header = * rcast(Header*, allocation);
-			header = { allocator, length, length };
-
-			String  result = { rcast( char*, allocation) + header_size };
-
-			if ( length && str )
-				mem_copy( result, str, length );
-			else
-				mem_set( result, 0, alloc_size - header_size );
-
-			result[ length ] = '\0';
-
-			return result;
-		}
-
-		static
-		String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... );
-
-		static
-		String fmt_buf( AllocatorInfo allocator, char const* fmt, ... );
-
-		static
-		String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue )
-		{
-			String result = make( allocator, "" );
-
-			for ( sw idx = 0; idx < num_parts; ++idx )
-			{
-				result.append( parts[ idx ] );
-
-				if ( idx < num_parts - 1 )
-					result.append( glue );
-			}
-
-			return result;
-		}
-
-		static
-		bool are_equal( String lhs, String rhs )
-		{
-			if ( lhs.length() != rhs.length() )
+		for ( sw idx = 0; idx < lhs.length(); ++idx )
+			if ( lhs[ idx ] != rhs[ idx ] )
 				return false;
 
-			for ( sw idx = 0; idx < lhs.length(); ++idx )
-				if ( lhs[ idx ] != rhs[ idx ] )
-					return false;
+		return true;
+	}
 
+	bool make_space_for( char const* str, sw add_len )
+	{
+		sw available = avail_space();
+
+		// NOTE: Return if there is enough space left
+		if ( available >= add_len )
+		{
 			return true;
 		}
-
-		bool make_space_for( char const* str, sw add_len )
+		else
 		{
-			sw available = avail_space();
+			sw new_len, old_size, new_size;
 
-			// NOTE: Return if there is enough space left
-			if ( available >= add_len )
-			{
-				return true;
-			}
-			else
-			{
-				sw new_len, old_size, new_size;
+			void* ptr;
+			void* new_ptr;
 
-				void* ptr;
-				void* new_ptr;
+			AllocatorInfo allocator = get_header().Allocator;
+			Header*       header	= nullptr;
 
-				AllocatorInfo allocator = get_header().Allocator;
-				Header*       header	= nullptr;
+			new_len  = grow_formula( length() + add_len );
+			ptr      = & get_header();
+			old_size = size_of( Header ) + length() + 1;
+			new_size = size_of( Header ) + new_len + 1;
 
-				new_len  = grow_formula( length() + add_len );
-				ptr      = & get_header();
-				old_size = size_of( Header ) + length() + 1;
-				new_size = size_of( Header ) + new_len + 1;
+			new_ptr = resize( allocator, ptr, old_size, new_size );
 
-				new_ptr = resize( allocator, ptr, old_size, new_size );
+			if ( new_ptr == nullptr )
+				return false;
 
-				if ( new_ptr == nullptr )
-					return false;
+			header            = zpl_cast( Header* ) new_ptr;
+			header->Allocator = allocator;
+			header->Capacity  = new_len;
 
-				header            = zpl_cast( Header* ) new_ptr;
-				header->Allocator = allocator;
-				header->Capacity  = new_len;
+			Data = rcast( char*, header + 1 );
 
-				Data = rcast( char*, header + 1 );
-
-				return str;
-			}
-		}
-
-		bool append( char const* str )
-		{
-			return append( str, str_len( str ) );
-		}
-
-		bool append( char const* str, sw length )
-		{
-			if ( sptr(str) > 0 )
-			{
-				sw curr_len = this->length();
-
-				if ( ! make_space_for( str, length ) )
-					return false;
-
-				Header& header = get_header();
-
-				mem_copy( Data + curr_len, str, length );
-
-				Data[ curr_len + length ] = '\0';
-
-				header.Length = curr_len + length;
-			}
 			return str;
 		}
+	}
 
-		bool append( StrC str)
+	bool append( char const* str )
+	{
+		return append( str, str_len( str ) );
+	}
+
+	bool append( char const* str, sw length )
+	{
+		if ( sptr(str) > 0 )
 		{
-			return append( str.Ptr, str.Len );
-		}
+			sw curr_len = this->length();
 
-		bool append( const String other )
-		{
-			return append( other.Data, other.length() );;
-		}
-
-		bool append_fmt( char const* fmt, ... );
-
-		sw avail_space() const
-		{
-			Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
-
-			return header.Capacity - header.Length;
-		}
-
-		sw capacity() const
-		{
-			Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
-
-			return header.Capacity;
-		}
-
-		void clear()
-		{
-			get_header().Length = 0;
-		}
-
-		String duplicate( AllocatorInfo allocator )
-		{
-			return make_length( allocator, Data, length() );
-		}
-
-		void free()
-		{
-			if ( ! Data )
-				return;
+			if ( ! make_space_for( str, length ) )
+				return false;
 
 			Header& header = get_header();
 
-			gen::free( header.Allocator, & header );
+			mem_copy( Data + curr_len, str, length );
+
+			Data[ curr_len + length ] = '\0';
+
+			header.Length = curr_len + length;
 		}
+		return str;
+	}
 
-		Header& get_header()
-		{
-			return *(Header*)(Data - sizeof(Header));
-		}
-
-		sw length() const
-		{
-			Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
-
-			return header.Length;
-		}
-
-		void trim( char const* cut_set )
-		{
-			sw len = 0;
-
-			char* start_pos = Data;
-			char* end_pos   = Data + length() - 1;
-
-			while ( start_pos <= end_pos && char_first_occurence( cut_set, *start_pos ) )
-				start_pos++;
-
-			while ( end_pos > start_pos && char_first_occurence( cut_set, *end_pos ) )
-				end_pos--;
-
-			len = scast( sw, ( start_pos > end_pos ) ? 0 : ( ( end_pos - start_pos ) + 1 ) );
-
-			if ( Data != start_pos )
-				mem_move( Data, start_pos, len );
-
-			Data[ len ] = '\0';
-
-			get_header().Length = len;
-		}
-
-		void trim_space()
-		{
-			return trim( " \t\r\n\v\f" );
-		}
-
-		// For-range support
-
-		char* begin()
-		{
-			return Data;
-		}
-
-		char* end()
-		{
-			Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
-
-			return Data + header.Length;
-		}
-
-		operator bool()
-		{
-			return Data;
-		}
-
-		operator char* ()
-		{
-			return Data;
-		}
-
-		operator char const* () const
-		{
-			return Data;
-		}
-
-		operator StrC() const
-		{
-			return
-			{
-				length(),
-				Data
-			};
-		}
-
-		// Used with cached strings
-		// Essentially makes the string a string view.
-		String const& operator = ( String const& other ) const
-		{
-			if ( this == & other )
-				return *this;
-
-			String& this_ = ccast( String, *this );
-
-			this_.Data = other.Data;
-
-			return this_;
-		}
-
-		char& operator [] ( sw index )
-		{
-			return Data[ index ];
-		}
-
-		char const& operator [] ( sw index ) const
-		{
-			return Data[ index ];
-		}
-
-		char* Data = nullptr;
-	};
-
-	struct String_POD
+	bool append( StrC str)
 	{
-		char* Data;
+		return append( str.Ptr, str.Len );
+	}
 
-		operator String()
+	bool append( const String other )
+	{
+		return append( other.Data, other.length() );;
+	}
+
+	bool append_fmt( char const* fmt, ... );
+
+	sw avail_space() const
+	{
+		Header const&
+		header = * rcast( Header const*, Data - sizeof( Header ));
+
+		return header.Capacity - header.Length;
+	}
+
+	sw capacity() const
+	{
+		Header const&
+		header = * rcast( Header const*, Data - sizeof( Header ));
+
+		return header.Capacity;
+	}
+
+	void clear()
+	{
+		get_header().Length = 0;
+	}
+
+	String duplicate( AllocatorInfo allocator )
+	{
+		return make_length( allocator, Data, length() );
+	}
+
+	void free()
+	{
+		if ( ! Data )
+			return;
+
+		Header& header = get_header();
+
+		gen::free( header.Allocator, & header );
+	}
+
+	Header& get_header()
+	{
+		return *(Header*)(Data - sizeof(Header));
+	}
+
+	sw length() const
+	{
+		Header const&
+		header = * rcast( Header const*, Data - sizeof( Header ));
+
+		return header.Length;
+	}
+
+	void trim( char const* cut_set )
+	{
+		sw len = 0;
+
+		char* start_pos = Data;
+		char* end_pos   = Data + length() - 1;
+
+		while ( start_pos <= end_pos && char_first_occurence( cut_set, *start_pos ) )
+			start_pos++;
+
+		while ( end_pos > start_pos && char_first_occurence( cut_set, *end_pos ) )
+			end_pos--;
+
+		len = scast( sw, ( start_pos > end_pos ) ? 0 : ( ( end_pos - start_pos ) + 1 ) );
+
+		if ( Data != start_pos )
+			mem_move( Data, start_pos, len );
+
+		Data[ len ] = '\0';
+
+		get_header().Length = len;
+	}
+
+	void trim_space()
+	{
+		return trim( " \t\r\n\v\f" );
+	}
+
+	// For-range support
+
+	char* begin()
+	{
+		return Data;
+	}
+
+	char* end()
+	{
+		Header const&
+		header = * rcast( Header const*, Data - sizeof( Header ));
+
+		return Data + header.Length;
+	}
+
+	operator bool()
+	{
+		return Data;
+	}
+
+	operator char* ()
+	{
+		return Data;
+	}
+
+	operator char const* () const
+	{
+		return Data;
+	}
+
+	operator StrC() const
+	{
+		return
 		{
-			return * rcast(String*, this);
-		}
-	};
-	static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
+			length(),
+			Data
+		};
+	}
+
+	// Used with cached strings
+	// Essentially makes the string a string view.
+	String const& operator = ( String const& other ) const
+	{
+		if ( this == & other )
+			return *this;
+
+		String& this_ = ccast( String, *this );
+
+		this_.Data = other.Data;
+
+		return this_;
+	}
+
+	char& operator [] ( sw index )
+	{
+		return Data[ index ];
+	}
+
+	char const& operator [] ( sw index ) const
+	{
+		return Data[ index ];
+	}
+
+	char* Data = nullptr;
+};
+
+struct String_POD
+{
+	char* Data;
+
+	operator String()
+	{
+		return * rcast(String*, this);
+	}
+};
+static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
 #pragma endregion String
 
 #pragma region File Handling
@@ -2336,7 +2345,7 @@ GEN_DEF_INLINE s64 file_tell( FileInfo* file );
  * @param  buffer Buffer to read from
  * @param  size   Size to read
  */
-b32 file_write( FileInfo* file, void const* buffer, sw size );
+GEN_DEF_INLINE b32 file_write( FileInfo* file, void const* buffer, sw size );
 
 /**
  * Writes to file at a specific offset
@@ -2543,7 +2552,7 @@ struct ADT_Node
 	/* properties */
 	ADT_Type type  : 4;
 	u8 props : 4;
-#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+#ifndef GEN_PARSER_DISABLE_ANALYSIS
 	u8 cfg_mode          : 1;
 	u8 name_style        : 2;
 	u8 assign_style      : 2;
@@ -2566,7 +2575,7 @@ struct ADT_Node
 				s64 integer;
 			};
 
-#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+#ifndef GEN_PARSER_DISABLE_ANALYSIS
 			/* number analysis */
 			s32 base;
 			s32 base2;

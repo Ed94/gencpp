@@ -14,7 +14,7 @@
 
 #include "gen.push_ignores.inline.hpp"
 
-//! If its desired to roll your own dependencies, define GENCPP_PROVIDE_DEPENDENCIES before including this file.
+//! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
 #	include "gen.dep.hpp"
@@ -240,9 +240,9 @@ namespace ESpecifier
 		#	pragma push_macro( "global" )
 		#	pragma push_macro( "internal" )
 		#	pragma push_macro( "local_persist" )
-		#	define global        global
-		#	define internal      internal
-		#	define local_persist local_persist
+		#	undef global
+		#	undef internal
+		#	undef local_persist
 
 		#	define Entry( Spec_, Code_ ) { sizeof(stringize(Code_)), stringize(Code_) },
 			Define_Specifiers
@@ -348,7 +348,7 @@ namespace Attribute
 	constexpr char const* API_Import = stringize( GEN_API_Import_Code  );
 	constexpr char const* Keyword    = stringize( GEN_Attribute_Keyword);
 
-#elif GEN_HAS_ATTRIBUTE( visibility ) || GEN_GCC_VERSION_CHECK( 3, 3, 0 ) || GEN_INTEL_VERSION_CHECK( 13, 0, 0 )
+#elif GEN_HAS_ATTRIBUTE( visibility ) || GEN_GCC_VERSION_CHECK( 3, 3, 0 )
 #	define GEN_API_Export_Code   __attribute__ ((visibility ("default")))
 #	define GEN_API_Import_Code   __attribute__ ((visibility ("default")))
 #	define GEN_Attribute_Keyword __attribute__
@@ -1244,7 +1244,7 @@ static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same
 struct AST_Typedef
 {
 	union {
-		char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
 			CodeAttributes Attributes;
@@ -1253,13 +1253,13 @@ struct AST_Typedef
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
 		};
 	};
-	Code              Prev;
-	Code              Next;
-	Code              Parent;
-	StringCached      Name;
-	CodeT             Type;
-	ModuleFlag        ModuleFlags;
-	char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	Code                   Prev;
+	Code                   Next;
+	Code                   Parent;
+	StringCached           Name;
+	CodeT                  Type;
+	ModuleFlag             ModuleFlags;
+	char 			       _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Typedef) == sizeof(AST), "ERROR: AST_Typedef is not the same size as AST");
 

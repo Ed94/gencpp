@@ -29,15 +29,16 @@ struct Scanner
 
 	static void set_allocator( AllocatorInfo allocator );
 
-	Array(FileInfo)     Files;
+	Array<FileInfo>     Files;
 	String              Buffer;
-	Array(RequestEntry) Requests;
+	Array<RequestEntry> Requests;
 
 	void add_files( s32 num, char const** files );
 
 	void add( SymbolInfo signature, Policy policy );
 
-	bool process_requests( Array(Receipt) out_receipts );
+	bool process_requests( Array<Receipt> out_receipts );
 };
-k
+
+// namespace gen
 }

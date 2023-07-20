@@ -39,6 +39,24 @@
 #		endif
 #	endif
 
+#include <sys/stat.h>
+
+#ifdef GEN_SYSTEM_MACOS
+#	include <copyfile.h>
+#endif
+
+#ifdef GEN_SYSTEM_CYGWIN
+#	include <windows.h>
+#endif
+
+#if defined( GEN_SYSTEM_WINDOWS ) && ! defined( GEN_COMPILER_GCC )
+#	include <io.h>
+#endif
+
+#if defined( GEN_SYSTEM_LINUX )
+#	include <sys/types.h>
+#endif
+
 #ifdef GEN_BENCHMARK
 // Timing includes
 #if defined( GEN_SYSTEM_MACOS ) || GEN_SYSTEM_UNIX
@@ -61,7 +79,6 @@
 #endif
 #endif
 #pragma endregion Macros & Includes
-
 
 
 namespace gen {
@@ -2062,9 +2079,15 @@ namespace gen {
 		GEN_ASSERT_NOT_NULL( root );
 		GEN_ASSERT_NOT_NULL( text );
 		zero_item( root );
+
 		adt_make_branch( root, allocator, NULL, has_header ? false : true );
-		char *p = text, *b = p, *e = p;
-		sw    colc = 0, total_colc = 0;
+
+		char* p = text;
+		char* b = p;
+		char* e = p;
+
+		sw colc       = 0;
+		sw total_colc = 0;
 
 		do
 		{
@@ -2074,7 +2097,7 @@ namespace gen {
 				break;
 			ADT_Node row_item = { 0 };
 			row_item.type     = EADT_TYPE_STRING;
-	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
 			row_item.name_style = EADT_NAME_STYLE_NO_QUOTES;
 	#endif
 
@@ -2083,7 +2106,7 @@ namespace gen {
 			{
 				p = b = e       = p + 1;
 				row_item.string = b;
-	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
 				row_item.name_style = EADT_NAME_STYLE_DOUBLE_QUOTE;
 	#endif
 				do
@@ -2229,7 +2252,7 @@ namespace gen {
 		{
 			case EADT_TYPE_STRING :
 				{
-	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
 					switch ( node->name_style )
 					{
 						case EADT_NAME_STYLE_DOUBLE_QUOTE :
@@ -2244,7 +2267,7 @@ namespace gen {
 							{
 	#endif
 								str_fmt_file( file, "%s", node->string );
-	#ifndef ZPL_PARSER_DISABLE_ANALYSIS
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
 							}
 							break;
 					}
@@ -3244,3 +3267,4 @@ namespace gen {
 
 // namespace gen
 }
+

@@ -1,6 +1,9 @@
 # Documentation
 
-All the library code is contained in two files: `gen.hpp` and `gen.cpp`
+The core library is contained within `gen.hpp` and `gen.cpp`.
+Things related to the editor and scanner are in their own respective files. (Ex: `gen.scanner.<hpp/cpp>` )
+
+
 
 ## gen.hpp
 
@@ -11,8 +14,8 @@ Feature Macros:
 * `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
 * `GEN_ENFORCE_STRONG_CODE_TYPES` : Enforces casts to filtered code types.
 
-`GEN_USE_RECURSIVE_AST_DUPLICATION` is available but its not well tested and should not need to be used.
-If constructing ASTs properly. There should be no modification of ASTs, and thus this would never become an issue.
+`GEN_USE_RECURSIVE_AST_DUPLICATION` is available but its not well tested and should not need to be used.  
+If constructing ASTs properly. There should be no modification of ASTs, and thus this would never become an issue.  
 (I will probably remove down the line...)
 
 Due to the design of `gen.hpp` to support being written alongside runtime intended code (in the same file), all the code is wrapped in a `GEN_TIME` `#ifdef` and then wrapped further in a `gen` namespace to avoid pollution of the global scope.

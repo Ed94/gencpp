@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gen.hpp"
+#include "gen.scanner.hpp"
 
 namespace gen {
 
@@ -52,9 +52,9 @@ struct Editor
 
 	static void set_allocator( AllocatorInfo  allocator );
 
-	Array(FileInfo)     Files;
+	Array<FileInfo>     Files;
 	String              Buffer;
-	Array(RequestEntry) Requests;
+	Array<RequestEntry> Requests;
 
 	void add_files( s32 num, char const** files );
 
@@ -66,7 +66,7 @@ struct Editor
 	void refactor( char const* file_path, char const* specification_path );
 #	endif
 
-	bool process_requests( Array(Receipt) out_receipts );
+	bool process_requests( Array<Receipt> out_receipts );
 };
 
 // namespace gen
