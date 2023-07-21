@@ -1887,7 +1887,7 @@ namespace gen
 	// NOTE: This limits the maximum size of an allocation
 	// If you are generating a string larger than this, increase the size of the bucket here.
 	constexpr uw Global_BucketSize          = megabytes(10);
-	constexpr s32 CodePool_NumBlocks        = kilobytes(4);
+	constexpr s32 CodePool_NumBlocks        = kilobytes(64);
 	constexpr s32 SizePer_StringArena       = megabytes(1);
 
 	constexpr s32 MaxCommentLineLength      = 1024;

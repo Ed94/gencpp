@@ -279,15 +279,16 @@ Data Notes:
 * ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
-* Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
+* Cached Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
   * `StringArenas`, `StringCache`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
 * Strings used for serialization and file buffers are not contained by those used for cached strings.
-  * They are currently using `Memory::GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
-  * Memory within the buckets is not reused, so its inherently wasteful (most likely will give non-cached strings their own tailored allocator later)
+  * They are currently using `GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
+  * Memory within the buckets is not reused, so its inherently wasteful.
+  * I will be augmenting the single arena with a simple slag allocator.
 * Linked lists used children nodes on bodies, and parameters.
 * Its intended to generate the AST in one go and serialize after. The constructors and serializer are designed to be a "one pass, front to back" setup.
 * When benchmarking, the three most significant var to tune are:
-  * `Memory::Global_BlockSize` (found gen_dep.hpp) : Used by the GlobalAllocator for the size of each global arena.
+  * `Global_BlockSize` (found gen_dep.hpp) : Used by the GlobalAllocator for the size of each global arena.
   * `SizePer_StringArena` (found in gen.hpp under the constants region) : Used by the string cache to store strings.
   * `CodePool_NumBlocks` (found in gen.hpp under constants region) : Used by code pool to store ASTs.
   * The default values can handled generating for a string up to a size of ~650 kbs (bottleneck is serialization).
@@ -682,20 +683,31 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 # TODO
 
-* Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
-* Make a more robust test suite.
-* Generate a single-header library.
-* Convert global allocation strategy to use the dual-scratch allocator for a contextual scope.
-* May be in need of a better name, I found a few repos with this same one...
+* Support defining & parsing full definitions inside a typedef. (For C patterns)
 * Support module and attribute parsing (Marked with TODOs for now..)
+* Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
 * Trailing specifiers ( postfix ) for functions (const, override, final)
+* Make a more robust test suite.
+* Generate a single-header library
+  * Componetize the library, make a metaprogram using gencpp to bootstrap itself.
 * Implement the Scanner
 * Implement the Editor
-* Support defining/parsing full definitions inside a typedef. (For C patterns)
-* Make the library bootstrap itself? It would make the code generated have less macros.
-  * Easier to tailor make the library for other projects.
-  * Most code can be in componentized into files and then scanned in.
-  * Can offer a more c-like version for the implementation, make namespaces optional, etc. (Good way to stress test it)
 * Should the builder be an "extension" header?
   * Technically the library doesn't require it and the user can use their own filesystem library.
   * It would allow me to remove the filesystem dependencies and related functions outside of gen base headers. ( At least 1k loc reduced )
+  * ADT and the CSV parser depend on it as well. The `str_fmt_file` related functions do as well but they can be ommited.
+  * Scanner and editor will also depend on it so they would need to include w/e the depency header for all three file-interacting interfaces.
+    * `gen.dep.files.hpp`
+* Convert GlobalAllocator to a slab allocator:
+
+```md
+Slab classes (for 10 mb arena)
+
+1KB   slab: 5MB  ( 5MB  / 1KB   ~ 5,000 blocks )
+4KB   slab: 10MB ( 10MB / 4KB   ~ 2,500 blocks )
+16KB  slab: 15MB ( 15MB / 16KB  ~ 960 blocks   )
+64KB  slab: 15MB ( 15MB / 64KB  ~ 240 blocks   )
+256KB slab: 20MB ( 20MB / 256KB ~ 80 blocks    )
+512KB slab: 20MB ( 20MB / 512KB ~ 40 blocks    )
+1MB   slab: 15MB ( 15MB / 1MB   ~ 15 blocks    )
+```
