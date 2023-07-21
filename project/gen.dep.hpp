@@ -146,7 +146,7 @@ namespace gen {
 
 // Bits
 
-#define bit( Value )                             ( 1 << Value )
+#define bit( Value )                             ( 1 << (Value) )
 #define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
 
 // Casting
@@ -230,7 +230,7 @@ while(0);
 #define size_of( x )                  ( sw )( sizeof( x ) )
 
 template< class Type >
-void swap( Type a, Type b )
+void swap( Type& a, Type& b )
 {
 	Type tmp = a;
 	a = b;
