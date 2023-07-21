@@ -710,6 +710,13 @@ struct CodeBody
 	{
 		raw()->append( other.ast );
 	}
+	void append( CodeBody body )
+	{
+		for ( Code entry : body )
+		{
+			append( entry );
+		}
+	}
 	bool has_entries()
 	{
 		return rcast( AST*, ast )->has_entries();
