@@ -5,6 +5,14 @@ An attempt at simple staged metaprogramming for c/c++.
 The library API is a composition of code element constructors.  
 These build up a code AST to then serialize with a file builder.
 
+General goal is to have a less than 15k sloc library that takes at most a couple of hours to learn and make use of.
+
+*Why 15?* Assuming a seasoned coder of C++ can read and understand around 1000-2000 lines of code per hour, 15,000 could be understood in under 16-18 hours
+and have confidence in modifying for their use case.
+
+This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
+its not meant to be a black box metaprogramming utility, its meant for the user to extend for their project domain.
+
 ### TOC
 
 * [Notes](#notes)
@@ -171,8 +179,7 @@ This method is setup where all the metaprogram's code are the within the same fi
 * Execution statement validation : Execution expressions are defined using the untyped API.
   * Lambdas (This naturally means its unsupported)
 * RAII : This needs support for constructors/destructor parsing
-  * I haven't gotten around to yet, only useful (to me) for third-party scanning
-* Multiple Inheritance : Working on it..
+  * Haven't gotten around to yet, only useful (to me) for third-party scanning
 
 Keywords kept from "Modern C++":
 
@@ -461,6 +468,7 @@ The lexing and parsing takes shortcuts from whats expected in the standard.
   * typedefs have attributes with the type (`parse_type`)
 * As a general rule; if its not available from the upfront constructors, its not available in the parsing constructors.
   * *Upfront constructors are not necessarily used in the parsing constructors, this is just a good metric to know what can be parsed.*
+* Parsing attributes can be extended to support user defined macros by defining `GEN_Define_Attribute_Tokens` (see `gen.hpp` for the formatting)
 
 Usage:
 
@@ -685,7 +693,7 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 `def_operator` is the most sophisticated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
-If extendeding parsing capability
+If extendeding parsing capability, ECode, ESpecifier, may need to be modified along with making a new `AST_<Name>` and `Code<Name>` if its desired to preserve the same interface. The lexer (see the `Parser` namespace in `gen.cpp`) will most likely also need to be extended to support any unsupported or custom tokens.
 
 # TODO
 
@@ -705,7 +713,7 @@ If extendeding parsing capability
 * Convert GlobalAllocator to a slab allocator:
 
 ```md
-Slab classes (for 10 mb arena)
+Slab classes (for 100 mb arena)
 
 1KB   slab: 5MB  ( 5MB  / 1KB   ~ 5,000 blocks )
 4KB   slab: 10MB ( 10MB / 4KB   ~ 2,500 blocks )

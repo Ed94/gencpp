@@ -81,7 +81,7 @@
 #pragma endregion Macros & Includes
 
 
-namespace gen {
+GEN_NS_BEGIN
 
 #pragma region Debug
 	void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... )
@@ -3265,5 +3265,4 @@ namespace gen {
 #endif
 #pragma endregion Timing
 
-// namespace gen
-}
+GEN_NS_END
