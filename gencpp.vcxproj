@@ -111,6 +111,23 @@
     <None Include="test\Readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="project\components\gen.data_structures.hpp" />
+    <ClInclude Include="project\components\gen.interface.hpp" />
+    <ClInclude Include="project\components\gen.types.hpp" />
+    <ClInclude Include="project\dependencies\gen.basic_types.hpp" />
+    <ClInclude Include="project\dependencies\gen.containers.hpp" />
+    <ClInclude Include="project\dependencies\gen.dep.hpp" />
+    <ClInclude Include="project\dependencies\gen.file_handling.hpp" />
+    <ClInclude Include="project\dependencies\gen.header_start.hpp" />
+    <ClInclude Include="project\dependencies\gen.macros.hpp" />
+    <ClInclude Include="project\dependencies\gen.memory.hpp" />
+    <ClInclude Include="project\dependencies\gen.parsing.hpp" />
+    <ClInclude Include="project\dependencies\gen.printing.hpp" />
+    <ClInclude Include="project\dependencies\gen.string.hpp" />
+    <ClInclude Include="project\dependencies\gen.string_ops.hpp" />
+    <ClInclude Include="project\filesystem\gen.builder.hpp" />
+    <ClInclude Include="project\filesystem\gen.editor.hpp" />
+    <ClInclude Include="project\filesystem\gen.scanner.hpp" />
     <ClInclude Include="project\gen.dep.hpp" />
     <ClInclude Include="project\gen.editor.hpp" />
     <ClInclude Include="project\gen.hpp" />
@@ -118,6 +135,9 @@
     <ClInclude Include="project\gen.push_ignores.inline.hpp" />
     <ClInclude Include="project\gen.scanner.hpp" />
     <ClInclude Include="project\gen.undef.macros.hpp" />
+    <ClInclude Include="project\helpers\gen.pop_ignores.inline.hpp" />
+    <ClInclude Include="project\helpers\gen.push_ignores.inline.hpp" />
+    <ClInclude Include="project\helpers\gen.undef.macros.hpp" />
     <ClInclude Include="test\DummyInclude.hpp" />
     <ClInclude Include="test\gen\array.Upfront.gen.hpp" />
     <ClInclude Include="test\gen\buffer.Upfront.gen.hpp" />
@@ -139,6 +159,14 @@
     <ClInclude Include="test\Parsed\Sanity.Parsed.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="project\components\gen.ast.cpp" />
+    <ClCompile Include="project\components\gen.interface.parsing.cpp" />
+    <ClCompile Include="project\components\gen.interface.upfront.cpp" />
+    <ClCompile Include="project\dependencies\gen.dep.cpp" />
+    <ClCompile Include="project\dependencies\gen.file_handling.cpp" />
+    <ClCompile Include="project\dependencies\gen.memory.cpp" />
+    <ClCompile Include="project\dependencies\gen.parsing.cpp" />
+    <ClCompile Include="project\dependencies\gen.printing.cpp" />
     <ClCompile Include="project\gen.cpp" />
     <ClCompile Include="project\gen.dep.cpp" />
     <ClCompile Include="singleheader\gen\gen.singleheader.cpp" />

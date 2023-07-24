@@ -1,24 +1,24 @@
 <?xml version="1.0"?>
 <N10X>
 	<Workspace>
-		<IncludeFilter>*.*</IncludeFilter>
-		<ExcludeFilter>*.obj,*.lib,*.pch,*.dll,*.pdb,.vs,Debug,Release,x64,obj,*.user,Intermediate</ExcludeFilter>
+		<IncludeFilter>*.*,</IncludeFilter>
+		<ExcludeFilter>*.obj,*.lib,*.pch,*.dll,*.pdb,.vs,Debug,Release,x64,obj,*.user,Intermediate,**/sanity.gen.hpp,</ExcludeFilter>
 		<SyncFiles>true</SyncFiles>
 		<Recursive>true</Recursive>
 		<ShowEmptyFolders>true</ShowEmptyFolders>
 		<IsVirtual>false</IsVirtual>
 		<IsFolder>false</IsFolder>
-		<BuildCommand></BuildCommand>
-		<RebuildCommand></RebuildCommand>
+		<BuildCommand>powershell ./scripts/build.ps1</BuildCommand>
+		<RebuildCommand>powershell ./scripts/rebuild.ps1</RebuildCommand>
 		<BuildFileCommand></BuildFileCommand>
-		<CleanCommand></CleanCommand>
+		<CleanCommand>powershell ./scripts/clean.ps1</CleanCommand>
 		<BuildWorkingDirectory></BuildWorkingDirectory>
 		<CancelBuild></CancelBuild>
-		<RunCommand></RunCommand>
+		<RunCommand>./test/gen/build/gencpp.exe</RunCommand>
 		<RunCommandWorkingDirectory></RunCommandWorkingDirectory>
-		<DebugCommand></DebugCommand>
-		<ExePathCommand></ExePathCommand>
-		<DebugSln></DebugSln>
+		<DebugCommand>powershell ./scripts/build.ps1</DebugCommand>
+		<ExePathCommand>./test/gen/build/gencpp.exe</ExePathCommand>
+		<DebugSln>gencpp.sln</DebugSln>
 		<UseVisualStudioEnvBat>false</UseVisualStudioEnvBat>
 		<Configurations>
 			<Configuration>Debug</Configuration>
@@ -39,7 +39,21 @@
 			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um</AdditionalIncludePath>
 		</AdditionalIncludePaths>
 		<Defines></Defines>
-		<ConfigProperties></ConfigProperties>
+		<ConfigProperties>
+			<ConfigAndPlatform>
+				<Name>Debug:x64</Name>
+				<Defines></Defines>
+				<ForceIncludes></ForceIncludes>
+			</ConfigAndPlatform>
+			<Config>
+				<Name>Debug</Name>
+				<Defines></Defines>
+			</Config>
+			<Platform>
+				<Name>x64</Name>
+				<Defines></Defines>
+			</Platform>
+		</ConfigProperties>
 		<Children></Children>
 	</Workspace>
 </N10X>

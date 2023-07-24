@@ -22,7 +22,7 @@
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
-	"C_Cpp.errorSquiggles": "enabled",
+	"C_Cpp.errorSquiggles": "disabled", // This doesn't work well with how the headers are included.
 	"godot_tools.scene_file_config": "",
 	"C_Cpp.default.compilerPath": "cl.exe",
 	"C_Cpp.exclusionPolicy": "checkFilesAndFolders",
