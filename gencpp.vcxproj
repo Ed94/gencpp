@@ -102,13 +102,21 @@
     <None Include="scripts\build.ci.ps1" />
     <None Include="scripts\build.ps1" />
     <None Include="scripts\clean.ps1" />
+    <None Include="scripts\gen.ps1" />
+    <None Include="scripts\genccp.natstepfilter" />
+    <None Include="scripts\gencpp.refactor" />
     <None Include="scripts\get_sources.ps1" />
     <None Include="test\gen\meson.build" />
     <None Include="test\meson.build" />
     <None Include="test\Readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="project\gen.dep.hpp" />
+    <ClInclude Include="project\gen.editor.hpp" />
     <ClInclude Include="project\gen.hpp" />
+    <ClInclude Include="project\gen.pop_ignores.inline.hpp" />
+    <ClInclude Include="project\gen.push_ignores.inline.hpp" />
+    <ClInclude Include="project\gen.scanner.hpp" />
     <ClInclude Include="project\gen.undef.macros.hpp" />
     <ClInclude Include="test\DummyInclude.hpp" />
     <ClInclude Include="test\gen\array.Upfront.gen.hpp" />
@@ -119,7 +127,9 @@
     <ClInclude Include="test\Parsed\Buffer.Parsed.hpp" />
     <ClInclude Include="test\Parsed\HashTable.Parsed.hpp" />
     <ClInclude Include="test\Parsed\Ring.Parsed.hpp" />
+    <ClInclude Include="test\parsing.hpp" />
     <ClInclude Include="test\SOA.hpp" />
+    <ClInclude Include="test\upfront.hpp" />
     <ClInclude Include="test\Upfront\Array.Upfront.hpp" />
     <ClInclude Include="test\Upfront\Buffer.Upfront.hpp" />
     <ClInclude Include="test\Upfront\HashTable.Upfront.hpp" />
@@ -130,11 +140,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="project\gen.cpp" />
+    <ClCompile Include="project\gen.dep.cpp" />
     <ClCompile Include="singleheader\gen\gen.singleheader.cpp" />
     <ClCompile Include="test\gen\build\meson-private\sanitycheckc.c" />
     <ClCompile Include="test\gen\build\meson-private\sanitycheckcpp.cc" />
+    <ClCompile Include="test\parsing.cpp" />
+    <ClCompile Include="test\sanity.cpp" />
+    <ClCompile Include="test\SOA.cpp" />
     <ClCompile Include="test\test.cpp" />
+    <ClCompile Include="test\test.parsing.cpp" />
     <ClCompile Include="test\test.Upfront.cpp" />
+    <ClCompile Include="test\upfront.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include=".vscode\gencpp.natvis" />

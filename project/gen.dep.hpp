@@ -146,7 +146,7 @@ namespace gen {
 
 // Bits
 
-#define bit( Value )                             ( 1 << (Value) )
+#define bit( Value )                             ( 1 << Value )
 #define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
 
 // Casting
@@ -230,7 +230,7 @@ while(0);
 #define size_of( x )                  ( sw )( sizeof( x ) )
 
 template< class Type >
-void swap( Type& a, Type& b )
+void swap( Type a, Type b )
 {
 	Type tmp = a;
 	a = b;
@@ -1271,7 +1271,7 @@ struct Array
 		return true;
 	}
 
-	bool append_at( Type item, sw idx )
+	bool append_at( Type item, uw idx )
 	{
 		Header* header = get_header();
 
@@ -1297,7 +1297,7 @@ struct Array
 		return true;
 	}
 
-	bool append_at( Type* items, uw item_num, sw idx )
+	bool append_at( Type* items, uw item_num, uw idx )
 	{
 		Header* header = get_header();
 
@@ -1502,7 +1502,7 @@ struct HashTable
 	}
 
 	static
-	HashTable init_reserve( AllocatorInfo allocator, sw num )
+	HashTable init_reserve( AllocatorInfo allocator, uw num )
 	{
 		HashTable<Type> result = { { nullptr }, { nullptr } };
 

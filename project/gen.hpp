@@ -220,7 +220,11 @@ namespace ESpecifier
 	Entry( RValue,           && )                \
 	Entry( Static,           static  )           \
 	Entry( Thread_Local,     thread_local )      \
-	Entry( Volatile,         volatile )
+	Entry( Volatile,         volatile )          \
+	Entry( Virtual,          virtual )           \
+	Entry( Const_Fn,         const )             \
+	Entry( Final,            final )             \
+	Entry( Override,         override )
 
 	enum Type : u32
 	{
@@ -333,40 +337,48 @@ ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
 
 /*
 	Predefined attributes
-
 	Used for the parser constructors to identify non-standard attributes
+
+	Override these to change the attribute to your own unique identifier convention.
+
+	The tokenizer identifies attribute defines with the GEN_Define_Attribute_Tokens macros.
+	See the example below and the Define_TokType macro used in gen.cpp to know the format.
+	While the library can parse raw attributes, most projects use defines to wrap them for compiler
+	platform indendence. The token define allows support for them without having to modify the library.
 */
-namespace Attribute
-{
 #if defined(GEN_SYSTEM_WINDOWS) || defined( __CYGWIN__ )
-#	define GEN_API_
+#ifndef GEN_Attribute_Keyword
 #	define GEN_API_Export_Code   __declspec(dllexport)
 #	define GEN_API_Import_Code   __declspec(dllimport)
 #	define GEN_Attribute_Keyword __declspec
+#endif
 
-	constexpr char const* API_Export = stringize( GEN_API_Export_Code  );
-	constexpr char const* API_Import = stringize( GEN_API_Import_Code  );
-	constexpr char const* Keyword    = stringize( GEN_Attribute_Keyword);
+constexpr char const* Attribute_Keyword = stringize( GEN_Attribute_Keyword);
 
 #elif GEN_HAS_ATTRIBUTE( visibility ) || GEN_GCC_VERSION_CHECK( 3, 3, 0 )
+#ifndef GEN_Attribute_Keyword
 #	define GEN_API_Export_Code   __attribute__ ((visibility ("default")))
 #	define GEN_API_Import_Code   __attribute__ ((visibility ("default")))
 #	define GEN_Attribute_Keyword __attribute__
+#endif
 
-	constexpr char const* API_Export = stringize( GEN_API_Export_Code );
-	constexpr char const* API_Import = stringize( GEN_API_Import_Code );
-	constexpr char const* Keyword    = stringize( GEN_Attribute_Keyword);
+constexpr char const* Attribute_Keyword = stringize( GEN_Attribute_Keyword );
 
 #else
+#ifndef GEN_Attribute_Keyword
 #	define GEN_API_Export_Code
 #	define GEN_API_Import_Code
 #	define GEN_Attribute_Keyword
-
-	constexpr char const* API_Export = "";
-	constexpr char const* API_Import = "";
-	constexpr char const* Keyword    = "";
 #endif
-}
+
+constexpr char const* Attribute_Keyword = "";
+#endif
+
+#ifndef GEN_Define_Attribute_Tokens
+#	define GEN_Define_Attribute_Tokens         \
+	Entry( API_Export, "GEN_API_Export_Code" ) \
+	Entry( API_Import, "GEN_API_Import_Code" )
+#endif
 #pragma endregion Types
 
 #pragma region Data Structures
@@ -629,7 +641,7 @@ struct AST_POD
 	union {
 		struct
 		{
-			AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+			AST*      Attributes;     // Class, Enum, Function, Struct, Typename, Union, Using, Variable
 			AST*      Specs;          // Function, Operator, Type symbol, Variable
 			union {
 				AST*  ParentType;     // Class, Struct
@@ -1254,10 +1266,9 @@ struct AST_Typedef
 		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			CodeAttributes Attributes;
-			char 	       _PAD_SPECS_     [ sizeof(AST*) ];
-			Code           UnderlyingType;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+			Code           UnderlyingType;
+			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) * 2 ];
 		};
 	};
 	Code                   Prev;
@@ -1886,7 +1897,7 @@ namespace gen
 
 	// NOTE: This limits the maximum size of an allocation
 	// If you are generating a string larger than this, increase the size of the bucket here.
-	constexpr uw Global_BucketSize          = megabytes(10);
+	constexpr uw  Global_BucketSize         = megabytes(10);
 	constexpr s32 CodePool_NumBlocks        = kilobytes(64);
 	constexpr s32 SizePer_StringArena       = megabytes(1);
 
@@ -1906,6 +1917,9 @@ namespace gen
 	extern CodeType t_wchar_t;
 	extern CodeType t_class;
 	extern CodeType t_typename;
+
+	extern Code attrib_api_export;
+	extern Code attrib_api_import;
 
 	extern Code access_public;
 	extern Code access_protected;

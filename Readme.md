@@ -26,13 +26,17 @@ The project has reached an *alpha* state, all the current functionality works fo
 
 The project has no external dependencies beyond:
 
-* `stdarg.h`
-* `stddef.h`
-* `stdio.h`
-* `errno.h`
-* `unistd.h` (Linux/Mac)
-* `intrin.h` (Windows)
-* `windows.h` (Windows)
+* `errno.h`    (gen.cpp)
+* `stat.h`     (gen.cpp)
+* `stdarg.h`   (gen.hpp)
+* `stddef.h`   (gen.hpp
+* `stdio.h`    (gen.cpp)
+* `copyfile.h` (Mac, gen.cpp)
+* `types.h`    (Linux, gen.cpp)
+* `unistd.h`   (Linux/Mac, gen.cpp)
+* `intrin.h`   (Windows, gen.hpp)
+* `io.h`       (Windows with gcc, gen.cpp)
+* `windows.h`  (Windows, gen.cpp)
 
 Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
 The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
@@ -684,7 +688,6 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 # TODO
 
 * Support defining & parsing full definitions inside a typedef. (For C patterns)
-* Support module and attribute parsing (Marked with TODOs for now..)
 * Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
 * Trailing specifiers ( postfix ) for functions (const, override, final)
 * Make a more robust test suite.

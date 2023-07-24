@@ -29,3 +29,4 @@ if ( $files )
 {
 	Remove-Item $files
 }
+
