@@ -24,5 +24,11 @@
 	"mesonbuild.configureOnOpen": true,
 	"C_Cpp.errorSquiggles": "enabled",
 	"godot_tools.scene_file_config": "",
-	"C_Cpp.default.compilerPath": "cl.exe"
+	"C_Cpp.default.compilerPath": "cl.exe",
+	"C_Cpp.exclusionPolicy": "checkFilesAndFolders",
+	"C_Cpp.files.exclude": {
+		"**/.vscode": true,
+		"**/.vs": true,
+		"**/sanity.gen.hpp": true
+	}
 }

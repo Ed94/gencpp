@@ -161,8 +161,6 @@ This method is setup where all the metaprogram's code are the within the same fi
 ### *WHAT IS NOT PROVIDED*
 
 * Lambdas
-* Lang provided dynamic dispatch (virtuals) : `override` and `final` specifiers complicate the specifier parsing and serialization. (Its a todo)
-* Suffix specifiers for functions (Ex: void() const ). Same reason as virtual/override/final missing for now.
 * RTTI
 * Exceptions
 * Execution statement validation              : Execution expressions are defined using the untyped API.
@@ -180,10 +178,7 @@ Keywords kept from "Modern C++":
 When it comes to expressions:
 
 **There is no support for validating expressions.**  
-**The reason:** Its difficult to parse without enough benefits.  
-Most of the time, the critical complex metaprogramming conundrums are producing the frame of abstractions around the expressions (which this library provides constructors to help validate, you can skip that process by using the untyped constructors).  
-Its not a priority to add such a level of complexity to the library when there isn't a high reward or need for it.  
-Especially when the priority is to keep this library small and easy to grasp for what it is.
+Its difficult to parse without enough benefits (At the metaprogramming level).  
 
 When it comes to templates:
 
@@ -328,7 +323,7 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeOperator
 * CodeOpCast
 * CodeParam : Has support for `for-range` iterating across parameters.
-* CodeSpecifier : Has support for `for-range` iterating across specifiers.
+* CodeSpecifiers : Has support for `for-range` iterating across specifiers.
 * CodeStruct
 * CodeTemplate
 * CodeType

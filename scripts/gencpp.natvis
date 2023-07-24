@@ -243,6 +243,7 @@
 	<Type Name="gen::AST_OpCast">
 		<DisplayString>{Name} Type: {Type}</DisplayString>
 		<Expand>
+			<Item Name="Specs">Specs</Item>
 			<Item Name="ValueType">ValueType</Item>
 			<Item Name="Body">Body</Item>
 			<Item Name="Parent">Parent</Item>
@@ -551,7 +552,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::CodeSpecifier">
+	<Type Name="gen::CodeSpecifiers">
 		<DisplayString Condition="ast == nullptr">Null</DisplayString>
 		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
 		<Expand>

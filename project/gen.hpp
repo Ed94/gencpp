@@ -212,10 +212,10 @@ namespace ESpecifier
 
 #	define Define_Specifiers                     \
 	Entry( Invalid,          INVALID )           \
-	Entry( Const,            const )             \
 	Entry( Consteval,        consteval )         \
 	Entry( Constexpr,        constexpr )         \
 	Entry( Constinit,        constinit )         \
+	Entry( Explicit,         explicit )          \
 	Entry( External_Linkage, extern )            \
 	Entry( Global,           global )            \
 	Entry( Inline,           inline )            \
@@ -230,7 +230,7 @@ namespace ESpecifier
 	Entry( Thread_Local,     thread_local )      \
 	Entry( Volatile,         volatile )          \
 	Entry( Virtual,          virtual )           \
-	Entry( Const_Fn,         const )             \
+	Entry( Const,            const )             \
 	Entry( Final,            final )             \
 	Entry( Override,         override )
 
@@ -242,6 +242,12 @@ namespace ESpecifier
 
 		Num_Specifiers,
 	};
+
+	inline
+	bool is_trailing( Type specifier )
+	{
+		return specifier > Virtual;
+	}
 
 	// Specifier to string
 	inline
@@ -413,7 +419,7 @@ struct AST_Namespace;
 struct AST_Operator;
 struct AST_OpCast;
 struct AST_Param;
-struct AST_Specifier;
+struct AST_Specifiers;
 struct AST_Struct;
 struct AST_Template;
 struct AST_Type;
@@ -440,7 +446,7 @@ struct CodeNamespace;
 struct CodeOperator;
 struct CodeOpCast;
 struct CodeParam;
-struct CodeSpecifier;
+struct CodeSpecifiers;
 struct CodeStruct;
 struct CodeTemplate;
 struct CodeType;
@@ -518,7 +524,7 @@ struct Code
 	operator CodeOperator() const;
 	operator CodeOpCast() const;
 	operator CodeParam() const;
-	operator CodeSpecifier() const;
+	operator CodeSpecifiers() const;
 	operator CodeStruct() const;
 	operator CodeTemplate() const;
 	operator CodeType() const;
@@ -579,7 +585,7 @@ struct AST
 	operator CodeOperator();
 	operator CodeOpCast();
 	operator CodeParam();
-	operator CodeSpecifier();
+	operator CodeSpecifiers();
 	operator CodeStruct();
 	operator CodeTemplate();
 	operator CodeType();
@@ -838,15 +844,15 @@ struct CodeParam
 	AST_Param* ast;
 };
 
-struct CodeSpecifier
+struct CodeSpecifiers
 {
-	Using_Code( CodeSpecifier );
+	Using_Code( CodeSpecifiers );
 
 	bool append( SpecifierT spec )
 	{
 		if ( raw()->NumEntries == AST::ArrSpecs_Cap )
 		{
-			log_failure("CodeSpecifier: Attempted to append over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
+			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
 			return false;
 		}
 
@@ -868,7 +874,7 @@ struct CodeSpecifier
 	{
 		return rcast( AST*, ast );
 	}
-	AST_Specifier* operator->()
+	AST_Specifiers* operator->()
 	{
 		if ( ast == nullptr )
 		{
@@ -895,7 +901,7 @@ struct CodeSpecifier
 	}
 #pragma endregion Iterator
 
-	AST_Specifier* ast;
+	AST_Specifiers* ast;
 };
 
 #undef Define_CodeType
@@ -1076,7 +1082,7 @@ struct AST_Fn
 		struct
 		{
 			CodeAttributes  Attributes;
-			CodeSpecifier   Specs;
+			CodeSpecifiers  Specs;
 			CodeType        ReturnType;
 			CodeParam 	    Params;
 			CodeBody        Body;
@@ -1131,7 +1137,7 @@ struct AST_Operator
 		struct
 		{
 			CodeAttributes  Attributes;
-			CodeSpecifier   Specs;
+			CodeSpecifiers  Specs;
 			CodeType        ReturnType;
 			CodeParam 	    Params;
 			CodeBody        Body;
@@ -1153,10 +1159,11 @@ struct AST_OpCast
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
-			CodeType  ValueType;
-			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) ];
-			CodeBody  Body;
+			char 	       _PAD_PROPERTIES_[ sizeof(AST*)  ];
+			CodeSpecifiers Specs;
+			CodeType       ValueType;
+			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			CodeBody       Body;
 		};
 	};
 	Code              Prev;
@@ -1190,7 +1197,7 @@ struct AST_Param
 };
 static_assert( sizeof(AST_Param) == sizeof(AST), "ERROR: AST_Param is not the same size as AST");
 
-struct AST_Specifier
+struct AST_Specifiers
 {
 	SpecifierT        ArrSpecs[ AST::ArrSpecs_Cap ];
 	Code              Prev;
@@ -1201,7 +1208,7 @@ struct AST_Specifier
 	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
 	s32               NumEntries;
 };
-	static_assert( sizeof(AST_Specifier) == sizeof(AST), "ERROR: AST_Specifier is not the same size as AST");
+	static_assert( sizeof(AST_Specifiers) == sizeof(AST), "ERROR: AST_Specifier is not the same size as AST");
 
 struct AST_Struct
 {
@@ -1254,7 +1261,7 @@ struct AST_Type
 		struct
 		{
 			CodeAttributes Attributes;
-			CodeSpecifier  Specs;
+			CodeSpecifiers Specs;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
 			Code           ArrExpr;
 		};
@@ -1339,7 +1346,7 @@ struct AST_Var
 		struct
 		{
 			CodeAttributes Attributes;
-			CodeSpecifier  Specs;
+			CodeSpecifiers Specs;
 			CodeType       ValueType;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) ];
 			Code           Value;
@@ -1413,7 +1420,7 @@ CodeFriend def_friend     ( Code symbol );
 
 CodeFn def_function( StrC name
 	, CodeParam      params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
-	, CodeSpecifier specifiers = NoCode, CodeAttributes attributes = NoCode
+	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 	, ModuleFlag mflags     = ModuleFlag::None );
 
 CodeInclude   def_include  ( StrC content );
@@ -1422,13 +1429,13 @@ CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFla
 
 CodeOperator def_operator( OperatorT op
 	, CodeParam      params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
-	, CodeSpecifier specifiers = NoCode, CodeAttributes attributes = NoCode
+	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 	, ModuleFlag     mflags     = ModuleFlag::None );
 
-CodeOpCast def_operator_cast( CodeType type, Code body = NoCode );
+CodeOpCast def_operator_cast( CodeType type, Code body = NoCode, CodeSpecifiers specs = NoCode );
 
 CodeParam      def_param    ( CodeType type, StrC name, Code value = NoCode );
-CodeSpecifier def_specifier( SpecifierT specifier );
+CodeSpecifiers def_specifier( SpecifierT specifier );
 
 CodeStruct def_struct( StrC name
 	, Code           body       = NoCode
@@ -1438,7 +1445,7 @@ CodeStruct def_struct( StrC name
 
 CodeTemplate def_template( CodeParam params, Code definition, ModuleFlag mflags = ModuleFlag::None );
 
-CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, CodeSpecifier specifiers = NoCode, CodeAttributes attributes = NoCode );
+CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode );
 CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
 
 CodeUnion def_union( StrC name, Code body, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag::None );
@@ -1450,7 +1457,7 @@ CodeUsing def_using( StrC name, CodeType type = NoCode
 CodeUsing def_using_namespace( StrC name );
 
 CodeVar def_variable( CodeType type, StrC name, Code value = NoCode
-	, CodeSpecifier specifiers = NoCode, CodeAttributes attributes = NoCode
+	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 	, ModuleFlag     mflags     = ModuleFlag::None );
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
@@ -1459,48 +1466,48 @@ CodeBody def_body( CodeT type );
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
 
-CodeBody      def_class_body      ( s32 num, ... );
-CodeBody      def_class_body      ( s32 num, Code* codes );
-CodeBody      def_enum_body       ( s32 num, ... );
-CodeBody      def_enum_body       ( s32 num, Code* codes );
-CodeBody      def_export_body     ( s32 num, ... );
-CodeBody      def_export_body     ( s32 num, Code* codes);
-CodeBody      def_extern_link_body( s32 num, ... );
-CodeBody      def_extern_link_body( s32 num, Code* codes );
-CodeBody      def_function_body   ( s32 num, ... );
-CodeBody      def_function_body   ( s32 num, Code* codes );
-CodeBody      def_global_body     ( s32 num, ... );
-CodeBody      def_global_body     ( s32 num, Code* codes );
-CodeBody      def_namespace_body  ( s32 num, ... );
-CodeBody      def_namespace_body  ( s32 num, Code* codes );
-CodeParam     def_params          ( s32 num, ... );
-CodeParam     def_params          ( s32 num, CodeParam* params );
-CodeSpecifier def_specifiers      ( s32 num, ... );
-CodeSpecifier def_specifiers      ( s32 num, SpecifierT* specs );
-CodeBody      def_struct_body     ( s32 num, ... );
-CodeBody      def_struct_body     ( s32 num, Code* codes );
-CodeBody      def_union_body      ( s32 num, ... );
-CodeBody      def_union_body      ( s32 num, Code* codes );
+CodeBody       def_class_body      ( s32 num, ... );
+CodeBody       def_class_body      ( s32 num, Code* codes );
+CodeBody       def_enum_body       ( s32 num, ... );
+CodeBody       def_enum_body       ( s32 num, Code* codes );
+CodeBody       def_export_body     ( s32 num, ... );
+CodeBody       def_export_body     ( s32 num, Code* codes);
+CodeBody       def_extern_link_body( s32 num, ... );
+CodeBody       def_extern_link_body( s32 num, Code* codes );
+CodeBody       def_function_body   ( s32 num, ... );
+CodeBody       def_function_body   ( s32 num, Code* codes );
+CodeBody       def_global_body     ( s32 num, ... );
+CodeBody       def_global_body     ( s32 num, Code* codes );
+CodeBody       def_namespace_body  ( s32 num, ... );
+CodeBody       def_namespace_body  ( s32 num, Code* codes );
+CodeParam      def_params          ( s32 num, ... );
+CodeParam      def_params          ( s32 num, CodeParam* params );
+CodeSpecifiers def_specifiers      ( s32 num, ... );
+CodeSpecifiers def_specifiers      ( s32 num, SpecifierT* specs );
+CodeBody       def_struct_body     ( s32 num, ... );
+CodeBody       def_struct_body     ( s32 num, Code* codes );
+CodeBody       def_union_body      ( s32 num, ... );
+CodeBody       def_union_body      ( s32 num, Code* codes );
 #pragma endregion Upfront
 
 #pragma region Parsing
-CodeClass      parse_class        ( StrC class_def     );
-CodeEnum       parse_enum         ( StrC enum_def      );
-CodeBody       parse_export_body  ( StrC export_def    );
-CodeExtern     parse_extern_link  ( StrC exten_link_def);
-CodeFriend     parse_friend       ( StrC friend_def    );
-CodeFn         parse_function     ( StrC fn_def        );
-CodeBody       parse_global_body  ( StrC body_def      );
-CodeNamespace  parse_namespace    ( StrC namespace_def );
-CodeOperator   parse_operator     ( StrC operator_def  );
-CodeOpCast     parse_operator_cast( StrC operator_def  );
-CodeStruct     parse_struct       ( StrC struct_def    );
-CodeTemplate   parse_template     ( StrC template_def  );
-CodeType       parse_type         ( StrC type_def      );
-CodeTypedef    parse_typedef      ( StrC typedef_def   );
-CodeUnion      parse_union        ( StrC union_def     );
-CodeUsing      parse_using        ( StrC using_def     );
-CodeVar        parse_variable     ( StrC var_def       );
+CodeClass     parse_class        ( StrC class_def     );
+CodeEnum      parse_enum         ( StrC enum_def      );
+CodeBody      parse_export_body  ( StrC export_def    );
+CodeExtern    parse_extern_link  ( StrC exten_link_def);
+CodeFriend    parse_friend       ( StrC friend_def    );
+CodeFn        parse_function     ( StrC fn_def        );
+CodeBody      parse_global_body  ( StrC body_def      );
+CodeNamespace parse_namespace    ( StrC namespace_def );
+CodeOperator  parse_operator     ( StrC operator_def  );
+CodeOpCast    parse_operator_cast( StrC operator_def  );
+CodeStruct    parse_struct       ( StrC struct_def    );
+CodeTemplate  parse_template     ( StrC template_def  );
+CodeType      parse_type         ( StrC type_def      );
+CodeTypedef   parse_typedef      ( StrC typedef_def   );
+CodeUnion     parse_union        ( StrC union_def     );
+CodeUsing     parse_using        ( StrC using_def     );
+CodeVar       parse_variable     ( StrC var_def       );
 #pragma endregion Parsing
 
 #pragma region Untyped text
@@ -1699,7 +1706,7 @@ Define_CodeImpl( CodeNamespace );
 Define_CodeImpl( CodeOperator );
 Define_CodeImpl( CodeOpCast );
 Define_CodeImpl( CodeParam );
-Define_CodeImpl( CodeSpecifier );
+Define_CodeImpl( CodeSpecifiers );
 Define_CodeImpl( CodeStruct );
 Define_CodeImpl( CodeTemplate );
 Define_CodeImpl( CodeType );
@@ -1730,7 +1737,7 @@ Define_AST_Cast( Namespace );
 Define_AST_Cast( Operator );
 Define_AST_Cast( OpCast );
 Define_AST_Cast( Param );
-Define_AST_Cast( Specifier );
+Define_AST_Cast( Specifiers );
 Define_AST_Cast( Struct );
 Define_AST_Cast( Template );
 Define_AST_Cast( Type );
@@ -1760,7 +1767,7 @@ Define_CodeCast( Namespace );
 Define_CodeCast( Operator );
 Define_CodeCast( OpCast );
 Define_CodeCast( Param );
-Define_CodeCast( Specifier );
+Define_CodeCast( Specifiers );
 Define_CodeCast( Struct );
 Define_CodeCast( Template );
 Define_CodeCast( Type );
@@ -1956,23 +1963,23 @@ StrC token_fmt_impl( sw num, ... )
 
 	extern Code pragma_once;
 
-	extern CodeSpecifier spec_const;
-	extern CodeSpecifier spec_consteval;
-	extern CodeSpecifier spec_constexpr;
-	extern CodeSpecifier spec_constinit;
-	extern CodeSpecifier spec_extern_linkage;
-	extern CodeSpecifier spec_global;
-	extern CodeSpecifier spec_inline;
-	extern CodeSpecifier spec_internal_linkage;
-	extern CodeSpecifier spec_local_persist;
-	extern CodeSpecifier spec_mutable;
-	extern CodeSpecifier spec_ptr;
-	extern CodeSpecifier spec_ref;
-	extern CodeSpecifier spec_register;
-	extern CodeSpecifier spec_rvalue;
-	extern CodeSpecifier spec_static_member;
-	extern CodeSpecifier spec_thread_local;
-	extern CodeSpecifier spec_volatile;
+	extern CodeSpecifiers spec_const;
+	extern CodeSpecifiers spec_consteval;
+	extern CodeSpecifiers spec_constexpr;
+	extern CodeSpecifiers spec_constinit;
+	extern CodeSpecifiers spec_extern_linkage;
+	extern CodeSpecifiers spec_global;
+	extern CodeSpecifiers spec_inline;
+	extern CodeSpecifiers spec_internal_linkage;
+	extern CodeSpecifiers spec_local_persist;
+	extern CodeSpecifiers spec_mutable;
+	extern CodeSpecifiers spec_ptr;
+	extern CodeSpecifiers spec_ref;
+	extern CodeSpecifiers spec_register;
+	extern CodeSpecifiers spec_rvalue;
+	extern CodeSpecifiers spec_static_member;
+	extern CodeSpecifiers spec_thread_local;
+	extern CodeSpecifiers spec_volatile;
 #pragma endregion Constants
 
 #pragma region Macros
