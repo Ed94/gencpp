@@ -18,7 +18,6 @@ These build up a code AST to then serialize with a file builder.
 * [On multithreading](#on-multi-threading)
 * [Extending the library](#extending-the-library)
 * [TODO](#todo)
-* [Thoughts](#thoughts)
 
 ## Notes
 
@@ -26,20 +25,28 @@ The project has reached an *alpha* state, all the current functionality works fo
 
 The project has no external dependencies beyond:
 
-* `errno.h`    (gen.cpp)
-* `stat.h`     (gen.cpp)
-* `stdarg.h`   (gen.hpp)
-* `stddef.h`   (gen.hpp
-* `stdio.h`    (gen.cpp)
-* `copyfile.h` (Mac, gen.cpp)
-* `types.h`    (Linux, gen.cpp)
-* `unistd.h`   (Linux/Mac, gen.cpp)
-* `intrin.h`   (Windows, gen.hpp)
-* `io.h`       (Windows with gcc, gen.cpp)
-* `windows.h`  (Windows, gen.cpp)
+* `errno.h`    (gen.dep.cpp)
+* `stat.h`     (gen.dep.cpp)
+* `stdarg.h`   (gen.dep.hpp)
+* `stddef.h`   (gen.dep.hpp
+* `stdio.h`    (gen.dep.cpp)
+* `copyfile.h` (Mac, gen.dep.cpp)
+* `types.h`    (Linux, gen.dep.cpp)
+* `unistd.h`   (Linux/Mac, gen.dep.cpp)
+* `intrin.h`   (Windows, gen.dep.hpp)
+* `io.h`       (Windows with gcc, gen.dep.cpp)
+* `windows.h`  (Windows, gen.dep.cpp)
 
 Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
 The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
+
+This library was written a subset of C++ where the following are avoided:
+
+* RAII (Constructors/Destructors), lifetimes are managed using named static or regular functions.
+* Language provide dynamic dispatch, RTTI
+* Object-Oriented Inheritance
+
+Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.
 
 A `natvis` and `natstepfilter` are provided in the scripts directory.
 
@@ -160,11 +167,12 @@ This method is setup where all the metaprogram's code are the within the same fi
 
 ### *WHAT IS NOT PROVIDED*
 
-* Lambdas
-* RTTI
 * Exceptions
-* Execution statement validation              : Execution expressions are defined using the untyped API.
-* Parsing support for module specifiers and attributes. (Its a todo)
+* Execution statement validation : Execution expressions are defined using the untyped API.
+  * Lambdas (This naturally means its unsupported)
+* RAII : This needs support for constructors/destructor parsing
+  * I haven't gotten around to yet, only useful (to me) for third-party scanning
+* Multiple Inheritance
 
 Keywords kept from "Modern C++":
 
@@ -191,7 +199,7 @@ This means that the typename entry for the parameter AST would be either:
 * A fundamental type, function, or pointer type.
 
 Anything beyond this usage is not supported by parse_template for arguments (at least not intentionally).  
-Use at your own mental peril...
+Use at your own mental peril.
 
 *Concepts and Constraints are not supported, its usage is non-trivial substitution.*
 
@@ -536,17 +544,20 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_constexpr`
 * `spec_constinit`
 * `spec_extern_linkage` (extern)
+* `spec_final`
 * `spec_global` (global macro)
 * `spec_inline`
 * `spec_internal_linkage` (internal macro)
 * `spec_local_persist` (local_persist macro)
 * `spec_mutable`
+* `spec_override`
 * `spec_ptr`
 * `spec_ref`
 * `spec_register`
 * `spec_rvalue`
 * `spec_static_member` (static)
 * `spec_thread_local`
+* `spec_virtual`
 * `spec_volatile`
 * `spec_type_signed`
 * `spec_type_unsigned`
@@ -663,16 +674,6 @@ Currently unsupported. The following changes would have to be made:
 
 This library is relatively very small, and can be extended without much hassle.
 
-The untyped codes and builder/editor/scanner can be technically be used to circumvent
-any sort of constrictions the library has with: modern c++, templates, macros, etc.
-
-Typical use case is for getting define constants an old C/C++ library with the scanner:  
-Code parse_defines() can emit a custom code AST with Macro_Constant type.
-
-Another would be getting preprocessor or template metaprogramming Codes from Unreal Engine definitions, etc.
-
-The rules for constructing the AST are largely bound the syntax rules for what can be composed with whichever version of C++ your targeting.
-
 The convention you'll see used throughout the API of the library is as follows:
 
 1. Check name or parameters to make sure they are valid for the construction requested
@@ -684,9 +685,12 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 `def_operator` is the most sophisticated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
+If extendeding parsing capability
+
 # TODO
 
-* Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
+* Implement a context stack for the parsing, allows for accurate scope validation for the AST types. (Better errors)
+  * Right now the parsing errors require a debugger in most cases.
 * Make a more robust test suite.
 * Generate a single-header library
   * Componetize the library, make a metaprogram using gencpp to bootstrap itself.

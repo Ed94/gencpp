@@ -1942,6 +1942,7 @@ StrC token_fmt_impl( sw num, ... )
 	constexpr s32 LexAllocator_Size         = GEN_LEX_ALLOCATOR_SIZE;
 	constexpr s32 Builder_StrBufferReserve  = GEN_BUILDER_STR_BUFFER_RESERVE;
 
+	extern CodeType t_empty; // Used with varaidc parameters. (Exposing just in case its useful for another circumstance)
 	extern CodeType t_auto;
 	extern CodeType t_void;
 	extern CodeType t_int;
@@ -1951,8 +1952,10 @@ StrC token_fmt_impl( sw num, ... )
 	extern CodeType t_class;
 	extern CodeType t_typename;
 
-	extern Code attrib_api_export;
-	extern Code attrib_api_import;
+	extern CodeParam param_varadic;
+
+	extern CodeAttributes attrib_api_export;
+	extern CodeAttributes attrib_api_import;
 
 	extern Code access_public;
 	extern Code access_protected;
@@ -1968,17 +1971,20 @@ StrC token_fmt_impl( sw num, ... )
 	extern CodeSpecifiers spec_constexpr;
 	extern CodeSpecifiers spec_constinit;
 	extern CodeSpecifiers spec_extern_linkage;
+	extern CodeSpecifiers spec_final;
 	extern CodeSpecifiers spec_global;
 	extern CodeSpecifiers spec_inline;
 	extern CodeSpecifiers spec_internal_linkage;
 	extern CodeSpecifiers spec_local_persist;
 	extern CodeSpecifiers spec_mutable;
+	extern CodeSpecifiers spec_override;
 	extern CodeSpecifiers spec_ptr;
 	extern CodeSpecifiers spec_ref;
 	extern CodeSpecifiers spec_register;
 	extern CodeSpecifiers spec_rvalue;
 	extern CodeSpecifiers spec_static_member;
 	extern CodeSpecifiers spec_thread_local;
+	extern CodeSpecifiers spec_virtual;
 	extern CodeSpecifiers spec_volatile;
 #pragma endregion Constants
 

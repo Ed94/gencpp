@@ -37,6 +37,7 @@ global AllocatorInfo Allocator_TypeTable        = heap();
 #pragma endregion StaticData
 
 #pragma region Constants
+global CodeType t_empty;
 global CodeType t_auto;
 global CodeType t_void;
 global CodeType t_int;
@@ -66,6 +67,11 @@ global CodeType t_f32;
 global CodeType t_f64;
 #endif
 
+global CodeParam param_varadic;
+
+global CodeAttributes attrib_api_export;
+global CodeAttributes attrib_api_import;
+
 global Code access_public;
 global Code access_protected;
 global Code access_private;
@@ -80,17 +86,20 @@ global CodeSpecifiers spec_consteval;
 global CodeSpecifiers spec_constexpr;
 global CodeSpecifiers spec_constinit;
 global CodeSpecifiers spec_extern_linkage;
+global CodeSpecifiers spec_final;
 global CodeSpecifiers spec_global;
 global CodeSpecifiers spec_inline;
 global CodeSpecifiers spec_internal_linkage;
 global CodeSpecifiers spec_local_persist;
 global CodeSpecifiers spec_mutable;
+global CodeSpecifiers spec_override;
 global CodeSpecifiers spec_ptr;
 global CodeSpecifiers spec_ref;
 global CodeSpecifiers spec_register;
 global CodeSpecifiers spec_rvalue;
 global CodeSpecifiers spec_static_member;
 global CodeSpecifiers spec_thread_local;
+global CodeSpecifiers spec_virtual;
 global CodeSpecifiers spec_volatile;
 #pragma endregion Constants
 
@@ -1278,6 +1287,23 @@ internal void define_constants()
 #endif
 #	undef def_constant_code_type
 
+	t_empty = (CodeType) make_code();
+	t_empty->Type    = ECode::Typename;
+	t_empty->Name    = get_cached_string( txt_StrC("") );
+	t_empty.set_global();
+
+	param_varadic            = (CodeType) make_code();
+	param_varadic->Type      = ECode::Parameters;
+	param_varadic->Name      = get_cached_string( txt_StrC("...") );
+	param_varadic->ValueType = t_empty;
+	param_varadic.set_global();
+
+	attrib_api_export = def_attributes( code(GEN_API_Export_Code));
+	attrib_api_export.set_global();
+
+	attrib_api_import = def_attributes( code(GEN_API_Import_Code));
+	attrib_api_import.set_global();
+
 	access_private       = make_code();
 	access_private->Type = ECode::Access_Private;
 	access_private->Name = get_cached_string( txt_StrC("private:") );
@@ -1327,17 +1353,20 @@ internal void define_constants()
 	def_constant_spec( constexpr,        ESpecifier::Constexpr );
 	def_constant_spec( constinit,        ESpecifier::Constinit );
 	def_constant_spec( extern_linkage,   ESpecifier::External_Linkage );
+	def_constant_spec( final, 		     ESpecifier::Final );
 	def_constant_spec( global,           ESpecifier::Global );
 	def_constant_spec( inline,           ESpecifier::Inline );
 	def_constant_spec( internal_linkage, ESpecifier::Internal_Linkage );
 	def_constant_spec( local_persist,    ESpecifier::Local_Persist );
 	def_constant_spec( mutable,          ESpecifier::Mutable );
+	def_constant_spec( override,         ESpecifier::Override );
 	def_constant_spec( ptr,              ESpecifier::Ptr );
 	def_constant_spec( ref,              ESpecifier::Ref );
 	def_constant_spec( register,         ESpecifier::Register );
 	def_constant_spec( rvalue,           ESpecifier::RValue );
 	def_constant_spec( static_member,    ESpecifier::Static );
 	def_constant_spec( thread_local,     ESpecifier::Thread_Local );
+	def_constant_spec( virtual, 		 ESpecifier::Virtual );
 	def_constant_spec( volatile, 	     ESpecifier::Volatile)
 
 	spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
@@ -3475,6 +3504,7 @@ namespace Parser
 	Entry( Type_char, 			   "char" )             \
 	Entry( Type_int, 			   "int" )              \
 	Entry( Type_double, 		   "double" )           \
+	Entry( Varadic_Argument,       "..." )              \
 	Entry( Attributes_Start,       "__attrib_start__" )
 
 	enum class TokType : u32
@@ -3706,6 +3736,22 @@ namespace Parser
 
 					if (left)
 						move_forward();
+
+					if ( current == '.' )
+					{
+						move_forward();
+						if( current == '.' )
+						{
+							token.Length = 3;
+							token.Type = TokType::Varadic_Argument;
+							move_forward();
+						}
+						else
+						{
+							log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c'", current );
+						}
+					}
+
 					goto FoundToken;
 
 				case '&' :
@@ -4145,25 +4191,25 @@ struct ParseContext
 	char const*   Fn;
 };
 
-internal Code parse_function_body    ( Parser::TokArray& toks, char const* context );
-internal Code parse_global_nspace    ( Parser::TokArray& toks, char const* context );
+internal Code parse_function_body( Parser::TokArray& toks, char const* context );
+internal Code parse_global_nspace( Parser::TokArray& toks, char const* context );
 
-internal CodeClass     parse_class            ( Parser::TokArray& toks, char const* context );
-internal CodeEnum      parse_enum             ( Parser::TokArray& toks, char const* context );
-internal CodeBody      parse_export_body      ( Parser::TokArray& toks, char const* context );
-internal CodeBody      parse_extern_link_body ( Parser::TokArray& toks, char const* context );
-internal CodeExtern    parse_exten_link       ( Parser::TokArray& toks, char const* context );
-internal CodeFriend    parse_friend           ( Parser::TokArray& toks, char const* context );
-internal CodeFn        parse_function         ( Parser::TokArray& toks, char const* context );
-internal CodeNamespace parse_namespace        ( Parser::TokArray& toks, char const* context );
-internal CodeOpCast    parse_operator_cast    ( Parser::TokArray& toks, char const* context );
-internal CodeStruct    parse_struct           ( Parser::TokArray& toks, char const* context );
-internal CodeVar       parse_variable         ( Parser::TokArray& toks, char const* context );
-internal CodeTemplate  parse_template         ( Parser::TokArray& toks, char const* context );
-internal CodeType      parse_type             ( Parser::TokArray& toks, char const* context );
-internal CodeTypedef   parse_typedef          ( Parser::TokArray& toks, char const* context );
-internal CodeUnion     parse_union            ( Parser::TokArray& toks, char const* context );
-internal CodeUsing     parse_using            ( Parser::TokArray& toks, char const* context );
+internal CodeClass     parse_class           ( Parser::TokArray& toks, char const* context );
+internal CodeEnum      parse_enum            ( Parser::TokArray& toks, char const* context );
+internal CodeBody      parse_export_body     ( Parser::TokArray& toks, char const* context );
+internal CodeBody      parse_extern_link_body( Parser::TokArray& toks, char const* context );
+internal CodeExtern    parse_exten_link      ( Parser::TokArray& toks, char const* context );
+internal CodeFriend    parse_friend          ( Parser::TokArray& toks, char const* context );
+internal CodeFn        parse_function        ( Parser::TokArray& toks, char const* context );
+internal CodeNamespace parse_namespace       ( Parser::TokArray& toks, char const* context );
+internal CodeOpCast    parse_operator_cast   ( Parser::TokArray& toks, char const* context );
+internal CodeStruct    parse_struct          ( Parser::TokArray& toks, char const* context );
+internal CodeVar       parse_variable        ( Parser::TokArray& toks, char const* context );
+internal CodeTemplate  parse_template        ( Parser::TokArray& toks, char const* context );
+internal CodeType      parse_type            ( Parser::TokArray& toks, char const* context );
+internal CodeTypedef   parse_typedef         ( Parser::TokArray& toks, char const* context );
+internal CodeUnion     parse_union           ( Parser::TokArray& toks, char const* context );
+internal CodeUsing     parse_using           ( Parser::TokArray& toks, char const* context );
 
 internal inline
 Code parse_array_decl( Parser::TokArray& toks, char const* context )
@@ -4339,6 +4385,13 @@ CodeParam parse_params( Parser::TokArray& toks, char const* context, bool use_te
 	CodeType type  = { nullptr };
 	Code     value = { nullptr };
 
+	if ( check( TokType::Varadic_Argument) )
+	{
+		eat( TokType::Varadic_Argument );
+
+		return param_varadic;
+	}
+
 	type = parse_type( toks, context );
 	if ( type == Code::Invalid )
 		return CodeInvalid;
@@ -4395,6 +4448,13 @@ CodeParam parse_params( Parser::TokArray& toks, char const* context, bool use_te
 
 		Code type  = { nullptr };
 		Code value = { nullptr };
+
+		if ( check( TokType::Varadic_Argument) )
+		{
+			eat( TokType::Varadic_Argument );
+			result.append( param_varadic );
+			continue;
+		}
 
 		type = parse_type( toks, context );
 		if ( type == Code::Invalid )
