@@ -133,7 +133,15 @@
 #	endif
 #pragma endregion Mandatory Includes
 
-namespace gen {
+#ifdef GEN_DONT_USE_NAMESPACE
+#	define GEN_NS_BEGIN
+#	define GEN_NS_END
+#else
+#	define GEN_NS_BEGIN namespace gen {
+#	define GEN_NS_END   }
+#endif
+
+GEN_NS_BEGIN
 
 #pragma region Macros
 #define zpl_cast( Type ) ( Type )
@@ -2918,6 +2926,4 @@ f64 time_rel( void );
 u64 time_rel_ms( void );
 #endif
 
-// gen namespace
-}
-
+GEN_NS_END

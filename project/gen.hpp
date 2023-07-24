@@ -20,7 +20,15 @@
 #	include "gen.dep.hpp"
 #endif
 
-namespace gen {
+#if defined(GEN_DONT_USE_NAMESPACE) && ! defined(GEN_NS_BEGIN)
+#	define GEN_NS_BEGIN
+#	define GEN_NS_END
+#elif ! defined(GEN_NS_BEGIN)
+#  define GEN_NS_BEGIN namespace gen {
+#  define GEN_NS_END   }
+#endif
+
+GEN_NS_BEGIN
 
 #pragma region Types
 using LogFailType = sw(*)(char const*, ...);
@@ -1857,13 +1865,8 @@ StrC token_fmt_impl( sw num, ... )
 }
 #pragma endregion Inlines
 
-// namespace gen
-}
-
 #pragma region Constants
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-namespace gen
-{
 	// Predefined typename codes. Are set to readonly and are setup during gen::init()
 
 	extern CodeType t_b32;
@@ -1883,11 +1886,8 @@ namespace gen
 
 	extern CodeType t_f32;
 	extern CodeType t_f64;
-}
 #endif
 
-namespace gen
-{
 	// These constexprs are used for allocation behavior of data structures
 	// or string handling while constructing or serializing.
 	// Change them to suit your needs.
@@ -1947,7 +1947,6 @@ namespace gen
 	extern CodeSpecifier spec_static_member;
 	extern CodeSpecifier spec_thread_local;
 	extern CodeSpecifier spec_volatile;
-}
 #pragma endregion Constants
 
 #pragma region Macros
@@ -1972,8 +1971,6 @@ namespace gen
 #pragma endregion Macros
 
 #ifdef GEN_EXPOSE_BACKEND
-namespace gen
-{
 	// Global allocator used for data with process lifetime.
 	extern AllocatorInfo  GlobalAllocator;
 	extern Array< Arena > Global_AllocatorBuckets;
@@ -1990,7 +1987,8 @@ namespace gen
 	extern AllocatorInfo Allocator_StringArena;
 	extern AllocatorInfo Allocator_StringTable;
 	extern AllocatorInfo Allocator_TypeTable;
-}
 #endif
+
+GEN_NS_END
 
 #include "gen.pop_ignores.inline.hpp"

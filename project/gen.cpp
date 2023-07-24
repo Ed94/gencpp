@@ -14,7 +14,7 @@
 
 #include "gen.hpp"
 
-namespace gen {
+GEN_NS_BEGIN
 
 #pragma region StaticData
 // TODO : Convert global allocation strategy to use a slab allocation strategy.
@@ -6606,7 +6606,6 @@ void Builder::write()
 }
 #pragma endregion Builder
 
-// namespace gen
-}
+GEN_NS_END
 
 #include "gen.pop_ignores.inline.hpp"
