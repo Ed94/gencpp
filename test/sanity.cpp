@@ -1,7 +1,6 @@
 // Testing to make sure backend of library is operating properly.
 
 #ifdef GEN_TIME
-#define GEN_FEATURE_PARSING
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
