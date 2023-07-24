@@ -172,7 +172,7 @@ This method is setup where all the metaprogram's code are the within the same fi
   * Lambdas (This naturally means its unsupported)
 * RAII : This needs support for constructors/destructor parsing
   * I haven't gotten around to yet, only useful (to me) for third-party scanning
-* Multiple Inheritance
+* Multiple Inheritance : Working on it..
 
 Keywords kept from "Modern C++":
 

@@ -1,4 +1,4 @@
-// This file is intended to be included within gen.hpp (There is pragma diagnostic ignores)
+// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)
 #pragma once
 
 #pragma region Platform Detection

@@ -12,12 +12,12 @@
 #error Gen.hpp : GEN_TIME not defined
 #endif
 
-#include "gen.push_ignores.inline.hpp"
+#include "helpers/gen.push_ignores.inline.hpp"
 
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
-#	include "gen.dep.hpp"
+#	include "dependencies/gen.dep.hpp"
 #endif
 
 #if defined(GEN_DONT_USE_NAMESPACE) && ! defined(GEN_NS_BEGIN)
@@ -778,7 +778,6 @@ struct CodeBody
 
 Define_CodeType( Attributes );
 Define_CodeType( Comment );
-Define_CodeType( Class );
 Define_CodeType( Enum );
 Define_CodeType( Exec );
 Define_CodeType( Extern );
@@ -789,13 +788,38 @@ Define_CodeType( Module );
 Define_CodeType( Namespace );
 Define_CodeType( Operator );
 Define_CodeType( OpCast );
-Define_CodeType( Struct );
 Define_CodeType( Template );
 Define_CodeType( Type );
-Define_CodeType(Typedef);
+Define_CodeType( Typedef );
 Define_CodeType( Union );
 Define_CodeType( Using );
 Define_CodeType( Var );
+
+struct CodeClass
+{
+	Using_Code( CodeClass );
+
+	void add_interface( CodeType interface );
+
+	AST* raw()
+	{
+		return rcast( AST*, ast );
+	}
+	operator Code()
+	{
+		return * rcast( Code*, this );
+	}
+	AST_Class* operator->()
+	{
+		if ( ast == nullptr )
+		{
+			log_failure("Attempt to dereference a nullptr");
+			return nullptr;
+		}
+		return ast;
+	}
+	AST_Class* ast;
+};
 
 struct CodeParam
 {
@@ -904,6 +928,32 @@ struct CodeSpecifiers
 	AST_Specifiers* ast;
 };
 
+struct CodeStruct
+{
+	Using_Code( CodeStruct );
+
+	void add_interface( CodeType interface );
+
+	AST* raw()
+	{
+		return rcast( AST*, ast );
+	}
+	operator Code()
+	{
+		return * rcast( Code*, this );
+	}
+	AST_Struct* operator->()
+	{
+		if ( ast == nullptr )
+		{
+			log_failure("Attempt to dereference a nullptr");
+			return nullptr;
+		}
+		return ast;
+	}
+	AST_Struct* ast;
+};
+
 #undef Define_CodeType
 #undef Using_Code
 #pragma endregion Code Types
@@ -971,8 +1021,8 @@ struct AST_Class
 			CodeBody        Body;
 		};
 	};
-	Code                    Prev;
-	Code                    Next;
+	CodeType                Last;
+	CodeType                Next;
 	Code                    Parent;
 	StringCached            Name;
 	CodeT                   Type;
@@ -1223,8 +1273,8 @@ struct AST_Struct
 			CodeBody       Body;
 		};
 	};
-	Code                   Prev;
-	Code                   Next;
+	CodeType               Last;
+	CodeType               Next;
 	Code                   Parent;
 	StringCached           Name;
 	CodeT                  Type;
@@ -1407,7 +1457,8 @@ CodeClass def_class( StrC name
 	, Code           body         = NoCode
 	, CodeType       parent       = NoCode, AccessSpec access = AccessSpec::Default
 	, CodeAttributes attributes   = NoCode
-	, ModuleFlag mflags = ModuleFlag::None );
+	, ModuleFlag     mflags       = ModuleFlag::None
+	, CodeType*      interfaces   = nullptr, s32 num_interfaces = 0 );
 
 CodeEnum def_enum( StrC name
 	, Code         body      = NoCode,      CodeType       type       = NoCode
@@ -1441,7 +1492,8 @@ CodeStruct def_struct( StrC name
 	, Code           body       = NoCode
 	, CodeType       parent     = NoCode, AccessSpec access = AccessSpec::Default
 	, CodeAttributes attributes = NoCode
-	, ModuleFlag     mflags     = ModuleFlag::None );
+	, ModuleFlag     mflags     = ModuleFlag::None
+	, CodeType*      interfaces = nullptr, s32 num_interfaces = 0 );
 
 CodeTemplate def_template( CodeParam params, Code definition, ModuleFlag mflags = ModuleFlag::None );
 
@@ -1737,8 +1789,8 @@ Define_AST_Cast( Namespace );
 Define_AST_Cast( Operator );
 Define_AST_Cast( OpCast );
 Define_AST_Cast( Param );
-Define_AST_Cast( Specifiers );
 Define_AST_Cast( Struct );
+Define_AST_Cast( Specifiers );
 Define_AST_Cast( Template );
 Define_AST_Cast( Type );
 Define_AST_Cast( Typedef );
@@ -1778,6 +1830,19 @@ Define_CodeCast( Var );
 Define_CodeCast( Body);
 #undef Define_CodeCast
 #pragma endregion AST & Code Gen Common
+
+void CodeClass::add_interface( CodeType type )
+{
+	if ( ! ast->Next )
+	{
+		ast->Next = type;
+		ast->Last = ast->Next;
+		return;
+	}
+
+	ast->Next->Next = type;
+	ast->Last       = ast->Next->Next;
+}
 
 void CodeParam::append( CodeParam other )
 {
@@ -1826,6 +1891,18 @@ CodeParam& CodeParam::operator ++()
 {
 	ast = ast->Next.ast;
 	return * this;
+}
+
+void CodeStruct::add_interface( CodeType type )
+{
+	if ( ! ast->Next )
+	{
+		ast->Next = type;
+		ast->Last = ast->Next;
+	}
+
+	ast->Next->Next = type;
+	ast->Last       = ast->Next->Next;
 }
 
 CodeBody def_body( CodeT type )
@@ -2030,4 +2107,4 @@ StrC token_fmt_impl( sw num, ... )
 
 GEN_NS_END
 
-#include "gen.pop_ignores.inline.hpp"
+#include "helpers/gen.pop_ignores.inline.hpp"

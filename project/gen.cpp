@@ -4,12 +4,12 @@
 #error Gen.hpp : GEN_TIME not defined
 #endif
 
-#include "gen.push_ignores.inline.hpp"
+#include "helpers/gen.push_ignores.inline.hpp"
 
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 //! Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
-#	include "gen.dep.cpp"
+#	include "dependencies/gen.dep.cpp"
 #endif
 
 #include "gen.hpp"
@@ -478,6 +478,17 @@ String AST::to_string()
 						, ParentType->to_string()
 						, Body->to_string()
 					);
+
+					CodeType interface = Next->cast<CodeType>();
+					if ( interface )
+						result.append("\n");
+
+					while ( interface )
+					{
+						result.append_fmt( ", %s", interface.to_string() );
+
+						interface = interface->Next->cast<CodeType>();
+					}
 				}
 				else
 				{
@@ -902,6 +913,17 @@ String AST::to_string()
 						, ParentType->to_string()
 						, Body->to_string()
 					);
+
+					CodeType interface = Next->cast<CodeType>();
+					if ( interface )
+						result.append("\n");
+
+					while ( interface )
+					{
+						result.append_fmt( ", public %s", interface.to_string() );
+
+						interface = interface->Next->cast<CodeType>();
+					}
 				}
 				else
 				{
@@ -1182,7 +1204,8 @@ bool AST::validate_body()
 #pragma endregion AST
 
 #pragma region Gen Interface
-internal void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
+internal
+void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
 {
 	Arena* last = & Global_AllocatorBuckets.back();
 
@@ -1244,7 +1267,8 @@ internal void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw s
 	return nullptr;
 }
 
-internal void define_constants()
+internal
+void define_constants()
 {
 	Code::Global          = make_code();
 	Code::Global->Name    = get_cached_string( txt_StrC("Global Code") );
@@ -2032,7 +2056,8 @@ CodeClass def_class( StrC name
 	, Code           body
 	, CodeType       parent, AccessSpec parent_access
 	, CodeAttributes attributes
-	, ModuleFlag     mflags )
+	, ModuleFlag     mflags
+	, CodeType*      interfaces, s32 num_interfaces	)
 {
 	using namespace ECode;
 
@@ -2083,6 +2108,14 @@ CodeClass def_class( StrC name
 	{
 		result->ParentAccess = parent_access;
 		result->ParentType   = parent;
+	}
+
+	if ( interfaces )
+	{
+		for (s32 idx = 0; idx < num_interfaces; idx++ )
+		{
+			result.add_interface( interfaces[idx] );
+		}
 	}
 
 	return result;
@@ -2523,7 +2556,8 @@ CodeStruct def_struct( StrC name
 	, Code           body
 	, CodeType       parent, AccessSpec parent_access
 	, CodeAttributes attributes
-	, ModuleFlag     mflags )
+	, ModuleFlag     mflags
+	, CodeType*      interfaces, s32 num_interfaces )
 {
 	using namespace ECode;
 
@@ -2569,6 +2603,14 @@ CodeStruct def_struct( StrC name
 	{
 		result->ParentAccess = parent_access;
 		result->ParentType   = parent;
+	}
+
+	if ( interfaces )
+	{
+		for (s32 idx = 0; idx < num_interfaces; idx++ )
+		{
+			result.add_interface( interfaces[idx] );
+		}
 	}
 
 	return result;
@@ -5162,6 +5204,7 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 
 	Token name { nullptr, 0, TokType::Invalid };
 
+	AccessSpec     access     = AccessSpec::Default;
 	CodeType       parent     = { nullptr };
 	CodeBody       body       = { nullptr };
 	CodeAttributes attributes = { nullptr };
@@ -5182,8 +5225,9 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 	if ( check( TokType::Identifier ) )
 		name = parse_identifier( toks, context );
 
-	AccessSpec access     = AccessSpec::Default;
-	Token      parent_tok = { nullptr, 0, TokType::Invalid };
+	local_persist
+	char interface_arr_mem[ kilobytes(4) ] {0};
+	Array<CodeType> interfaces = Array<CodeType>::init_reserve( Arena::init_from_memory(interface_arr_mem, kilobytes(4) ), 4 );
 
 	if ( check( TokType::Assign_Classifer ) )
 	{
@@ -5194,7 +5238,22 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 			access = tok_to_access_specifier( currtok );
 		}
 
-		parent_tok = parse_identifier( toks, context );
+		Token parent_tok = parse_identifier( toks, context );
+		parent = def_type( parent_tok );
+
+		while ( check(TokType::Comma) )
+		{
+			eat(TokType::Access_Public);
+
+			if ( tok_is_access_specifier( currtok ) )
+			{
+				eat(currtok.Type);
+			}
+
+			Token interface_tok = parse_identifier( toks, context );
+
+			interfaces.append( def_type( interface_tok ) );
+		}
 	}
 
 	if ( check( TokType::BraceCurly_Open ) )
@@ -5203,9 +5262,6 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 	}
 
 	eat( TokType::Statement_End );
-
-	if ( parent_tok )
-		parent = def_type( parent_tok );
 
 	if ( which == TokType::Decl_Class )
 		result = def_class( name, body, parent, access
@@ -5219,6 +5275,7 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 			, mflags
 		);
 
+	interfaces.free();
 	return result;
 }
 
@@ -6812,4 +6869,4 @@ void Builder::write()
 
 GEN_NS_END
 
-#include "gen.pop_ignores.inline.hpp"
+#include "helpers/gen.pop_ignores.inline.hpp"
