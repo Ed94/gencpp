@@ -33,9 +33,9 @@ GEN_NS_BEGIN
 #include "components/gen.types.hpp"
 #include "components/gen.data_structures.hpp"
 #include "components/gen.interface.hpp"
-#include "filesystem/gen.builder.hpp"
-
 #include "components/gen.header_end.hpp"
+
+#include "filesystem/gen.builder.hpp"
 
 GEN_NS_END
 

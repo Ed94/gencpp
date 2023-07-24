@@ -1,5 +1,3 @@
-#pragma once
-
 // ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
 
 #if ! defined(GEN_DONT_ENFORCE_GEN_TIME_GUARD) && ! defined(GEN_TIME)
@@ -33,4 +31,3 @@ GEN_NS_BEGIN
 GEN_NS_END
 
 #include "helpers/gen.pop_ignores.inline.hpp"
-
