@@ -2530,13 +2530,28 @@ CodeType def_type( StrC name, Code arrayexpr, CodeSpecifier specifiers, CodeAttr
 
 CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, ModuleFlag mflags )
 {
+	using namespace ECode;
+
 	name_check( def_typedef, name );
 	null_check( def_typedef, type );
 
-	if ( type->Type != ECode::Typename )
+	switch ( type->Type )
 	{
-		log_failure( "gen::def_typedef: type was not a Typename - %s", type.debug_str() );
-		return CodeInvalid;
+		case Class:
+		case Class_Fwd:
+		case Enum:
+		case Enum_Fwd:
+		case Enum_Class:
+		case Enum_Class_Fwd:
+		case Function_Fwd:
+		case Struct:
+		case Struct_Fwd:
+		case Union:
+		case Typename:
+			break;
+		default:
+			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", type.debug_str() );
+			return CodeInvalid;
 	}
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
@@ -6116,8 +6131,11 @@ CodeTypedef parse_typedef( Parser::TokArray& toks, char const* context )
 	if ( check( TokType::Decl_Enum ) )
 		type = parse_enum( toks, context );
 
+	else if ( check(TokType::Decl_Class ) )
+		type = parse_class( toks, context );
+
 	else if ( check(TokType::Decl_Struct ) )
-		type = parse_enum( toks, context );
+		type = parse_struct( toks, context );
 
 	else if ( check(TokType::Decl_Union) )
 		type = parse_union( toks, context );

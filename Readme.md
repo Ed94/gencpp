@@ -691,7 +691,6 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 # TODO
 
-* Support defining & parsing full definitions inside a typedef. (For C patterns)
 * Implement a context stack for the parsing, allows for accurate scope validation for the AST types.
 * Trailing specifiers ( postfix ) for functions (const, override, final)
 * Make a more robust test suite.
