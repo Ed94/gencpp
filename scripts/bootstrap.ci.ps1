@@ -15,7 +15,7 @@ foreach ( $arg in $args )
 
 $path_root            = git rev-parse --show-toplevel
 $path_project         = Join-Path $path_root project
-$path_project_build   = Join-Path $path_bootstrap build
+$path_project_build   = Join-Path $path_project build
 
 write-host "`n`nBuilding gencpp bootstrap`n"
 

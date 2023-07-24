@@ -7,7 +7,7 @@ includes = include_directories(
 
 sources = [ 'gen.bootstrap.cpp' ]
 
-if get_option('buildtype').sartswith('debug')
+if get_option('buildtype').startswith('debug')
 
   add_project_arguments('-DBuild_Debug', language : ['c', 'cpp'])
 

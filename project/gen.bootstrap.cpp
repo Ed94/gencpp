@@ -5,7 +5,7 @@
 
 using namespace gen;
 
-void gen_main()
+int gen_main()
 {
 
 
