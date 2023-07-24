@@ -12,7 +12,7 @@ These build up a code AST to then serialize with a file builder.
 * [Building](#notes)
 * [Outline](#outline)
 * [What is not provided](#what-is-not-provided)
-* [The four constructors](#there-are-four-sets-of-interfaces-for-code-ast-generation-the-library-provides)
+* [The three constructors ](#there-are-three-sets-of-interfaces-for-code-ast-generation-the-library-provides)
 * [Predefined Codes](#predefined-codes)
 * [Code generation and modification](#code-generation-and-modification)
 * [On multithreading](#on-multi-threading)
@@ -291,12 +291,16 @@ Data Notes:
   * I will be augmenting the single arena with a simple slag allocator.
 * Linked lists used children nodes on bodies, and parameters.
 * Its intended to generate the AST in one go and serialize after. The constructors and serializer are designed to be a "one pass, front to back" setup.
-* When benchmarking, the three most significant var to tune are:
-  * `Global_BlockSize` (found gen_dep.hpp) : Used by the GlobalAllocator for the size of each global arena.
-  * `SizePer_StringArena` (found in gen.hpp under the constants region) : Used by the string cache to store strings.
-  * `CodePool_NumBlocks` (found in gen.hpp under constants region) : Used by code pool to store ASTs.
-  * The default values can handled generating for a string up to a size of ~650 kbs (bottleneck is serialization).
-  * Increasing the values can generate files upwards of over a million lines without issue (the formatter will most likely run slower than it)
+* Allocations can be tuned by defining the folloiwng macros:
+  * `GEN_GLOBAL_BUCKET_SIZE` : Size of each bucket area for the global allocator
+  * `GEN_CODEPOOL_NUM_BLOCKS` : Number of blocks per code pool in the code allocator
+  * `GEN_SIZE_PER_STRING_ARENA` : Size per arena used with string caching.
+  * `GEN_MAX_COMMENT_LINE_LENGTH` : Longest length a comment can have per line.
+  * `GEN_MAX_NAME_LENGTH` : Max length of any identifier.
+  * `GEN_MAX_UNTYPED_STR_LENGTH` : Max content length for any untyped code.
+  * `GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE` : token_fmt_va uses local_persit memory of this size for the hashtable.
+  * `GEN_LEX_ALLOCATOR_SIZE`
+  * `GEN_BUILDER_STR_BUFFER_RESERVE`
 
 Two generic templated containers are used throughout the library:
 

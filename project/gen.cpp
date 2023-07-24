@@ -4115,6 +4115,7 @@ CodeAttributes parse_attributes( Parser::TokArray& toks, char const* context )
 	using namespace Parser;
 
 	Token start;
+	s32 len = 0;
 
 	if ( check(TokType::Attribute_Open) )
 	{
@@ -4126,6 +4127,8 @@ CodeAttributes parse_attributes( Parser::TokArray& toks, char const* context )
 		}
 
 		eat( TokType::Attribute_Close );
+
+		s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
 	}
 
 	else if ( check(TokType::Decl_GNU_Attribute) )
@@ -4140,6 +4143,8 @@ CodeAttributes parse_attributes( Parser::TokArray& toks, char const* context )
 
 		eat(TokType::BraceCurly_Close);
 		eat(TokType::BraceCurly_Close);
+
+		s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
 	}
 
 	else if ( check(TokType::Decl_MSVC_Attribute) )
@@ -4153,14 +4158,15 @@ CodeAttributes parse_attributes( Parser::TokArray& toks, char const* context )
 		}
 
 		eat(TokType::BraceCurly_Close);
+
+		s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
 	}
 
 	else if ( tok_is_attribute( currtok ) )
 	{
 		eat(currtok.Type);
+		s32 len = start.Length;
 	}
-
-	s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
 
 	if ( len > 0 )
 	{
@@ -6237,7 +6243,7 @@ CodeUsing parse_using( Parser::TokArray& toks, char const* context )
 {
 	using namespace Parser;
 
-	SpecifierT specs_found[16] { ESpecifier::Num_Specifiers };
+	SpecifierT specs_found[16] { ESpecifier::Invalid };
 	s32        num_specifiers = 0;
 
 	Token    name       = { nullptr, 0, TokType::Invalid };
@@ -6416,11 +6422,13 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 	char const* buf_begin = buf;
 	sw          remaining = buf_size;
 
-	static Arena tok_map_arena;
+	local_persist
+	Arena tok_map_arena;
 
 	HashTable<StrC> tok_map;
 	{
-		static char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
+		local_persist
+		char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
 
 		tok_map_arena = Arena::init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
 

@@ -1888,26 +1888,52 @@ StrC token_fmt_impl( sw num, ... )
 	extern CodeType t_f64;
 #endif
 
+#ifndef GEN_GLOBAL_BUCKET_SIZE
+#	define GEN_GLOBAL_BUCKET_SIZE megabytes(10)
+#endif
+#ifndef GEN_CODEPOOL_NUM_BLOCKS
+#	define GEN_CODEPOOL_NUM_BLOCKS kilobytes(64)
+#endif
+#ifndef GEN_SIZE_PER_STRING_ARENA
+#	define GEN_SIZE_PER_STRING_ARENA megabytes(1)
+#endif
+#ifndef GEN_MAX_COMMENT_LINE_LENGTH
+#	define GEN_MAX_COMMENT_LINE_LENGTH 1024
+#endif
+#ifndef GEN_MAX_NAME_LENGTH
+#	define GEN_MAX_NAME_LENGTH 128
+#endif
+#ifndef GEN_MAX_UNTYPED_STR_LENGTH
+#	define GEN_MAX_UNTYPED_STR_LENGTH kilobytes(640)
+#endif
+#ifndef GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE
+#	define GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE kilobytes(4)
+#endif
+#ifndef GEN_LEX_ALLOCATOR_SIZE
+#	define GEN_LEX_ALLOCATOR_SIZE megabytes(10)
+#endif
+#ifndef GEN_BUILDER_STR_BUFFER_RESERVE
+#	define GEN_BUILDER_STR_BUFFER_RESERVE megabytes(1)
+#endif
+
 	// These constexprs are used for allocation behavior of data structures
 	// or string handling while constructing or serializing.
 	// Change them to suit your needs.
 
-	constexpr s32 InitSize_DataArrays  = 16;
-	constexpr s32 InitSize_StringTable = megabytes(4);
+	constexpr s32 InitSize_DataArrays = 16;
 
 	// NOTE: This limits the maximum size of an allocation
 	// If you are generating a string larger than this, increase the size of the bucket here.
-	constexpr uw  Global_BucketSize         = megabytes(10);
-	constexpr s32 CodePool_NumBlocks        = kilobytes(64);
-	constexpr s32 SizePer_StringArena       = megabytes(1);
+	constexpr uw  Global_BucketSize         = GEN_GLOBAL_BUCKET_SIZE;
+	constexpr s32 CodePool_NumBlocks        = GEN_CODEPOOL_NUM_BLOCKS;
+	constexpr s32 SizePer_StringArena       = GEN_SIZE_PER_STRING_ARENA;
 
-	constexpr s32 MaxCommentLineLength      = 1024;
-	constexpr s32 MaxNameLength             = 128;
-	constexpr s32 MaxUntypedStrLength       = kilobytes(640);
-	constexpr s32 StringTable_MaxHashLength = kilobytes(1);
-	constexpr s32 TokenFmt_TokenMap_MemSize	= kilobytes(4);
-	constexpr s32 LexAllocator_Size         = megabytes(10);
-	constexpr s32 Builder_StrBufferReserve  = megabytes(1);
+	constexpr s32 MaxCommentLineLength      = GEN_MAX_COMMENT_LINE_LENGTH;
+	constexpr s32 MaxNameLength             = GEN_MAX_NAME_LENGTH;
+	constexpr s32 MaxUntypedStrLength       = GEN_MAX_UNTYPED_STR_LENGTH;
+	constexpr s32 TokenFmt_TokenMap_MemSize	= GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE;
+	constexpr s32 LexAllocator_Size         = GEN_LEX_ALLOCATOR_SIZE;
+	constexpr s32 Builder_StrBufferReserve  = GEN_BUILDER_STR_BUFFER_RESERVE;
 
 	extern CodeType t_auto;
 	extern CodeType t_void;

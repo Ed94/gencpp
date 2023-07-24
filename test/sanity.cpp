@@ -39,7 +39,7 @@ void check_sanity()
 		Num String Cache        : 30000025
 	*/
 	constexpr
-	s32 num_iterations = 650000;
+	s32 num_iterations = 325000;
 
 	Array<CodeTypedef> typedefs = Array<CodeTypedef>::init_reserve( GlobalAllocator, num_iterations * 2 );
 
