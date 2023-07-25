@@ -1,6 +1,6 @@
 # Documentation
 
-The core library is contained within `gen.hpp` and `gen.cpp`.
+The core library is contained within `gen.hpp` and `gen.cpp`.  
 Things related to the editor and scanner are in their own respective files. (Ex: `gen.scanner.<hpp/cpp>` )
 
 Dependencies are within `gen.dep.<hpp/cpp>`
@@ -8,11 +8,12 @@ Dependencies are within `gen.dep.<hpp/cpp>`
 The library is fragmented into a series of headers and sources files meant to be scanned in and then generated to a tailored format for the target
 `gen` files.
 
-Both libraries use *pre-generated* (self-hosting I guess) version of the library to then generate the latest version of itself.
+Both libraries use *pre-generated* (self-hosting I guess) version of the library to then generate the latest version of itself.  
 (sort of a verification that the generated version is equivalent)
 
-The default `gen.bootstrap.cpp` located in the project folder is meant to be produce a standard segmeneted library, where the components of the library
-have relatively dedicated header and source files. With dependencies included at the top of the file and each header starting with a pragma once.
+The default `gen.bootstrap.cpp` located in the project folder is meant to be produce a standard segmeneted library (WIP), where the components of the library  
+have relatively dedicated header and source files. With dependencies included at the top of the file and each header starting with a pragma once.  
+This will overwrite the existing library implementation in the immediate directory.
 
 Use those to get a general idea of how to make your own tailored version.
 

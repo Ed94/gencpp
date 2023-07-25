@@ -4,6 +4,8 @@ build/*
 .vs
 
 **/*.gen.*
+**/gen/gen.hpp
+**/gen/gen.cpp
 
 gencpp.hpp
 gencpp.cpp

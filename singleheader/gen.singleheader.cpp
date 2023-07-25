@@ -50,7 +50,7 @@ int gen_main()
 	Code nspace_macro = untyped_str( namespace_by_default ? nspace_default : nspace_non_default );
 
 	Builder gen_header;
-	gen_header.open( "gencpp.hpp" );
+	gen_header.open( "gen/gen.hpp" );
 	gen_header.print( push_ignores );
 
 	// Headers

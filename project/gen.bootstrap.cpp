@@ -50,7 +50,7 @@ int gen_main()
 		Code header_start = scan_file( "components/gen.header_start.hpp" );
 		Code nspace_macro = untyped_str( namespace_by_default ? nspace_default : nspace_non_default );
 
-		gen_header.open( "gencpp.hpp" );
+		gen_header.open( "gen/gen.hpp" );
 			gen_header.print_fmt("#pragma once\n\n");
 			gen_header.print( push_ignores );
 			gen_header.print( header_start );

@@ -16,6 +16,7 @@ foreach ( $arg in $args )
 $path_root               = git rev-parse --show-toplevel
 $path_singleheader       = Join-Path $path_root singleheader
 $path_singleheader_build = Join-Path $path_singleheader build
+$path_singleheader_gen   = Join-Path $path_singleheader gen
 
 write-host "`n`nBuilding gencpp bootstrap`n"
 
@@ -41,6 +42,10 @@ Push-Location $path_root
 Pop-Location
 
 Push-location $path_singleheader
+if ( -not(Test-Path($path_singleheader_gen) )) {
+	New-Item -ItemType Directory -Path $path_singleheader_gen
+}
+
 # Run meta-program
 $gencpp_singleheader = Join-Path $path_singleheader_build gencpp_singleheader.exe
 

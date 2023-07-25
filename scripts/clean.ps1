@@ -7,6 +7,8 @@ $path_gen_build          = Join-Path $path_gen  build
 $path_test_build         = Join-Path $path_test build
 $path_project_build      = Join-Path $path_project build
 $path_singleheader_build = Join-Path $path_singleheader build
+$path_project_gen		 = Join-Path $path_project gen
+$path_singleheader_gen	 = Join-Path $path_singleheader gen
 
 if ( Test-Path $path_project_build)
 {
@@ -28,17 +30,17 @@ if ( Test-Path $path_gen_build )
 	Remove-Item $path_gen_build -Recurse
 }
 
-[string[]] $include = 'gencpp.hpp', 'gencpp.cpp'
+[string[]] $include = 'gen.hpp', 'gen.cpp'
 [string[]] $exclude =
 
-$files = Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude
+$files = Get-ChildItem -Recurse -Path $path_project_gen -Include $include -Exclude $exclude
 
 if ( $files )
 {
 	Remove-Item $files
 }
 
-$files = Get-ChildItem -Recurse -Path $path_singleheader -Include $include -Exclude $exclude
+$files = Get-ChildItem -Recurse -Path $path_singleheader_gen -Include $include -Exclude $exclude
 
 if ( $files )
 {

@@ -16,6 +16,7 @@ foreach ( $arg in $args )
 $path_root            = git rev-parse --show-toplevel
 $path_project         = Join-Path $path_root project
 $path_project_build   = Join-Path $path_project build
+$path_project_gen     = Join-Path $path_project gen
 
 write-host "`n`nBuilding gencpp bootstrap`n"
 
@@ -41,6 +42,10 @@ Push-Location $path_root
 Pop-Location
 
 Push-location $path_project
+if ( -not(Test-Path($path_project_gen) )) {
+	New-Item -ItemType Directory -Path $path_project_gen
+}
+
 # Run meta-program
 $gencpp_bootstrap = Join-Path $path_project_build gencpp_bootstrap.exe
 

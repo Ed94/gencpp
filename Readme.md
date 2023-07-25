@@ -48,13 +48,15 @@ The project has no external dependencies beyond:
 Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
 The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
 
-This library was written a subset of C++ where the following are avoided:
+This library was written a subset of C++ where the following are not used at all:
 
 * RAII (Constructors/Destructors), lifetimes are managed using named static or regular functions.
 * Language provide dynamic dispatch, RTTI
 * Object-Oriented Inheritance
+* Exceptions
 
-Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.
+Polymorphic & Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.  
+There are only 4 template definitions in the entire library. (`Array<Type>`, `Hashtable<Type>`, `swap<Type>`, and `AST/Code::cast<Type>`)
 
 A `natvis` and `natstepfilter` are provided in the scripts directory.
 
@@ -133,19 +135,20 @@ Code header = parse_struct( code(
 ### Untyped
 
 ```cpp
-Code header = untyped_str( code(
+Code header = code_str(
     struct ArrayHeader
     {
         uw        Num;
         uw        Capacity;
         allocator Allocator;
     };
-));
+);
 ```
 
 `name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.  
 `code` is a helper macro for providing a string literal with its size, but intended for code string parameters.  
 `args` is a helper macro for providing the number of arguments to varadic constructors.
+`code_str` is a helper macro for writting `untyped_str( code( <content> ))`
 
 All three constrcuton interfaces will generate the following C code:
 
@@ -164,6 +167,8 @@ struct ArrayHeader
 
 An example of building is provided within project, singleheader, and test.
 
+(All generated files go to a corresponding `*/gen` directory)
+
 **Project**
 
 `gen.bootstrap.cpp` generates a segmented version of the library following a more traditional cpp convention.  
@@ -171,7 +176,7 @@ With the exception that: *The component hpp and cpp files are all included into 
 
 **Singleheader**
 
-`gen.singleheader.cpp` generated a single-header version of the library following the convention shown in popular libraries such as: gb, stb, and zpl.
+`gen.singleheader.cpp` generates a single-header version of the library following the convention shown in popular libraries such as: gb, stb, and zpl.
 
 **Test**
 
@@ -285,12 +290,12 @@ The width dictates how much the static array can hold before it must give way to
 constexpr static
 uw ArrSpecs_Cap =
 (
-        AST_POD_Size
-        - sizeof(AST*) * 3
-        - sizeof(StringCached)
-        - sizeof(CodeT)
-        - sizeof(ModuleFlag)
-        - sizeof(s32)
+    AST_POD_Size
+    - sizeof(AST*) * 3
+    - sizeof(StringCached)
+    - sizeof(CodeT)
+    - sizeof(ModuleFlag)
+    - sizeof(s32)
 )
 / sizeof(SpecifierT) -1; // -1 for 4 extra bytes (Odd num of AST*)
 ```
@@ -329,6 +334,8 @@ Two generic templated containers are used throughout the library:
 * `template< class Type> struct HashTable`
 
 Both Code and AST definitions have a `template< class Type> Code/AST cast()`. Its just an alternative way to explicitly cast to each other.
+
+`template< class Type> swap( Type& a, Type& b)` is used over a macro.
 
 Otherwise the library is free of any templates.
 
@@ -704,7 +711,8 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 `def_operator` is the most sophisticated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
-If extendeding parsing capability, ECode, ESpecifier, may need to be modified along with making a new `AST_<Name>` and `Code<Name>` if its desired to preserve the same interface. The lexer (see the `Parser` namespace in `gen.cpp`) will most likely also need to be extended to support any unsupported or custom tokens.
+The library has its code segmented into component files, use it to help create a derived version without needing to have to rewrite a generated file directly or build on top of the header via composition or inheritance.
+When the scanner is implemented, this will be even easier to customize.
 
 # TODO
 
@@ -720,7 +728,7 @@ If extendeding parsing capability, ECode, ESpecifier, may need to be modified al
   * It would allow me to remove the filesystem dependencies and related functions outside of gen base headers. ( At least 1k loc reduced )
   * ADT and the CSV parser depend on it as well. The `str_fmt_file` related functions do as well but they can be ommited.
   * Scanner and editor will also depend on it so they would need to include w/e the depency header for all three file-interacting interfaces.
-    * `gen.dep.files.hpp`
+    * `gen.files_handling.hpp`
 * Convert GlobalAllocator to a slab allocator:
 
 ```md
