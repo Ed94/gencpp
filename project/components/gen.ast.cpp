@@ -222,7 +222,7 @@ String AST::to_string()
 #	define ProcessModuleFlags()                                      \
 	if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))  \
 		result.append( "export " );                                  \
-																		\
+																     \
 	if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Import ))  \
 		result.append( "import " );                                  \
 

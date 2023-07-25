@@ -62,7 +62,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw a
 }
 
 internal
-	void define_constants()
+void define_constants()
 {
 	Code::Global          = make_code();
 	Code::Global->Name    = get_cached_string( txt_StrC("Global Code") );
@@ -71,9 +71,9 @@ internal
 	Code::Invalid = make_code();
 	Code::Invalid.set_global();
 
-#	define def_constant_code_type( Type_ )    \
-	t_##Type_ = def_type( name(Type_) ); \
-	t_##Type_.set_global();
+#	define def_constant_code_type( Type_ )   \
+		t_##Type_ = def_type( name(Type_) ); \
+		t_##Type_.set_global();
 
 	def_constant_code_type( auto );
 	def_constant_code_type( void );
@@ -162,9 +162,9 @@ internal
 #	undef internal
 #	undef local_persist
 
-#	define def_constant_spec( Type_, ... )                                    \
-	spec_##Type_ = def_specifiers( num_args(__VA_ARGS__), __VA_ARGS__); \
-	spec_##Type_.set_global();
+#	define def_constant_spec( Type_, ... )                                  \
+		spec_##Type_ = def_specifiers( num_args(__VA_ARGS__), __VA_ARGS__); \
+		spec_##Type_.set_global();
 
 	def_constant_spec( const,            ESpecifier::Const );
 	def_constant_spec( consteval,        ESpecifier::Consteval );
@@ -187,7 +187,7 @@ internal
 	def_constant_spec( virtual, 		 ESpecifier::Virtual );
 	def_constant_spec( volatile, 	     ESpecifier::Volatile)
 
-		spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
+	spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
 	spec_local_persist.set_global();
 
 #	pragma pop_macro( "global" )
@@ -361,7 +361,6 @@ StringCached get_cached_string( StrC str )
 	}
 
 	String result = String::make( get_string_allocator( str.Len ), str );
-
 	StringCache.set( key, result );
 
 	return result;

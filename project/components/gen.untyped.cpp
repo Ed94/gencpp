@@ -4,12 +4,12 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 	sw          remaining = buf_size;
 
 	local_persist
-		Arena tok_map_arena;
+	Arena tok_map_arena;
 
 	HashTable<StrC> tok_map;
 	{
 		local_persist
-			char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
+		char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
 
 		tok_map_arena = Arena::init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
 
@@ -101,7 +101,7 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 Code untyped_str( StrC content )
 {
 	Code
-		result          = make_code();
+	result          = make_code();
 	result->Name    = get_cached_string( content );
 	result->Type    = ECode::Untyped;
 	result->Content = result->Name;
@@ -112,7 +112,7 @@ Code untyped_str( StrC content )
 Code untyped_fmt( char const* fmt, ...)
 {
 	local_persist thread_local
-		char buf[GEN_PRINTF_MAXLEN] = { 0 };
+	char buf[GEN_PRINTF_MAXLEN] = { 0 };
 
 	va_list va;
 	va_start(va, fmt);
@@ -120,7 +120,7 @@ Code untyped_fmt( char const* fmt, ...)
 	va_end(va);
 
 	Code
-		result          = make_code();
+	result          = make_code();
 	result->Name    = get_cached_string( { str_len(fmt, MaxNameLength), fmt } );
 	result->Type    = ECode::Untyped;
 	result->Content = get_cached_string( { length, buf } );
@@ -131,7 +131,7 @@ Code untyped_fmt( char const* fmt, ...)
 Code untyped_token_fmt( s32 num_tokens, ... )
 {
 	local_persist thread_local
-		char buf[GEN_PRINTF_MAXLEN] = { 0 };
+	char buf[GEN_PRINTF_MAXLEN] = { 0 };
 
 	va_list va;
 	va_start(va, num_tokens);
@@ -139,7 +139,7 @@ Code untyped_token_fmt( s32 num_tokens, ... )
 	va_end(va);
 
 	Code
-		result          = make_code();
+	result          = make_code();
 	result->Name    = get_cached_string( { length, buf } );
 	result->Type    = ECode::Untyped;
 	result->Content = result->Name;

@@ -6,7 +6,7 @@ enum class OpValidateResult : u32
 };
 
 inline
-	OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeType ret_type, CodeSpecifiers specifier )
+OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeType ret_type, CodeSpecifiers specifier )
 {
 	using namespace EOperator;
 
@@ -20,26 +20,26 @@ inline
 #	define check_params()                                                                                 \
 	if ( ! params_code )                                                                                  \
 	{                                                                                                     \
-	log_failure("gen::def_operator: params is null and operator%s requires it", to_str(op));          \
-	return OpValidateResult::Fail;                                                                    \
+		log_failure("gen::def_operator: params is null and operator%s requires it", to_str(op));          \
+		return OpValidateResult::Fail;                                                                    \
 	}                                                                                                     \
 	if ( params_code->Type != ECode::Parameters )                                                         \
 	{                                                                                                     \
-	log_failure("gen::def_operator: params is not of Parameters type - %s", params_code.debug_str()); \
-	return OpValidateResult::Fail;                                                                    \
+		log_failure("gen::def_operator: params is not of Parameters type - %s", params_code.debug_str()); \
+		return OpValidateResult::Fail;                                                                    \
 	}
 
 #	define check_param_eq_ret()                                                                    \
 	if ( ! is_member_symbol && params_code->ValueType != ret_type )                                \
 	{                                                                                              \
-	log_failure("gen_def_operator: operator%s requires first parameter to equal return type\n" \
-	            "param types: %s\n"                                                                    \
-	            "return type: %s",                                                                     \
-	            to_str(op),                                                                            \
-	            params_code.debug_str(),                                                               \
-	            ret_type.debug_str()                                                                   \
-	            );                                                                                         \
-	return OpValidateResult::Fail;                                                             \
+		log_failure("gen_def_operator: operator%s requires first parameter to equal return type\n" \
+			"param types: %s\n"                                                                    \
+			"return type: %s",                                                                     \
+			to_str(op),                                                                            \
+			params_code.debug_str(),                                                               \
+			ret_type.debug_str()                                                                   \
+		);                                                                                         \
+		return OpValidateResult::Fail;                                                             \
 	}
 #pragma endregion Helper Macros
 
@@ -65,10 +65,10 @@ inline
 			if ( params_code->NumEntries > 1 )
 			{
 				log_failure("gen::def_operator: "
-				            "operator%s does not support non-member definition (more than one parameter provided) - %s",
-				            to_str(op),
-				            params_code.debug_str()
-				            );
+					"operator%s does not support non-member definition (more than one parameter provided) - %s",
+					to_str(op),
+					params_code.debug_str()
+				);
 				return OpValidateResult::Fail;
 			}
 
@@ -96,10 +96,10 @@ inline
 			if (params_code->NumEntries > 2 )
 			{
 				log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
-				            , to_str(op)
-				            , params_code->NumEntries
-				            , params_code.debug_str()
-				            );
+					, to_str(op)
+					, params_code->NumEntries
+					, params_code.debug_str()
+				);
 				return OpValidateResult::Fail;
 			}
 			break;
@@ -112,9 +112,9 @@ inline
 				if ( params_code->Type != ECode::Parameters )
 				{
 					log_failure("gen::def_operator: operator%s params code provided is not of Parameters type - %s"
-					            , to_str(op)
-					            , params_code.debug_str()
-					            );
+						, to_str(op)
+						, params_code.debug_str()
+					);
 					return OpValidateResult::Fail;
 				}
 
@@ -134,18 +134,18 @@ inline
 						if ( ! params_code.get(1).is_equal( t_int ) )
 						{
 							log_failure("gen::def_operator: "
-							            "operator%s requires second parameter of non-member definition to be int for post-decrement",
-							            to_str(op)
-							            );
+								"operator%s requires second parameter of non-member definition to be int for post-decrement",
+								to_str(op)
+							);
 							return OpValidateResult::Fail;
 						}
 						break;
 
 					default:
 						log_failure("gen::def_operator: operator%s recieved unexpected number of parameters recived %d instead of 0-2"
-						            , to_str(op)
-						            , params_code->NumEntries
-						            );
+							, to_str(op)
+							, params_code->NumEntries
+						);
 						return OpValidateResult::Fail;
 				}
 			}
@@ -168,21 +168,21 @@ inline
 				if ( params_code->ValueType.is_equal( ret_type ) )
 				{
 					log_failure("gen::def_operator: "
-					            "operator%s is non-member symbol yet first paramter does not equal return type\n"
-					            "param type: %s\n"
-					            "return type: %s\n"
-					            , params_code.debug_str()
-					            , ret_type.debug_str()
-					            );
+						"operator%s is non-member symbol yet first paramter does not equal return type\n"
+						"param type: %s\n"
+						"return type: %s\n"
+						, params_code.debug_str()
+						, ret_type.debug_str()
+					);
 					return OpValidateResult::Fail;
 				}
 
 				if ( params_code->NumEntries > 1 )
 				{
 					log_failure("gen::def_operator: operator%s may not have more than one parameter - param count: %d"
-					            , to_str(op)
-					            , params_code->NumEntries
-					            );
+						, to_str(op)
+						, params_code->NumEntries
+					);
 					return OpValidateResult::Fail;
 				}
 			}
@@ -210,21 +210,21 @@ inline
 					if ( ! params_code->ValueType.is_equal( ret_type ) )
 					{
 						log_failure("gen::def_operator: "
-						            "operator%s is non-member symbol yet first paramter does not equal return type\n"
-						            "param type: %s\n"
-						            "return type: %s\n"
-						            , params_code.debug_str()
-						            , ret_type.debug_str()
-						            );
+							"operator%s is non-member symbol yet first paramter does not equal return type\n"
+							"param type: %s\n"
+							"return type: %s\n"
+							, params_code.debug_str()
+							, ret_type.debug_str()
+						);
 						return OpValidateResult::Fail;
 					}
 					break;
 
 				default:
 					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
-					            , to_str(op)
-					            , params_code->NumEntries
-					            );
+						, to_str(op)
+						, params_code->NumEntries
+					);
 					return OpValidateResult::Fail;
 			}
 			break;
@@ -244,9 +244,9 @@ inline
 				if ( params_code->NumEntries != 1 )
 				{
 					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
-					            , to_str(op)
-					            , params_code->NumEntries
-					            );
+						, to_str(op)
+						, params_code->NumEntries
+					);
 					return OpValidateResult::Fail;
 				}
 			}
@@ -254,9 +254,9 @@ inline
 			if ( ! ret_type.is_equal( t_bool ))
 			{
 				log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
-				            , to_str(op)
-				            , ret_type.debug_str()
-				            );
+					, to_str(op)
+					, ret_type.debug_str()
+				);
 				return OpValidateResult::Fail;
 			}
 			break;
@@ -282,9 +282,9 @@ inline
 
 				default:
 					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 1-2"
-					            , to_str(op)
-					            , params_code->NumEntries
-					            );
+						, to_str(op)
+						, params_code->NumEntries
+					);
 					return OpValidateResult::Fail;
 			}
 			break;
@@ -295,9 +295,9 @@ inline
 			if ( params_code && params_code->NumEntries > 1)
 			{
 				log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
-				            , to_str(op)
-				            , params_code->NumEntries
-				            );
+					, to_str(op)
+					, params_code->NumEntries
+				);
 				return OpValidateResult::Fail;
 			}
 			else
@@ -627,7 +627,7 @@ CodeFriend def_friend( Code declaration )
 }
 
 CodeFn def_function( StrC name
-	, CodeParam      params ,   CodeType       ret_type, Code body
+	, CodeParam      params ,    CodeType       ret_type, Code body
 	, CodeSpecifiers specifiers, CodeAttributes attributes
 	, ModuleFlag     mflags )
 {
@@ -765,7 +765,7 @@ CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags )
 
 CodeOperator def_operator( OperatorT op
 	, CodeParam      params_code, CodeType       ret_type, Code body
-	, CodeSpecifiers specifiers,   CodeAttributes attributes
+	, CodeSpecifiers specifiers,  CodeAttributes attributes
 	, ModuleFlag     mflags )
 {
 	using namespace ECode;
@@ -1828,4 +1828,3 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 #	undef name_check
 #	undef null_check
 #	undef null_or_invalid_check
-

@@ -741,7 +741,7 @@ namespace Parser
 }
 
 #pragma region Helper Macros
-#	define check_parse_args( func, def )                                       \
+#	define check_parse_args( func, def )                                   \
 if ( def.Len <= 0 )                                                        \
 {                                                                          \
 	log_failure( "gen::" stringize(func) ": length must greater than 0" ); \

@@ -24,12 +24,12 @@ Code make_code();
 // Set these before calling gen's init() procedure.
 // Data
 
-void set_allocator_data_arrays       ( AllocatorInfo data_array_allocator );
-void set_allocator_code_pool         ( AllocatorInfo pool_allocator );
-void set_allocator_lexer             ( AllocatorInfo lex_allocator );
-void set_allocator_string_arena      ( AllocatorInfo string_allocator );
-void set_allocator_string_table      ( AllocatorInfo string_allocator );
-void set_allocator_type_table        ( AllocatorInfo type_reg_allocator );
+void set_allocator_data_arrays ( AllocatorInfo data_array_allocator );
+void set_allocator_code_pool   ( AllocatorInfo pool_allocator );
+void set_allocator_lexer       ( AllocatorInfo lex_allocator );
+void set_allocator_string_arena( AllocatorInfo string_allocator );
+void set_allocator_string_table( AllocatorInfo string_allocator );
+void set_allocator_type_table  ( AllocatorInfo type_reg_allocator );
 
 #pragma region Upfront
 CodeAttributes def_attributes( StrC content );
@@ -152,4 +152,3 @@ Code untyped_str      ( StrC content);
 Code untyped_fmt      ( char const* fmt, ... );
 Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
 #pragma endregion Untyped text
-

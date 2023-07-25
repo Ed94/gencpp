@@ -27,22 +27,22 @@ void AST::append( AST* other )
 char const* AST::debug_str()
 {
 	char const* fmt = stringize(
-	                  \nCode Debug:
-	                  \nType    : %s
-	                  \nParent  : %s
-	                  \nName    : %s
-	                  \nComment : %s
-	                  );
+		\nCode Debug:
+		\nType    : %s
+		\nParent  : %s
+		\nName    : %s
+		\nComment : %s
+	);
 
 	// These should be used immediately in a log.
 	// Thus if its desired to keep the debug str
 	// for multiple calls to bprintf,
 	// allocate this to proper string.
 	return str_fmt_buf( fmt
-	                   ,	type_str()
-	                   ,	Parent   ? Parent->Name : ""
-	                   ,	Name     ? Name         : ""
-	                   );
+		,	type_str()
+		,	Parent   ? Parent->Name : ""
+		,	Name     ? Name         : ""
+	);
 }
 
 Code& AST::entry( u32 idx )
@@ -351,7 +351,7 @@ CodeBody def_body( CodeT type )
 StrC token_fmt_impl( sw num, ... )
 {
 	local_persist thread_local
-		char buf[GEN_PRINTF_MAXLEN] = { 0 };
+	char buf[GEN_PRINTF_MAXLEN] = { 0 };
 	mem_set( buf, 0, GEN_PRINTF_MAXLEN );
 
 	va_list va;

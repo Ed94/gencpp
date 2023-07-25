@@ -10,12 +10,12 @@ global StringTable StringCache;
 
 global Arena LexArena;
 
-global AllocatorInfo Allocator_DataArrays       = heap();
-global AllocatorInfo Allocator_CodePool         = heap();
-global AllocatorInfo Allocator_Lexer            = heap();
-global AllocatorInfo Allocator_StringArena      = heap();
-global AllocatorInfo Allocator_StringTable      = heap();
-global AllocatorInfo Allocator_TypeTable        = heap();
+global AllocatorInfo Allocator_DataArrays  = heap();
+global AllocatorInfo Allocator_CodePool    = heap();
+global AllocatorInfo Allocator_Lexer       = heap();
+global AllocatorInfo Allocator_StringArena = heap();
+global AllocatorInfo Allocator_StringTable = heap();
+global AllocatorInfo Allocator_TypeTable   = heap();
 #pragma endregion StaticData
 
 #pragma region Constants

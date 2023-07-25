@@ -1,5 +1,5 @@
 #	define AST_BODY_CLASS_UNALLOWED_TYPES \
-	case PlatformAttributes:                      \
+	case PlatformAttributes:              \
 	case Class_Body:                      \
 	case Enum_Body:                       \
 	case Extern_Linkage:                  \
@@ -19,7 +19,7 @@
 	case Access_Public:                      \
 	case Access_Protected:                   \
 	case Access_Private:                     \
-	case PlatformAttributes:                         \
+	case PlatformAttributes:                 \
 	case Class_Body:                         \
 	case Enum_Body:                          \
 	case Extern_Linkage:                     \
@@ -42,7 +42,7 @@
 	case Access_Public: 				   \
 	case Access_Protected: 				   \
 	case Access_Private: 				   \
-	case PlatformAttributes:                       \
+	case PlatformAttributes:               \
 	case Class_Body: 					   \
 	case Enum_Body: 					   \
 	case Execution: 					   \

@@ -92,7 +92,7 @@
 #define size_of( x )                  ( sw )( sizeof( x ) )
 
 template< class Type >
-void swap( Type a, Type b )
+void swap( Type& a, Type& b )
 {
 	Type tmp = a;
 	a = b;
