@@ -1088,7 +1088,7 @@ CodeParam parse_params( Parser::TokArray& toks, char const* context, bool use_te
 	{
 		if ( ! check( TokType::Operator) || currtok.Text[0] != '>' )
 		{
-			log_failure("gen::parse_template: expected '<' after 'template' keyword. %s", str_tok_type( currtok.Type ));
+			log_failure("gen::parse_params: expected '<' after 'template' keyword. %s", str_tok_type( currtok.Type ));
 			return CodeInvalid;
 		}
 		eat( TokType::Operator );
@@ -1519,7 +1519,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	if ( check( TokType::Operator) )
 	{
 		// Dealing with an operator overload
-		result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, type, toks, stringize(parse_template) );
+		result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, type, toks, context );
 	}
 	else
 	{
@@ -1530,7 +1530,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		{
 			// Dealing with a function
 
-			result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, stringize(parse_template) );
+			result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, context );
 		}
 		else
 		{
@@ -1541,7 +1541,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 			}
 
 			// Dealing with a variable
-			result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, stringize(parse_template) );
+			result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name, toks, context );
 		}
 	}
 
@@ -1695,6 +1695,9 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::TokArray& toks,
 			case TokType::Type_Signed:
 			case TokType::Type_Short:
 			case TokType::Type_Long:
+			case TokType::Type_char:
+			case TokType::Type_int:
+			case TokType::Type_double:
 			{
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, context );
 			}
@@ -1996,6 +1999,9 @@ CodeBody parse_global_nspace( CodeT which, Parser::TokArray& toks, char const* c
 			case TokType::Type_Short:
 			case TokType::Type_Signed:
 			case TokType::Type_Unsigned:
+			case TokType::Type_char:
+			case TokType::Type_double:
+			case TokType::Type_int:
 			{
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers, toks, context );
 			}
@@ -2003,7 +2009,7 @@ CodeBody parse_global_nspace( CodeT which, Parser::TokArray& toks, char const* c
 
 		if ( member == Code::Invalid )
 		{
-			log_failure( "gen::%s: failed to parse extern linkage member", context );
+			log_failure( "gen::%s: failed to parse member", context );
 			return CodeInvalid;
 		}
 
