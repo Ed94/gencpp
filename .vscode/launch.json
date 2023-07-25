@@ -22,6 +22,15 @@
 			"args": [],
 			"cwd": "${workspaceFolder}/test/gen/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
+		},
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
+			"name": "Debug bootstrap vsdbg",
+			"program": "${workspaceFolder}/project/build/gencpp_bootstrap.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}/project/",
+			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		}
 	]
 }

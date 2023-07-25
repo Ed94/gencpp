@@ -39,3 +39,27 @@ Push-Location $path_root
 
 	& ninja $args_ninja
 Pop-Location
+
+Push-location $path_singleheader
+# Run meta-program
+$gencpp_singleheader = Join-Path $path_singleheader_build gencpp_singleheader.exe
+
+Write-Host `nRunning gencpp bootstrap...
+& $gencpp_singleheader
+
+# Format generated files
+Write-Host `nBeginning format...
+$formatParams = @(
+	'-i'          # In-place
+	'-style=file:../scripts/.clang-format'
+	'-verbose'
+)
+
+$include = @('gencpp.hpp')
+$exclude = $null
+
+$targetFiles = @(Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
+
+clang-format $formatParams $targetFiles
+Write-Host "`nFormatting complete"
+Pop-Location

@@ -39,3 +39,27 @@ Push-Location $path_root
 
 	& ninja $args_ninja
 Pop-Location
+
+Push-location $path_project
+# Run meta-program
+$gencpp_bootstrap = Join-Path $path_project_build gencpp_bootstrap.exe
+
+Write-Host `nRunning gencpp bootstrap...
+& $gencpp_bootstrap
+
+# Format generated files
+Write-Host `nBeginning format...
+$formatParams = @(
+	'-i'          # In-place
+	'-style=file:../scripts/.clang-format'
+	'-verbose'
+)
+
+$include = @('gencpp.hpp', 'gencpp.cpp')
+$exclude = $null
+
+$targetFiles = @(Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
+
+clang-format $formatParams $targetFiles
+Write-Host "`nFormatting complete"
+Pop-Location

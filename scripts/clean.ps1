@@ -28,8 +28,25 @@ if ( Test-Path $path_gen_build )
 	Remove-Item $path_gen_build -Recurse
 }
 
-[string[]] $include = '*.h', '*.hpp', '*.cpp'
+[string[]] $include = 'gencpp.hpp', 'gencpp.cpp'
 [string[]] $exclude =
+
+$files = Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude
+
+if ( $files )
+{
+	Remove-Item $files
+}
+
+$files = Get-ChildItem -Recurse -Path $path_singleheader -Include $include -Exclude $exclude
+
+if ( $files )
+{
+	Remove-Item $files
+}
+
+$include = '*.h', '*.hpp', '*.cpp'
+$exclude =
 
 $files = Get-ChildItem -Recurse -Path $path_gen -Include $include -Exclude $exclude
 
@@ -37,4 +54,3 @@ if ( $files )
 {
 	Remove-Item $files
 }
-

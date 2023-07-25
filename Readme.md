@@ -7,7 +7,7 @@ These build up a code AST to then serialize with a file builder.
 
 General goal is to have a less than 15k sloc library that takes at most a couple of hours to learn and make use of.
 
-*Why 15?* Assuming a seasoned coder of C++ can read and understand around 1000-2000 lines of code per hour, 15,000 could be understood in under 16-18 hours
+*Why 15k ?* Assuming a seasoned coder of C++ can read and understand around 1000-2000 lines of code per hour, 15,000 could be understood in under 16-18 hours
 and have confidence in modifying for their use case.
 
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
@@ -162,7 +162,18 @@ struct ArrayHeader
 
 ## Building
 
-An example of building is provided in the test directory.
+An example of building is provided within project, singleheader, and test.
+
+**Project**
+
+`gen.bootstrap.cpp` generates a segmented version of the library following a more traditional cpp convention.  
+With the exception that: *The component hpp and cpp files are all included into their respective header and source*
+
+**Singleheader**
+
+`gen.singleheader.cpp` generated a single-header version of the library following the convention shown in popular libraries such as: gb, stb, and zpl.
+
+**Test**
 
 There are two meson build files the one within test is the program's build specification.  
 The other one in the gen directory within test is the metaprogram's build specification.

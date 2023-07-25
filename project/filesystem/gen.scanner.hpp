@@ -1,7 +1,37 @@
 #pragma once
 #include "gen.hpp"
 
-namespace gen {
+GEN_NS_BEGIN
+
+Code scan_file( char const* path )
+{
+	FileInfo file;
+
+	FileError error = file_open_mode( & file, EFileMode_READ, path );
+	if ( error != EFileError_NONE )
+	{
+		fatal( "scan_file: Could not open genc.macro.h: %s", path );
+	}
+
+	sw fsize = file_size( & file );
+	if ( fsize <= 0 )
+	{
+		fatal("scan_file: %s is empty", path );
+	}
+
+	String str = String::make_reserve( GlobalAllocator, fsize );
+		file_read( & file, str, fsize );
+		str.get_header().Length = fsize;
+
+	file_close( & file );
+
+	return untyped_str( str );
+}
+
+struct Policy
+{
+	// Nothing for now.
+};
 
 struct SymbolInfo
 {
@@ -40,5 +70,4 @@ struct Scanner
 	bool process_requests( Array<Receipt> out_receipts );
 };
 
-// namespace gen
-}
+GEN_NS_END

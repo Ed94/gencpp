@@ -5,6 +5,9 @@ build/*
 
 **/*.gen.*
 
+gencpp.hpp
+gencpp.cpp
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
