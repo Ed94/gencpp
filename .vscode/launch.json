@@ -31,6 +31,15 @@
 			"args": [],
 			"cwd": "${workspaceFolder}/project/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
+		},
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
+			"name": "Debug singleheader vsdbg",
+			"program": "${workspaceFolder}/singleheader/build/gencpp_singleheader.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}/singleheader/",
+			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		}
 	]
 }

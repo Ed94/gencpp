@@ -10,7 +10,7 @@ Code scan_file( char const* path )
 	FileError error = file_open_mode( & file, EFileMode_READ, path );
 	if ( error != EFileError_NONE )
 	{
-		fatal( "scan_file: Could not open genc.macro.h: %s", path );
+		fatal( "scan_file: Could not open: %s", path );
 	}
 
 	sw fsize = file_size( & file );

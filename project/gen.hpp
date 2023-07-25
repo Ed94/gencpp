@@ -11,6 +11,14 @@
 #include "helpers/gen.push_ignores.inline.hpp"
 #include "components/gen.header_start.hpp"
 
+#ifdef GEN_DONT_USE_NAMESPACE
+#	define GEN_NS_BEGIN
+#	define GEN_NS_END
+#else
+#	define GEN_NS_BEGIN namespace gen {
+#	define GEN_NS_END   }
+#endif
+
 GEN_NS_BEGIN
 
 #include "components/gen.types.hpp"

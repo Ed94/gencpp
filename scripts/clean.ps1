@@ -9,6 +9,7 @@ $path_project_build      = Join-Path $path_project build
 $path_singleheader_build = Join-Path $path_singleheader build
 $path_project_gen		 = Join-Path $path_project gen
 $path_singleheader_gen	 = Join-Path $path_singleheader gen
+$path_x64				 = Join-Path $path_root x64
 
 if ( Test-Path $path_project_build)
 {
@@ -30,7 +31,12 @@ if ( Test-Path $path_gen_build )
 	Remove-Item $path_gen_build -Recurse
 }
 
-[string[]] $include = 'gen.hpp', 'gen.cpp'
+if ( Test-Path $path_x64)
+{
+	Remove-Item $path_x64 -Recurse
+}
+
+[string[]] $include = 'gen.hpp', 'gen.cpp', 'gen_dep.hpp', 'gen_dep.cpp'
 [string[]] $exclude =
 
 $files = Get-ChildItem -Recurse -Path $path_project_gen -Include $include -Exclude $exclude

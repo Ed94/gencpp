@@ -18,7 +18,7 @@ $path_singleheader       = Join-Path $path_root singleheader
 $path_singleheader_build = Join-Path $path_singleheader build
 $path_singleheader_gen   = Join-Path $path_singleheader gen
 
-write-host "`n`nBuilding gencpp bootstrap`n"
+write-host "`n`nBuilding gencpp singleheader`n"
 
 if ( -not( Test-Path $path_singleheader_build) )
 {
@@ -49,7 +49,7 @@ if ( -not(Test-Path($path_singleheader_gen) )) {
 # Run meta-program
 $gencpp_singleheader = Join-Path $path_singleheader_build gencpp_singleheader.exe
 
-Write-Host `nRunning gencpp bootstrap...
+Write-Host `nRunning gencpp singleheader...
 & $gencpp_singleheader
 
 # Format generated files
@@ -60,7 +60,7 @@ $formatParams = @(
 	'-verbose'
 )
 
-$include = @('gencpp.hpp')
+$include = @('gen.hpp')
 $exclude = $null
 
 $targetFiles = @(Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)

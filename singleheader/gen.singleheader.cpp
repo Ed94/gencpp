@@ -28,49 +28,155 @@ constexpr StrC nspace_non_default = txt_StrC(R"(
 #endif
 )");
 
-constexpr StrC gen_implementation_guard = txt_StrC(R"(
+constexpr StrC implementation_guard_start = txt_StrC(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
 #if ! defined(GEN_IMPLEMENTATION)
 #	define GEN_IMPLEMENTATION
 )");
 
-constexpr StrC gen_implementation_end = txt_StrC(R"(
+constexpr StrC implementation_guard_end = txt_StrC(R"(
 #endif
 #pragma endregion GENCPP IMPLEMENTATION GUARD
+)");
+
+constexpr StrC roll_own_dependencies_guard_start = txt_StrC(R"(
+//! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
+// Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
+#ifndef GEN_ROLL_OWN_DEPENDENCIES
+
+)");
+
+constexpr StrC roll_own_dependencies_guard_end = txt_StrC(R"(
+// GEN_ROLL_OWN_DEPENDENCIES
+#endif
+
 )");
 
 int gen_main()
 {
 	gen::init();
 
-	Code push_ignores = scan_file( "../project/helpers/gen.push_ignores.inline.hpp" );
-	Code pop_ignores  = scan_file( "../project/helpers/gen.pop_ignores.inline.hpp" );
+#define project_dir "../project/"
+
+	Code push_ignores = scan_file( project_dir "helpers/gen.push_ignores.inline.hpp" );
+	Code pop_ignores  = scan_file( project_dir "helpers/gen.pop_ignores.inline.hpp" );
 
 	Code header_start = scan_file( "components/gen.header_start.hpp" );
 	Code nspace_macro = untyped_str( namespace_by_default ? nspace_default : nspace_non_default );
 
-	Builder gen_header;
-	gen_header.open( "gen/gen.hpp" );
-	gen_header.print( push_ignores );
+	Builder
+	header;
+	header.open( "gen/gen.hpp" );
+	header.print( push_ignores );
+
+	header.print_fmt("#pragma once\n\n");
 
 	// Headers
-		gen_header.print_fmt("#pragma once\n\n");
-		gen_header.print( header_start );
-		gen_header.print( nspace_macro );
-		gen_header.print_fmt( "GEN_NS_BEGIN\n");
+	{
+		header.print( header_start );
+		header.print( nspace_macro );
 
-		gen_header.print_fmt( "\nGEN_NS_END\n");
+		{
+			header.print_fmt( roll_own_dependencies_guard_start );
+
+			Code header_start  = scan_file( project_dir "dependencies/gen.header_start.hpp" );
+			Code macros        = scan_file( project_dir "dependencies/gen.macros.hpp" );
+			Code basic_types   = scan_file( project_dir "dependencies/gen.basic_types.hpp" );
+			Code debug         = scan_file( project_dir "dependencies/gen.debug.hpp" );
+			Code memory	       = scan_file( project_dir "dependencies/gen.memory.hpp" );
+			Code string_ops    = scan_file( project_dir "dependencies/gen.string_ops.hpp" );
+			Code printing      = scan_file( project_dir "dependencies/gen.printing.hpp" );
+			Code containers    = scan_file( project_dir "dependencies/gen.containers.hpp" );
+			Code string        = scan_file( project_dir "dependencies/gen.string.hpp" );
+			Code file_handling = scan_file( project_dir "dependencies/gen.file_handling.hpp" );
+			Code parsing       = scan_file( project_dir "dependencies/gen.parsing.hpp" );
+			Code timing        = scan_file( project_dir "dependencies/gen.timing.hpp" );
+
+			header.print_fmt( "GEN_NS_BEGIN\n\n" );
+			header.print( header_start );
+			header.print( macros );
+			header.print( basic_types );
+			header.print( debug );
+			header.print( memory );
+			header.print( string_ops );
+			header.print( printing );
+			header.print( containers );
+			header.print( string );
+			header.print( file_handling );
+			header.print( parsing );
+			header.print( timing );
+			header.print_fmt( "GEN_NS_END\n" );
+
+			header.print_fmt( roll_own_dependencies_guard_end );
+		}
+
+		Code types        = scan_file( project_dir "components/gen.types.hpp" );
+		Code data_structs = scan_file( project_dir "components/gen.data_structures.hpp" );
+		Code interface    = scan_file( project_dir "components/gen.interface.hpp" );
+		Code header_end   = scan_file( project_dir "components/gen.header_end.hpp" );
+
+		header.print_fmt( "GEN_NS_BEGIN\n\n" );
+		header.print( types );
+		header.print( data_structs );
+		header.print( interface );
+		header.print( header_end );
+		header.print_fmt( "GEN_NS_END\n" );
+	}
 
 	// Implementation
+	{
+		header.print_fmt( "%s\n", (char const*) implementation_guard_start );
+		{
+			header.print_fmt( roll_own_dependencies_guard_start );
 
-		gen_header.print_fmt( "%s\n\n", (char const*) gen_implementation_guard );
-		gen_header.print_fmt( "GEN_NS_BEGIN\n");
+			Code impl_start = scan_file( project_dir "dependencies/gen.impl_start.cpp" );
+			Code debug      = scan_file( project_dir "dependencies/gen.debug.cpp" );
+			Code string_ops = scan_file( project_dir "dependencies/gen.string_ops.cpp" );
+			Code printing   = scan_file( project_dir "dependencies/gen.printing.cpp" );
+			Code memory     = scan_file( project_dir "dependencies/gen.memory.cpp" );
+			Code parsing    = scan_file( project_dir "dependencies/gen.parsing.cpp" );
+			Code hashing    = scan_file( project_dir "dependencies/gen.hashing.cpp" );
+			Code string     = scan_file( project_dir "dependencies/gen.string.cpp" );
+			Code timing     = scan_file( project_dir "dependencies/gen.timing.cpp" );
 
-		gen_header.print_fmt( "\nGEN_NS_END\n");
-		gen_header.print_fmt( "%s\n", (char const*) gen_implementation_end );
+			header.print_fmt( "GEN_NS_BEGIN\n\n");
+			header.print( impl_start );
+			header.print( debug );
+			header.print( string_ops );
+			header.print( printing );
+			header.print( memory );
+			header.print( parsing );
+			header.print( hashing );
+			header.print( string );
+			header.print( timing );
+			header.print_fmt( "GEN_NS_END\n");
 
-	gen_header.print( pop_ignores );
-	gen_header.write();
+			header.print_fmt( roll_own_dependencies_guard_end );
+		}
+
+		Code data 	         = scan_file( project_dir "components/gen.data.cpp" );
+		Code ast_case_macros = scan_file( project_dir "components/gen.ast_case_macros.cpp" );
+		Code ast             = scan_file( project_dir "components/gen.ast.cpp" );
+		Code interface       = scan_file( project_dir "components/gen.interface.cpp" );
+		Code upfront         = scan_file( project_dir "components/gen.interface.upfront.cpp" );
+		Code parsing         = scan_file( project_dir "components/gen.interface.parsing.cpp" );
+		Code untyped         = scan_file( project_dir "components/gen.untyped.cpp" );
+
+		header.print_fmt( "GEN_NS_BEGIN\n\n");
+		header.print( data );
+		header.print( ast_case_macros );
+		header.print( ast );
+		header.print( interface );
+		header.print( upfront );
+		header.print( parsing );
+		header.print( untyped );
+		header.print_fmt( "GEN_NS_END\n");
+
+		header.print_fmt( "%s\n", (char const*) implementation_guard_end );
+	}
+
+	header.print( pop_ignores );
+	header.write();
 
 	gen::deinit();
 	return 0;

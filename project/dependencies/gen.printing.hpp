@@ -1,7 +1,7 @@
 struct FileInfo;
 
 #ifndef GEN_PRINTF_MAXLEN
-#	define GEN_PRINTF_MAXLEN 65536
+#	define GEN_PRINTF_MAXLEN kilobytes(128)
 #endif
 
 // NOTE: A locally persisting buffer is used internally

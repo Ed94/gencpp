@@ -129,11 +129,3 @@
 #		include <intrin.h>
 #	endif
 #pragma endregion Mandatory Includes
-
-#ifdef GEN_DONT_USE_NAMESPACE
-#	define GEN_NS_BEGIN
-#	define GEN_NS_END
-#else
-#	define GEN_NS_BEGIN namespace gen {
-#	define GEN_NS_END   }
-#endif

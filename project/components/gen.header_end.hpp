@@ -402,7 +402,7 @@ StrC token_fmt_impl( sw num, ... )
 #	define GEN_MAX_NAME_LENGTH 128
 #endif
 #ifndef GEN_MAX_UNTYPED_STR_LENGTH
-#	define GEN_MAX_UNTYPED_STR_LENGTH kilobytes(640)
+#	define GEN_MAX_UNTYPED_STR_LENGTH megabytes(1)
 #endif
 #ifndef GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE
 #	define GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE kilobytes(4)

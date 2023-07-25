@@ -171,8 +171,8 @@ An example of building is provided within project, singleheader, and test.
 
 **Project**
 
-`gen.bootstrap.cpp` generates a segmented version of the library following a more traditional cpp convention.  
-With the exception that: *The component hpp and cpp files are all included into their respective header and source*
+`gen.bootstrap.cpp` generates a segmented version of the library where code is divided into `gen.hpp`, `gen.cpp`, `gen_dep.hpp`, and `gen_dep.cpp`.
+(Similar whats there already, but with the includes injected)
 
 **Singleheader**
 

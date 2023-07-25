@@ -6,6 +6,8 @@ build/*
 **/*.gen.*
 **/gen/gen.hpp
 **/gen/gen.cpp
+**/gen/gen_dep.hpp
+**/gen/gen_dep.cpp
 
 gencpp.hpp
 gencpp.cpp

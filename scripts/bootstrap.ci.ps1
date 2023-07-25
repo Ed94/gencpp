@@ -60,10 +60,10 @@ $formatParams = @(
 	'-verbose'
 )
 
-$include = @('gencpp.hpp', 'gencpp.cpp')
+$include = @('gen.hpp', 'gen.cpp', 'gen_dep.hpp', 'gen_dep.cpp')
 $exclude = $null
 
-$targetFiles = @(Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
+$targetFiles = @(Get-ChildItem -Recurse -Path $path_project_gen -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
 
 clang-format $formatParams $targetFiles
 Write-Host "`nFormatting complete"
