@@ -30,8 +30,8 @@ constexpr StrC nspace_non_default = txt_StrC(R"(
 
 constexpr StrC implementation_guard_start = txt_StrC(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
-#if ! defined(GEN_IMPLEMENTATION)
-#	define GEN_IMPLEMENTATION
+#if defined(GEN_IMPLEMENTATION) && ! defined(GEN_IMPLEMENTED)
+#	define GEN_IMPLEMENTED
 )");
 
 constexpr StrC implementation_guard_end = txt_StrC(R"(
@@ -92,8 +92,8 @@ int gen_main()
 			Code parsing       = scan_file( project_dir "dependencies/gen.parsing.hpp" );
 			Code timing        = scan_file( project_dir "dependencies/gen.timing.hpp" );
 
-			header.print_fmt( "GEN_NS_BEGIN\n\n" );
 			header.print( header_start );
+			header.print_fmt( "GEN_NS_BEGIN\n\n" );
 			header.print( macros );
 			header.print( basic_types );
 			header.print( debug );
@@ -115,11 +115,14 @@ int gen_main()
 		Code interface    = scan_file( project_dir "components/gen.interface.hpp" );
 		Code header_end   = scan_file( project_dir "components/gen.header_end.hpp" );
 
+		Code builder = scan_file( project_dir "filesystem/gen.builder.hpp" );
+
 		header.print_fmt( "GEN_NS_BEGIN\n\n" );
 		header.print( types );
 		header.print( data_structs );
 		header.print( interface );
 		header.print( header_end );
+		header.print( builder );
 		header.print_fmt( "GEN_NS_END\n" );
 	}
 
@@ -139,6 +142,8 @@ int gen_main()
 			Code string     = scan_file( project_dir "dependencies/gen.string.cpp" );
 			Code timing     = scan_file( project_dir "dependencies/gen.timing.cpp" );
 
+			Code file_handling = scan_file( project_dir "dependencies/gen.file_handling.cpp" );
+
 			header.print_fmt( "GEN_NS_BEGIN\n\n");
 			header.print( impl_start );
 			header.print( debug );
@@ -149,6 +154,9 @@ int gen_main()
 			header.print( hashing );
 			header.print( string );
 			header.print( timing );
+
+			header.print( file_handling );
+
 			header.print_fmt( "GEN_NS_END\n");
 
 			header.print_fmt( roll_own_dependencies_guard_end );
@@ -162,6 +170,8 @@ int gen_main()
 		Code parsing         = scan_file( project_dir "components/gen.interface.parsing.cpp" );
 		Code untyped         = scan_file( project_dir "components/gen.untyped.cpp" );
 
+		Code builder = scan_file( project_dir "filesystem/gen.builder.cpp" );
+
 		header.print_fmt( "GEN_NS_BEGIN\n\n");
 		header.print( data );
 		header.print( ast_case_macros );
@@ -170,6 +180,7 @@ int gen_main()
 		header.print( upfront );
 		header.print( parsing );
 		header.print( untyped );
+			header.print( builder );
 		header.print_fmt( "GEN_NS_END\n");
 
 		header.print_fmt( "%s\n", (char const*) implementation_guard_end );

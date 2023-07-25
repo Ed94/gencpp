@@ -116,6 +116,8 @@ int gen_main()
 		Code interface    = scan_file( "components/gen.interface.hpp" );
 		Code header_end   = scan_file( "components/gen.header_end.hpp" );
 
+		Code builder = scan_file( "filesystem/gen.builder.hpp" );
+
 		Builder
 		header;
 		header.open( "gen/gen.hpp" );
@@ -128,6 +130,7 @@ int gen_main()
 				header.print( data_structs );
 				header.print( interface );
 				header.print( header_end );
+					header.print( builder );
 			header.print_fmt( "GEN_NS_END\n\n");
 			header.print( pop_ignores );
 		header.write();
@@ -161,6 +164,7 @@ int gen_main()
 				impl.print( upfront );
 				impl.print( parsing );
 				impl.print( untyped );
+					impl.print( builder );
 			impl.print_fmt( "GEN_NS_END\n\n");
 			impl.print( pop_ignores );
 		impl.write();
