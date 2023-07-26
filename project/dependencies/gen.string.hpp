@@ -1,3 +1,5 @@
+#pragma region String
+
 // Constant string with length.
 struct StrC
 {
@@ -219,7 +221,7 @@ struct String
 	sw avail_space() const
 	{
 		Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
+		header = * rcast( Header const*, Data - sizeof( Header ));
 
 		return header.Capacity - header.Length;
 	}
@@ -227,7 +229,7 @@ struct String
 	sw capacity() const
 	{
 		Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
+		header = * rcast( Header const*, Data - sizeof( Header ));
 
 		return header.Capacity;
 	}
@@ -260,7 +262,7 @@ struct String
 	sw length() const
 	{
 		Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
+		header = * rcast( Header const*, Data - sizeof( Header ));
 
 		return header.Length;
 	}
@@ -303,7 +305,7 @@ struct String
 	char* end()
 	{
 		Header const&
-			header = * rcast( Header const*, Data - sizeof( Header ));
+		header = * rcast( Header const*, Data - sizeof( Header ));
 
 		return Data + header.Length;
 	}
@@ -345,7 +347,7 @@ struct String
 
 		return this_;
 	}
-	
+
 	char& operator [] ( sw index )
 	{
 		return Data[ index ];
@@ -369,4 +371,5 @@ struct String_POD
 	}
 };
 static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
-	
+
+#pragma endregion String

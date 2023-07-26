@@ -1,3 +1,5 @@
+#pragma region Printing
+
 enum
 {
 	GEN_FMT_MINUS = bit( 0 ),
@@ -558,3 +560,5 @@ sw str_fmt_out_err( char const* fmt, ... )
 	va_end( va );
 	return res;
 }
+
+#pragma endregion Printing

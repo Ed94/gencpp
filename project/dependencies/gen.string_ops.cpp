@@ -1,4 +1,7 @@
-internal sw _scan_zpl_i64( const char* text, s32 base, s64* value )
+#pragma region String Ops
+
+internal
+sw _scan_zpl_i64( const char* text, s32 base, s64* value )
 {
 	const char* text_begin = text;
 	s64         result     = 0;
@@ -202,3 +205,5 @@ f64 str_to_f64( const char* str, char** end_ptr )
 
 	return result;
 }
+
+#pragma endregion String Ops

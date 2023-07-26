@@ -1,4 +1,5 @@
 #pragma region ADT
+
 #define _adt_fprintf( s_, fmt_, ... )                      \
 	do                                                     \
 	{                                                      \
@@ -780,9 +781,11 @@ ADT_Error adt_str_to_number_strict( ADT_Node* node )
 }
 
 #undef _adt_fprintf
+
 #pragma endregion ADT
 
 #pragma region CSV
+
 #ifdef GEN_CSV_DEBUG
 #	define GEN_CSV_ASSERT( msg ) GEN_PANIC( msg )
 #else
@@ -1062,4 +1065,5 @@ String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimi
 	file_close( &tmp );
 	return output;
 }
+
 #pragma endregion CSV

@@ -46,6 +46,7 @@ int gen_main()
 		Code string_ops    = scan_file( "dependencies/gen.string_ops.hpp" );
 		Code printing      = scan_file( "dependencies/gen.printing.hpp" );
 		Code containers    = scan_file( "dependencies/gen.containers.hpp" );
+		Core hashing 	   = scan_file( "dependencies/gen.hashing.hpp" );
 		Code string        = scan_file( "dependencies/gen.string.hpp" );
 		Code file_handling = scan_file( "dependencies/gen.file_handling.hpp" );
 		Code parsing       = scan_file( "dependencies/gen.parsing.hpp" );
@@ -54,9 +55,8 @@ int gen_main()
 		Builder
 		deps_header;
 		deps_header.open("gen/gen_dep.hpp");
-			deps_header.print_fmt("// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n");
+			deps_header.print_fmt("// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n");
 			deps_header.print_fmt("#pragma once\n\n");
-			deps_header.print( push_ignores );
 			deps_header.print( header_start );
 			deps_header.print( nspace_macro );
 			deps_header.print_fmt( "GEN_NS_BEGIN\n\n");
@@ -67,12 +67,12 @@ int gen_main()
 				deps_header.print( string_ops );
 				deps_header.print( printing );
 				deps_header.print( containers );
+				deps_header.print( hashing );
 				deps_header.print( string );
 				deps_header.print( file_handling );
 				deps_header.print( parsing );
 				deps_header.print( timing );
 			deps_header.print_fmt( "GEN_NS_END\n\n");
-			deps_header.print( pop_ignores );
 		deps_header.write();
 	}
 

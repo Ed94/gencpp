@@ -1,3 +1,4 @@
+#pragma region File Handling
 
 typedef u32 FileMode;
 
@@ -367,3 +368,5 @@ b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, sw siz
 u8* file_stream_buf( FileInfo* file, sw* size );
 
 extern FileOperations const memory_file_operations;
+
+#pragma endregion File Handling

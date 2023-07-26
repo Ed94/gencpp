@@ -1,4 +1,5 @@
 #pragma region ADT
+
 enum ADT_Type : u32
 {
 	EADT_TYPE_UNINITIALISED, /* node was not initialised, this is a programming error! */
@@ -380,9 +381,11 @@ ADT_Error adt_print_number( FileInfo* file, ADT_Node* node );
 	* @return
 	*/
 ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_chars, char const* escape_symbol );
+
 #pragma endregion ADT
 
 #pragma region CSV
+
 enum CSV_Error : u32
 {
 	ECSV_Error__NONE,
@@ -418,4 +421,5 @@ GEN_IMPL_INLINE String csv_write_string( AllocatorInfo a, CSV_Object* obj )
 {
 	return csv_write_string_delimiter( a, obj, ',' );
 }
+
 #pragma endregion CSV

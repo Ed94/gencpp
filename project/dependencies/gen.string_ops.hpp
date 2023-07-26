@@ -1,3 +1,5 @@
+#pragma region String Ops
+
 GEN_DEF_INLINE const char* char_first_occurence( const char* str, char c );
 constexpr auto str_find = &char_first_occurence;
 
@@ -256,3 +258,5 @@ GEN_IMPL_INLINE void str_to_upper( char* str )
 		str++;
 	}
 }
+
+#pragma endregion String Ops

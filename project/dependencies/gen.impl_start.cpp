@@ -1,3 +1,5 @@
+#pragma region Macros and Includes
+
 #	include <stdio.h>
 // NOTE: Ensure we use standard methods for these calls if we use GEN_PICO
 #	if ! defined( GEN_PICO_CUSTOM_ROUTINES )
@@ -74,3 +76,5 @@
 #	include <timezoneapi.h>
 #endif
 #endif
+
+#pragma endregion Macros and Includes

@@ -1,3 +1,5 @@
+#pragma region Printing
+
 struct FileInfo;
 
 #ifndef GEN_PRINTF_MAXLEN
@@ -54,3 +56,5 @@ sw fatal(char const* fmt, ...)
 	return -1;
 #endif
 }
+
+#pragma endregion Printing

@@ -1,3 +1,5 @@
+#pragma endregion Debug
+
 #if defined( _MSC_VER )
 #	if _MSC_VER < 1300
 #		define GEN_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
@@ -30,3 +32,5 @@
 void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
 s32  assert_crash( char const* condition );
 void process_exit( u32 code );
+
+#pragma endregion Debug

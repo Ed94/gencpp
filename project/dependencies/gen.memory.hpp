@@ -1,3 +1,5 @@
+#pragma region Memory
+
 #define kilobytes( x ) ( ( x ) * ( s64 )( 1024 ) )
 #define megabytes( x ) ( kilobytes( x ) * ( s64 )( 1024 ) )
 #define gigabytes( x ) ( megabytes( x ) * ( s64 )( 1024 ) )
@@ -480,3 +482,5 @@ struct Pool
 		return { allocator_proc, this };
 	}
 };
+
+#pragma endregion Memory

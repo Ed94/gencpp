@@ -1,3 +1,5 @@
+#pragma endregion Debug
+
 void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... )
 {
 	_printf_err( "%s:(%d): Assert Failure: ", file, line );
@@ -35,3 +37,5 @@ s32 assert_crash( char const* condition )
 		exit( code );
 	}
 #endif
+
+#pragma endregion Debug

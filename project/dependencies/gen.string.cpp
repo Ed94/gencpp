@@ -1,3 +1,5 @@
+#pragma region String
+
 String String::fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... )
 {
 	va_list va;
@@ -33,3 +35,5 @@ bool String::append_fmt( char const* fmt, ... )
 
 	return append( buf, res );
 }
+
+#pragma endregion String

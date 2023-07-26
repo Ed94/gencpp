@@ -1,3 +1,5 @@
+#pragma region Macros
+
 #define zpl_cast( Type ) ( Type )
 
 // Keywords
@@ -98,3 +100,5 @@ void swap( Type& a, Type& b )
 	a = b;
 	b = tmp;
 }
+
+#pragma endregion Macros

@@ -1,3 +1,5 @@
+#pragma region Basic Types
+
 #define GEN_U8_MIN 0u
 #define GEN_U8_MAX 0xffu
 #define GEN_I8_MIN ( -0x7f - 1 )
@@ -114,3 +116,5 @@ static_assert( sizeof( f64 ) == 8, "sizeof(f64) != 8" );
 typedef s8  b8;
 typedef s16 b16;
 typedef s32 b32;
+
+#pragma region Basic Types

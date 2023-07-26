@@ -1,3 +1,5 @@
+#pragma region File Handling
+
 #if defined( GEN_SYSTEM_WINDOWS ) || defined( GEN_SYSTEM_CYGWIN )
 
 internal wchar_t* _alloc_utf8_to_ucs2( AllocatorInfo a, char const* text, sw* w_len_ )
@@ -630,3 +632,5 @@ internal GEN_FILE_CLOSE_PROC( _memory_file_close )
 }
 
 FileOperations const memory_file_operations = { _memory_file_read, _memory_file_write, _memory_file_seek, _memory_file_close };
+
+#pragma endregion File Handling

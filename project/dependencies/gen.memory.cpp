@@ -1,3 +1,5 @@
+#pragma region Memory
+
 void* mem_copy( void* dest, void const* source, sw n )
 {
 	if ( dest == NULL )
@@ -383,3 +385,5 @@ void Pool::clear()
 
 	FreeList = PhysicalStart;
 }
+
+#pragma endregion Memory
