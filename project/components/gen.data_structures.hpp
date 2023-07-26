@@ -1,3 +1,5 @@
+#pragma region Data Structures
+
 // Implements basic string interning. Data structure is based off the ZPL Hashtable.
 using StringTable = HashTable<String const>;
 
@@ -1011,3 +1013,4 @@ struct AST_Var
 static_assert( sizeof(AST_Var) == sizeof(AST), "ERROR: AST_Var is not the same size as AST");
 #pragma endregion Filtered ASTs
 
+#pragma endregion Data Structures

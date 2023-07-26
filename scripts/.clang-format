@@ -12,8 +12,11 @@ AlignConsecutiveAssignments:
   PadOperators: true
 AlignConsecutiveBitFields: AcrossComments
 AlignConsecutiveDeclarations: AcrossComments
-AlignConsecutiveMacros: AcrossComments
-AlignEscapedNewlines: Right
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+AlignEscapedNewlines: Left
 AlignOperands: DontAlign
 
 AlignTrailingComments: true
@@ -38,7 +41,7 @@ BinPackParameters: false
 
 BitFieldColonSpacing: Both
 
-BraceWrapping: 
+BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
   AfterControlStatement: false
@@ -90,10 +93,10 @@ FixNamespaceComments: true
 IncludeBlocks: Preserve
 
 
-IndentCaseBlocks: true
-IndentCaseLabels: true
+IndentCaseBlocks: false
+IndentCaseLabels: false
 IndentExternBlock: AfterExternBlock
-IndentGotoLabels: true
+IndentGotoLabels: false
 IndentPPDirectives: AfterHash
 IndentRequires: true
 IndentWidth: 4

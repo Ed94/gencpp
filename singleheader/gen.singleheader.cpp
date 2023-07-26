@@ -3,6 +3,7 @@
 #define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
 #include "filesystem/gen.scanner.hpp"
+#include "helpers/gen.helper.hpp"
 
 using namespace gen;
 
@@ -87,6 +88,7 @@ int gen_main()
 			Code string_ops    = scan_file( project_dir "dependencies/gen.string_ops.hpp" );
 			Code printing      = scan_file( project_dir "dependencies/gen.printing.hpp" );
 			Code containers    = scan_file( project_dir "dependencies/gen.containers.hpp" );
+			Code hashing 	   = scan_file( project_dir "dependencies/gen.hashing.hpp" );
 			Code string        = scan_file( project_dir "dependencies/gen.string.hpp" );
 			Code file_handling = scan_file( project_dir "dependencies/gen.file_handling.hpp" );
 			Code parsing       = scan_file( project_dir "dependencies/gen.parsing.hpp" );
@@ -101,6 +103,7 @@ int gen_main()
 			header.print( string_ops );
 			header.print( printing );
 			header.print( containers );
+			header.print( hashing );
 			header.print( string );
 			header.print( file_handling );
 			header.print( parsing );
@@ -115,10 +118,21 @@ int gen_main()
 		Code interface    = scan_file( project_dir "components/gen.interface.hpp" );
 		Code header_end   = scan_file( project_dir "components/gen.header_end.hpp" );
 
+		CodeBody ecode      = gen_ecode( project_dir "components/ECode.csv" );
+		CodeBody eoperator  = gen_eoperator( project_dir "components/EOperator.csv" );
+		CodeBody especifier = gen_especifier( project_dir "components/ESpecifier.csv" );
+
 		Code builder = scan_file( project_dir "filesystem/gen.builder.hpp" );
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n" );
+
+		header.print_fmt("#pragma region Types");
 		header.print( types );
+		header.print( ecode );
+		header.print( eoperator );
+		header.print( especifier );
+		header.print_fmt("#pragma endregion Types");
+
 		header.print( data_structs );
 		header.print( interface );
 		header.print( header_end );

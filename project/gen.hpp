@@ -22,6 +22,9 @@
 GEN_NS_BEGIN
 
 #include "components/gen.types.hpp"
+#include "components/gen.ecode.hpp"
+#include "components/gen.eoperator.hpp"
+#include "components/gen.especifier.hpp"
 #include "components/gen.data_structures.hpp"
 #include "components/gen.interface.hpp"
 #include "components/gen.header_end.hpp"

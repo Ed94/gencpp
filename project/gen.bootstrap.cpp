@@ -3,6 +3,7 @@
 #define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
 #include "filesystem/gen.scanner.hpp"
+#include "helpers/gen.helper.hpp"
 
 using namespace gen;
 
@@ -46,7 +47,7 @@ int gen_main()
 		Code string_ops    = scan_file( "dependencies/gen.string_ops.hpp" );
 		Code printing      = scan_file( "dependencies/gen.printing.hpp" );
 		Code containers    = scan_file( "dependencies/gen.containers.hpp" );
-		Core hashing 	   = scan_file( "dependencies/gen.hashing.hpp" );
+		Code hashing 	   = scan_file( "dependencies/gen.hashing.hpp" );
 		Code string        = scan_file( "dependencies/gen.string.hpp" );
 		Code file_handling = scan_file( "dependencies/gen.file_handling.hpp" );
 		Code parsing       = scan_file( "dependencies/gen.parsing.hpp" );
@@ -60,18 +61,20 @@ int gen_main()
 			deps_header.print( header_start );
 			deps_header.print( nspace_macro );
 			deps_header.print_fmt( "GEN_NS_BEGIN\n\n");
-				deps_header.print( macros );
-				deps_header.print( basic_types );
-				deps_header.print( debug );
-				deps_header.print( memory );
-				deps_header.print( string_ops );
-				deps_header.print( printing );
-				deps_header.print( containers );
-				deps_header.print( hashing );
-				deps_header.print( string );
-				deps_header.print( file_handling );
-				deps_header.print( parsing );
-				deps_header.print( timing );
+
+			deps_header.print( macros );
+			deps_header.print( basic_types );
+			deps_header.print( debug );
+			deps_header.print( memory );
+			deps_header.print( string_ops );
+			deps_header.print( printing );
+			deps_header.print( containers );
+			deps_header.print( hashing );
+			deps_header.print( string );
+			deps_header.print( file_handling );
+			deps_header.print( parsing );
+			deps_header.print( timing );
+
 			deps_header.print_fmt( "GEN_NS_END\n\n");
 		deps_header.write();
 	}
@@ -96,13 +99,16 @@ int gen_main()
 			deps_impl.print( impl_start );
 			deps_impl.print( header );
 			deps_impl.print_fmt( "\nGEN_NS_BEGIN\n");
-				deps_impl.print( debug );
-				deps_impl.print( string_ops );
-				deps_impl.print( printing );
-				deps_impl.print( memory );
-				deps_impl.print( parsing );
-				deps_impl.print( string );
-				deps_impl.print( timing );
+
+			deps_impl.print( debug );
+			deps_impl.print( string_ops );
+			deps_impl.print( printing );
+			deps_impl.print( hashing );
+			deps_impl.print( memory );
+			deps_impl.print( parsing );
+			deps_impl.print( string );
+			deps_impl.print( timing );
+
 			deps_impl.print_fmt( "GEN_NS_END\n\n");
 		deps_impl.write();
 	}
@@ -116,6 +122,10 @@ int gen_main()
 		Code interface    = scan_file( "components/gen.interface.hpp" );
 		Code header_end   = scan_file( "components/gen.header_end.hpp" );
 
+		CodeBody ecode      = gen_ecode( "./components/ECode.csv" );
+		CodeBody eoperator  = gen_eoperator( "./components/EOperator.csv" );
+		CodeBody especifier = gen_especifier( "./components/ESpecifier.csv" );
+
 		Code builder = scan_file( "filesystem/gen.builder.hpp" );
 
 		Builder
@@ -126,11 +136,20 @@ int gen_main()
 			header.print( header_start );
 			header.print( nspace_macro );
 			header.print_fmt( "GEN_NS_BEGIN\n\n");
-				header.print( types );
-				header.print( data_structs );
-				header.print( interface );
-				header.print( header_end );
-					header.print( builder );
+
+			header.print_fmt("#pragma region Types");
+			header.print( types );
+			header.print( ecode );
+			header.print( eoperator );
+			header.print( especifier );
+			header.print_fmt("#pragma endregion Types");
+
+			header.print( data_structs );
+			header.print( interface );
+			header.print( header_end );
+
+			header.print( builder );
+
 			header.print_fmt( "GEN_NS_END\n\n");
 			header.print( pop_ignores );
 		header.write();
@@ -157,14 +176,16 @@ int gen_main()
 			impl.print( impl_start );
 			impl.print( header );
 			impl.print_fmt( "\nGEN_NS_BEGIN\n\n");
-				impl.print( data );
-				impl.print( ast_case_macros );
-				impl.print( ast );
-				impl.print( interface );
-				impl.print( upfront );
-				impl.print( parsing );
-				impl.print( untyped );
-					impl.print( builder );
+
+			impl.print( data );
+			impl.print( ast_case_macros );
+			impl.print( ast );
+			impl.print( interface );
+			impl.print( upfront );
+			impl.print( parsing );
+			impl.print( untyped );
+
+			impl.print( builder );
 			impl.print_fmt( "GEN_NS_END\n\n");
 			impl.print( pop_ignores );
 		impl.write();

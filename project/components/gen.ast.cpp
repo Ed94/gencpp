@@ -1,3 +1,5 @@
+#pragma region AST
+
 Code Code::Global;
 Code Code::Invalid;
 
@@ -5,215 +7,11 @@ AST* AST::duplicate()
 {
 	using namespace ECode;
 
-	AST*
-	result = make_code().ast;
-#ifndef GEN_USE_RECURSIVE_AST_DUPLICATION
+	AST* result = make_code().ast;
+
 	mem_copy( result, this, sizeof( AST ) );
+
 	result->Parent = nullptr;
-#else
-	// TODO : Stress test this...
-	switch ( Type )
-	{
-		case Invalid:
-			log_failure("Attempted to duplicate invalid code! - \n%s", Parent ? Parent->debug_str() : Name );
-			return nullptr
-		case Untyped:
-		case Comment:
-		case Execution:
-		case Access_Private:
-		case Access_Protected:
-		case Access_Public:
-		case PlatformAttributes:
-		case Preprocessor_Include:
-		case Module:
-		case Specifiers:
-		case Using_Namespace:
-			mem_copy( result, this, sizeof( AST ) );
-		break;
-
-		case Extern_Linkage:
-		case Friend:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if (Value)
-				result->Value = Value->duplicate();
-		break;
-
-		case Class:
-		case Struct:
-		case Enum:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if ( Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			if ( ParentType )
-				result->ParentType = ParentType->duplicate();
-
-			result->Body = Body->duplicate();
-		break;
-
-		case Enum_Fwd:
-		case Class_Fwd:
-		case Struct_Fwd:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if ( Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			if ( ParentType )
-				result->ParentType = ParentType->duplicate();
-		break;
-
-		case Function:
-		case Operator:
-		case Operator_Member:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if ( Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			if ( Specs )
-				result->ParentType = ParentType->duplicate();
-
-			if ( ReturnType )
-				result->ReturnType = ReturnType->duplicate();
-
-			if ( Params )
-				result->Params = Params->duplicate();
-
-			result->Body = Body->duplicate();
-		break;
-
-		case Function_Fwd:
-		case Operator_Fwd:
-		case Operator_Member_Fwd:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if ( Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			if ( Specs )
-				result->ParentType = ParentType->duplicate();
-
-			if ( ReturnType )
-				result->ReturnType = ReturnType->duplicate();
-
-			if ( Params )
-				result->Params = Params->duplicate();
-		break;
-
-		case Namespace:
-			mem_copy( result, this, sizeof( AST ) );
-
-			result->Body = Body->duplicate();
-		break;
-
-		case Operator_Cast:
-			mem_copy( result, this, sizeof( AST ) );
-
-			result->ValueType = ValueType->duplicate();
-			result->Body      = Body->duplicate();
-		break;
-		case Operator_Cast_Fwd:
-			mem_copy( result, this, sizeof( AST ) );
-
-			result->ValueType = ValueType->duplicate();
-		break;
-
-		case Parameters:
-			mem_copy( result, this, sizeof( AST ) );
-
-			result->NumEntries = 0;
-			result->Last = nullptr;
-			result->Next = nullptr;
-
-			if ( NumEntries - 1 > 0 )
-			{
-				CodeParam parent = result->cast<CodeParam>();
-				for ( CodeParam param : Next->cast<CodeParam>() )
-				{
-					parent.append( param );
-				}
-			}
-		break;
-
-		case Template:
-			mem_copy( result, this, sizeof( AST ) );
-
-			result->Params      = Params->duplicate();
-			result->Declaration = Declaration->duplicate();
-		break;
-
-		case Typename:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if (Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			if ( Specs )
-				result->Specs = Specs->duplicate();
-
-			if ( ArrExpr )
-				result->ArrExpr = ArrExpr->duplicate();
-		break;
-
-		case Typedef:
-		case Using:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if (Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			if ( UnderlyingType )
-				result->UnderlyingType = UnderlyingType->duplicate();
-		break;
-
-		case Union:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if ( Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			result->Body = Body->duplicate();
-		break;
-
-		case Variable:
-			mem_copy( result, this, sizeof( AST ) );
-
-			if (Attributes)
-				result->Attributes = Attributes->duplicate();
-
-			if ( Specs )
-				result->Specs = Specs->duplicate();
-
-			result->ValueType = UnderlyingType->duplicate();
-
-			if ( Value )
-				result->Value = Value->duplicate();
-		break;
-
-		case Class_Body:
-		case Enum_Body:
-		case Export_Body:
-		case Extern_Linkage_Body:
-		case Function_Body:
-		case Global_Body:
-		case Namespace_Body:
-		case Struct_Body:
-		case Union_Body:
-			CodeBody
-			body         = cast<CodeBody>();
-			body->Name   = Name;
-			body->Type   = Type;
-			for ( Code entry : cast<CodeBody>() )
-			{
-				result->append( entry.ast );
-			}
-		break;
-	}
-#endif
-
 	return result;
 }
 
@@ -1028,3 +826,5 @@ bool AST::validate_body()
 
 	return false;
 }
+
+#pragma endregion AST

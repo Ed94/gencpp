@@ -507,6 +507,13 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 		{
 			node_props = EADT_PROPS_IS_HEX;
 		}
+
+		/* bail if ZPL_ADT_PROPS_IS_HEX is unset but we get 'x' on input */
+		if ( char_to_lower( *e ) == 'x' && ( node_props != EADT_PROPS_IS_HEX ) )
+		{
+			return ++base_str;
+		}
+
 		while ( char_is_hex_digit( *e ) || char_to_lower( *e ) == 'x' )
 		{
 			buf[ ib++ ] = *e++;
@@ -795,155 +802,185 @@ ADT_Error adt_str_to_number_strict( ADT_Node* node )
 
 u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim )
 {
-	CSV_Error err = ECSV_Error__NONE;
+	CSV_Error error = ECSV_Error__NONE;
 	GEN_ASSERT_NOT_NULL( root );
 	GEN_ASSERT_NOT_NULL( text );
 	zero_item( root );
 
 	adt_make_branch( root, allocator, NULL, has_header ? false : true );
 
-	char* p = text;
-	char* b = p;
-	char* e = p;
+	char* currentChar = text;
+	char* beginChar;
+	char* endChar;
 
-	sw colc       = 0;
-	sw total_colc = 0;
+	sw columnIndex       = 0;
+	sw totalColumnIndex = 0;
 
 	do
 	{
-		char d = 0;
-		p      = zpl_cast( char* ) str_trim( p, false );
-		if ( *p == 0 )
+		char delimiter = 0;
+		currentChar = zpl_cast( char* ) str_trim( currentChar, false );
+
+		if ( *currentChar == 0 )
 			break;
-		ADT_Node row_item = { 0 };
-		row_item.type     = EADT_TYPE_STRING;
-#ifndef GEN_PARSER_DISABLE_ANALYSIS
-		row_item.name_style = EADT_NAME_STYLE_NO_QUOTES;
-#endif
+
+		ADT_Node rowItem = { 0 };
+		rowItem.type     = EADT_TYPE_STRING;
+
+	#ifndef GEN_PARSER_DISABLE_ANALYSIS
+		rowItem.name_style = EADT_NAME_STYLE_NO_QUOTES;
+	#endif
 
 		/* handle string literals */
-		if ( *p == '"' )
+		if ( *currentChar == '"' )
 		{
-			p = b = e       = p + 1;
-			row_item.string = b;
-#ifndef GEN_PARSER_DISABLE_ANALYSIS
-			row_item.name_style = EADT_NAME_STYLE_DOUBLE_QUOTE;
-#endif
+			currentChar   += 1;
+			beginChar      = currentChar;
+			endChar        = currentChar;
+			rowItem.string = beginChar;
+		#ifndef GEN_PARSER_DISABLE_ANALYSIS
+			rowItem.name_style = EADT_NAME_STYLE_DOUBLE_QUOTE;
+		#endif
 			do
 			{
-				e = zpl_cast( char* ) str_skip( e, '"' );
-				if ( *e && *( e + 1 ) == '"' )
+				endChar = zpl_cast( char* ) str_skip( endChar, '"' );
+
+				if ( *endChar && *( endChar + 1 ) == '"' )
 				{
-					e += 2;
+					endChar += 2;
 				}
 				else
 					break;
-			} while ( *e );
-			if ( *e == 0 )
+			}
+			while ( *endChar );
+
+			if ( *endChar == 0 )
 			{
 				GEN_CSV_ASSERT( "unmatched quoted string" );
-				err = ECSV_Error__UNEXPECTED_END_OF_INPUT;
-				return err;
+				error = ECSV_Error__UNEXPECTED_END_OF_INPUT;
+				return error;
 			}
-			*e = 0;
-			p  = zpl_cast( char* ) str_trim( e + 1, true );
-			d  = *p;
+
+			*endChar    = 0;
+			currentChar = zpl_cast( char* ) str_trim( endChar + 1, true );
+			delimiter   = * currentChar;
 
 			/* unescape escaped quotes (so that unescaped text escapes :) */
 			{
-				char* ep = b;
+				char* escapedChar = beginChar;
 				do
 				{
-					if ( *ep == '"' && *( ep + 1 ) == '"' )
+					if ( *escapedChar == '"' && *( escapedChar + 1 ) == '"' )
 					{
-						mem_move( ep, ep + 1, str_len( ep ) );
+						mem_move( escapedChar, escapedChar + 1, str_len( escapedChar ) );
 					}
-					ep++;
-				} while ( *ep );
+					escapedChar++;
+				}
+				while ( *escapedChar );
 			}
 		}
-		else if ( *p == delim )
+		else if ( *currentChar == delim )
 		{
-			d               = *p;
-			row_item.string = "";
+			delimiter      = * currentChar;
+			rowItem.string = "";
 		}
-		else if ( *p )
+		else if ( *currentChar )
 		{
 			/* regular data */
-			b = e           = p;
-			row_item.string = b;
+			beginChar      = currentChar;
+			endChar        = currentChar;
+			rowItem.string = beginChar;
+
 			do
 			{
-				e++;
-			} while ( *e && *e != delim && *e != '\n' );
-			if ( *e )
+				endChar++;
+			}
+			while ( * endChar && * endChar != delim && * endChar != '\n' );
+
+			if ( * endChar )
 			{
-				p = zpl_cast( char* ) str_trim( e, true );
-				while ( char_is_space( *( e - 1 ) ) )
+				currentChar = zpl_cast( char* ) str_trim( endChar, true );
+
+				while ( char_is_space( *( endChar - 1 ) ) )
 				{
-					e--;
+					endChar--;
 				}
-				d  = *p;
-				*e = 0;
+
+				delimiter = * currentChar;
+				* endChar = 0;
 			}
 			else
 			{
-				d = 0;
-				p = e;
+				delimiter   = 0;
+				currentChar = endChar;
 			}
 
 			/* check if number and process if so */
 			b32   skip_number = false;
-			char* num_p       = b;
-			do
-			{
-				if ( ! char_is_hex_digit( *num_p ) && ( ! str_find( "+-.eExX", *num_p ) ) )
-				{
-					skip_number = true;
-					break;
-				}
-			} while ( *num_p++ );
+			char* num_p       = beginChar;
 
-			if ( ! skip_number )
+			// We only consider hexadecimal values if they start with 0x
+			if ( str_len(num_p) > 2 && num_p[0] == '0' && (num_p[1] == 'x' || num_p[1] == 'X') )
 			{
-				adt_str_to_number( &row_item );
+				num_p += 2; // skip '0x' prefix
+				do
+				{
+					if (!char_is_hex_digit(*num_p))
+					{
+						skip_number = true;
+						break;
+					}
+				} while (*num_p++);
+			}
+			else
+			{
+				skip_number = true;
+			}
+
+			if (!skip_number)
+			{
+				adt_str_to_number(&rowItem);
 			}
 		}
 
-		if ( colc >= root->nodes.num() )
+		if ( columnIndex >= root->nodes.num() )
 		{
 			adt_append_arr( root, NULL );
 		}
 
-		root->nodes[ colc ].nodes.append( row_item );
+		root->nodes[ columnIndex ].nodes.append( rowItem );
 
-		if ( d == delim )
+		if ( delimiter == delim )
 		{
-			colc++;
-			p++;
+			columnIndex++;
+			currentChar++;
 		}
-		else if ( d == '\n' || d == 0 )
+		else if ( delimiter == '\n' || delimiter == 0 )
 		{
 			/* check if number of rows is not mismatched */
-			if ( total_colc < colc )
-				total_colc = colc;
-			else if ( total_colc != colc )
+			if ( totalColumnIndex < columnIndex )
+				totalColumnIndex = columnIndex;
+
+			else if ( totalColumnIndex != columnIndex )
 			{
 				GEN_CSV_ASSERT( "mismatched rows" );
-				err = ECSV_Error__MISMATCHED_ROWS;
-				return err;
+				error = ECSV_Error__MISMATCHED_ROWS;
+				return error;
 			}
-			colc = 0;
-			if ( d != 0 )
-				p++;
+
+			columnIndex = 0;
+
+			if ( delimiter != 0 )
+				currentChar++;
 		}
-	} while ( *p );
+	}
+	while ( *currentChar );
 
 	if ( root->nodes.num() == 0 )
 	{
 		GEN_CSV_ASSERT( "unexpected end of input. stream is empty." );
-		err = ECSV_Error__UNEXPECTED_END_OF_INPUT;
-		return err;
+		error = ECSV_Error__UNEXPECTED_END_OF_INPUT;
+		return error;
 	}
 
 	/* consider first row as a header. */
@@ -958,7 +995,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 		}
 	}
 
-	return err;
+	return error;
 }
 
 void csv_free( CSV_Object* obj )

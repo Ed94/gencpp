@@ -1,3 +1,5 @@
+#pragma region Gen Interface
+
 // Initialize the library.
 // This currently just initializes the CodePool.
 void init();
@@ -32,6 +34,7 @@ void set_allocator_string_table( AllocatorInfo string_allocator );
 void set_allocator_type_table  ( AllocatorInfo type_reg_allocator );
 
 #pragma region Upfront
+
 CodeAttributes def_attributes( StrC content );
 CodeComment    def_comment   ( StrC content );
 
@@ -122,9 +125,11 @@ CodeBody       def_struct_body     ( s32 num, ... );
 CodeBody       def_struct_body     ( s32 num, Code* codes );
 CodeBody       def_union_body      ( s32 num, ... );
 CodeBody       def_union_body      ( s32 num, Code* codes );
+
 #pragma endregion Upfront
 
 #pragma region Parsing
+
 CodeClass     parse_class        ( StrC class_def     );
 CodeEnum      parse_enum         ( StrC enum_def      );
 CodeBody      parse_export_body  ( StrC export_def    );
@@ -142,13 +147,18 @@ CodeTypedef   parse_typedef      ( StrC typedef_def   );
 CodeUnion     parse_union        ( StrC union_def     );
 CodeUsing     parse_using        ( StrC using_def     );
 CodeVar       parse_variable     ( StrC var_def       );
+
 #pragma endregion Parsing
 
 #pragma region Untyped text
+
 sw   token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va );
 StrC token_fmt_impl( sw, ... );
 
 Code untyped_str      ( StrC content);
 Code untyped_fmt      ( char const* fmt, ... );
 Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
+
 #pragma endregion Untyped text
+
+#pragma endregion Gen Interface
