@@ -137,12 +137,12 @@ int gen_main()
 			header.print( nspace_macro );
 			header.print_fmt( "GEN_NS_BEGIN\n\n");
 
-			header.print_fmt("#pragma region Types");
+			header.print_fmt("#pragma region Types\n\n");
 			header.print( types );
 			header.print( ecode );
 			header.print( eoperator );
 			header.print( especifier );
-			header.print_fmt("#pragma endregion Types");
+			header.print_fmt("#pragma endregion Types\n\n");
 
 			header.print( data_structs );
 			header.print( interface );
@@ -167,7 +167,7 @@ int gen_main()
 		Code 	    parsing 	    = scan_file( "components/gen.interface.parsing.cpp" );
 		Code        untyped 	    = scan_file( "components/gen.untyped.cpp" );
 
-		CodeBody etoktype = gen_etoktype( "./components/ETokType.csv" );
+		CodeBody etoktype = gen_etoktype( "components/ETokType.csv", "components/AttributeTokens.csv" );
 		CodeNamespace parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
 		Code builder = scan_file( "filesystem/gen.builder.cpp" );

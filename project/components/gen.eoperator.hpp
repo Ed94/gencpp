@@ -3,6 +3,7 @@
 namespace EOperator
 {
 #	define Define_Operators       \
+	Entry( Invalid,         INVALID ) \
 	Entry( Assign,          =  )  \
 	Entry( Assign_Add,      += )  \
 	Entry( Assign_Subtract, -= )  \
@@ -53,7 +54,6 @@ namespace EOperator
 		Comma,
 
 		Num_Ops,
-		Invalid
 	};
 
 	inline

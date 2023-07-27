@@ -38,7 +38,7 @@ namespace ESpecifier
 		Define_Specifiers
 	#	undef Entry
 
-		Num_Specifiers,
+		NumSpecifiers,
 	};
 
 	inline
@@ -52,7 +52,7 @@ namespace ESpecifier
 	StrC to_str( Type specifier )
 	{
 		local_persist
-		StrC lookup[ Num_Specifiers ] = {
+		StrC lookup[ NumSpecifiers ] = {
 		#	pragma push_macro( "global" )
 		#	pragma push_macro( "internal" )
 		#	pragma push_macro( "local_persist" )
@@ -76,9 +76,9 @@ namespace ESpecifier
 	Type to_type( StrC str )
 	{
 		local_persist
-		u32 keymap[ Num_Specifiers ];
+		u32 keymap[ NumSpecifiers ];
 		do_once_start
-			for ( u32 index = 0; index < Num_Specifiers; index++ )
+			for ( u32 index = 0; index < NumSpecifiers; index++ )
 			{
 				StrC enum_str = to_str( (Type)index );
 
@@ -90,7 +90,7 @@ namespace ESpecifier
 
 		u32 hash = crc32( str.Ptr, str.Len );
 
-		for ( u32 index = 0; index < Num_Specifiers; index++ )
+		for ( u32 index = 0; index < NumSpecifiers; index++ )
 		{
 			if ( keymap[index] == hash )
 				return (Type)index;
@@ -101,4 +101,5 @@ namespace ESpecifier
 
 #	undef Define_Specifiers
 }
+
 using SpecifierT = ESpecifier::Type;

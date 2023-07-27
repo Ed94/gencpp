@@ -10,6 +10,7 @@ namespace Parser
 */
 
 #	define Define_TokType \
+	Entry( Invalid,                "INVALID" )          \
 	Entry( Access_Private,         "private" )          \
 	Entry( Access_Protected,       "protected" )        \
 	Entry( Access_Public,          "public" )           \
@@ -80,102 +81,61 @@ namespace Parser
 	Entry( Varadic_Argument,       "..." )              \
 	Entry( Attributes_Start,       "__attrib_start__" )
 
-	enum class TokType : u32
+	namespace ETokType
 	{
-	#	define Entry( Name_, Str_ ) Name_,
-		Define_TokType
-		GEN_Define_Attribute_Tokens
-	#	undef Entry
-		Num,
-		Invalid
-	};
-
-	struct Token
-	{
-		char const* Text;
-		sptr        Length;
-		TokType     Type;
-		bool 	    IsAssign;
-
-		operator bool()
+		enum Type : u32
 		{
-			return Text && Length && Type != TokType::Invalid;
-		}
-
-		operator StrC()
-		{
-			return { Length, Text };
-		}
-	};
-
-	internal inline
-	TokType get_tok_type( char const* word, s32 length )
-	{
-		local_persist
-		StrC lookup[(u32)TokType::Num] =
-		{
-		#	define Entry( Name_, Str_ ) { sizeof(Str_), Str_ },
+		#	define Entry( Name_, Str_ ) Name_,
 			Define_TokType
 			GEN_Define_Attribute_Tokens
 		#	undef Entry
+			NumTokens,
 		};
 
-		for ( u32 index = 0; index < (u32)TokType::Num; index++ )
+		internal inline
+		Type to_type( StrC str_tok )
 		{
-			s32         lookup_len = lookup[index].Len - 1;
-			char const* lookup_str = lookup[index].Ptr;
+			local_persist
+			StrC lookup[(u32)NumTokens] =
+			{
+			#	define Entry( Name_, Str_ ) { sizeof(Str_), Str_ },
+				Define_TokType
+				GEN_Define_Attribute_Tokens
+			#	undef Entry
+			};
 
-			if ( lookup_len != length )
-				continue;
+			for ( u32 index = 0; index < (u32)NumTokens; index++ )
+			{
+				s32         lookup_len = lookup[index].Len - 1;
+				char const* lookup_str = lookup[index].Ptr;
 
-			if ( str_compare( word, lookup_str, lookup_len ) == 0 )
-				return scast(TokType, index);
+				if ( lookup_len != str_tok.Len )
+					continue;
+
+				if ( str_compare( str_tok.Ptr, lookup_str, lookup_len ) == 0 )
+					return scast(Type, index);
+			}
+
+			return Invalid;
 		}
 
-		return TokType::Invalid;
-	}
-
-	internal inline
-	char const* str_tok_type( TokType type )
-	{
-		local_persist
-		char const* lookup[(u32)TokType::Num] =
+		internal inline
+		char const* to_str( Type type )
 		{
-		#	define Entry( Name_, Str_ ) Str_,
-			Define_TokType
-			GEN_Define_Attribute_Tokens
-		#	undef Entry
-		};
+			local_persist
+			char const* lookup[(u32)NumTokens] =
+			{
+			#	define Entry( Name_, Str_ ) Str_,
+				Define_TokType
+				GEN_Define_Attribute_Tokens
+			#	undef Entry
+			};
 
-		return lookup[(u32)type];
-	}
+			return lookup[(u32)type];
+		}
+	#	undef Define_TokType
+	};
 
-#	undef Define_TokType
+	using TokType = ETokType::Type;
 
-	internal inline
-	bool tok_is_specifier( Token const& tok )
-	{
-		return (tok.Type <= TokType::Star && tok.Type >= TokType::Spec_Alignas)
-			|| tok.Type == TokType::Ampersand
-			|| tok.Type == TokType::Ampersand_DBL
-		;
-	}
-
-	internal inline
-	bool tok_is_access_specifier( Token const& tok )
-	{
-		return tok.Type >= TokType::Access_Private && tok.Type <= TokType::Access_Public;
-	}
-
-	internal inline
-	AccessSpec tok_to_access_specifier( Token const& tok )
-	{
-		return scast(AccessSpec, tok.Type);
-	}
-
-	internal inline
-	bool tok_is_attribute( Token const& tok )
-	{
-		return tok.Type > TokType::Attributes_Start;
-	}
 } // Parser

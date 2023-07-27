@@ -3,6 +3,7 @@
 namespace ECode
 {
 #	define Define_Types           \
+	Entry( Invalid )              \
 	Entry( Untyped )              \
 	Entry( Comment )              \
 	Entry( Access_Private )       \
@@ -56,8 +57,7 @@ namespace ECode
 		Define_Types
 	#	undef Entry
 
-		Num_Types,
-		Invalid
+		Num_Types
 	};
 
 	inline

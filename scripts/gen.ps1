@@ -52,10 +52,12 @@ Push-location $path_gen
 	& $gencpp
 
 # Format generated files
+	$path_clang_format = Join-Path $path_scripts .clang-format
+
 	Write-Host `nBeginning format...
 	$formatParams = @(
 		'-i'          # In-place
-		'-style=file' # Search for a .clang-format file in the parent directory of the source file.
+		"-style=file:$path_clang_format" # Search for a .clang-format file in the parent directory of the source file.
 		'-verbose'
 	)
 

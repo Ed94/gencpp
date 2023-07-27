@@ -363,10 +363,10 @@ GEN_IMPL_INLINE void zero_size( void* ptr, sw size )
 struct Arena
 {
 	static
-		void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+	void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
 
 	static
-		Arena init_from_memory( void* start, sw size )
+	Arena init_from_memory( void* start, sw size )
 	{
 		return
 		{
@@ -379,7 +379,7 @@ struct Arena
 	}
 
 	static
-		Arena init_from_allocator( AllocatorInfo backing, sw size )
+	Arena init_from_allocator( AllocatorInfo backing, sw size )
 	{
 		Arena result =
 		{
@@ -393,7 +393,7 @@ struct Arena
 	}
 
 	static
-		Arena init_sub( Arena& parent, sw size )
+	Arena init_sub( Arena& parent, sw size )
 	{
 		return init_from_allocator( parent.Backing, size );
 	}
@@ -448,16 +448,16 @@ struct Arena
 struct Pool
 {
 	static
-		void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+	void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
 
 	static
-		Pool init( AllocatorInfo backing, sw num_blocks, sw block_size )
+	Pool init( AllocatorInfo backing, sw num_blocks, sw block_size )
 	{
 		return init_align( backing, num_blocks, block_size, GEN_DEFAULT_MEMORY_ALIGNMENT );
 	}
 
 	static
-		Pool init_align( AllocatorInfo backing, sw num_blocks, sw block_size, sw block_align );
+	Pool init_align( AllocatorInfo backing, sw num_blocks, sw block_size, sw block_align );
 
 	void clear();
 

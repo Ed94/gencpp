@@ -1,3 +1,4 @@
+Invalid,         INVALID
 Assign,          "="
 Assign_Add,      "+="
 Assign_Subtract, "-="

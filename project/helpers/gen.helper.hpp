@@ -157,7 +157,6 @@ CodeBody gen_especifier( char const* path )
 #undef local_persist
 #undef do_once_start
 #undef do_once_end
-
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
 		StrC to_str( Type type )
 		{
@@ -197,7 +196,6 @@ CodeBody gen_especifier( char const* path )
 			return Invalid;
 		}
 	)));
-
 #pragma pop_macro( "local_persist" )
 #pragma pop_macro( "do_once_start" )
 #pragma pop_macro( "do_once_end" )
@@ -209,36 +207,57 @@ CodeBody gen_especifier( char const* path )
 	return def_global_body( args( nspace, specifier_t ) );
 }
 
-CodeBody gen_etoktype( char const* path )
+CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 {
-	char scratch_mem[kilobytes(4)];
+	char scratch_mem[kilobytes(64)];
 	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	file_read_contents( scratch, zero_terminate, path );
+	FileContents enum_content = file_read_contents( scratch, zero_terminate, etok_path );
 
-	CSV_Object csv_nodes;
-	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
+	CSV_Object csv_enum_nodes;
+	csv_parse( &csv_enum_nodes, rcast(char*, enum_content.data), GlobalAllocator, false );
 
-	Array<ADT_Node> enum_strs = csv_nodes.nodes[0].nodes;
-	Array<ADT_Node> str_strs  = csv_nodes.nodes[1].nodes;
+	// memset( scratch_mem, 0, sizeof(scratch_mem) );
+	// scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
+	FileContents attrib_content = file_read_contents( scratch, zero_terminate, attr_path );
 
-	String enum_entries   = String::make_reserve( GlobalAllocator, kilobytes(1) );
-	String to_str_entries = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	CSV_Object csv_attr_nodes;
+	csv_parse( &csv_attr_nodes, rcast(char*, attrib_content.data), GlobalAllocator, false );
+
+	Array<ADT_Node> enum_strs          = csv_enum_nodes.nodes[0].nodes;
+	Array<ADT_Node> enum_str_strs      = csv_enum_nodes.nodes[1].nodes;
+	Array<ADT_Node> attribute_strs     = csv_attr_nodes.nodes[0].nodes;
+	Array<ADT_Node> attribute_str_strs = csv_attr_nodes.nodes[1].nodes;
+
+	String enum_entries      = String::make_reserve( GlobalAllocator, kilobytes(2) );
+	String to_str_entries    = String::make_reserve( GlobalAllocator, kilobytes(4) );
+	String attribute_entries = String::make_reserve( GlobalAllocator, kilobytes(2) );
+	String to_str_attributes = String::make_reserve( GlobalAllocator, kilobytes(4) );
 
 	for (uw idx = 0; idx < enum_strs.num(); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
-		char const* entry_to_str = str_strs [idx].string;
+		char const* entry_to_str = enum_str_strs [idx].string;
 
 		enum_entries.append_fmt( "%s,\n", enum_str );
 		to_str_entries.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
-	CodeEnum enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
+	for ( uw idx = 0; idx < attribute_strs.num(); idx++ )
+	{
+		char const* attribute_str = attribute_strs[idx].string;
+		char const* entry_to_str  = attribute_str_strs [idx].string;
+
+		attribute_entries.append_fmt( "%s,\n", attribute_str );
+		to_str_attributes.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+	}
+
+	CodeEnum enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, "attribute_toks", (StrC)attribute_entries, stringize(
 		enum Type : u32
 		{
 			<entries>
-			NumTokenTypes
+			<attribute_toks>
+			NumTokens
 		};
 	)));
 
@@ -248,14 +267,13 @@ CodeBody gen_etoktype( char const* path )
 #undef local_persist
 #undef do_once_start
 #undef do_once_end
-
-	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
+	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, "attribute_toks", (StrC)to_str_attributes, stringize(
 		StrC to_str( Type type )
 		{
 			local_persist
 			StrC lookup[] {
 				<entries>
-				NumTokens
+				<attribute_toks>
 			};
 
 			return lookup[ type ];
@@ -289,49 +307,12 @@ CodeBody gen_etoktype( char const* path )
 			return Invalid;
 		}
 	)));
-
 #pragma pop_macro( "local_persist" )
 #pragma pop_macro( "do_once_start" )
 #pragma pop_macro( "do_once_end" )
 
-	CodeFn is_specifier = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
-		bool tok_is_specifier( Type type )
-		{
-			return (tok.Type <= TokType::Star && tok.Type >= TokType::Spec_Alignas)
-				|| tok.Type == TokType::Ampersand
-				|| tok.Type == TokType::Ampersand_DBL
-			;
-		}
-	)));
-
-	CodeFn is_access_specifier = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
-		bool tok_is_access_specifier( Type type )
-		{
-			return tok.Type >= TokType::Access_Private && tok.Type <= TokType::Access_Public;
-		}
-	)));
-
-#pragma push_macro( "internal" )
-#pragma push_macro( "scast" )
-	CodeFn to_access_specifier = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
-		internal inline
-		AccessSpec tok_to_access_specifier( Type type )
-		{
-			return scast(AccessSpec, tok.Type);
-		}
-	)));
-#pragma pop_macro( "internal" )
-#pragma pop_macro( "scast" )
-
-	CodeFn is_attribute = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
-		bool tok_is_attribute( const Token type )
-		{
-			return tok.Type >= TokType::Attr_Alignas && tok.Type <= TokType::Attr_Visibility;
-		}
-	)));
-
-	CodeNamespace nspace     = def_namespace( name(ETokType), def_namespace_body( args( enum_code, to_str, to_type, is_specifier, is_access_specifier, to_access_specifier, is_attribute ) ) );
-	CodeUsing td_toktype = def_using( name(TokTypeT), def_type( name(ETokType::Type) ) );
+	CodeNamespace nspace     = def_namespace( name(ETokType), def_namespace_body( args( enum_code, to_str, to_type ) ) );
+	CodeUsing     td_toktype = def_using( name(TokType), def_type( name(ETokType::Type) ) );
 
 	return def_global_body( args( nspace, td_toktype ) );
 }
