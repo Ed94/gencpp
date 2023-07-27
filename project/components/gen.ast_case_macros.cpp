@@ -58,7 +58,24 @@
 	case Typename:
 
 #	define AST_BODY_EXPORT_UNALLOWED_TYPES         AST_BODY_GLOBAL_UNALLOWED_TYPES
-#	define AST_BODY_NAMESPACE_UNALLOWED_TYPES      AST_BODY_GLOBAL_UNALLOWED_TYPES
+#	define AST_BODY_NAMESPACE_UNALLOWED_TYPES \
+	case Access_Public: 				      \
+	case Access_Protected: 				      \
+	case Access_Private: 				      \
+	case PlatformAttributes:                  \
+	case Class_Body: 					      \
+	case Enum_Body: 					      \
+	case Execution: 					      \
+	case Friend: 						      \
+	case Function_Body: 				      \
+	case Namespace_Body: 				      \
+	case Operator_Member: 				      \
+	case Operator_Member_Fwd: 			      \
+	case Parameters: 					      \
+	case Specifiers: 					      \
+	case Struct_Body: 					      \
+	case Typename:
+
 #	define AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES AST_BODY_GLOBAL_UNALLOWED_TYPES
 
 #	define AST_BODY_STRUCT_UNALLOWED_TYPES         AST_BODY_CLASS_UNALLOWED_TYPES

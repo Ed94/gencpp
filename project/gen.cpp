@@ -23,6 +23,7 @@ GEN_NS_BEGIN
 
 #include "components/gen.interface.cpp"
 #include "components/gen.interface.upfront.cpp"
+#include "components/gen.etoktype.cpp"
 #include "components/gen.interface.parsing.cpp"
 #include "components/gen.untyped.cpp"
 

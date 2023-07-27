@@ -184,6 +184,9 @@ int gen_main()
 		Code parsing         = scan_file( project_dir "components/gen.interface.parsing.cpp" );
 		Code untyped         = scan_file( project_dir "components/gen.untyped.cpp" );
 
+		CodeBody etoktype = gen_etoktype( project_dir "components/ETokType.csv" );
+		CodeNamespace parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
+
 		Code builder = scan_file( project_dir "filesystem/gen.builder.cpp" );
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n");
@@ -192,6 +195,7 @@ int gen_main()
 		header.print( ast );
 		header.print( interface );
 		header.print( upfront );
+		header.print( parser_nspace );
 		header.print( parsing );
 		header.print( untyped );
 			header.print( builder );

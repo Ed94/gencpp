@@ -15,7 +15,7 @@ AlignConsecutiveDeclarations: AcrossComments
 AlignConsecutiveMacros:
   Enabled: true
   AcrossEmptyLines: true
-  AcrossComments: false
+  AcrossComments: true
 AlignEscapedNewlines: Left
 AlignOperands: DontAlign
 
@@ -80,7 +80,7 @@ CompactNamespaces: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth : 4
 
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 0
 
 Cpp11BracedListStyle: false
 
