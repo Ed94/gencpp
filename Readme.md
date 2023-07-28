@@ -23,9 +23,6 @@ its not meant to be a black box metaprogramming utility, its meant for the user 
 * [The three constructors ](#there-are-three-sets-of-interfaces-for-code-ast-generation-the-library-provides)
 * [Predefined Codes](#predefined-codes)
 * [Code generation and modification](#code-generation-and-modification)
-* [On multithreading](#on-multi-threading)
-* [Extending the library](#extending-the-library)
-* [TODO](#todo)
 
 ## Notes
 
@@ -589,6 +586,7 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_type_unsigned`
 * `spec_type_short`
 * `spec_type_long`
+* `t_empty`
 * `t_auto`
 * `t_void`
 * `t_int`
@@ -686,59 +684,3 @@ Files may be added to the Editor and Scanner additionally with add_files( num, f
 This is intended for when you have requests that are for multiple files.
 
 Request queue in both Editor and Scanner are cleared once process_requests completes.
-
-## On multi-threading
-
-Currently unsupported. The following changes would have to be made:
-
-* Setup static data access with fences if more than one thread will generate ASTs ( or keep a different set for each thread)
-* Make sure local persistent data of functions are also thread local.
-* The builder should be done on a per-thread basis.
-* Due to the design of the editor and scanner, it will most likely be best to make each file a job to process request entries on. Receipts should have an an array to store per thread. They can be combined to the final receipts array when all files have been processed.
-
-## Extending the library
-
-This library is relatively very small, and can be extended without much hassle.
-
-The convention you'll see used throughout the API of the library is as follows:
-
-1. Check name or parameters to make sure they are valid for the construction requested
-2. Create a code object using `make_code`.
-3. Populate immediate fields (Name, Type, ModuleFlags, etc)
-4. Populate sub-entires using `add_entry`. If using the default serialization function `to_string`, follow the order at which entires are expected to appear (there is a strong ordering expected).
-
-Names or Content fields are interned strings and thus showed be cached using `get_cached_string` if its desired to preserve that behavior.
-
-`def_operator` is the most sophisticated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
-
-The library has its code segmented into component files, use it to help create a derived version without needing to have to rewrite a generated file directly or build on top of the header via composition or inheritance.
-When the scanner is implemented, this will be even easier to customize.
-
-# TODO
-
-* Implement a context stack for the parsing, allows for accurate scope validation for the AST types. (Better errors)
-  * Right now the parsing errors require a debugger in most cases.
-* Make a more robust test suite.
-* Generate a single-header library
-  * Componetize the library, make a metaprogram using gencpp to bootstrap itself.
-* Implement the Scanner
-* Implement the Editor
-* Should the builder be an "extension" header?
-  * Technically the library doesn't require it and the user can use their own filesystem library.
-  * It would allow me to remove the filesystem dependencies and related functions outside of gen base headers. ( At least 1k loc reduced )
-  * ADT and the CSV parser depend on it as well. The `str_fmt_file` related functions do as well but they can be ommited.
-  * Scanner and editor will also depend on it so they would need to include w/e the depency header for all three file-interacting interfaces.
-    * `gen.files_handling.hpp`
-* Convert GlobalAllocator to a slab allocator:
-
-```md
-Slab classes (for 100 mb arena)
-
-1KB   slab: 5MB  ( 5MB  / 1KB   ~ 5,000 blocks )
-4KB   slab: 10MB ( 10MB / 4KB   ~ 2,500 blocks )
-16KB  slab: 15MB ( 15MB / 16KB  ~ 960 blocks   )
-64KB  slab: 15MB ( 15MB / 64KB  ~ 240 blocks   )
-256KB slab: 20MB ( 20MB / 256KB ~ 80 blocks    )
-512KB slab: 20MB ( 20MB / 512KB ~ 40 blocks    )
-1MB   slab: 15MB ( 15MB / 1MB   ~ 15 blocks    )
-```
