@@ -1,19 +1,19 @@
 // This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)
 #include "gen.dep.hpp"
 
-#include "dependencies/gen.impl_start.cpp"
+#include "dependencies/impl_start.cpp"
 
 GEN_NS_BEGIN
 
-#include "dependencies/gen.debug.cpp"
-#include "dependencies/gen.string_ops.cpp"
-#include "dependencies/gen.printing.cpp"
-#include "dependencies/gen.memory.cpp"
-#include "dependencies/gen.parsing.cpp"
-#include "dependencies/gen.hashing.cpp"
-#include "dependencies/gen.string.cpp"
-#include "dependencies/gen.timing.cpp"
+#include "dependencies/debug.cpp"
+#include "dependencies/string_ops.cpp"
+#include "dependencies/printing.cpp"
+#include "dependencies/memory.cpp"
+#include "dependencies/parsing.cpp"
+#include "dependencies/hashing.cpp"
+#include "dependencies/string.cpp"
+#include "dependencies/timing.cpp"
 
-#include "dependencies/gen.file_handling.cpp"
+#include "dependencies/file_handling.cpp"
 
 GEN_NS_END

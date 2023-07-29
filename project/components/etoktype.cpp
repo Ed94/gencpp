@@ -9,6 +9,12 @@ namespace Parser
 	Attributes_Start is only used to indicate the start of the user_defined attribute list.
 */
 
+#ifndef GEN_DEFINE_ATTRIBUTE_TOKENS
+#	define GEN_DEFINE_ATTRIBUTE_TOKENS         \
+	Entry( API_Export, "GEN_API_Export_Code" ) \
+	Entry( API_Import, "GEN_API_Import_Code" )
+#endif
+
 #	define Define_TokType \
 	Entry( Invalid,                "INVALID" )          \
 	Entry( Access_Private,         "private" )          \
@@ -27,8 +33,8 @@ namespace Parser
 	Entry( BraceSquare_Close,      "]" )                \
 	Entry( Capture_Start,          "(" )                \
 	Entry( Capture_End,            ")" )                \
-	Entry( Comment,                "__comment__" )      \
-	Entry( Char,                   "__char__" )         \
+	Entry( Comment,                "comment" )          \
+	Entry( Char,                   "character" )        \
 	Entry( Comma,                  "," )                \
 	Entry( Decl_Class,             "class" )            \
 	Entry( Decl_GNU_Attribute,    "__attribute__" )     \
@@ -44,13 +50,17 @@ namespace Parser
 	Entry( Decl_Typedef,           "typedef" )          \
 	Entry( Decl_Using,             "using" )            \
 	Entry( Decl_Union,             "union" )            \
-	Entry( Identifier,             "__identifier__" )   \
+	Entry( Identifier,             "identifier" )       \
 	Entry( Module_Import,          "import" )           \
 	Entry( Module_Export,          "export" )           \
 	Entry( Number,                 "number" )           \
 	Entry( Operator,               "operator" )         \
-	Entry( Preprocessor_Directive, "#")                 \
-	Entry( Preprocessor_Include,   "include" )          \
+	Entry( Preprocess_Define,      "#define")           \
+	Entry( Preproces_Include,      "include" )          \
+	Entry( Preprocess_If,          "#if")               \
+	Entry( Preprocess_Elif,        "#elif")             \
+	Entry( Preprocess_Else,        "#else")             \
+	Entry( Preprocess_EndIf,       "#endif")            \
 	Entry( Spec_Alignas,           "alignas" )          \
 	Entry( Spec_Const,             "const" )            \
 	Entry( Spec_Consteval,         "consteval" )        \
@@ -70,7 +80,7 @@ namespace Parser
 	Entry( Spec_Volatile,          "volatile")          \
 	Entry( Star,                   "*" )                \
 	Entry( Statement_End,          ";" )                \
-	Entry( String,                 "__string__" )       \
+	Entry( String,                 "string" )           \
 	Entry( Type_Unsigned, 	       "unsigned" )         \
 	Entry( Type_Signed,            "signed" )           \
 	Entry( Type_Short,             "short" )            \
@@ -87,7 +97,7 @@ namespace Parser
 		{
 		#	define Entry( Name_, Str_ ) Name_,
 			Define_TokType
-			GEN_Define_Attribute_Tokens
+			GEN_DEFINE_ATTRIBUTE_TOKENS
 		#	undef Entry
 			NumTokens,
 		};
@@ -100,7 +110,7 @@ namespace Parser
 			{
 			#	define Entry( Name_, Str_ ) { sizeof(Str_), Str_ },
 				Define_TokType
-				GEN_Define_Attribute_Tokens
+				GEN_DEFINE_ATTRIBUTE_TOKENS
 			#	undef Entry
 			};
 
@@ -127,7 +137,7 @@ namespace Parser
 			{
 			#	define Entry( Name_, Str_ ) Str_,
 				Define_TokType
-				GEN_Define_Attribute_Tokens
+				GEN_DEFINE_ATTRIBUTE_TOKENS
 			#	undef Entry
 			};
 

@@ -109,7 +109,7 @@ Array<GenRingRequest> GenRingRequests;
 void gen__ring_request( StrC type, StrC dep = {} )
 {
 	do_once_start
-		GenRingRequests = Array<GenRingRequest>::init( Memory::GlobalAllocator );
+		GenRingRequests = Array<GenRingRequest>::init( GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.

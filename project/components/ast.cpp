@@ -17,19 +17,8 @@ AST* AST::duplicate()
 
 String AST::to_string()
 {
-#	define ProcessModuleFlags()                                      \
-	if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))  \
-		result.append( "export " );                                  \
-																     \
-	if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Import ))  \
-		result.append( "import " );                                  \
-
 	local_persist thread_local
 	char SerializationLevel = 0;
-
-#if defined(GEN_BENCHMARK) && defined(GEN_BENCHMARK_SERIALIZATION)
-	u64 time_start = time_rel_ms();
-#endif
 
 	// TODO : Need to refactor so that intermeidate strings are freed conviently.
 	String result = String::make( GlobalAllocator, "" );
@@ -82,7 +71,8 @@ String AST::to_string()
 
 		case Class:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes || ParentType )
 			{
@@ -129,7 +119,8 @@ String AST::to_string()
 
 		case Class_Fwd:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "class %s %s;", Attributes->to_string(), Name );
@@ -140,7 +131,8 @@ String AST::to_string()
 
 		case Enum:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes || UnderlyingType )
 			{
@@ -170,7 +162,8 @@ String AST::to_string()
 
 		case Enum_Fwd:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
@@ -181,7 +174,8 @@ String AST::to_string()
 
 		case Enum_Class:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes || UnderlyingType )
 			{
@@ -219,7 +213,8 @@ String AST::to_string()
 
 		case Enum_Class_Fwd:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			result.append( "enum class " );
 
@@ -262,7 +257,8 @@ String AST::to_string()
 
 		case Function:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
@@ -301,7 +297,8 @@ String AST::to_string()
 
 		case Function_Fwd:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
@@ -347,7 +344,8 @@ String AST::to_string()
 			break;
 
 		case Namespace:
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			result.append_fmt( "namespace %s\n{\n%s}"
 				, Name
@@ -358,7 +356,8 @@ String AST::to_string()
 		case Operator:
 		case Operator_Member:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
@@ -395,7 +394,8 @@ String AST::to_string()
 		case Operator_Fwd:
 		case Operator_Member_Fwd:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
@@ -513,7 +513,8 @@ String AST::to_string()
 
 		case Struct:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Name == nullptr)
 			{
@@ -566,7 +567,8 @@ String AST::to_string()
 
 		case Struct_Fwd:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "struct %s %s;", Attributes->to_string(), Name );
@@ -577,7 +579,8 @@ String AST::to_string()
 
 		case Template:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			result.append_fmt( "template< %s >\n%s", Params->to_string(), Declaration->to_string() );
 		}
@@ -585,7 +588,8 @@ String AST::to_string()
 
 		case Typedef:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			result.append( "typedef ");
 
@@ -624,7 +628,8 @@ String AST::to_string()
 
 		case Union:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			result.append( "union " );
 
@@ -650,7 +655,8 @@ String AST::to_string()
 
 		case Using:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
@@ -675,7 +681,8 @@ String AST::to_string()
 
 		case Variable:
 		{
-			ProcessModuleFlags();
+			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
+				result.append( "export " );
 
 			if ( Attributes || Specs )
 			{
@@ -726,11 +733,7 @@ String AST::to_string()
 		break;
 	}
 
-#if defined(GEN_BENCHMARK) && defined(GEN_BENCHMARK_SERIALIZATION)
-	log_fmt("AST::to_string() time taken: %llu for: %s\n", time_rel_ms() - time_start, result );
-#endif
 	return result;
-#undef ProcessModuleFlags
 }
 
 bool AST::is_equal( AST* other )
@@ -760,25 +763,25 @@ bool AST::validate_body()
 {
 	using namespace ECode;
 
-#define CheckEntries( Unallowed_Types )                                                                \
-	do                                                                                                 \
-	{                                                                                                  \
-		for ( Code entry : cast<CodeBody>() )                                                          \
-		{                                                                                              \
-			switch ( entry->Type )                                                                     \
-			{                                                                                          \
-				Unallowed_Types                                                                        \
-					log_failure( "AST::validate_body: Invalid entry in body %s", entry.debug_str() );  \
-					return false;                                                                      \
-			}                                                                                          \
-		}                                                                                              \
-	}                                                                                                  \
+#define CheckEntries( Unallowed_Types )                                                               \
+	do                                                                                                \
+	{                                                                                                 \
+		for ( Code entry : cast<CodeBody>() )                                                         \
+		{                                                                                             \
+			switch ( entry->Type )                                                                    \
+			{                                                                                         \
+				Unallowed_Types                                                                       \
+					log_failure( "AST::validate_body: Invalid entry in body %s", entry.debug_str() ); \
+					return false;                                                                     \
+			}                                                                                         \
+		}                                                                                             \
+	}                                                                                                 \
 	while (0);
 
 	switch ( Type )
 	{
 		case Class_Body:
-			CheckEntries( AST_BODY_CLASS_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
 		case Enum_Body:
 			for ( Code entry : cast<CodeBody>() )
@@ -791,22 +794,22 @@ bool AST::validate_body()
 			}
 		break;
 		case Export_Body:
-			CheckEntries( AST_BODY_CLASS_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
 		case Extern_Linkage:
-			CheckEntries( AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES );
 		break;
 		case Function_Body:
-			CheckEntries( AST_BODY_FUNCTION_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES );
 		break;
 		case Global_Body:
-			CheckEntries( AST_BODY_GLOBAL_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES );
 		break;
 		case Namespace_Body:
-			CheckEntries( AST_BODY_NAMESPACE_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES );
 		break;
 		case Struct_Body:
-			CheckEntries( AST_BODY_STRUCT_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_STRUCT_UNALLOWED_TYPES );
 		break;
 		case Union_Body:
 			for ( Code entry : Body->cast<CodeBody>() )
@@ -825,6 +828,8 @@ bool AST::validate_body()
 	}
 
 	return false;
+
+#undef CheckEntries
 }
 
 #pragma endregion AST

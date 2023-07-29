@@ -5,7 +5,7 @@ void assert_handler( char const* condition, char const* file, s32 line, char con
 	_printf_err( "%s:(%d): Assert Failure: ", file, line );
 
 	if ( condition )
-		_printf_err( "`%s` ", condition );
+		_printf_err( "`%s` \n", condition );
 
 	if ( msg )
 	{

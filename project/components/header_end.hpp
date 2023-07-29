@@ -84,6 +84,7 @@ Code& Code::operator ++()
 }
 
 #pragma region AST & Code Gen Common
+
 #define Define_CodeImpl( Typename )                                                  \
 char const* Typename::debug_str()                                                    \
 {                                                                                    \
@@ -243,6 +244,7 @@ Define_CodeCast( Using );
 Define_CodeCast( Var );
 Define_CodeCast( Body);
 #undef Define_CodeCast
+
 #pragma endregion AST & Code Gen Common
 
 void CodeClass::add_interface( CodeType type )
@@ -361,9 +363,11 @@ StrC token_fmt_impl( sw num, ... )
 
 	return { result, buf };
 }
+
 #pragma endregion Inlines
 
 #pragma region Constants
+
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 	// Predefined typename codes. Are set to readonly and are setup during gen::init()
 
@@ -477,9 +481,11 @@ extern CodeSpecifiers spec_static_member;
 extern CodeSpecifiers spec_thread_local;
 extern CodeSpecifiers spec_virtual;
 extern CodeSpecifiers spec_volatile;
+
 #pragma endregion Constants
 
 #pragma region Macros
+
 #	define gen_main main
 
 #	define __ NoCode
@@ -498,9 +504,11 @@ extern CodeSpecifiers spec_volatile;
 
 	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
 #	define token_fmt( ... ) gen::token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+
 #pragma endregion Macros
 
 #ifdef GEN_EXPOSE_BACKEND
+
 	// Global allocator used for data with process lifetime.
 	extern AllocatorInfo  GlobalAllocator;
 	extern Array< Arena > Global_AllocatorBuckets;
@@ -517,4 +525,5 @@ extern CodeSpecifiers spec_volatile;
 	extern AllocatorInfo Allocator_StringArena;
 	extern AllocatorInfo Allocator_StringTable;
 	extern AllocatorInfo Allocator_TypeTable;
+
 #endif

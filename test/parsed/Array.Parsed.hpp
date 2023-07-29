@@ -229,7 +229,7 @@ Array<GenArrayRequest> GenArrayRequests;
 void gen__array_request( StrC type, StrC dep = {} )
 {
 	do_once_start
-		GenArrayRequests = Array<GenArrayRequest>::init( Memory::GlobalAllocator );
+		GenArrayRequests = Array<GenArrayRequest>::init( GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.

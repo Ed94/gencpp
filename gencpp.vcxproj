@@ -112,12 +112,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project\components\gen.data_structures.hpp" />
+    <ClInclude Include="project\components\gen.ecode.hpp" />
+    <ClInclude Include="project\components\gen.eoperator.hpp" />
+    <ClInclude Include="project\components\gen.especifier.hpp" />
+    <ClInclude Include="project\components\gen.header_end.hpp" />
+    <ClInclude Include="project\components\gen.header_start.hpp" />
     <ClInclude Include="project\components\gen.interface.hpp" />
     <ClInclude Include="project\components\gen.types.hpp" />
     <ClInclude Include="project\dependencies\gen.basic_types.hpp" />
     <ClInclude Include="project\dependencies\gen.containers.hpp" />
-    <ClInclude Include="project\dependencies\gen.dep.hpp" />
+    <ClInclude Include="project\dependencies\gen.debug.hpp" />
     <ClInclude Include="project\dependencies\gen.file_handling.hpp" />
+    <ClInclude Include="project\dependencies\gen.hashing.hpp" />
     <ClInclude Include="project\dependencies\gen.header_start.hpp" />
     <ClInclude Include="project\dependencies\gen.macros.hpp" />
     <ClInclude Include="project\dependencies\gen.memory.hpp" />
@@ -125,25 +131,17 @@
     <ClInclude Include="project\dependencies\gen.printing.hpp" />
     <ClInclude Include="project\dependencies\gen.string.hpp" />
     <ClInclude Include="project\dependencies\gen.string_ops.hpp" />
+    <ClInclude Include="project\dependencies\gen.timing.hpp" />
     <ClInclude Include="project\filesystem\gen.builder.hpp" />
     <ClInclude Include="project\filesystem\gen.editor.hpp" />
     <ClInclude Include="project\filesystem\gen.scanner.hpp" />
     <ClInclude Include="project\gen.dep.hpp" />
-    <ClInclude Include="project\gen.editor.hpp" />
     <ClInclude Include="project\gen.hpp" />
-    <ClInclude Include="project\gen.pop_ignores.inline.hpp" />
-    <ClInclude Include="project\gen.push_ignores.inline.hpp" />
-    <ClInclude Include="project\gen.scanner.hpp" />
-    <ClInclude Include="project\gen.undef.macros.hpp" />
     <ClInclude Include="project\helpers\gen.pop_ignores.inline.hpp" />
     <ClInclude Include="project\helpers\gen.push_ignores.inline.hpp" />
     <ClInclude Include="project\helpers\gen.undef.macros.hpp" />
+    <ClInclude Include="singleheader\components\gen.header_start.hpp" />
     <ClInclude Include="test\DummyInclude.hpp" />
-    <ClInclude Include="test\gen\array.Upfront.gen.hpp" />
-    <ClInclude Include="test\gen\buffer.Upfront.gen.hpp" />
-    <ClInclude Include="test\gen\hashtable.Upfront.gen.hpp" />
-    <ClInclude Include="test\gen\ring.Upfront.gen.hpp" />
-    <ClInclude Include="test\gen\sanity.Upfront.gen.hpp" />
     <ClInclude Include="test\Parsed\Buffer.Parsed.hpp" />
     <ClInclude Include="test\Parsed\HashTable.Parsed.hpp" />
     <ClInclude Include="test\Parsed\Ring.Parsed.hpp" />
@@ -160,18 +158,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="project\components\gen.ast.cpp" />
+    <ClCompile Include="project\components\gen.ast_case_macros.cpp" />
+    <ClCompile Include="project\components\gen.data.cpp" />
+    <ClCompile Include="project\components\gen.etoktype.cpp" />
+    <ClCompile Include="project\components\gen.impl_start.cpp" />
+    <ClCompile Include="project\components\gen.interface.cpp" />
     <ClCompile Include="project\components\gen.interface.parsing.cpp" />
     <ClCompile Include="project\components\gen.interface.upfront.cpp" />
-    <ClCompile Include="project\dependencies\gen.dep.cpp" />
+    <ClCompile Include="project\components\gen.untyped.cpp" />
+    <ClCompile Include="project\dependencies\gen.debug.cpp" />
     <ClCompile Include="project\dependencies\gen.file_handling.cpp" />
+    <ClCompile Include="project\dependencies\gen.hashing.cpp" />
+    <ClCompile Include="project\dependencies\gen.impl_start.cpp" />
     <ClCompile Include="project\dependencies\gen.memory.cpp" />
     <ClCompile Include="project\dependencies\gen.parsing.cpp" />
     <ClCompile Include="project\dependencies\gen.printing.cpp" />
+    <ClCompile Include="project\dependencies\gen.string.cpp" />
+    <ClCompile Include="project\dependencies\gen.string_ops.cpp" />
+    <ClCompile Include="project\dependencies\gen.timing.cpp" />
+    <ClCompile Include="project\gen.bootstrap.cpp" />
     <ClCompile Include="project\gen.cpp" />
     <ClCompile Include="project\gen.dep.cpp" />
-    <ClCompile Include="singleheader\gen\gen.singleheader.cpp" />
-    <ClCompile Include="test\gen\build\meson-private\sanitycheckc.c" />
-    <ClCompile Include="test\gen\build\meson-private\sanitycheckcpp.cc" />
+    <ClCompile Include="singleheader\gen.singleheader.cpp" />
     <ClCompile Include="test\parsing.cpp" />
     <ClCompile Include="test\sanity.cpp" />
     <ClCompile Include="test\SOA.cpp" />
@@ -183,6 +191,23 @@
   <ItemGroup>
     <Natvis Include=".vscode\gencpp.natvis" />
     <Natvis Include="scripts\gencpp.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="project\components\AttributeTokens.csv" />
+    <Content Include="project\components\ECode.csv" />
+    <Content Include="project\components\EOperator.csv" />
+    <Content Include="project\components\ESpecifier.csv" />
+    <Content Include="project\components\ETokType.csv" />
+    <Content Include="project\meson.build" />
+    <Content Include="scripts\.clang-format" />
+    <Content Include="scripts\bootstrap.ci.ps1" />
+    <Content Include="scripts\bootstrap.ps1" />
+    <Content Include="scripts\msvc\build_msvc.ps1" />
+    <Content Include="scripts\msvc\devshell.ps1" />
+    <Content Include="scripts\refactor.ps1" />
+    <Content Include="scripts\singleheader.ci.ps1" />
+    <Content Include="scripts\singleheader.ps1" />
+    <Content Include="singleheader\meson.build" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

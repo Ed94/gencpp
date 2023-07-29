@@ -1,4 +1,5 @@
 #pragma region StaticData
+
 // TODO : Convert global allocation strategy to use a slab allocation strategy.
 global AllocatorInfo  GlobalAllocator;
 global Array<Arena>   Global_AllocatorBuckets;
@@ -16,9 +17,11 @@ global AllocatorInfo Allocator_Lexer       = heap();
 global AllocatorInfo Allocator_StringArena = heap();
 global AllocatorInfo Allocator_StringTable = heap();
 global AllocatorInfo Allocator_TypeTable   = heap();
+
 #pragma endregion StaticData
 
 #pragma region Constants
+
 global CodeType t_empty;
 global CodeType t_auto;
 global CodeType t_void;
@@ -83,4 +86,5 @@ global CodeSpecifiers spec_static_member;
 global CodeSpecifiers spec_thread_local;
 global CodeSpecifiers spec_virtual;
 global CodeSpecifiers spec_volatile;
+
 #pragma endregion Constants

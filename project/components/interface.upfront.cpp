@@ -1338,7 +1338,7 @@ CodeBody def_class_body( s32 num, ... )
 	va_list va;
 	va_start(va, num);
 	def_body_code_validation_start( def_class_body );
-		AST_BODY_CLASS_UNALLOWED_TYPES
+		GEN_AST_BODY_CLASS_UNALLOWED_TYPES
 	def_body_code_validation_end( def_class_body );
 	va_end(va);
 
@@ -1354,7 +1354,7 @@ CodeBody def_class_body( s32 num, Code* codes )
 	result->Type = Function_Body;
 
 	def_body_code_array_validation_start( def_class_body );
-		AST_BODY_CLASS_UNALLOWED_TYPES
+		GEN_AST_BODY_CLASS_UNALLOWED_TYPES
 	def_body_code_validation_end( def_class_body );
 
 	return result;
@@ -1437,7 +1437,7 @@ CodeBody def_export_body( s32 num, ... )
 	va_list va;
 	va_start(va, num);
 	def_body_code_validation_start( def_export_body );
-		AST_BODY_EXPORT_UNALLOWED_TYPES
+		GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
 	def_body_code_validation_end( def_export_body );
 	va_end(va);
 
@@ -1453,7 +1453,7 @@ CodeBody def_export_body( s32 num, Code* codes )
 	result->Type = Export_Body;
 
 	def_body_code_array_validation_start( def_export_body );
-		AST_BODY_EXPORT_UNALLOWED_TYPES
+		GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
 	def_body_code_validation_end( def_export_body );
 
 	return result;
@@ -1470,7 +1470,7 @@ CodeBody def_extern_link_body( s32 num, ... )
 	va_list va;
 	va_start(va, num);
 	def_body_code_validation_start( def_extern_linkage_body );
-		AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
+		GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
 	def_body_code_validation_end( def_extern_linkage_body );
 	va_end(va);
 
@@ -1486,7 +1486,7 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 	result->Type = Extern_Linkage_Body;
 
 	def_body_code_array_validation_start( def_extern_linkage_body );
-		AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
+		GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
 	def_body_code_validation_end( def_extern_linkage_body );
 
 	return result;
@@ -1503,7 +1503,7 @@ CodeBody def_function_body( s32 num, ... )
 	va_list va;
 	va_start(va, num);
 	def_body_code_validation_start( def_function_body );
-		AST_BODY_FUNCTION_UNALLOWED_TYPES
+		GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
 	def_body_code_validation_end( def_function_body );
 	va_end(va);
 
@@ -1519,7 +1519,7 @@ CodeBody def_function_body( s32 num, Code* codes )
 	result->Type = Function_Body;
 
 	def_body_code_array_validation_start( def_function_body );
-		AST_BODY_FUNCTION_UNALLOWED_TYPES
+		GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
 	def_body_code_validation_end( def_function_body );
 
 	return result;
@@ -1536,7 +1536,7 @@ CodeBody def_global_body( s32 num, ... )
 	va_list va;
 	va_start(va, num);
 	def_body_code_validation_start( def_global_body );
-		AST_BODY_GLOBAL_UNALLOWED_TYPES
+		GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
 	def_body_code_validation_end( def_global_body );
 	va_end(va);
 
@@ -1552,7 +1552,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 	result->Type = Global_Body;
 
 	def_body_code_array_validation_start( def_global_body );
-		AST_BODY_GLOBAL_UNALLOWED_TYPES
+		GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
 	def_body_code_validation_end( def_global_body );
 
 	return result;
@@ -1569,7 +1569,7 @@ CodeBody def_namespace_body( s32 num, ... )
 	va_list va;
 	va_start(va, num);
 	def_body_code_validation_start( def_namespace_body );
-		AST_BODY_NAMESPACE_UNALLOWED_TYPES
+		GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
 	def_body_code_validation_end( def_namespace_body );
 	va_end(va);
 
@@ -1585,7 +1585,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 	result->Type = Global_Body;
 
 	def_body_code_array_validation_start( def_namespace_body );
-		AST_BODY_NAMESPACE_UNALLOWED_TYPES
+		GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
 	def_body_code_validation_end( def_namespace_body );
 
 	return result;
@@ -1737,7 +1737,7 @@ CodeBody def_struct_body( s32 num, ... )
 	va_list va;
 	va_start(va, num);
 	def_body_code_validation_start( def_struct_body );
-		AST_BODY_STRUCT_UNALLOWED_TYPES
+		GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
 	def_body_code_validation_end( def_struct_body );
 	va_end(va);
 
@@ -1753,7 +1753,7 @@ CodeBody def_struct_body( s32 num, Code* codes )
 	result->Type = Struct_Body;
 
 	def_body_code_array_validation_start( def_struct_body );
-		AST_BODY_STRUCT_UNALLOWED_TYPES
+		GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
 	def_body_code_validation_end( def_struct_body );
 
 	return result;

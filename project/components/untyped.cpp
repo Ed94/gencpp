@@ -12,8 +12,7 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 		char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
 
 		tok_map_arena = Arena::init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
-
-		tok_map = HashTable<StrC>::init( tok_map_arena );
+		tok_map       = HashTable<StrC>::init( tok_map_arena );
 
 		s32 left = num_tokens - 1;
 
