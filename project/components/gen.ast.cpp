@@ -778,7 +778,7 @@ bool AST::validate_body()
 	switch ( Type )
 	{
 		case Class_Body:
-			CheckEntries( AST_BODY_CLASS_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
 		case Enum_Body:
 			for ( Code entry : cast<CodeBody>() )
@@ -791,22 +791,22 @@ bool AST::validate_body()
 			}
 		break;
 		case Export_Body:
-			CheckEntries( AST_BODY_CLASS_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
 		case Extern_Linkage:
-			CheckEntries( AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES );
 		break;
 		case Function_Body:
-			CheckEntries( AST_BODY_FUNCTION_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES );
 		break;
 		case Global_Body:
-			CheckEntries( AST_BODY_GLOBAL_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES );
 		break;
 		case Namespace_Body:
-			CheckEntries( AST_BODY_NAMESPACE_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES );
 		break;
 		case Struct_Body:
-			CheckEntries( AST_BODY_STRUCT_UNALLOWED_TYPES );
+			CheckEntries( GEN_AST_BODY_STRUCT_UNALLOWED_TYPES );
 		break;
 		case Union_Body:
 			for ( Code entry : Body->cast<CodeBody>() )

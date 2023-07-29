@@ -100,10 +100,3 @@ constexpr char const* Attribute_Keyword = stringize( GEN_Attribute_Keyword );
 
 constexpr char const* Attribute_Keyword = "";
 #endif
-
-#ifndef GEN_Define_Attribute_Tokens
-#	define GEN_Define_Attribute_Tokens         \
-	Entry( API_Export, "GEN_API_Export_Code" ) \
-	Entry( API_Import, "GEN_API_Import_Code" )
-#endif
-

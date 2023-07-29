@@ -5,11 +5,6 @@ An attempt at simple staged metaprogramming for c/c++.
 The library API is a composition of code element constructors.  
 These build up a code AST to then serialize with a file builder.
 
-General goal is to have a less than 15k sloc library that takes at most a couple of hours to learn and make use of.
-
-*Why 15k ?* Assuming a seasoned coder of C++ can read and understand around 1000-2000 lines of code per hour, 15,000 could be understood in under 16-18 hours
-and have confidence in modifying for their use case.
-
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
 its not meant to be a black box metaprogramming utility, its meant for the user to extend for their project domain.
 
@@ -30,17 +25,17 @@ The project has reached an *alpha* state, all the current functionality works fo
 
 The project has no external dependencies beyond:
 
-* `errno.h`    (gen.dep.cpp)
-* `stat.h`     (gen.dep.cpp)
-* `stdarg.h`   (gen.dep.hpp)
-* `stddef.h`   (gen.dep.hpp
-* `stdio.h`    (gen.dep.cpp)
-* `copyfile.h` (Mac, gen.dep.cpp)
-* `types.h`    (Linux, gen.dep.cpp)
-* `unistd.h`   (Linux/Mac, gen.dep.cpp)
-* `intrin.h`   (Windows, gen.dep.hpp)
-* `io.h`       (Windows with gcc, gen.dep.cpp)
-* `windows.h`  (Windows, gen.dep.cpp)
+* `errno.h`
+* `stat.h`
+* `stdarg.h`
+* `stddef.h`
+* `stdio.h`
+* `copyfile.h` (Mac)
+* `types.h`    (Linux)
+* `unistd.h`   (Linux/Mac)
+* `intrin.h`   (Windows)
+* `io.h`       (Windows with gcc)
+* `windows.h`  (Windows)
 
 Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
 The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
@@ -561,6 +556,7 @@ The following are provided predefined by the library as they are commonly used:
 * `access_private`
 * `module_global_fragment`
 * `module_private_fragment`
+* `param_varaidc` (Used for varadic definitions)
 * `pragma_once`
 * `spec_const`
 * `spec_consteval`
@@ -586,7 +582,7 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_type_unsigned`
 * `spec_type_short`
 * `spec_type_long`
-* `t_empty`
+* `t_empty` (Used for varaidc macros)
 * `t_auto`
 * `t_void`
 * `t_int`

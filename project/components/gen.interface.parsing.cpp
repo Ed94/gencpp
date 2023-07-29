@@ -4,13 +4,21 @@ These constructors are the most implementation intensive other than the editor o
 
 namespace Parser
 {
-
 	struct Token
 	{
+		// TokType  Type;
+		// s32      Start;
+		// s32      End;
+		// s32      Line;
+		// s32      Column;
+		// TokFlags Flags;
+
 		char const* Text;
 		sptr        Length;
 		TokType     Type;
 		bool 	    IsAssign;
+		s32         Line;
+		s32         Column;
 
 		operator bool()
 		{
@@ -21,60 +29,42 @@ namespace Parser
 		{
 			return { Length, Text };
 		}
+
+		bool is_access_specifier()
+		{
+			return Type >= TokType::Access_Private && Type <= TokType::Access_Public;
+		}
+
+		bool is_attribute()
+		{
+			return Type > TokType::Attributes_Start;
+		}
+
+		bool is_preprocessor()
+		{
+			return Type >= TokType::Preprocess_Define && Type <= TokType::Preprocess_EndIf;
+		}
+
+		bool is_specifier()
+		{
+			return (Type <= TokType::Star && Type >= TokType::Spec_Alignas)
+				|| Type == TokType::Ampersand
+				|| Type == TokType::Ampersand_DBL
+			;
+		}
+
+		AccessSpec to_access_specifier()
+		{
+			return scast(AccessSpec, Type);
+		}
 	};
-
-	internal inline
-	bool tok_is_specifier( Token const& tok )
-	{
-		return (tok.Type <= TokType::Star && tok.Type >= TokType::Spec_Alignas)
-			|| tok.Type == TokType::Ampersand
-			|| tok.Type == TokType::Ampersand_DBL
-		;
-	}
-
-	internal inline
-	bool tok_is_access_specifier( Token const& tok )
-	{
-		return tok.Type >= TokType::Access_Private && tok.Type <= TokType::Access_Public;
-	}
-
-	internal inline
-	AccessSpec tok_to_access_specifier( Token const& tok )
-	{
-		return scast(AccessSpec, tok.Type);
-	}
-
-	internal inline
-	bool tok_is_attribute( Token const& tok )
-	{
-		return tok.Type > TokType::Attributes_Start;
-	}
 
 	struct TokArray
 	{
 		Array<Token> Arr;
 		s32          Idx;
 
-		bool __eat( TokType type, char const* context )
-		{
-			if ( Arr.num() - Idx <= 0 )
-			{
-				log_failure( "gen::%s: No tokens left", context );
-				return false;
-			}
-
-			if ( Arr[Idx].Type != type )
-			{
-				String token_str = String::make( GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
-
-				log_failure( "gen::%s: expected %s, got %s", context, ETokType::to_str(type), ETokType::to_str(Arr[Idx].Type) );
-
-				return false;
-			}
-
-			Idx++;
-			return true;
-		}
+		bool __eat( TokType type );
 
 		Token& current()
 		{
@@ -92,13 +82,87 @@ namespace Parser
 		}
 	};
 
-	TokArray lex( StrC content, bool keep_preprocess_directives = false )
+	struct StackNode
+	{
+		StackNode* Prev;
+
+		Token Name;        // The name of the AST node (if parsed)
+		StrC  ProcName;    // The name of the procedure
+	};
+
+	struct ParseContext
+	{
+		TokArray   Tokens;
+		StackNode* Scope;
+
+		String to_string()
+		{
+			String result = String::make_reserve( GlobalAllocator, kilobytes(4) );
+
+			result.append_fmt("\tContext:\n");
+
+			StackNode* current = Scope;
+			do
+			{
+				String name = String::make( GlobalAllocator, current->Name ? (StrC)current->Name : txt_StrC("Unresolved") );
+
+				result.append_fmt("\tProcedure: %s, AST Name: %s\n\t(%d, %d):", current->ProcName, name );
+				current = current->Prev;
+
+				name.free();
+			}
+			while ( current );
+
+			return result;
+		}
+	};
+
+	global ParseContext Context;
+
+	bool TokArray::__eat( TokType type )
+	{
+		if ( Arr.num() - Idx <= 0 )
+		{
+			log_failure( "No tokens left\n", Context.Scope->ProcName );
+			return false;
+		}
+
+		if ( Arr[Idx].Type != type )
+		{
+			String token_str = String::make( GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
+
+			log_failure( "gen::%s: expected %s, got %s",  Context.Scope->ProcName, ETokType::to_str(type), ETokType::to_str(Arr[Idx].Type) );
+
+			return false;
+		}
+
+		Idx++;
+		return true;
+	}
+
+	enum TokFlags : u32
+	{
+		IsAssign = bit(0),
+	};
+
+	TokArray lex( StrC content, bool keep_preprocess_directives = true )
 	{
 	#	define current ( * scanner )
 
-	#	define move_forward() \
-		left--;               \
-		scanner++
+	#	define move_forward()       \
+		{                           \
+			if ( current == '\n' )  \
+			{                       \
+				line++;             \
+				column = 0;         \
+			}                       \
+			else                    \
+			{                       \
+				column++;           \
+			}                       \
+			left--;                 \
+			scanner++;              \
+		}
 
 	#	define SkipWhitespace()                     \
 		while ( left && char_is_space( current ) )  \
@@ -126,6 +190,9 @@ namespace Parser
 		char const* word        = scanner;
 		s32         word_length = 0;
 
+		s32 line   = 0;
+		s32 column = 0;
+
 		SkipWhitespace();
 		if ( left <= 0 )
 		{
@@ -142,7 +209,7 @@ namespace Parser
 
 		while (left )
 		{
-			Token token = { nullptr, 0, TokType::Invalid, false };
+			Token token = { nullptr, 0, TokType::Invalid, false, line, column };
 
 			SkipWhitespace();
 			if ( left <= 0 )
@@ -153,11 +220,15 @@ namespace Parser
 				case '#':
 					token.Text   = scanner;
 					token.Length = 1;
-					token.Type   = TokType::Preprocessor_Directive;
 					move_forward();
 
 					while (left && current != '\n' )
 					{
+						if ( token.Type == ETokType::Invalid && current == ' ' )
+						{
+							token.Type = ETokType::to_type( token );
+						}
+
 						if ( current == '\\'  )
 						{
 							move_forward();
@@ -178,8 +249,9 @@ namespace Parser
 					token.Length = 1;
 					token.Type   = TokType::Access_MemberSymbol;
 
-					if (left)
+					if (left) {
 						move_forward();
+					}
 
 					if ( current == '.' )
 					{
@@ -577,7 +649,7 @@ namespace Parser
 
 			if ( token.Type != TokType::Invalid )
 			{
-				if ( token.Type == TokType::Preprocessor_Directive && keep_preprocess_directives == false )
+				if ( token.is_preprocessor() && keep_preprocess_directives == false )
 					continue;
 
 				Tokens.append( token );
@@ -608,6 +680,7 @@ namespace Parser
 }
 
 #pragma region Helper Macros
+
 #	define check_parse_args( func, def )                                   \
 if ( def.Len <= 0 )                                                        \
 {                                                                          \
@@ -620,13 +693,16 @@ if ( def.Ptr == nullptr )                                                  \
 	return CodeInvalid;                                                    \
 }
 
-#	define nexttok 	    toks.next()
-#	define currtok      toks.current()
-#	define prevtok      toks.previous()
-#	define eat( Type_ ) toks.__eat( Type_, context )
-#	define left         ( toks.Arr.num() - toks.Idx )
+#	define nexttok 	    Context.Tokens.next()
+#	define currtok      Context.Tokens.current()
+#	define prevtok      Context.Tokens.previous()
+#	define eat( Type_ ) Context.Tokens.__eat( Type_ )
+#	define left         ( Context.Tokens.Arr.num() - Context.Tokens.Idx )
 
 #	define check( Type_ ) ( left && currtok.Type == Type_ )
+
+// #	define 
+
 #pragma endregion Helper Macros
 
 struct ParseContext
@@ -635,28 +711,28 @@ struct ParseContext
 	char const*   Fn;
 };
 
-internal Code parse_function_body( Parser::TokArray& toks, char const* context );
-internal Code parse_global_nspace( Parser::TokArray& toks, char const* context );
+internal Code parse_function_body();
+internal Code parse_global_nspace();
 
-internal CodeClass     parse_class           ( Parser::TokArray& toks, char const* context );
-internal CodeEnum      parse_enum            ( Parser::TokArray& toks, char const* context );
-internal CodeBody      parse_export_body     ( Parser::TokArray& toks, char const* context );
-internal CodeBody      parse_extern_link_body( Parser::TokArray& toks, char const* context );
-internal CodeExtern    parse_exten_link      ( Parser::TokArray& toks, char const* context );
-internal CodeFriend    parse_friend          ( Parser::TokArray& toks, char const* context );
-internal CodeFn        parse_function        ( Parser::TokArray& toks, char const* context );
-internal CodeNamespace parse_namespace       ( Parser::TokArray& toks, char const* context );
-internal CodeOpCast    parse_operator_cast   ( Parser::TokArray& toks, char const* context );
-internal CodeStruct    parse_struct          ( Parser::TokArray& toks, char const* context );
-internal CodeVar       parse_variable        ( Parser::TokArray& toks, char const* context );
-internal CodeTemplate  parse_template        ( Parser::TokArray& toks, char const* context );
-internal CodeType      parse_type            ( Parser::TokArray& toks, char const* context );
-internal CodeTypedef   parse_typedef         ( Parser::TokArray& toks, char const* context );
-internal CodeUnion     parse_union           ( Parser::TokArray& toks, char const* context );
-internal CodeUsing     parse_using           ( Parser::TokArray& toks, char const* context );
+internal CodeClass     parse_class           ();
+internal CodeEnum      parse_enum            ();
+internal CodeBody      parse_export_body     ();
+internal CodeBody      parse_extern_link_body();
+internal CodeExtern    parse_exten_link      ();
+internal CodeFriend    parse_friend          ();
+internal CodeFn        parse_function        ();
+internal CodeNamespace parse_namespace       ();
+internal CodeOpCast    parse_operator_cast   ();
+internal CodeStruct    parse_struct          ();
+internal CodeVar       parse_variable        ();
+internal CodeTemplate  parse_template        ();
+internal CodeType      parse_type            ();
+internal CodeTypedef   parse_typedef         ();
+internal CodeUnion     parse_union           ();
+internal CodeUsing     parse_using           ();
 
 internal inline
-Code parse_array_decl( Parser::TokArray& toks, char const* context )
+Code parse_array_decl()
 {
 	using namespace Parser;
 
@@ -707,7 +783,7 @@ Code parse_array_decl( Parser::TokArray& toks, char const* context )
 }
 
 internal inline
-CodeAttributes parse_attributes( Parser::TokArray& toks, char const* context )
+CodeAttributes parse_attributes()
 {
 	using namespace Parser;
 
@@ -759,7 +835,7 @@ CodeAttributes parse_attributes( Parser::TokArray& toks, char const* context )
 		s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
 	}
 
-	else if ( tok_is_attribute( currtok ) )
+	else if ( currtok.is_attribute() )
 	{
 		eat(currtok.Type);
 		s32 len = start.Length;
@@ -775,7 +851,7 @@ CodeAttributes parse_attributes( Parser::TokArray& toks, char const* context )
 }
 
 internal inline
-Parser::Token parse_identifier( Parser::TokArray& toks, char const* context )
+Parser::Token parse_identifier()
 {
 	using namespace Parser;
 	Token name = currtok;
@@ -788,7 +864,7 @@ Parser::Token parse_identifier( Parser::TokArray& toks, char const* context )
 
 		if ( left == 0 )
 		{
-			log_failure( "%s: Error, unexpected end of type definition, expected identifier", context );
+			log_failure( "%s: Error, unexpected end of type definition, expected identifier", Context.to_string() );
 			return { nullptr, 0, TokType::Invalid };
 		}
 
@@ -806,7 +882,7 @@ Parser::Token parse_identifier( Parser::TokArray& toks, char const* context )
 }
 
 internal
-CodeParam parse_params( Parser::TokArray& toks, char const* context, bool use_template_capture = false )
+CodeParam parse_params( bool use_template_capture = false )
 {
 	using namespace Parser;
 	using namespace ECode;
@@ -973,15 +1049,13 @@ CodeFn parse_function_after_name(
 	, CodeSpecifiers    specifiers
 	, CodeType          ret_type
 	, StrC              name
-	, Parser::TokArray& toks
-	, char const*        context
 )
 {
 	using namespace Parser;
 
 	CodeParam params = parse_params( toks, stringize(parse_function) );
 
-	while ( left && tok_is_specifier( currtok ) )
+	while ( left && currtok.is_specifier() )
 	{
 		specifiers.append( ESpecifier::to_type(currtok) );
 		eat( currtok.Type );
@@ -1041,12 +1115,12 @@ CodeFn parse_function_after_name(
 }
 
 internal inline
-CodeOperator parse_operator_after_ret_type( ModuleFlag mflags
+CodeOperator parse_operator_after_ret_type( 
+	  ModuleFlag mflags
 	, CodeAttributes attributes
 	, CodeSpecifiers  specifiers
 	, CodeType       ret_type
-	, Parser::TokArray& toks
-	, char const* context )
+)
 {
 	using namespace Parser;
 	using namespace EOperator;
@@ -1251,7 +1325,7 @@ CodeOperator parse_operator_after_ret_type( ModuleFlag mflags
 	// Parse Params
 	CodeParam params = parse_params( toks, stringize(parse_operator) );
 
-	while ( left && tok_is_specifier( currtok ) )
+	while ( left && currtok.is_specifier() )
 	{
 		specifiers.append( ESpecifier::to_type(currtok) );
 		eat( currtok.Type );
@@ -1341,7 +1415,7 @@ CodeVar parse_variable_after_name(
 }
 
 internal inline
-Code parse_variable_assignment( Parser::TokArray& toks, char const* context )
+Code parse_variable_assignment()
 {
 	using namespace Parser;
 
@@ -1372,7 +1446,7 @@ Code parse_variable_assignment( Parser::TokArray& toks, char const* context )
 }
 
 internal inline
-Code parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers, Parser::TokArray& toks, char const* context )
+Code parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers )
 {
 	using namespace Parser;
 
@@ -1416,7 +1490,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 }
 
 internal
-CodeBody parse_class_struct_body( Parser::TokType which, Parser::TokArray& toks, char const* context )
+CodeBody parse_class_struct_body( Parser::TokType which )
 {
 	using namespace Parser;
 	using namespace ECode;
@@ -1508,7 +1582,7 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::TokArray& toks,
 			GEN_Define_Attribute_Tokens
 		#undef Entry
 			{
-				attributes = parse_attributes( toks, context );
+				attributes = parse_attributes();
 			}
 			//! Fallthrough intended
 			case TokType::Spec_Consteval:
@@ -1522,7 +1596,7 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::TokArray& toks,
 				SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 				s32        NumSpecifiers = 0;
 
-				while ( left && tok_is_specifier( currtok ) )
+				while ( left && currtok.is_specifier() )
 				{
 					SpecifierT spec = ESpecifier::to_type( currtok );
 
@@ -1597,7 +1671,7 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::TokArray& toks,
 }
 
 internal
-Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char const* context )
+Code parse_class_struct( Parser::TokType which )
 {
 	using namespace Parser;
 
@@ -1625,7 +1699,7 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 
 	eat( which );
 
-	attributes = parse_attributes( toks, context );
+	attributes = parse_attributes();
 
 	if ( check( TokType::Identifier ) )
 		name = parse_identifier( toks, context );
@@ -1638,9 +1712,9 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 	{
 		eat( TokType::Assign_Classifer );
 
-		if ( tok_is_access_specifier( currtok ) )
+		if ( currtok.is_access_specifier() )
 		{
-			access = tok_to_access_specifier( currtok );
+			access = currtok.to_access_specifier();
 		}
 
 		Token parent_tok = parse_identifier( toks, context );
@@ -1650,7 +1724,7 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 		{
 			eat(TokType::Access_Public);
 
-			if ( tok_is_access_specifier( currtok ) )
+			if ( currtok.is_access_specifier() )
 			{
 				eat(currtok.Type);
 			}
@@ -1685,7 +1759,7 @@ Code parse_class_struct( Parser::TokType which, Parser::TokArray& toks, char con
 }
 
 internal
-Code parse_function_body( Parser::TokArray& toks, char const* context )
+Code parse_function_body()
 {
 	using namespace Parser;
 	using namespace ECode;
@@ -1724,7 +1798,7 @@ Code parse_function_body( Parser::TokArray& toks, char const* context )
 }
 
 internal
-CodeBody parse_global_nspace( CodeT which, Parser::TokArray& toks, char const* context )
+CodeBody parse_global_nspace( CodeT which )
 {
 	using namespace Parser;
 	using namespace ECode;
@@ -1811,7 +1885,7 @@ CodeBody parse_global_nspace( CodeT which, Parser::TokArray& toks, char const* c
 			GEN_Define_Attribute_Tokens
 		#undef Entry
 			{
-				attributes = parse_attributes( toks, context );
+				attributes = parse_attributes();
 			}
 			//! Fallthrough intentional
 			case TokType::Spec_Consteval:
@@ -1826,7 +1900,7 @@ CodeBody parse_global_nspace( CodeT which, Parser::TokArray& toks, char const* c
 				SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 				s32        NumSpecifiers = 0;
 
-				while ( left && tok_is_specifier( currtok ) )
+				while ( left && currtok.is_specifier() )
 				{
 					SpecifierT spec = ESpecifier::to_type( currtok );
 
@@ -1890,7 +1964,7 @@ CodeBody parse_global_nspace( CodeT which, Parser::TokArray& toks, char const* c
 }
 
 internal
-CodeClass parse_class( Parser::TokArray& toks, char const* context )
+CodeClass parse_class()
 {
 	return (CodeClass) parse_class_struct( Parser::TokType::Decl_Class, toks, context );
 }
@@ -1908,7 +1982,7 @@ CodeClass parse_class( StrC def )
 }
 
 internal
-CodeEnum parse_enum( Parser::TokArray& toks, char const* context )
+CodeEnum parse_enum()
 {
 	using namespace Parser;
 	using namespace ECode;
@@ -2027,7 +2101,7 @@ CodeEnum parse_enum( StrC def )
 }
 
 internal inline
-CodeBody parse_export_body( Parser::TokArray& toks, char const* context )
+CodeBody parse_export_body()
 {
 	return parse_global_nspace( ECode::Export_Body, toks, context );
 }
@@ -2170,9 +2244,9 @@ CodeFn parse_functon( Parser::TokArray& toks, char const* context )
 		eat( TokType::Module_Export );
 	}
 
-	attributes = parse_attributes( toks, context );
+	attributes = parse_attributes();
 
-	while ( left && tok_is_specifier( currtok ) )
+	while ( left && currtok.is_specifier() )
 	{
 		SpecifierT spec = ESpecifier::to_type( currtok );
 
@@ -2294,9 +2368,9 @@ CodeOperator parse_operator( Parser::TokArray& toks, char const* context )
 		eat( TokType::Module_Export );
 	}
 
-	attributes = parse_attributes( toks, context );
+	attributes = parse_attributes();
 
-	while ( left && tok_is_specifier( currtok ) )
+	while ( left && currtok.is_specifier() )
 	{
 		SpecifierT spec = ESpecifier::to_type( currtok );
 
@@ -2492,9 +2566,9 @@ CodeTemplate parse_template( Parser::TokArray& toks, char const* context )
 		SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 		s32        NumSpecifiers = 0;
 
-		attributes = parse_attributes( toks, stringize(parse_template) );
+		attributes = parse_attributes();
 
-		while ( left && tok_is_specifier( currtok ) )
+		while ( left && currtok.is_specifier() )
 		{
 			SpecifierT spec = ESpecifier::to_type( currtok );
 
@@ -2576,9 +2650,9 @@ CodeType parse_type( Parser::TokArray& toks, char const* context )
 	Token name      = { nullptr, 0, TokType::Invalid };
 	Token brute_sig = { currtok.Text, 0, TokType::Invalid };
 
-	CodeAttributes attributes = parse_attributes( toks, context );
+	CodeAttributes attributes = parse_attributes();
 
-	while ( left && tok_is_specifier( currtok ) )
+	while ( left && currtok.is_specifier() )
 	{
 		SpecifierT spec = ESpecifier::to_type( currtok );
 
@@ -2651,7 +2725,7 @@ CodeType parse_type( Parser::TokArray& toks, char const* context )
 		}
 	}
 
-	while ( left && tok_is_specifier( currtok ) )
+	while ( left && currtok.is_specifier() )
 	{
 		SpecifierT spec = ESpecifier::to_type( currtok );
 
@@ -2842,7 +2916,7 @@ CodeUnion parse_union( Parser::TokArray& toks, char const* context )
 
 	eat( TokType::Decl_Union );
 
-	CodeAttributes attributes = parse_attributes( toks, context );
+	CodeAttributes attributes = parse_attributes();
 
 	StrC name = { 0, nullptr };
 
@@ -2986,11 +3060,9 @@ CodeUsing parse_using( StrC def )
 }
 
 internal
-CodeVar parse_variable( Parser::TokArray& toks, char const* context )
+CodeVar parse_variable()
 {
 	using namespace Parser;
-
-	Token name = { nullptr, 0, TokType::Invalid };
 
 	SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 	s32        NumSpecifiers = 0;
@@ -3005,7 +3077,7 @@ CodeVar parse_variable( Parser::TokArray& toks, char const* context )
 		eat( TokType::Module_Export );
 	}
 
-	attributes = parse_attributes( toks, context );
+	attributes = parse_attributes();
 
 	while ( left && tok_is_specifier( currtok ) )
 	{
@@ -3050,24 +3122,32 @@ CodeVar parse_variable( Parser::TokArray& toks, char const* context )
 	if ( type == Code::Invalid )
 		return CodeInvalid;
 
-	name = currtok;
+	Context.Scope->Name = current;
 	eat( TokType::Identifier );
 
-	CodeVar result = parse_variable_after_name( mflags, attributes, specifiers, type, name, toks, context );
+	CodeVar result = parse_variable_after_name( mflags, attributes, specifiers, type, Context.Scope->Name, Context.Tokens, Context.Scope->ProcName );
 
 	return result;
 }
 
 CodeVar parse_variable( StrC def )
 {
-	check_parse_args( parse_variable, def );
 	using namespace Parser;
+	check_parse_args( parse_variable, def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
-	return parse_variable( toks, stringize(parse_variable) );
+	Context.Tokens = toks;
+	Parser::StackNode root
+	{
+		toks.current(),
+		{ nullptr, 0, TokType::Invalid },
+		name(parse_variable)
+	};
+
+	return parse_variable();
 }
 
 // Undef helper macros
@@ -3075,4 +3155,3 @@ CodeVar parse_variable( StrC def )
 #	undef curr_tok
 #	undef eat
 #	undef left
-

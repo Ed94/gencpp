@@ -6,7 +6,7 @@ using namespace gen;
 
 CodeBody gen_ecode( char const* path )
 {
-	char scratch_mem[kilobytes(1)];
+	char  scratch_mem[kilobytes(1)];
 	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
 	file_read_contents( scratch, zero_terminate, path );
@@ -50,8 +50,7 @@ CodeBody gen_ecode( char const* path )
 #pragma pop_macro( "local_persist" )
 
 	CodeNamespace nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
-
-	CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
+	CodeUsing    code_t  = def_using( name(CodeT), def_type( name(ECode::Type) ) );
 
 	return def_global_body( args( nspace, code_t ) );
 }
@@ -209,7 +208,7 @@ CodeBody gen_especifier( char const* path )
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 {
-	char scratch_mem[kilobytes(64)];
+	char  scratch_mem[kilobytes(64)];
 	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
 	FileContents enum_content = file_read_contents( scratch, zero_terminate, etok_path );
@@ -217,8 +216,6 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	CSV_Object csv_enum_nodes;
 	csv_parse( &csv_enum_nodes, rcast(char*, enum_content.data), GlobalAllocator, false );
 
-	// memset( scratch_mem, 0, sizeof(scratch_mem) );
-	// scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
 	FileContents attrib_content = file_read_contents( scratch, zero_terminate, attr_path );
 
 	CSV_Object csv_attr_nodes;

@@ -9,6 +9,12 @@ namespace Parser
 	Attributes_Start is only used to indicate the start of the user_defined attribute list.
 */
 
+#ifndef GEN_Define_Attribute_Tokens
+#	define GEN_Define_Attribute_Tokens         \
+	Entry( API_Export, "GEN_API_Export_Code" ) \
+	Entry( API_Import, "GEN_API_Import_Code" )
+#endif
+
 #	define Define_TokType \
 	Entry( Invalid,                "INVALID" )          \
 	Entry( Access_Private,         "private" )          \
@@ -49,8 +55,12 @@ namespace Parser
 	Entry( Module_Export,          "export" )           \
 	Entry( Number,                 "number" )           \
 	Entry( Operator,               "operator" )         \
-	Entry( Preprocessor_Directive, "#")                 \
-	Entry( Preprocessor_Include,   "include" )          \
+	Entry( Preprocess_Define,      "#define")           \
+	Entry( Preproces_Include,      "include" )          \
+	Entry( Preprocess_If,          "#if")               \
+	Entry( Preprocess_Elif,        "#elif")             \
+	Entry( Preprocess_Else,        "#else")             \
+	Entry( Preprocess_EndIf,       "#endif")            \
 	Entry( Spec_Alignas,           "alignas" )          \
 	Entry( Spec_Const,             "const" )            \
 	Entry( Spec_Consteval,         "consteval" )        \
