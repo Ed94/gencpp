@@ -2,7 +2,7 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
-#include "filesystem/scanner.hpp"
+#include "file_processors/scanner.hpp"
 #include "helpers/helper.hpp"
 
 using namespace gen;

@@ -27,7 +27,7 @@ GEN_NS_BEGIN
 #include "components/interface.parsing.cpp"
 #include "components/untyped.cpp"
 
-#include "file_proecessors/builder.cpp"
+#include "file_processors/builder.cpp"
 
 GEN_NS_END
 
