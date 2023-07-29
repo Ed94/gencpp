@@ -1738,7 +1738,6 @@ internal
 Code parse_class_struct( Parser::TokType which )
 {
 	using namespace Parser;
-	push_scope();
 
 	if ( which != TokType::Decl_Class && which != TokType::Decl_Struct )
 	{
@@ -1814,7 +1813,6 @@ Code parse_class_struct( Parser::TokType which )
 		result = def_struct( name, body, (CodeType)parent, access, attributes, mflags );
 
 	interfaces.free();
-	Context.pop();
 	return result;
 }
 
@@ -1865,7 +1863,6 @@ CodeBody parse_global_nspace( CodeT which )
 {
 	using namespace Parser;
 	using namespace ECode;
-	push_scope();
 
 	if ( which != Namespace_Body && which != Global_Body && which != Export_Body && which != Extern_Linkage_Body )
 		return CodeInvalid;
@@ -2024,7 +2021,6 @@ CodeBody parse_global_nspace( CodeT which )
 	if ( which != Global_Body )
 		eat( TokType::BraceCurly_Close );
 
-	Context.pop();
 	return result;
 }
 
@@ -2047,6 +2043,7 @@ CodeClass parse_class( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	push_scope();
 	CodeClass result = (CodeClass) parse_class_struct( TokType::Decl_Class );
 	Context.pop();
@@ -2171,6 +2168,7 @@ CodeEnum parse_enum( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_enum();
 }
 
@@ -2193,6 +2191,7 @@ CodeBody parse_export_body( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_export_body();
 }
 
@@ -2247,6 +2246,7 @@ CodeExtern parse_extern_link( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_extern_link();
 }
 
@@ -2309,6 +2309,7 @@ CodeFriend parse_friend( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_friend();
 }
 
@@ -2388,6 +2389,7 @@ CodeFn parse_function( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return (CodeFn) parse_functon();
 }
 
@@ -2400,6 +2402,7 @@ CodeBody parse_global_body( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	push_scope();
 	CodeBody result = parse_global_nspace( ECode::Global_Body );
 	Context.pop();
@@ -2440,6 +2443,7 @@ CodeNamespace parse_namespace( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_namespace();
 }
 
@@ -2512,6 +2516,7 @@ CodeOperator parse_operator( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return (CodeOperator) parse_operator();
 }
 
@@ -2589,6 +2594,7 @@ CodeOpCast parse_operator_cast( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_operator_cast();
 }
 
@@ -2611,6 +2617,7 @@ CodeStruct parse_struct( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return (CodeStruct) parse_class_struct( TokType::Decl_Struct );
 }
 
@@ -2738,6 +2745,7 @@ CodeTemplate parse_template( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_template();
 }
 
@@ -2927,6 +2935,7 @@ CodeType parse_type( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_type();
 }
 
@@ -3004,6 +3013,7 @@ CodeTypedef parse_typedef( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_typedef();
 }
 
@@ -3078,6 +3088,7 @@ CodeUnion parse_union( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_union();
 }
 
@@ -3167,6 +3178,7 @@ CodeUsing parse_using( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_using();
 }
 
@@ -3252,6 +3264,7 @@ CodeVar parse_variable( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
+	Context.Tokens = toks;
 	return parse_variable();
 }
 

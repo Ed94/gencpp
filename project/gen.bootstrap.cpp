@@ -129,7 +129,7 @@ int gen_main()
 		CodeBody especifier = gen_especifier( "enums/ESpecifier.csv" );
 
 		// TODO : Make this optional to include
-		Code builder = scan_file( "file_proecessors/builder.hpp" );
+		Code builder = scan_file( "file_processors/builder.hpp" );
 
 		Builder
 		header;
@@ -160,7 +160,7 @@ int gen_main()
 
 	// gen.cpp
 	{
-		Code        impl_start      = scan_file( "components/gen.impl_start.cpp" );
+		Code        impl_start      = scan_file( "components/impl_start.cpp" );
 		CodeInclude header          = def_include( txt_StrC("gen.hpp") );
 		Code        data 	        = scan_file( "components/static_data.cpp" );
 		Code        ast_case_macros = scan_file( "components/ast_case_macros.cpp" );
@@ -174,7 +174,7 @@ int gen_main()
 		CodeNamespace parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
 		// TODO : Make this optional to include
-		Code builder = scan_file( "file_proecessors/builder.cpp" );
+		Code builder = scan_file( "file_processors/builder.cpp" );
 
 		Builder
 		impl;

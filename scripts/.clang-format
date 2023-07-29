@@ -3,7 +3,7 @@
 AccessModifierOffset: -4
 
 AlignAfterOpenBracket: BlockIndent
-AlignArrayOfStructures: Right
+AlignArrayOfStructures: Left
 AlignConsecutiveAssignments:
   Enabled: true
   AcrossEmptyLines: false
@@ -61,7 +61,7 @@ BraceWrapping:
   BeforeLambdaBody: false
   BeforeWhile: false
 
-# BreakAfterAttributes: Always
+BreakAfterAttributes: Always
 # BreakArrays: false
 # BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeBinaryOperators: NonAssignment
@@ -96,7 +96,7 @@ IncludeBlocks: Preserve
 IndentCaseBlocks: false
 IndentCaseLabels: false
 IndentExternBlock: AfterExternBlock
-IndentGotoLabels: false
+IndentGotoLabels: true
 IndentPPDirectives: AfterHash
 IndentRequires: true
 IndentWidth: 4
@@ -127,7 +127,7 @@ SeparateDefinitionBlocks: Always
 
 ShortNamespaceLines: 40
 
-SortIncludes: true
+SortIncludes: false
 SortUsingDeclarations: true
 
 SpaceAfterCStyleCast: false
