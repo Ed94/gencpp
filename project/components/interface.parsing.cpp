@@ -97,16 +97,18 @@ namespace Parser
 
 			result.append_fmt("\tContext:\n");
 
-			char const* current = Tokens.current().Text;
-			sptr        length  = Tokens.current().Length;
-			while ( current != Tokens.Arr.back().Text && *current != '\n' )
+			Token last_valid = Tokens.Idx >= Tokens.Arr.num() ? Tokens.Arr[Tokens.Arr.num() -1] : Tokens.current();
+
+			char const* current = last_valid.Text;
+			sptr        length  = last_valid.Length;
+			while ( current <= Tokens.Arr.back().Text && *current != '\n' )
 			{
 				current++;
-				length--;
+				length++;
 			}
 
-			String line = String::make( GlobalAllocator, { length, Tokens.current().Text } );
-			result.append_fmt("\t(%d, %d): %s", Tokens.current().Line, Tokens.current().Column, line );
+			String line = String::make( GlobalAllocator, { length, last_valid.Text } );
+			result.append_fmt("\t(%d, %d): %s\n", last_valid.Line, last_valid.Column, line );
 			line.free();
 
 			StackNode* curr_scope = Scope;
@@ -114,16 +116,16 @@ namespace Parser
 			{
 				if ( curr_scope->Name )
 				{
-					result.append_fmt("\tProcedure: %s, AST Name: %s\n", curr_scope->ProcName, (StrC)curr_scope->Name );
+					result.append_fmt("\tProcedure: %s, AST Name: %s\n", curr_scope->ProcName.Ptr, (StrC)curr_scope->Name );
 				}
 				else
 				{
-					result.append_fmt("\tProcedure: %s\n", curr_scope->ProcName );
+					result.append_fmt("\tProcedure: %s\n", curr_scope->ProcName.Ptr );
 				}
 
 				curr_scope = curr_scope->Prev;
 			}
-			while ( current );
+			while ( curr_scope );
 			return result;
 		}
 
@@ -901,10 +903,39 @@ Parser::Token parse_identifier()
 
 		name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
 		eat( TokType::Identifier );
+
+		if ( check( TokType::Operator ) && currtok.Text[0] == '<' )
+		{
+			eat( TokType::Operator );
+
+			// Template arguments can be complex so were not validating if they are correct.
+			s32 level = 0;
+			while ( left && (currtok.Text[0] != '>' || level > 0 ) )
+			{
+				if ( currtok.Text[0] == '<' )
+					level++;
+
+				else if ( currtok.Text[0] == '>' && level > 0 )
+					level--;
+
+				eat( currtok.Type );
+			}
+
+			if ( left == 0 )
+			{
+				log_failure( "Error, unexpected end of template arguments\n%s", Context.to_string() );
+				return { nullptr, 0, TokType::Invalid };
+			}
+
+			eat( TokType::Operator );
+			name.Length = ( (sptr)prevtok.Text + (sptr)prevtok.Length ) - (sptr)name.Text;
+		}
 	}
 
 	if ( check( TokType::Operator ) && currtok.Text[0] == '<' )
 	{
+		eat( TokType::Operator );
+
 		// Template arguments can be complex so were not validating if they are correct.
 		s32 level = 0;
 		while ( left && (currtok.Text[0] != '>' || level > 0 ) )

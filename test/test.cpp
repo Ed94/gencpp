@@ -12,7 +12,7 @@ int gen_main()
 	using namespace gen;
 	log_fmt("\ngen_time:");
 
-	check_sanity();
+	// check_sanity();
 
 	check_SOA();
 

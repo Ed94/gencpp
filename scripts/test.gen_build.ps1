@@ -1,2 +1,2 @@
 cls
-Invoke-Expression "& $(Join-Path $PSScriptRoot 'build.ci.ps1') $args" 
+Invoke-Expression "& $(Join-Path $PSScriptRoot 'test.gen_build.ci.ps1') $args" 
