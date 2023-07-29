@@ -9,8 +9,8 @@ namespace Parser
 	Attributes_Start is only used to indicate the start of the user_defined attribute list.
 */
 
-#ifndef GEN_Define_Attribute_Tokens
-#	define GEN_Define_Attribute_Tokens         \
+#ifndef GEN_DEFINE_ATTRIBUTE_TOKENS
+#	define GEN_DEFINE_ATTRIBUTE_TOKENS         \
 	Entry( API_Export, "GEN_API_Export_Code" ) \
 	Entry( API_Import, "GEN_API_Import_Code" )
 #endif
@@ -97,7 +97,7 @@ namespace Parser
 		{
 		#	define Entry( Name_, Str_ ) Name_,
 			Define_TokType
-			GEN_Define_Attribute_Tokens
+			GEN_DEFINE_ATTRIBUTE_TOKENS
 		#	undef Entry
 			NumTokens,
 		};
@@ -110,7 +110,7 @@ namespace Parser
 			{
 			#	define Entry( Name_, Str_ ) { sizeof(Str_), Str_ },
 				Define_TokType
-				GEN_Define_Attribute_Tokens
+				GEN_DEFINE_ATTRIBUTE_TOKENS
 			#	undef Entry
 			};
 
@@ -137,7 +137,7 @@ namespace Parser
 			{
 			#	define Entry( Name_, Str_ ) Str_,
 				Define_TokType
-				GEN_Define_Attribute_Tokens
+				GEN_DEFINE_ATTRIBUTE_TOKENS
 			#	undef Entry
 			};
 

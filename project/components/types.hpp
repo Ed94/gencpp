@@ -68,7 +68,7 @@ ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
 
 	Override these to change the attribute to your own unique identifier convention.
 
-	The tokenizer identifies attribute defines with the GEN_Define_Attribute_Tokens macros.
+	The tokenizer identifies attribute defines with the GEN_DEFINE_ATTRIBUTE_TOKENS macros.
 	See the example below and the Define_TokType macro used in gen.cpp to know the format.
 	While the library can parse raw attributes, most projects use defines to wrap them for compiler
 	platform indendence. The token define allows support for them without having to modify the library.

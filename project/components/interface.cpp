@@ -105,7 +105,7 @@ void define_constants()
 #endif
 #	undef def_constant_code_type
 
-	t_empty = (CodeType) make_code();
+	t_empty          = (CodeType) make_code();
 	t_empty->Type    = ECode::Typename;
 	t_empty->Name    = get_cached_string( txt_StrC("") );
 	t_empty.set_global();
@@ -127,12 +127,12 @@ void define_constants()
 	access_private->Name = get_cached_string( txt_StrC("private:") );
 	access_private.set_global();
 
-	access_protected = make_code();
+	access_protected       = make_code();
 	access_protected->Type = ECode::Access_Protected;
 	access_protected->Name = get_cached_string( txt_StrC("protected:") );
 	access_protected.set_global();
 
-	access_public = make_code();
+	access_public       = make_code();
 	access_public->Type = ECode::Access_Public;
 	access_public->Name = get_cached_string( txt_StrC("public:") );
 	access_public.set_global();

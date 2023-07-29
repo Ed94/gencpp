@@ -1,4 +1,4 @@
-#include "helpers/gen.push_ignores.inline.hpp"
+#include "helpers/push_ignores.inline.hpp"
 
 // ReSharper disable CppClangTidyClangDiagnosticSwitchEnum
 
@@ -16,19 +16,19 @@
 
 GEN_NS_BEGIN
 
-#include "components/gen.data.cpp"
+#include "components/static_data.cpp"
 
-#include "components/gen.ast_case_macros.cpp"
-#include "components/gen.ast.cpp"
+#include "components/ast_case_macros.cpp"
+#include "components/ast.cpp"
 
-#include "components/gen.interface.cpp"
-#include "components/gen.interface.upfront.cpp"
-#include "components/gen.etoktype.cpp"
-#include "components/gen.interface.parsing.cpp"
-#include "components/gen.untyped.cpp"
+#include "components/interface.cpp"
+#include "components/interface.upfront.cpp"
+#include "components/etoktype.cpp"
+#include "components/interface.parsing.cpp"
+#include "components/untyped.cpp"
 
-#include "filesystem/gen.builder.cpp"
+#include "file_proecessors/builder.cpp"
 
 GEN_NS_END
 
-#include "helpers/gen.pop_ignores.inline.hpp"
+#include "helpers/pop_ignores.inline.hpp"
