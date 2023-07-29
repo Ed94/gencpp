@@ -20,6 +20,7 @@ GEN_NS_BEGIN
 #include "dependencies/string_ops.hpp"
 #include "dependencies/printing.hpp"
 #include "dependencies/containers.hpp"
+#include "dependencies/hashing.hpp"
 #include "dependencies/string.hpp"
 #include "dependencies/parsing.hpp"
 #include "dependencies/timing.hpp"

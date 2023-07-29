@@ -14,7 +14,7 @@ int gen_main()
 
 	// check_sanity();
 
-	check_SOA();
+	checkSOA();
 
 	return 0;
 }

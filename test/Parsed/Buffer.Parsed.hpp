@@ -143,7 +143,7 @@ Array<GenBufferRequest> GenBufferRequests;
 void gen__buffer_request( StrC type, StrC dep = {} )
 {
 	do_once_start
-		GenBufferRequests = Array<GenBufferRequest>::init( Memory::GlobalAllocator );
+		GenBufferRequests = Array<GenBufferRequest>::init( GlobalAllocator );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.

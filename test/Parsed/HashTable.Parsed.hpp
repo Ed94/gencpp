@@ -292,7 +292,7 @@ Array<GenHashTableRequest> GenHashTableRequests;
 void gen__hashtable_request( StrC type, StrC dep = {} )
 {
 	do_once_start
-		GenHashTableRequests = Array<GenHashTableRequest>::init( Memory::GlobalAllocator );
+		GenHashTableRequests = Array<GenHashTableRequest>::init( GlobalAllocator );
 
 		gen_array( sw );
 	do_once_end

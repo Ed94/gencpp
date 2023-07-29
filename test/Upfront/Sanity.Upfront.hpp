@@ -286,8 +286,8 @@ u32 gen_sanity_upfront()
 
 	// Using
 	{
-		CodeUsing          reg    = def_using( name(TestUsing), t_u8 );
-		CodeUsingNamespace nspace = def_using_namespace( name(TestNamespace) );
+		CodeUsing reg    = def_using( name(TestUsing), t_u8 );
+		CodeUsing nspace = def_using_namespace( name(TestNamespace) );
 
 		gen_sanity_file.print(reg);
 		gen_sanity_file.print(nspace);
