@@ -33,8 +33,8 @@ namespace Parser
 	Entry( BraceSquare_Close,      "]" )                \
 	Entry( Capture_Start,          "(" )                \
 	Entry( Capture_End,            ")" )                \
-	Entry( Comment,                "__comment__" )      \
-	Entry( Char,                   "__char__" )         \
+	Entry( Comment,                "comment" )          \
+	Entry( Char,                   "character" )        \
 	Entry( Comma,                  "," )                \
 	Entry( Decl_Class,             "class" )            \
 	Entry( Decl_GNU_Attribute,    "__attribute__" )     \
@@ -50,7 +50,7 @@ namespace Parser
 	Entry( Decl_Typedef,           "typedef" )          \
 	Entry( Decl_Using,             "using" )            \
 	Entry( Decl_Union,             "union" )            \
-	Entry( Identifier,             "__identifier__" )   \
+	Entry( Identifier,             "identifier" )       \
 	Entry( Module_Import,          "import" )           \
 	Entry( Module_Export,          "export" )           \
 	Entry( Number,                 "number" )           \
@@ -80,7 +80,7 @@ namespace Parser
 	Entry( Spec_Volatile,          "volatile")          \
 	Entry( Star,                   "*" )                \
 	Entry( Statement_End,          ";" )                \
-	Entry( String,                 "__string__" )       \
+	Entry( String,                 "string" )           \
 	Entry( Type_Unsigned, 	       "unsigned" )         \
 	Entry( Type_Signed,            "signed" )           \
 	Entry( Type_Short,             "short" )            \

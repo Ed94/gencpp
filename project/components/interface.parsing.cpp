@@ -82,6 +82,7 @@ namespace Parser
 	{
 		StackNode* Prev;
 
+		Token Start;
 		Token Name;        // The name of the AST node (if parsed)
 		StrC  ProcName;    // The name of the procedure
 	};
@@ -90,44 +91,6 @@ namespace Parser
 	{
 		TokArray   Tokens;
 		StackNode* Scope;
-
-		String to_string()
-		{
-			String result = String::make_reserve( GlobalAllocator, kilobytes(4) );
-
-			result.append_fmt("\tContext:\n");
-
-			Token last_valid = Tokens.Idx >= Tokens.Arr.num() ? Tokens.Arr[Tokens.Arr.num() -1] : Tokens.current();
-
-			char const* current = last_valid.Text;
-			sptr        length  = last_valid.Length;
-			while ( current <= Tokens.Arr.back().Text && *current != '\n' )
-			{
-				current++;
-				length++;
-			}
-
-			String line = String::make( GlobalAllocator, { length, last_valid.Text } );
-			result.append_fmt("\t(%d, %d): %s\n", last_valid.Line, last_valid.Column, line );
-			line.free();
-
-			StackNode* curr_scope = Scope;
-			do
-			{
-				if ( curr_scope->Name )
-				{
-					result.append_fmt("\tProcedure: %s, AST Name: %s\n", curr_scope->ProcName.Ptr, (StrC)curr_scope->Name );
-				}
-				else
-				{
-					result.append_fmt("\tProcedure: %s\n", curr_scope->ProcName.Ptr );
-				}
-
-				curr_scope = curr_scope->Prev;
-			}
-			while ( curr_scope );
-			return result;
-		}
 
 		void push( StackNode* node )
 		{
@@ -138,6 +101,51 @@ namespace Parser
 		void pop()
 		{
 			Scope = Scope->Prev;
+		}
+
+		String to_string()
+		{
+			String result = String::make_reserve( GlobalAllocator, kilobytes(4) );
+
+			Token scope_start = Scope->Start;
+			Token last_valid  = Tokens.Idx >= Tokens.Arr.num() ? Tokens.Arr[Tokens.Arr.num() -1] : Tokens.current();
+
+			sptr        length  = scope_start.Length;
+			char const* current = scope_start.Text + length;
+			while ( current <= Tokens.Arr.back().Text && *current != '\n' && length < 74 )
+			{
+				current++;
+				length++;
+			}
+
+			String line = String::make( GlobalAllocator, { length, scope_start.Text } );
+			result.append_fmt("\tScope: %s\n", line );
+			line.free();
+
+			sptr dist = (sptr)last_valid.Text - (sptr)scope_start.Text;
+			sptr   length_from_err = dist;
+			String line_from_err   = String::make( GlobalAllocator, { length_from_err, last_valid.Text } );
+
+			result.append_fmt("\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
+
+			StackNode* curr_scope = Scope;
+			s32 level = 0;
+			do
+			{
+				if ( curr_scope->Name )
+				{
+					result.append_fmt("\t%d: %s, AST Name: %s\n", level, curr_scope->ProcName.Ptr, (StrC)curr_scope->Name );
+				}
+				else
+				{
+					result.append_fmt("\t%d: %s\n", level, curr_scope->ProcName.Ptr );
+				}
+
+				curr_scope = curr_scope->Prev;
+				level++;
+			}
+			while ( curr_scope );
+			return result;
 		}
 	};
 
@@ -155,7 +163,7 @@ namespace Parser
 		{
 			String token_str = String::make( GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
 
-			log_failure( "Parse Error, TokArray::eat, Expected: %s, not %s (%d, %d)`\n%s", ETokType::to_str(type), token_str, Context.to_string() );
+			log_failure( "Parse Error, TokArray::eat, Expected: %s, not '%s' (%d, %d)`\n%s", ETokType::to_str(type), token_str, current().Line, current().Column, Context.to_string() );
 
 			return false;
 		}
@@ -727,7 +735,7 @@ if ( def.Ptr == nullptr )                                                       
 #	define check( Type_ ) ( left && currtok.Type == Type_ )
 
 #	define push_scope()                                           \
-	StackNode scope { nullptr, NullToken, txt_StrC( __func__ ) }; \
+	StackNode scope { nullptr, currtok, NullToken, txt_StrC( __func__ ) }; \
 	Context.push( & scope )
 
 #pragma endregion Helper Macros
@@ -1796,8 +1804,7 @@ Code parse_class_struct( Parser::TokType which )
 
 	attributes = parse_attributes();
 
-	if ( check( TokType::Identifier ) )
-		name = parse_identifier();
+	name = parse_identifier();
 
 	local_persist
 	char interface_arr_mem[ kilobytes(4) ] {0};
@@ -2649,7 +2656,10 @@ CodeStruct parse_struct( StrC def )
 		return CodeInvalid;
 
 	Context.Tokens = toks;
-	return (CodeStruct) parse_class_struct( TokType::Decl_Struct );
+	push_scope();
+	CodeStruct result = (CodeStruct) parse_class_struct( TokType::Decl_Struct );
+	Context.pop();
+	return result;
 }
 
 internal
