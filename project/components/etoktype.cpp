@@ -15,7 +15,7 @@ namespace Parser
 	Entry( API_Import, "GEN_API_Import_Code" )
 #endif
 
-#	define Define_TokType \
+#	define Define_TokType                               \
 	Entry( Invalid,                "INVALID" )          \
 	Entry( Access_Private,         "private" )          \
 	Entry( Access_Protected,       "protected" )        \
@@ -37,7 +37,7 @@ namespace Parser
 	Entry( Char,                   "character" )        \
 	Entry( Comma,                  "," )                \
 	Entry( Decl_Class,             "class" )            \
-	Entry( Decl_GNU_Attribute,    "__attribute__" )     \
+	Entry( Decl_GNU_Attribute,     "__attribute__" )    \
 	Entry( Decl_MSVC_Attribute,    "__declspec" )       \
 	Entry( Decl_Enum,              "enum" )             \
 	Entry( Decl_Extern_Linkage,    "extern" )           \
@@ -56,11 +56,15 @@ namespace Parser
 	Entry( Number,                 "number" )           \
 	Entry( Operator,               "operator" )         \
 	Entry( Preprocess_Define,      "#define")           \
-	Entry( Preproces_Include,      "include" )          \
+	Entry( Preprocess_Include,     "include" )          \
 	Entry( Preprocess_If,          "#if")               \
-	Entry( Preprocess_Elif,        "#elif")             \
+	Entry( Preprocess_IfDef,       "#if")               \
+	Entry( Preprocess_IfNotDef,    "#ifndef")           \
+	Entry( Preprocess_ElIf,        "#elif")             \
 	Entry( Preprocess_Else,        "#else")             \
 	Entry( Preprocess_EndIf,       "#endif")            \
+	Entry( Preprocess_Pragma, 	   "#pragma")           \
+	Entry( Preprocess_Content, 	   "macro content")     \
 	Entry( Spec_Alignas,           "alignas" )          \
 	Entry( Spec_Const,             "const" )            \
 	Entry( Spec_Consteval,         "consteval" )        \

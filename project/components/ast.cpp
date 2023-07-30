@@ -489,8 +489,40 @@ String AST::to_string()
 		}
 		break;
 
-		case Preprocessor_Include:
-			result.append_fmt( "#include \"%s\"", Name );
+		case Preprocess_Define:
+			result.append_fmt( "#define %s %s", Name, Content );
+		break;
+
+		case Preprocess_If:
+			result.append_fmt( "#if %s", Content );
+		break;
+
+		case Preprocess_IfDef:
+			result.append_fmt( "#ifdef %s", Content );
+		break;
+
+		case Preprocess_IfNotDef:
+			result.append_fmt( "#ifndef %s", Content );
+		break;
+
+		case Preprocess_Include:
+			result.append_fmt( "#include \"%s\"", Content );
+		break;
+
+		case Preprocess_ElIf:
+			result.append_fmt( "#elif %s", Content );
+		break;
+
+		case Preprocess_Else:
+			result.append_fmt( "#else" );
+		break;
+
+		case Preprocess_EndIf:
+			result.append_fmt( "#endif" );
+		break;
+
+		case Preprocess_Pragma:
+			result.append_fmt( "#pragma %s", Content );
 		break;
 
 		case Specifiers:

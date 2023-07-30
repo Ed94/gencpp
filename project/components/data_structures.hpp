@@ -12,6 +12,7 @@ struct AST_Body;
 struct AST_Attributes;
 struct AST_Comment;
 struct AST_Class;
+struct AST_Define;
 struct AST_Enum;
 struct AST_Exec;
 struct AST_Extern;
@@ -23,6 +24,8 @@ struct AST_Namespace;
 struct AST_Operator;
 struct AST_OpCast;
 struct AST_Param;
+struct AST_Pragma;
+struct AST_PreprocessCond;
 struct AST_Specifiers;
 struct AST_Struct;
 struct AST_Template;
@@ -38,6 +41,7 @@ struct CodeBody;
 struct CodeAttributes;
 struct CodeComment;
 struct CodeClass;
+struct CodeDefine;
 struct CodeEnum;
 struct CodeExec;
 struct CodeExtern;
@@ -49,6 +53,8 @@ struct CodeNamespace;
 struct CodeOperator;
 struct CodeOpCast;
 struct CodeParam;
+struct CodePreprocessCond;
+struct CodePragma;
 struct CodeSpecifiers;
 struct CodeStruct;
 struct CodeTemplate;
@@ -115,6 +121,7 @@ struct Code
 	operator CodeAttributes() const;
 	operator CodeComment() const;
 	operator CodeClass() const;
+	operator CodeDefine() const;
 	operator CodeExec() const;
 	operator CodeEnum() const;
 	operator CodeExtern() const;
@@ -126,6 +133,8 @@ struct Code
 	operator CodeOperator() const;
 	operator CodeOpCast() const;
 	operator CodeParam() const;
+	operator CodePragma() const;
+	operator CodePreprocessCond() const;
 	operator CodeSpecifiers() const;
 	operator CodeStruct() const;
 	operator CodeTemplate() const;
@@ -175,6 +184,7 @@ struct AST
 	operator CodeAttributes();
 	operator CodeComment();
 	operator CodeClass();
+	operator CodeDefine();
 	operator CodeEnum();
 	operator CodeExec();
 	operator CodeExtern();
@@ -186,6 +196,8 @@ struct AST
 	operator CodeOperator();
 	operator CodeOpCast();
 	operator CodeParam();
+	operator CodePragma();
+	operator CodePreprocessCond();
 	operator CodeSpecifiers();
 	operator CodeStruct();
 	operator CodeTemplate();
@@ -378,6 +390,7 @@ struct CodeBody
 
 Define_CodeType( Attributes );
 Define_CodeType( Comment );
+Define_CodeType( Define );
 Define_CodeType( Enum );
 Define_CodeType( Exec );
 Define_CodeType( Extern );
@@ -388,6 +401,8 @@ Define_CodeType( Module );
 Define_CodeType( Namespace );
 Define_CodeType( Operator );
 Define_CodeType( OpCast );
+Define_CodeType( Pragma );
+Define_CodeType( PreprocessCond );
 Define_CodeType( Template );
 Define_CodeType( Type );
 Define_CodeType( Typedef );
@@ -631,6 +646,21 @@ struct AST_Class
 };
 static_assert( sizeof(AST_Class) == sizeof(AST), "ERROR: AST_Class is not the same size as AST");
 
+struct AST_Define
+{
+	union {
+		char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		StringCached  Content;
+	};
+	Code              Prev;
+	Code              Next;
+	Code              Parent;
+	StringCached      Name;
+	CodeT             Type;
+	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+};
+static_assert( sizeof(AST_Define) == sizeof(AST), "ERROR: AST_Define is not the same size as AST");
+
 struct AST_Enum
 {
 	union {
@@ -846,6 +876,36 @@ struct AST_Param
 	s32               NumEntries;
 };
 static_assert( sizeof(AST_Param) == sizeof(AST), "ERROR: AST_Param is not the same size as AST");
+
+struct AST_Pragma
+{
+	union {
+		char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		StringCached  Content;
+	};
+	Code              Prev;
+	Code              Next;
+	Code              Parent;
+	StringCached      Name;
+	CodeT             Type;
+	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+};
+static_assert( sizeof(AST_Pragma) == sizeof(AST), "ERROR: AST_Pragma is not the same size as AST");
+
+struct AST_PreprocessCond
+{
+	union {
+		char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		StringCached  Content;
+	};
+	Code              Prev;
+	Code              Next;
+	Code              Parent;
+	StringCached      Name;
+	CodeT             Type;
+	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+};
+static_assert( sizeof(AST_PreprocessCond) == sizeof(AST), "ERROR: AST_PreprocessCond is not the same size as AST");
 
 struct AST_Specifiers
 {

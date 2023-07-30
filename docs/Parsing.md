@@ -5,8 +5,7 @@ This parser does not, and should not do the compiler's job. By only supporting t
 
 
 Everything is done in one pass for both the preprocessor directives and the rest of the language.  
-The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***.  
-*(Conditionals and defines are a TODO)*
+The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***, and ***`pragmas`**.  
 
 The keywords supported for the preprocessor are:
 
@@ -17,8 +16,9 @@ The keywords supported for the preprocessor are:
 * elif
 * endif
 * undef
+* pragma
 
-Just like with actual preprocessor, each directive # line is considered one preproecessor unit, and will be treated as one Preprocessor AST. *These ASTs will be considered members or entries of braced scope they reside within*.
+Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST. *These ASTs will be considered members or entries of braced scope they reside within*.
 All keywords except *include* are suppported as members of a scope for a class/struct, global, or namespace body.  
 
 Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).

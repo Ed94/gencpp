@@ -8,12 +8,6 @@ These build up a code AST to then serialize with a file builder.
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
 its not meant to be a black box metaprogramming utility, its meant for the user to extend for their project domain.
 
-### TOC
-
-* [Notes](#notes)
-* [Usage](#usage)
-* [Building](#building)
-
 ## Notes
 
 The project has reached an *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.  

@@ -36,7 +36,12 @@ namespace Parser
 
 		bool is_preprocessor()
 		{
-			return Type >= TokType::Preprocess_Define && Type <= TokType::Preprocess_EndIf;
+			return Type >= TokType::Preprocess_Define && Type <= TokType::Preprocess_Pragma;
+		}
+
+		bool is_preprocess_cond()
+		{
+			return Type >= TokType::Preprocess_If && Type <= TokType::Preprocess_EndIf;
 		}
 
 		bool is_specifier()
@@ -163,7 +168,13 @@ namespace Parser
 		{
 			String token_str = String::make( GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
 
-			log_failure( "Parse Error, TokArray::eat, Expected: %s, not '%s' (%d, %d)`\n%s", ETokType::to_str(type), token_str, current().Line, current().Column, Context.to_string() );
+			log_failure( "Parse Error, TokArray::eat, Expected: %s, not '%s' (%d, %d)`\n%s"
+				, ETokType::to_str(type)
+				, token_str
+				, current().Line
+				, current().Column
+				, Context.to_string()
+			);
 
 			return false;
 		}
@@ -177,7 +188,7 @@ namespace Parser
 		IsAssign = bit(0),
 	};
 
-	TokArray lex( StrC content, bool keep_preprocess_directives = true )
+	TokArray lex( StrC content )
 	{
 	#	define current ( * scanner )
 
@@ -200,17 +211,6 @@ namespace Parser
 		while ( left && char_is_space( current ) )  \
 		{                                           \
 			move_forward();                         \
-		}
-
-	#	define SkipWhitespace_Checked( Context_, Msg_, ... )             \
-		while ( left && char_is_space( current ) )                       \
-		{                                                                \
-			move_forward();                                              \
-		}                                                                \
-		if ( left <= 0 )                                                 \
-		{                                                                \
-			log_failure( "gen::" txt(Context_) ": " Msg_, __VA_ARGS__ ); \
-			return { 0, nullptr };                                       \
 		}
 
 		local_persist thread_local
@@ -249,34 +249,93 @@ namespace Parser
 
 			switch ( current )
 			{
-				// TODO : Need to handle the preprocessor as a separate pass.
 				case '#':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					move_forward();
 
-					while (left && current != '\n' )
+					while (left && current != ' ' )
 					{
-						if ( token.Type == ETokType::Invalid && current == ' ' )
-						{
-							token.Type = ETokType::to_type( token );
-						}
-
-						if ( current == '\\'  )
-						{
-							move_forward();
-
-							if ( current != '\n' && keep_preprocess_directives )
-							{
-								log_failure( "gen::lex: invalid preprocessor directive, will still grab but will not compile %s", token.Text );
-							}
-						}
-
 						move_forward();
 						token.Length++;
 					}
-					goto FoundToken;
 
+					token.Type = ETokType::to_type( token );
+					Tokens.append( token );
+
+					Token content = { scanner, 0, TokType::Preprocess_Content, false, line, column };
+
+					if ( token.Type == TokType::Preprocess_Include )
+					{
+						content.Type = TokType::String;
+
+						SkipWhitespace();
+						if ( current != '"' )
+						{
+							log_failure( "gen::Parser::lex: Expected '\"' after #include, not '%c' (%d, %d)\n%s"
+								, current
+								, token.Line
+								, token.Column
+								, Context.to_string()
+							);
+							return { { nullptr }, 0 };
+						}
+
+						while ( left && current != '"' )
+						{
+							move_forward();
+							content.Length++;
+						}
+
+						move_forward();
+						content.Length++;
+
+						Tokens.append( content );
+						continue; // Skip found token, its all handled here.
+					}
+
+					while ( left )
+					{
+						if ( current == '\\' )
+						{
+							move_forward();
+							content.Length++;
+
+							if ( current == '\n' )
+							{
+								move_forward();
+								content.Length++;
+								continue;
+							}
+							else
+							{
+								String directive_str = String::fmt_buf( GlobalAllocator, "%s", token.Text, token.Length );
+								String content_str   = String::fmt_buf( GlobalAllocator, "%s", content, min( 40, left + content.Length ) );
+
+								log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
+									         " in preprocessor directive '%.*s' (%d, %d)\n"
+											 "will continue parsing, but compiliation will fail (if using non-fatal failures).\n"
+									, content_str, line, column
+									, directive_str, token.Line, token.Column );
+								break;
+							}
+						}
+
+						if ( current == '\n' )
+						{
+							move_forward();
+							content.Length++;
+							break;
+						}
+
+						move_forward();
+						content.Length++;
+					}
+
+					Tokens.append( content );
+					continue; // Skip found token, its all handled here.
+				}
 				case '.':
 					token.Text   = scanner;
 					token.Length = 1;
@@ -297,7 +356,9 @@ namespace Parser
 						}
 						else
 						{
-							log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c'", current );
+							String context_str = String::fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
+
+							log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)", context_str, line, column );
 						}
 					}
 
@@ -669,7 +730,7 @@ namespace Parser
 			{
 				String context_str = String::fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
 
-				log_failure( "Failed to lex token %s", context_str );
+				log_failure( "Failed to lex token %s (%d, %d)", context_str, line, column );
 
 				// Skip to next whitespace since we can't know if anything else is valid until then.
 				while ( left && ! char_is_space( current ) )
@@ -682,9 +743,6 @@ namespace Parser
 
 			if ( token.Type != TokType::Invalid )
 			{
-				if ( token.is_preprocessor() && keep_preprocess_directives == false )
-					continue;
-
 				Tokens.append( token );
 				continue;
 			}
@@ -708,22 +766,21 @@ namespace Parser
 	#	undef current
 	#	undef move_forward
 	#	undef SkipWhitespace
-	#	undef SkipWhitespace_Checked
 	}
 }
 
 #pragma region Helper Macros
 
-#	define check_parse_args( def )                                               \
-if ( def.Len <= 0 )                                                              \
-{                                                                                \
+#	define check_parse_args( def )                                             \
+if ( def.Len <= 0 )                                                            \
+{                                                                              \
 	log_failure( "gen::" stringize(__func__) ": length must greater than 0" ); \
-	return CodeInvalid;                                                          \
-}                                                                                \
-if ( def.Ptr == nullptr )                                                        \
-{                                                                                \
+	return CodeInvalid;                                                        \
+}                                                                              \
+if ( def.Ptr == nullptr )                                                      \
+{                                                                              \
 	log_failure( "gen::" stringize(__func__) ": def was null" );               \
-	return CodeInvalid;                                                          \
+	return CodeInvalid;                                                        \
 }
 
 #	define nexttok 	    Context.Tokens.next()
@@ -734,7 +791,7 @@ if ( def.Ptr == nullptr )                                                       
 
 #	define check( Type_ ) ( left && currtok.Type == Type_ )
 
-#	define push_scope()                                           \
+#	define push_scope()                                                    \
 	StackNode scope { nullptr, currtok, NullToken, txt_StrC( __func__ ) }; \
 	Context.push( & scope )
 
@@ -759,6 +816,115 @@ internal CodeType      parse_type            ();
 internal CodeTypedef   parse_typedef         ();
 internal CodeUnion     parse_union           ();
 internal CodeUsing     parse_using           ();
+
+internal inline
+CodeDefine parse_define()
+{
+	using namespace Parser;
+	push_scope();
+
+	eat( TokType::Preprocess_Define );
+
+	CodeDefine
+	define = (CodeDefine) make_code();
+	define->Type = ECode::Preprocess_Define;
+
+	if ( ! check( TokType::Identifier ) )
+	{
+		log_failure( "Error, expected identifier after #define\n%s", Context.to_string() );
+		return CodeInvalid;
+	}
+
+	define->Name = get_cached_string( currtok );
+	eat( TokType::Identifier );
+
+	if ( ! check( TokType::Preprocess_Content ))
+	{
+		log_failure( "Error, expected content after #define %s\n%s", define->Name, Context.to_string() );
+		return CodeInvalid;
+	}
+
+	define->Content = get_cached_string( currtok );
+	eat( TokType::Preprocess_Content );
+
+	Context.pop();
+	return define;
+}
+
+internal inline
+CodePreprocessCond parse_preprocess_cond()
+{
+	using namespace Parser;
+	push_scope();
+
+	if ( ! currtok.is_preprocess_cond() )
+	{
+		log_failure( "Error, expected preprocess conditional\n%s", Context.to_string() );
+		return CodeInvalid;
+	}
+
+	CodePreprocessCond
+	cond       = (CodePreprocessCond) make_code();
+	cond->Type = scast(CodeT, currtok.Type - (ETokType::Preprocess_If - ECode::Preprocess_If) );
+	eat( currtok.Type );
+
+	if ( ! check( TokType::Preprocess_Content ))
+	{
+		log_failure( "Error, expected content after #define\n%s", Context.to_string() );
+		return CodeInvalid;
+	}
+
+	cond->Content = get_cached_string( currtok );
+	eat( TokType::Preprocess_Content );
+
+	Context.pop();
+	return cond;
+}
+
+internal inline
+CodeInclude parse_include()
+{
+	using namespace Parser;
+	push_scope();
+
+	CodeInclude
+	include       = (CodeInclude) make_code();
+	include->Type = ECode::Preprocess_Include;
+
+	if ( ! check( TokType::String ))
+	{
+		log_failure( "Error, expected include string after #include\n%s", Context.to_string() );
+		return CodeInvalid;
+	}
+	include->Content = get_cached_string( currtok );
+	eat( TokType::String );
+
+	Context.pop();
+	return include;
+}
+
+internal inline
+CodePragma parse_pragma()
+{
+	using namespace Parser;
+	push_scope();
+
+	CodePragma
+	pragma       = (CodePragma) make_code();
+	pragma->Type = ECode::Preprocess_Pragma;
+
+	if ( ! check( TokType::Preprocess_Content ))
+	{
+		log_failure( "Error, expected content after #define\n%s", Context.to_string() );
+		return CodeInvalid;
+	}
+
+	pragma->Content = get_cached_string( currtok );
+	eat( TokType::Preprocess_Content );
+
+	Context.pop();
+	return pragma;
+}
 
 internal inline
 Code parse_array_decl()
@@ -1677,6 +1843,33 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 				member = parse_using();
 			break;
 
+			case TokType::Preprocess_Define:
+				member = parse_define();
+			break;
+
+			case TokType::Preprocess_Include:
+				member = parse_include();
+			break;
+
+			case TokType::Preprocess_If:
+			case TokType::Preprocess_IfDef:
+			case TokType::Preprocess_IfNotDef:
+			case TokType::Preprocess_ElIf:
+				member = parse_preprocess_cond();
+			break;
+
+			case TokType::Preprocess_Pragma:
+				member = parse_pragma();
+			break;
+
+			case TokType::Preprocess_Else:
+				member = preprocess_else;
+			break;
+
+			case TokType::Preprocess_EndIf:
+				member = preprocess_endif;
+			break;
+
 			case TokType::Attribute_Open:
 			case TokType::Decl_GNU_Attribute:
 			case TokType::Decl_MSVC_Attribute:
@@ -1964,6 +2157,33 @@ CodeBody parse_global_nspace( CodeT which )
 
 			case TokType::Decl_Using:
 				member = parse_using();
+			break;
+
+			case TokType::Preprocess_Define:
+				member = parse_define();
+			break;
+
+			case TokType::Preprocess_Include:
+				member = parse_include();
+			break;
+
+			case TokType::Preprocess_If:
+			case TokType::Preprocess_IfDef:
+			case TokType::Preprocess_IfNotDef:
+			case TokType::Preprocess_ElIf:
+				member = parse_preprocess_cond();
+			break;
+
+			case TokType::Preprocess_Pragma:
+				member = parse_pragma();
+			break;
+
+			case TokType::Preprocess_Else:
+				member = preprocess_else;
+			break;
+
+			case TokType::Preprocess_EndIf:
+				member = preprocess_endif;
 			break;
 
 			case TokType::Module_Export:

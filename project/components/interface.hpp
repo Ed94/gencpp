@@ -45,6 +45,8 @@ CodeClass def_class( StrC name
 	, ModuleFlag     mflags       = ModuleFlag::None
 	, CodeType*      interfaces   = nullptr, s32 num_interfaces = 0 );
 
+CodeDefine def_define( StrC name, StrC content );
+
 CodeEnum def_enum( StrC name
 	, Code         body      = NoCode,      CodeType       type       = NoCode
 	, EnumT        specifier = EnumRegular, CodeAttributes attributes = NoCode
@@ -70,7 +72,11 @@ CodeOperator def_operator( OperatorT op
 
 CodeOpCast def_operator_cast( CodeType type, Code body = NoCode, CodeSpecifiers specs = NoCode );
 
-CodeParam      def_param    ( CodeType type, StrC name, Code value = NoCode );
+CodeParam  def_param ( CodeType type, StrC name, Code value = NoCode );
+CodePragma def_pragma( StrC directive );
+
+CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC content );
+
 CodeSpecifiers def_specifier( SpecifierT specifier );
 
 CodeStruct def_struct( StrC name

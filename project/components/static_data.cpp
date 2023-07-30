@@ -22,6 +22,44 @@ global AllocatorInfo Allocator_TypeTable   = heap();
 
 #pragma region Constants
 
+global Code access_public;
+global Code access_protected;
+global Code access_private;
+
+global CodeAttributes attrib_api_export;
+global CodeAttributes attrib_api_import;
+
+global Code module_global_fragment;
+global Code module_private_fragment;
+
+global CodeParam param_varadic;
+
+global CodePragma pragma_once;
+
+global CodePreprocessCond preprocess_else;
+global CodePreprocessCond preprocess_endif;
+
+global CodeSpecifiers spec_const;
+global CodeSpecifiers spec_consteval;
+global CodeSpecifiers spec_constexpr;
+global CodeSpecifiers spec_constinit;
+global CodeSpecifiers spec_extern_linkage;
+global CodeSpecifiers spec_final;
+global CodeSpecifiers spec_global;
+global CodeSpecifiers spec_inline;
+global CodeSpecifiers spec_internal_linkage;
+global CodeSpecifiers spec_local_persist;
+global CodeSpecifiers spec_mutable;
+global CodeSpecifiers spec_override;
+global CodeSpecifiers spec_ptr;
+global CodeSpecifiers spec_ref;
+global CodeSpecifiers spec_register;
+global CodeSpecifiers spec_rvalue;
+global CodeSpecifiers spec_static_member;
+global CodeSpecifiers spec_thread_local;
+global CodeSpecifiers spec_virtual;
+global CodeSpecifiers spec_volatile;
+
 global CodeType t_empty;
 global CodeType t_auto;
 global CodeType t_void;
@@ -51,40 +89,5 @@ global CodeType t_uw;
 global CodeType t_f32;
 global CodeType t_f64;
 #endif
-
-global CodeParam param_varadic;
-
-global CodeAttributes attrib_api_export;
-global CodeAttributes attrib_api_import;
-
-global Code access_public;
-global Code access_protected;
-global Code access_private;
-
-global Code module_global_fragment;
-global Code module_private_fragment;
-
-global Code pragma_once;
-
-global CodeSpecifiers spec_const;
-global CodeSpecifiers spec_consteval;
-global CodeSpecifiers spec_constexpr;
-global CodeSpecifiers spec_constinit;
-global CodeSpecifiers spec_extern_linkage;
-global CodeSpecifiers spec_final;
-global CodeSpecifiers spec_global;
-global CodeSpecifiers spec_inline;
-global CodeSpecifiers spec_internal_linkage;
-global CodeSpecifiers spec_local_persist;
-global CodeSpecifiers spec_mutable;
-global CodeSpecifiers spec_override;
-global CodeSpecifiers spec_ptr;
-global CodeSpecifiers spec_ref;
-global CodeSpecifiers spec_register;
-global CodeSpecifiers spec_rvalue;
-global CodeSpecifiers spec_static_member;
-global CodeSpecifiers spec_thread_local;
-global CodeSpecifiers spec_virtual;
-global CodeSpecifiers spec_volatile;
 
 #pragma endregion Constants
