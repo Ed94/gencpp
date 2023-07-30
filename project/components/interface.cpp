@@ -1,3 +1,6 @@
+internal void init_parser();
+internal void deinit_parser();
+
 internal
 void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
 {
@@ -266,6 +269,7 @@ void init()
 	}
 
 	define_constants();
+	init_parser();
 }
 
 void deinit()
@@ -308,6 +312,7 @@ void deinit()
 	while ( left--, left );
 
 	Global_AllocatorBuckets.free();
+	deinit_parser();
 }
 
 void reset()

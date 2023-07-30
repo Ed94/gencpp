@@ -188,6 +188,8 @@ namespace Parser
 		IsAssign = bit(0),
 	};
 
+	global Array<Token> Tokens;
+
 	TokArray lex( StrC content )
 	{
 	#	define current ( * scanner )
@@ -213,9 +215,6 @@ namespace Parser
 			move_forward();                         \
 		}
 
-		local_persist thread_local
-		Array<Token> Tokens = { nullptr };
-
 		s32         left    = content.Len;
 		char const* scanner = content.Ptr;
 
@@ -232,16 +231,21 @@ namespace Parser
 			return { { nullptr }, 0 };
 		}
 
-		if ( Tokens )
+		local_persist char defines_map_mem[ kilobytes(64) ];
+		local_persist Arena defines_map_arena;
+		HashTable<StrC> defines;
 		{
-			Tokens.free();
+			defines_map_arena = Arena::init_from_memory( defines_map_mem, sizeof(defines_map_mem) );
+			defines = HashTable<StrC>::init( defines_map_arena );
 		}
 
-		Tokens = Array<Token>::init_reserve( LexArena, content.Len / 6 );
+		Tokens.clear();
 
 		while (left )
 		{
 			Token token = { nullptr, 0, TokType::Invalid, false, line, column };
+
+			bool is_define = false;
 
 			SkipWhitespace();
 			if ( left <= 0 )
@@ -251,11 +255,11 @@ namespace Parser
 			{
 				case '#':
 				{
-					token.Text   = scanner;
-					token.Length = 1;
 					move_forward();
+					SkipWhitespace();
 
-					while (left && current != ' ' )
+					token.Text = scanner;
+					while (left && ! char_is_space(current) )
 					{
 						move_forward();
 						token.Length++;
@@ -264,6 +268,34 @@ namespace Parser
 					token.Type = ETokType::to_type( token );
 					Tokens.append( token );
 
+					if ( token.Type == TokType::Preprocess_Define )
+					{
+						SkipWhitespace();
+						Token name = { scanner, 0, TokType::Identifier, false, line, column };
+
+						name.Text   = scanner;
+						name.Length = 1;
+						move_forward();
+
+						while ( left && ( char_is_alphanumeric(current) || current == '_' ) )
+						{
+							move_forward();
+							name.Length++;
+						}
+
+						Tokens.append( name );
+
+						s32 key = crc32( name.Text, name.Length );
+						defines.set( key, name );
+					}
+
+					if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
+					{
+						SkipWhitespace();
+						Tokens.append( token );
+						continue;
+					}
+
 					Token content = { scanner, 0, TokType::Preprocess_Content, false, line, column };
 
 					if ( token.Type == TokType::Preprocess_Include )
@@ -271,18 +303,20 @@ namespace Parser
 						content.Type = TokType::String;
 
 						SkipWhitespace();
-						if ( current != '"' )
+						if ( current != '"' && current != '<' )
 						{
-							log_failure( "gen::Parser::lex: Expected '\"' after #include, not '%c' (%d, %d)\n%s"
+							String directive_str = String::fmt_buf( GlobalAllocator, "%.*s", min( 80, left + content.Length ), token.Text );
+
+							log_failure( "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
 								, current
-								, token.Line
-								, token.Column
-								, Context.to_string()
+								, content.Line
+								, content.Column
+								, directive_str.Data
 							);
 							return { { nullptr }, 0 };
 						}
 
-						while ( left && current != '"' )
+						while ( left && current != '"' && current != '>' )
 						{
 							move_forward();
 							content.Length++;
@@ -295,12 +329,26 @@ namespace Parser
 						continue; // Skip found token, its all handled here.
 					}
 
+					s32 within_string = false;
+					s32 within_char   = false;
 					while ( left )
 					{
-						if ( current == '\\' )
+						if ( current == '"' )
+							within_string ^= true;
+
+						if ( current == '\'' )
+							within_char ^= true;
+
+						if ( current == '\\' && ! within_string && ! within_char )
 						{
 							move_forward();
 							content.Length++;
+
+							if ( current == '\r' )
+							{
+								move_forward();
+								content.Length++;
+							}
 
 							if ( current == '\n' )
 							{
@@ -310,14 +358,14 @@ namespace Parser
 							}
 							else
 							{
-								String directive_str = String::fmt_buf( GlobalAllocator, "%s", token.Text, token.Length );
-								String content_str   = String::fmt_buf( GlobalAllocator, "%s", content, min( 40, left + content.Length ) );
+								String directive_str = String::make_length( GlobalAllocator, token.Text, token.Length );
+								String content_str   = String::fmt_buf( GlobalAllocator, "%.*s", min( 400, left + content.Length ), content.Text );
 
 								log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
-									         " in preprocessor directive '%.*s' (%d, %d)\n"
-											 "will continue parsing, but compiliation will fail (if using non-fatal failures).\n"
-									, content_str, line, column
-									, directive_str, token.Line, token.Column );
+									         " in preprocessor directive '%s' (%d, %d)\n%s"
+									, current, line, column
+									, directive_str, content.Line, content.Column
+									, content_str );
 								break;
 							}
 						}
@@ -358,7 +406,7 @@ namespace Parser
 						{
 							String context_str = String::fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
 
-							log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)", context_str, line, column );
+							log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", current, line, column, context_str );
 						}
 					}
 
@@ -468,6 +516,18 @@ namespace Parser
 
 					move_forward();
 
+					if ( left && current == '\\' )
+					{
+						move_forward();
+						token.Length++;
+
+						if ( current == '\'' )
+						{
+							move_forward();
+							token.Length++;
+						}
+					}
+
 					while ( left && current != '\'' )
 					{
 						move_forward();
@@ -540,6 +600,17 @@ namespace Parser
 					}
 					goto FoundToken;
 
+				case '?':
+					token.Text     = scanner;
+					token.Length   = 1;
+					token.Type     = TokType::Operator;
+					token.IsAssign = false;
+
+					if (left)
+						move_forward();
+
+					goto FoundToken;
+
 				// All other operators we just label as an operator and move forward.
 				case '=':
 					token.Text     = scanner;
@@ -549,6 +620,15 @@ namespace Parser
 
 					if (left)
 						move_forward();
+
+					if ( current == '=' )
+					{
+						token.Length++;
+						token.IsAssign = false;
+
+						if (left)
+							move_forward();
+					}
 
 					goto FoundToken;
 
@@ -653,10 +733,17 @@ namespace Parser
 							token.Text   = scanner;
 							token.Length = 0;
 
-							while ( left && ( current != '*' && *(scanner + 1) != '/' ) )
+							bool star   = current == '*';
+							bool slash  = scanner[1] == '/';
+							bool at_end = star && slash;
+							while ( left && ! at_end  )
 							{
 								move_forward();
 								token.Length++;
+
+								star   = current == '*';
+								slash  = scanner[1] == '/';
+								at_end = star && slash;
 							}
 							move_forward();
 							move_forward();
@@ -728,9 +815,9 @@ namespace Parser
 			}
 			else
 			{
-				String context_str = String::fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
+				String context_str = String::fmt_buf( GlobalAllocator, "%.*s", min( 100, left ), scanner );
 
-				log_failure( "Failed to lex token %s (%d, %d)", context_str, line, column );
+				log_failure( "Failed to lex token '%c' (%d, %d)\n%s", current, line, column, context_str );
 
 				// Skip to next whitespace since we can't know if anything else is valid until then.
 				while ( left && ! char_is_space( current ) )
@@ -749,10 +836,47 @@ namespace Parser
 
 			TokType type = ETokType::to_type( token );
 
-			if ( type == TokType::Invalid)
-				type = TokType::Identifier;
+			if ( type != TokType::Invalid )
+			{
+				token.Type = type;
+				Tokens.append( token );
+				continue;
+			}
 
-			token.Type = type;
+			u32   key    = crc32( token.Text, token.Length );
+			StrC* define = defines.get( key );
+			if ( define )
+			{
+				token.Type = TokType::Preprocess_Macro;
+
+				// Want to ignore any arguments the define may have as they can be execution expressions.
+				if ( left && current == '(' )
+				{
+					move_forward();
+					token.Length++;
+
+					s32 level = 0;
+					while ( left && (current != ')' || level > 0) )
+					{
+						if ( current == '(' )
+							level++;
+
+						else if ( current == ')' && level > 0 )
+							level--;
+
+						move_forward();
+						token.Length++;
+					}
+
+					move_forward();
+					token.Length++;
+				}
+			}
+			else
+			{
+				token.Type = TokType::Identifier;
+			}
+
 			Tokens.append( token );
 		}
 
@@ -762,11 +886,29 @@ namespace Parser
 			return { { nullptr }, 0 };
 		}
 
+		defines.clear();
+		defines_map_arena.free();
 		return { Tokens, 0 };
 	#	undef current
 	#	undef move_forward
 	#	undef SkipWhitespace
 	}
+}
+
+internal
+void init_parser()
+{
+	using namespace Parser;
+
+	Tokens = Array<Token>::init_reserve( LexArena
+		, ( LexAllocator_Size - sizeof( Array<Token>::Header ) ) / sizeof(Token)
+	);
+}
+
+internal
+void deinit_parser()
+{
+	Parser::Tokens = { nullptr };
 }
 
 #pragma region Helper Macros
@@ -912,10 +1054,11 @@ CodePragma parse_pragma()
 	CodePragma
 	pragma       = (CodePragma) make_code();
 	pragma->Type = ECode::Preprocess_Pragma;
+	eat( TokType::Preprocess_Pragma );
 
 	if ( ! check( TokType::Preprocess_Content ))
 	{
-		log_failure( "Error, expected content after #define\n%s", Context.to_string() );
+		log_failure( "Error, expected content after #pragma\n%s", Context.to_string() );
 		return CodeInvalid;
 	}
 
@@ -1858,6 +2001,11 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 				member = parse_preprocess_cond();
 			break;
 
+			case TokType::Preprocess_Macro:
+				member = untyped_str( currtok );
+				eat( TokType::Preprocess_Macro );
+			break;
+
 			case TokType::Preprocess_Pragma:
 				member = parse_pragma();
 			break;
@@ -2174,16 +2322,23 @@ CodeBody parse_global_nspace( CodeT which )
 				member = parse_preprocess_cond();
 			break;
 
+			case TokType::Preprocess_Macro:
+				member = untyped_str( currtok );
+				eat( TokType::Preprocess_Macro );
+			break;
+
 			case TokType::Preprocess_Pragma:
 				member = parse_pragma();
 			break;
 
 			case TokType::Preprocess_Else:
 				member = preprocess_else;
+				eat( TokType::Preprocess_Else );
 			break;
 
 			case TokType::Preprocess_EndIf:
 				member = preprocess_endif;
+				eat( TokType::Preprocess_EndIf );
 			break;
 
 			case TokType::Module_Export:
@@ -2273,6 +2428,7 @@ CodeBody parse_global_nspace( CodeT which )
 			return CodeInvalid;
 		}
 
+		// log_fmt("Global Body Member: %s", member->debug_str());
 		result.append( member );
 	}
 

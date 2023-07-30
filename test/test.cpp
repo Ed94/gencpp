@@ -5,6 +5,7 @@
 #include "gen.cpp"
 #include "sanity.cpp"
 #include "SOA.cpp"
+#include "test.singleheader_ast.cpp"
 
 #if GEN_TIME
 int gen_main()
@@ -12,9 +13,11 @@ int gen_main()
 	using namespace gen;
 	log_fmt("\ngen_time:");
 
-	check_sanity();
+	// check_sanity();
 
 	check_SOA();
+
+	check_singleheader_ast();
 
 	return 0;
 }
