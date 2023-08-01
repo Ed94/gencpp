@@ -18,11 +18,18 @@ void check_singleheader_ast()
 
 	CodeBody ast = parse_global_body( { file.size, (char const*)file.data } );
 
-	log_fmt("generated AST!!!");
+	log_fmt("generated AST!!!\n");
+
+	s32 idx = 0;
+	for ( Code entry : ast )
+	{
+		log_fmt("Entry %d: %s", idx, entry.to_string() );
+		idx++;
+	}
 
 	Builder builder;
 	builder.open( "singleheader_copy.hpp" );
-	log_fmt("serializng ast");
+	log_fmt("serializng ast\n");
 	builder.print( ast );
 	builder.write();
 

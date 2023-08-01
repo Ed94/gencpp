@@ -99,17 +99,35 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 
 Code untyped_str( StrC content )
 {
+	if ( content.Len == 0 )
+	{
+		log_failure( "untyped_str: empty string" );
+		return CodeInvalid;
+	}
+
 	Code
 	result          = make_code();
 	result->Name    = get_cached_string( content );
 	result->Type    = ECode::Untyped;
 	result->Content = result->Name;
 
+	if ( result->Name == nullptr )
+	{
+		log_failure( "untyped_str: could not cache string" );
+		return CodeInvalid;
+	}
+
 	return result;
 }
 
 Code untyped_fmt( char const* fmt, ...)
 {
+	if ( fmt == nullptr )
+	{
+		log_failure( "untyped_fmt: null format string" );
+		return CodeInvalid;
+	}
+
 	local_persist thread_local
 	char buf[GEN_PRINTF_MAXLEN] = { 0 };
 
@@ -124,11 +142,23 @@ Code untyped_fmt( char const* fmt, ...)
 	result->Type    = ECode::Untyped;
 	result->Content = get_cached_string( { length, buf } );
 
+	if ( result->Name == nullptr )
+	{
+		log_failure( "untyped_fmt: could not cache string" );
+		return CodeInvalid;
+	}
+
 	return result;
 }
 
 Code untyped_token_fmt( s32 num_tokens, ... )
 {
+	if ( num_tokens == 0 )
+	{
+		log_failure( "untyped_token_fmt: zero tokens" );
+		return CodeInvalid;
+	}
+
 	local_persist thread_local
 	char buf[GEN_PRINTF_MAXLEN] = { 0 };
 
@@ -142,6 +172,12 @@ Code untyped_token_fmt( s32 num_tokens, ... )
 	result->Name    = get_cached_string( { length, buf } );
 	result->Type    = ECode::Untyped;
 	result->Content = result->Name;
+
+	if ( result->Name == nullptr )
+	{
+		log_failure( "untyped_fmt: could not cache string" );
+		return CodeInvalid;
+	}
 
 	return result;
 }

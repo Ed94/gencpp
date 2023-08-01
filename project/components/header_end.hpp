@@ -26,12 +26,29 @@ void AST::append( AST* other )
 
 char const* AST::debug_str()
 {
+	if ( Parent )
+	{
+		char const* fmt = stringize(
+			\nType    : %s
+			\nParent  : %s %s
+			\nName    : %s
+		);
+
+		// These should be used immediately in a log.
+		// Thus if its desired to keep the debug str
+		// for multiple calls to bprintf,
+		// allocate this to proper string.
+		return str_fmt_buf( fmt
+			,	type_str()
+			,	Parent->Name
+			,   Parent->type_str()
+			,	Name     ? Name         : ""
+		);
+	}
+
 	char const* fmt = stringize(
-		\nCode Debug:
 		\nType    : %s
-		\nParent  : %s
 		\nName    : %s
-		\nComment : %s
 	);
 
 	// These should be used immediately in a log.
@@ -40,7 +57,6 @@ char const* AST::debug_str()
 	// allocate this to proper string.
 	return str_fmt_buf( fmt
 		,	type_str()
-		,	Parent   ? Parent->Name : ""
 		,	Name     ? Name         : ""
 	);
 }

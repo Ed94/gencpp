@@ -1,6 +1,3 @@
-/*
-These constructors are the most implementation intensive other than the editor or scanner.
-*/
 
 namespace Parser
 {
@@ -331,6 +328,12 @@ namespace Parser
 						continue; // Skip found token, its all handled here.
 					}
 
+					if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
+					{
+						Tokens.append( token );
+						continue;
+					}
+
 					Tokens.append( token );
 
 					SkipWhitespace();
@@ -353,12 +356,6 @@ namespace Parser
 
 						u64 key = crc32( name.Text, name.Length );
 						defines.set( key, name );
-					}
-
-					if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
-					{
-						Tokens.append( token );
-						continue;
 					}
 
 					Token content = { scanner, 0, TokType::Preprocess_Content, false, line, column };
@@ -1165,8 +1162,10 @@ Code parse_static_assert()
 	Code
 	assert       = make_code();
 	assert->Type = ECode::Untyped;
-	eat( TokType::StaticAssert );
 
+	Token content = currtok;
+
+	eat( TokType::StaticAssert );
 	eat( TokType::Capture_Start );
 
 	s32 level = 0;
@@ -1181,6 +1180,14 @@ Code parse_static_assert()
 	}
 	eat( TokType::Capture_End );
 	eat( TokType::Statement_End );
+
+	content.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
+
+	content.Text = str_fmt_buf( "%.*s\n", content.Length, content.Text );
+	content.Length++;
+
+	assert->Content = get_cached_string( content );
+	assert->Name	= assert->Content;
 
 	Context.pop();
 	return assert;
@@ -1682,7 +1689,10 @@ CodeOperator parse_operator_after_ret_type(
 	// Parse Operator
 	eat( TokType::Decl_Operator );
 
-	if ( ! check( TokType::Operator ) )
+	if ( ! left && currtok.Type != TokType::Operator
+		&& currtok.Type != TokType::Star
+		&& currtok.Type != TokType::Ampersand
+		&& currtok.Type != TokType::Ampersand_DBL )
 	{
 		log_failure( "Expected operator after 'operator' keyword\n%s", Context.to_string() );
 		Context.pop();
@@ -1697,12 +1707,26 @@ CodeOperator parse_operator_after_ret_type(
 			if ( currtok.Text[1] == '=' )
 				op = Assign_Add;
 
+			if ( currtok.Text[1] == '+' )
+				op = Increment;
+
 			else
 				op = Add;
 		}
 		break;
 		case '-':
 		{
+			if ( currtok.Text[1] == '>' )
+			{
+				if ( currtok.Text[2] == '*' )
+					op = MemberOfPointer;
+
+				else
+					op = MemberOfPointer;
+
+				break;
+			}
+
 			if ( currtok.Text[1] == '=' )
 				op = Assign_Subtract;
 
@@ -1876,10 +1900,13 @@ CodeOperator parse_operator_after_ret_type(
 		return CodeInvalid;
 	}
 
-	eat( TokType::Operator );
+	eat( currtok.Type );
 
 	// Parse Params
 	CodeParam params = parse_params();
+
+	if ( params.ast == nullptr && op == EOperator::Multiply )
+		op = MemberOfPointer;
 
 	while ( left && currtok.is_specifier() )
 	{
@@ -2273,15 +2300,11 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 			break;
 
 			case TokType::Decl_Class:
-			{
 				member = parse_complicated_definition( TokType::Decl_Class );
-			}
 			break;
 
 			case TokType::Decl_Enum:
-			{
 				member = parse_complicated_definition( TokType::Decl_Enum );
-			}
 			break;
 
 			case TokType::Decl_Friend:
@@ -2293,9 +2316,7 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 			break;
 
 			case TokType::Decl_Struct:
-			{
 				member = parse_complicated_definition( TokType::Decl_Struct );
-			}
 			break;
 
 			case TokType::Decl_Template:
@@ -2307,10 +2328,7 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 			break;
 
 			case TokType::Decl_Union:
-			{
 				member = parse_complicated_definition( TokType::Decl_Union );
-			}
-
 			break;
 
 			case TokType::Decl_Using:
@@ -2489,7 +2507,8 @@ Code parse_class_struct( Parser::TokType which, bool inplace_def = false )
 
 	attributes = parse_attributes();
 
-	name = parse_identifier();
+	if ( check( TokType::Identifier ) )
+		name = parse_identifier();
 
 	local_persist
 	char interface_arr_mem[ kilobytes(4) ] {0};
@@ -2834,7 +2853,6 @@ CodeEnum parse_enum( bool inplace_def )
 	Token    name       = { nullptr, 0, TokType::Invalid };
 	Code     array_expr = { nullptr };
 	CodeType type       = { nullptr };
-	Token    body       = { nullptr, 0, TokType::Invalid };
 
 	char  entries_code[ kilobytes(128) ] { 0 };
 	s32   entries_length = 0;
@@ -2851,15 +2869,11 @@ CodeEnum parse_enum( bool inplace_def )
 
 	attributes = parse_attributes();
 
-	if ( currtok.Type != TokType::Identifier )
+	if ( check( TokType::Identifier ) )
 	{
-		log_failure( "Expected identifier for enum name\n%s", Context.to_string() );
-		Context.pop();
-		return CodeInvalid;
+		name = currtok;
+		eat( TokType::Identifier );
 	}
-
-	name = currtok;
-	eat( TokType::Identifier );
 
 	if ( currtok.Type == TokType::Assign_Classifer )
 	{
@@ -2874,44 +2888,90 @@ CodeEnum parse_enum( bool inplace_def )
 		}
 	}
 
+	CodeBody body = { nullptr };
+
 	if ( currtok.Type == TokType::BraceCurly_Open )
 	{
+		body = (CodeBody) make_code();
+
 		eat( TokType::BraceCurly_Open );
 
-		body = currtok;
+		Code member = CodeInvalid;
 
 		while ( currtok.Type != TokType::BraceCurly_Close )
 		{
-			if ( currtok.Type == TokType::Comment )
+			switch ( currtok.Type )
 			{
-				eat( TokType::Comment );
-				continue;
-			}
-			else if ( currtok.Type == TokType::Preprocess_Macro )
-			{
-				eat( TokType::Preprocess_Macro );
-				continue;
+				case TokType::Comment:
+					member = def_comment( currtok );
+					eat( TokType::Comment );
+				break;
+
+				case TokType::Preprocess_Define:
+					member = parse_define();
+				break;
+
+				case TokType::Preprocess_If:
+				case TokType::Preprocess_IfDef:
+				case TokType::Preprocess_IfNotDef:
+				case TokType::Preprocess_ElIf:
+					member = parse_preprocess_cond();
+				break;
+
+				case TokType::Preprocess_Else:
+					member = preprocess_else;
+					eat( TokType::Preprocess_Else );
+				break;
+
+				case TokType::Preprocess_EndIf:
+					member = preprocess_endif;
+					eat( TokType::Preprocess_EndIf );
+				break;
+
+				case TokType::Preprocess_Macro:
+					member = untyped_str( currtok );
+					eat( TokType::Preprocess_Macro );
+				break;
+
+				case TokType::Preprocess_Pragma:
+					member = parse_pragma();
+				break;
+
+				default:
+					Token entry = currtok;
+
+					eat( TokType::Identifier);
+
+					if ( currtok.Type == TokType::Operator && currtok.Text[0] == '=' )
+					{
+						eat( TokType::Operator );
+
+						while ( currtok.Type != TokType::Comma && currtok.Type != TokType::BraceCurly_Close )
+						{
+							eat( currtok.Type );
+						}
+					}
+
+					if ( currtok.Type == TokType::Comma )
+					{
+						eat( TokType::Comma );
+					}
+
+					entry.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)entry.Text;
+
+					member = untyped_str( entry );
+				break;
 			}
 
-			eat( TokType::Identifier);
-
-			if ( currtok.Type == TokType::Operator && currtok.Text[0] == '=' )
+			if ( member == Code::Invalid )
 			{
-				eat( TokType::Operator );
-
-				while ( currtok.Type != TokType::Comma && currtok.Type != TokType::BraceCurly_Close )
-				{
-					eat( currtok.Type );
-				}
+				log_failure( "Failed to parse member\n%s", Context.to_string() );
+				Context.pop();
+				return CodeInvalid;
 			}
 
-			if ( currtok.Type == TokType::Comma )
-			{
-				eat( TokType::Comma );
-			}
+			body.append( member );
 		}
-
-		body.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)body.Text;
 
 		eat( TokType::BraceCurly_Close );
 	}
@@ -2924,14 +2984,10 @@ CodeEnum parse_enum( bool inplace_def )
 	CodeEnum
 	result = (CodeEnum) make_code();
 
-	if ( body.Length )
+	if ( body.ast )
 	{
-		// mem_copy( entries_code, body.Text, body.Length );
-
-		Code untyped_body = untyped_str( body );
-
 		result->Type = is_enum_class ? Enum_Class : Enum;
-		result->Body = untyped_body;
+		result->Body = body;
 	}
 	else
 	{
@@ -3884,10 +3940,67 @@ CodeUnion parse_union( bool inplace_def )
 
 	while ( ! check( TokType::BraceCurly_Close ) )
 	{
-		Code entry = parse_variable();
+		Code member = { nullptr };
+		switch ( currtok.Type )
+		{
+			case TokType::Comment:
+				member = def_comment( currtok );
+				eat( TokType::Comment );
+			break;
 
-		if ( entry )
-			body.append( entry );
+			case TokType::Decl_Class:
+				member = parse_complicated_definition( TokType::Decl_Class );
+			break;
+
+			case TokType::Decl_Enum:
+				member = parse_complicated_definition( TokType::Decl_Enum );
+			break;
+
+			case TokType::Decl_Struct:
+				member = parse_complicated_definition( TokType::Decl_Struct );
+			break;
+
+			case TokType::Decl_Union:
+				member = parse_complicated_definition( TokType::Decl_Union );
+			break;
+
+			case TokType::Preprocess_Define:
+				member = parse_define();
+			break;
+
+			case TokType::Preprocess_If:
+			case TokType::Preprocess_IfDef:
+			case TokType::Preprocess_IfNotDef:
+			case TokType::Preprocess_ElIf:
+				member = parse_preprocess_cond();
+			break;
+
+			case TokType::Preprocess_Else:
+				member = preprocess_else;
+				eat( TokType::Preprocess_Else );
+			break;
+
+			case TokType::Preprocess_EndIf:
+				member = preprocess_endif;
+				eat( TokType::Preprocess_EndIf );
+			break;
+
+			case TokType::Preprocess_Macro:
+				member = untyped_str( currtok );
+				eat( TokType::Preprocess_Macro );
+			break;
+
+			case TokType::Preprocess_Pragma:
+				member = parse_pragma();
+			break;
+
+			default:
+				member = parse_variable();
+			break;
+		}
+
+		if ( member )
+			body.append( member );
 	}
 
 	eat( TokType::BraceCurly_Close );

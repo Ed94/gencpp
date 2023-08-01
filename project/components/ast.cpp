@@ -508,39 +508,39 @@ String AST::to_string()
 		break;
 
 		case Preprocess_Define:
-			result.append_fmt( "#define %s %s", Name, Content );
+			result.append_fmt( "#define %s %s\n", Name, Content );
 		break;
 
 		case Preprocess_If:
-			result.append_fmt( "#if %s", Content );
+			result.append_fmt( "#if %s\n", Content );
 		break;
 
 		case Preprocess_IfDef:
-			result.append_fmt( "#ifdef %s", Content );
+			result.append_fmt( "#ifdef %s\n", Content );
 		break;
 
 		case Preprocess_IfNotDef:
-			result.append_fmt( "#ifndef %s", Content );
+			result.append_fmt( "#ifndef %s\n", Content );
 		break;
 
 		case Preprocess_Include:
-			result.append_fmt( "#include \"%s\"", Content );
+			result.append_fmt( "#include \"%s\"\n", Content );
 		break;
 
 		case Preprocess_ElIf:
-			result.append_fmt( "#elif %s", Content );
+			result.append_fmt( "#elif %s\n", Content );
 		break;
 
 		case Preprocess_Else:
-			result.append_fmt( "#else" );
+			result.append_fmt( "#else\n" );
 		break;
 
 		case Preprocess_EndIf:
-			result.append_fmt( "#endif" );
+			result.append_fmt( "#endif\n" );
 		break;
 
 		case Preprocess_Pragma:
-			result.append_fmt( "#pragma %s", Content );
+			result.append_fmt( "#pragma %s\n", Content );
 		break;
 
 		case Specifiers:
@@ -653,11 +653,11 @@ String AST::to_string()
 
 			if ( UnderlyingType->Type == Typename && UnderlyingType->ArrExpr )
 			{
-				result.append_fmt( "[%s];", UnderlyingType->ArrExpr->to_string() );
+				result.append_fmt( "[%s];\n", UnderlyingType->ArrExpr->to_string() );
 			}
 			else
 			{
-				result.append( ";" );
+				result.append( ";\n" );
 			}
 		}
 		break;
