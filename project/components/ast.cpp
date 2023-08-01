@@ -707,7 +707,9 @@ String AST::to_string()
 				);
 			}
 
-			if ( Parent && Parent->Type != ECode::Typedef )
+			bool add_semicolon = Parent && Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable;
+
+			if ( add_semicolon )
 				result.append(";");
 		}
 		break;
@@ -756,6 +758,9 @@ String AST::to_string()
 				if ( ValueType->ArrExpr )
 					result.append_fmt( "[%s]", ValueType->ArrExpr->to_string() );
 
+				if ( BitfieldSize )
+					result.append_fmt( " : %lu", BitfieldSize );
+
 				if ( Value )
 					result.append_fmt( " = %s", Value->to_string() );
 
@@ -764,7 +769,10 @@ String AST::to_string()
 				break;
 			}
 
-			if ( UnderlyingType->ArrExpr )
+			if ( BitfieldSize )
+				result.append_fmt( "%s : %lu", ValueType->to_string(), BitfieldSize );
+
+			else if ( UnderlyingType->ArrExpr )
 				result.append_fmt( "%s %s[%s];", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
 
 			else

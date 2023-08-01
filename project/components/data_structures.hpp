@@ -231,7 +231,10 @@ struct AST
 				AST*  UnderlyingType; // Enum, Typedef
 				AST*  ValueType;      // Parameter, Variable
 			};
-			AST*      Params;         // Function, Operator, Template
+			union {
+				AST*  Params;         // Function, Operator, Template
+				AST*  BitfieldSize;   // Varaiable (Class/Struct Data Member)
+			};
 			union {
 				AST*  ArrExpr;        // Type Symbol
 				AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
@@ -275,7 +278,10 @@ struct AST_POD
 				AST*  UnderlyingType; // Enum, Typedef
 				AST*  ValueType;      // Parameter, Variable
 			};
-			AST*      Params;         // Function, Operator, Template
+			union {
+				AST*  Params;         // Function, Operator, Template
+				AST*  BitfieldSize;   // Varaiable (Class/Struct Data Member)
+			};
 			union {
 				AST*  ArrExpr;        // Type Symbol
 				AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
@@ -1064,7 +1070,7 @@ struct AST_Var
 			CodeAttributes Attributes;
 			CodeSpecifiers Specs;
 			CodeType       ValueType;
-			char 	       _PAD_PROPERTIES_[ sizeof(AST*) ];
+			Code           BitfieldSize;
 			Code           Value;
 		};
 	};

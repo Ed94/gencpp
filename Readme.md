@@ -17,7 +17,7 @@ A `natvis` and `natstepfilter` are provided in the scripts directory.
 
 ***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
 
-A C variant is hosted [here](https://github.com/Ed94/genc); I haven't gotten headwind on it, should be easier to make than this...
+A C variant is hosted [here](https://github.com/Ed94/genc); I will complete it when this library is feature complete, it should be easier to make than this...
 
 ## Usage
 
