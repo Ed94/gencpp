@@ -107,13 +107,16 @@ String AST::to_string()
 				}
 				else
 				{
-					result.append_fmt( "%s \n{\n%s\n};", Name, Body->to_string() );
+					result.append_fmt( "%s \n{\n%s\n}", Name, Body->to_string() );
 				}
 			}
 			else
 			{
-				result.append_fmt( "class %s\n{\n%s\n};", Name, Body->to_string() );
+				result.append_fmt( "class %s\n{\n%s\n}", Name, Body->to_string() );
 			}
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -123,9 +126,12 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "class %s %s;", Attributes->to_string(), Name );
+				result.append_fmt( "class %s %s", Attributes->to_string(), Name );
 
-			else result.append_fmt( "class %s;", Name );
+			else result.append_fmt( "class %s", Name );
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -142,21 +148,24 @@ String AST::to_string()
 					result.append_fmt( "%s ", Attributes->to_string() );
 
 				if ( UnderlyingType )
-					result.append_fmt( "%s : %s\n{\n%s\n};"
+					result.append_fmt( "%s : %s\n{\n%s\n}"
 						, Name
 						, UnderlyingType->to_string()
 						, Body->to_string()
 					);
 
-				else result.append_fmt( "%s\n{\n%s\n};"
+				else result.append_fmt( "%s\n{\n%s\n}"
 					, Name
 					, Body->to_string()
 				);
 			}
-			else result.append_fmt( "enum %s\n{\n%s\n};"
+			else result.append_fmt( "enum %s\n{\n%s\n}"
 				, Name
 				, Body->to_string()
 			);
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -168,7 +177,10 @@ String AST::to_string()
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
 
-			result.append_fmt( "enum %s : %s;", Name, UnderlyingType->to_string() );
+			result.append_fmt( "enum %s : %s", Name, UnderlyingType->to_string() );
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -188,7 +200,7 @@ String AST::to_string()
 
 				if ( UnderlyingType )
 				{
-					result.append_fmt( "%s : %s\n{\n%s\n};"
+					result.append_fmt( "%s : %s\n{\n%s\n}"
 						, Name
 						, UnderlyingType->to_string()
 						, Body->to_string()
@@ -196,7 +208,7 @@ String AST::to_string()
 				}
 				else
 				{
-					result.append_fmt( "%s\n{\n%s\n};"
+					result.append_fmt( "%s\n{\n%s\n}"
 						, Name
 						, Body->to_string()
 					);
@@ -204,10 +216,13 @@ String AST::to_string()
 			}
 			else
 			{
-				result.append_fmt( "enum class %s\n{\n%s\n};"
+				result.append_fmt( "enum class %s\n{\n%s\n}"
 					, Body->to_string()
 				);
 			}
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -221,7 +236,10 @@ String AST::to_string()
 			if ( Attributes )
 				result.append_fmt( "%s ", Attributes->to_string() );
 
-			result.append_fmt( "%s : %s;", Name, UnderlyingType->to_string() );
+			result.append_fmt( "%s : %s", Name, UnderlyingType->to_string() );
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -587,13 +605,16 @@ String AST::to_string()
 				{
 					if ( Name )
 
-					result.append_fmt( "%s \n{\n%s\n};", Name, Body->to_string() );
+					result.append_fmt( "%s \n{\n%s\n}", Name, Body->to_string() );
 				}
 			}
 			else
 			{
-				result.append_fmt( "struct %s\n{\n%s\n};", Name, Body->to_string() );
+				result.append_fmt( "struct %s\n{\n%s\n}", Name, Body->to_string() );
 			}
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -603,9 +624,12 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "struct %s %s;", Attributes->to_string(), Name );
+				result.append_fmt( "struct %s %s", Attributes->to_string(), Name );
 
-			else result.append_fmt( "struct %s;", Name );
+			else result.append_fmt( "struct %s", Name );
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 
@@ -670,7 +694,7 @@ String AST::to_string()
 
 			if ( Name )
 			{
-				result.append_fmt( "%s\n{\n%s\n};"
+				result.append_fmt( "%s\n{\n%s\n}"
 					, Name
 					, Body->to_string()
 				);
@@ -678,10 +702,13 @@ String AST::to_string()
 			else
 			{
 				// Anonymous union
-				result.append_fmt( "\n{\n%s\n};"
+				result.append_fmt( "\n{\n%s\n}"
 					, Body->to_string()
 				);
 			}
+
+			if ( Parent && Parent->Type != ECode::Typedef )
+				result.append(";");
 		}
 		break;
 

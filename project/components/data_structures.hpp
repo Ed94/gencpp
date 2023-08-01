@@ -489,6 +489,12 @@ struct CodeSpecifiers
 
 	bool append( SpecifierT spec )
 	{
+		if ( ast == nullptr )
+		{
+			log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
+			return false;
+		}
+
 		if ( raw()->NumEntries == AST::ArrSpecs_Cap )
 		{
 			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
