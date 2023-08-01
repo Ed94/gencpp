@@ -28,7 +28,7 @@ void check_singleheader_ast()
 	}
 
 	Builder builder;
-	builder.open( "singleheader_copy.hpp" );
+	builder.open( "singleheader_copy.gen.hpp" );
 	log_fmt("serializng ast\n");
 	builder.print( ast );
 	builder.write();

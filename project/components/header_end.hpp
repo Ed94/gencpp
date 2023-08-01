@@ -368,7 +368,7 @@ CodeBody def_body( CodeT type )
 	}
 
 	Code
-		result       = make_code();
+	result       = make_code();
 	result->Type = type;
 	return (CodeBody)result;
 }

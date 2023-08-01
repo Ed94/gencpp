@@ -74,6 +74,11 @@ void define_constants()
 	Code::Invalid = make_code();
 	Code::Invalid.set_global();
 
+	t_empty          = (CodeType) make_code();
+	t_empty->Type    = ECode::Typename;
+	t_empty->Name    = get_cached_string( txt_StrC("") );
+	t_empty.set_global();
+
 	access_private       = make_code();
 	access_private->Type = ECode::Access_Private;
 	access_private->Name = get_cached_string( txt_StrC("private:") );
@@ -160,11 +165,6 @@ void define_constants()
 	def_constant_code_type( f64 );
 #endif
 #	undef def_constant_code_type
-
-	t_empty          = (CodeType) make_code();
-	t_empty->Type    = ECode::Typename;
-	t_empty->Name    = get_cached_string( txt_StrC("") );
-	t_empty.set_global();
 
 #	pragma push_macro( "global" )
 #	pragma push_macro( "internal" )

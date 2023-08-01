@@ -2037,6 +2037,22 @@ CodeVar parse_variable_after_name(
 }
 
 internal inline
+Code parse_simple_preprocess( Parser::TokType which )
+{
+	using namespace Parser;
+	push_scope();
+
+	Token tok = currtok;
+	tok.Text = str_fmt_buf( "%.*s\n", tok.Length, tok.Text );
+	tok.Length++;
+	Code result = untyped_str( tok );
+	eat( which );
+
+	Context.pop();
+	return result;
+}
+
+internal inline
 Code parse_variable_assignment()
 {
 	using namespace Parser;
@@ -2069,7 +2085,6 @@ Code parse_variable_assignment()
 	Context.pop();
 	return expr;
 }
-
 
 internal inline
 Code parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers )
@@ -2351,8 +2366,7 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 			break;
 
 			case TokType::Preprocess_Macro:
-				member = untyped_str( currtok );
-				eat( TokType::Preprocess_Macro );
+				member = parse_simple_preprocess( TokType::Preprocess_Macro );
 			break;
 
 			case TokType::Preprocess_Pragma:
@@ -2370,8 +2384,7 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 			break;
 
 			case TokType::Preprocess_Unsupported:
-				member = untyped_str( currtok );
-				eat( TokType::Preprocess_Unsupported );
+				member = parse_simple_preprocess( TokType::Preprocess_Unsupported );
 			break;
 
 			case TokType::StaticAssert:
@@ -2687,8 +2700,7 @@ CodeBody parse_global_nspace( CodeT which )
 			break;
 
 			case TokType::Preprocess_Macro:
-				member = untyped_str( currtok );
-				eat( TokType::Preprocess_Macro );
+				member = parse_simple_preprocess( TokType::Preprocess_Macro );
 			break;
 
 			case TokType::Preprocess_Pragma:
@@ -2706,8 +2718,7 @@ CodeBody parse_global_nspace( CodeT which )
 			break;
 
 			case TokType::Preprocess_Unsupported:
-				member = untyped_str( currtok );
-				eat( TokType::Preprocess_Unsupported );
+				member = parse_simple_preprocess( TokType::Preprocess_Unsupported );
 			break;
 
 			case TokType::StaticAssert:
@@ -2892,7 +2903,8 @@ CodeEnum parse_enum( bool inplace_def )
 
 	if ( currtok.Type == TokType::BraceCurly_Open )
 	{
-		body = (CodeBody) make_code();
+		body       = (CodeBody) make_code();
+		body->Type = ECode::Enum_Body;
 
 		eat( TokType::BraceCurly_Open );
 
@@ -2929,12 +2941,15 @@ CodeEnum parse_enum( bool inplace_def )
 				break;
 
 				case TokType::Preprocess_Macro:
-					member = untyped_str( currtok );
-					eat( TokType::Preprocess_Macro );
+					member = parse_simple_preprocess( TokType::Preprocess_Macro );
 				break;
 
 				case TokType::Preprocess_Pragma:
 					member = parse_pragma();
+				break;
+
+				case TokType::Preprocess_Unsupported:
+					member = parse_simple_preprocess( TokType::Preprocess_Unsupported );
 				break;
 
 				default:
@@ -3986,12 +4001,15 @@ CodeUnion parse_union( bool inplace_def )
 			break;
 
 			case TokType::Preprocess_Macro:
-				member = untyped_str( currtok );
-				eat( TokType::Preprocess_Macro );
+				member = parse_simple_preprocess( TokType::Preprocess_Macro );
 			break;
 
 			case TokType::Preprocess_Pragma:
 				member = parse_pragma();
+			break;
+
+			case TokType::Preprocess_Unsupported:
+				member = parse_simple_preprocess( TokType::Preprocess_Unsupported );
 			break;
 
 			default:
