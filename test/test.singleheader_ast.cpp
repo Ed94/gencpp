@@ -20,16 +20,16 @@ void check_singleheader_ast()
 
 	log_fmt("generated AST!!!\n");
 
-	s32 idx = 0;
-	for ( Code entry : ast )
-	{
-		log_fmt("Entry %d: %s", idx, entry.to_string() );
-		idx++;
-	}
+	// s32 idx = 0;
+	// for ( Code entry : ast )
+	// {
+	// 	log_fmt("Entry %d: %s", idx, entry.to_string() );
+	// 	idx++;
+	// }
 
 	Builder builder;
 	builder.open( "singleheader_copy.gen.hpp" );
-	log_fmt("serializng ast\n");
+	log_fmt("\n\nserializng ast\n");
 	builder.print( ast );
 	builder.write();
 

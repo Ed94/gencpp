@@ -257,6 +257,8 @@ namespace Parser
 			{
 				case '#':
 				{
+					char const* hash = scanner;
+
 					move_forward();
 					SkipWhitespace();
 
@@ -292,13 +294,13 @@ namespace Parser
 								if ( current == '\r' )
 								{
 									move_forward();
-									token.Length++;
+									// token.Length++;
 								}
 
 								if ( current == '\n' )
 								{
 									move_forward();
-									token.Length++;
+									// token.Length++;
 									continue;
 								}
 								else
@@ -316,7 +318,7 @@ namespace Parser
 							if ( current == '\n' )
 							{
 								move_forward();
-								token.Length++;
+								// token.Length++;
 								break;
 							}
 
@@ -324,6 +326,8 @@ namespace Parser
 							token.Length++;
 						}
 
+						token.Text   = hash;
+						token.Length = (sptr)token.Text + token.Length - (sptr)hash;
 						Tokens.append( token );
 						continue; // Skip found token, its all handled here.
 					}
@@ -434,7 +438,7 @@ namespace Parser
 						if ( current == '\n' )
 						{
 							move_forward();
-							content.Length++;
+							// content.Length++;
 							break;
 						}
 
@@ -1183,8 +1187,8 @@ Code parse_static_assert()
 
 	content.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
 
-	content.Text = str_fmt_buf( "%.*s\n", content.Length, content.Text );
-	content.Length++;
+	// content.Text = str_fmt_buf( "%.*s\n", content.Length, content.Text );
+	// content.Length++;
 
 	assert->Content = get_cached_string( content );
 	assert->Name	= assert->Content;
@@ -1979,7 +1983,7 @@ CodeVar parse_variable_after_name(
 			eat( currtok.Type );
 		}
 
-		expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
+		expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text - 1;
 		expr            = untyped_str( expr_tok );
 	}
 
@@ -2043,7 +2047,7 @@ Code parse_simple_preprocess( Parser::TokType which )
 	push_scope();
 
 	Token tok = currtok;
-	tok.Text = str_fmt_buf( "%.*s\n", tok.Length, tok.Text );
+	tok.Text = str_fmt_buf( "%.*s", tok.Length, tok.Text );
 	tok.Length++;
 	Code result = untyped_str( tok );
 	eat( which );

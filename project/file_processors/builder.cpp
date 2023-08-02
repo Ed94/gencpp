@@ -1,6 +1,6 @@
 void Builder::print( Code code )
 {
-	Buffer.append_fmt( "%s\n", code->to_string() );
+	Buffer.append_fmt( "%s", code->to_string() );
 }
 
 void Builder::print_fmt( char const* fmt, ... )
