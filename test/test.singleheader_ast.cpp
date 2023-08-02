@@ -23,6 +23,10 @@ void check_singleheader_ast()
 	s32 idx = 0;
 	for ( Code entry : ast )
 	{
+		if (idx == 900)
+		{
+			log_fmt("break here\n");
+		}
 		log_fmt("Entry %d: %s\n", idx, entry.to_string() );
 		idx++;
 	}

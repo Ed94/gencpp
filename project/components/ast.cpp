@@ -483,7 +483,7 @@ String AST::to_string()
 		case Operator_Cast_Fwd:
 			if ( Specs )
 			{
-				result.append_fmt( "operator %s()" );
+				result.append_fmt( "operator %s()",  ValueType->to_string() );
 
 				CodeSpecifiers specs = cast<CodeSpecifiers>();
 
@@ -493,7 +493,7 @@ String AST::to_string()
 						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
 				}
 
-				result.append_fmt( ";", Body->to_string() );
+				result.append( ";" );
 				break;
 			}
 

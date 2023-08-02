@@ -1498,11 +1498,6 @@ CodeParam parse_params( bool use_template_capture = false )
 
 	Token name = NullToken;
 
-	if ( Context.Tokens.Idx == 18546 )
-	{
-		log_fmt("here");
-	}
-
 	if ( check( TokType::Identifier )  )
 	{
 		name = currtok;
@@ -1521,7 +1516,10 @@ CodeParam parse_params( bool use_template_capture = false )
 				return CodeInvalid;
 			}
 
-			while ( left && currtok.Type != TokType::Comma )
+			while ( left
+				&& currtok.Type != TokType::Comma
+				&& currtok.Type != TokType::Capture_End
+			)
 			{
 				value_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)value_tok.Text;
 				eat( currtok.Type );
@@ -1589,7 +1587,9 @@ CodeParam parse_params( bool use_template_capture = false )
 					return CodeInvalid;
 				}
 
-				while ( left && currtok.Type != TokType::Comma )
+				while ( left
+				&& currtok.Type != TokType::Comma && currtok.Type != TokType::Capture_End
+				)
 				{
 					value_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)value_tok.Text;
 					eat( currtok.Type );
@@ -2017,9 +2017,8 @@ CodeVar parse_variable_after_name(
 	using namespace Parser;
 	push_scope();
 
-	Code array_expr = parse_array_decl();
-	Code expr       = { nullptr };
-
+	Code array_expr    = parse_array_decl();
+	Code expr          = { nullptr };
 	Code bitfield_expr = { nullptr };
 
 	if ( currtok.IsAssign )
@@ -2041,6 +2040,29 @@ CodeVar parse_variable_after_name(
 		}
 
 		expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text - 1;
+		expr            = untyped_str( expr_tok );
+	}
+
+	if ( currtok.Type == TokType::BraceCurly_Open )
+	{
+		Token expr_tok = currtok;
+
+		eat( TokType::BraceCurly_Open );
+
+		s32 level = 0;
+		while ( left && ( currtok.Type != TokType::BraceCurly_Close || level > 0 ) )
+		{
+			if ( currtok.Type == TokType::BraceCurly_Open )
+				level++;
+
+			else if ( currtok.Type == TokType::BraceCurly_Close && level > 0 )
+				level--;
+
+			eat( currtok.Type );
+		}
+		eat( TokType::BraceCurly_Close );
+
+		expr_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_tok.Text;
 		expr            = untyped_str( expr_tok );
 	}
 
@@ -2140,40 +2162,6 @@ Code parse_simple_preprocess( Parser::TokType which )
 
 	Context.pop();
 	return result;
-}
-
-internal inline
-Code parse_variable_assignment()
-{
-	using namespace Parser;
-	push_scope();
-
-	Code expr = CodeInvalid;
-
-	if ( currtok.IsAssign )
-	{
-		eat( TokType::Operator );
-
-		Token expr_tok = currtok;
-
-		if ( currtok.Type == TokType::Statement_End )
-		{
-			log_failure( "Expected expression after assignment operator\n%s", Context.to_string() );
-			Context.pop();
-			return CodeInvalid;
-		}
-
-		while ( left && currtok.Type != TokType::Statement_End )
-		{
-			expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
-			eat( currtok.Type );
-		}
-
-		expr = untyped_str( expr_tok );
-	}
-
-	Context.pop();
-	return expr;
 }
 
 internal inline
