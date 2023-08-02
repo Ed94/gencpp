@@ -26,12 +26,29 @@ void AST::append( AST* other )
 
 char const* AST::debug_str()
 {
+	if ( Parent )
+	{
+		char const* fmt = stringize(
+			\nType    : %s
+			\nParent  : %s %s
+			\nName    : %s
+		);
+
+		// These should be used immediately in a log.
+		// Thus if its desired to keep the debug str
+		// for multiple calls to bprintf,
+		// allocate this to proper string.
+		return str_fmt_buf( fmt
+			,	type_str()
+			,	Parent->Name
+			,   Parent->type_str()
+			,	Name     ? Name         : ""
+		);
+	}
+
 	char const* fmt = stringize(
-		\nCode Debug:
 		\nType    : %s
-		\nParent  : %s
 		\nName    : %s
-		\nComment : %s
 	);
 
 	// These should be used immediately in a log.
@@ -40,7 +57,6 @@ char const* AST::debug_str()
 	// allocate this to proper string.
 	return str_fmt_buf( fmt
 		,	type_str()
-		,	Parent   ? Parent->Name : ""
 		,	Name     ? Name         : ""
 	);
 }
@@ -162,6 +178,7 @@ Define_CodeImpl( CodeBody );
 Define_CodeImpl( CodeAttributes );
 Define_CodeImpl( CodeComment );
 Define_CodeImpl( CodeClass );
+Define_CodeImpl( CodeDefine );
 Define_CodeImpl( CodeEnum );
 Define_CodeImpl( CodeExec );
 Define_CodeImpl( CodeExtern );
@@ -173,6 +190,8 @@ Define_CodeImpl( CodeNamespace );
 Define_CodeImpl( CodeOperator );
 Define_CodeImpl( CodeOpCast );
 Define_CodeImpl( CodeParam );
+Define_CodeImpl( CodePragma );
+Define_CodeImpl( CodePreprocessCond );
 Define_CodeImpl( CodeSpecifiers );
 Define_CodeImpl( CodeStruct );
 Define_CodeImpl( CodeTemplate );
@@ -193,6 +212,7 @@ Define_AST_Cast( Body );
 Define_AST_Cast( Attributes );
 Define_AST_Cast( Comment );
 Define_AST_Cast( Class );
+Define_AST_Cast( Define );
 Define_AST_Cast( Enum );
 Define_AST_Cast( Exec );
 Define_AST_Cast( Extern );
@@ -204,6 +224,8 @@ Define_AST_Cast( Namespace );
 Define_AST_Cast( Operator );
 Define_AST_Cast( OpCast );
 Define_AST_Cast( Param );
+Define_AST_Cast( Pragma );
+Define_AST_Cast( PreprocessCond );
 Define_AST_Cast( Struct );
 Define_AST_Cast( Specifiers );
 Define_AST_Cast( Template );
@@ -223,6 +245,7 @@ Code::operator Code ## type() const \
 Define_CodeCast( Attributes );
 Define_CodeCast( Comment );
 Define_CodeCast( Class );
+Define_CodeCast( Define );
 Define_CodeCast( Exec );
 Define_CodeCast( Enum );
 Define_CodeCast( Extern );
@@ -234,6 +257,8 @@ Define_CodeCast( Namespace );
 Define_CodeCast( Operator );
 Define_CodeCast( OpCast );
 Define_CodeCast( Param );
+Define_CodeCast( Pragma );
+Define_CodeCast( PreprocessCond );
 Define_CodeCast( Specifiers );
 Define_CodeCast( Struct );
 Define_CodeCast( Template );
@@ -343,7 +368,7 @@ CodeBody def_body( CodeT type )
 	}
 
 	Code
-		result       = make_code();
+	result       = make_code();
 	result->Type = type;
 	return (CodeBody)result;
 }
@@ -367,28 +392,6 @@ StrC token_fmt_impl( sw num, ... )
 #pragma endregion Inlines
 
 #pragma region Constants
-
-#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-	// Predefined typename codes. Are set to readonly and are setup during gen::init()
-
-	extern CodeType t_b32;
-
-	extern CodeType t_s8;
-	extern CodeType t_s16;
-	extern CodeType t_s32;
-	extern CodeType t_s64;
-
-	extern CodeType t_u8;
-	extern CodeType t_u16;
-	extern CodeType t_u32;
-	extern CodeType t_u64;
-
-	extern CodeType t_sw;
-	extern CodeType t_uw;
-
-	extern CodeType t_f32;
-	extern CodeType t_f64;
-#endif
 
 #ifndef GEN_GLOBAL_BUCKET_SIZE
 #	define GEN_GLOBAL_BUCKET_SIZE megabytes(10)
@@ -437,29 +440,22 @@ constexpr s32 TokenFmt_TokenMap_MemSize	= GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE;
 constexpr s32 LexAllocator_Size         = GEN_LEX_ALLOCATOR_SIZE;
 constexpr s32 Builder_StrBufferReserve  = GEN_BUILDER_STR_BUFFER_RESERVE;
 
-extern CodeType t_empty; // Used with varaidc parameters. (Exposing just in case its useful for another circumstance)
-extern CodeType t_auto;
-extern CodeType t_void;
-extern CodeType t_int;
-extern CodeType t_bool;
-extern CodeType t_char;
-extern CodeType t_wchar_t;
-extern CodeType t_class;
-extern CodeType t_typename;
-
-extern CodeParam param_varadic;
-
-extern CodeAttributes attrib_api_export;
-extern CodeAttributes attrib_api_import;
-
 extern Code access_public;
 extern Code access_protected;
 extern Code access_private;
 
+extern CodeAttributes attrib_api_export;
+extern CodeAttributes attrib_api_import;
+
 extern Code module_global_fragment;
 extern Code module_private_fragment;
 
-extern Code pragma_once;
+extern CodePragma pragma_once;
+
+extern CodeParam param_varadic;
+
+extern CodePreprocessCond preprocess_else;
+extern CodePreprocessCond preprocess_endif;
 
 extern CodeSpecifiers spec_const;
 extern CodeSpecifiers spec_consteval;
@@ -472,6 +468,7 @@ extern CodeSpecifiers spec_inline;
 extern CodeSpecifiers spec_internal_linkage;
 extern CodeSpecifiers spec_local_persist;
 extern CodeSpecifiers spec_mutable;
+extern CodeSpecifiers spec_neverinline;
 extern CodeSpecifiers spec_override;
 extern CodeSpecifiers spec_ptr;
 extern CodeSpecifiers spec_ref;
@@ -481,6 +478,38 @@ extern CodeSpecifiers spec_static_member;
 extern CodeSpecifiers spec_thread_local;
 extern CodeSpecifiers spec_virtual;
 extern CodeSpecifiers spec_volatile;
+
+extern CodeType t_empty; // Used with varaidc parameters. (Exposing just in case its useful for another circumstance)
+extern CodeType t_auto;
+extern CodeType t_void;
+extern CodeType t_int;
+extern CodeType t_bool;
+extern CodeType t_char;
+extern CodeType t_wchar_t;
+extern CodeType t_class;
+extern CodeType t_typename;
+
+#ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
+	// Predefined typename codes. Are set to readonly and are setup during gen::init()
+
+	extern CodeType t_b32;
+
+	extern CodeType t_s8;
+	extern CodeType t_s16;
+	extern CodeType t_s32;
+	extern CodeType t_s64;
+
+	extern CodeType t_u8;
+	extern CodeType t_u16;
+	extern CodeType t_u32;
+	extern CodeType t_u64;
+
+	extern CodeType t_sw;
+	extern CodeType t_uw;
+
+	extern CodeType t_f32;
+	extern CodeType t_f64;
+#endif
 
 #pragma endregion Constants
 

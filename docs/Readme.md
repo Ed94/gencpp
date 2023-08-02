@@ -42,6 +42,7 @@ Otherwise the library is free of any templates.
 
 * Execution statement validation : Execution expressions are defined using the untyped AST.
   * Lambdas (This naturally means its unsupported)
+* Non-trivial template validation support.
 * RAII : This needs support for constructors/destructor parsing
   * Haven't gotten around to yet (its in the github issues)
 

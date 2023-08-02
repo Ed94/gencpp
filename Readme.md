@@ -8,12 +8,6 @@ These build up a code AST to then serialize with a file builder.
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
 its not meant to be a black box metaprogramming utility, its meant for the user to extend for their project domain.
 
-### TOC
-
-* [Notes](#notes)
-* [Usage](#usage)
-* [Building](#building)
-
 ## Notes
 
 The project has reached an *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.  
@@ -23,7 +17,7 @@ A `natvis` and `natstepfilter` are provided in the scripts directory.
 
 ***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
 
-A C variant is hosted [here](https://github.com/Ed94/genc); I haven't gotten headwind on it, should be easier to make than this...
+A C variant is hosted [here](https://github.com/Ed94/genc); I will complete it when this library is feature complete, it should be easier to make than this...
 
 ## Usage
 

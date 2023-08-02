@@ -6,7 +6,7 @@ namespace Parser
 
 	For the sake of scanning files, it can scan preprocessor directives
 
-	Attributes_Start is only used to indicate the start of the user_defined attribute list.
+	__Attributes_Start is only used to indicate the start of the user_defined attribute list.
 */
 
 #ifndef GEN_DEFINE_ATTRIBUTE_TOKENS
@@ -15,7 +15,7 @@ namespace Parser
 	Entry( API_Import, "GEN_API_Import_Code" )
 #endif
 
-#	define Define_TokType \
+#	define Define_TokType                               \
 	Entry( Invalid,                "INVALID" )          \
 	Entry( Access_Private,         "private" )          \
 	Entry( Access_Protected,       "protected" )        \
@@ -33,11 +33,11 @@ namespace Parser
 	Entry( BraceSquare_Close,      "]" )                \
 	Entry( Capture_Start,          "(" )                \
 	Entry( Capture_End,            ")" )                \
-	Entry( Comment,                "comment" )          \
-	Entry( Char,                   "character" )        \
+	Entry( Comment,                "__comment__" )      \
+	Entry( Char,                   "__character__" )    \
 	Entry( Comma,                  "," )                \
 	Entry( Decl_Class,             "class" )            \
-	Entry( Decl_GNU_Attribute,    "__attribute__" )     \
+	Entry( Decl_GNU_Attribute,     "__attribute__" )    \
 	Entry( Decl_MSVC_Attribute,    "__declspec" )       \
 	Entry( Decl_Enum,              "enum" )             \
 	Entry( Decl_Extern_Linkage,    "extern" )           \
@@ -50,17 +50,23 @@ namespace Parser
 	Entry( Decl_Typedef,           "typedef" )          \
 	Entry( Decl_Using,             "using" )            \
 	Entry( Decl_Union,             "union" )            \
-	Entry( Identifier,             "identifier" )       \
+	Entry( Identifier,             "__identifier__" )   \
 	Entry( Module_Import,          "import" )           \
 	Entry( Module_Export,          "export" )           \
-	Entry( Number,                 "number" )           \
-	Entry( Operator,               "operator" )         \
-	Entry( Preprocess_Define,      "#define")           \
-	Entry( Preproces_Include,      "include" )          \
-	Entry( Preprocess_If,          "#if")               \
-	Entry( Preprocess_Elif,        "#elif")             \
-	Entry( Preprocess_Else,        "#else")             \
-	Entry( Preprocess_EndIf,       "#endif")            \
+	Entry( Number,                 "__number__" )       \
+	Entry( Operator,               "__operator__" )     \
+	Entry( Preprocess_Define,      "define")            \
+	Entry( Preprocess_If,          "if")                \
+	Entry( Preprocess_IfDef,       "ifdef")             \
+	Entry( Preprocess_IfNotDef,    "ifndef")            \
+	Entry( Preprocess_ElIf,        "elif")              \
+	Entry( Preprocess_Else,        "else")              \
+	Entry( Preprocess_EndIf,       "endif")             \
+	Entry( Preprocess_Include,     "include" )          \
+	Entry( Preprocess_Pragma, 	   "pragma")            \
+	Entry( Preprocess_Content, 	   "__macro_content__") \
+	Entry( Preprocess_Macro,       "__macro__")         \
+	Entry( Preprocess_Unsupported, "__unsupported__" )  \
 	Entry( Spec_Alignas,           "alignas" )          \
 	Entry( Spec_Const,             "const" )            \
 	Entry( Spec_Consteval,         "consteval" )        \
@@ -74,13 +80,15 @@ namespace Parser
 	Entry( Spec_Internal_Linkage,  "internal" )         \
 	Entry( Spec_LocalPersist,      "local_persist" )    \
 	Entry( Spec_Mutable,           "mutable" )          \
+	Entry( Spec_NeverInline,       "neverinline" )      \
 	Entry( Spec_Override,          "override" )         \
 	Entry( Spec_Static,            "static" )           \
 	Entry( Spec_ThreadLocal,       "thread_local" )     \
 	Entry( Spec_Volatile,          "volatile")          \
 	Entry( Star,                   "*" )                \
 	Entry( Statement_End,          ";" )                \
-	Entry( String,                 "string" )           \
+	Entry( StaticAssert, 		   "static_assert" )    \
+	Entry( String,                 "__string__" )       \
 	Entry( Type_Unsigned, 	       "unsigned" )         \
 	Entry( Type_Signed,            "signed" )           \
 	Entry( Type_Short,             "short" )            \
@@ -88,8 +96,13 @@ namespace Parser
 	Entry( Type_char, 			   "char" )             \
 	Entry( Type_int, 			   "int" )              \
 	Entry( Type_double, 		   "double" )           \
+	Entry( Type_MS_int8, 		   "__int8" )           \
+	Entry( Type_MS_int16, 		   "__int16" )          \
+	Entry( Type_MS_int32, 		   "__int32" )          \
+	Entry( Type_MS_int64, 		   "__int64" )          \
+	Entry( Type_MS_W64, 		   "_W64" )             \
 	Entry( Varadic_Argument,       "..." )              \
-	Entry( Attributes_Start,       "__attrib_start__" )
+	Entry( __Attributes_Start,     "__attrib_start__" )
 
 	namespace ETokType
 	{

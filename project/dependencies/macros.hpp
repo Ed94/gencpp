@@ -86,6 +86,9 @@
 	}                      \
 	while(0);
 
+#define labeled_scope_start if ( false ) {
+#define labeled_scope_end   }
+
 #define clamp( x, lower, upper )      min( max( ( x ), ( lower ) ), ( upper ) )
 #define count_of( x )                 ( ( size_of( x ) / size_of( 0 [ x ] ) ) / ( ( sw )( ! ( size_of( x ) % size_of( 0 [ x ] ) ) ) ) )
 #define is_between( x, lower, upper ) ( ( ( lower ) <= ( x ) ) && ( ( x ) <= ( upper ) ) )

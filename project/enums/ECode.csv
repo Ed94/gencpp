@@ -32,7 +32,15 @@ Operator_Member_Fwd
 Operator_Cast
 Operator_Cast_Fwd
 Parameters
-Preprocessor_Include
+Preprocess_Define
+Preprocess_Include
+Preprocess_If
+Preprocess_IfDef
+Preprocess_IfNotDef
+Preprocess_ElIf
+Preprocess_Else
+Preprocess_EndIf
+Preprocess_Pragma
 Specifiers
 Struct
 Struct_Fwd

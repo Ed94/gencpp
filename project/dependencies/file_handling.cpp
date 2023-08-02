@@ -224,7 +224,7 @@ internal GEN_FILE_CLOSE_PROC( _posix_file_close )
 
 FileOperations const default_file_operations = { _posix_file_read, _posix_file_write, _posix_file_seek, _posix_file_close };
 
-GEN_NEVER_INLINE GEN_FILE_OPEN_PROC( _posix_file_open )
+neverinline GEN_FILE_OPEN_PROC( _posix_file_open )
 {
 	s32 os_mode;
 	switch ( mode & GEN_FILE_MODES )

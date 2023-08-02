@@ -12,7 +12,7 @@ Just like the `gen.<hpp/cpp>` they include their components: `dependencies/<depe
 The fle processors are in their own respective files. (Ex: `file_processors/<file_processor>.<hpp/cpp>` )  
 They directly include `depedencies/file_handling.<hpp/cpp>` as the core library does not include file processing by defualt.
 
-**TODO : Right now the library is not finished structurally, as such the first self-hosting iteration is still WIP**  
+**TODO : Right now the library is not finished, as such the first self-hosting iteration is still WIP**  
 Both libraries use *pre-generated* (self-hosting I guess) version of the library to then generate the latest version of itself.  
 (sort of a verification that the generated version is equivalent).
 

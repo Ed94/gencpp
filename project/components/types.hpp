@@ -8,16 +8,6 @@ using LogFailType = sw(*)(char const*, ...);
 	constexpr LogFailType log_failure = fatal;
 #endif
 
-// Used to indicate if enum definitoin is an enum class or regular enum.
-enum class EnumT : u8
-{
-	Regular,
-	Class
-};
-
-constexpr EnumT EnumClass   = EnumT::Class;
-constexpr EnumT EnumRegular = EnumT::Regular;
-
 enum class AccessSpec : u32
 {
 	Default,
@@ -46,6 +36,17 @@ char const* to_str( AccessSpec type )
 	return lookup[ (u32)type ];
 }
 
+// Used to indicate if enum definitoin is an enum class or regular enum.
+enum class EnumT : u8
+{
+	Regular,
+	Class
+};
+
+constexpr EnumT EnumClass   = EnumT::Class;
+constexpr EnumT EnumRegular = EnumT::Regular;
+
+
 enum class ModuleFlag : u32
 {
 	None    = 0,
@@ -61,6 +62,19 @@ ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
 {
 	return (ModuleFlag)( (u32)A | (u32)B );
 }
+
+enum class EPreprocessCond : u32
+{
+	If,
+	IfDef,
+	IfNotDef,
+	ElIf
+};
+
+constexpr EPreprocessCond PreprocessCond_If       = EPreprocessCond::If;
+constexpr EPreprocessCond PreprocessCond_IfDef    = EPreprocessCond::IfDef;
+constexpr EPreprocessCond PreprocessCond_IfNotDef = EPreprocessCond::IfNotDef;
+constexpr EPreprocessCond PreprocessCond_ElIf     = EPreprocessCond::ElIf;
 
 /*
 	Predefined attributes

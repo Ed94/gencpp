@@ -489,6 +489,26 @@ CodeClass def_class( StrC name
 	return result;
 }
 
+CodeDefine def_define( StrC name, StrC content )
+{
+	using namespace ECode;
+
+	name_check( def_define, name );
+
+	if ( content.Len <= 0 || content.Ptr == nullptr )
+	{
+		log_failure( "gen::def_define: Invalid value provided" );
+		return CodeInvalid;
+	}
+
+	CodeDefine
+	result          = (CodeDefine) make_code();
+	result->Name    = get_cached_string( name );
+	result->Content = get_cached_string( content );
+
+	return result;
+}
+
 CodeEnum def_enum( StrC name
 	, Code       body,      CodeType       type
 	, EnumT      specifier, CodeAttributes attributes
@@ -719,7 +739,7 @@ CodeInclude def_include ( StrC path )
 
 	Code
 	result          = make_code();
-	result->Type    = ECode::Preprocessor_Include;
+	result->Type    = ECode::Preprocess_Include;
 	result->Name    = get_cached_string( path );
 	result->Content = result->Name;
 
@@ -763,7 +783,7 @@ CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags )
 	return result;
 }
 
-CodeOperator def_operator( OperatorT op
+CodeOperator def_operator( OperatorT op, StrC nspace
 	, CodeParam      params_code, CodeType       ret_type, Code body
 	, CodeSpecifiers specifiers,  CodeAttributes attributes
 	, ModuleFlag     mflags )
@@ -789,7 +809,7 @@ CodeOperator def_operator( OperatorT op
 		return CodeInvalid;
 	}
 
-	char const* name = str_fmt_buf( "operator %s", to_str(op) );
+	char const* name = str_fmt_buf( "%.*soperator %s", nspace.Len, nspace.Ptr, to_str(op) );
 
 	CodeOperator
 	result              = (CodeOperator) make_code();
@@ -906,6 +926,53 @@ CodeParam def_param( CodeType type, StrC name, Code value )
 		result->Value = value;
 
 	result->NumEntries++;
+
+	return result;
+}
+
+CodePragma def_pragma( StrC directive )
+{
+	using namespace ECode;
+
+	if ( directive.Len <= 0 || directive.Ptr == nullptr )
+	{
+		log_failure( "gen::def_comment: Invalid comment provided:" );
+		return CodeInvalid;
+	}
+
+	CodePragma
+	result          = (CodePragma) make_code();
+	result->Type    = Preprocess_Pragma;
+	result->Content = get_cached_string( directive );
+
+	return result;
+}
+
+CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
+{
+	using namespace ECode;
+
+	if ( expr.Len <= 0 || expr.Ptr == nullptr )
+	{
+		log_failure( "gen::def_comment: Invalid comment provided:" );
+		return CodeInvalid;
+	}
+
+	CodePreprocessCond
+	result          = (CodePreprocessCond) make_code();
+	result->Content = get_cached_string( expr );
+
+	switch (type)
+	{
+		case EPreprocessCond::If:
+			result->Type = ECode::Preprocess_If;
+		case EPreprocessCond::IfDef:
+			result->Type = Preprocess_IfDef;
+		case EPreprocessCond::IfNotDef:
+			result->Type = Preprocess_IfNotDef;
+		case EPreprocessCond::ElIf:
+			result->Type = Preprocess_ElIf;
+	}
 
 	return result;
 }

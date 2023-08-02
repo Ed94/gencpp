@@ -3,26 +3,6 @@
 The library features a naive parser tailored for only what the library needs to construct the supported syntax of C++ into its AST.  
 This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept under 5000 loc.
 
-
-Everything is done in one pass for both the preprocessor directives and the rest of the language.  
-The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***.  
-*(Conditionals and defines are a TODO)*
-
-The keywords supported for the preprocessor are:
-
-* include
-* define
-* if
-* ifdef
-* elif
-* endif
-* undef
-
-Just like with actual preprocessor, each directive # line is considered one preproecessor unit, and will be treated as one Preprocessor AST. *These ASTs will be considered members or entries of braced scope they reside within*.
-All keywords except *include* are suppported as members of a scope for a class/struct, global, or namespace body.  
-
-Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).
-
 The parsing implementation supports the following for the user:
 
 ```cpp
@@ -46,4 +26,27 @@ CodeVar       parse_variable     ( StrC var_def       );
 ```
 
 ***Parsing will aggregate any tokens within a function body or expression statement to an untyped Code AST.***
+
+Everything is done in one pass for both the preprocessor directives and the rest of the language.  
+The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***, and ***`pragmas`**.  
+
+The keywords supported for the preprocessor are:
+
+* include
+* define
+* if
+* ifdef
+* elif
+* endif
+* undef
+* pragma
+
+Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST. *These ASTs will be considered members or entries of braced scope they reside within*.
+All keywords except *include* are suppported as members of a scope for a class/struct, global, or namespace body.  
+
+Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).
+
+Exceptions to the above rule (If its too hard to keep track of just follow the above notion):
+
+* Typedefs allow of a macro exansion to be defined after the keyword; Ex: `typedef GEN_FILE_OPEN_PROC( file_open_proc );`
 

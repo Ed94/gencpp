@@ -37,7 +37,15 @@ namespace ECode
 	Entry( Operator_Cast )		  \
 	Entry( Operator_Cast_Fwd )    \
 	Entry( Parameters )           \
-	Entry( Preprocessor_Include ) \
+	Entry( Preprocess_Define )    \
+	Entry( Preprocess_If )        \
+	Entry( Preprocess_IfDef )     \
+	Entry( Preprocess_IfNotDef )  \
+	Entry( Preprocess_ElIf )      \
+	Entry( Preprocess_Else )      \
+	Entry( Preprocess_EndIf )     \
+	Entry( Preprocess_Include )   \
+	Entry( Preprocess_Pragma )    \
 	Entry( Specifiers )           \
 	Entry( Struct )               \
 	Entry( Struct_Fwd )           \

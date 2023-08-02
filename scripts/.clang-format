@@ -73,7 +73,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: true
 
-ColumnLimit: 180
+ColumnLimit: 120
 
 CompactNamespaces: true
 
@@ -94,16 +94,16 @@ IncludeBlocks: Preserve
 
 
 IndentCaseBlocks: false
-IndentCaseLabels: false
+IndentCaseLabels: true
 IndentExternBlock: AfterExternBlock
 IndentGotoLabels: true
 IndentPPDirectives: AfterHash
 IndentRequires: true
 IndentWidth: 4
-IndentWrappedFunctionNames: false
+IndentWrappedFunctionNames: true
 
 # InsertNewlineAtEOF: true
-InsertTrailingCommas: Wrapped
+# InsertTrailingCommas: Wrapped
 
 LambdaBodyIndentation: OuterScope
 

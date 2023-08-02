@@ -1,26 +1,23 @@
-# This script is used to iniitate the MSVC DevShell
-$vs_devshell = @()
-@("enterprise", "professional", "community") | ForEach-Object {
-    $vs_devshell_2022 = "C:\Program Files\Microsoft Visual Studio\2022\"       + $_ + "\Common7\Tools\Launch-VsDevShell.ps1"
-    $vs_devshell_2019 = "C:\Program Files (x86)\Microsoft Visual Studio\2019\" + $_ + "\Common7\Tools\Launch-VsDevShell.ps1"
+$ErrorActionPreference = "Stop"
 
-    $vs_devshell += @( $vs_devshell_2022, $vs_devshell_2019 )
+# Use vswhere to find the latest Visual Studio installation
+$vswhere_out = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+if ($null -eq $vswhere_out) {
+    Write-Host "ERROR: Visual Studio installation not found"
+    exit 1
 }
 
-$found = $false
-foreach($path in $vs_devshell) {
-    if (Test-Path $path) {
-        write-host "Found $path"
+# Find Launch-VsDevShell.ps1 in the Visual Studio installation
+$vs_path     = $vswhere_out
+$vs_devshell = Join-Path $vs_path "\Common7\Tools\Launch-VsDevShell.ps1"
 
-        Push-Location # Save the current path, loading the script will change it.
-        & $path
-        Pop-Location
-
-        $found = $true
-        break;
-    }
+if ( -not (Test-Path $vs_devshell) ) {
+    Write-Host "ERROR: Launch-VsDevShell.ps1 not found in Visual Studio installation"
+    Write-Host Tested path: $vs_devshell
+    exit 1
 }
 
-if (-not $found) {
-    write-host "MSVC DevShell: No valid path found"
-}
+# Launch the Visual Studio Developer Shell
+Push-Location
+& $vs_devshell @args
+Pop-Location
