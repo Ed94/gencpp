@@ -20,6 +20,7 @@ namespace ESpecifier
 	Entry( Internal_Linkage, internal )          \
 	Entry( Local_Persist,    local_persist )     \
 	Entry( Mutable,          mutable )           \
+	Entry( NeverInline,      neverinline )       \
 	Entry( Ptr,              * )                 \
 	Entry( Ref,              & )                 \
 	Entry( Register,         register )          \
@@ -56,9 +57,11 @@ namespace ESpecifier
 		#	pragma push_macro( "global" )
 		#	pragma push_macro( "internal" )
 		#	pragma push_macro( "local_persist" )
+		#	pragma push_macro( "neverinline" )
 		#	undef global
 		#	undef internal
 		#	undef local_persist
+		#	undef neverinline
 
 		#	define Entry( Spec_, Code_ ) { sizeof(stringize(Code_)), stringize(Code_) },
 			Define_Specifiers
@@ -67,6 +70,7 @@ namespace ESpecifier
 		#	pragma pop_macro( "global" )
 		#	pragma pop_macro( "internal" )
 		#	pragma pop_macro( "local_persist" )
+		#	pragma pop_macro( "neverinline" )
 		};
 
 		return lookup[ specifier ];

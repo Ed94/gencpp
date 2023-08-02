@@ -9,6 +9,7 @@ Inline,           inline
 Internal_Linkage, internal
 Local_Persist,    local_persist
 Mutable,          mutable
+NeverInline,      neverinline
 Ptr,              *
 Ref,              &
 Register,         register

@@ -65,7 +65,7 @@ CodeInclude   def_include  ( StrC content );
 CodeModule    def_module   ( StrC name,            ModuleFlag mflags = ModuleFlag::None );
 CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 
-CodeOperator def_operator( OperatorT op
+CodeOperator def_operator( OperatorT op, StrC nspace
 	, CodeParam      params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
 	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 	, ModuleFlag     mflags     = ModuleFlag::None );

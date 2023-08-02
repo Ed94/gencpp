@@ -783,7 +783,7 @@ CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags )
 	return result;
 }
 
-CodeOperator def_operator( OperatorT op
+CodeOperator def_operator( OperatorT op, StrC nspace
 	, CodeParam      params_code, CodeType       ret_type, Code body
 	, CodeSpecifiers specifiers,  CodeAttributes attributes
 	, ModuleFlag     mflags )
@@ -809,7 +809,7 @@ CodeOperator def_operator( OperatorT op
 		return CodeInvalid;
 	}
 
-	char const* name = str_fmt_buf( "operator %s", to_str(op) );
+	char const* name = str_fmt_buf( "%.*soperator %s", nspace.Len, nspace.Ptr, to_str(op) );
 
 	CodeOperator
 	result              = (CodeOperator) make_code();

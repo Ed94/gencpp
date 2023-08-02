@@ -80,6 +80,7 @@ namespace Parser
 	Entry( Spec_Internal_Linkage,  "internal" )         \
 	Entry( Spec_LocalPersist,      "local_persist" )    \
 	Entry( Spec_Mutable,           "mutable" )          \
+	Entry( Spec_NeverInline,       "neverinline" )      \
 	Entry( Spec_Override,          "override" )         \
 	Entry( Spec_Static,            "static" )           \
 	Entry( Spec_ThreadLocal,       "thread_local" )     \

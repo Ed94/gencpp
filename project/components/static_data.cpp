@@ -50,6 +50,7 @@ global CodeSpecifiers spec_inline;
 global CodeSpecifiers spec_internal_linkage;
 global CodeSpecifiers spec_local_persist;
 global CodeSpecifiers spec_mutable;
+global CodeSpecifiers spec_neverinline;
 global CodeSpecifiers spec_override;
 global CodeSpecifiers spec_ptr;
 global CodeSpecifiers spec_ref;

@@ -456,7 +456,10 @@ String AST::to_string()
 		{
 			if ( Specs )
 			{
-				result.append_fmt( "operator %s()", EOperator::to_str( Op ) );
+				if ( Name && Name.length() )
+					result.append_fmt( "%.*soperator %s()", Name.length(), Name, EOperator::to_str( Op ));
+				else
+					result.append_fmt( "operator %s()", EOperator::to_str( Op ) );
 
 				CodeSpecifiers specs = cast<CodeSpecifiers>();
 
@@ -470,7 +473,10 @@ String AST::to_string()
 				break;
 			}
 
-			result.append_fmt("operator %s()\n{\n%s\n}", ValueType->to_string(), Body->to_string() );
+			if ( Name && Name.length() )
+				result.append_fmt("%.*soperator %s()\n{\n%s\n}", Name.length(), Name, ValueType->to_string(), Body->to_string() );
+			else
+				result.append_fmt("operator %s()\n{\n%s\n}", ValueType->to_string(), Body->to_string() );
 		}
 		break;
 
