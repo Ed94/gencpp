@@ -42,29 +42,32 @@ Push-Location $path_root
 Pop-Location
 
 Push-location $path_singleheader
-if ( -not(Test-Path($path_singleheader_gen) )) {
-	New-Item -ItemType Directory -Path $path_singleheader_gen
-}
+	if ( -not(Test-Path($path_singleheader_gen) )) {
+		New-Item -ItemType Directory -Path $path_singleheader_gen
+	}
 
-# Run meta-program
-$gencpp_singleheader = Join-Path $path_singleheader_build gencpp_singleheader.exe
+	# Run meta-program
+	$gencpp_singleheader = Join-Path $path_singleheader_build gencpp_singleheader.exe
 
-Write-Host `nRunning gencpp singleheader...
-& $gencpp_singleheader
+	Write-Host `nRunning gencpp singleheader...
+	& $gencpp_singleheader
 
-# Format generated files
-Write-Host `nBeginning format...
-$formatParams = @(
-	'-i'          # In-place
-	'-style=file:../scripts/.clang-format'
-	'-verbose'
-)
+	# Format generated files
+	Write-Host `nBeginning format...
+	$formatParams = @(
+		'-i'          # In-place
+		'-style=file:../scripts/.clang-format'
+		'-verbose'
+	)
 
-$include = @('gen.hpp')
-$exclude = $null
+	$include = @('gen.hpp')
+	$exclude = $null
 
-$targetFiles = @(Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
+	$targetFiles = @(Get-ChildItem -Recurse -Path $path_project -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
 
-clang-format $formatParams $targetFiles
-Write-Host "`nFormatting complete"
+	clang-format $formatParams $targetFiles
+	Write-Host "`nFormatting complete"
 Pop-Location
+
+# Build and run validation
+

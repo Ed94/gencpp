@@ -503,6 +503,7 @@ CodeDefine def_define( StrC name, StrC content )
 
 	CodeDefine
 	result          = (CodeDefine) make_code();
+	result->Type    = Preprocess_Define;
 	result->Name    = get_cached_string( name );
 	result->Content = get_cached_string( content );
 
@@ -1306,27 +1307,6 @@ CodeVar def_variable( CodeType type, StrC name, Code value
 	return result;
 }
 
-/*
-Body related functions typically follow the same implementation pattern.
-Opted to use inline helper macros to get the implementaiton done.
-
-The implementation pattern is as follows:
-* Validate a valid parameter num was provided, or code array
-	def_body_start or def_body_code_array_start( <name of function >)
-
-* Begin the code entry do-while loop, make sure each entry is valid processing its type in the switc
-	def_body_code_validation_start( <name of function> )
-
-* Define the switch case statements between the macros.
-
-* Add the code entry, finish the closing implemenation for the do-while loop.
-	def_body_code_validation_end( <name of function> )
-
-* Lock the body AST and return it.
-
-If a function's implementation deviates from the macros then its just writen it out.
-*/
-
 #pragma region Helper Macros for def_**_body functions
 #define def_body_start( Name_ )                                               \
 using namespace ECode;                                                        \
@@ -1352,61 +1332,43 @@ if ( codes == nullptr )                                                        \
 	return CodeInvalid;                                                        \
 }
 
-#define def_body_code_validation_start( Name_ )                               \
-do                                                                            \
-{                                                                             \
-	Code_POD pod   = va_arg(va, Code_POD);                                    \
-	Code     entry = pcast(Code, pod);                                        \
-																			  \
-	if ( ! entry )                                                            \
-	{                                                                         \
-		log_failure("gen::" stringize(Name_) ": Provided an null entry");     \
-		return CodeInvalid;                                                   \
-	}                                                                         \
-																			  \
-	switch ( entry->Type )                                                    \
-	{
-
-#define def_body_code_array_validation_start( Name_ )                         \
-do                                                                            \
-{                                                                             \
-	Code entry = *codes; codes++;                                             \
-																			  \
-	if ( ! entry )                                                            \
-	{                                                                         \
-		log_failure("gen::" stringize(Name_) ": Provided an null entry");     \
-		return CodeInvalid;                                                   \
-	}                                                                         \
-																			  \
-	switch ( entry->Type )                                                    \
-	{
-
-#define def_body_code_validation_end( Name_ )                                                             \
-			log_failure("gen::" stringize(Name_) ": Entry type is not allowed: %s", entry.debug_str() );  \
-			return CodeInvalid;                                                                           \
-																										  \
-		default:                                                                                          \
-			break;                                                                                        \
-	}                                                                                                     \
-																										  \
-	result.append( entry );                                                                               \
-}                                                                                                         \
-while ( num--, num > 0 )
 #pragma endregion Helper Macros for def_**_body functions
 
 CodeBody def_class_body( s32 num, ... )
 {
 	def_body_start( def_class_body );
 
-	CodeBody
-	result       = (CodeBody) make_code();
-	result->Type = Class_Body;
+	CodeBody result = ( CodeBody )make_code();
+	result->Type    = Class_Body;
 
 	va_list va;
-	va_start(va, num);
-	def_body_code_validation_start( def_class_body );
-		GEN_AST_BODY_CLASS_UNALLOWED_TYPES
-	def_body_code_validation_end( def_class_body );
+	va_start( va, num );
+	do
+	{
+		Code_POD pod   = va_arg(va, Code_POD);
+		Code     entry = pcast(Code, pod);
+
+		if (!entry)
+		{
+			log_failure("gen::"
+						"def_class_body"
+						": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
+				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 	va_end(va);
 
 	return result;
@@ -1420,9 +1382,30 @@ CodeBody def_class_body( s32 num, Code* codes )
 	result       = (CodeBody) make_code();
 	result->Type = Function_Body;
 
-	def_body_code_array_validation_start( def_class_body );
-		GEN_AST_BODY_CLASS_UNALLOWED_TYPES
-	def_body_code_validation_end( def_class_body );
+	do
+	{
+		Code entry = *codes;
+		codes++;
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_class_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
+				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 
 	return result;
 }
@@ -1503,9 +1486,30 @@ CodeBody def_export_body( s32 num, ... )
 
 	va_list va;
 	va_start(va, num);
-	def_body_code_validation_start( def_export_body );
-		GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
-	def_body_code_validation_end( def_export_body );
+	do
+	{
+		Code_POD pod = va_arg(va, Code_POD);
+		Code     entry = pcast(Code, pod);
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_export_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
+				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 	va_end(va);
 
 	return result;
@@ -1519,9 +1523,30 @@ CodeBody def_export_body( s32 num, Code* codes )
 	result       = (CodeBody) make_code();
 	result->Type = Export_Body;
 
-	def_body_code_array_validation_start( def_export_body );
-		GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
-	def_body_code_validation_end( def_export_body );
+	do
+	{
+		Code entry = *codes;
+		codes++;
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_export_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
+				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 
 	return result;
 }
@@ -1536,9 +1561,30 @@ CodeBody def_extern_link_body( s32 num, ... )
 
 	va_list va;
 	va_start(va, num);
-	def_body_code_validation_start( def_extern_linkage_body );
-		GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
-	def_body_code_validation_end( def_extern_linkage_body );
+	do
+	{
+		Code_POD pod = va_arg(va, Code_POD);
+		Code entry = pcast(Code, pod);
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_extern_linkage_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
+				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 	va_end(va);
 
 	return result;
@@ -1552,9 +1598,31 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 	result       = (CodeBody) make_code();
 	result->Type = Extern_Linkage_Body;
 
-	def_body_code_array_validation_start( def_extern_linkage_body );
-		GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
-	def_body_code_validation_end( def_extern_linkage_body );
+	do
+	{
+		Code entry = *codes;
+		codes++;
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_extern_linkage_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
+				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+
+	}
+	while (num--, num > 0);
 
 	return result;
 }
@@ -1569,9 +1637,31 @@ CodeBody def_function_body( s32 num, ... )
 
 	va_list va;
 	va_start(va, num);
-	def_body_code_validation_start( def_function_body );
-		GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
-	def_body_code_validation_end( def_function_body );
+	do
+	{
+		Code_POD pod   = va_arg(va, Code_POD);
+		Code     entry = pcast(Code, pod);
+
+		if (!entry)
+		{
+			log_failure("gen::" stringize(def_function_body) ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+
+			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
+				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 	va_end(va);
 
 	return result;
@@ -1585,9 +1675,29 @@ CodeBody def_function_body( s32 num, Code* codes )
 	result       = (CodeBody) make_code();
 	result->Type = Function_Body;
 
-	def_body_code_array_validation_start( def_function_body );
-		GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
-	def_body_code_validation_end( def_function_body );
+	do
+	{
+		Code entry = *codes;
+		codes++;
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_function_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
+				log_failure("gen::" "def_function_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+		result.append(entry);
+	}
+	while (num--, num > 0);
 
 	return result;
 }
@@ -1602,9 +1712,30 @@ CodeBody def_global_body( s32 num, ... )
 
 	va_list va;
 	va_start(va, num);
-	def_body_code_validation_start( def_global_body );
-		GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
-	def_body_code_validation_end( def_global_body );
+	do
+	{
+		Code_POD pod   = va_arg(va, Code_POD);
+		Code     entry = pcast(Code, pod);
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_global_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
+				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return (*Code::Invalid.ast);
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 	va_end(va);
 
 	return result;
@@ -1618,9 +1749,30 @@ CodeBody def_global_body( s32 num, Code* codes )
 	result       = (CodeBody) make_code();
 	result->Type = Global_Body;
 
-	def_body_code_array_validation_start( def_global_body );
-		GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
-	def_body_code_validation_end( def_global_body );
+	do
+	{
+		Code entry = *codes;
+		codes++;
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_global_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
+				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 
 	return result;
 }
@@ -1635,9 +1787,30 @@ CodeBody def_namespace_body( s32 num, ... )
 
 	va_list va;
 	va_start(va, num);
-	def_body_code_validation_start( def_namespace_body );
-		GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
-	def_body_code_validation_end( def_namespace_body );
+	do
+	{
+		Code_POD pod   = va_arg(va, Code_POD);
+		Code     entry = pcast(Code, pod);
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_namespace_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
+				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 	va_end(va);
 
 	return result;
@@ -1651,9 +1824,29 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 	result       = (CodeBody) make_code();
 	result->Type = Global_Body;
 
-	def_body_code_array_validation_start( def_namespace_body );
-		GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
-	def_body_code_validation_end( def_namespace_body );
+	do
+	{
+		Code entry = *codes;
+		codes++;
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_namespace_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
+				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str() ); 
+				return CodeInvalid;
+
+			default: break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 
 	return result;
 }
@@ -1803,9 +1996,30 @@ CodeBody def_struct_body( s32 num, ... )
 
 	va_list va;
 	va_start(va, num);
-	def_body_code_validation_start( def_struct_body );
-		GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
-	def_body_code_validation_end( def_struct_body );
+	do
+	{
+		Code_POD pod   = va_arg(va, Code_POD);
+		Code     entry = pcast(Code, pod);
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_struct_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
+				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str());
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 	va_end(va);
 
 	return result;
@@ -1819,9 +2033,30 @@ CodeBody def_struct_body( s32 num, Code* codes )
 	result       = (CodeBody) make_code();
 	result->Type = Struct_Body;
 
-	def_body_code_array_validation_start( def_struct_body );
-		GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
-	def_body_code_validation_end( def_struct_body );
+	do
+	{
+		Code entry = *codes;
+		codes++;
+
+		if (!entry)
+		{
+			log_failure("gen::" "def_struct_body" ": Provided an null entry");
+			return CodeInvalid;
+		}
+
+		switch (entry->Type)
+		{
+			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
+				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str() ); 
+				return CodeInvalid;
+
+			default:
+			break;
+		}
+
+		result.append(entry);
+	}
+	while (num--, num > 0);
 
 	return result;
 }
@@ -1895,3 +2130,4 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 #	undef name_check
 #	undef null_check
 #	undef null_or_invalid_check
+

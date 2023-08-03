@@ -113,4 +113,13 @@ constexpr char const* Attribute_Keyword = stringize( GEN_Attribute_Keyword );
 #endif
 
 constexpr char const* Attribute_Keyword = "";
+
 #endif
+
+// Implements basic string interning. Data structure is based off the ZPL Hashtable.
+using StringTable = HashTable<String const>;
+
+// Represents strings cached with the string table.
+// Should never be modified, if changed string is desired, cache_string( str ) another.
+using StringCached = String const;
+

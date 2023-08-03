@@ -73,3 +73,4 @@ namespace EOperator
 #	undef Define_Operators
 }
 using OperatorT = EOperator::Type;
+

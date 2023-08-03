@@ -373,3 +373,4 @@ struct String_POD
 static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
 
 #pragma endregion String
+

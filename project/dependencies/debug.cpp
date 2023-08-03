@@ -39,3 +39,4 @@ s32 assert_crash( char const* condition )
 #endif
 
 #pragma endregion Debug
+

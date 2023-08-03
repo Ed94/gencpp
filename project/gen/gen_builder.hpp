@@ -1,3 +1,9 @@
+// This file was generated automatially by gen.bootstrap.cpp (See: https://github.com/Ed94/gencpp)
+
+#include "gen.hpp"
+
+GEN_NS_BEGIN
+
 #pragma region ADT
 
 enum ADT_Type : u32
@@ -65,7 +71,7 @@ struct ADT_Node
 
 	/* properties */
 	ADT_Type type  : 4;
-	u8 props : 4;
+	u8       props : 4;
 #ifndef GEN_PARSER_DISABLE_ANALYSIS
 	u8 cfg_mode          : 1;
 	u8 name_style        : 2;
@@ -78,8 +84,8 @@ struct ADT_Node
 	/* adt data */
 	union
 	{
-		char const*     string;
-		Array<ADT_Node> nodes;    ///< zpl_array
+		char const*       string;
+		Array< ADT_Node > nodes;    ///< zpl_array
 
 		struct
 		{
@@ -103,283 +109,283 @@ struct ADT_Node
 };
 
 /* ADT NODE LIMITS
-	* delimiter and assignment segment width is limited to 128 whitespace symbols each.
-	* real number limits decimal position to 128 places.
-	* real number exponent is limited to 64 digits.
-	*/
+ * delimiter and assignment segment width is limited to 128 whitespace symbols each.
+ * real number limits decimal position to 128 places.
+ * real number exponent is limited to 64 digits.
+ */
 
 /**
-	* @brief Initialise an ADT object or array
-	*
-	* @param node
-	* @param backing Memory allocator used for descendants
-	* @param name Node's name
-	* @param is_array
-	* @return error code
-	*/
+ * @brief Initialise an ADT object or array
+ *
+ * @param node
+ * @param backing Memory allocator used for descendants
+ * @param name Node's name
+ * @param is_array
+ * @return error code
+ */
 u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32 is_array );
 
 /**
-	* @brief Destroy an ADT branch and its descendants
-	*
-	* @param node
-	* @return error code
-	*/
+ * @brief Destroy an ADT branch and its descendants
+ *
+ * @param node
+ * @return error code
+ */
 u8 adt_destroy_branch( ADT_Node* node );
 
 /**
-	* @brief Initialise an ADT leaf
-	*
-	* @param node
-	* @param name Node's name
-	* @param type Node's type (use zpl_adt_make_branch for container nodes)
-	* @return error code
-	*/
+ * @brief Initialise an ADT leaf
+ *
+ * @param node
+ * @param name Node's name
+ * @param type Node's type (use zpl_adt_make_branch for container nodes)
+ * @return error code
+ */
 u8 adt_make_leaf( ADT_Node* node, char const* name, ADT_Type type );
 
 
 /**
-	* @brief Fetch a node using provided URI string.
-	*
-	* This method uses a basic syntax to fetch a node from the ADT. The following features are available
-	* to retrieve the data:
-	*
-	* - "a/b/c" navigates through objects "a" and "b" to get to "c"
-	* - "arr/[foo=123]/bar" iterates over "arr" to find any object with param "foo" that matches the value "123", then gets its field called "bar"
-	* - "arr/3" retrieves the 4th element in "arr"
-	* - "arr/[apple]" retrieves the first element of value "apple" in "arr"
-	*
-	* @param node ADT node
-	* @param uri Locator string as described above
-	* @return zpl_adt_node*
-	*
-	* @see code/apps/examples/json_get.c
-	*/
+ * @brief Fetch a node using provided URI string.
+ *
+ * This method uses a basic syntax to fetch a node from the ADT. The following features are available
+ * to retrieve the data:
+ *
+ * - "a/b/c" navigates through objects "a" and "b" to get to "c"
+ * - "arr/[foo=123]/bar" iterates over "arr" to find any object with param "foo" that matches the value "123", then gets its field called "bar"
+ * - "arr/3" retrieves the 4th element in "arr"
+ * - "arr/[apple]" retrieves the first element of value "apple" in "arr"
+ *
+ * @param node ADT node
+ * @param uri Locator string as described above
+ * @return zpl_adt_node*
+ *
+ * @see code/apps/examples/json_get.c
+ */
 ADT_Node* adt_query( ADT_Node* node, char const* uri );
 
 /**
-	* @brief Find a field node within an object by the given name.
-	*
-	* @param node
-	* @param name
-	* @param deep_search Perform search recursively
-	* @return zpl_adt_node * node
-	*/
+ * @brief Find a field node within an object by the given name.
+ *
+ * @param node
+ * @param name
+ * @param deep_search Perform search recursively
+ * @return zpl_adt_node * node
+ */
 ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search );
 
 /**
-	* @brief Allocate an unitialised node within a container at a specified index.
-	*
-	* @param parent
-	* @param index
-	* @return zpl_adt_node * node
-	*/
+ * @brief Allocate an unitialised node within a container at a specified index.
+ *
+ * @param parent
+ * @param index
+ * @return zpl_adt_node * node
+ */
 ADT_Node* adt_alloc_at( ADT_Node* parent, sw index );
 
 /**
-	* @brief Allocate an unitialised node within a container.
-	*
-	* @param parent
-	* @return zpl_adt_node * node
-	*/
+ * @brief Allocate an unitialised node within a container.
+ *
+ * @param parent
+ * @return zpl_adt_node * node
+ */
 ADT_Node* adt_alloc( ADT_Node* parent );
 
 /**
-	* @brief Move an existing node to a new container at a specified index.
-	*
-	* @param node
-	* @param new_parent
-	* @param index
-	* @return zpl_adt_node * node
-	*/
+ * @brief Move an existing node to a new container at a specified index.
+ *
+ * @param node
+ * @param new_parent
+ * @param index
+ * @return zpl_adt_node * node
+ */
 ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, sw index );
 
 /**
-	* @brief Move an existing node to a new container.
-	*
-	* @param node
-	* @param new_parent
-	* @return zpl_adt_node * node
-	*/
+ * @brief Move an existing node to a new container.
+ *
+ * @param node
+ * @param new_parent
+ * @return zpl_adt_node * node
+ */
 ADT_Node* adt_move_node( ADT_Node* node, ADT_Node* new_parent );
 
 /**
-	* @brief Swap two nodes.
-	*
-	* @param node
-	* @param other_node
-	* @return
-	*/
+ * @brief Swap two nodes.
+ *
+ * @param node
+ * @param other_node
+ * @return
+ */
 void adt_swap_nodes( ADT_Node* node, ADT_Node* other_node );
 
 /**
-	* @brief Remove node from container.
-	*
-	* @param node
-	* @return
-	*/
+ * @brief Remove node from container.
+ *
+ * @param node
+ * @return
+ */
 void adt_remove_node( ADT_Node* node );
 
 /**
-	* @brief Initialise a node as an object
-	*
-	* @param obj
-	* @param name
-	* @param backing
-	* @return
-	*/
+ * @brief Initialise a node as an object
+ *
+ * @param obj
+ * @param name
+ * @param backing
+ * @return
+ */
 b8 adt_set_obj( ADT_Node* obj, char const* name, AllocatorInfo backing );
 
 /**
-	* @brief Initialise a node as an array
-	*
-	* @param obj
-	* @param name
-	* @param backing
-	* @return
-	*/
+ * @brief Initialise a node as an array
+ *
+ * @param obj
+ * @param name
+ * @param backing
+ * @return
+ */
 b8 adt_set_arr( ADT_Node* obj, char const* name, AllocatorInfo backing );
 
 /**
-	* @brief Initialise a node as a string
-	*
-	* @param obj
-	* @param name
-	* @param value
-	* @return
-	*/
+ * @brief Initialise a node as a string
+ *
+ * @param obj
+ * @param name
+ * @param value
+ * @return
+ */
 b8 adt_set_str( ADT_Node* obj, char const* name, char const* value );
 
 /**
-	* @brief Initialise a node as a float
-	*
-	* @param obj
-	* @param name
-	* @param value
-	* @return
-	*/
+ * @brief Initialise a node as a float
+ *
+ * @param obj
+ * @param name
+ * @param value
+ * @return
+ */
 b8 adt_set_flt( ADT_Node* obj, char const* name, f64 value );
 
 /**
-	* @brief Initialise a node as a signed integer
-	*
-	* @param obj
-	* @param name
-	* @param value
-	* @return
-	*/
+ * @brief Initialise a node as a signed integer
+ *
+ * @param obj
+ * @param name
+ * @param value
+ * @return
+ */
 b8 adt_set_int( ADT_Node* obj, char const* name, s64 value );
 
 /**
-	* @brief Append a new node to a container as an object
-	*
-	* @param parent
-	* @param name
-	* @return*
-	*/
+ * @brief Append a new node to a container as an object
+ *
+ * @param parent
+ * @param name
+ * @return*
+ */
 ADT_Node* adt_append_obj( ADT_Node* parent, char const* name );
 
 /**
-	* @brief Append a new node to a container as an array
-	*
-	* @param parent
-	* @param name
-	* @return*
-	*/
+ * @brief Append a new node to a container as an array
+ *
+ * @param parent
+ * @param name
+ * @return*
+ */
 ADT_Node* adt_append_arr( ADT_Node* parent, char const* name );
 
 /**
-	* @brief Append a new node to a container as a string
-	*
-	* @param parent
-	* @param name
-	* @param value
-	* @return*
-	*/
+ * @brief Append a new node to a container as a string
+ *
+ * @param parent
+ * @param name
+ * @param value
+ * @return*
+ */
 ADT_Node* adt_append_str( ADT_Node* parent, char const* name, char const* value );
 
 /**
-	* @brief Append a new node to a container as a float
-	*
-	* @param parent
-	* @param name
-	* @param value
-	* @return*
-	*/
+ * @brief Append a new node to a container as a float
+ *
+ * @param parent
+ * @param name
+ * @param value
+ * @return*
+ */
 ADT_Node* adt_append_flt( ADT_Node* parent, char const* name, f64 value );
 
 /**
-	* @brief Append a new node to a container as a signed integer
-	*
-	* @param parent
-	* @param name
-	* @param value
-	* @return*
-	*/
+ * @brief Append a new node to a container as a signed integer
+ *
+ * @param parent
+ * @param name
+ * @param value
+ * @return*
+ */
 ADT_Node* adt_append_int( ADT_Node* parent, char const* name, s64 value );
 
 /* parser helpers */
 
 /**
-	* @brief Parses a text and stores the result into an unitialised node.
-	*
-	* @param node
-	* @param base
-	* @return*
-	*/
+ * @brief Parses a text and stores the result into an unitialised node.
+ *
+ * @param node
+ * @param base
+ * @return*
+ */
 char* adt_parse_number( ADT_Node* node, char* base );
 
 /**
-	* @brief Parses a text and stores the result into an unitialised node.
-	* This function expects the entire input to be a number.
-	*
-	* @param node
-	* @param base
-	* @return*
-	*/
+ * @brief Parses a text and stores the result into an unitialised node.
+ * This function expects the entire input to be a number.
+ *
+ * @param node
+ * @param base
+ * @return*
+ */
 char* adt_parse_number_strict( ADT_Node* node, char* base_str );
 
 /**
-	* @brief Parses and converts an existing string node into a number.
-	*
-	* @param node
-	* @return
-	*/
+ * @brief Parses and converts an existing string node into a number.
+ *
+ * @param node
+ * @return
+ */
 ADT_Error adt_str_to_number( ADT_Node* node );
 
 /**
-	* @brief Parses and converts an existing string node into a number.
-	* This function expects the entire input to be a number.
-	*
-	* @param node
-	* @return
-	*/
+ * @brief Parses and converts an existing string node into a number.
+ * This function expects the entire input to be a number.
+ *
+ * @param node
+ * @return
+ */
 ADT_Error adt_str_to_number_strict( ADT_Node* node );
 
 /**
-	* @brief Prints a number into a file stream.
-	*
-	* The provided file handle can also be a memory mapped stream.
-	*
-	* @see zpl_file_stream_new
-	* @param file
-	* @param node
-	* @return
-	*/
+ * @brief Prints a number into a file stream.
+ *
+ * The provided file handle can also be a memory mapped stream.
+ *
+ * @see zpl_file_stream_new
+ * @param file
+ * @param node
+ * @return
+ */
 ADT_Error adt_print_number( FileInfo* file, ADT_Node* node );
 
 /**
-	* @brief Prints a string into a file stream.
-	*
-	* The provided file handle can also be a memory mapped stream.
-	*
-	* @see zpl_file_stream_new
-	* @param file
-	* @param node
-	* @param escaped_chars
-	* @param escape_symbol
-	* @return
-	*/
+ * @brief Prints a string into a file stream.
+ *
+ * The provided file handle can also be a memory mapped stream.
+ *
+ * @see zpl_file_stream_new
+ * @param file
+ * @param node
+ * @param escaped_chars
+ * @param escape_symbol
+ * @return
+ */
 ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_chars, char const* escape_symbol );
 
 #pragma endregion ADT
@@ -424,3 +430,19 @@ GEN_IMPL_INLINE String csv_write_string( AllocatorInfo a, CSV_Object* obj )
 
 #pragma endregion CSV
 
+struct Builder
+{
+	FileInfo File;
+	String   Buffer;
+
+	static Builder open( char const* path );
+
+	void pad_lines( s32 num );
+
+	void print( Code );
+	void print_fmt( char const* fmt, ... );
+
+	void write();
+};
+
+GEN_NS_END

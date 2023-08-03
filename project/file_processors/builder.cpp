@@ -1,3 +1,25 @@
+Builder Builder::open( char const* path )
+{
+	Builder result;
+
+	FileError error = file_open_mode( & result.File, EFileMode_WRITE, path );
+
+	if ( error != EFileError_NONE )
+	{
+		log_failure( "gen::File::open - Could not open file: %s", path);
+		return result;
+	}
+
+	result.Buffer = String::make_reserve( GlobalAllocator, Builder_StrBufferReserve );
+
+	return result;
+}
+
+void Builder::pad_lines( s32 num )
+{
+	Buffer.append( "\n" );
+}
+
 void Builder::print( Code code )
 {
 	Buffer.append( code->to_string() );
@@ -14,21 +36,6 @@ void Builder::print_fmt( char const* fmt, ... )
 	va_end( va );
 
 	Buffer.append( buf, res );
-}
-
-bool Builder::open( char const* path )
-{
-	FileError error = file_open_mode( & File, EFileMode_WRITE, path );
-
-	if ( error != EFileError_NONE )
-	{
-		log_failure( "gen::File::open - Could not open file: %s", path);
-		return false;
-	}
-
-	Buffer = String::make_reserve( GlobalAllocator, Builder_StrBufferReserve );
-
-	return true;
 }
 
 void Builder::write()

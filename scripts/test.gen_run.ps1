@@ -1,3 +1,5 @@
+cls
+
 [string] $type = $null
 [string] $test = $false
 

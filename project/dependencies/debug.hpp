@@ -1,4 +1,4 @@
-#pragma endregion Debug
+#pragma region Debug
 
 #if defined( _MSC_VER )
 #	if _MSC_VER < 1300
@@ -34,3 +34,4 @@ s32  assert_crash( char const* condition );
 void process_exit( u32 code );
 
 #pragma endregion Debug
+

@@ -37,3 +37,4 @@ bool String::append_fmt( char const* fmt, ... )
 }
 
 #pragma endregion String
+

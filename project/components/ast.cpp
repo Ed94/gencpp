@@ -373,7 +373,7 @@ String AST::to_string()
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			result.append_fmt( "namespace %s\n{\n%s}"
+			result.append_fmt( "namespace %s\n{\n%s\n}"
 				, Name
 				, Body->to_string()
 			);
@@ -528,7 +528,7 @@ String AST::to_string()
 		break;
 
 		case Preprocess_Define:
-			result.append_fmt( "#define %s%s", Name, Content );
+			result.append_fmt( "#define %s \\\n%s\n", Name, Content );
 		break;
 
 		case Preprocess_If:
@@ -544,7 +544,7 @@ String AST::to_string()
 		break;
 
 		case Preprocess_Include:
-			result.append_fmt( "#include \"%s\"", Content );
+			result.append_fmt( "#include \"%s\"\n", Content );
 		break;
 
 		case Preprocess_ElIf:
@@ -918,3 +918,4 @@ bool AST::validate_body()
 }
 
 #pragma endregion AST
+

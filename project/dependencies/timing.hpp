@@ -12,3 +12,4 @@ u64 time_rel_ms( void );
 #endif
 
 #pragma endregion Timing
+

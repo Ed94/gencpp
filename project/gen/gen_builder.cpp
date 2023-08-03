@@ -1,3 +1,7 @@
+#include "gen_builder.hpp"
+
+GEN_NS_BEGIN
+
 #pragma region ADT
 
 #define _adt_fprintf( s_, fmt_, ... )                      \
@@ -19,7 +23,7 @@ u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32
 	node->type   = type;
 	node->name   = name;
 	node->parent = parent;
-	node->nodes  = Array<ADT_Node>::init( backing );
+	node->nodes  = Array< ADT_Node >::init( backing );
 
 	if ( ! node->nodes )
 		return EADT_ERROR_OUT_OF_MEMORY;
@@ -90,35 +94,35 @@ internal ADT_Node* _adt_get_value( ADT_Node* node, char const* value )
 	{
 		case EADT_TYPE_MULTISTRING :
 		case EADT_TYPE_STRING :
+		{
+			if ( node->string && ! str_compare( node->string, value ) )
 			{
-				if ( node->string && ! str_compare( node->string, value ) )
-				{
-					return node;
-				}
+				return node;
 			}
-			break;
+		}
+		break;
 		case EADT_TYPE_INTEGER :
 		case EADT_TYPE_REAL :
+		{
+			char     back[ 4096 ] = { 0 };
+			FileInfo tmp;
+
+			/* allocate a file descriptor for a memory-mapped number to string conversion, input source buffer is not cloned, however. */
+			file_stream_open( &tmp, heap(), ( u8* )back, size_of( back ), EFileStream_WRITABLE );
+			adt_print_number( &tmp, node );
+
+			sw  fsize = 0;
+			u8* buf   = file_stream_buf( &tmp, &fsize );
+
+			if ( ! str_compare( ( char const* )buf, value ) )
 			{
-				char     back[ 4096 ] = { 0 };
-				FileInfo tmp;
-
-				/* allocate a file descriptor for a memory-mapped number to string conversion, input source buffer is not cloned, however. */
-				file_stream_open( &tmp, heap(), ( u8* )back, size_of( back ), EFileStream_WRITABLE );
-				adt_print_number( &tmp, node );
-
-				sw  fsize = 0;
-				u8* buf   = file_stream_buf( &tmp, &fsize );
-
-				if ( ! str_compare( ( char const* )buf, value ) )
-				{
-					file_close( &tmp );
-					return node;
-				}
-
 				file_close( &tmp );
+				return node;
 			}
-			break;
+
+			file_close( &tmp );
+		}
+		break;
 		default :
 			break; /* node doesn't support value based lookup */
 	}
@@ -169,7 +173,7 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri )
 	char *    p = ( char* )uri, *b = p, *e = p;
 	ADT_Node* found_node = NULL;
 
-	b = p;
+	b                    = p;
 	p = e     = ( char* )str_skip( p, '/' );
 	char* buf = str_fmt_buf( "%.*s", ( int )( e - b ), b );
 
@@ -462,14 +466,14 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 	GEN_ASSERT_NOT_NULL( base_str );
 	char *p = base_str, *e = p;
 
-	s32       base         = 0;
-	s32       base2        = 0;
-	u8        base2_offset = 0;
-	s8        exp = 0, orig_exp = 0;
-	u8        neg_zero   = 0;
-	u8        lead_digit = 0;
-	ADT_Type  node_type  = EADT_TYPE_UNINITIALISED;
-	u8        node_props = 0;
+	s32      base         = 0;
+	s32      base2        = 0;
+	u8       base2_offset = 0;
+	s8       exp = 0, orig_exp = 0;
+	u8       neg_zero   = 0;
+	u8       lead_digit = 0;
+	ADT_Type node_type  = EADT_TYPE_UNINITIALISED;
+	u8       node_props = 0;
 
 	/* skip false positives and special cases */
 	if ( ! ! str_find( "eE", *p ) || ( ! ! str_find( ".+-", *p ) && ! char_is_hex_digit( *( p + 1 ) ) && *( p + 1 ) != '.' ) )
@@ -477,8 +481,8 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 		return ++base_str;
 	}
 
-	node_type = EADT_TYPE_INTEGER;
-	neg_zero  = false;
+	node_type      = EADT_TYPE_INTEGER;
+	neg_zero       = false;
 
 	sw   ib        = 0;
 	char buf[ 48 ] = { 0 };
@@ -658,67 +662,67 @@ ADT_Error adt_print_number( FileInfo* file, ADT_Node* node )
 	switch ( node->type )
 	{
 		case EADT_TYPE_INTEGER :
+		{
+			if ( node->props == EADT_PROPS_IS_HEX )
 			{
-				if ( node->props == EADT_PROPS_IS_HEX )
-				{
-					_adt_fprintf( file, "0x%llx", ( long long )node->integer );
-				}
-				else
-				{
-					_adt_fprintf( file, "%lld", ( long long )node->integer );
-				}
+				_adt_fprintf( file, "0x%llx", ( long long )node->integer );
 			}
-			break;
+			else
+			{
+				_adt_fprintf( file, "%lld", ( long long )node->integer );
+			}
+		}
+		break;
 
 		case EADT_TYPE_REAL :
+		{
+			if ( node->props == EADT_PROPS_NAN )
 			{
-				if ( node->props == EADT_PROPS_NAN )
-				{
-					_adt_fprintf( file, "NaN" );
-				}
-				else if ( node->props == EADT_PROPS_NAN_NEG )
-				{
-					_adt_fprintf( file, "-NaN" );
-				}
-				else if ( node->props == EADT_PROPS_INFINITY )
-				{
-					_adt_fprintf( file, "Infinity" );
-				}
-				else if ( node->props == EADT_PROPS_INFINITY_NEG )
-				{
-					_adt_fprintf( file, "-Infinity" );
-				}
-				else if ( node->props == EADT_PROPS_TRUE )
-				{
-					_adt_fprintf( file, "true" );
-				}
-				else if ( node->props == EADT_PROPS_FALSE )
-				{
-					_adt_fprintf( file, "false" );
-				}
-				else if ( node->props == EADT_PROPS_NULL )
-				{
-					_adt_fprintf( file, "null" );
-#ifndef GEN_PARSER_DISABLE_ANALYSIS
-				}
-				else if ( node->props == EADT_PROPS_IS_EXP )
-				{
-					_adt_fprintf( file, "%lld.%0*d%llde%lld", ( long long )node->base, node->base2_offset, 0, ( long long )node->base2, ( long long )node->exp );
-				}
-				else if ( node->props == EADT_PROPS_IS_PARSED_REAL )
-				{
-					if ( ! node->lead_digit )
-						_adt_fprintf( file, ".%0*d%lld", node->base2_offset, 0, ( long long )node->base2 );
-					else
-						_adt_fprintf( file, "%lld.%0*d%lld", ( long long int )node->base2_offset, 0, ( int )node->base, ( long long )node->base2 );
-#endif
-				}
-				else
-				{
-					_adt_fprintf( file, "%f", node->real );
-				}
+				_adt_fprintf( file, "NaN" );
 			}
-			break;
+			else if ( node->props == EADT_PROPS_NAN_NEG )
+			{
+				_adt_fprintf( file, "-NaN" );
+			}
+			else if ( node->props == EADT_PROPS_INFINITY )
+			{
+				_adt_fprintf( file, "Infinity" );
+			}
+			else if ( node->props == EADT_PROPS_INFINITY_NEG )
+			{
+				_adt_fprintf( file, "-Infinity" );
+			}
+			else if ( node->props == EADT_PROPS_TRUE )
+			{
+				_adt_fprintf( file, "true" );
+			}
+			else if ( node->props == EADT_PROPS_FALSE )
+			{
+				_adt_fprintf( file, "false" );
+			}
+			else if ( node->props == EADT_PROPS_NULL )
+			{
+				_adt_fprintf( file, "null" );
+#ifndef GEN_PARSER_DISABLE_ANALYSIS
+			}
+			else if ( node->props == EADT_PROPS_IS_EXP )
+			{
+				_adt_fprintf( file, "%lld.%0*d%llde%lld", ( long long )node->base, node->base2_offset, 0, ( long long )node->base2, ( long long )node->exp );
+			}
+			else if ( node->props == EADT_PROPS_IS_PARSED_REAL )
+			{
+				if ( ! node->lead_digit )
+					_adt_fprintf( file, ".%0*d%lld", node->base2_offset, 0, ( long long )node->base2 );
+				else
+					_adt_fprintf( file, "%lld.%0*d%lld", ( long long int )node->base2_offset, 0, ( int )node->base, ( long long )node->base2 );
+#endif
+			}
+			else
+			{
+				_adt_fprintf( file, "%f", node->real );
+			}
+		}
+		break;
 	}
 
 	return EADT_ERROR_NONE;
@@ -813,13 +817,13 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 	char* beginChar;
 	char* endChar;
 
-	sw columnIndex       = 0;
+	sw columnIndex      = 0;
 	sw totalColumnIndex = 0;
 
 	do
 	{
 		char delimiter = 0;
-		currentChar = zpl_cast( char* ) str_trim( currentChar, false );
+		currentChar    = zpl_cast( char* ) str_trim( currentChar, false );
 
 		if ( *currentChar == 0 )
 			break;
@@ -827,20 +831,20 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 		ADT_Node rowItem = { 0 };
 		rowItem.type     = EADT_TYPE_STRING;
 
-	#ifndef GEN_PARSER_DISABLE_ANALYSIS
+#ifndef GEN_PARSER_DISABLE_ANALYSIS
 		rowItem.name_style = EADT_NAME_STYLE_NO_QUOTES;
-	#endif
+#endif
 
 		/* handle string literals */
 		if ( *currentChar == '"' )
 		{
-			currentChar   += 1;
-			beginChar      = currentChar;
-			endChar        = currentChar;
-			rowItem.string = beginChar;
-		#ifndef GEN_PARSER_DISABLE_ANALYSIS
+			currentChar    += 1;
+			beginChar       = currentChar;
+			endChar         = currentChar;
+			rowItem.string  = beginChar;
+#ifndef GEN_PARSER_DISABLE_ANALYSIS
 			rowItem.name_style = EADT_NAME_STYLE_DOUBLE_QUOTE;
-		#endif
+#endif
 			do
 			{
 				endChar = zpl_cast( char* ) str_skip( endChar, '"' );
@@ -851,8 +855,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 				}
 				else
 					break;
-			}
-			while ( *endChar );
+			} while ( *endChar );
 
 			if ( *endChar == 0 )
 			{
@@ -863,7 +866,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 
 			*endChar    = 0;
 			currentChar = zpl_cast( char* ) str_trim( endChar + 1, true );
-			delimiter   = * currentChar;
+			delimiter   = *currentChar;
 
 			/* unescape escaped quotes (so that unescaped text escapes :) */
 			{
@@ -875,13 +878,12 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 						mem_move( escapedChar, escapedChar + 1, str_len( escapedChar ) );
 					}
 					escapedChar++;
-				}
-				while ( *escapedChar );
+				} while ( *escapedChar );
 			}
 		}
 		else if ( *currentChar == delim )
 		{
-			delimiter      = * currentChar;
+			delimiter      = *currentChar;
 			rowItem.string = "";
 		}
 		else if ( *currentChar )
@@ -894,10 +896,9 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			do
 			{
 				endChar++;
-			}
-			while ( * endChar && * endChar != delim && * endChar != '\n' );
+			} while ( *endChar && *endChar != delim && *endChar != '\n' );
 
-			if ( * endChar )
+			if ( *endChar )
 			{
 				currentChar = zpl_cast( char* ) str_trim( endChar, true );
 
@@ -906,8 +907,8 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 					endChar--;
 				}
 
-				delimiter = * currentChar;
-				* endChar = 0;
+				delimiter = *currentChar;
+				*endChar  = 0;
 			}
 			else
 			{
@@ -920,26 +921,26 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			char* num_p       = beginChar;
 
 			// We only consider hexadecimal values if they start with 0x
-			if ( str_len(num_p) > 2 && num_p[0] == '0' && (num_p[1] == 'x' || num_p[1] == 'X') )
+			if ( str_len( num_p ) > 2 && num_p[ 0 ] == '0' && ( num_p[ 1 ] == 'x' || num_p[ 1 ] == 'X' ) )
 			{
-				num_p += 2; // skip '0x' prefix
+				num_p += 2;    // skip '0x' prefix
 				do
 				{
-					if (!char_is_hex_digit(*num_p))
+					if ( ! char_is_hex_digit( *num_p ) )
 					{
 						skip_number = true;
 						break;
 					}
-				} while (*num_p++);
+				} while ( *num_p++ );
 			}
 			else
 			{
 				skip_number = true;
 			}
 
-			if (!skip_number)
+			if ( ! skip_number )
 			{
-				adt_str_to_number(&rowItem);
+				adt_str_to_number( &rowItem );
 			}
 		}
 
@@ -973,8 +974,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			if ( delimiter != 0 )
 				currentChar++;
 		}
-	}
-	while ( *currentChar );
+	} while ( *currentChar );
 
 	if ( root->nodes.num() == 0 )
 	{
@@ -1008,36 +1008,36 @@ void _csv_write_record( FileInfo* file, CSV_Object* node )
 	switch ( node->type )
 	{
 		case EADT_TYPE_STRING :
+		{
+#ifndef GEN_PARSER_DISABLE_ANALYSIS
+			switch ( node->name_style )
 			{
-#ifndef GEN_PARSER_DISABLE_ANALYSIS
-				switch ( node->name_style )
+				case EADT_NAME_STYLE_DOUBLE_QUOTE :
 				{
-					case EADT_NAME_STYLE_DOUBLE_QUOTE :
-						{
-							str_fmt_file( file, "\"" );
-							adt_print_string( file, node, "\"", "\"" );
-							str_fmt_file( file, "\"" );
-						}
-						break;
-
-					case EADT_NAME_STYLE_NO_QUOTES :
-						{
-#endif
-							str_fmt_file( file, "%s", node->string );
-#ifndef GEN_PARSER_DISABLE_ANALYSIS
-						}
-						break;
+					str_fmt_file( file, "\"" );
+					adt_print_string( file, node, "\"", "\"" );
+					str_fmt_file( file, "\"" );
 				}
+				break;
+
+				case EADT_NAME_STYLE_NO_QUOTES :
+				{
 #endif
+					str_fmt_file( file, "%s", node->string );
+#ifndef GEN_PARSER_DISABLE_ANALYSIS
+				}
+				break;
 			}
-			break;
+#endif
+		}
+		break;
 
 		case EADT_TYPE_REAL :
 		case EADT_TYPE_INTEGER :
-			{
-				adt_print_number( file, node );
-			}
-			break;
+		{
+			adt_print_number( file, node );
+		}
+		break;
 	}
 }
 
@@ -1105,3 +1105,55 @@ String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimi
 
 #pragma endregion CSV
 
+Builder Builder::open( char const* path )
+{
+	Builder result;
+
+	FileError error = file_open_mode( &result.File, EFileMode_WRITE, path );
+
+	if ( error != EFileError_NONE )
+	{
+		log_failure( "gen::File::open - Could not open file: %s", path );
+		return result;
+	}
+
+	result.Buffer = String::make_reserve( GlobalAllocator, Builder_StrBufferReserve );
+
+	return result;
+}
+
+void Builder::pad_lines( s32 num )
+{
+	Buffer.append( "\n" );
+}
+
+void Builder::print( Code code )
+{
+	Buffer.append( code->to_string() );
+}
+
+void Builder::print_fmt( char const* fmt, ... )
+{
+	sw   res;
+	char buf[ GEN_PRINTF_MAXLEN ] = { 0 };
+
+	va_list va;
+	va_start( va, fmt );
+	res = str_fmt_va( buf, count_of( buf ) - 1, fmt, va ) - 1;
+	va_end( va );
+
+	Buffer.append( buf, res );
+}
+
+void Builder::write()
+{
+	bool result = file_write( &File, Buffer, Buffer.length() );
+
+	if ( result == false )
+		log_failure( "gen::File::write - Failed to write to file: %s", file_name( &File ) );
+
+	file_close( &File );
+	Buffer.free();
+}
+
+GEN_NS_END

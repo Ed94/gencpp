@@ -7,27 +7,9 @@
 
 using namespace gen;
 
-bool namespace_by_default = true;
-
-constexpr StrC nspace_default = txt_StrC(R"(
-#if defined(GEN_DONT_USE_NAMESPACE) && ! defined(GEN_NS_BEGIN)
-#	define GEN_NS_BEGIN
-#	define GEN_NS_END
-#elif ! defined(GEN_NS_BEGIN)
-#  define GEN_NS_BEGIN namespace gen {
-#  define GEN_NS_END   }
-#endif
-)");
-
-constexpr StrC nspace_non_default = txt_StrC(R"(
-#if ! defined(GEN_USE_NAMESPACE) && ! defined(GEN_NS_BEGIN)
-#	define GEN_NS_BEGIN
-#	define GEN_NS_END
-#elif ! defined(GEN_NS_BEGIN)
-#  define GEN_NS_BEGIN namespace gen {
-#  define GEN_NS_END   }
-#endif
-)");
+constexpr char const* generation_notice =
+"// This file was generated automatially by gen.bootstrap.cpp "
+"(See: https://github.com/Ed94/gencpp)\n\n";
 
 constexpr StrC implementation_guard_start = txt_StrC(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
@@ -50,8 +32,12 @@ constexpr StrC roll_own_dependencies_guard_start = txt_StrC(R"(
 constexpr StrC roll_own_dependencies_guard_end = txt_StrC(R"(
 // GEN_ROLL_OWN_DEPENDENCIES
 #endif
-
 )");
+
+global bool generate_gen_dep = true;
+global bool generate_builder = true;
+global bool generate_editor  = true;
+global bool generate_scanner = true;
 
 int gen_main()
 {
@@ -63,11 +49,10 @@ int gen_main()
 	Code pop_ignores  = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
 
 	Code header_start = scan_file( "components/header_start.hpp" );
-	Code nspace_macro = untyped_str( namespace_by_default ? nspace_default : nspace_non_default );
 
 	Builder
-	header;
-	header.open( "gen/gen.hpp" );
+	header = Builder::open( "gen/gen.hpp" );
+	header.print( generation_notice );
 	header.print( push_ignores );
 
 	header.print_fmt("#pragma once\n\n");
@@ -75,8 +60,8 @@ int gen_main()
 	// Headers
 	{
 		header.print( header_start );
-		header.print( nspace_macro );
 
+		if ( generate_gen_dep )
 		{
 			header.print_fmt( roll_own_dependencies_guard_start );
 
@@ -91,7 +76,6 @@ int gen_main()
 			Code hashing 	   = scan_file( project_dir "dependencies/hashing.hpp" );
 			Code string        = scan_file( project_dir "dependencies/string.hpp" );
 			Code file_handling = scan_file( project_dir "dependencies/file_handling.hpp" );
-			Code parsing       = scan_file( project_dir "dependencies/parsing.hpp" );
 			Code timing        = scan_file( project_dir "dependencies/timing.hpp" );
 
 			header.print( header_start );
@@ -106,7 +90,6 @@ int gen_main()
 			header.print( hashing );
 			header.print( string );
 			header.print( file_handling );
-			header.print( parsing );
 			header.print( timing );
 			header.print_fmt( "GEN_NS_END\n" );
 
@@ -114,15 +97,16 @@ int gen_main()
 		}
 
 		Code types        = scan_file( project_dir "components/types.hpp" );
-		Code data_structs = scan_file( project_dir "components/data_structures.hpp" );
+		Code ast          = scan_file( project_dir "components/ast.hpp" );
+		Code ast_types    = scan_file( project_dir "components/ast_types.hpp" );
 		Code interface    = scan_file( project_dir "components/interface.hpp" );
+		Code inlines 	  = scan_file( project_dir "components/inlines.hpp" );
+		Code ast_inlines  = scan_file( project_dir "components/temp/ast_inlines.hpp" );
 		Code header_end   = scan_file( project_dir "components/header_end.hpp" );
 
-		CodeBody ecode      = gen_ecode( project_dir "enums/ECode.csv" );
-		CodeBody eoperator  = gen_eoperator( project_dir "enums/EOperator.csv" );
+		CodeBody ecode      = gen_ecode     ( project_dir "enums/ECode.csv" );
+		CodeBody eoperator  = gen_eoperator ( project_dir "enums/EOperator.csv" );
 		CodeBody especifier = gen_especifier( project_dir "enums/ESpecifier.csv" );
-
-		Code builder = scan_file( project_dir "file_processors/builder.hpp" );
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n" );
 
@@ -133,32 +117,40 @@ int gen_main()
 		header.print( especifier );
 		header.print_fmt("#pragma endregion Types\n\n");
 
-		header.print( data_structs );
+		header.print_fmt("#pragma region AST\n\n");
+		header.print( ast );
+		header.print( ast_types );
+		header.print_fmt("#pragma endregion AST\n\n");
+
 		header.print( interface );
+
+		header.print_fmt( inlines );
+		header.print_fmt( ast_inlines );
+
 		header.print( header_end );
-		header.print( builder );
 		header.print_fmt( "GEN_NS_END\n" );
 	}
 
 	// Implementation
 	{
 		header.print_fmt( "%s\n", (char const*) implementation_guard_start );
+
+		if ( generate_gen_dep )
 		{
-			header.print_fmt( roll_own_dependencies_guard_start );
-
-			Code impl_start = scan_file( project_dir "dependencies/impl_start.cpp" );
-			Code debug      = scan_file( project_dir "dependencies/debug.cpp" );
-			Code string_ops = scan_file( project_dir "dependencies/string_ops.cpp" );
-			Code printing   = scan_file( project_dir "dependencies/printing.cpp" );
-			Code memory     = scan_file( project_dir "dependencies/memory.cpp" );
-			Code parsing    = scan_file( project_dir "dependencies/parsing.cpp" );
-			Code hashing    = scan_file( project_dir "dependencies/hashing.cpp" );
-			Code string     = scan_file( project_dir "dependencies/string.cpp" );
-			Code timing     = scan_file( project_dir "dependencies/timing.cpp" );
-
+			Code impl_start    = scan_file( project_dir "dependencies/impl_start.cpp" );
+			Code debug         = scan_file( project_dir "dependencies/debug.cpp" );
+			Code string_ops    = scan_file( project_dir "dependencies/string_ops.cpp" );
+			Code printing      = scan_file( project_dir "dependencies/printing.cpp" );
+			Code memory        = scan_file( project_dir "dependencies/memory.cpp" );
+			Code parsing       = scan_file( project_dir "dependencies/parsing.cpp" );
+			Code hashing       = scan_file( project_dir "dependencies/hashing.cpp" );
+			Code string        = scan_file( project_dir "dependencies/string.cpp" );
 			Code file_handling = scan_file( project_dir "dependencies/file_handling.cpp" );
+			Code timing        = scan_file( project_dir "dependencies/timing.cpp" );
 
+			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print_fmt( "GEN_NS_BEGIN\n\n");
+
 			header.print( impl_start );
 			header.print( debug );
 			header.print( string_ops );
@@ -167,12 +159,10 @@ int gen_main()
 			header.print( parsing );
 			header.print( hashing );
 			header.print( string );
+			header.print( file_handling );
 			header.print( timing );
 
-			header.print( file_handling );
-
 			header.print_fmt( "GEN_NS_END\n");
-
 			header.print_fmt( roll_own_dependencies_guard_end );
 		}
 
@@ -184,10 +174,8 @@ int gen_main()
 		Code parsing         = scan_file( project_dir "components/interface.parsing.cpp" );
 		Code untyped         = scan_file( project_dir "components/untyped.cpp" );
 
-		CodeBody etoktype = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
+		CodeBody      etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
 		CodeNamespace parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
-
-		Code builder = scan_file( project_dir "file_processors/builder.cpp" );
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n");
 		header.print( data );
@@ -198,7 +186,6 @@ int gen_main()
 		header.print( parser_nspace );
 		header.print( parsing );
 		header.print( untyped );
-			header.print( builder );
 		header.print_fmt( "GEN_NS_END\n");
 
 		header.print_fmt( "%s\n", (char const*) implementation_guard_end );

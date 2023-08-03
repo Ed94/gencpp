@@ -2,6 +2,10 @@
 
 #include "gen.hpp"
 
+GEN_NS_BEGIN
+#include "dependencies/parsing.hpp"
+GEN_NS_END
+
 using namespace gen;
 
 CodeBody gen_ecode( char const* path )
@@ -208,7 +212,7 @@ CodeBody gen_especifier( char const* path )
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 {
-	char  scratch_mem[kilobytes(64)];
+	char  scratch_mem[kilobytes(16)];
 	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
 	FileContents enum_content = file_read_contents( scratch, zero_terminate, etok_path );
@@ -226,10 +230,11 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	Array<ADT_Node> attribute_strs     = csv_attr_nodes.nodes[0].nodes;
 	Array<ADT_Node> attribute_str_strs = csv_attr_nodes.nodes[1].nodes;
 
-	String enum_entries      = String::make_reserve( GlobalAllocator, kilobytes(2) );
-	String to_str_entries    = String::make_reserve( GlobalAllocator, kilobytes(4) );
-	String attribute_entries = String::make_reserve( GlobalAllocator, kilobytes(2) );
-	String to_str_attributes = String::make_reserve( GlobalAllocator, kilobytes(4) );
+	String enum_entries             = String::make_reserve( GlobalAllocator, kilobytes(2) );
+	String to_str_entries           = String::make_reserve( GlobalAllocator, kilobytes(4) );
+	String attribute_entries        = String::make_reserve( GlobalAllocator, kilobytes(2) );
+	String to_str_attributes        = String::make_reserve( GlobalAllocator, kilobytes(4) );
+	String attribute_define_entries = String::make_reserve( GlobalAllocator, kilobytes(4) );
 
 	for (uw idx = 0; idx < enum_strs.num(); idx++)
 	{
@@ -247,7 +252,16 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 		attribute_entries.append_fmt( "%s,\n", attribute_str );
 		to_str_attributes.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		attribute_define_entries.append_fmt( "Entry( %s, %s )", attribute_str, entry_to_str );
+
+		if ( idx < attribute_strs.num() - 1 )
+			attribute_define_entries.append( " \\\n");
 	}
+
+#pragma push_macro( "GEN_DEFINE_ATTRIBUTE_TOKENS" )
+#undef GEN_DEFINE_ATTRIBUTE_TOKENS
+	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), attribute_define_entries  );
+#pragma pop_macro( "GEN_DEFINE_ATTRIBUTE_TOKENS" )
 
 	CodeEnum enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, "attribute_toks", (StrC)attribute_entries, stringize(
 		enum Type : u32
@@ -308,8 +322,13 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #pragma pop_macro( "do_once_start" )
 #pragma pop_macro( "do_once_end" )
 
-	CodeNamespace nspace     = def_namespace( name(ETokType), def_namespace_body( args( enum_code, to_str, to_type ) ) );
+	CodeNamespace nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
 	CodeUsing     td_toktype = def_using( name(TokType), def_type( name(ETokType::Type) ) );
 
 	return def_global_body( args( nspace, td_toktype ) );
+}
+
+CodeBody gen_data_structures( char const* data_path, char const* ast_path )
+{
+	return CodeInvalid;
 }

@@ -634,3 +634,4 @@ internal GEN_FILE_CLOSE_PROC( _memory_file_close )
 FileOperations const memory_file_operations = { _memory_file_read, _memory_file_write, _memory_file_seek, _memory_file_close };
 
 #pragma endregion File Handling
+

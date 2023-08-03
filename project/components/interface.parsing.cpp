@@ -1,4 +1,3 @@
-
 namespace Parser
 {
 	struct Token
@@ -4430,3 +4429,4 @@ CodeVar parse_variable( StrC def )
 #	undef left
 #	undef check
 #	undef push_scope
+

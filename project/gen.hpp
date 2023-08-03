@@ -11,25 +11,21 @@
 #include "helpers/push_ignores.inline.hpp"
 #include "components/header_start.hpp"
 
-#ifdef GEN_DONT_USE_NAMESPACE
-#	define GEN_NS_BEGIN
-#	define GEN_NS_END
-#else
-#	define GEN_NS_BEGIN namespace gen {
-#	define GEN_NS_END   }
-#endif
-
 GEN_NS_BEGIN
 
 #include "components/types.hpp"
-#include "components/ecode.hpp"
-#include "components/eoperator.hpp"
-#include "components/especifier.hpp"
-#include "components/data_structures.hpp"
-#include "components/interface.hpp"
-#include "components/header_end.hpp"
+#include "components/temp/ecode.hpp"
+#include "components/temp/eoperator.hpp"
+#include "components/temp/especifier.hpp"
 
-#include "file_processors/builder.hpp"
+#include "components/ast.hpp"
+#include "components/ast_types.hpp"
+
+#include "components/interface.hpp"
+
+#include "components/inlines.hpp"
+#include "components/temp/ast_inlines.hpp"
+#include "components/header_end.hpp"
 
 GEN_NS_END
 

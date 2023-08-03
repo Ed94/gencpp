@@ -440,3 +440,4 @@ void set_allocator_string_table( AllocatorInfo allocator )
 {
 	Allocator_StringArena = allocator;
 }
+

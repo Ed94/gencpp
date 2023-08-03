@@ -562,3 +562,4 @@ sw str_fmt_out_err( char const* fmt, ... )
 }
 
 #pragma endregion Printing
+

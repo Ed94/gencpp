@@ -6,16 +6,22 @@ AlignAfterOpenBracket: BlockIndent
 AlignArrayOfStructures: Left
 AlignConsecutiveAssignments:
   Enabled: true
-  AcrossEmptyLines: false
-  AcrossComments: true
+  AcrossEmptyLines: true
+  AcrossComments: false
   AlignCompound: true
   PadOperators: true
-AlignConsecutiveBitFields: AcrossComments
-AlignConsecutiveDeclarations: AcrossComments
+AlignConsecutiveBitFields:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
 AlignConsecutiveMacros:
   Enabled: true
   AcrossEmptyLines: true
-  AcrossComments: true
+  AcrossComments: false
 AlignEscapedNewlines: Left
 AlignOperands: DontAlign
 
@@ -62,7 +68,7 @@ BraceWrapping:
   BeforeWhile: false
 
 BreakAfterAttributes: Always
-# BreakArrays: false
+BreakArrays: true
 # BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Allman
@@ -73,7 +79,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: true
 
-ColumnLimit: 120
+ColumnLimit: 160
 
 CompactNamespaces: true
 
@@ -91,7 +97,6 @@ ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
 
 IncludeBlocks: Preserve
-
 
 IndentCaseBlocks: false
 IndentCaseLabels: true
@@ -128,7 +133,7 @@ SeparateDefinitionBlocks: Always
 ShortNamespaceLines: 40
 
 SortIncludes: false
-SortUsingDeclarations: true
+SortUsingDeclarations: false
 
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: true
