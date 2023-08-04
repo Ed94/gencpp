@@ -53,8 +53,8 @@ namespace ECode
 	Entry( Template )             \
 	Entry( Typedef )              \
 	Entry( Typename )             \
-	Entry( Union )			      \
-	Entry( Union_Body) 		      \
+	Entry( Union )                \
+	Entry( Union_Body)            \
 	Entry( Using )                \
 	Entry( Using_Namespace )      \
 	Entry( Variable )

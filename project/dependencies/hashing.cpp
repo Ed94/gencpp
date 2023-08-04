@@ -82,5 +82,5 @@ u64 crc64( void const* data, sw len )
 	return result;
 }
 
-#pragma region Hashing
+#pragma endregion Hashing
 

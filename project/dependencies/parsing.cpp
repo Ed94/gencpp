@@ -799,7 +799,6 @@ ADT_Error adt_str_to_number_strict( ADT_Node* node )
 #	define GEN_CSV_ASSERT( msg )
 #endif
 
-
 u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim )
 {
 	CSV_Error error = ECSV_Error__NONE;

@@ -26,7 +26,7 @@ namespace Parser
 	Entry( Ampersand_DBL,          "&&" )               \
 	Entry( Assign_Classifer,       ":" )                \
 	Entry( Attribute_Open, 	       "[[" )               \
-	Entry( Attribute_Close, 	   "]]" )               \
+	Entry( Attribute_Close,        "]]" )               \
 	Entry( BraceCurly_Open,        "{" )                \
 	Entry( BraceCurly_Close,       "}" )                \
 	Entry( BraceSquare_Open,       "[" )                \
@@ -50,6 +50,7 @@ namespace Parser
 	Entry( Decl_Typedef,           "typedef" )          \
 	Entry( Decl_Using,             "using" )            \
 	Entry( Decl_Union,             "union" )            \
+	Entry( Empty_Line,             "__empty_line__" )   \
 	Entry( Identifier,             "__identifier__" )   \
 	Entry( Module_Import,          "import" )           \
 	Entry( Module_Export,          "export" )           \
@@ -63,8 +64,8 @@ namespace Parser
 	Entry( Preprocess_Else,        "else")              \
 	Entry( Preprocess_EndIf,       "endif")             \
 	Entry( Preprocess_Include,     "include" )          \
-	Entry( Preprocess_Pragma, 	   "pragma")            \
-	Entry( Preprocess_Content, 	   "__macro_content__") \
+	Entry( Preprocess_Pragma,      "pragma")            \
+	Entry( Preprocess_Content,     "__macro_content__") \
 	Entry( Preprocess_Macro,       "__macro__")         \
 	Entry( Preprocess_Unsupported, "__unsupported__" )  \
 	Entry( Spec_Alignas,           "alignas" )          \
@@ -72,10 +73,10 @@ namespace Parser
 	Entry( Spec_Consteval,         "consteval" )        \
 	Entry( Spec_Constexpr,         "constexpr" )        \
 	Entry( Spec_Constinit,         "constinit" )        \
-	Entry( Spec_Explicit, 		   "explicit" )         \
+	Entry( Spec_Explicit,          "explicit" )         \
 	Entry( Spec_Extern,            "extern" )           \
-	Entry( Spec_Final, 		       "final" )            \
-	Entry( Spec_Global, 		   "global" )           \
+	Entry( Spec_Final,             "final" )            \
+	Entry( Spec_Global,            "global" )           \
 	Entry( Spec_Inline,            "inline" )           \
 	Entry( Spec_Internal_Linkage,  "internal" )         \
 	Entry( Spec_LocalPersist,      "local_persist" )    \
@@ -87,20 +88,20 @@ namespace Parser
 	Entry( Spec_Volatile,          "volatile")          \
 	Entry( Star,                   "*" )                \
 	Entry( Statement_End,          ";" )                \
-	Entry( StaticAssert, 		   "static_assert" )    \
+	Entry( StaticAssert,           "static_assert" )    \
 	Entry( String,                 "__string__" )       \
-	Entry( Type_Unsigned, 	       "unsigned" )         \
+	Entry( Type_Unsigned,          "unsigned" )         \
 	Entry( Type_Signed,            "signed" )           \
 	Entry( Type_Short,             "short" )            \
 	Entry( Type_Long,              "long" )             \
-	Entry( Type_char, 			   "char" )             \
-	Entry( Type_int, 			   "int" )              \
-	Entry( Type_double, 		   "double" )           \
-	Entry( Type_MS_int8, 		   "__int8" )           \
-	Entry( Type_MS_int16, 		   "__int16" )          \
-	Entry( Type_MS_int32, 		   "__int32" )          \
-	Entry( Type_MS_int64, 		   "__int64" )          \
-	Entry( Type_MS_W64, 		   "_W64" )             \
+	Entry( Type_char,              "char" )             \
+	Entry( Type_int,               "int" )              \
+	Entry( Type_double,            "double" )           \
+	Entry( Type_MS_int8,           "__int8" )           \
+	Entry( Type_MS_int16,          "__int16" )          \
+	Entry( Type_MS_int32,          "__int32" )          \
+	Entry( Type_MS_int64,          "__int64" )          \
+	Entry( Type_MS_W64,            "_W64" )             \
 	Entry( Varadic_Argument,       "..." )              \
 	Entry( __Attributes_Start,     "__attrib_start__" )
 

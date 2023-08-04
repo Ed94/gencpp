@@ -44,10 +44,10 @@ int gen_main()
 		Builder
 		deps_header = Builder::open("gen/gen_dep.hpp");
 		deps_header.print_fmt( generation_notice );
-		deps_header.print_fmt("// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n");
-		deps_header.print_fmt("#pragma once\n\n");
+		deps_header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n" );
+		deps_header.print_fmt( "#pragma once\n\n" );
 		deps_header.print( header_start );
-		deps_header.print_fmt( "GEN_NS_BEGIN\n\n");
+		deps_header.print_fmt( "GEN_NS_BEGIN\n\n" );
 
 		deps_header.print( macros );
 		deps_header.print( basic_types );
@@ -61,13 +61,13 @@ int gen_main()
 		deps_header.print( file_handling );
 		deps_header.print( timing );
 
-		deps_header.print_fmt( "GEN_NS_END\n\n");
+		deps_header.print_fmt( "GEN_NS_END\n\n" );
 		deps_header.write();
 	}
 
 	// gen_dep.cpp
 	{
-		Code src_start    = scan_file( "dependencies/src_start.cpp" );
+		Code src_start     = scan_file( "dependencies/src_start.cpp" );
 		Code debug         = scan_file( "dependencies/debug.cpp" );
 		Code string_ops    = scan_file( "dependencies/string_ops.cpp" );
 		Code printing      = scan_file( "dependencies/printing.cpp" );
@@ -78,11 +78,11 @@ int gen_main()
 		Code timing        = scan_file( "dependencies/timing.cpp" );
 
 		Builder
-		deps_impl = Builder::open("gen/gen_dep.cpp");
+		deps_impl = Builder::open( "gen/gen_dep.cpp" );
 		deps_impl.print_fmt( generation_notice );
-		deps_impl.print_fmt("// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n");
+		deps_impl.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n" );
 		deps_impl.print( src_start );
-		deps_impl.print_fmt( "GEN_NS_BEGIN\n\n");
+		deps_impl.print_fmt( "GEN_NS_BEGIN\n\n" );
 
 		deps_impl.print( debug );
 		deps_impl.print( string_ops );
@@ -93,7 +93,7 @@ int gen_main()
 		deps_impl.print( file_handling );
 		deps_impl.print( timing );
 
-		deps_impl.print_fmt( "GEN_NS_END\n\n");
+		deps_impl.print_fmt( "GEN_NS_END\n\n" );
 		deps_impl.write();
 	}
 
@@ -115,30 +115,32 @@ int gen_main()
 		Builder
 		header = Builder::open( "gen/gen.hpp" );
 		header.print_fmt( generation_notice );
-		header.print_fmt("#pragma once\n\n");
+		header.print_fmt( "#pragma once\n\n" );
 		header.print( push_ignores );
 		header.print( header_start );
-		header.print_fmt( "GEN_NS_BEGIN\n\n");
+		header.print_fmt( "GEN_NS_BEGIN\n\n" );
 
-		header.print_fmt("#pragma region Types\n\n");
+		header.print_fmt( "#pragma region Types\n\n" );
 		header.print( types );
 		header.print( ecode );
 		header.print( eoperator );
 		header.print( especifier );
-		header.print_fmt("#pragma endregion Types\n\n");
+		header.print_fmt( "#pragma endregion Types\n\n" );
 
-		header.print_fmt("#pragma region AST\n\n");
+		header.print_fmt( "#pragma region AST\n\n" );
 		header.print( ast );
 		header.print( ast_types );
-		header.print_fmt("#pragma endregion AST\n\n");
+		header.print_fmt( "#pragma endregion AST\n\n" );
 
 		header.print( interface );
 
+		header.print_fmt( "#pragma region Inlines\n\n" );
 		header.print( inlines );
 		header.print( ast_inlines );
+		header.print_fmt( "#pragma endregion Inlines\n\n" );
 
 		header.print( header_end );
-		header.print_fmt( "GEN_NS_END\n\n");
+		header.print_fmt( "GEN_NS_END\n\n" );
 		header.print( pop_ignores );
 		header.write();
 	}
@@ -147,7 +149,7 @@ int gen_main()
 	{
 		Code        src_start       = scan_file( "components/src_start.cpp" );
 		CodeInclude header          = def_include( txt_StrC("gen.hpp") );
-		Code        data 	        = scan_file( "components/static_data.cpp" );
+		Code        static_data 	= scan_file( "components/static_data.cpp" );
 		Code        ast_case_macros = scan_file( "components/ast_case_macros.cpp" );
 		Code        ast			    = scan_file( "components/ast.cpp" );
 		Code        interface	    = scan_file( "components/interface.cpp" );
@@ -166,14 +168,22 @@ int gen_main()
 		src.print( header );
 		src.print_fmt( "\nGEN_NS_BEGIN\n\n");
 
-		src.print( data );
+		src.print( static_data );
+
+		src.print_fmt( "#pragma region AST\n\n" );
 		src.print( ast_case_macros );
 		src.print( ast );
+		src.print_fmt( "#pragma endregion AST\n\n" );
+
+		src.print_fmt( "#pragma region Interface\n\n" );
 		src.print( interface );
 		src.print( upfront );
+		src.print_fmt( "#pragma region Parsing\n\n" );
 		src.print( parser_nspace );
 		src.print( parsing );
 		src.print( untyped );
+		src.print_fmt( "#pragma endregion Parsing\n\n" );
+		src.print_fmt( "#pragma endregion Interface\n\n" );
 
 		src.print_fmt( "GEN_NS_END\n\n");
 		src.print( pop_ignores );
@@ -182,7 +192,6 @@ int gen_main()
 
 	// gen_builder.hpp
 	{
-		Code parsing = scan_file( "dependencies/parsing.hpp" );
 		Code builder = scan_file( "file_processors/builder.hpp" );
 
 		Builder
@@ -190,7 +199,6 @@ int gen_main()
 		header.print_fmt( generation_notice );
 		header.print( def_include( txt_StrC("gen.hpp") ));
 		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
-		header.print( parsing );
 		header.print( builder );
 		header.print_fmt( "\nGEN_NS_END\n\n" );
 		header.write();
@@ -198,15 +206,44 @@ int gen_main()
 
 	// gen_builder.cpp
 	{
-		Code parsing = scan_file( "dependencies/parsing.cpp" );
 		Code builder = scan_file( "file_processors/builder.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen_builder.cpp" );
+		src.print_fmt( generation_notice );
 		src.print( def_include( txt_StrC("gen_builder.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
-		src.print( parsing );
 		src.print( builder );
+		src.print_fmt( "\nGEN_NS_END\n\n" );
+		src.write();
+	}
+
+	// gen_scanner.hpp
+	{
+		Code parsing = scan_file( "dependencies/parsing.hpp" );
+		Code scanner = scan_file( "file_processors/scanner.hpp" );
+
+		Builder
+		header = Builder::open( "gen/gen_scanner.hpp" );
+		header.print( def_include( txt_StrC("gen.hpp") ) );
+		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+		header.print( parsing );
+		header.print( scanner );
+		header.print_fmt( "\nGEN_NS_END\n\n" );
+		header.write();
+	}
+
+	// gen_scanner.cpp
+	{
+		Code parsing = scan_file( "dependencies/parsing.cpp" );
+		// Code scanner = scan_file( "file_processors/scanner.cpp" );
+
+		Builder
+		src = Builder::open( "gen/gen_scanner.cpp" );
+		src.print( def_include( txt_StrC("gen_scanner.hpp") ) );
+		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+		src.print( parsing );
+		// src.print( scanner );
 		src.print_fmt( "\nGEN_NS_END\n\n" );
 		src.write();
 	}

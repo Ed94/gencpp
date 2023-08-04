@@ -64,6 +64,7 @@ Push-location $path_project
 		'gen.hpp', 'gen.cpp',
 		'gen_dep.hpp', 'gen_dep.cpp',
 		'gen_builder.hpp', 'gen_builder.cpp'
+		'gen_scanner.hpp', 'gen_scanner.cpp'
 	)
 	$exclude = $null
 

@@ -383,9 +383,7 @@ StringCached get_cached_string( StrC str )
 	return result;
 }
 
-/*
-	Used internally to retireve a Code object form the CodePool.
-	*/
+// Used internally to retireve a Code object form the CodePool.
 Code make_code()
 {
 	Pool* allocator = & CodePools.back();

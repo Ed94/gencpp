@@ -1,3 +1,5 @@
+#pragma region Upfront
+
 enum class OpValidateResult : u32
 {
 	Fail,
@@ -375,7 +377,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 
 
 /*
-The implementaiton of the upfront constructors involves bascially doing three things:
+The implementaiton of the upfront constructors involves doing three things:
 * Validate the arguments given to construct the intended type of AST is valid.
 * Construct said AST type.
 * Lock the AST (set to readonly) and return the valid object.
@@ -2130,4 +2132,9 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 #	undef name_check
 #	undef null_check
 #	undef null_or_invalid_check
+#	undef def_body_start
+#	undef def_body_code_array_start
+
+
+#pragma endregion Upfront
 

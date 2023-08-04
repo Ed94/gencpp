@@ -1,4 +1,4 @@
-#pragma endregion Debug
+#pragma region Debug
 
 void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... )
 {

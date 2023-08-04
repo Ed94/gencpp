@@ -8,6 +8,10 @@ build/*
 **/gen/gen.cpp
 **/gen/gen_dep.hpp
 **/gen/gen_dep.cpp
+**/gen/gen_builder.hpp
+**/gen/gen_builder.cpp
+**/gen/gen_scanner.hpp
+**/gen/gen_scanner.cpp
 
 gencpp.hpp
 gencpp.cpp

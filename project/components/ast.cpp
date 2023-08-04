@@ -1,5 +1,3 @@
-#pragma region AST
-
 Code Code::Global;
 Code Code::Invalid;
 
@@ -916,6 +914,3 @@ bool AST::validate_body()
 
 #undef CheckEntries
 }
-
-#pragma endregion AST
-

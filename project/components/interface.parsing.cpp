@@ -65,17 +65,19 @@ namespace Parser
 
 		Token& current()
 		{
+			while ( Arr[Idx].Type == TokType::Empty_Line )
+				Idx++;
+
 			return Arr[Idx];
 		}
 
 		Token& previous()
 		{
-			return Arr[Idx - 1];
-		}
+			s32 idx = this->Idx;
+			while ( Arr[Idx].Type == TokType::Empty_Line )
+				idx--;
 
-		Token* next()
-		{
-			return Idx + 1 < Arr.num() ? &Arr[Idx + 1] : nullptr;
+			return Arr[idx - 1];
 		}
 
 		Token& operator []( s32 idx )
@@ -168,6 +170,12 @@ namespace Parser
 			return false;
 		}
 
+		if ( Arr[Idx].Type == TokType::Empty_Line && type != TokType::Empty_Line )
+		{
+			Idx++;
+			return log_fmt( "Auto-skipping empty line (%d, %d)\n", current().Line, current().Column );
+		}
+
 		if ( Arr[Idx].Type != type )
 		{
 			String token_str = String::make( GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
@@ -203,7 +211,7 @@ namespace Parser
 			if ( current == '\n' )  \
 			{                       \
 				line++;             \
-				column = 0;         \
+				column = 1;         \
 			}                       \
 			else                    \
 			{                       \
@@ -249,12 +257,24 @@ namespace Parser
 		{
 			Token token = { nullptr, 0, TokType::Invalid, line, column, false };
 
-			if ( line == 4921 )
-			{
-				log_fmt("here");
-			}
-
 			bool is_define = false;
+
+			if ( column == 1 )
+			{
+				token.Text = scanner;
+
+				if ( current == '\r')
+					token.Length = 1;
+
+				if ( current == '\n' )
+				{
+					token.Type = TokType::Empty_Line;
+					token.Length ++;
+
+					Tokens.append( token );
+					continue;
+				}
+			}
 
 			SkipWhitespace();
 			if ( left <= 0 )
@@ -1022,13 +1042,16 @@ if ( def.Ptr == nullptr )                                                      \
 	return CodeInvalid;                                                        \
 }
 
-#	define nexttok 	    Context.Tokens.next()
 #	define currtok      Context.Tokens.current()
 #	define prevtok      Context.Tokens.previous()
 #	define eat( Type_ ) Context.Tokens.__eat( Type_ )
 #	define left         ( Context.Tokens.Arr.num() - Context.Tokens.Idx )
 
-#	define check( Type_ ) ( left && currtok.Type == Type_ )
+#	define check( Type_ )                     \
+	( left                                    \
+	&& (currtok.Type == TokType::Empty_Line ? \
+		eat( TokType::Empty_Line) : true)     \
+	&& currtok.Type == Type_ )
 
 #	define push_scope()                                                    \
 	StackNode scope { nullptr, currtok, NullToken, txt_StrC( __func__ ) }; \
@@ -2402,6 +2425,12 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 
 		switch ( currtok.Type )
 		{
+			case TokType::Empty_Line:
+				// Empty lines are auto skipped by Tokens.current()
+				member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
+				eat( TokType::Empty_Line );
+			break;
+
 			case TokType::Comment:
 				member = def_comment( currtok );
 				eat( TokType::Comment );
@@ -2756,6 +2785,12 @@ CodeBody parse_global_nspace( CodeT which )
 
 		switch ( currtok.Type )
 		{
+			case TokType::Empty_Line:
+				// Empty lines are auto skipped by Tokens.current()
+				member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
+				eat( TokType::Empty_Line );
+			break;
+
 			case TokType::Comment:
 				member = def_comment( currtok );
 				eat( TokType::Comment );
@@ -3072,6 +3107,12 @@ CodeEnum parse_enum( bool inplace_def )
 		{
 			switch ( currtok.Type )
 			{
+				case TokType::Empty_Line:
+					// Empty lines are auto skipped by Tokens.current()
+					member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
+					eat( TokType::Empty_Line );
+				break;
+
 				case TokType::Comment:
 					member = def_comment( currtok );
 					eat( TokType::Comment );
@@ -4027,11 +4068,6 @@ CodeTypedef parse_typedef()
 
 	eat( TokType::Decl_Typedef );
 
-	if ( currtok.Line == 2196 )
-	{
-		log_fmt("here");
-	}
-
 	constexpr bool from_typedef = true;
 
 	if ( check( TokType::Preprocess_Macro ))
@@ -4144,6 +4180,12 @@ CodeUnion parse_union( bool inplace_def )
 		Code member = { nullptr };
 		switch ( currtok.Type )
 		{
+			case TokType::Empty_Line:
+				// Empty lines are auto skipped by Tokens.current()
+				member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
+				eat( TokType::Empty_Line );
+			break;
+
 			case TokType::Comment:
 				member = def_comment( currtok );
 				eat( TokType::Comment );
@@ -4422,7 +4464,6 @@ CodeVar parse_variable( StrC def )
 
 // Undef helper macros
 #	undef check_parse_args
-#	undef nexttok
 #	undef currtok
 #	undef prevtok
 #	undef eat

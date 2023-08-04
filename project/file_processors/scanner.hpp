@@ -1,8 +1,3 @@
-#pragma once
-#include "gen.hpp"
-
-GEN_NS_BEGIN
-
 Code scan_file( char const* path )
 {
 	FileInfo file;
@@ -28,6 +23,7 @@ Code scan_file( char const* path )
 	return untyped_str( str );
 }
 
+#if 0
 struct Policy
 {
 	// Nothing for now.
@@ -69,5 +65,5 @@ struct Scanner
 
 	bool process_requests( Array<Receipt> out_receipts );
 };
+#endif
 
-GEN_NS_END

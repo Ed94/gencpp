@@ -12,3 +12,4 @@ struct Builder
 
 	void write();
 };
+

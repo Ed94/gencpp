@@ -58,3 +58,4 @@ sw fatal(char const* fmt, ...)
 }
 
 #pragma endregion Printing
+

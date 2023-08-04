@@ -2,8 +2,16 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
-#include "file_processors/scanner.hpp"
+
 #include "helpers/helper.hpp"
+
+GEN_NS_BEGIN
+#include "dependencies/parsing.cpp"
+GEN_NS_END
+
+#include "file_processors/builder.hpp"
+#include "file_processors/builder.cpp"
+#include "file_processors/scanner.hpp"
 
 using namespace gen;
 
@@ -41,30 +49,25 @@ global bool generate_scanner = true;
 
 int gen_main()
 {
+#define project_dir "../project/"
 	gen::init();
 
-#define project_dir "../project/"
-
-	Code push_ignores = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
-	Code pop_ignores  = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
-
-	Code header_start = scan_file( "components/header_start.hpp" );
+	Code push_ignores        = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
+	Code pop_ignores         = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
+	Code single_header_start = scan_file( "components/header_start.hpp" );
 
 	Builder
 	header = Builder::open( "gen/gen.hpp" );
-	header.print( generation_notice );
-	header.print( push_ignores );
-
+	header.print_fmt( generation_notice );
 	header.print_fmt("#pragma once\n\n");
+	header.print( push_ignores );
 
 	// Headers
 	{
-		header.print( header_start );
+		header.print( single_header_start );
 
 		if ( generate_gen_dep )
 		{
-			header.print_fmt( roll_own_dependencies_guard_start );
-
 			Code header_start  = scan_file( project_dir "dependencies/header_start.hpp" );
 			Code macros        = scan_file( project_dir "dependencies/macros.hpp" );
 			Code basic_types   = scan_file( project_dir "dependencies/basic_types.hpp" );
@@ -78,8 +81,10 @@ int gen_main()
 			Code file_handling = scan_file( project_dir "dependencies/file_handling.hpp" );
 			Code timing        = scan_file( project_dir "dependencies/timing.hpp" );
 
+			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print( header_start );
 			header.print_fmt( "GEN_NS_BEGIN\n\n" );
+
 			header.print( macros );
 			header.print( basic_types );
 			header.print( debug );
@@ -91,8 +96,15 @@ int gen_main()
 			header.print( string );
 			header.print( file_handling );
 			header.print( timing );
-			header.print_fmt( "GEN_NS_END\n" );
 
+			if ( generate_scanner )
+			{
+				header.print_fmt( "pragma region Parsing\n\n" );
+				header.print( scan_file( project_dir "dependencies/parsing.hpp" ) );
+				header.print_fmt( "pragma endregion Parsing\n\n" );
+			}
+
+			header.print_fmt( "GEN_NS_END\n" );
 			header.print_fmt( roll_own_dependencies_guard_end );
 		}
 
@@ -124,10 +136,27 @@ int gen_main()
 
 		header.print( interface );
 
-		header.print_fmt( inlines );
-		header.print_fmt( ast_inlines );
+		header.print_fmt( "#pragma region Inlines\n\n" );
+		header.print( inlines );
+		header.print( ast_inlines );
+		header.print_fmt( "#pragma endregion Inlines\n\n" );
 
 		header.print( header_end );
+
+		if ( generate_builder )
+		{
+			header.print_fmt( "#pragma region Builder\n\n" );
+			header.print( scan_file( project_dir "file_processors/builder.hpp" ) );
+			header.print_fmt( "#pragma endregion Builder\n\n" );
+		}
+
+		if ( generate_scanner )
+		{
+			header.print_fmt( "#pragma region Scanner\n\n" );
+			header.print( scan_file( project_dir "file_processors/scanner.hpp" ) );
+			header.print_fmt( "#pragma endregion Scanner\n\n" );
+		}
+
 		header.print_fmt( "GEN_NS_END\n" );
 	}
 
@@ -137,7 +166,7 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code impl_start    = scan_file( project_dir "dependencies/impl_start.cpp" );
+			Code impl_start    = scan_file( project_dir "dependencies/src_start.cpp" );
 			Code debug         = scan_file( project_dir "dependencies/debug.cpp" );
 			Code string_ops    = scan_file( project_dir "dependencies/string_ops.cpp" );
 			Code printing      = scan_file( project_dir "dependencies/printing.cpp" );
@@ -162,11 +191,18 @@ int gen_main()
 			header.print( file_handling );
 			header.print( timing );
 
+			if ( generate_scanner )
+			{
+				header.print_fmt( "#pragma region Parsing\n\n" );
+				header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
+				header.print_fmt( "#pragma endregion Parsing\n\n" );
+			}
+
 			header.print_fmt( "GEN_NS_END\n");
 			header.print_fmt( roll_own_dependencies_guard_end );
 		}
 
-		Code data 	         = scan_file( project_dir "components/static_data.cpp" );
+		Code static_data 	 = scan_file( project_dir "components/static_data.cpp" );
 		Code ast_case_macros = scan_file( project_dir "components/ast_case_macros.cpp" );
 		Code ast             = scan_file( project_dir "components/ast.cpp" );
 		Code interface       = scan_file( project_dir "components/interface.cpp" );
@@ -178,14 +214,39 @@ int gen_main()
 		CodeNamespace parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n");
-		header.print( data );
+		header.print( static_data );
+
+		header.print_fmt( "#pragma region AST\n\n" );
 		header.print( ast_case_macros );
 		header.print( ast );
+		header.print_fmt( "#pragma endregion AST\n\n" );
+
+		header.print_fmt( "#pragma region Interface\n\n" );
 		header.print( interface );
 		header.print( upfront );
+		header.print_fmt( "#pragma region Parsing\n\n" );
 		header.print( parser_nspace );
 		header.print( parsing );
+		header.print_fmt( "#pragma endregion Parsing\n\n" );
 		header.print( untyped );
+		header.print_fmt( "#pragma endregion Interface\n\n");
+
+		if ( generate_builder )
+		{
+			header.print_fmt( "#pragma region Builder\n\n" );
+			header.print( scan_file( project_dir "file_processors/builder.cpp" ) );
+			header.print_fmt( "#pragma endregion Builder\n\n" );
+		}
+
+#if 0
+		if ( generate_scanner )
+		{
+			header.print_fmt( "#pragma region Scanner\n\n" );
+			header.print( scan_file( project_dir "file_processors/scanner.cpp" ) );
+			header.print_fmt( "#pragma endregion Scanner\n\n" );
+		}
+#endif
+
 		header.print_fmt( "GEN_NS_END\n");
 
 		header.print_fmt( "%s\n", (char const*) implementation_guard_end );
@@ -196,4 +257,5 @@ int gen_main()
 
 	gen::deinit();
 	return 0;
+#undef project_dir
 }
