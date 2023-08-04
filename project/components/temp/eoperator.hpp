@@ -57,14 +57,14 @@ namespace EOperator
 	};
 
 	inline
-	char const* to_str( Type op )
+	StrC to_str( Type op )
 	{
 		local_persist
-		char const* lookup[ Num_Ops ] = {
-		#	define Entry( Type_, Token_ ) stringize(Token_),
+		StrC lookup[ Num_Ops ] = {
+		#	define Entry( Type_, Token_ ) { sizeof(stringize(Token_)), stringize(Token_) },
 			Define_Operators
 		#	undef Entry
-			","
+			txt_StrC(",")
 		};
 
 		return lookup[ op ];

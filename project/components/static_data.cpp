@@ -32,6 +32,8 @@ global CodeAttributes attrib_api_import;
 global Code module_global_fragment;
 global Code module_private_fragment;
 
+global Code fmt_newline;
+
 global CodeParam param_varadic;
 
 global CodePragma pragma_once;

@@ -1,9 +1,9 @@
-#if GEN_TIME
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "gen.hpp"
+#include "gen/gen.hpp"
+#include "gen/gen.builder.hpp"
 using namespace gen;
 
 Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
@@ -118,7 +118,7 @@ void check_SOA()
 {
 	log_fmt("\ncheck_SOA:");
 	gen::init();
-	Builder soa_test; soa_test.open( "SOA.gen.hpp" );
+	Builder soa_test = Builder::open( "SOA.gen.hpp" );
 
 	soa_test.print( parse_using( code(
 		using u16 = unsigned short;
@@ -142,4 +142,3 @@ void check_SOA()
 	gen::deinit();
 	log_fmt(" passed!\n");
 }
-#endif

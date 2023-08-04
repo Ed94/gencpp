@@ -63,19 +63,28 @@ namespace Parser
 
 		bool __eat( TokType type );
 
-		Token& current()
+		Token& current( bool skip_new_lines = true )
 		{
-			while ( Arr[Idx].Type == TokType::Empty_Line )
-				Idx++;
+			if ( skip_new_lines )
+			{
+				while ( Arr[Idx].Type == TokType::NewLine )
+					Idx++;
+			}
 
 			return Arr[Idx];
 		}
 
-		Token& previous()
+		Token& previous( bool skip_new_lines = false )
 		{
 			s32 idx = this->Idx;
-			while ( Arr[Idx].Type == TokType::Empty_Line )
-				idx--;
+
+			if ( skip_new_lines )
+			{
+				while ( Arr[idx].Type == TokType::NewLine )
+					idx--;
+
+				return Arr[idx];
+			}
 
 			return Arr[idx - 1];
 		}
@@ -85,6 +94,8 @@ namespace Parser
 			return Arr[idx];
 		}
 	};
+
+	constexpr bool dont_skip_new_lines = false;
 
 	struct StackNode
 	{
@@ -145,7 +156,7 @@ namespace Parser
 			{
 				if ( curr_scope->Name )
 				{
-					result.append_fmt("\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, (StrC)curr_scope->Name );
+					result.append_fmt("\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
 				}
 				else
 				{
@@ -170,19 +181,16 @@ namespace Parser
 			return false;
 		}
 
-		if ( Arr[Idx].Type == TokType::Empty_Line && type != TokType::Empty_Line )
+		if ( Arr[Idx].Type == TokType::NewLine && type != TokType::NewLine )
 		{
 			Idx++;
-			return log_fmt( "Auto-skipping empty line (%d, %d)\n", current().Line, current().Column );
 		}
 
 		if ( Arr[Idx].Type != type )
 		{
-			String token_str = String::make( GlobalAllocator, { Arr[Idx].Length, Arr[Idx].Text } );
-
-			log_failure( "Parse Error, TokArray::eat, Expected: ' %s ' not ' %s ' (%d, %d)`\n%s"
-				, ETokType::to_str(type)
-				, token_str
+			log_failure( "Parse Error, TokArray::eat, Expected: ' %s ' not ' %.*s ' (%d, %d)`\n%s"
+				, ETokType::to_str(type).Ptr
+				, Arr[Idx].Length, Arr[Idx].Text
 				, current().Line
 				, current().Column
 				, Context.to_string()
@@ -255,26 +263,30 @@ namespace Parser
 
 		while (left )
 		{
-			Token token = { nullptr, 0, TokType::Invalid, line, column, false };
+			Token token = { scanner, 0, TokType::Invalid, line, column, false };
 
 			bool is_define = false;
 
 			if ( column == 1 )
 			{
-				token.Text = scanner;
-
 				if ( current == '\r')
+				{
+					move_forward();
 					token.Length = 1;
+				}
 
 				if ( current == '\n' )
 				{
-					token.Type = TokType::Empty_Line;
+					token.Type = TokType::NewLine;
 					token.Length ++;
+					move_forward();
 
 					Tokens.append( token );
 					continue;
 				}
 			}
+
+			token.Length = 0;
 
 			SkipWhitespace();
 			if ( left <= 0 )
@@ -321,25 +333,28 @@ namespace Parser
 								if ( current == '\r' )
 								{
 									move_forward();
-									// token.Length++;
+									token.Length++;
 								}
 
 								if ( current == '\n' )
 								{
 									move_forward();
-									// token.Length++;
+									token.Length++;
 									continue;
 								}
 								else
 								{
-									String directive_str = String::make_length( GlobalAllocator, token.Text, token.Length );
-
 									log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
-												" in preprocessor directive (%d, %d)\n%s"
+												" in preprocessor directive (%d, %d)\n%.100s"
 										, current, line, column
-										, token.Line, token.Column, directive_str );
+										, token.Line, token.Column, token.Text );
 									break;
 								}
+							}
+
+							if ( current == '\r' )
+							{
+								move_forward();
 							}
 
 							if ( current == '\n' )
@@ -353,8 +368,8 @@ namespace Parser
 							token.Length++;
 						}
 
+						token.Length = token.Length + token.Text - hash;
 						token.Text   = hash;
-						token.Length = (sptr)token.Text + token.Length - (sptr)hash;
 						Tokens.append( token );
 						continue; // Skip found token, its all handled here.
 					}
@@ -817,10 +832,21 @@ namespace Parser
 							token.Text   = scanner;
 							token.Length = 0;
 
-							while ( left && current != '\n' )
+							while ( left && current != '\n' && current != '\r' )
 							{
 								move_forward();
 								token.Length++;
+							}
+
+							if ( current == '\r' )
+							{
+								move_forward();
+							}
+
+							if ( current == '\n' )
+							{
+								move_forward();
+								// token.Length++;
 							}
 						}
 						else if ( current == '*' )
@@ -986,6 +1012,17 @@ namespace Parser
 					move_forward();
 					token.Length++;
 				}
+
+				if ( current == '\r' )
+				{
+					move_forward();
+					// token.Length++;
+				}
+				if ( current == '\n' )
+				{
+					move_forward();
+					// token.Length++;
+				}
 			}
 			else
 			{
@@ -1042,16 +1079,14 @@ if ( def.Ptr == nullptr )                                                      \
 	return CodeInvalid;                                                        \
 }
 
-#	define currtok      Context.Tokens.current()
-#	define prevtok      Context.Tokens.previous()
-#	define eat( Type_ ) Context.Tokens.__eat( Type_ )
-#	define left         ( Context.Tokens.Arr.num() - Context.Tokens.Idx )
+#	define currtok_noskip Context.Tokens.current( dont_skip_new_lines )
+#	define currtok        Context.Tokens.current()
+#	define prevtok        Context.Tokens.previous()
+#	define eat( Type_ )   Context.Tokens.__eat( Type_ )
+#	define left           ( Context.Tokens.Arr.num() - Context.Tokens.Idx )
 
-#	define check( Type_ )                     \
-	( left                                    \
-	&& (currtok.Type == TokType::Empty_Line ? \
-		eat( TokType::Empty_Line) : true)     \
-	&& currtok.Type == Type_ )
+#	define check_noskip( Type_ ) ( left && currtok_noskip.Type == Type_ )
+#	define check( Type_ )        ( left && currtok.Type == Type_ )
 
 #	define push_scope()                                                    \
 	StackNode scope { nullptr, currtok, NullToken, txt_StrC( __func__ ) }; \
@@ -2415,7 +2450,7 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 	else
 		result->Type = Struct_Body;
 
-	while ( left && currtok.Type != TokType::BraceCurly_Close )
+	while ( left && currtok_noskip.Type != TokType::BraceCurly_Close )
 	{
 		Code           member     = Code::Invalid;
 		CodeAttributes attributes = { nullptr };
@@ -2423,12 +2458,13 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 
 		bool expects_function = false;
 
-		switch ( currtok.Type )
+		Context.Scope->Start = currtok_noskip;
+
+		switch ( currtok_noskip.Type )
 		{
-			case TokType::Empty_Line:
-				// Empty lines are auto skipped by Tokens.current()
-				member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
-				eat( TokType::Empty_Line );
+			case TokType::NewLine:
+				member = fmt_newline;
+				eat( TokType::NewLine );
 			break;
 
 			case TokType::Comment:
@@ -2773,7 +2809,7 @@ CodeBody parse_global_nspace( CodeT which )
 	result = (CodeBody) make_code();
 	result->Type = which;
 
-	while ( left && currtok.Type != TokType::BraceCurly_Close )
+	while ( left && currtok_noskip.Type != TokType::BraceCurly_Close )
 	{
 		Code           member     = Code::Invalid;
 		CodeAttributes attributes = { nullptr };
@@ -2781,14 +2817,14 @@ CodeBody parse_global_nspace( CodeT which )
 
 		bool expects_function = false;
 
-		Context.Scope->Start = currtok;
+		Context.Scope->Start = currtok_noskip;
 
-		switch ( currtok.Type )
+		switch ( currtok_noskip.Type )
 		{
-			case TokType::Empty_Line:
+			case TokType::NewLine:
 				// Empty lines are auto skipped by Tokens.current()
-				member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
-				eat( TokType::Empty_Line );
+				member = fmt_newline;
+				eat( TokType::NewLine );
 			break;
 
 			case TokType::Comment:
@@ -3103,14 +3139,13 @@ CodeEnum parse_enum( bool inplace_def )
 
 		Code member = CodeInvalid;
 
-		while ( currtok.Type != TokType::BraceCurly_Close )
+		while ( left && currtok_noskip.Type != TokType::BraceCurly_Close )
 		{
-			switch ( currtok.Type )
+			switch ( currtok_noskip.Type )
 			{
-				case TokType::Empty_Line:
-					// Empty lines are auto skipped by Tokens.current()
-					member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
-					eat( TokType::Empty_Line );
+				case TokType::NewLine:
+					member = untyped_str( currtok_noskip );
+					eat( TokType::NewLine );
 				break;
 
 				case TokType::Comment:
@@ -3160,9 +3195,9 @@ CodeEnum parse_enum( bool inplace_def )
 					{
 						eat( TokType::Operator );
 
-						while ( currtok.Type != TokType::Comma && currtok.Type != TokType::BraceCurly_Close )
+						while ( currtok_noskip.Type != TokType::Comma && currtok_noskip.Type != TokType::BraceCurly_Close )
 						{
-							eat( currtok.Type );
+							eat( currtok_noskip.Type );
 						}
 					}
 
@@ -3653,14 +3688,14 @@ CodeOpCast parse_operator_cast()
 			if ( currtok.Type == TokType::BraceCurly_Open )
 				level++;
 
-			else if ( currtok.Type == TokType::BraceCurly_Close && level > 0 )
+			else if ( currtok.Type == TokType::BraceCurly_Close )
 				level--;
 
 			eat( currtok.Type );
 		}
-		eat( TokType::BraceCurly_Close );
-
 		body_str.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)body_str.Text;
+
+		eat( TokType::BraceCurly_Close );
 
 		body = untyped_str( body_str );
 	}
@@ -4175,15 +4210,15 @@ CodeUnion parse_union( bool inplace_def )
 	body = make_code();
 	body->Type = ECode::Union_Body;
 
-	while ( ! check( TokType::BraceCurly_Close ) )
+	while ( ! check_noskip( TokType::BraceCurly_Close ) )
 	{
 		Code member = { nullptr };
-		switch ( currtok.Type )
+		switch ( currtok_noskip.Type )
 		{
-			case TokType::Empty_Line:
+			case TokType::NewLine:
 				// Empty lines are auto skipped by Tokens.current()
-				member = untyped_str( Context.Tokens.Arr[ Context.Tokens.Idx] );
-				eat( TokType::Empty_Line );
+				member = fmt_newline;
+				eat( TokType::NewLine );
 			break;
 
 			case TokType::Comment:

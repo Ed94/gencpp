@@ -812,8 +812,13 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 		return CodeInvalid;
 	}
 
-	char const* name = str_fmt_buf( "%.*soperator %s", nspace.Len, nspace.Ptr, to_str(op) );
+	char const* name = nullptr;
 
+	StrC op_str = to_str( op );
+	if ( nspace.Len > 0 )
+		name = str_fmt_buf( "%.*soperator %.*s", nspace.Len, nspace.Ptr, op_str.Len, op_str.Ptr );
+	else
+		name = str_fmt_buf( "operator %.*s", op_str.Len, op_str.Ptr );
 	CodeOperator
 	result              = (CodeOperator) make_code();
 	result->Name        = get_cached_string( { str_len(name), name } );

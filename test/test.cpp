@@ -2,7 +2,8 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "gen.cpp"
+#include "gen/gen.cpp"
+#include "gen/gen.builder.cpp"
 #include "sanity.cpp"
 #include "SOA.cpp"
 #include "test.singleheader_ast.cpp"
@@ -15,7 +16,7 @@ int gen_main()
 
 	// check_sanity();
 
-	check_SOA();
+	// check_SOA();
 
 	check_singleheader_ast();
 

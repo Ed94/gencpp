@@ -50,10 +50,10 @@ namespace Parser
 	Entry( Decl_Typedef,           "typedef" )          \
 	Entry( Decl_Using,             "using" )            \
 	Entry( Decl_Union,             "union" )            \
-	Entry( Empty_Line,             "__empty_line__" )   \
 	Entry( Identifier,             "__identifier__" )   \
 	Entry( Module_Import,          "import" )           \
 	Entry( Module_Export,          "export" )           \
+	Entry( NewLine,                "__NewLine__" )      \
 	Entry( Number,                 "__number__" )       \
 	Entry( Operator,               "__operator__" )     \
 	Entry( Preprocess_Define,      "define")            \
@@ -144,12 +144,12 @@ namespace Parser
 		}
 
 		internal inline
-		char const* to_str( Type type )
+		StrC to_str( Type type )
 		{
 			local_persist
-			char const* lookup[(u32)NumTokens] =
+			StrC lookup[(u32)NumTokens] =
 			{
-			#	define Entry( Name_, Str_ ) Str_,
+			#	define Entry( Name_, Str_ ) { sizeof(Str_), Str_ },
 				Define_TokType
 				GEN_DEFINE_ATTRIBUTE_TOKENS
 			#	undef Entry

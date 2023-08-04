@@ -5,6 +5,7 @@ namespace ECode
 #	define Define_Types           \
 	Entry( Invalid )              \
 	Entry( Untyped )              \
+	Entry( NewLine )              \
 	Entry( Comment )              \
 	Entry( Access_Private )       \
 	Entry( Access_Protected )     \

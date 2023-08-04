@@ -256,6 +256,8 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 		if ( idx < attribute_strs.num() - 1 )
 			attribute_define_entries.append( " \\\n");
+		else
+			attribute_define_entries.append( "\n");
 	}
 
 #pragma push_macro( "GEN_DEFINE_ATTRIBUTE_TOKENS" )

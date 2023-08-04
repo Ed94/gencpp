@@ -99,9 +99,9 @@ int gen_main()
 
 			if ( generate_scanner )
 			{
-				header.print_fmt( "pragma region Parsing\n\n" );
+				header.print_fmt( "#pragma region Parsing\n\n" );
 				header.print( scan_file( project_dir "dependencies/parsing.hpp" ) );
-				header.print_fmt( "pragma endregion Parsing\n\n" );
+				header.print_fmt( "#pragma endregion Parsing\n\n" );
 			}
 
 			header.print_fmt( "GEN_NS_END\n" );

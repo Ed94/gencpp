@@ -112,6 +112,10 @@ void define_constants()
 	module_private_fragment->Content = module_private_fragment->Name;
 	module_private_fragment.set_global();
 
+	fmt_newline = make_code();
+	fmt_newline->Type = ECode::NewLine;
+	fmt_newline.set_global();
+
 	pragma_once          = (CodePragma) make_code();
 	pragma_once->Type    = ECode::Untyped;
 	pragma_once->Name    = get_cached_string( txt_StrC("once") );

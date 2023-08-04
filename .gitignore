@@ -6,12 +6,12 @@ build/*
 **/*.gen.*
 **/gen/gen.hpp
 **/gen/gen.cpp
-**/gen/gen_dep.hpp
-**/gen/gen_dep.cpp
-**/gen/gen_builder.hpp
-**/gen/gen_builder.cpp
-**/gen/gen_scanner.hpp
-**/gen/gen_scanner.cpp
+**/gen/gen.dep.hpp
+**/gen/gen.dep.cpp
+**/gen/gen.builder.hpp
+**/gen/gen.builder.cpp
+**/gen/gen.scanner.hpp
+**/gen/gen.scanner.cpp
 
 gencpp.hpp
 gencpp.cpp

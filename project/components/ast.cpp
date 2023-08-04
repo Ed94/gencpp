@@ -29,6 +29,10 @@ String AST::to_string()
 			log_failure("Attempted to serialize invalid code! - %s", Parent ? Parent->debug_str() : Name );
 		break;
 
+		case NewLine:
+			result.append("\n");
+		break;
+
 		case Untyped:
 		case Execution:
 			result.append( Content );
@@ -257,7 +261,7 @@ String AST::to_string()
 			s32  left = NumEntries;
 			while ( left-- )
 			{
-				result.append_fmt( "%s\n", curr.to_string() );
+				result.append_fmt( "%s", curr.to_string() );
 				++curr;
 			}
 
@@ -455,9 +459,9 @@ String AST::to_string()
 			if ( Specs )
 			{
 				if ( Name && Name.length() )
-					result.append_fmt( "%.*soperator %s()", Name.length(), Name, EOperator::to_str( Op ));
+					result.append_fmt( "%.*soperator %s()", Name.length(), Name, ValueType->to_string() );
 				else
-					result.append_fmt( "operator %s()", EOperator::to_str( Op ) );
+					result.append_fmt( "operator %s()", ValueType->to_string() );
 
 				CodeSpecifiers specs = cast<CodeSpecifiers>();
 
@@ -481,7 +485,7 @@ String AST::to_string()
 		case Operator_Cast_Fwd:
 			if ( Specs )
 			{
-				result.append_fmt( "operator %s()",  ValueType->to_string() );
+				result.append_fmt( "operator %s()", ValueType->to_string() );
 
 				CodeSpecifiers specs = cast<CodeSpecifiers>();
 
@@ -524,9 +528,8 @@ String AST::to_string()
 			}
 		}
 		break;
-
 		case Preprocess_Define:
-			result.append_fmt( "#define %s \\\n%s\n", Name, Content );
+			result.append_fmt( "#define %s %s", Name, Content );
 		break;
 
 		case Preprocess_If:
@@ -550,11 +553,11 @@ String AST::to_string()
 		break;
 
 		case Preprocess_Else:
-			result.append_fmt( "#else" );
+			result.append_fmt( "\n#else" );
 		break;
 
 		case Preprocess_EndIf:
-			result.append_fmt( "#endif\n" );
+			result.append_fmt( "#endif" );
 		break;
 
 		case Preprocess_Pragma:
@@ -796,8 +799,21 @@ String AST::to_string()
 		}
 		break;
 
-		case Class_Body:
+#if 0
+		{
+			Code curr = Front->cast<Code>();
+			s32  left = NumEntries;
+			while ( left -- )
+			{
+				result.append_fmt( "%s", curr.to_string() );
+				++curr;
+			}
+		}
+		break;
+#endif
+
 		case Enum_Body:
+		case Class_Body:
 		case Extern_Linkage_Body:
 		case Function_Body:
 		case Global_Body:
@@ -809,7 +825,11 @@ String AST::to_string()
 			s32  left = NumEntries;
 			while ( left -- )
 			{
-				result.append_fmt( "%s\n", curr.to_string() );
+				result.append_fmt( "%s", curr.to_string() );
+
+				if ( curr->Type != ECode::NewLine )
+					result.append( "\n" );
+
 				++curr;
 			}
 		}

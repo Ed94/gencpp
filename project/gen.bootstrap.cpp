@@ -42,10 +42,9 @@ int gen_main()
 		Code timing        = scan_file( "dependencies/timing.hpp" );
 
 		Builder
-		deps_header = Builder::open("gen/gen_dep.hpp");
+		deps_header = Builder::open("gen/gen.dep.hpp");
 		deps_header.print_fmt( generation_notice );
 		deps_header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n" );
-		deps_header.print_fmt( "#pragma once\n\n" );
 		deps_header.print( header_start );
 		deps_header.print_fmt( "GEN_NS_BEGIN\n\n" );
 
@@ -78,7 +77,7 @@ int gen_main()
 		Code timing        = scan_file( "dependencies/timing.cpp" );
 
 		Builder
-		deps_impl = Builder::open( "gen/gen_dep.cpp" );
+		deps_impl = Builder::open( "gen/gen.dep.cpp" );
 		deps_impl.print_fmt( generation_notice );
 		deps_impl.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n" );
 		deps_impl.print( src_start );
@@ -148,7 +147,6 @@ int gen_main()
 	// gen.cpp
 	{
 		Code        src_start       = scan_file( "components/src_start.cpp" );
-		CodeInclude header          = def_include( txt_StrC("gen.hpp") );
 		Code        static_data 	= scan_file( "components/static_data.cpp" );
 		Code        ast_case_macros = scan_file( "components/ast_case_macros.cpp" );
 		Code        ast			    = scan_file( "components/ast.cpp" );
@@ -165,7 +163,6 @@ int gen_main()
 		src.print_fmt( generation_notice );
 		src.print( push_ignores );
 		src.print( src_start );
-		src.print( header );
 		src.print_fmt( "\nGEN_NS_BEGIN\n\n");
 
 		src.print( static_data );
@@ -195,8 +192,9 @@ int gen_main()
 		Code builder = scan_file( "file_processors/builder.hpp" );
 
 		Builder
-		header = Builder::open( "gen/gen_builder.hpp" );
+		header = Builder::open( "gen/gen.builder.hpp" );
 		header.print_fmt( generation_notice );
+		header.print_fmt( "#pragma once\n\n" );
 		header.print( def_include( txt_StrC("gen.hpp") ));
 		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		header.print( builder );
@@ -209,9 +207,9 @@ int gen_main()
 		Code builder = scan_file( "file_processors/builder.cpp" );
 
 		Builder
-		src = Builder::open( "gen/gen_builder.cpp" );
+		src = Builder::open( "gen/gen.builder.cpp" );
 		src.print_fmt( generation_notice );
-		src.print( def_include( txt_StrC("gen_builder.hpp") ) );
+		src.print( def_include( txt_StrC("gen.builder.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		src.print( builder );
 		src.print_fmt( "\nGEN_NS_END\n\n" );
@@ -224,7 +222,9 @@ int gen_main()
 		Code scanner = scan_file( "file_processors/scanner.hpp" );
 
 		Builder
-		header = Builder::open( "gen/gen_scanner.hpp" );
+		header = Builder::open( "gen/gen.scanner.hpp" );
+		header.print_fmt( generation_notice );
+		header.print_fmt( "#pragma once\n\n" );
 		header.print( def_include( txt_StrC("gen.hpp") ) );
 		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		header.print( parsing );
@@ -239,8 +239,9 @@ int gen_main()
 		// Code scanner = scan_file( "file_processors/scanner.cpp" );
 
 		Builder
-		src = Builder::open( "gen/gen_scanner.cpp" );
-		src.print( def_include( txt_StrC("gen_scanner.hpp") ) );
+		src = Builder::open( "gen/gen.scanner.cpp" );
+		src.print_fmt( generation_notice );
+		src.print( def_include( txt_StrC("gen.scanner.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		src.print( parsing );
 		// src.print( scanner );
