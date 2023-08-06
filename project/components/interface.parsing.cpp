@@ -1120,7 +1120,7 @@ internal CodeBody      parse_extern_link_body();
 internal CodeExtern    parse_exten_link      ();
 internal CodeFriend    parse_friend          ();
 internal CodeFn        parse_function        ();
-internal CodeNamespace parse_namespace       ();
+internal CodeNS        parse_namespace       ();
 internal CodeOpCast    parse_operator_cast   ();
 internal CodeStruct    parse_struct          ( bool inplace_def = false );
 internal CodeVar       parse_variable        ();
@@ -3071,7 +3071,10 @@ CodeBody parse_global_nspace( CodeT which )
 				}
 
 				if ( found_operator_cast )
+				{
 					member = parse_operator_cast();
+					break;
+				}
 
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
 			}
@@ -3566,7 +3569,7 @@ CodeBody parse_global_body( StrC def )
 }
 
 internal
-CodeNamespace parse_namespace()
+CodeNS parse_namespace()
 {
 	using namespace Parser;
 	push_scope();
@@ -3583,8 +3586,8 @@ CodeNamespace parse_namespace()
 		return CodeInvalid;
 	}
 
-	CodeNamespace
-	result       = (CodeNamespace) make_code();
+	CodeNS
+	result       = (CodeNS) make_code();
 	result->Type = ECode::Namespace;
 	result->Name = get_cached_string( name );
 
@@ -3594,7 +3597,7 @@ CodeNamespace parse_namespace()
 	return result;
 }
 
-CodeNamespace parse_namespace( StrC def )
+CodeNS parse_namespace( StrC def )
 {
 	check_parse_args( def );
 	using namespace Parser;

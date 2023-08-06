@@ -13,7 +13,7 @@ CodeExtern    parse_extern_link  ( StrC exten_link_def);
 CodeFriend    parse_friend       ( StrC friend_def    );
 CodeFn        parse_function     ( StrC fn_def        );
 CodeBody      parse_global_body  ( StrC body_def      );
-CodeNamespace parse_namespace    ( StrC namespace_def );
+CodeNS parse_namespace    ( StrC namespace_def );
 CodeOperator  parse_operator     ( StrC operator_def  );
 CodeOpCast    parse_operator_cast( StrC operator_def  );
 CodeStruct    parse_struct       ( StrC struct_def    );

@@ -213,7 +213,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::AST_Namespace">
+	<Type Name="gen::AST_NS">
 		<DisplayString>{Name} Type: {Type}</DisplayString>
 		<Expand>
 			<Item Name="ModuleFlags">ModuleFlags</Item>
@@ -498,7 +498,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::CodeNamespace">
+	<Type Name="gen::CodeNS">
 		<DisplayString Condition="ast == nullptr">Null</DisplayString>
 		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
 		<Expand>

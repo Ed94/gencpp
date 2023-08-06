@@ -195,7 +195,7 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeFriend
 * CodeFn
 * CodeModule
-* CodeNamespace
+* CodeNS
 * CodeOperator
 * CodeOpCast
 * CodeParam : Has support for `for-range` iterating across parameters.

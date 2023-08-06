@@ -132,7 +132,7 @@ u32 gen_sanity()
 
 	// Namespace
 	{
-		CodeNamespace def = parse_namespace( code(
+		CodeNS def = parse_namespace( code(
 			namespace TestNamespace
 			{
 			}
@@ -283,7 +283,7 @@ u32 gen_sanity()
 			using TestUsing = u8;
 		));
 
-		CodeNamespace nspace = parse_namespace( code(
+		CodeNS nspace = parse_namespace( code(
 			namespace TestNamespace
 			{
 			};

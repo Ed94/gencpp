@@ -906,7 +906,31 @@ bool AST::validate_body()
 			CheckEntries( GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES );
 		break;
 		case Global_Body:
-			CheckEntries( GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES );
+			for (Code entry : cast<CodeBody>())
+			{
+				switch (entry->Type)
+				{
+					case Access_Public:
+					case Access_Protected:
+					case Access_Private:
+					case PlatformAttributes:
+					case Class_Body:
+					case Enum_Body:
+					case Execution:
+					case Friend:
+					case Function_Body:
+					case Global_Body:
+					case Namespace_Body:
+					case Operator_Member:
+					case Operator_Member_Fwd:
+					case Parameters:
+					case Specifiers:
+					case Struct_Body:
+					case Typename:
+						log_failure("AST::validate_body: Invalid entry in body %s", entry.debug_str());
+					return false;
+				}
+			}
 		break;
 		case Namespace_Body:
 			CheckEntries( GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES );

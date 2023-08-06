@@ -49,7 +49,6 @@
 	case Execution: 					       \
 	case Friend: 						       \
 	case Function_Body: 				       \
-	case Global_Body: 					       \
 	case Namespace_Body: 				       \
 	case Operator_Member: 				       \
 	case Operator_Member_Fwd: 			       \

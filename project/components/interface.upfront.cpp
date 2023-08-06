@@ -763,7 +763,7 @@ CodeModule def_module( StrC name, ModuleFlag mflags )
 	return (CodeModule) result;
 }
 
-CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags )
+CodeNS def_namespace( StrC name, Code body, ModuleFlag mflags )
 {
 	using namespace ECode;
 
@@ -776,8 +776,8 @@ CodeNamespace def_namespace( StrC name, Code body, ModuleFlag mflags )
 		return CodeInvalid;
 	}
 
-	CodeNamespace
-	result              = (CodeNamespace) make_code();
+	CodeNS
+	result              = (CodeNS) make_code();
 	result->Type        = Namespace;
 	result->Name        = get_cached_string( name );
 	result->ModuleFlags = mflags;
@@ -1732,6 +1732,10 @@ CodeBody def_global_body( s32 num, ... )
 
 		switch (entry->Type)
 		{
+			case Global_Body:
+				result.append( entry.cast<CodeBody>() ) ;
+				continue;
+
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
 				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
 				return (*Code::Invalid.ast);
@@ -1769,6 +1773,10 @@ CodeBody def_global_body( s32 num, Code* codes )
 
 		switch (entry->Type)
 		{
+			case Global_Body:
+				result.append( entry.cast<CodeBody>() ) ;
+				continue;
+
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
 				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
 				return CodeInvalid;

@@ -108,17 +108,17 @@ int gen_main()
 			header.print_fmt( roll_own_dependencies_guard_end );
 		}
 
-		Code types        = scan_file( project_dir "components/types.hpp" );
-		Code ast          = scan_file( project_dir "components/ast.hpp" );
-		Code ast_types    = scan_file( project_dir "components/ast_types.hpp" );
-		Code interface    = scan_file( project_dir "components/interface.hpp" );
-		Code inlines 	  = scan_file( project_dir "components/inlines.hpp" );
-		Code ast_inlines  = scan_file( project_dir "components/temp/ast_inlines.hpp" );
-		Code header_end   = scan_file( project_dir "components/header_end.hpp" );
+		Code types      = scan_file( project_dir "components/types.hpp" );
+		Code ast        = scan_file( project_dir "components/ast.hpp" );
+		Code ast_types  = scan_file( project_dir "components/ast_types.hpp" );
+		Code interface  = scan_file( project_dir "components/interface.hpp" );
+		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
+		Code header_end = scan_file( project_dir "components/header_end.hpp" );
 
-		CodeBody ecode      = gen_ecode     ( project_dir "enums/ECode.csv" );
-		CodeBody eoperator  = gen_eoperator ( project_dir "enums/EOperator.csv" );
-		CodeBody especifier = gen_especifier( project_dir "enums/ESpecifier.csv" );
+		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv" );
+		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
+		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
+		CodeBody ast_inlines = gen_ast_inlines();
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n" );
 
@@ -211,7 +211,7 @@ int gen_main()
 		Code untyped         = scan_file( project_dir "components/untyped.cpp" );
 
 		CodeBody      etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
-		CodeNamespace parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
+		CodeNS parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n");
 		header.print( static_data );

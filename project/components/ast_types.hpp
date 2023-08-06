@@ -216,7 +216,7 @@ struct AST_Module
 };
 static_assert( sizeof(AST_Module) == sizeof(AST), "ERROR: AST_Module is not the same size as AST");
 
-struct AST_Namespace
+struct AST_NS
 {
 	union {
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
@@ -233,7 +233,7 @@ struct AST_Namespace
 	ModuleFlag        ModuleFlags;
 	char 			  _PAD_UNUSED_[ sizeof(u32) ];
 };
-static_assert( sizeof(AST_Namespace) == sizeof(AST), "ERROR: AST_Namespace is not the same size as AST");
+static_assert( sizeof(AST_NS) == sizeof(AST), "ERROR: AST_NS is not the same size as AST");
 
 struct AST_Operator
 {

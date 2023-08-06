@@ -104,12 +104,12 @@ int gen_main()
 		Code ast_types    = scan_file( "components/ast_types.hpp" );
 		Code interface    = scan_file( "components/interface.hpp" );
 		Code inlines      = scan_file( "components/inlines.hpp" );
-		Code ast_inlines  = scan_file( "components/temp/ast_inlines.hpp" );
 		Code header_end   = scan_file( "components/header_end.hpp" );
 
-		CodeBody ecode      = gen_ecode     ( "enums/ECode.csv" );
-		CodeBody eoperator  = gen_eoperator ( "enums/EOperator.csv" );
-		CodeBody especifier = gen_especifier( "enums/ESpecifier.csv" );
+		CodeBody ecode       = gen_ecode     ( "enums/ECode.csv" );
+		CodeBody eoperator   = gen_eoperator ( "enums/EOperator.csv" );
+		CodeBody especifier  = gen_especifier( "enums/ESpecifier.csv" );
+		CodeBody ast_inlines = gen_ast_inlines();
 
 		Builder
 		header = Builder::open( "gen/gen.hpp" );
@@ -155,8 +155,8 @@ int gen_main()
 		Code 	    parsing 	    = scan_file( "components/interface.parsing.cpp" );
 		Code        untyped 	    = scan_file( "components/untyped.cpp" );
 
-		CodeBody      etoktype      = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
-		CodeNamespace parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
+		CodeBody etoktype      = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
+		CodeNS   parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
 		Builder
 		src = Builder::open( "gen/gen.cpp" );

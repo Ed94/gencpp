@@ -139,7 +139,7 @@ u32 gen_sanity_upfront()
 
 	// Namespace
 	{
-		CodeNamespace namespace_def;
+		CodeNS namespace_def;
 		{
 			CodeBody body = def_namespace_body( 1
 				, def_comment( txt_StrC("Empty namespace body") )
