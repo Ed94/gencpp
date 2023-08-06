@@ -297,6 +297,7 @@ namespace Parser
 				case '#':
 				{
 					char const* hash = scanner;
+					Tokens.append( { hash, 1, TokType::Preprocess_Hash, line, column, false } );
 
 					move_forward();
 					SkipWhitespace();
@@ -354,12 +355,13 @@ namespace Parser
 
 							if ( current == '\r' )
 							{
-								move_forward();
+								// move_forward();
+								// token.Length++;
 							}
 
 							if ( current == '\n' )
 							{
-								move_forward();
+								// move_forward();
 								// token.Length++;
 								break;
 							}
@@ -483,9 +485,15 @@ namespace Parser
 							}
 						}
 
+						if ( current == '\r' )
+						{
+							// move_forward();
+							// content.Length++;
+						}
+
 						if ( current == '\n' )
 						{
-							move_forward();
+							// move_forward();
 							// content.Length++;
 							break;
 						}
@@ -826,36 +834,38 @@ namespace Parser
 
 						if ( current == '/' )
 						{
-							token.Type = TokType::Comment;
+							token.Type = TokType::Comment_Start;
+							token.Length = 2;
+							Tokens.append( token );
 
 							move_forward();
-							token.Text   = scanner;
-							token.Length = 0;
+							Token content = { scanner, 1, TokType::Comment, line, column, false };
 
 							while ( left && current != '\n' && current != '\r' )
 							{
 								move_forward();
-								token.Length++;
+								content.Length++;
 							}
+							Tokens.append( content );
 
 							if ( current == '\r' )
 							{
 								move_forward();
 							}
-
 							if ( current == '\n' )
 							{
 								move_forward();
-								// token.Length++;
 							}
+							continue;
 						}
 						else if ( current == '*' )
 						{
-							token.Type = TokType::Comment;
+							token.Type = TokType::Comment_Start;
+							token.Length = 2;
+							Tokens.append( token );
 
 							move_forward();
-							token.Text   = scanner;
-							token.Length = 0;
+							Token content = { scanner, 1, TokType::Comment, line, column, false };
 
 							bool star   = current == '*';
 							bool slash  = scanner[1] == '/';
@@ -863,14 +873,20 @@ namespace Parser
 							while ( left && ! at_end  )
 							{
 								move_forward();
-								token.Length++;
+								content.Length++;
 
 								star   = current == '*';
 								slash  = scanner[1] == '/';
 								at_end = star && slash;
 							}
+							Tokens.append( content );
+
+							Token end = { scanner, 2, TokType::Comment_End, line, column, false };
 							move_forward();
 							move_forward();
+
+							Tokens.append( end );
+							continue;
 						}
 					}
 					goto FoundToken;
@@ -1115,6 +1131,28 @@ internal CodeUnion     parse_union           ( bool inplace_def = false );
 internal CodeUsing     parse_using           ();
 
 constexpr bool inplace_def = true;
+
+internal inline
+CodeComment parse_comment()
+{
+	using namespace Parser;
+	push_scope();
+
+	eat( TokType::Comment_Start );
+
+	CodeComment
+	result          = (CodeComment) make_code();
+	result->Type    = ECode::Comment;
+	result->Content = get_cached_string( currtok );
+	result->Name    = result->Content;
+	eat( TokType::Comment );
+
+	if ( check( TokType::Comment_End ) )
+		eat( TokType::Comment_End );
+
+	Context.pop();
+	return result;
+}
 
 internal inline
 CodeDefine parse_define()
@@ -2460,6 +2498,9 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 
 		Context.Scope->Start = currtok_noskip;
 
+		if ( currtok.Type == TokType::Preprocess_Hash )
+			eat( TokType::Preprocess_Hash );
+
 		switch ( currtok_noskip.Type )
 		{
 			case TokType::NewLine:
@@ -2467,9 +2508,8 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 				eat( TokType::NewLine );
 			break;
 
-			case TokType::Comment:
-				member = def_comment( currtok );
-				eat( TokType::Comment );
+			case TokType::Comment_Start:
+				member = parse_comment();
 			break;
 
 			case TokType::Access_Public:
@@ -2819,6 +2859,9 @@ CodeBody parse_global_nspace( CodeT which )
 
 		Context.Scope->Start = currtok_noskip;
 
+		if ( currtok.Type == TokType::Preprocess_Hash )
+			eat( TokType::Preprocess_Hash );
+
 		switch ( currtok_noskip.Type )
 		{
 			case TokType::NewLine:
@@ -2827,9 +2870,8 @@ CodeBody parse_global_nspace( CodeT which )
 				eat( TokType::NewLine );
 			break;
 
-			case TokType::Comment:
-				member = def_comment( currtok );
-				eat( TokType::Comment );
+			case TokType::Comment_Start:
+				member = parse_comment();
 			break;
 
 			case TokType::Decl_Class:
@@ -3141,6 +3183,9 @@ CodeEnum parse_enum( bool inplace_def )
 
 		while ( left && currtok_noskip.Type != TokType::BraceCurly_Close )
 		{
+			if ( currtok.Type == TokType::Preprocess_Hash )
+				eat( TokType::Preprocess_Hash );
+
 			switch ( currtok_noskip.Type )
 			{
 				case TokType::NewLine:
@@ -3148,9 +3193,8 @@ CodeEnum parse_enum( bool inplace_def )
 					eat( TokType::NewLine );
 				break;
 
-				case TokType::Comment:
-					member = def_comment( currtok );
-					eat( TokType::Comment );
+				case TokType::Comment_Start:
+					member = parse_comment();
 				break;
 
 				case TokType::Preprocess_Define:
@@ -4212,6 +4256,14 @@ CodeUnion parse_union( bool inplace_def )
 
 	while ( ! check_noskip( TokType::BraceCurly_Close ) )
 	{
+		if ( currtok.Type == TokType::Preprocess_Hash )
+			eat( TokType::Preprocess_Hash );
+
+		if ( currtok.Line >= 3826 )
+		{
+			log_fmt("here");
+		}
+
 		Code member = { nullptr };
 		switch ( currtok_noskip.Type )
 		{
@@ -4221,9 +4273,8 @@ CodeUnion parse_union( bool inplace_def )
 				eat( TokType::NewLine );
 			break;
 
-			case TokType::Comment:
-				member = def_comment( currtok );
-				eat( TokType::Comment );
+			case TokType::Comment_Start:
+				member = parse_comment();
 			break;
 
 			case TokType::Decl_Class:

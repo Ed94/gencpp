@@ -589,7 +589,7 @@ String AST::to_string()
 
 			if ( Name == nullptr)
 			{
-				result.append( "struct\n{\n%s\n};", Body->to_string() );
+				result.append_fmt( "struct\n{\n%s\n};", Body->to_string() );
 				break;
 			}
 
