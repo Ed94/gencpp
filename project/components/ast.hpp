@@ -524,29 +524,15 @@ struct CodeStruct
 	AST_Struct* ast;
 };
 
-#define Define_CodeType( Typename )                           \
-struct Code##Typename                                         \
-{                                                             \
-	Using_Code( Code##Typename );                             \
-	AST* raw() 				                                  \
-	{                                                         \
-		return rcast( AST*, ast );                            \
-	}                                                         \
-	operator Code()                                           \
-	{                                                         \
-		return * rcast( Code*, this );                        \
-	}                                                         \
-	AST_##Typename* operator->()                              \
-	{                                                         \
-		if ( ast == nullptr )                                 \
-		{                                                     \
-			log_failure("Attempt to dereference a nullptr!"); \
-			return nullptr;                                   \
-		}                                                     \
-		return ast;                                           \
-	}                                                         \
-	AST_##Typename* ast;                                      \
-}
+#define Define_CodeType( Typename )     \
+	struct Code##Typename               \
+	{                                   \
+		Using_Code( Code ## Typename ); \
+		AST*            raw();          \
+		operator        Code();         \
+		AST_##Typename* operator->();   \
+		AST_##Typename* ast;            \
+	}
 
 Define_CodeType( Attributes );
 Define_CodeType( Comment );

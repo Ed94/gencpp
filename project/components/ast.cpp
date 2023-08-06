@@ -308,9 +308,7 @@ String AST::to_string()
 
 			if ( Specs )
 			{
-				CodeSpecifiers specs = cast<CodeSpecifiers>();
-
-				for ( SpecifierT spec : specs )
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
 						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
@@ -348,9 +346,7 @@ String AST::to_string()
 
 			if ( Specs )
 			{
-				CodeSpecifiers specs = cast<CodeSpecifiers>();
-
-				for ( SpecifierT spec : specs )
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
 						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
@@ -404,9 +400,7 @@ String AST::to_string()
 
 			if ( Specs )
 			{
-				CodeSpecifiers specs = cast<CodeSpecifiers>();
-
-				for ( SpecifierT spec : specs )
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
 						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
@@ -441,9 +435,7 @@ String AST::to_string()
 
 			if ( Specs )
 			{
-				CodeSpecifiers specs = cast<CodeSpecifiers>();
-
-				for ( SpecifierT spec : specs )
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
 						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
@@ -463,9 +455,7 @@ String AST::to_string()
 				else
 					result.append_fmt( "operator %s()", ValueType->to_string() );
 
-				CodeSpecifiers specs = cast<CodeSpecifiers>();
-
-				for ( SpecifierT spec : specs )
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
 						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
@@ -487,9 +477,7 @@ String AST::to_string()
 			{
 				result.append_fmt( "operator %s()", ValueType->to_string() );
 
-				CodeSpecifiers specs = cast<CodeSpecifiers>();
-
-				for ( SpecifierT spec : specs )
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
 						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
@@ -570,7 +558,7 @@ String AST::to_string()
 			s32 left = NumEntries;
 			while ( left-- )
 			{
-				if ( ESpecifier::is_trailing( ArrSpecs[idx])  )
+				if ( ESpecifier::is_trailing( ArrSpecs[idx]) && ArrSpecs[idx] != ESpecifier::Const )
 				{
 					idx++;
 					continue;

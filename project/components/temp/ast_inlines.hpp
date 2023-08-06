@@ -78,6 +78,25 @@ Typename::operator bool()                                                       
 	return ast != nullptr;                                                           \
 }
 
+#define Define_CodeType_Impl( Typename )                    \
+AST* Code##Typename::raw()                                  \
+{                                                           \
+	return rcast( AST*, ast );                              \
+}                                                           \
+Code##Typename::operator Code()                             \
+{                                                           \
+	return *rcast( Code*, this );                           \
+}                                                           \
+AST_##Typename* Code##Typename::operator->()                \
+{                                                           \
+	if ( ast == nullptr )                                   \
+	{                                                       \
+		log_failure( "Attempt to dereference a nullptr!" ); \
+		return nullptr;                                     \
+	}                                                       \
+	return ast;                                             \
+}                                                           \
+
 Define_CodeImpl( Code );
 Define_CodeImpl( CodeBody );
 Define_CodeImpl( CodeAttributes );
@@ -105,7 +124,31 @@ Define_CodeImpl( CodeTypedef );
 Define_CodeImpl( CodeUnion );
 Define_CodeImpl( CodeUsing );
 Define_CodeImpl( CodeVar );
+
+Define_CodeType_Impl( Attributes );
+Define_CodeType_Impl( Comment );
+Define_CodeType_Impl( Define );
+Define_CodeType_Impl( Enum );
+Define_CodeType_Impl( Exec );
+Define_CodeType_Impl( Extern );
+Define_CodeType_Impl( Include );
+Define_CodeType_Impl( Friend );
+Define_CodeType_Impl( Fn );
+Define_CodeType_Impl( Module );
+Define_CodeType_Impl( NS );
+Define_CodeType_Impl( Operator );
+Define_CodeType_Impl( OpCast );
+Define_CodeType_Impl( Pragma );
+Define_CodeType_Impl( PreprocessCond );
+Define_CodeType_Impl( Template );
+Define_CodeType_Impl( Type );
+Define_CodeType_Impl( Typedef );
+Define_CodeType_Impl( Union );
+Define_CodeType_Impl( Using );
+Define_CodeType_Impl( Var );
+
 #undef Define_CodeImpl
+#undef Define_CodeType_Impl
 
 #define Define_AST_Cast( typename )              \
 AST::operator Code ## typename()                 \
