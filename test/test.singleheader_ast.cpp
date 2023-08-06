@@ -13,30 +13,21 @@ void check_singleheader_ast()
 	gen::init();
 	log_fmt("\ncheck_singleheader_ast:\n");
 
-	FileContents file = file_read_contents( GlobalAllocator, true, project_dir "singleheader/gen/gen.hpp" );
+	FileContents file       = file_read_contents( GlobalAllocator, true, project_dir "singleheader/gen/gen.hpp" );
+	u64          time_start = time_rel_ms();
+	CodeBody     ast        = parse_global_body( { file.size, (char const*)file.data } );
 
-	CodeBody ast = parse_global_body( { file.size, (char const*)file.data } );
+	log_fmt("\nAst generated. Time taken: %llu ms\n", time_rel_ms() - time_start);
 
-	log_fmt("generated AST!!!\n");
+	log_fmt("\nSerializng ast:\n");
+	time_start = time_rel_ms();
 
-#if 0
-	s32 idx = 0;
-	for ( Code entry : ast )
-	{
-		if (idx == 900)
-		{
-			log_fmt("break here\n");
-		}
-		log_fmt("Entry %d: %s\n", idx, entry.to_string() );
-		idx++;
-	}
-#endif
-
-	Builder builder = Builder::open( "singleheader_copy.gen.hpp" );
-	log_fmt("\n\nserializng ast\n");
+	Builder
+	builder = Builder::open( "singleheader_copy.gen.hpp" );
 	builder.print( ast );
 	builder.write();
 
-	log_fmt("passed!!\n");
+	log_fmt("passed!! Time taken: %llu ms\n", time_rel_ms() - time_start);
+
 	gen::deinit();
 }

@@ -4262,11 +4262,6 @@ CodeUnion parse_union( bool inplace_def )
 		if ( currtok.Type == TokType::Preprocess_Hash )
 			eat( TokType::Preprocess_Hash );
 
-		if ( currtok.Line >= 3826 )
-		{
-			log_fmt("here");
-		}
-
 		Code member = { nullptr };
 		switch ( currtok_noskip.Type )
 		{

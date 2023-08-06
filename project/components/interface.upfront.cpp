@@ -1440,7 +1440,7 @@ CodeBody def_enum_body( s32 num, ... )
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
-			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() ); \
+			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() );
 			return CodeInvalid;
 		}
 
@@ -1472,7 +1472,7 @@ CodeBody def_enum_body( s32 num, Code* codes )
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
-			log_failure("gen::def_enum_body: Entry type is not allowed: %s", entry.debug_str() ); \
+			log_failure("gen::def_enum_body: Entry type is not allowed: %s", entry.debug_str() );
 			return CodeInvalid;
 		}
 
@@ -1853,7 +1853,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
-				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str() ); 
+				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str() );
 				return CodeInvalid;
 
 			default: break;
@@ -2062,7 +2062,7 @@ CodeBody def_struct_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
-				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str() ); 
+				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str() );
 				return CodeInvalid;
 
 			default:
@@ -2099,7 +2099,7 @@ CodeBody def_union_body( s32 num, ... )
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
-			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() ); \
+			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() );
 			return CodeInvalid;
 		}
 
