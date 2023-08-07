@@ -171,7 +171,6 @@ int gen_main()
 			Code string_ops    = scan_file( project_dir "dependencies/string_ops.cpp" );
 			Code printing      = scan_file( project_dir "dependencies/printing.cpp" );
 			Code memory        = scan_file( project_dir "dependencies/memory.cpp" );
-			Code parsing       = scan_file( project_dir "dependencies/parsing.cpp" );
 			Code hashing       = scan_file( project_dir "dependencies/hashing.cpp" );
 			Code string        = scan_file( project_dir "dependencies/string.cpp" );
 			Code file_handling = scan_file( project_dir "dependencies/file_handling.cpp" );
@@ -185,7 +184,6 @@ int gen_main()
 			header.print( string_ops );
 			header.print( printing );
 			header.print( memory );
-			header.print( parsing );
 			header.print( hashing );
 			header.print( string );
 			header.print( file_handling );

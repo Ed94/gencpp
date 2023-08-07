@@ -4,11 +4,11 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "Parsed\Array.Parsed.hpp"
-#include "Parsed\Buffer.Parsed.hpp"
-#include "Parsed\HashTable.Parsed.hpp"
-#include "Parsed\Ring.Parsed.hpp"
-#include "Parsed\Sanity.Parsed.hpp"
+#include "Array.Parsed.hpp"
+#include "Buffer.Parsed.hpp"
+#include "HashTable.Parsed.hpp"
+#include "Ring.Parsed.hpp"
+#include "Sanity.Parsed.hpp"
 #include "SOA.cpp"
 #include "gen.cpp"
 

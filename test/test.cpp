@@ -16,7 +16,7 @@ int gen_main()
 
 	// check_sanity();
 
-	// check_SOA();
+	check_SOA();
 
 	check_singleheader_ast();
 

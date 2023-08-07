@@ -5,12 +5,11 @@
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
 #include "gen.cpp"
-#include "Upfront\Array.Upfront.hpp"
-#include "Upfront\Buffer.Upfront.hpp"
-#include "Upfront\HashTable.Upfront.hpp"
-#include "Upfront\Ring.Upfront.hpp"
-#include "Upfront\Sanity.Upfront.hpp"
-
+#include "Array.Upfront.hpp"
+#include "Buffer.Upfront.hpp"
+#include "HashTable.Upfront.hpp"
+#include "Ring.Upfront.hpp"
+#include "Sanity.Upfront.hpp"
 
 
 using namespace gen;
