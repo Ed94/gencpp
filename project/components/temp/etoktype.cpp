@@ -88,6 +88,7 @@ namespace Parser
 	Entry( Spec_Override,          "override" )          \
 	Entry( Spec_Static,            "static" )            \
 	Entry( Spec_ThreadLocal,       "thread_local" )      \
+	Entry( Spec_Virtual, 		   "virtual" )           \
 	Entry( Spec_Volatile,          "volatile")           \
 	Entry( Star,                   "*" )                 \
 	Entry( Statement_End,          ";" )                 \

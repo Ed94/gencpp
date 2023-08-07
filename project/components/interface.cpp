@@ -197,6 +197,7 @@ void define_constants()
 	def_constant_spec( neverinline,      ESpecifier::NeverInline );
 	def_constant_spec( override,         ESpecifier::Override );
 	def_constant_spec( ptr,              ESpecifier::Ptr );
+	def_constant_spec( pure,             ESpecifier::Pure )
 	def_constant_spec( ref,              ESpecifier::Ref );
 	def_constant_spec( register,         ESpecifier::Register );
 	def_constant_spec( rvalue,           ESpecifier::RValue );

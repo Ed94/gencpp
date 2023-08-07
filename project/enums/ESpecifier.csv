@@ -21,3 +21,4 @@ Virtual,          virtual
 Const,            const
 Final,            final
 Override,         override
+Pure,             = 0

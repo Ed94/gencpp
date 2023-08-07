@@ -45,7 +45,11 @@ CodeClass def_class( StrC name
 	, ModuleFlag     mflags       = ModuleFlag::None
 	, CodeType*      interfaces   = nullptr, s32 num_interfaces = 0 );
 
+CodeConstructor def_constructor( CodeParam params = NoCode, Code initializer_list = NoCode, Code body = NoCode );
+
 CodeDefine def_define( StrC name, StrC content );
+
+CodeDestructor def_destructor( Code body = NoCode, CodeSpecifiers specifiers = NoCode );
 
 CodeEnum def_enum( StrC name
 	, Code         body      = NoCode,      CodeType       type       = NoCode
@@ -136,23 +140,25 @@ CodeBody       def_union_body      ( s32 num, Code* codes );
 
 #pragma region Parsing
 
-CodeClass     parse_class        ( StrC class_def     );
-CodeEnum      parse_enum         ( StrC enum_def      );
-CodeBody      parse_export_body  ( StrC export_def    );
-CodeExtern    parse_extern_link  ( StrC exten_link_def);
-CodeFriend    parse_friend       ( StrC friend_def    );
-CodeFn        parse_function     ( StrC fn_def        );
-CodeBody      parse_global_body  ( StrC body_def      );
-CodeNS        parse_namespace    ( StrC namespace_def );
-CodeOperator  parse_operator     ( StrC operator_def  );
-CodeOpCast    parse_operator_cast( StrC operator_def  );
-CodeStruct    parse_struct       ( StrC struct_def    );
-CodeTemplate  parse_template     ( StrC template_def  );
-CodeType      parse_type         ( StrC type_def      );
-CodeTypedef   parse_typedef      ( StrC typedef_def   );
-CodeUnion     parse_union        ( StrC union_def     );
-CodeUsing     parse_using        ( StrC using_def     );
-CodeVar       parse_variable     ( StrC var_def       );
+CodeClass       parse_class        ( StrC class_def       );
+CodeConstructor parse_constructor  ( StrC constructor_def );
+CodeDestructor  parse_destructor   ( StrC destructor_def  );
+CodeEnum        parse_enum         ( StrC enum_def        );
+CodeBody        parse_export_body  ( StrC export_def      );
+CodeExtern      parse_extern_link  ( StrC exten_link_def  );
+CodeFriend      parse_friend       ( StrC friend_def      );
+CodeFn          parse_function     ( StrC fn_def          );
+CodeBody        parse_global_body  ( StrC body_def        );
+CodeNS          parse_namespace    ( StrC namespace_def   );
+CodeOperator    parse_operator     ( StrC operator_def    );
+CodeOpCast      parse_operator_cast( StrC operator_def    );
+CodeStruct      parse_struct       ( StrC struct_def      );
+CodeTemplate    parse_template     ( StrC template_def    );
+CodeType        parse_type         ( StrC type_def        );
+CodeTypedef     parse_typedef      ( StrC typedef_def     );
+CodeUnion       parse_union        ( StrC union_def       );
+CodeUsing       parse_using        ( StrC using_def       );
+CodeVar         parse_variable     ( StrC var_def         );
 
 #pragma endregion Parsing
 

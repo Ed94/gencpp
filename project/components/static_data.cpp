@@ -55,6 +55,7 @@ global CodeSpecifiers spec_mutable;
 global CodeSpecifiers spec_neverinline;
 global CodeSpecifiers spec_override;
 global CodeSpecifiers spec_ptr;
+global CodeSpecifiers spec_pure;
 global CodeSpecifiers spec_ref;
 global CodeSpecifiers spec_register;
 global CodeSpecifiers spec_rvalue;

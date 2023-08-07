@@ -9,6 +9,10 @@ PlatformAttributes
 Class
 Class_Fwd
 Class_Body
+Constructor
+Constructor_Fwd
+Destructor
+Destructor_Fwd
 Enum
 Enum_Fwd
 Enum_Body

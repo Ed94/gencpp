@@ -102,7 +102,9 @@ Define_CodeImpl( CodeBody );
 Define_CodeImpl( CodeAttributes );
 Define_CodeImpl( CodeComment );
 Define_CodeImpl( CodeClass );
+Define_CodeImpl( CodeConstructor );
 Define_CodeImpl( CodeDefine );
+Define_CodeImpl( CodeDestructor );
 Define_CodeImpl( CodeEnum );
 Define_CodeImpl( CodeExec );
 Define_CodeImpl( CodeExtern );
@@ -127,7 +129,9 @@ Define_CodeImpl( CodeVar );
 
 Define_CodeType_Impl( Attributes );
 Define_CodeType_Impl( Comment );
+Define_CodeType_Impl( Constructor );
 Define_CodeType_Impl( Define );
+Define_CodeType_Impl( Destructor );
 Define_CodeType_Impl( Enum );
 Define_CodeType_Impl( Exec );
 Define_CodeType_Impl( Extern );
@@ -159,8 +163,10 @@ AST::operator Code ## typename()                 \
 Define_AST_Cast( Body );
 Define_AST_Cast( Attributes );
 Define_AST_Cast( Comment );
+Define_AST_Cast( Constructor );
 Define_AST_Cast( Class );
 Define_AST_Cast( Define );
+Define_AST_Cast( Destructor );
 Define_AST_Cast( Enum );
 Define_AST_Cast( Exec );
 Define_AST_Cast( Extern );
@@ -192,8 +198,10 @@ Code::operator Code ## type() const \
 
 Define_CodeCast( Attributes );
 Define_CodeCast( Comment );
+Define_CodeCast( Constructor );
 Define_CodeCast( Class );
 Define_CodeCast( Define );
+Define_CodeCast( Destructor );
 Define_CodeCast( Exec );
 Define_CodeCast( Enum );
 Define_CodeCast( Extern );

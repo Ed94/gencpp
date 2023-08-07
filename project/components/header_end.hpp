@@ -81,6 +81,7 @@ extern CodeSpecifiers spec_mutable;
 extern CodeSpecifiers spec_neverinline;
 extern CodeSpecifiers spec_override;
 extern CodeSpecifiers spec_ptr;
+extern CodeSpecifiers spec_pure;
 extern CodeSpecifiers spec_ref;
 extern CodeSpecifiers spec_register;
 extern CodeSpecifiers spec_rvalue;

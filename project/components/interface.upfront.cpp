@@ -422,6 +422,53 @@ CodeComment def_comment( StrC content )
 	return (CodeComment) result;
 }
 
+CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code body )
+{
+	using namespace ECode;
+
+	if ( params && params->Type != Parameters )
+	{
+		log_failure("gen::def_constructor: params must be of Parameters type - %s", params.debug_str());
+		return CodeInvalid;
+	}
+
+	CodeConstructor
+	result = (CodeConstructor) make_code();
+
+	if ( params )
+	{
+		result->Params = params;
+	}
+
+	if ( initializer_list )
+	{
+		result->InitializerList = initializer_list;
+	}
+
+	if ( body )
+	{
+		switch ( body->Type )
+		{
+			case Function_Body:
+			case Untyped:
+			break;
+
+			default:
+				log_failure("gen::def_constructor: body must be either of Function_Body or Untyped type - %s", body.debug_str());
+				return CodeInvalid;
+		}
+
+		result->Type = Constructor;
+		result->Body = body;
+	}
+	else
+	{
+		result->Type = Constructor_Fwd;
+	}
+
+	return result;
+}
+
 CodeClass def_class( StrC name
 	, Code           body
 	, CodeType       parent, AccessSpec parent_access
@@ -508,6 +555,45 @@ CodeDefine def_define( StrC name, StrC content )
 	result->Type    = Preprocess_Define;
 	result->Name    = get_cached_string( name );
 	result->Content = get_cached_string( content );
+
+	return result;
+}
+
+CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
+{
+	using namespace ECode;
+
+	if ( specifiers && specifiers->Type != Specifiers )
+	{
+		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", specifiers.debug_str() );
+		return CodeInvalid;
+	}
+
+	CodeDestructor result = (CodeDestructor) make_code();
+
+	if ( specifiers )
+		result->Specs = specifiers;
+
+	if ( body )
+	{
+		switch ( body->Type )
+		{
+			case Function_Body:
+			case Untyped:
+			break;
+
+			default:
+				log_failure("gen::def_destructor: body must be either of Function_Body or Untyped type - %s", body.debug_str());
+				return CodeInvalid;
+		}
+
+		result->Type = Destructor;
+		result->Body = body;
+	}
+	else
+	{
+		result->Type = Destructor_Fwd;
+	}
 
 	return result;
 }

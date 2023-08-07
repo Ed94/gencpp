@@ -71,6 +71,27 @@ struct AST_Class
 };
 static_assert( sizeof(AST_Class) == sizeof(AST), "ERROR: AST_Class is not the same size as AST");
 
+struct AST_Constructor
+{
+	union {
+		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		struct
+		{
+			char      _PAD_PROPERTIES_ [ sizeof(AST*) * 3 ];
+			Code      InitializerList;
+			CodeParam Params;
+			Code      Body;
+		};
+	};
+	Code              Prev;
+	Code              Next;
+	Code              Parent;
+	StringCached      Name;
+	CodeT             Type;
+	char _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+};
+static_assert( sizeof(AST_Constructor) == sizeof(AST), "ERROR: AST_Constructor is not the same size as AST");
+
 struct AST_Define
 {
 	union {
@@ -85,6 +106,27 @@ struct AST_Define
 	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Define) == sizeof(AST), "ERROR: AST_Define is not the same size as AST");
+
+struct AST_Destructor
+{
+	union {
+		char               _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
+		struct
+		{
+			char           _PAD_PROPERTIES_ [ sizeof(AST*) * 1 ];
+			CodeSpecifiers Specs;
+			char           _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
+			Code           Body;
+		};
+	};
+	Code                   Prev;
+	Code                   Next;
+	Code                   Parent;
+	StringCached           Name;
+	CodeT                  Type;
+	char                   _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+};
+static_assert( sizeof(AST_Destructor) == sizeof(AST), "ERROR: AST_Destructor is not the same size as AST");
 
 struct AST_Enum
 {

@@ -89,6 +89,21 @@ namespace Parser
 			return Arr[idx - 1];
 		}
 
+		Token& next( bool skip_new_lines = false )
+		{
+			s32 idx = this->Idx;
+
+			if ( skip_new_lines )
+			{
+				while ( Arr[idx].Type == TokType::NewLine )
+					idx++;
+
+				return Arr[idx];
+			}
+
+			return Arr[idx + 1];
+		}
+
 		Token& operator []( s32 idx )
 		{
 			return Arr[idx];
@@ -1098,6 +1113,7 @@ if ( def.Ptr == nullptr )                                                      \
 #	define currtok_noskip Context.Tokens.current( dont_skip_new_lines )
 #	define currtok        Context.Tokens.current()
 #	define prevtok        Context.Tokens.previous()
+#	define nexttok		  Context.Tokens.next()
 #	define eat( Type_ )   Context.Tokens.__eat( Type_ )
 #	define left           ( Context.Tokens.Arr.num() - Context.Tokens.Idx )
 
@@ -1113,22 +1129,24 @@ if ( def.Ptr == nullptr )                                                      \
 internal Code parse_function_body();
 internal Code parse_global_nspace();
 
-internal CodeClass     parse_class           ( bool inplace_def = false );
-internal CodeEnum      parse_enum            ( bool inplace_def = false );
-internal CodeBody      parse_export_body     ();
-internal CodeBody      parse_extern_link_body();
-internal CodeExtern    parse_exten_link      ();
-internal CodeFriend    parse_friend          ();
-internal CodeFn        parse_function        ();
-internal CodeNS        parse_namespace       ();
-internal CodeOpCast    parse_operator_cast   ();
-internal CodeStruct    parse_struct          ( bool inplace_def = false );
-internal CodeVar       parse_variable        ();
-internal CodeTemplate  parse_template        ();
-internal CodeType      parse_type            ();
-internal CodeTypedef   parse_typedef         ();
-internal CodeUnion     parse_union           ( bool inplace_def = false );
-internal CodeUsing     parse_using           ();
+internal CodeClass       parse_class           ( bool inplace_def = false );
+internal CodeConstructor parse_constructor     ();
+internal CodeDestructor  parse_destructor      ( CodeSpecifiers specifiers = NoCode );
+internal CodeEnum        parse_enum            ( bool inplace_def = false );
+internal CodeBody        parse_export_body     ();
+internal CodeBody        parse_extern_link_body();
+internal CodeExtern      parse_exten_link      ();
+internal CodeFriend      parse_friend          ();
+internal CodeFn          parse_function        ();
+internal CodeNS          parse_namespace       ();
+internal CodeOpCast      parse_operator_cast   ();
+internal CodeStruct      parse_struct          ( bool inplace_def = false );
+internal CodeVar         parse_variable        ();
+internal CodeTemplate    parse_template        ();
+internal CodeType        parse_type            ();
+internal CodeTypedef     parse_typedef         ();
+internal CodeUnion       parse_union           ( bool inplace_def = false );
+internal CodeUsing       parse_using           ();
 
 constexpr bool inplace_def = true;
 
@@ -2471,7 +2489,7 @@ Code parse_complicated_definition( Parser::TokType which )
 }
 
 internal
-CodeBody parse_class_struct_body( Parser::TokType which )
+CodeBody parse_class_struct_body( Parser::TokType which, Parser::Token name = Parser::NullToken )
 {
 	using namespace Parser;
 	using namespace ECode;
@@ -2564,6 +2582,16 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 
 			case TokType::Decl_Using:
 				member = parse_using();
+			break;
+
+			case TokType::Operator:
+				if ( currtok.Text[0] != '~' )
+				{
+					log_failure( "Operator token found in global body but not destructor unary negation\n%s", Context.to_string() );
+					return CodeInvalid;
+				}
+
+				member = parse_destructor();
 			break;
 
 			case TokType::Preprocess_Define:
@@ -2661,6 +2689,12 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 				{
 					specifiers = def_specifiers( NumSpecifiers, specs_found );
 				}
+
+				if ( currtok.Type == TokType::Operator && currtok.Text[0] == '~' )
+				{
+					member = parse_destructor( specifiers );
+					break;
+				}
 			}
 			//! Fallthrough intentional
 			case TokType::Identifier:
@@ -2673,6 +2707,15 @@ CodeBody parse_class_struct_body( Parser::TokType which )
 			case TokType::Type_int:
 			case TokType::Type_double:
 			{
+				if ( nexttok.Type == TokType::Capture_Start && name.Length && currtok.Type == TokType::Identifier )
+				{
+					if ( str_compare( name.Text, currtok.Text, name.Length ) == 0 )
+					{
+						member = parse_constructor();
+						break;
+					}
+				}
+
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
 			}
 			break;
@@ -2775,7 +2818,7 @@ Code parse_class_struct( Parser::TokType which, bool inplace_def = false )
 
 	if ( check( TokType::BraceCurly_Open ) )
 	{
-		body = parse_class_struct_body( which );
+		body = parse_class_struct_body( which, name );
 	}
 
 	if ( ! inplace_def )
@@ -3119,6 +3162,158 @@ CodeClass parse_class( StrC def )
 	push_scope();
 	CodeClass result = (CodeClass) parse_class_struct( TokType::Decl_Class );
 	Context.pop();
+	return result;
+}
+
+internal
+CodeConstructor parse_constructor()
+{
+	using namespace Parser;
+	push_scope();
+
+	Token     identifier       = parse_identifier();
+	CodeParam params           = parse_params();
+	Code      initializer_list = { nullptr };
+	CodeBody  body             = { nullptr };
+
+	if ( check( TokType::Assign_Classifer ) )
+	{
+		eat( TokType::Assign_Classifer );
+
+		Token initializer_list_tok;
+
+		s32 level = 0;
+		while ( left && ( currtok.Type != TokType::BraceCurly_Open || level > 0 ) )
+		{
+			if ( currtok.Type == TokType::BraceCurly_Open )
+				level++;
+			else if ( currtok.Type == TokType::BraceCurly_Close )
+				level--;
+
+			eat( currtok.Type );
+		}
+
+		initializer_list_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)initializer_list_tok.Text;
+
+		initializer_list = untyped_str( initializer_list_tok );
+		body             = parse_function_body();
+	}
+	else if ( check( TokType::BraceCurly_Open ) )
+	{
+		body = parse_function_body();
+	}
+
+	CodeConstructor result = (CodeConstructor) make_code();
+
+	if ( params )
+		result->Params = params;
+
+	if ( initializer_list )
+		result->InitializerList = initializer_list;
+
+	if ( body )
+	{
+		result->Body = body;
+		result->Type = ECode::Constructor;
+	}
+	else
+		result->Type = ECode::Constructor_Fwd;
+
+	Context.pop();
+	return result;
+}
+
+CodeConstructor parse_constructor( StrC def )
+{
+	check_parse_args( def );
+	using namespace Parser;
+
+	TokArray toks = lex( def );
+	if ( toks.Arr == nullptr )
+		return CodeInvalid;
+
+	Context.Tokens = toks;
+	CodeConstructor result = parse_constructor();
+	return result;
+}
+
+internal
+CodeDestructor parse_destructor( CodeSpecifiers specifiers )
+{
+	using namespace Parser;
+	push_scope();
+
+	if ( check( TokType::Spec_Virtual ) )
+	{
+		if ( specifiers )
+			specifiers.append( ESpecifier::Virtual );
+		else
+			specifiers = def_specifier( ESpecifier::Virtual );
+		eat( TokType::Spec_Virtual );
+	}
+
+	if ( left && currtok.Text[0] == '~' )
+		eat( TokType::Operator );
+	else
+	{
+		log_failure( "Expected destructor '~' token\n%s", Context.to_string() );
+		return CodeInvalid;
+	}
+
+	Token          identifier = parse_identifier();
+	CodeBody       body       = { nullptr };
+
+	eat( TokType::Capture_Start );
+	eat( TokType::Capture_End );
+
+	if ( check( TokType::Operator ) && currtok.Text[0] == '=' )
+	{
+		eat( TokType::Operator );
+
+		if ( left && currtok.Text[0] == '0' )
+		{
+			eat( TokType::Number );
+
+			specifiers.append( ESpecifier::Pure );
+		}
+		else
+		{
+			log_failure( "Pure specifier expected due to '=' token\n%s", Context.to_string() );
+			return CodeInvalid;
+		}
+	}
+
+	if ( check( TokType::BraceCurly_Open ) )
+		body = parse_function_body();
+
+	CodeDestructor result = (CodeDestructor) make_code();
+
+	if ( specifiers )
+		result->Specs = specifiers;
+
+	if ( body )
+	{
+		result->Body = body;
+		result->Type = ECode::Destructor;
+	}
+	else
+		result->Type = ECode::Destructor_Fwd;
+
+	Context.pop();
+	return result;
+}
+
+CodeDestructor parse_destructor( StrC def )
+{
+	check_parse_args( def );
+	using namespace Parser;
+
+	TokArray toks = lex( def );
+	if ( toks.Arr == nullptr )
+		return CodeInvalid;
+
+	Context.Tokens = toks;
+	CodeDestructor result = parse_destructor();
 	return result;
 }
 
@@ -3474,7 +3669,7 @@ CodeFn parse_functon()
 	s32        NumSpecifiers = 0;
 
 	CodeAttributes attributes = { nullptr };
-	CodeSpecifiers  specifiers = { nullptr };
+	CodeSpecifiers specifiers = { nullptr };
 	ModuleFlag     mflags     = ModuleFlag::None;
 
 	if ( check(TokType::Module_Export) )
@@ -4550,6 +4745,7 @@ CodeVar parse_variable( StrC def )
 #	undef check_parse_args
 #	undef currtok
 #	undef prevtok
+#   undef nexttok
 #	undef eat
 #	undef left
 #	undef check

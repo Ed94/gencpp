@@ -14,6 +14,10 @@ namespace ECode
 	Entry( Class )                \
 	Entry( Class_Fwd )            \
 	Entry( Class_Body )           \
+	Entry( Constructor )          \
+	Entry( Constructor_Fwd )      \
+	Entry( Destructor )		      \
+	Entry( Destructor_Fwd )       \
 	Entry( Enum )                 \
 	Entry( Enum_Fwd )             \
 	Entry( Enum_Body )            \

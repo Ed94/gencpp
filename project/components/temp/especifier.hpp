@@ -31,7 +31,8 @@ namespace ESpecifier
 	Entry( Virtual,          virtual )           \
 	Entry( Const,            const )             \
 	Entry( Final,            final )             \
-	Entry( Override,         override )
+	Entry( Override,         override )          \
+	Entry( Pure,  		     = 0 )
 
 	enum Type : u32
 	{

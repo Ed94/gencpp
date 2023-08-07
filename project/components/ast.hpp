@@ -2,8 +2,10 @@ struct AST;
 struct AST_Body;
 struct AST_Attributes;
 struct AST_Comment;
+struct AST_Constructor;
 struct AST_Class;
 struct AST_Define;
+struct AST_Destructor;
 struct AST_Enum;
 struct AST_Exec;
 struct AST_Extern;
@@ -31,6 +33,8 @@ struct CodeBody;
 // These are to offer ease of use and optionally strong type safety for the AST.
 struct CodeAttributes;
 struct CodeComment;
+struct CodeConstructor;
+struct CodeDestructor;
 struct CodeClass;
 struct CodeDefine;
 struct CodeEnum;
@@ -108,6 +112,8 @@ struct Code
 #endif
 	operator CodeAttributes() const;
 	operator CodeComment() const;
+	operator CodeConstructor() const;
+	operator CodeDestructor() const;
 	operator CodeClass() const;
 	operator CodeDefine() const;
 	operator CodeExec() const;
@@ -171,6 +177,8 @@ struct AST
 	operator CodeBody();
 	operator CodeAttributes();
 	operator CodeComment();
+	operator CodeConstructor();
+	operator CodeDestructor();
 	operator CodeClass();
 	operator CodeDefine();
 	operator CodeEnum();
@@ -214,18 +222,19 @@ struct AST
 			AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
 			AST*      Specs;          // Function, Operator, Type symbol, Variable
 			union {
-				AST*  ParentType;     // Class, Struct
-				AST*  ReturnType;     // Function, Operator
-				AST*  UnderlyingType; // Enum, Typedef
-				AST*  ValueType;      // Parameter, Variable
+				AST*  InitializerList; // Constructor, Destructor
+				AST*  ParentType;      // Class, Struct
+				AST*  ReturnType;      // Function, Operator
+				AST*  UnderlyingType;  // Enum, Typedef
+				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
-				AST*  Params;         // Function, Operator, Template
-				AST*  BitfieldSize;   // Varaiable (Class/Struct Data Member)
+				AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
+				AST*  Params;          // Function, Operator, Template
 			};
 			union {
 				AST*  ArrExpr;        // Type Symbol
-				AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
+				AST*  Body;           // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
 				AST*  Declaration;    // Friend, Template
 				AST*  Value;          // Parameter, Variable
 			};
@@ -261,18 +270,19 @@ struct AST_POD
 			AST*      Attributes;     // Class, Enum, Function, Struct, Typename, Union, Using, Variable
 			AST*      Specs;          // Function, Operator, Type symbol, Variable
 			union {
-				AST*  ParentType;     // Class, Struct
-				AST*  ReturnType;     // Function, Operator
-				AST*  UnderlyingType; // Enum, Typedef
-				AST*  ValueType;      // Parameter, Variable
+				AST*  InitializerList; // Constructor, Destructor
+				AST*  ParentType;      // Class, Struct
+				AST*  ReturnType;      // Function, Operator
+				AST*  UnderlyingType;  // Enum, Typedef
+				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
-				AST*  Params;         // Function, Operator, Template
-				AST*  BitfieldSize;   // Varaiable (Class/Struct Data Member)
+				AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
+				AST*  Params;          // Function, Operator, Template
 			};
 			union {
 				AST*  ArrExpr;        // Type Symbol
-				AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
+				AST*  Body;           // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
 				AST*  Declaration;    // Friend, Template
 				AST*  Value;          // Parameter, Variable
 			};
@@ -536,7 +546,9 @@ struct CodeStruct
 
 Define_CodeType( Attributes );
 Define_CodeType( Comment );
+Define_CodeType( Constructor );
 Define_CodeType( Define );
+Define_CodeType( Destructor );
 Define_CodeType( Enum );
 Define_CodeType( Exec );
 Define_CodeType( Extern );

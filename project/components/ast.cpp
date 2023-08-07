@@ -145,6 +145,70 @@ String AST::to_string()
 		}
 		break;
 
+		case Constructor:
+		{
+			result.append( Parent->Name );
+
+			if ( Params )
+				result.append_fmt( "( %s )", Params->to_string() );
+			else
+				result.append( "(void)" );
+
+			if ( InitializerList )
+				result.append_fmt( " : %s", InitializerList->to_string() );
+
+			result.append_fmt( "\n{\n%s\n}", Body->to_string() );
+		}
+		break;
+
+		case Constructor_Fwd:
+		{
+			result.append( Parent->Name );
+
+			if ( Params )
+				result.append_fmt( "( %s )", Params->to_string() );
+			else
+				result.append( "(void);" );
+		}
+		break;
+
+		case Destructor:
+		{
+			if ( Specs )
+			{
+				CodeSpecifiers specs = Specs->cast<CodeSpecifiers>();
+
+				if ( specs.has( ESpecifier::Virtual ) )
+					result.append_fmt( "virtual ~%s()", Parent->Name );
+				else
+					result.append_fmt( "~%s()", Parent->Name );
+			}
+			else
+				result.append_fmt( "~%s()", Parent->Name );
+
+			result.append_fmt( "\n{\n%s\n}", Body->to_string() );
+		}
+		break;
+
+		case Destructor_Fwd:
+		{
+			if ( Specs )
+			{
+				CodeSpecifiers specs = Specs->cast<CodeSpecifiers>();
+
+				if ( specs.has( ESpecifier::Virtual ) )
+					result.append_fmt( "virtual ~%s();", Parent->Name );
+				else
+					result.append_fmt( "~%s()", Parent->Name );
+
+				if ( specs.has( ESpecifier::Pure ) )
+					result.append( " = 0;" );
+			}
+			else
+				result.append_fmt( "~%s();", Parent->Name );
+		}
+		break;
+
 		case Enum:
 		{
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
