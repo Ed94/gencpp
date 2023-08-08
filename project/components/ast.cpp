@@ -597,7 +597,7 @@ String AST::to_string()
 		break;
 
 		case Preprocess_Include:
-			result.append_fmt( "#include \"%s\"\n", Content );
+			result.append_fmt( "#include \"%s\"\n\n", Content );
 		break;
 
 		case Preprocess_ElIf:

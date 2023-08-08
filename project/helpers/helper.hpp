@@ -333,7 +333,9 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 CodeBody gen_ast_inlines()
 {
 #pragma push_macro("rcast")
+#pragma push_macro("log_failure")
 #undef rcast
+#undef log_failure
 	char const* code_impl_tmpl = stringize(
 		\n
 		char const* <typename>::debug_str()
@@ -600,4 +602,5 @@ CodeBody gen_ast_inlines()
 
 	return result;
 #pragma pop_macro("rcast")
+#pragma pop_macro("log_failure")
 }
