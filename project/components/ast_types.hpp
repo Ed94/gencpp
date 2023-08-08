@@ -469,7 +469,7 @@ struct AST_Typedef
 	StringCached           Name;
 	CodeT                  Type;
 	ModuleFlag             ModuleFlags;
-	char 			       _PAD_UNUSED_[ sizeof(u32) ];
+	b32                    IsFunction;
 };
 static_assert( sizeof(AST_Typedef) == sizeof(AST), "ERROR: AST_Typedef is not the same size as AST");
 

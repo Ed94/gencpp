@@ -424,9 +424,16 @@ struct HashTable
 
 		for ( idx = 0; idx < Entries.num(); idx++ )
 		{
-			Entry* entry;
-
+			Entry*     entry;
 			FindResult find_result;
+
+			entry       = & Entries[ idx ];
+			find_result = find( entry->Key );
+
+			if ( find_result.PrevIndex < 0 )
+				Hashes[ find_result.HashIndex ] = idx;
+			else
+				Entries[ find_result.PrevIndex ].Next = idx;
 		}
 	}
 

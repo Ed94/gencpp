@@ -722,7 +722,10 @@ String AST::to_string()
 
 			result.append( "typedef ");
 
-			result.append_fmt( "%s %s", UnderlyingType->to_string(), Name );
+			if ( IsFunction )
+				result.append( UnderlyingType->to_string() );
+			else
+				result.append_fmt( "%s %s", UnderlyingType->to_string(), Name );
 
 			if ( UnderlyingType->Type == Typename && UnderlyingType->ArrExpr )
 			{

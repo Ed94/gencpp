@@ -256,6 +256,7 @@ struct AST
 	CodeT             Type;
 	ModuleFlag        ModuleFlags;
 	union {
+		b32           IsFunction; // Used by typedef to not serialize the name field.
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
@@ -304,6 +305,7 @@ struct AST_POD
 	CodeT             Type;
 	ModuleFlag        ModuleFlags;
 	union {
+		b32           IsFunction; // Used by typedef to not serialize the name field.
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;

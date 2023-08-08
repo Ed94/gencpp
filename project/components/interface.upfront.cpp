@@ -1221,7 +1221,6 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 {
 	using namespace ECode;
 
-	name_check( def_typedef, name );
 	null_check( def_typedef, type );
 
 	switch ( type->Type )
@@ -1260,11 +1259,27 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 
 	CodeTypedef
 	result              = (CodeTypedef) make_code();
-	result->Name        = get_cached_string( name );
 	result->Type        = ECode::Typedef;
 	result->ModuleFlags = mflags;
 
 	result->UnderlyingType = type;
+
+	if ( name.Len <= 0  )
+	{
+		if (type->Type != Untyped)
+		{
+			log_failure( "gen::def_typedef: name was empty and type was not untyped (indicating its a function typedef) - %s", type.debug_str() );
+			return CodeInvalid;
+		}
+
+		result->Name       = get_cached_string( type->Name );
+		result->IsFunction = true;
+	}
+	else
+	{
+		result->Name       = get_cached_string( name );
+		result->IsFunction = false;
+	}
 
 	return result;
 }
