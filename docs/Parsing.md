@@ -1,34 +1,36 @@
 # Parsing
 
 The library features a naive parser tailored for only what the library needs to construct the supported syntax of C++ into its AST.  
-This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept under 5000 loc.
+This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) under 5000 loc.
 
 The parsing implementation supports the following for the user:
 
 ```cpp
-CodeClass     parse_class        ( StrC class_def     );
-CodeEnum      parse_enum         ( StrC enum_def      );
-CodeBody      parse_export_body  ( StrC export_def    );
-CodeExtern    parse_extern_link  ( StrC exten_link_def);
-CodeFriend    parse_friend       ( StrC friend_def    );
-CodeFn        parse_function     ( StrC fn_def        );
-CodeBody      parse_global_body  ( StrC body_def      );
-CodeNS parse_namespace    ( StrC namespace_def );
-CodeOperator  parse_operator     ( StrC operator_def  );
-CodeOpCast    parse_operator_cast( StrC operator_def  );
-CodeStruct    parse_struct       ( StrC struct_def    );
-CodeTemplate  parse_template     ( StrC template_def  );
-CodeType      parse_type         ( StrC type_def      );
-CodeTypedef   parse_typedef      ( StrC typedef_def   );
-CodeUnion     parse_union        ( StrC union_def     );
-CodeUsing     parse_using        ( StrC using_def     );
-CodeVar       parse_variable     ( StrC var_def       );
+CodeClass       parse_class        ( StrC class_def       );
+CodeConstructor parse_constructor  ( StrC constructor_def );
+CodeDestructor  parse_destructor   ( StrC destructor_def  );
+CodeEnum        parse_enum         ( StrC enum_def        );
+CodeBody        parse_export_body  ( StrC export_def      );
+CodeExtern      parse_extern_link  ( StrC exten_link_def  );
+CodeFriend      parse_friend       ( StrC friend_def      );
+CodeFn          parse_function     ( StrC fn_def          );
+CodeBody        parse_global_body  ( StrC body_def        );
+CodeNS          parse_namespace    ( StrC namespace_def   );
+CodeOperator    parse_operator     ( StrC operator_def    );
+CodeOpCast      parse_operator_cast( StrC operator_def    );
+CodeStruct      parse_struct       ( StrC struct_def      );
+CodeTemplate    parse_template     ( StrC template_def    );
+CodeType        parse_type         ( StrC type_def        );
+CodeTypedef     parse_typedef      ( StrC typedef_def     );
+CodeUnion       parse_union        ( StrC union_def       );
+CodeUsing       parse_using        ( StrC using_def       );
+CodeVar         parse_variable     ( StrC var_def         );
 ```
 
 ***Parsing will aggregate any tokens within a function body or expression statement to an untyped Code AST.***
 
 Everything is done in one pass for both the preprocessor directives and the rest of the language.  
-The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***, and ***`pragmas`**.  
+The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***, and ***pragmas**.  
 
 The keywords supported for the preprocessor are:
 
@@ -41,12 +43,30 @@ The keywords supported for the preprocessor are:
 * undef
 * pragma
 
-Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST. *These ASTs will be considered members or entries of braced scope they reside within*.
-All keywords except *include* are suppported as members of a scope for a class/struct, global, or namespace body.  
+Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST. *These ASTs will be considered members or entries of braced scope they reside within*.  
+If a directive is used with an unsupported keyword its will be processed as an untyped AST.
 
-Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).
+The preprocessor lines are stored as members of their associated scope they are parsed within. ( Global, Namespace, Class/Struct )
 
-Exceptions to the above rule (If its too hard to keep track of just follow the above notion):
+Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).  
+Exceptions:
 
-* Typedefs allow of a macro exansion to be defined after the keyword; Ex: `typedef GEN_FILE_OPEN_PROC( file_open_proc );`
+* function signatures are allowed for a preprocessed macro: `neverinline MACRO() { ... }`
+* typedefs allow for a preprocessed macro: `typedef MACRO();`
 
+*(See functions `parse_operator_function_or_variable` and `parse_typedef` )*
+
+The lexing and parsing takes shortcuts from whats expected in the standard.
+
+* Numeric literals are not checked for validity.
+* The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
+  * *This includes the assignment of variables.*
+* Attributes ( `[[]]` (standard), `__declspec` (Microsoft), or `__attribute__` (GNU) )
+  * Assumed to *come before specifiers* (`const`, `constexpr`, `extern`, `static`, etc) for a function
+  * Or in the usual spot for class, structs, (*right after the declaration keyword*)
+  * typedefs have attributes with the type (`parse_type`)
+* As a general rule; if its not available from the upfront constructors, its not available in the parsing constructors.
+  * *Upfront constructors are not necessarily used in the parsing constructors, this is just a good metric to know what can be parsed.*
+* Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
+
+Empty lines used throughout the file are preserved for formatting purposes for ast serialization.

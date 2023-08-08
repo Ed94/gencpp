@@ -40,12 +40,6 @@ Otherwise the library is free of any templates.
 
 ### *WHAT IS NOT PROVIDED*
 
-* Execution statement validation : Execution expressions are defined using the untyped AST.
-  * Lambdas (This naturally means its unsupported)
-* Non-trivial template validation support.
-* RAII : This needs support for constructors/destructor parsing
-  * Haven't gotten around to yet (its in the github issues)
-
 Keywords kept from "Modern C++":
 
 * constexpr : Great to store compile-time constants.
@@ -55,12 +49,8 @@ Keywords kept from "Modern C++":
 * import    : ^^
 * module    : ^^
 
-When it comes to expressions:
-
 **There is no support for validating expressions.**  
 Its difficult to parse without enough benefits (At the metaprogramming level).  
-
-When it comes to templates:
 
 **Only trivial template support is provided.**  
 The intention is for only simple, non-recursive substitution.  
@@ -78,7 +68,7 @@ Use at your own mental peril.
 
 ### The Data & Interface
 
-As mentioned in [Usage](#usage), the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
+As mentioned in root readme, the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
 The AST is managed by the library and provided the user via its interface.  
 However, the user may specifiy memory configuration.
@@ -89,39 +79,44 @@ Data layout of AST struct:
 union {
     struct
     {
-        AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-        AST*      Specs;          // Function, Operator, Type symbol, Variable
+        AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+        AST*      Specs;           // Function, Operator, Type symbol, Variable
         union {
-            AST*  ParentType;     // Class, Struct
-            AST*  ReturnType;     // Function, Operator
-            AST*  UnderlyingType; // Enum, Typedef
-            AST*  ValueType;      // Parameter, Variable
+            AST*  InitializerList; // Constructor, Destructor
+            AST*  ParentType;      // Class, Struct
+            AST*  ReturnType;      // Function, Operator
+            AST*  UnderlyingType;  // Enum, Typedef
+            AST*  ValueType;       // Parameter, Variable
         };
-        AST*      Params;         // Function, Operator, Template
         union {
-            AST*  ArrExpr;        // Type Symbol
-            AST*  Body;           // Class, Enum, Function, Namespace, Struct, Union
-            AST*  Declaration;    // Friend, Template
-            AST*  Value;          // Parameter, Variable
+            AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
+            AST*  Params;          // Function, Operator, Template
+        };
+        union {
+            AST*  ArrExpr;         // Type Symbol
+            AST*  Body;            // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+            AST*  Declaration;     // Friend, Template
+            AST*  Value;           // Parameter, Variable
         };
     };
-    StringCached  Content;        // Attributes, Comment, Execution, Include
+    StringCached  Content;                     // Attributes, Comment, Execution, Include
     SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 };
 union {
     AST* Prev;
-    AST* Front; // Used by CodeBody
-    AST* Last;  // Used by CodeParam
+    AST* Front;
+    AST* Last;
 };
 union {
     AST* Next;
-    AST* Back;  // Used by CodeBody
+    AST* Back;
 };
 AST*              Parent;
 StringCached      Name;
 CodeT             Type;
 ModuleFlag        ModuleFlags;
 union {
+    b32           IsFunction; // Used by typedef to not serialize the name field.
     OperatorT     Op;
     AccessSpec    ParentAccess;
     s32           NumEntries;
@@ -145,7 +140,7 @@ uw ArrSpecs_Cap =
     - sizeof(StringCached)
     - sizeof(CodeT)
     - sizeof(ModuleFlag)
-    - sizeof(s32)
+    - sizeof(u32)
 )
 / sizeof(SpecifierT) -1; // -1 for 4 extra bytes (Odd num of AST*)
 ```
@@ -155,7 +150,7 @@ uw ArrSpecs_Cap =
 Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
-  * You'll find the memory handling in `init`, `gen_string_allocator`, `get_cached_string`, `make_code`.
+  * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_string_allocator`, `get_cached_string`, `make_code`.
 * ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
@@ -168,15 +163,15 @@ Data Notes:
 * Linked lists used children nodes on bodies, and parameters.
 * Its intended to generate the AST in one go and serialize after. The constructors and serializer are designed to be a "one pass, front to back" setup.
 * Allocations can be tuned by defining the folloiwng macros:
-  * `GEN_BUILDER_STR_BUFFER_RESERVE`
-  * `GEN_CODEPOOL_NUM_BLOCKS` : Number of blocks per code pool in the code allocator
   * `GEN_GLOBAL_BUCKET_SIZE` : Size of each bucket area for the global allocator
-  * `GEN_LEX_ALLOCATOR_SIZE`
+  * `GEN_CODEPOOL_NUM_BLOCKS` : Number of blocks per code pool in the code allocator
+  * `GEN_SIZE_PER_STRING_ARENA` : Size per arena used with string caching.
   * `GEN_MAX_COMMENT_LINE_LENGTH` : Longest length a comment can have per line.
   * `GEN_MAX_NAME_LENGTH` : Max length of any identifier.
   * `GEN_MAX_UNTYPED_STR_LENGTH` : Max content length for any untyped code.
-  * `GEN_SIZE_PER_STRING_ARENA` : Size per arena used with string caching.
   * `GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE` : token_fmt_va uses local_persit memory of this size for the hashtable.
+  * `GEN_LEX_ALLOCATOR_SIZE`
+  * `GEN_BUILDER_STR_BUFFER_RESERVE`
 
 The following CodeTypes are used which the user may optionally use strong typing with if they enable: `GEN_ENFORCE_STRONG_CODE_TYPES`
 
@@ -187,7 +182,6 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeConstructor
 * CodeDefine
 * CodeDestructor
-* CodePreprocessCond
 * CodeEnum
 * CodeExec
 * CodeExtern
@@ -199,6 +193,8 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeOperator
 * CodeOpCast
 * CodeParam : Has support for `for-range` iterating across parameters.
+* CodePreprocessCond
+* CodePragma
 * CodeSpecifiers : Has support for `for-range` iterating across specifiers.
 * CodeStruct
 * CodeTemplate
@@ -221,7 +217,7 @@ Retrieving a raw version of the ast can be done using the `raw()` function defin
 ### Upfront Construction
 
 All component ASTs must be previously constructed, and provided on creation of the code AST.
-The construction will fail and return Code::Invalid otherwise.
+The construction will fail and return CodeInvalid otherwise.
 
 Interface :``
 
@@ -231,6 +227,7 @@ Interface :``
 * def_comment
 * def_class
 * def_constructor
+* def_define
 * def_destructor
 * def_enum
 * def_execution
@@ -245,6 +242,7 @@ Interface :``
 * def_operator_cast
 * def_param
 * def_params
+* def_preprocess_cond
 * def_specifier
 * def_specifiers
 * def_struct
@@ -321,19 +319,6 @@ Interface :
 * parse_using
 * parse_variable
 
-The lexing and parsing takes shortcuts from whats expected in the standard.
-
-* Numeric literals are not check for validity.
-* The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
-  * *This includes the assignment of variables.*
-* Attributes ( `[[]]` (standard), `__declspec` (Microsoft), or `__attribute__` (GNU) )
-  * Assumed to *come before specifiers* (`const`, `constexpr`, `extern`, `static`, etc) for a function
-  * Or in the usual spot for class, structs, (*right after the declaration keyword*)
-  * typedefs have attributes with the type (`parse_type`)
-* As a general rule; if its not available from the upfront constructors, its not available in the parsing constructors.
-  * *Upfront constructors are not necessarily used in the parsing constructors, this is just a good metric to know what can be parsed.*
-* Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
-
 Usage:
 
 ```cpp
@@ -342,13 +327,6 @@ Code <name> = parse_<function name>( string with code );
 Code <name> = def_<function name>( ..., parse_<function name>(
     <string with code>
 ));
-
-Code <name> = make_<function name>( ... )
-{
-    <name>->add( parse_<function name>(
-        <string with code>
-    ));
-}
 ```
 
 ### Untyped constructions
@@ -408,12 +386,15 @@ The following are provided predefined by the library as they are commonly used:
 * `access_public`
 * `access_protected`
 * `access_private`
+* `attrib_api_export`
+* `attrib_api_import`
 * `module_global_fragment`
 * `module_private_fragment`
+* `fmt_newline`
+* `pragma_once`
 * `param_varaidc` (Used for varadic definitions)
 * `preprocess_else`
 * `preprocess_endif`
-* `pragma_once`
 * `spec_const`
 * `spec_consteval`
 * `spec_constexpr`
@@ -425,8 +406,10 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_internal_linkage` (internal macro)
 * `spec_local_persist` (local_persist macro)
 * `spec_mutable`
+* `spec_neverinline`
 * `spec_override`
 * `spec_ptr`
+* `spec_pure`
 * `spec_ref`
 * `spec_register`
 * `spec_rvalue`
@@ -434,10 +417,6 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_thread_local`
 * `spec_virtual`
 * `spec_volatile`
-* `spec_type_signed`
-* `spec_type_unsigned`
-* `spec_type_short`
-* `spec_type_long`
 * `t_empty` (Used for varaidc macros)
 * `t_auto`
 * `t_void`

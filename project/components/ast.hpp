@@ -212,7 +212,7 @@ struct AST
 			- sizeof(StringCached)
 			- sizeof(CodeT)
 			- sizeof(ModuleFlag)
-			- sizeof(s32)
+			- sizeof(u32)
 	)
 	/ sizeof(SpecifierT) -1; // -1 for 4 extra bytes
 

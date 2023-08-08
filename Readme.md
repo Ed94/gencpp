@@ -6,12 +6,11 @@ The library API is a composition of code element constructors.
 These build up a code AST to then serialize with a file builder.
 
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
-its not meant to be a black box metaprogramming utility, its meant for the user to extend for their project domain.
+its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's their project domain.
 
 ## Notes
 
 The project has reached an *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.  
-The [issues](https://github.com/Ed94/gencpp/issues) marked with v1.0 Feature indicate whats left before the library is considered feature complete.
 
 A `natvis` and `natstepfilter` are provided in the scripts directory.
 
@@ -25,7 +24,7 @@ A metaprogram is built to generate files before the main program is built. We'll
 
 `gen.cpp` \`s  `main()` is defined as `gen_main()` which the user will have to define once for their program. There they will dictate everything that should be generated.
 
-In order to keep the locality of this code within the same files the following pattern may be used:
+In order to keep the locality of this code within the same files the following pattern may be used (although this pattern isn't required at all):
 
 Within `program.cpp` :
 
@@ -40,6 +39,8 @@ u32 gen_main()
     ...
 }
 #endif
+
+// "Stage" agnostic code.
 
 #ifndef GEN_TIME
 #include "program.gen.cpp"
@@ -56,6 +57,7 @@ Example using each construction interface:
 
 ### Upfront
 
+Validation and construction through a functional interface.
 
 ```cpp
 Code t_uw           = def_type( name(uw) );
@@ -75,6 +77,8 @@ Code header;
 
 ### Parse
 
+Validation through ast construction.
+
 ```cpp
 Code header = parse_struct( code(
     struct ArrayHeader
@@ -88,6 +92,8 @@ Code header = parse_struct( code(
 ```
 
 ### Untyped
+
+No validation, just glorified text injection.
 
 ```cpp
 Code header = code_str(
