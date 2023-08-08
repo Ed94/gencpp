@@ -118,8 +118,9 @@ void check_SOA()
 {
 	log_fmt("\ncheck_SOA:");
 	gen::init();
+	
 	Builder soa_test = Builder::open( "SOA.gen.hpp" );
-
+	
 	soa_test.print( parse_using( code(
 		using u16 = unsigned short;
 	)));
@@ -136,6 +137,7 @@ void check_SOA()
 				u64 D;
 			};
 		))
+		, 100
 	));
 
 	soa_test.write();

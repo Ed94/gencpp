@@ -1428,16 +1428,16 @@ CodeAttributes parse_attributes()
 
 	else if ( check(TokType::Decl_GNU_Attribute) )
 	{
-		eat(TokType::BraceCurly_Open);
-		eat(TokType::BraceCurly_Open);
+		eat(TokType::Capture_Start);
+		eat(TokType::Capture_Start);
 
-		while ( left && currtok.Type != TokType::BraceCurly_Close )
+		while ( left && currtok.Type != TokType::Capture_End )
 		{
 			eat(currtok.Type);
 		}
 
-		eat(TokType::BraceCurly_Close);
-		eat(TokType::BraceCurly_Close);
+		eat(TokType::Capture_End);
+		eat(TokType::Capture_End);
 
 		s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
 	}
@@ -1445,14 +1445,14 @@ CodeAttributes parse_attributes()
 	else if ( check(TokType::Decl_MSVC_Attribute) )
 	{
 		eat( TokType::Decl_MSVC_Attribute );
-		eat( TokType::BraceCurly_Open);
+		eat( TokType::Capture_Start);
 
-		while ( left && currtok.Type != TokType::BraceCurly_Close )
+		while ( left && currtok.Type != TokType::Capture_End )
 		{
 			eat(currtok.Type);
 		}
 
-		eat(TokType::BraceCurly_Close);
+		eat(TokType::Capture_End);
 
 		s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
 	}

@@ -6,7 +6,7 @@ The library API is a composition of code element constructors.
 These build up a code AST to then serialize with a file builder.
 
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
-its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's their project domain.
+its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.
 
 ## Notes
 
