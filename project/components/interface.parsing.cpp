@@ -4413,13 +4413,6 @@ CodeTypedef parse_typedef()
 
 				if ( tok.Type == TokType::BraceCurly_Close )
 				{
-					typedef struct
-					{
-						int a;
-						int b;
-					}* Something;
-
-
 					// Its an inplace definition
 					// typdef <which> <type_identifier> { ... } <identifier>;
 					ok_to_parse = true;

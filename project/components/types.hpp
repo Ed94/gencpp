@@ -3,9 +3,9 @@ using LogFailType = sw(*)(char const*, ...);
 // By default this library will either crash or exit if an error is detected while generating codes.
 // Even if set to not use fatal, fatal will still be used for memory failures as the library is unusable when they occur.
 #ifdef GEN_DONT_USE_FATAL
-	constexpr LogFailType log_failure = log_fmt;
+	#define log_failure log_fmt
 #else
-	constexpr LogFailType log_failure = fatal;
+	#define log_failure fatal
 #endif
 
 enum class AccessSpec : u32
