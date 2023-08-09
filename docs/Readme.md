@@ -40,15 +40,6 @@ Otherwise the library is free of any templates.
 
 ### *WHAT IS NOT PROVIDED*
 
-Keywords kept from "Modern C++":
-
-* constexpr : Great to store compile-time constants.
-* consteval : Technically fine, need to make sure to execute in moderation.
-* constinit : Better than constexpr at doing its job, however, its only c++ 20.
-* export    : Useful if c++ modules ever come around to actually being usable.
-* import    : ^^
-* module    : ^^
-
 **There is no support for validating expressions.**  
 Its difficult to parse without enough benefits (At the metaprogramming level).  
 
@@ -70,7 +61,7 @@ Use at your own mental peril.
 
 As mentioned in root readme, the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
-The AST is managed by the library and provided the user via its interface.  
+The AST is managed by the library and provided to the user via its interface.  
 However, the user may specifiy memory configuration.
 
 Data layout of AST struct:

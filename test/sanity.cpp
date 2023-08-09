@@ -20,7 +20,7 @@ void check_sanity()
 		fatal("check_sanity: String caching failed!");
 
 
-	// Purposefully use an excessive amount of memory to make so the the memory backend doesn't break.
+	// Purposefully uses an excessive amount of memory to make sure the the memory backend doesn't break.
 	// This has been tested with num_iterations set to 15000000 (generates 15 million lines of code), the Global_BlockSize, along with CodePool_NumBlocks, and SizePer_StringArena
 	// must be adjusted to gigabytes(2), kilobytes(512), and gigabyte(1) for good performance without crashing.
 	/*

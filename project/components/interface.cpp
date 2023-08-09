@@ -117,7 +117,7 @@ void define_constants()
 	fmt_newline.set_global();
 
 	pragma_once          = (CodePragma) make_code();
-	pragma_once->Type    = ECode::Untyped;
+	pragma_once->Type    = ECode::Preprocess_Pragma;
 	pragma_once->Name    = get_cached_string( txt_StrC("once") );
 	pragma_once->Content = pragma_once->Name;
 	pragma_once.set_global();

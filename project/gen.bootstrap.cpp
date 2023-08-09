@@ -42,26 +42,26 @@ int gen_main()
 		Code timing        = scan_file( "dependencies/timing.hpp" );
 
 		Builder
-		deps_header = Builder::open("gen/gen.dep.hpp");
-		deps_header.print_fmt( generation_notice );
-		deps_header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n" );
-		deps_header.print( header_start );
-		deps_header.print_fmt( "GEN_NS_BEGIN\n\n" );
+		header = Builder::open("gen/gen.dep.hpp");
+		header.print_fmt( generation_notice );
+		header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n" );
+		header.print( header_start );
+		header.print_fmt( "GEN_NS_BEGIN\n\n" );
 
-		deps_header.print( macros );
-		deps_header.print( basic_types );
-		deps_header.print( debug );
-		deps_header.print( memory );
-		deps_header.print( string_ops );
-		deps_header.print( printing );
-		deps_header.print( containers );
-		deps_header.print( hashing );
-		deps_header.print( string );
-		deps_header.print( file_handling );
-		deps_header.print( timing );
+		header.print( macros );
+		header.print( basic_types );
+		header.print( debug );
+		header.print( memory );
+		header.print( string_ops );
+		header.print( printing );
+		header.print( containers );
+		header.print( hashing );
+		header.print( string );
+		header.print( file_handling );
+		header.print( timing );
 
-		deps_header.print_fmt( "GEN_NS_END\n\n" );
-		deps_header.write();
+		header.print_fmt( "GEN_NS_END\n\n" );
+		header.write();
 	}
 
 	// gen_dep.cpp
@@ -77,23 +77,23 @@ int gen_main()
 		Code timing        = scan_file( "dependencies/timing.cpp" );
 
 		Builder
-		deps_impl = Builder::open( "gen/gen.dep.cpp" );
-		deps_impl.print_fmt( generation_notice );
-		deps_impl.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n" );
-		deps_impl.print( src_start );
-		deps_impl.print_fmt( "GEN_NS_BEGIN\n\n" );
+		src = Builder::open( "gen/gen.dep.cpp" );
+		src.print_fmt( generation_notice );
+		src.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n" );
+		src.print( src_start );
+		src.print_fmt( "GEN_NS_BEGIN\n\n" );
 
-		deps_impl.print( debug );
-		deps_impl.print( string_ops );
-		deps_impl.print( printing );
-		deps_impl.print( hashing );
-		deps_impl.print( memory );
-		deps_impl.print( string );
-		deps_impl.print( file_handling );
-		deps_impl.print( timing );
+		src.print( debug );
+		src.print( string_ops );
+		src.print( printing );
+		src.print( hashing );
+		src.print( memory );
+		src.print( string );
+		src.print( file_handling );
+		src.print( timing );
 
-		deps_impl.print_fmt( "GEN_NS_END\n\n" );
-		deps_impl.write();
+		src.print_fmt( "GEN_NS_END\n\n" );
+		src.write();
 	}
 
 	// gen.hpp

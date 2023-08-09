@@ -46,12 +46,12 @@ void process_exit( u32 code );
 	while (0)
 #else
 
-#	define fatal( fmt, ... )						 \
-	do                                               \
-	{												 \
-		str_fmt_out_err_va( fmt, __VA_ARGS__ );      \
-		process_exit(1);                             \
-	}             					                 \
+#	define fatal( fmt, ... )                 \
+	do                                       \
+	{										 \
+		str_fmt_out_err( fmt, __VA_ARGS__ ); \
+		process_exit(1);                     \
+	}             					         \
 	while (0)
 #endif
 

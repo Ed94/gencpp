@@ -6,16 +6,12 @@
 GEN_NS_BEGIN
 
 #include "dependencies/debug.cpp"
-
 #include "dependencies/string_ops.cpp"
 #include "dependencies/printing.cpp"
 #include "dependencies/memory.cpp"
-
 #include "dependencies/hashing.cpp"
 #include "dependencies/string.cpp"
-
-#include "dependencies/timing.cpp"
-
 #include "dependencies/file_handling.cpp"
+#include "dependencies/timing.cpp"
 
 GEN_NS_END

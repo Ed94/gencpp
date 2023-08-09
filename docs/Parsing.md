@@ -30,7 +30,7 @@ CodeVar         parse_variable     ( StrC var_def         );
 ***Parsing will aggregate any tokens within a function body or expression statement to an untyped Code AST.***
 
 Everything is done in one pass for both the preprocessor directives and the rest of the language.  
-The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***, and ***pragmas**.  
+The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***, and ***pragmas***.  
 
 The keywords supported for the preprocessor are:
 
@@ -69,4 +69,4 @@ The lexing and parsing takes shortcuts from whats expected in the standard.
   * *Upfront constructors are not necessarily used in the parsing constructors, this is just a good metric to know what can be parsed.*
 * Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
 
-Empty lines used throughout the file are preserved for formatting purposes for ast serialization.
+Empty lines used throughout the file are preserved for formatting purposes during ast serialization.
