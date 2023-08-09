@@ -17,7 +17,7 @@ void check_sanity()
 	CodeType t_int_dupe = def_type( name(int) );
 
 	if ( t_int_dupe->Name != t_int->Name )
-		fatal("check_sanity: String caching failed!");
+		GEN_FATAL("check_sanity: String caching failed!");
 
 
 	// Purposefully uses an excessive amount of memory to make sure the the memory backend doesn't break.

@@ -48,8 +48,8 @@
 				<DisplayString>{(Header*)((char*)Data - sizeof(Header))}</DisplayString>
 				<Expand>
 					<Item Name="Allocator">((Header*)((char*)Data - sizeof(Header)))->Allocator</Item>
-					<Item Name="Length">((Header*)((char*)Data - sizeof(Header)))->Length</Item>
 					<Item Name="Capacity">((Header*)((char*)Data - sizeof(Header)))->Capacity</Item>
+					<Item Name="Length">((Header*)((char*)Data - sizeof(Header)))->Length</Item>
 				</Expand>
 			</Synthetic>
 		</Expand>

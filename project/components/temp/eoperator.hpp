@@ -64,7 +64,7 @@ namespace EOperator
 		#	define Entry( Type_, Token_ ) { sizeof(stringize(Token_)), stringize(Token_) },
 			Define_Operators
 		#	undef Entry
-			txt_StrC(",")
+			txt(",")
 		};
 
 		return lookup[ op ];
@@ -73,4 +73,5 @@ namespace EOperator
 #	undef Define_Operators
 }
 using OperatorT = EOperator::Type;
+using EOperator::to_str;
 

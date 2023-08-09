@@ -531,7 +531,7 @@ CodeBody gen_ast_inlines()
 	CodeBody impl_cast_var       = parse_global_body( token_fmt( "typename", StrC name(Var),            cast_tmpl ));
 
 	CodeBody result = def_global_body( args(
-		def_pragma( txt_StrC("region generated code inline implementation")),
+		def_pragma( txt("region generated code inline implementation")),
 		fmt_newline,
 		impl_code,
 		impl_code_body,
@@ -563,9 +563,9 @@ CodeBody gen_ast_inlines()
 		impl_code_using,
 		impl_code_var,
 		fmt_newline,
-		def_pragma( txt_StrC("endregion generated code inline implementation")),
+		def_pragma( txt("endregion generated code inline implementation")),
 		fmt_newline,
-		def_pragma( txt_StrC("region generated AST/Code cast implementation")),
+		def_pragma( txt("region generated AST/Code cast implementation")),
 		fmt_newline,
 		impl_cast_body,
 		impl_cast_attribute,
@@ -596,7 +596,7 @@ CodeBody gen_ast_inlines()
 		impl_cast_using,
 		impl_cast_var,
 		fmt_newline,
-		def_pragma( txt_StrC("endregion generated AST/Code cast implementation")),
+		def_pragma( txt("endregion generated AST/Code cast implementation")),
 		fmt_newline
 	));
 

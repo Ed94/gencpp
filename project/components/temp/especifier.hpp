@@ -107,4 +107,5 @@ namespace ESpecifier
 #	undef Define_Specifiers
 }
 using SpecifierT = ESpecifier::Type;
+using ESpecifier::to_str;
 

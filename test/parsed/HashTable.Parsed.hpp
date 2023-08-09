@@ -320,9 +320,9 @@ u32 gen_hashtable_file()
 	gen_hashtable_file;
 	gen_hashtable_file.open( "hashtable.Parsed.gen.hpp" );
 
-	gen_hashtable_file.print( def_include( txt_StrC("gen.hpp")) );
-	gen_hashtable_file.print( def_include( txt_StrC("Array.Parsed.hpp")) );
-	gen_hashtable_file.print( def_include( txt_StrC("array.Parsed.gen.hpp")) );
+	gen_hashtable_file.print( def_include( txt("gen.hpp")) );
+	gen_hashtable_file.print( def_include( txt("Array.Parsed.hpp")) );
+	gen_hashtable_file.print( def_include( txt("array.Parsed.gen.hpp")) );
 
 	gen_hashtable_file.print( def_using_namespace( name(gen)));
 

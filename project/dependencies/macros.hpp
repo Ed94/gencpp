@@ -8,6 +8,25 @@
 #define internal      static    // Internal linkage
 #define local_persist static    // Local Persisting variables
 
+#ifdef GEN_COMPILER_MSVC
+#	define forceinline __forceinline
+#	define neverinline __declspec( noinline )
+#elif defined(GEN_COMPILER_GCC)
+#	define forceinline inline __attribute__((__always_inline__))
+#	define neverinline __attribute__( ( __noinline__ ) )
+#elif defined(GEN_COMPILER_CLANG)
+#if __has_attribute(__always_inline__)
+#	define forceinline inline __attribute__((__always_inline__))
+#	define neverinline __attribute__( ( __noinline__ ) )
+#else
+#	define forceinline
+#	define neverinline
+#endif
+#else
+#	define forceinline
+#	define neverinline
+#endif
+
 // Bits
 
 #define bit( Value )                             ( 1 << Value )
@@ -124,6 +143,12 @@
 #define max( a, b )                   ( ( a ) > ( b ) ? ( a ) : ( b ) )
 #define min( a, b )                   ( ( a ) < ( b ) ? ( a ) : ( b ) )
 #define size_of( x )                  ( sw )( sizeof( x ) )
+
+#if defined( _MSC_VER ) || defined( GEN_COMPILER_TINYC )
+#	define offset_of( Type, element ) ( ( GEN_NS( gen_sw ) ) & ( ( ( Type* )0 )->element ) )
+#else
+#	define offset_of( Type, element ) __builtin_offsetof( Type, element )
+#endif
 
 template< class Type >
 void swap( Type& a, Type& b )

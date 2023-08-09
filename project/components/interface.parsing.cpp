@@ -1122,7 +1122,7 @@ if ( def.Ptr == nullptr )                                                      \
 #	define check( Type_ )        ( left && currtok.Type == Type_ )
 
 #	define push_scope()                                                    \
-	StackNode scope { nullptr, currtok, NullToken, txt_StrC( __func__ ) }; \
+	StackNode scope { nullptr, currtok, NullToken, txt( __func__ ) }; \
 	Context.push( & scope )
 
 #pragma endregion Helper Macros
@@ -1329,7 +1329,7 @@ Code parse_static_assert()
 
 	char const* result = str_fmt_buf( "%.*s\n", content.Length, content.Text );
 
-	assert->Content = get_cached_string( to_StrC( result ) );
+	assert->Content = get_cached_string( to_str( result ) );
 	assert->Name	= assert->Content;
 
 	Context.pop();
@@ -2264,7 +2264,7 @@ Code parse_simple_preprocess( Parser::TokType which )
 
 	char const* content = str_fmt_buf( "%.*s\n", tok.Length, tok.Text );
 
-	Code result = untyped_str( to_StrC( content ) );
+	Code result = untyped_str( to_str( content ) );
 	Context.Scope->Name = tok;
 
 	if ( str_compare( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )

@@ -192,8 +192,8 @@ u32 gen_ring_file()
 	gen_ring_file;
 	gen_ring_file.open( "ring.Upfront.gen.hpp" );
 
-	gen_ring_file.print( def_include( txt_StrC("gen.hpp")) );
-	gen_ring_file.print( def_include( txt_StrC("buffer.Upfront.gen.hpp")) );
+	gen_ring_file.print( def_include( txt("gen.hpp")) );
+	gen_ring_file.print( def_include( txt("buffer.Upfront.gen.hpp")) );
 
 	gen_ring_file.print( def_using_namespace( name(gen)));
 

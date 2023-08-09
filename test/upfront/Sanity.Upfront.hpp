@@ -11,13 +11,13 @@ u32 gen_sanity_upfront()
 
 	// Comment
 	{
-		CodeComment comment_test = def_comment( txt_StrC("Sanity check: def_comment test") );
+		CodeComment comment_test = def_comment( txt("Sanity check: def_comment test") );
 
 		gen_sanity_file.print(comment_test);
 	}
 
 	gen_sanity_file.print_fmt("\n");
-	gen_sanity_file.print( def_comment( txt_StrC(
+	gen_sanity_file.print( def_comment( txt(
 		"The following will show a series of base cases for the gen api.\n"
 	)));
 
@@ -26,7 +26,7 @@ u32 gen_sanity_upfront()
 		CodeClass fwd = def_class( name(TestEmptyClass) );
 		CodeClass empty_body;
 		{
-			CodeComment cmt  = def_comment( txt_StrC("Empty class body") );
+			CodeComment cmt  = def_comment( txt("Empty class body") );
 			CodeBody    body = def_class_body( args( cmt ) );
 
 			empty_body = def_class( name(TestEmptyClass), body );
@@ -74,7 +74,7 @@ u32 gen_sanity_upfront()
 	// External Linkage
 	{
 		CodeBody body = def_extern_link_body( 1
-			, def_comment( txt_StrC("Empty extern body") )
+			, def_comment( txt("Empty extern body") )
 		);
 
 		CodeExtern c_extern = def_extern_link( name(C), body );
@@ -100,7 +100,7 @@ u32 gen_sanity_upfront()
 		CodeFn def;
 		{
 			CodeBody body = def_function_body( 1
-				, def_comment( txt_StrC("Empty function body") )
+				, def_comment( txt("Empty function body") )
 			);
 
 			def = def_function( name(test_function), __, __, body );
@@ -114,7 +114,7 @@ u32 gen_sanity_upfront()
 
 	// Include
 	{
-		CodeInclude include = def_include( txt_StrC("../DummyInclude.hpp") );
+		CodeInclude include = def_include( txt("../DummyInclude.hpp") );
 
 		gen_sanity_file.print(include);
 	}
@@ -142,7 +142,7 @@ u32 gen_sanity_upfront()
 		CodeNS namespace_def;
 		{
 			CodeBody body = def_namespace_body( 1
-				, def_comment( txt_StrC("Empty namespace body") )
+				, def_comment( txt("Empty namespace body") )
 			);
 
 			namespace_def = def_namespace( name(TestNamespace), body );
@@ -213,7 +213,7 @@ u32 gen_sanity_upfront()
 		CodeFn def, def2;
 		{
 			CodeBody body = def_function_body( 1
-				, def_comment( txt_StrC("Empty function body") )
+				, def_comment( txt("Empty function body") )
 			);
 
 			CodeParam params = def_params( args(
@@ -259,7 +259,7 @@ u32 gen_sanity_upfront()
 		CodeClass fwd = def_class( name(TestEmptyStruct) );
 		CodeClass empty_body;
 		{
-			CodeComment cmt  = def_comment( txt_StrC("Empty struct body") );
+			CodeComment cmt  = def_comment( txt("Empty struct body") );
 			CodeBody    body = def_class_body( args( cmt ) );
 
 			empty_body = def_class( name(TestEmptyStruct), body );
@@ -274,7 +274,7 @@ u32 gen_sanity_upfront()
 	// Union
 	{
 		CodeBody body = def_union_body( 1
-			, def_comment( txt_StrC("Empty union body") )
+			, def_comment( txt("Empty union body") )
 		);
 
 		CodeUnion def = def_union( name(TestEmptyUnion), body );
@@ -312,7 +312,7 @@ u32 gen_sanity_upfront()
 
 		CodeTemplate tmpl = def_template(  def_param( t_class, name(Type) )
 			, def_function( name(test_template), def_param( t_Type, name(a) ), __
-				, def_function_body(1, def_comment( txt_StrC("Empty template function body")))
+				, def_function_body(1, def_comment( txt("Empty template function body")))
 			)
 		);
 
@@ -321,7 +321,7 @@ u32 gen_sanity_upfront()
 
 	gen_sanity_file.print_fmt("\n");
 
-	gen_sanity_file.print( def_comment( txt_StrC(
+	gen_sanity_file.print( def_comment( txt(
 		"End of base case tests.\n"
 	)));
 

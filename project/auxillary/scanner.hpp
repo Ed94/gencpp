@@ -5,13 +5,13 @@ Code scan_file( char const* path )
 	FileError error = file_open_mode( & file, EFileMode_READ, path );
 	if ( error != EFileError_NONE )
 	{
-		fatal( "scan_file: Could not open: %s", path );
+		GEN_FATAL( "scan_file: Could not open: %s", path );
 	}
 
 	sw fsize = file_size( & file );
 	if ( fsize <= 0 )
 	{
-		fatal("scan_file: %s is empty", path );
+		GEN_FATAL("scan_file: %s is empty", path );
 	}
 
 	String str = String::make_reserve( GlobalAllocator, fsize );
@@ -35,7 +35,6 @@ struct SymbolInfo
 	char const*  Marker;
 	Code         Signature;
 };
-
 
 struct Scanner
 {

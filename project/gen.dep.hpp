@@ -13,8 +13,8 @@ GEN_NS_BEGIN
 #include "dependencies/printing.hpp"
 #include "dependencies/containers.hpp"
 #include "dependencies/hashing.hpp"
-#include "dependencies/string.hpp"
-#include "dependencies/file_handling.hpp"
+#include "dependencies/strings.hpp"
+#include "dependencies/filesystem.hpp"
 #include "dependencies/timing.hpp"
 
 GEN_NS_END

@@ -10,8 +10,8 @@ GEN_NS_BEGIN
 #include "dependencies/printing.cpp"
 #include "dependencies/memory.cpp"
 #include "dependencies/hashing.cpp"
-#include "dependencies/string.cpp"
-#include "dependencies/file_handling.cpp"
+#include "dependencies/strings.cpp"
+#include "dependencies/filesystem.cpp"
 #include "dependencies/timing.cpp"
 
 GEN_NS_END

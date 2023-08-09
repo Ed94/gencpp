@@ -8,6 +8,20 @@ Generation, testing, and cleanup scripts for the test directory are found here a
 
 Currently `refactor` only supports naive sort of *find and replace* feature set and will not be able to rename identifiers excluisvely to a specific context (such as only renaming member names of a specific struct, etc).
 
+**Note: The following macros are used with specifiers and token parsing within the library:**
+
+* global
+* internal
+* local_persist
+* forceinline
+* neverinline
+
+IF they are changed the following files would need adjustment:
+
+* `./project/enums/ESpecifier.csv`
+* `./project/enums/ETokType.csv`
+* `./project/helpers/helper.hpp`
+
 ## Build & Run Scripts
 
 **`clean.ps1`**  
@@ -17,7 +31,7 @@ Remove any generated content from the repository.
 Generate a version of gencpp where components are inlined directly to `gen.<hpp/cpp>` and `gen. <hpp/cpp>`  
 Any heavily preprocessed code is not inlined and are instead generated using the code in the `helpers` directory.
 
-**`singlheader.build.ps1`**  
+**`singleheader.ps1`**  
 Generate a single-header version of the library where all code that would normally good in the usual four files (see bootstrap) are inlined into a single `gen.hpp` file.  
 As with the bootstrap, any heavily preprocessed code is not inlined and instead generated with helper code.
 

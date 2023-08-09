@@ -3,15 +3,16 @@
 #define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
 
+#include "helpers/push_ignores.inline.hpp"
 #include "helpers/helper.hpp"
 
 GEN_NS_BEGIN
 #include "dependencies/parsing.cpp"
 GEN_NS_END
 
-#include "file_processors/builder.hpp"
-#include "file_processors/builder.cpp"
-#include "file_processors/scanner.hpp"
+#include "auxillary/builder.hpp"
+#include "auxillary/builder.cpp"
+#include "auxillary/scanner.hpp"
 
 using namespace gen;
 
@@ -28,18 +29,18 @@ int gen_main()
 
 	// gen_dep.hpp
 	{
-		Code header_start  = scan_file( "dependencies/header_start.hpp" );
-		Code macros 	   = scan_file( "dependencies/macros.hpp" );
-		Code basic_types   = scan_file( "dependencies/basic_types.hpp" );
-		Code debug         = scan_file( "dependencies/debug.hpp" );
-		Code memory	       = scan_file( "dependencies/memory.hpp" );
-		Code string_ops    = scan_file( "dependencies/string_ops.hpp" );
-		Code printing      = scan_file( "dependencies/printing.hpp" );
-		Code containers    = scan_file( "dependencies/containers.hpp" );
-		Code hashing 	   = scan_file( "dependencies/hashing.hpp" );
-		Code string        = scan_file( "dependencies/string.hpp" );
-		Code file_handling = scan_file( "dependencies/file_handling.hpp" );
-		Code timing        = scan_file( "dependencies/timing.hpp" );
+		Code header_start = scan_file( "dependencies/header_start.hpp" );
+		Code macros 	  = scan_file( "dependencies/macros.hpp" );
+		Code basic_types  = scan_file( "dependencies/basic_types.hpp" );
+		Code debug        = scan_file( "dependencies/debug.hpp" );
+		Code memory	      = scan_file( "dependencies/memory.hpp" );
+		Code string_ops   = scan_file( "dependencies/string_ops.hpp" );
+		Code printing     = scan_file( "dependencies/printing.hpp" );
+		Code containers   = scan_file( "dependencies/containers.hpp" );
+		Code hashing 	  = scan_file( "dependencies/hashing.hpp" );
+		Code strings      = scan_file( "dependencies/strings.hpp" );
+		Code filesystem   = scan_file( "dependencies/filesystem.hpp" );
+		Code timing       = scan_file( "dependencies/timing.hpp" );
 
 		Builder
 		header = Builder::open("gen/gen.dep.hpp");
@@ -56,8 +57,8 @@ int gen_main()
 		header.print( printing );
 		header.print( containers );
 		header.print( hashing );
-		header.print( string );
-		header.print( file_handling );
+		header.print( strings );
+		header.print( filesystem );
 		header.print( timing );
 
 		header.print_fmt( "GEN_NS_END\n\n" );
@@ -66,15 +67,15 @@ int gen_main()
 
 	// gen_dep.cpp
 	{
-		Code src_start     = scan_file( "dependencies/src_start.cpp" );
-		Code debug         = scan_file( "dependencies/debug.cpp" );
-		Code string_ops    = scan_file( "dependencies/string_ops.cpp" );
-		Code printing      = scan_file( "dependencies/printing.cpp" );
-		Code memory        = scan_file( "dependencies/memory.cpp" );
-		Code hashing       = scan_file( "dependencies/hashing.cpp" );
-		Code string        = scan_file( "dependencies/string.cpp" );
-		Code file_handling = scan_file( "dependencies/file_handling.cpp" );
-		Code timing        = scan_file( "dependencies/timing.cpp" );
+		Code src_start  = scan_file( "dependencies/src_start.cpp" );
+		Code debug      = scan_file( "dependencies/debug.cpp" );
+		Code string_ops = scan_file( "dependencies/string_ops.cpp" );
+		Code printing   = scan_file( "dependencies/printing.cpp" );
+		Code memory     = scan_file( "dependencies/memory.cpp" );
+		Code hashing    = scan_file( "dependencies/hashing.cpp" );
+		Code strings    = scan_file( "dependencies/strings.cpp" );
+		Code filesystem = scan_file( "dependencies/filesystem.cpp" );
+		Code timing     = scan_file( "dependencies/timing.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.dep.cpp" );
@@ -88,8 +89,8 @@ int gen_main()
 		src.print( printing );
 		src.print( hashing );
 		src.print( memory );
-		src.print( string );
-		src.print( file_handling );
+		src.print( strings );
+		src.print( filesystem );
 		src.print( timing );
 
 		src.print_fmt( "GEN_NS_END\n\n" );
@@ -189,13 +190,13 @@ int gen_main()
 
 	// gen_builder.hpp
 	{
-		Code builder = scan_file( "file_processors/builder.hpp" );
+		Code builder = scan_file( "auxillary/builder.hpp" );
 
 		Builder
 		header = Builder::open( "gen/gen.builder.hpp" );
 		header.print_fmt( generation_notice );
 		header.print_fmt( "#pragma once\n\n" );
-		header.print( def_include( txt_StrC("gen.hpp") ));
+		header.print( def_include( txt("gen.hpp") ));
 		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		header.print( builder );
 		header.print_fmt( "\nGEN_NS_END\n\n" );
@@ -204,12 +205,12 @@ int gen_main()
 
 	// gen_builder.cpp
 	{
-		Code builder = scan_file( "file_processors/builder.cpp" );
+		Code builder = scan_file( "auxillary/builder.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.builder.cpp" );
 		src.print_fmt( generation_notice );
-		src.print( def_include( txt_StrC("gen.builder.hpp") ) );
+		src.print( def_include( txt("gen.builder.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		src.print( builder );
 		src.print_fmt( "\nGEN_NS_END\n\n" );
@@ -219,13 +220,13 @@ int gen_main()
 	// gen_scanner.hpp
 	{
 		Code parsing = scan_file( "dependencies/parsing.hpp" );
-		Code scanner = scan_file( "file_processors/scanner.hpp" );
+		Code scanner = scan_file( "auxillary/scanner.hpp" );
 
 		Builder
 		header = Builder::open( "gen/gen.scanner.hpp" );
 		header.print_fmt( generation_notice );
 		header.print_fmt( "#pragma once\n\n" );
-		header.print( def_include( txt_StrC("gen.hpp") ) );
+		header.print( def_include( txt("gen.hpp") ) );
 		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		header.print( parsing );
 		header.print( scanner );
@@ -236,15 +237,15 @@ int gen_main()
 	// gen_scanner.cpp
 	{
 		Code parsing = scan_file( "dependencies/parsing.cpp" );
-		// Code scanner = scan_file( "file_processors/scanner.cpp" );
+		Code scanner = scan_file( "auxillary/scanner.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.scanner.cpp" );
 		src.print_fmt( generation_notice );
-		src.print( def_include( txt_StrC("gen.scanner.hpp") ) );
+		src.print( def_include( txt("gen.scanner.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 		src.print( parsing );
-		// src.print( scanner );
+		src.print( scanner );
 		src.print_fmt( "\nGEN_NS_END\n\n" );
 		src.write();
 	}

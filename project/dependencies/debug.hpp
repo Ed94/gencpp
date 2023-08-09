@@ -34,7 +34,7 @@ s32  assert_crash( char const* condition );
 void process_exit( u32 code );
 
 #if Build_Debug
-	#define fatal( fmt, ... )                              \
+	#define GEN_FATAL( fmt, ... )                              \
 	do                                                     \
 	{                                                      \
 		local_persist thread_local                         \
@@ -46,7 +46,7 @@ void process_exit( u32 code );
 	while (0)
 #else
 
-#	define fatal( fmt, ... )                 \
+#	define GEN_FATAL( fmt, ... )                 \
 	do                                       \
 	{										 \
 		str_fmt_out_err( fmt, __VA_ARGS__ ); \
