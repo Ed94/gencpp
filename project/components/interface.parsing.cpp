@@ -292,11 +292,13 @@ namespace Parser
 
 				if ( current == '\n' )
 				{
-					token.Type = TokType::NewLine;
-					token.Length ++;
 					move_forward();
 
+					token.Type = TokType::NewLine;
+					token.Length++;
+
 					Tokens.append( token );
+					// log_fmt( "NewLine: %d\n", token.Line );
 					continue;
 				}
 			}
@@ -370,14 +372,14 @@ namespace Parser
 
 							if ( current == '\r' )
 							{
-								// move_forward();
-								// token.Length++;
+								move_forward();
+								token.Length++;
 							}
 
 							if ( current == '\n' )
 							{
-								// move_forward();
-								// token.Length++;
+								move_forward();
+								token.Length++;
 								break;
 							}
 
@@ -502,13 +504,13 @@ namespace Parser
 
 						if ( current == '\r' )
 						{
-							// move_forward();
+							move_forward();
 							// content.Length++;
 						}
 
 						if ( current == '\n' )
 						{
-							// move_forward();
+							move_forward();
 							// content.Length++;
 							break;
 						}
@@ -880,7 +882,8 @@ namespace Parser
 							Tokens.append( token );
 
 							move_forward();
-							Token content = { scanner, 1, TokType::Comment, line, column, false };
+							// move_forward();
+							Token content = { scanner, 0, TokType::Comment, line, column, false };
 
 							bool star   = current == '*';
 							bool slash  = scanner[1] == '/';
@@ -1044,15 +1047,13 @@ namespace Parser
 					token.Length++;
 				}
 
-				if ( current == '\r' )
+				if ( current == '\r' && scanner[1] == '\n' )
 				{
 					move_forward();
-					// token.Length++;
 				}
-				if ( current == '\n' )
+				else if ( current == '\n' )
 				{
 					move_forward();
-					// token.Length++;
 				}
 			}
 			else
@@ -1326,10 +1327,9 @@ Code parse_static_assert()
 
 	content.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
 
-	// content.Text = str_fmt_buf( "%.*s\n", content.Length, content.Text );
-	// content.Length++;
+	char const* result = str_fmt_buf( "%.*s\n", content.Length, content.Text );
 
-	assert->Content = get_cached_string( content );
+	assert->Content = get_cached_string( to_StrC( result ) );
 	assert->Name	= assert->Content;
 
 	Context.pop();
@@ -2197,7 +2197,7 @@ CodeVar parse_variable_after_name(
 			eat( currtok.Type );
 		}
 
-		expr_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)expr_tok.Text;
+		expr_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_tok.Text;
 		bitfield_expr   = untyped_str( expr_tok );
 	}
 
@@ -2262,7 +2262,9 @@ Code parse_simple_preprocess( Parser::TokType which )
 		tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
 	}
 
-	Code result = untyped_str( tok );
+	char const* content = str_fmt_buf( "%.*s\n", tok.Length, tok.Text );
+
+	Code result = untyped_str( to_StrC( content ) );
 	Context.Scope->Name = tok;
 
 	if ( str_compare( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )
@@ -2520,7 +2522,7 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::Token name = Pa
 
 		Context.Scope->Start = currtok_noskip;
 
-		if ( currtok.Type == TokType::Preprocess_Hash )
+		if ( currtok_noskip.Type == TokType::Preprocess_Hash )
 			eat( TokType::Preprocess_Hash );
 
 		switch ( currtok_noskip.Type )
@@ -2906,7 +2908,7 @@ CodeBody parse_global_nspace( CodeT which )
 
 		Context.Scope->Start = currtok_noskip;
 
-		if ( currtok.Type == TokType::Preprocess_Hash )
+		if ( currtok_noskip.Type == TokType::Preprocess_Hash )
 			eat( TokType::Preprocess_Hash );
 
 		switch ( currtok_noskip.Type )

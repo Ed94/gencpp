@@ -1059,13 +1059,17 @@ CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
 	switch (type)
 	{
 		case EPreprocessCond::If:
-			result->Type = ECode::Preprocess_If;
+			result->Type = Preprocess_If;
+		break;
 		case EPreprocessCond::IfDef:
 			result->Type = Preprocess_IfDef;
+		break;
 		case EPreprocessCond::IfNotDef:
 			result->Type = Preprocess_IfNotDef;
+		break;
 		case EPreprocessCond::ElIf:
 			result->Type = Preprocess_ElIf;
+		break;
 	}
 
 	return result;

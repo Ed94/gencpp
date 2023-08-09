@@ -226,6 +226,11 @@ struct String
 		return header.Capacity - header.Length;
 	}
 
+	char& back()
+	{
+		return Data[ length() - 1 ];
+	}
+
 	sw capacity() const
 	{
 		Header const&

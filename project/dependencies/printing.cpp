@@ -47,7 +47,8 @@ internal sw _print_string( char* text, sw max_len, _format_info* info, char cons
 	}
 
 	if ( info && info->precision >= 0 )
-		len = str_len( str, info->precision );
+		// Made the design decision for this library that precision is the length of the string.
+		len = info->precision;
 	else
 		len = str_len( str );
 
@@ -409,6 +410,15 @@ neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
 			case 's' :
 				len = _print_string( text, remaining, &info, va_arg( va, char* ) );
 				break;
+
+			case 'S':
+			{
+				String gen_str = String { va_arg( va, char*) };
+
+				info.precision = gen_str.length();
+				len            = _print_string( text, remaining, &info, gen_str );
+			}
+			break;
 
 			case 'r' :
 				len = _print_repeated_char( text, remaining, &info, va_arg( va, int ) );

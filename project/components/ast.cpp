@@ -26,7 +26,7 @@ String AST::to_string()
 		using namespace ECode;
 
 		case Invalid:
-			log_failure("Attempted to serialize invalid code! - %s", Parent ? Parent->debug_str() : Name );
+			log_failure("Attempted to serialize invalid code! - %S", Parent ? Parent->debug_str() : Name );
 		break;
 
 		case NewLine:
@@ -40,6 +40,7 @@ String AST::to_string()
 
 		case Comment:
 		{
+			if ( Prev && Prev->Type != Comment && Prev->Type != NewLine )
 			result.append("\n");
 
 			static char line[MaxCommentLineLength];
@@ -49,7 +50,7 @@ String AST::to_string()
 			s32 curr  = 0;
 			do
 			{
-				s32 length = 0;
+				s32 length = 1;
 				while ( left && Content[index] != '\n' )
 				{
 					length++;
@@ -67,6 +68,9 @@ String AST::to_string()
 				curr = index;
 			}
 			while ( left--, left > 0 );
+
+			if ( result.back() != '\n' )
+				result.append("\n");
 		}
 		break;
 
@@ -90,43 +94,39 @@ String AST::to_string()
 
 				if ( Attributes )
 				{
-					result.append_fmt( "%s ", Attributes->to_string() );
+					result.append_fmt( "%S ", Attributes->to_string() );
 				}
 
 				if ( ParentType )
 				{
 					char const* access_level = to_str( ParentAccess );
 
-					result.append_fmt( "%s : %s %s\n{\n%s\n};"
-						, Name
-						, access_level
-						, ParentType->to_string()
-						, Body->to_string()
-					);
+					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-					CodeType interface = Next->cast<CodeType>();
+					CodeType interface = Next->cast< CodeType >();
 					if ( interface )
-						result.append("\n");
+						result.append( "\n" );
 
 					while ( interface )
 					{
-						result.append_fmt( ", %s", interface.to_string() );
-
-						interface = interface->Next->cast<CodeType>();
+						result.append_fmt( ", %S", interface.to_string() );
+						interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 					}
+
+					result.append_fmt( "\n{\n%S\n}", Body->to_string() );
 				}
 				else
 				{
-					result.append_fmt( "%s \n{\n%s\n}", Name, Body->to_string() );
+					result.append_fmt( "%S \n{\n%S\n}", Name, Body->to_string() );
 				}
 			}
 			else
 			{
-				result.append_fmt( "class %s\n{\n%s\n}", Name, Body->to_string() );
+				result.append_fmt( "class %S\n{\n%S\n}", Name, Body->to_string() );
 			}
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -136,12 +136,12 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "class %s %s", Attributes->to_string(), Name );
+				result.append_fmt( "class %S %S", Attributes->to_string(), Name );
 
-			else result.append_fmt( "class %s", Name );
+			else result.append_fmt( "class %S", Name );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -150,14 +150,14 @@ String AST::to_string()
 			result.append( Parent->Name );
 
 			if ( Params )
-				result.append_fmt( "( %s )", Params->to_string() );
+				result.append_fmt( "( %S )", Params->to_string() );
 			else
 				result.append( "(void)" );
 
 			if ( InitializerList )
-				result.append_fmt( " : %s", InitializerList->to_string() );
+				result.append_fmt( " : %S", InitializerList->to_string() );
 
-			result.append_fmt( "\n{\n%s\n}", Body->to_string() );
+			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
 		}
 		break;
 
@@ -166,9 +166,9 @@ String AST::to_string()
 			result.append( Parent->Name );
 
 			if ( Params )
-				result.append_fmt( "( %s )", Params->to_string() );
+				result.append_fmt( "( %S )", Params->to_string() );
 			else
-				result.append( "(void);" );
+				result.append( "(void);\n" );
 		}
 		break;
 
@@ -179,14 +179,14 @@ String AST::to_string()
 				CodeSpecifiers specs = Specs->cast<CodeSpecifiers>();
 
 				if ( specs.has( ESpecifier::Virtual ) )
-					result.append_fmt( "virtual ~%s()", Parent->Name );
+					result.append_fmt( "virtual ~%S()", Parent->Name );
 				else
-					result.append_fmt( "~%s()", Parent->Name );
+					result.append_fmt( "~%S()", Parent->Name );
 			}
 			else
-				result.append_fmt( "~%s()", Parent->Name );
+				result.append_fmt( "~%S()", Parent->Name );
 
-			result.append_fmt( "\n{\n%s\n}", Body->to_string() );
+			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
 		}
 		break;
 
@@ -197,15 +197,15 @@ String AST::to_string()
 				CodeSpecifiers specs = Specs->cast<CodeSpecifiers>();
 
 				if ( specs.has( ESpecifier::Virtual ) )
-					result.append_fmt( "virtual ~%s();", Parent->Name );
+					result.append_fmt( "virtual ~%S();\n", Parent->Name );
 				else
-					result.append_fmt( "~%s()", Parent->Name );
+					result.append_fmt( "~%S()", Parent->Name );
 
 				if ( specs.has( ESpecifier::Pure ) )
-					result.append( " = 0;" );
+					result.append( " = 0;\n" );
 			}
 			else
-				result.append_fmt( "~%s();", Parent->Name );
+				result.append_fmt( "~%S();\n", Parent->Name );
 		}
 		break;
 
@@ -219,27 +219,21 @@ String AST::to_string()
 				result.append( "enum " );
 
 				if ( Attributes )
-					result.append_fmt( "%s ", Attributes->to_string() );
+					result.append_fmt( "%S ", Attributes->to_string() );
 
 				if ( UnderlyingType )
-					result.append_fmt( "%s : %s\n{\n%s\n}"
+					result.append_fmt( "%S : %S\n{\n%S\n}"
 						, Name
 						, UnderlyingType->to_string()
 						, Body->to_string()
 					);
 
-				else result.append_fmt( "%s\n{\n%s\n}"
-					, Name
-					, Body->to_string()
-				);
+				else result.append_fmt( "%S\n{\n%S\n}", Name, Body->to_string() );
 			}
-			else result.append_fmt( "enum %s\n{\n%s\n}"
-				, Name
-				, Body->to_string()
-			);
+			else result.append_fmt( "enum %S\n{\n%S\n}", Name, Body->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -249,12 +243,12 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
 
-			result.append_fmt( "enum %s : %s", Name, UnderlyingType->to_string() );
+			result.append_fmt( "enum %S : %S", Name, UnderlyingType->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -269,34 +263,25 @@ String AST::to_string()
 
 				if ( Attributes )
 				{
-					result.append_fmt( "%s ", Attributes->to_string() );
+					result.append_fmt( "%S ", Attributes->to_string() );
 				}
 
 				if ( UnderlyingType )
 				{
-					result.append_fmt( "%s : %s\n{\n%s\n}"
-						, Name
-						, UnderlyingType->to_string()
-						, Body->to_string()
-					);
+					result.append_fmt( "%S : %S\n{\n%S\n}", Name, UnderlyingType->to_string(), Body->to_string() );
 				}
 				else
 				{
-					result.append_fmt( "%s\n{\n%s\n}"
-						, Name
-						, Body->to_string()
-					);
+					result.append_fmt( "%S\n{\n%S\n}", Name, Body->to_string() );
 				}
 			}
 			else
 			{
-				result.append_fmt( "enum class %s\n{\n%s\n}"
-					, Body->to_string()
-				);
+				result.append_fmt( "enum class %S\n{\n%S\n}", Body->to_string() );
 			}
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -308,12 +293,12 @@ String AST::to_string()
 			result.append( "enum class " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
 
-			result.append_fmt( "%s : %s", Name, UnderlyingType->to_string() );
+			result.append_fmt( "%S : %S", Name, UnderlyingType->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -325,26 +310,23 @@ String AST::to_string()
 			s32  left = NumEntries;
 			while ( left-- )
 			{
-				result.append_fmt( "%s", curr.to_string() );
+				result.append_fmt( "%S", curr.to_string() );
 				++curr;
 			}
 
-			result.append_fmt( "};" );
+			result.append_fmt( "};\n" );
 		}
 		break;
 
 		case Extern_Linkage:
-			result.append_fmt( "extern \"%s\"\n{\n%s\n}"
-				, Name
-				, Body->to_string()
-			);
+			result.append_fmt( "extern \"%S\"\n{\n%S\n}\n", Name, Body->to_string() );
 		break;
 
 		case Friend:
-			result.append_fmt( "friend %s", Declaration->to_string() );
+			result.append_fmt( "friend %S", Declaration->to_string() );
 
 			if ( result[ result.length() -1 ] != ';' )
-				result.append( ";" );
+				result.append( ";\n" );
 		break;
 
 		case Function:
@@ -353,19 +335,19 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%s", Specs->to_string() );
+				result.append_fmt( "%S", Specs->to_string() );
 
 			if ( ReturnType )
-				result.append_fmt( "%s %s(", ReturnType->to_string(), Name );
+				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
 
 			else
-				result.append_fmt( "%s(", Name );
+				result.append_fmt( "%S(", Name );
 
 			if ( Params )
-				result.append_fmt( "%s)", Params->to_string() );
+				result.append_fmt( "%S)", Params->to_string() );
 
 			else
 				result.append( "void)" );
@@ -375,13 +357,14 @@ String AST::to_string()
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
-						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
 				}
 			}
 
-			result.append_fmt( "\n{\n%s\n}"
-				, Body->to_string()
-			);
+			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
 		}
 		break;
 
@@ -391,19 +374,19 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%s", Specs->to_string() );
+				result.append_fmt( "%S", Specs->to_string() );
 
 			if ( ReturnType )
-				result.append_fmt( "%s %s(", ReturnType->to_string(), Name );
+				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
 
 			else
-				result.append_fmt( "%s(", Name );
+				result.append_fmt( "%S(", Name );
 
 			if ( Params )
-				result.append_fmt( "%s)", Params->to_string() );
+				result.append_fmt( "%S)", Params->to_string() );
 
 			else
 				result.append( "void)" );
@@ -413,11 +396,14 @@ String AST::to_string()
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
-						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
 				}
 			}
 
-			result.append( ";" );
+			result.append( ";\n" );
 		}
 		break;
 
@@ -428,17 +414,14 @@ String AST::to_string()
 			if (((u32(ModuleFlag::Import) & u32(ModuleFlags)) == u32(ModuleFlag::Import)))
 				result.append("import ");
 
-			result.append_fmt( "%s;", Name );
+			result.append_fmt( "%S;\n", Name );
 			break;
 
 		case Namespace:
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			result.append_fmt( "namespace %s\n{\n%s\n}"
-				, Name
-				, Body->to_string()
-			);
+			result.append_fmt( "namespace %S\n{\n%S\n}\n", Name , Body->to_string() );
 		break;
 
 		case Operator:
@@ -448,16 +431,16 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Attributes )
-				result.append_fmt( "%s\n", Attributes->to_string() );
+				result.append_fmt( "%S\n", Attributes->to_string() );
 
 			if ( ReturnType )
-				result.append_fmt( "%s %s (", ReturnType->to_string(), Name );
+				result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
 
 			if ( Params )
-				result.append_fmt( "%s)", Params->to_string() );
+				result.append_fmt( "%S)", Params->to_string() );
 
 			else
 				result.append( "void)" );
@@ -467,11 +450,14 @@ String AST::to_string()
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
-						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
 				}
 			}
 
-			result.append_fmt( "\n{\n%s\n}"
+			result.append_fmt( "\n{\n%S\n}\n"
 				, Body->to_string()
 			);
 		}
@@ -484,15 +470,15 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S\n", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%s", Specs->to_string() );
+				result.append_fmt( "%S\n", Specs->to_string() );
 
-			result.append_fmt( "%s %s (", ReturnType->to_string(), Name );
+			result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
 
 			if ( Params )
-				result.append_fmt( "%s)", Params->to_string() );
+				result.append_fmt( "%S)", Params->to_string() );
 
 			else
 				result.append_fmt( "void)" );
@@ -502,11 +488,14 @@ String AST::to_string()
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
-						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
 				}
 			}
 
-			result.append( ";" );
+			result.append( ";\n" );
 		}
 		break;
 
@@ -515,105 +504,111 @@ String AST::to_string()
 			if ( Specs )
 			{
 				if ( Name && Name.length() )
-					result.append_fmt( "%.*soperator %s()", Name.length(), Name, ValueType->to_string() );
+					result.append_fmt( "%Soperator %S()", Name, ValueType->to_string() );
 				else
-					result.append_fmt( "operator %s()", ValueType->to_string() );
+					result.append_fmt( "operator %S()", ValueType->to_string() );
 
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
-						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
 				}
 
-				result.append_fmt( "\n{\n%s\n}", Body->to_string() );
+				result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
 				break;
 			}
 
 			if ( Name && Name.length() )
-				result.append_fmt("%.*soperator %s()\n{\n%s\n}", Name.length(), Name, ValueType->to_string(), Body->to_string() );
+				result.append_fmt("%Soperator %S()\n{\n%S\n}\n", Name, ValueType->to_string(), Body->to_string() );
 			else
-				result.append_fmt("operator %s()\n{\n%s\n}", ValueType->to_string(), Body->to_string() );
+				result.append_fmt("operator %S()\n{\n%S\n}\n", ValueType->to_string(), Body->to_string() );
 		}
 		break;
 
 		case Operator_Cast_Fwd:
 			if ( Specs )
 			{
-				result.append_fmt( "operator %s()", ValueType->to_string() );
+				result.append_fmt( "operator %S()", ValueType->to_string() );
 
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
 				{
 					if ( ESpecifier::is_trailing( spec ) )
-						result.append_fmt( " %s", (char const*)ESpecifier::to_str( spec ) );
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %*s", spec_str.Len, spec_str.Ptr );
+					}
 				}
 
 				result.append( ";" );
 				break;
 			}
 
-			result.append_fmt("operator %s();", ValueType->to_string() );
+			result.append_fmt("operator %S();\n", ValueType->to_string() );
 		break;
 
 		case Parameters:
 		{
 			if ( ValueType == nullptr )
 			{
-				result.append_fmt( "%s", Name );
+				result.append_fmt( "%S", Name );
 				break;
 			}
 
 			if ( Name )
-				result.append_fmt( "%s %s", ValueType->to_string(), Name );
+				result.append_fmt( "%S %S", ValueType->to_string(), Name );
 
 			else
-				result.append_fmt( "%s", ValueType->to_string() );
+				result.append_fmt( "%S", ValueType->to_string() );
 
 			if ( Value )
-				result.append_fmt( "= %s", Value->to_string() );
+				result.append_fmt( "= %S", Value->to_string() );
 
 			if ( NumEntries - 1 > 0)
 			{
 				for ( CodeParam param :  CodeParam { (AST_Param*) Next } )
 				{
-					result.append_fmt( ", %s", param.to_string() );
+					result.append_fmt( ", %S", param.to_string() );
 				}
 			}
 		}
 		break;
 		case Preprocess_Define:
-			result.append_fmt( "#define %s %s", Name, Content );
+			result.append_fmt( "#define %S %S\n", Name, Content );
 		break;
 
 		case Preprocess_If:
-			result.append_fmt( "#if %s", Content );
+			result.append_fmt( "#if %S\n", Content );
 		break;
 
 		case Preprocess_IfDef:
-			result.append_fmt( "#ifdef %s", Content );
+			result.append_fmt( "#ifdef %S\n", Content );
 		break;
 
 		case Preprocess_IfNotDef:
-			result.append_fmt( "#ifndef %s", Content );
+			result.append_fmt( "#ifndef %S\n", Content );
 		break;
 
 		case Preprocess_Include:
-			result.append_fmt( "#include \"%s\"\n\n", Content );
+			result.append_fmt( "#include \"%S\"\n", Content );
 		break;
 
 		case Preprocess_ElIf:
-			result.append_fmt( "#elif %s", Content );
+			result.append_fmt( "#elif %S\n", Content );
 		break;
 
 		case Preprocess_Else:
-			result.append_fmt( "\n#else" );
+			result.append_fmt( "#else\n" );
 		break;
 
 		case Preprocess_EndIf:
-			result.append_fmt( "#endif" );
+			result.append_fmt( "#endif\n" );
 		break;
 
 		case Preprocess_Pragma:
-			result.append_fmt( "#pragma %s", Content );
+			result.append_fmt( "#pragma %S\n", Content );
 		break;
 
 		case Specifiers:
@@ -628,7 +623,8 @@ String AST::to_string()
 					continue;
 				}
 
-				result.append_fmt( "%s ", (char const*)ESpecifier::to_str( ArrSpecs[idx]) );
+				StrC spec = ESpecifier::to_str( ArrSpecs[idx] );
+				result.append_fmt( "%.*s ", spec.Len, spec.Ptr );
 				idx++;
 			}
 		}
@@ -641,7 +637,7 @@ String AST::to_string()
 
 			if ( Name == nullptr)
 			{
-				result.append_fmt( "struct\n{\n%s\n};", Body->to_string() );
+				result.append_fmt( "struct\n{\n%S\n};\n", Body->to_string() );
 				break;
 			}
 
@@ -650,44 +646,40 @@ String AST::to_string()
 				result.append( "struct " );
 
 				if ( Attributes )
-					result.append_fmt( "%s ", Attributes->to_string() );
+					result.append_fmt( "%S ", Attributes->to_string() );
 
 				if ( ParentType )
 				{
 					char const* access_level = to_str( ParentAccess );
 
-					result.append_fmt( "%s : %s %s\n{\n%s\n};"
-						, Name
-						, access_level
-						, ParentType->to_string()
-						, Body->to_string()
-					);
+					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-					CodeType interface = Next->cast<CodeType>();
+					CodeType interface = Next->cast< CodeType >();
 					if ( interface )
-						result.append("\n");
+						result.append( "\n" );
 
 					while ( interface )
 					{
-						result.append_fmt( ", public %s", interface.to_string() );
+						result.append_fmt( ", %S", interface.to_string() );
 
-						interface = interface->Next->cast<CodeType>();
+						interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 					}
+
+					result.append_fmt( "\n{\n%S\n}", Body->to_string() );
 				}
 				else
 				{
 					if ( Name )
-
-					result.append_fmt( "%s \n{\n%s\n}", Name, Body->to_string() );
+						result.append_fmt( "%S \n{\n%S\n}", Name, Body->to_string() );
 				}
 			}
 			else
 			{
-				result.append_fmt( "struct %s\n{\n%s\n}", Name, Body->to_string() );
+				result.append_fmt( "struct %S\n{\n%S\n}", Name, Body->to_string() );
 			}
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -697,12 +689,12 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "struct %s %s", Attributes->to_string(), Name );
+				result.append_fmt( "struct %S %S", Attributes->to_string(), Name );
 
-			else result.append_fmt( "struct %s", Name );
+			else result.append_fmt( "struct %S", Name );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -711,7 +703,7 @@ String AST::to_string()
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			result.append_fmt( "template< %s >\n%s", Params->to_string(), Declaration->to_string() );
+			result.append_fmt( "template< %S >\n%S", Params->to_string(), Declaration->to_string() );
 		}
 		break;
 
@@ -725,15 +717,15 @@ String AST::to_string()
 			if ( IsFunction )
 				result.append( UnderlyingType->to_string() );
 			else
-				result.append_fmt( "%s %s", UnderlyingType->to_string(), Name );
+				result.append_fmt( "%S %S", UnderlyingType->to_string(), Name );
 
 			if ( UnderlyingType->Type == Typename && UnderlyingType->ArrExpr )
 			{
-				result.append_fmt( "[%s];", UnderlyingType->ArrExpr->to_string() );
+				result.append_fmt( "[%S];", UnderlyingType->ArrExpr->to_string() );
 			}
 			else
 			{
-				result.append( ";" );
+				result.append( ";\n" );
 			}
 		}
 		break;
@@ -743,17 +735,17 @@ String AST::to_string()
 			if ( Attributes || Specs )
 			{
 				if ( Attributes )
-					result.append_fmt( "%s ", Attributes->to_string() );
+					result.append_fmt( "%S ", Attributes->to_string() );
 
 				if ( Specs )
-					result.append_fmt( "%s %s", Name, Specs->to_string() );
+					result.append_fmt( "%S %S", Name, Specs->to_string() );
 
 				else
-					result.append_fmt( "%s", Name );
+					result.append_fmt( "%S", Name );
 			}
 			else
 			{
-				result.append_fmt( "%s", Name );
+				result.append_fmt( "%S", Name );
 			}
 		}
 		break;
@@ -766,11 +758,11 @@ String AST::to_string()
 			result.append( "union " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Name )
 			{
-				result.append_fmt( "%s\n{\n%s\n}"
+				result.append_fmt( "%S\n{\n%S\n}"
 					, Name
 					, Body->to_string()
 				);
@@ -778,13 +770,13 @@ String AST::to_string()
 			else
 			{
 				// Anonymous union
-				result.append_fmt( "\n{\n%s\n}"
+				result.append_fmt( "\n{\n%S\n}"
 					, Body->to_string()
 				);
 			}
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";");
+				result.append(";\n");
 		}
 		break;
 
@@ -794,24 +786,24 @@ String AST::to_string()
 				result.append( "export " );
 
 			if ( Attributes )
-				result.append_fmt( "%s ", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( UnderlyingType )
 			{
-				result.append_fmt( "using %s = %s", Name, UnderlyingType->to_string() );
+				result.append_fmt( "using %S = %S", Name, UnderlyingType->to_string() );
 
 				if ( UnderlyingType->ArrExpr )
-					result.append_fmt( "[%s]", UnderlyingType->ArrExpr->to_string() );
+					result.append_fmt( "[%S]", UnderlyingType->ArrExpr->to_string() );
 
-				result.append( ";" );
+				result.append( ";\n" );
 			}
 			else
-				result.append_fmt( "using %s;", Name );
+				result.append_fmt( "using %S;\n", Name );
 		}
 		break;
 
 		case Using_Namespace:
-			result.append_fmt( "using namespace %s;", Name );
+			result.append_fmt( "using namespace %s;\n", Name );
 		break;
 
 		case Variable:
@@ -822,50 +814,37 @@ String AST::to_string()
 			if ( Attributes || Specs )
 			{
 				if ( Attributes )
-					result.append_fmt( "%s ", Specs->to_string() );
+					result.append_fmt( "%S ", Specs->to_string() );
 
 				if ( Specs )
-					result.append_fmt( "%s\n", Specs->to_string() );
+					result.append_fmt( "%S\n", Specs->to_string() );
 
-				result.append_fmt( "%s %s", ValueType->to_string(), Name );
+				result.append_fmt( "%S %S", ValueType->to_string(), Name );
 
 				if ( ValueType->ArrExpr )
-					result.append_fmt( "[%s]", ValueType->ArrExpr->to_string() );
+					result.append_fmt( "[%S]", ValueType->ArrExpr->to_string() );
 
 				if ( BitfieldSize )
-					result.append_fmt( " : %s", BitfieldSize->to_string() );
+					result.append_fmt( " : %S", BitfieldSize->to_string() );
 
 				if ( Value )
-					result.append_fmt( " = %s", Value->to_string() );
+					result.append_fmt( " = %S", Value->to_string() );
 
-				result.append( ";" );
+				result.append( ";\n" );
 
 				break;
 			}
 
 			if ( BitfieldSize )
-				result.append_fmt( "%s : %s", ValueType->to_string(), BitfieldSize->to_string() );
+				result.append_fmt( "%S : %S;\n", ValueType->to_string(), BitfieldSize->to_string() );
 
 			else if ( UnderlyingType->ArrExpr )
-				result.append_fmt( "%s %s[%s];", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
+				result.append_fmt( "%S %S[%S];\n", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
 
 			else
-				result.append_fmt( "%s %s;", UnderlyingType->to_string(), Name );
+				result.append_fmt( "%S %S;\n", UnderlyingType->to_string(), Name );
 		}
 		break;
-
-#if 0
-		{
-			Code curr = Front->cast<Code>();
-			s32  left = NumEntries;
-			while ( left -- )
-			{
-				result.append_fmt( "%s", curr.to_string() );
-				++curr;
-			}
-		}
-		break;
-#endif
 
 		case Enum_Body:
 		case Class_Body:
@@ -880,11 +859,7 @@ String AST::to_string()
 			s32  left = NumEntries;
 			while ( left -- )
 			{
-				result.append_fmt( "%s", curr.to_string() );
-
-				if ( curr->Type != ECode::NewLine )
-					result.append( "\n" );
-
+				result.append_fmt( "%S", curr.to_string() );
 				++curr;
 			}
 		}

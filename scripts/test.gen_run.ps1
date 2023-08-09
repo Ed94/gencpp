@@ -23,6 +23,9 @@ $path_gen        = Join-Path $path_test gen
 $path_test_build = Join-Path $path_test build
 $path_gen_build  = Join-Path $path_gen  build
 
+# Invoke-Expression "& $(Join-Path $PSScriptRoot 'bootstrap.ci.ps1')"
+# Invoke-Expression "& $(Join-Path $PSScriptRoot 'singleheader.ci.ps1')"
+
 write-host "`n`nBuilding Test`n"
 
 if ( -not( Test-Path $path_gen_build ) )

@@ -53,8 +53,8 @@ CodeBody gen_ecode( char const* path )
 	)));
 #pragma pop_macro( "local_persist" )
 
-	CodeNS nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
-	CodeUsing    code_t  = def_using( name(CodeT), def_type( name(ECode::Type) ) );
+	CodeNS    nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
+	CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
 
 	return def_global_body( args( nspace, code_t ) );
 }
@@ -324,8 +324,8 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #pragma pop_macro( "do_once_start" )
 #pragma pop_macro( "do_once_end" )
 
-	CodeNS nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
-	CodeUsing     td_toktype = def_using( name(TokType), def_type( name(ETokType::Type) ) );
+	CodeNS    nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
+	CodeUsing td_toktype = def_using( name(TokType), def_type( name(ETokType::Type) ) );
 
 	return def_global_body( args( nspace, td_toktype ) );
 }
