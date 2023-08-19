@@ -73,8 +73,10 @@
 	)
 
 // #else
+// This doesn't work on latest msvc so I had to use /Zc:preprocessor flag.
+
 // Supports 1-50 arguments
-// #define num_args_impl(                                     \
+// #define num_args_impl(                                  \
 // 		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,   \
 // 		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20,  \
 // 		_21, _22, _23, _24, _25, _26, _27, _28, _29, _30,  \
@@ -88,7 +90,7 @@
 // 		N, ...                                             \
 // 	) N
 
-// #define num_args(...)                            \
+// #define num_args(...)                         \
 // 	num_args_impl( __VA_ARGS__,                  \
 // 		100, 99, 98, 97, 96, 95, 94, 93, 92, 91, \
 // 		 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, \
@@ -102,7 +104,7 @@
 // 		 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
 // 		 10,  9,  8,  7,  6,  5,  4,  3,  2,  1  \
 // 	)
-// // #endif
+// #endif
 
 // Stringizing
 #define stringize_va( ... ) #__VA_ARGS__

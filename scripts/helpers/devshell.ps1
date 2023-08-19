@@ -1,6 +1,6 @@
 param (
-    [ValidateSet("x64", "x86", "arm", "arm64")]
-    [string]$arch = "x64"
+    [ValidateSet("amd64", "x86", "arm", "arm64")]
+    [string]$arch = "amd64"
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,9 +23,9 @@ if ( -not (Test-Path $vs_devshell) ) {
 }
 
 # Set the target architecture based on the parameter
-$env:VSCMD_ARG_TGT_ARCH=$arch
+# $env:VSCMD_ARG_TGT_ARCH=$arch
 
 # Launch the Visual Studio Developer Shell
 Push-Location
-& $vs_devshell @args
+& $vs_devshell -Arch amd64
 Pop-Location

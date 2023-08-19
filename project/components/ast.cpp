@@ -59,7 +59,7 @@ String AST::to_string()
 				}
 				index++;
 
-				str_copy( line, Content + curr, length );
+				str_copy( line, (char const*)Content + curr, length );
 				result.append_fmt( "//%.*s", length, line );
 				mem_set( line, 0, MaxCommentLineLength);
 
