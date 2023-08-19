@@ -27,7 +27,7 @@
 			"type": "cppvsdbg",
 			"request": "launch",
 			"name": "Debug bootstrap vsdbg",
-			"program": "${workspaceFolder}/project/build/gencpp_bootstrap.exe",
+			"program": "${workspaceFolder}/project/build/bootstrap.exe",
 			"args": [],
 			"cwd": "${workspaceFolder}/project/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"

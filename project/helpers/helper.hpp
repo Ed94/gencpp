@@ -61,7 +61,7 @@ CodeBody gen_ecode( char const* path )
 
 CodeBody gen_eoperator( char const* path )
 {
-	char scratch_mem[kilobytes(1)];
+	char scratch_mem[kilobytes(4)];
 	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
 	file_read_contents( scratch, zero_terminate, path );
@@ -116,7 +116,7 @@ CodeBody gen_eoperator( char const* path )
 
 CodeBody gen_especifier( char const* path )
 {
-	char scratch_mem[kilobytes(1)];
+	char scratch_mem[kilobytes(4)];
 	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
 	file_read_contents( scratch, zero_terminate, path );

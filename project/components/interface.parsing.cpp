@@ -1409,7 +1409,7 @@ CodeAttributes parse_attributes()
 	using namespace Parser;
 	push_scope();
 
-	Token start;
+	Token start = NullToken;
 	s32 len = 0;
 
 	if ( check(TokType::Attribute_Open) )
@@ -3186,7 +3186,7 @@ CodeConstructor parse_constructor()
 	{
 		eat( TokType::Assign_Classifer );
 
-		Token initializer_list_tok;
+		Token initializer_list_tok = NullToken;
 
 		s32 level = 0;
 		while ( left && ( currtok.Type != TokType::BraceCurly_Open || level > 0 ) )

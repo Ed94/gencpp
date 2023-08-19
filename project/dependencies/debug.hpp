@@ -34,22 +34,22 @@ s32  assert_crash( char const* condition );
 void process_exit( u32 code );
 
 #if Build_Debug
-	#define GEN_FATAL( fmt, ... )                              \
+	#define GEN_FATAL( ... )                               \
 	do                                                     \
 	{                                                      \
 		local_persist thread_local                         \
 		char buf[GEN_PRINTF_MAXLEN] = { 0 };               \
 													       \
-		str_fmt(buf, GEN_PRINTF_MAXLEN, fmt, __VA_ARGS__); \
+		str_fmt(buf, GEN_PRINTF_MAXLEN, __VA_ARGS__); \
 		GEN_PANIC(buf);                                    \
 	}                                                      \
 	while (0)
 #else
 
-#	define GEN_FATAL( fmt, ... )                 \
+#	define GEN_FATAL( ... )                  \
 	do                                       \
 	{										 \
-		str_fmt_out_err( fmt, __VA_ARGS__ ); \
+		str_fmt_out_err( __VA_ARGS__ );      \
 		process_exit(1);                     \
 	}             					         \
 	while (0)

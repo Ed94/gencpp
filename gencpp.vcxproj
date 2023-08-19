@@ -98,6 +98,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
+    <None Include="project\components\temp\Readme.md" />
     <None Include="Readme.md" />
     <None Include="scripts\build.ci.ps1" />
     <None Include="scripts\build.ps1" />
@@ -111,6 +112,8 @@
     <None Include="test\Readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="project\components\ast.hpp" />
+    <ClInclude Include="project\components\ast_types.hpp" />
     <ClInclude Include="project\components\gen.data_structures.hpp" />
     <ClInclude Include="project\components\gen.ecode.hpp" />
     <ClInclude Include="project\components\gen.eoperator.hpp" />
@@ -119,6 +122,19 @@
     <ClInclude Include="project\components\gen.header_start.hpp" />
     <ClInclude Include="project\components\gen.interface.hpp" />
     <ClInclude Include="project\components\gen.types.hpp" />
+    <ClInclude Include="project\components\header_end.hpp" />
+    <ClInclude Include="project\components\header_start.hpp" />
+    <ClInclude Include="project\components\inlines.hpp" />
+    <ClInclude Include="project\components\interface.hpp" />
+    <ClInclude Include="project\components\temp\ast_inlines.hpp" />
+    <ClInclude Include="project\components\temp\ecode.hpp" />
+    <ClInclude Include="project\components\temp\eoperator.hpp" />
+    <ClInclude Include="project\components\temp\especifier.hpp" />
+    <ClInclude Include="project\components\types.hpp" />
+    <ClInclude Include="project\dependencies\basic_types.hpp" />
+    <ClInclude Include="project\dependencies\containers.hpp" />
+    <ClInclude Include="project\dependencies\debug.hpp" />
+    <ClInclude Include="project\dependencies\filesystem.hpp" />
     <ClInclude Include="project\dependencies\gen.basic_types.hpp" />
     <ClInclude Include="project\dependencies\gen.containers.hpp" />
     <ClInclude Include="project\dependencies\gen.debug.hpp" />
@@ -132,6 +148,15 @@
     <ClInclude Include="project\dependencies\gen.string.hpp" />
     <ClInclude Include="project\dependencies\gen.string_ops.hpp" />
     <ClInclude Include="project\dependencies\gen.timing.hpp" />
+    <ClInclude Include="project\dependencies\hashing.hpp" />
+    <ClInclude Include="project\dependencies\header_start.hpp" />
+    <ClInclude Include="project\dependencies\macros.hpp" />
+    <ClInclude Include="project\dependencies\memory.hpp" />
+    <ClInclude Include="project\dependencies\parsing.hpp" />
+    <ClInclude Include="project\dependencies\printing.hpp" />
+    <ClInclude Include="project\dependencies\strings.hpp" />
+    <ClInclude Include="project\dependencies\string_ops.hpp" />
+    <ClInclude Include="project\dependencies\timing.hpp" />
     <ClInclude Include="project\filesystem\gen.builder.hpp" />
     <ClInclude Include="project\filesystem\gen.editor.hpp" />
     <ClInclude Include="project\filesystem\gen.scanner.hpp" />
@@ -140,6 +165,10 @@
     <ClInclude Include="project\helpers\gen.pop_ignores.inline.hpp" />
     <ClInclude Include="project\helpers\gen.push_ignores.inline.hpp" />
     <ClInclude Include="project\helpers\gen.undef.macros.hpp" />
+    <ClInclude Include="project\helpers\helper.hpp" />
+    <ClInclude Include="project\helpers\pop_ignores.inline.hpp" />
+    <ClInclude Include="project\helpers\push_ignores.inline.hpp" />
+    <ClInclude Include="project\helpers\undef.macros.hpp" />
     <ClInclude Include="singleheader\components\gen.header_start.hpp" />
     <ClInclude Include="test\DummyInclude.hpp" />
     <ClInclude Include="test\Parsed\Buffer.Parsed.hpp" />
@@ -157,6 +186,9 @@
     <ClInclude Include="test\Parsed\Sanity.Parsed.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="project\bootstrap.cpp" />
+    <ClCompile Include="project\components\ast.cpp" />
+    <ClCompile Include="project\components\ast_case_macros.cpp" />
     <ClCompile Include="project\components\gen.ast.cpp" />
     <ClCompile Include="project\components\gen.ast_case_macros.cpp" />
     <ClCompile Include="project\components\gen.data.cpp" />
@@ -166,6 +198,15 @@
     <ClCompile Include="project\components\gen.interface.parsing.cpp" />
     <ClCompile Include="project\components\gen.interface.upfront.cpp" />
     <ClCompile Include="project\components\gen.untyped.cpp" />
+    <ClCompile Include="project\components\interface.cpp" />
+    <ClCompile Include="project\components\interface.parsing.cpp" />
+    <ClCompile Include="project\components\interface.upfront.cpp" />
+    <ClCompile Include="project\components\src_start.cpp" />
+    <ClCompile Include="project\components\static_data.cpp" />
+    <ClCompile Include="project\components\temp\etoktype.cpp" />
+    <ClCompile Include="project\components\untyped.cpp" />
+    <ClCompile Include="project\dependencies\debug.cpp" />
+    <ClCompile Include="project\dependencies\filesystem.cpp" />
     <ClCompile Include="project\dependencies\gen.debug.cpp" />
     <ClCompile Include="project\dependencies\gen.file_handling.cpp" />
     <ClCompile Include="project\dependencies\gen.hashing.cpp" />
@@ -176,6 +217,14 @@
     <ClCompile Include="project\dependencies\gen.string.cpp" />
     <ClCompile Include="project\dependencies\gen.string_ops.cpp" />
     <ClCompile Include="project\dependencies\gen.timing.cpp" />
+    <ClCompile Include="project\dependencies\hashing.cpp" />
+    <ClCompile Include="project\dependencies\memory.cpp" />
+    <ClCompile Include="project\dependencies\parsing.cpp" />
+    <ClCompile Include="project\dependencies\printing.cpp" />
+    <ClCompile Include="project\dependencies\src_start.cpp" />
+    <ClCompile Include="project\dependencies\strings.cpp" />
+    <ClCompile Include="project\dependencies\string_ops.cpp" />
+    <ClCompile Include="project\dependencies\timing.cpp" />
     <ClCompile Include="project\gen.bootstrap.cpp" />
     <ClCompile Include="project\gen.cpp" />
     <ClCompile Include="project\gen.dep.cpp" />

@@ -27,13 +27,18 @@ IF they are changed the following files would need adjustment:
 **`clean.ps1`**  
 Remove any generated content from the repository.
 
-**`bootstrap.ps1`**  
-Generate a version of gencpp where components are inlined directly to `gen.<hpp/cpp>` and `gen. <hpp/cpp>`  
-Any heavily preprocessed code is not inlined and are instead generated using the code in the `helpers` directory.
+**`build.ps1`**  
+Build bootstrap, singleheader, or tests. Supports MSVC or clang, release or debug.
 
-**`singleheader.ps1`**  
-Generate a single-header version of the library where all code that would normally good in the usual four files (see bootstrap) are inlined into a single `gen.hpp` file.  
-As with the bootstrap, any heavily preprocessed code is not inlined and instead generated with helper code.
+```
+args:
+    bootstrap
+    singleheader
+    test
+    clang
+    msvc
+    release
+```
 
 **`test.gen.build.ps1`**  
 Build the metaprogram for generating the test code.
@@ -46,3 +51,6 @@ Build and run metaprogram, build test program.
 
 **`test.run.ps1`**  
 Build and run metaprogram, build and run test program.
+
+
+*Note: My env is Windows 11 with MSVC 2022 and clang 16.0.6*
