@@ -8,9 +8,9 @@
 			"type": "lldb",
 			"request": "launch",
 			"name": "Debug gentime lldb",
-			"program": "${workspaceFolder}/test/gen/build/gencpp.exe",
+			"program": "${workspaceFolder}/test/test.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}/test/gen/",
+			"cwd": "${workspaceFolder}/test/",
 			"postRunCommands": [
 			]
 		},
@@ -18,16 +18,16 @@
 			"type": "cppvsdbg",
 			"request": "launch",
 			"name": "Debug gentime vsdbg",
-			"program": "${workspaceFolder}/test/gen/build/gencpp.exe",
+			"program": "${workspaceFolder}/test/build/test.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}/test/gen/",
+			"cwd": "${workspaceFolder}/test/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		},
 		{
 			"type": "cppvsdbg",
 			"request": "launch",
 			"name": "Debug bootstrap vsdbg",
-			"program": "${workspaceFolder}/project/build/gencpp_bootstrap.exe",
+			"program": "${workspaceFolder}/project/build/bootstrap.exe",
 			"args": [],
 			"cwd": "${workspaceFolder}/project/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"

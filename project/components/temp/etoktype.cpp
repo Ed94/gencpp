@@ -165,6 +165,7 @@ namespace Parser
 	};
 
 	using TokType = ETokType::Type;
+	using ETokType::to_str;
 
 } // Parser
 

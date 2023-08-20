@@ -40,7 +40,6 @@ The keywords supported for the preprocessor are:
 * ifdef
 * elif
 * endif
-* undef
 * pragma
 
 Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST. *These ASTs will be considered members or entries of braced scope they reside within*.  

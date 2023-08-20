@@ -1,4 +1,4 @@
-#pragma region String
+#pragma region Strings
 
 // Constant string with length.
 struct StrC
@@ -12,16 +12,12 @@ struct StrC
 	}
 };
 
-#define txt_StrC( text ) StrC { sizeof( text ) - 1, text }
+#define cast_to_strc( str ) * rcast( StrC*, str - sizeof(sw) )
+#define txt( text ) StrC { sizeof( text ) - 1, text }
 
-StrC to_StrC( char const* str )
+StrC to_str( char const* str )
 {
 	return { str_len( str ), str };
-}
-
-sw StrC_len( char const* str )
-{
-	return (sw) ( str - 1 );
 }
 
 // Dynamic String
@@ -33,8 +29,8 @@ struct String
 	struct Header
 	{
 		AllocatorInfo Allocator;
-		sw            Length;
 		sw            Capacity;
+		sw            Length;
 	};
 
 	static
@@ -76,7 +72,7 @@ struct String
 		header->Capacity  = capacity;
 		header->Length    = 0;
 
-		String result = { (char*)allocation + header_size };
+		String result = { rcast(char*, allocation) + header_size };
 		return result;
 	}
 
@@ -92,7 +88,7 @@ struct String
 			return { nullptr };
 
 		Header&
-			header = * rcast(Header*, allocation);
+		header = * rcast(Header*, allocation);
 		header = { allocator, length, length };
 
 		String  result = { rcast( char*, allocation) + header_size };
@@ -332,11 +328,7 @@ struct String
 
 	operator StrC() const
 	{
-		return
-		{
-			length(),
-			Data
-		};
+		return { length(), Data };
 	}
 
 	// Used with cached strings
@@ -363,19 +355,21 @@ struct String
 		return Data[ index ];
 	}
 
-	char* Data = nullptr;
+	char* Data;
 };
 
 struct String_POD
 {
 	char* Data;
-
-	operator String()
-	{
-		return * rcast(String*, this);
-	}
 };
 static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
 
-#pragma endregion String
+// Implements basic string interning. Data structure is based off the ZPL Hashtable.
+using StringTable = HashTable<String const>;
+
+// Represents strings cached with the string table.
+// Should never be modified, if changed string is desired, cache_string( str ) another.
+using StringCached = String const;
+
+#pragma endregion Strings
 

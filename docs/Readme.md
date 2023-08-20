@@ -360,7 +360,7 @@ Code <name> = code_str( <some code without "" quotes > )
 Template metaprogramming in the traditional sense becomes possible with the use of `token_fmt` and parse constructors:
 
 ```cpp
-StrC value = txt_StrC("Something");
+StrC value = txt("Something");
 
 char const* template_str = txt(
     Code with <key> to replace with token_values
@@ -447,7 +447,7 @@ and have the desired specifiers assigned to them beforehand.
 
 ## Code generation and modification
 
-There are three provided file interfaces:
+There are three provided auxillary interfaces:
 
 * Builder
 * Editor
@@ -462,11 +462,12 @@ Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FE
 * The code is provided via print( code ) function  will be serialized to its buffer.
 * When all serialization is finished, use the write() command to write the buffer to the file.
 
-### Editor is for editing a series of files based on a set of requests provided to it
+### Editor is for editing a series of files/asts based on a set of requests provided to it
 
 **Note: Not implemented yet**
 
 * The purpose is to overrite a specific file, it places its contents in a buffer to scan.
+* If editing an AST it will generate a new ast as a result (ASTs are not edited).
 * Requests are populated using the following interface:
   * add : Add code.
   * remove : Remove code.
@@ -486,7 +487,7 @@ Additionally if `GEN_FEATURE_EDITOR_REFACTOR` is defined, refactor( file_path, s
 Refactor is based of the refactor library and uses its interface.  
 It will on call add a request to the queue to run the refactor script on the file.
 
-### Scanner allows the user to generate Code ASTs by reading files
+### Scanner allows the user to sift through a series of files/asts based on a set of requests provided to it
 
 **Note: Not implemented yet**
 
@@ -494,8 +495,6 @@ It will on call add a request to the queue to run the refactor script on the fil
 * Requests are populated using the add( SymbolInfo, Policy ) function. The symbol info is the same as the one used for the editor. So is the case with Policy.
 
 The file will only be read from, no writing supported.
-
-One great use case is for example: generating the single-header library for gencpp!
 
 ### Additional Info (Editor and Scanner)
 

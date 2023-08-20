@@ -221,7 +221,7 @@ void* Arena::allocator_proc( void* allocator_data, AllocType type, sw size, sw a
 				if ( arena->TotalUsed + total_size > (sw) arena->TotalSize )
 				{
 					// zpl__printf_err("%s", "Arena out of memory\n");
-					fatal("Arena out of memory! (Possibly could not fit for the largest size Arena!!)");
+					GEN_FATAL("Arena out of memory! (Possibly could not fit for the largest size Arena!!)");
 					return nullptr;
 				}
 

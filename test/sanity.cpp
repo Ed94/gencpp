@@ -4,8 +4,8 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "gen/gen.hpp"
-#include "gen/gen.builder.hpp"
+#include "gen.hpp"
+#include "gen.builder.hpp"
 
 void check_sanity()
 {
@@ -17,7 +17,7 @@ void check_sanity()
 	CodeType t_int_dupe = def_type( name(int) );
 
 	if ( t_int_dupe->Name != t_int->Name )
-		fatal("check_sanity: String caching failed!");
+		GEN_FATAL("check_sanity: String caching failed!");
 
 
 	// Purposefully uses an excessive amount of memory to make sure the the memory backend doesn't break.
@@ -63,8 +63,7 @@ void check_sanity()
 	log_fmt("Num String Cache Arenas : %llu TotalSize: %llu !\n", StringArenas.num(), StringArenas.num() * SizePer_StringArena);
 	log_fmt("Num String Cache        : %llu\n", StringCache.Entries.num(), StringCache);
 
-	Builder builder;
-	builder.open( "sanity.gen.hpp" );
+	Builder builder = Builder::open( "./gen/sanity.gen.hpp" );
 
 	idx = typedefs.num();
 #ifdef GEN_BENCHMARK

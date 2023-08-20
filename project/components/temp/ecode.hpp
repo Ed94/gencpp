@@ -89,4 +89,5 @@ namespace ECode
 #	undef Define_Types
 }
 using CodeT = ECode::Type;
+using ECode::to_str;
 

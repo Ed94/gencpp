@@ -255,7 +255,7 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.Parsed.gen.hpp" );
 
-	Code include_gen = def_include( txt_StrC("gen.hpp") );
+	Code include_gen = def_include( txt("gen.hpp") );
 	gen_array_file.print( include_gen );
 
 	gen_array_file.print( def_using_namespace( name(gen)));

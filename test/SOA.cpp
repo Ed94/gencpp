@@ -2,8 +2,8 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "gen/gen.hpp"
-#include "gen/gen.builder.hpp"
+#include "gen.hpp"
+#include "gen.builder.hpp"
 using namespace gen;
 
 Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
@@ -33,7 +33,7 @@ Code gen_SOA( CodeStruct struct_def, s32 num_entries = 0 )
 			if ( struct_mem->Type == ECode::Variable )
 			{
 				CodeType var_type        = struct_mem.cast<CodeVar>()->ValueType;
-				StrC     num_entries_str = to_StrC( str_fmt_buf( "%d", num_entries ) );
+				StrC     num_entries_str = to_str( str_fmt_buf( "%d", num_entries ) );
 
 				CodeVar entry_arr = { nullptr };
 				if ( ! num_entries)
@@ -124,7 +124,7 @@ void check_SOA()
 	soa_test.print( parse_using( code(
 		using u16 = unsigned short;
 	)));
-	soa_test.print( def_include( txt_StrC("gen.hpp")));
+	soa_test.print( def_include( txt("gen.hpp")));
 	soa_test.print( def_using_namespace( name(gen) ) );
 
 	soa_test.print( gen_SOA(

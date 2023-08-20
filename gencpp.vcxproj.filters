@@ -18,16 +18,7 @@
     <ClCompile Include="project\gen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test\gen\build\meson-private\sanitycheckc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test\gen\build\meson-private\sanitycheckcpp.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="test\test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="singleheader\gen\gen.singleheader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test\test.Upfront.cpp">
@@ -60,9 +51,6 @@
     <ClCompile Include="project\components\gen.interface.upfront.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project\dependencies\gen.dep.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="project\dependencies\gen.file_handling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -75,30 +63,114 @@
     <ClCompile Include="project\dependencies\gen.printing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="project\components\gen.ast_case_macros.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\gen.data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\gen.etoktype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\gen.impl_start.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\gen.interface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\gen.untyped.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\gen.debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\gen.hashing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\gen.impl_start.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\gen.string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\gen.string_ops.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\gen.timing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\gen.bootstrap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="singleheader\gen.singleheader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\temp\etoktype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\ast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\ast_case_macros.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\interface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\interface.parsing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\interface.upfront.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\src_start.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\static_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\untyped.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\bootstrap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\filesystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\hashing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\memory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\parsing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\printing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\src_start.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\string_ops.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\strings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\dependencies\timing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project\gen.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project\gen.undef.macros.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="test\DummyInclude.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\gen\array.Upfront.gen.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\gen\buffer.Upfront.gen.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\gen\hashtable.Upfront.gen.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\gen\ring.Upfront.gen.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test\gen\sanity.Upfront.gen.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test\Parsed\Buffer.Parsed.hpp">
@@ -137,18 +209,6 @@
     <ClInclude Include="project\gen.dep.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="project\gen.editor.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\gen.pop_ignores.inline.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\gen.push_ignores.inline.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\gen.scanner.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="test\parsing.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -168,9 +228,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="project\dependencies\gen.containers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\dependencies\gen.dep.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="project\dependencies\gen.file_handling.hpp">
@@ -215,6 +272,117 @@
     <ClInclude Include="project\helpers\gen.undef.macros.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="project\components\gen.ecode.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\gen.eoperator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\gen.especifier.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\gen.header_end.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\gen.header_start.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\gen.debug.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\gen.hashing.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\gen.timing.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="singleheader\components\gen.header_start.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\temp\ast_inlines.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\temp\ecode.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\temp\eoperator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\temp\especifier.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\ast.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\ast_types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\header_end.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\header_start.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\inlines.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\interface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\helpers\helper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\helpers\pop_ignores.inline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\helpers\push_ignores.inline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\helpers\undef.macros.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\basic_types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\containers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\debug.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\filesystem.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\hashing.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\header_start.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\macros.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\memory.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\parsing.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\printing.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\string_ops.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\strings.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\dependencies\timing.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
@@ -229,6 +397,7 @@
     <None Include="scripts\gen.ps1" />
     <None Include="scripts\genccp.natstepfilter" />
     <None Include="scripts\gencpp.refactor" />
+    <None Include="project\components\temp\Readme.md" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include=".vscode\gencpp.natvis" />

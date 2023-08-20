@@ -3,15 +3,16 @@
 #define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
 
+#include "helpers/push_ignores.inline.hpp"
 #include "helpers/helper.hpp"
 
 GEN_NS_BEGIN
 #include "dependencies/parsing.cpp"
 GEN_NS_END
 
-#include "file_processors/builder.hpp"
-#include "file_processors/builder.cpp"
-#include "file_processors/scanner.hpp"
+#include "auxillary/builder.hpp"
+#include "auxillary/builder.cpp"
+#include "auxillary/scanner.hpp"
 
 using namespace gen;
 
@@ -19,25 +20,25 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gen.bootstrap.cpp "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
-constexpr StrC implementation_guard_start = txt_StrC(R"(
+constexpr StrC implementation_guard_start = txt(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
 #if defined(GEN_IMPLEMENTATION) && ! defined(GEN_IMPLEMENTED)
 #	define GEN_IMPLEMENTED
 )");
 
-constexpr StrC implementation_guard_end = txt_StrC(R"(
+constexpr StrC implementation_guard_end = txt(R"(
 #endif
 #pragma endregion GENCPP IMPLEMENTATION GUARD
 )");
 
-constexpr StrC roll_own_dependencies_guard_start = txt_StrC(R"(
+constexpr StrC roll_own_dependencies_guard_start = txt(R"(
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
 
 )");
 
-constexpr StrC roll_own_dependencies_guard_end = txt_StrC(R"(
+constexpr StrC roll_own_dependencies_guard_end = txt(R"(
 // GEN_ROLL_OWN_DEPENDENCIES
 #endif
 )");
@@ -68,18 +69,18 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code header_start  = scan_file( project_dir "dependencies/header_start.hpp" );
-			Code macros        = scan_file( project_dir "dependencies/macros.hpp" );
-			Code basic_types   = scan_file( project_dir "dependencies/basic_types.hpp" );
-			Code debug         = scan_file( project_dir "dependencies/debug.hpp" );
-			Code memory	       = scan_file( project_dir "dependencies/memory.hpp" );
-			Code string_ops    = scan_file( project_dir "dependencies/string_ops.hpp" );
-			Code printing      = scan_file( project_dir "dependencies/printing.hpp" );
-			Code containers    = scan_file( project_dir "dependencies/containers.hpp" );
-			Code hashing 	   = scan_file( project_dir "dependencies/hashing.hpp" );
-			Code string        = scan_file( project_dir "dependencies/string.hpp" );
-			Code file_handling = scan_file( project_dir "dependencies/file_handling.hpp" );
-			Code timing        = scan_file( project_dir "dependencies/timing.hpp" );
+			Code header_start = scan_file( project_dir "dependencies/header_start.hpp" );
+			Code macros       = scan_file( project_dir "dependencies/macros.hpp" );
+			Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
+			Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
+			Code memory	      = scan_file( project_dir "dependencies/memory.hpp" );
+			Code string_ops   = scan_file( project_dir "dependencies/string_ops.hpp" );
+			Code printing     = scan_file( project_dir "dependencies/printing.hpp" );
+			Code containers   = scan_file( project_dir "dependencies/containers.hpp" );
+			Code hashing 	  = scan_file( project_dir "dependencies/hashing.hpp" );
+			Code strings      = scan_file( project_dir "dependencies/strings.hpp" );
+			Code filesystem   = scan_file( project_dir "dependencies/filesystem.hpp" );
+			Code timing       = scan_file( project_dir "dependencies/timing.hpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print( header_start );
@@ -93,8 +94,8 @@ int gen_main()
 			header.print( printing );
 			header.print( containers );
 			header.print( hashing );
-			header.print( string );
-			header.print( file_handling );
+			header.print( strings );
+			header.print( filesystem );
 			header.print( timing );
 
 			if ( generate_scanner )
@@ -106,6 +107,7 @@ int gen_main()
 
 			header.print_fmt( "GEN_NS_END\n" );
 			header.print_fmt( roll_own_dependencies_guard_end );
+			header.print( fmt_newline );
 		}
 
 		Code types      = scan_file( project_dir "components/types.hpp" );
@@ -146,14 +148,14 @@ int gen_main()
 		if ( generate_builder )
 		{
 			header.print_fmt( "#pragma region Builder\n\n" );
-			header.print( scan_file( project_dir "file_processors/builder.hpp" ) );
+			header.print( scan_file( project_dir "auxillary/builder.hpp" ) );
 			header.print_fmt( "#pragma endregion Builder\n\n" );
 		}
 
 		if ( generate_scanner )
 		{
 			header.print_fmt( "#pragma region Scanner\n\n" );
-			header.print( scan_file( project_dir "file_processors/scanner.hpp" ) );
+			header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
 			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
 
@@ -166,15 +168,15 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code impl_start    = scan_file( project_dir "dependencies/src_start.cpp" );
-			Code debug         = scan_file( project_dir "dependencies/debug.cpp" );
-			Code string_ops    = scan_file( project_dir "dependencies/string_ops.cpp" );
-			Code printing      = scan_file( project_dir "dependencies/printing.cpp" );
-			Code memory        = scan_file( project_dir "dependencies/memory.cpp" );
-			Code hashing       = scan_file( project_dir "dependencies/hashing.cpp" );
-			Code string        = scan_file( project_dir "dependencies/string.cpp" );
-			Code file_handling = scan_file( project_dir "dependencies/file_handling.cpp" );
-			Code timing        = scan_file( project_dir "dependencies/timing.cpp" );
+			Code impl_start = scan_file( project_dir "dependencies/src_start.cpp" );
+			Code debug      = scan_file( project_dir "dependencies/debug.cpp" );
+			Code string_ops = scan_file( project_dir "dependencies/string_ops.cpp" );
+			Code printing   = scan_file( project_dir "dependencies/printing.cpp" );
+			Code memory     = scan_file( project_dir "dependencies/memory.cpp" );
+			Code hashing    = scan_file( project_dir "dependencies/hashing.cpp" );
+			Code strings    = scan_file( project_dir "dependencies/strings.cpp" );
+			Code filesystem = scan_file( project_dir "dependencies/filesystem.cpp" );
+			Code timing     = scan_file( project_dir "dependencies/timing.cpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print_fmt( "GEN_NS_BEGIN\n\n");
@@ -185,8 +187,8 @@ int gen_main()
 			header.print( printing );
 			header.print( memory );
 			header.print( hashing );
-			header.print( string );
-			header.print( file_handling );
+			header.print( strings );
+			header.print( filesystem );
 			header.print( timing );
 
 			if ( generate_scanner )
@@ -232,7 +234,7 @@ int gen_main()
 		if ( generate_builder )
 		{
 			header.print_fmt( "#pragma region Builder\n\n" );
-			header.print( scan_file( project_dir "file_processors/builder.cpp" ) );
+			header.print( scan_file( project_dir "auxillary/builder.cpp" ) );
 			header.print_fmt( "#pragma endregion Builder\n\n" );
 		}
 
@@ -240,7 +242,7 @@ int gen_main()
 		if ( generate_scanner )
 		{
 			header.print_fmt( "#pragma region Scanner\n\n" );
-			header.print( scan_file( project_dir "file_processors/scanner.cpp" ) );
+			header.print( scan_file( project_dir "auxillary/scanner.cpp" ) );
 			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
 #endif

@@ -22,7 +22,7 @@ Code gen__ring( StrC type )
 		name = get_cached_string({ name_len, name_str });
 	};
 
-	StrC buffer_name = to_StrC( str_fmt_buf( "Buffer_%s", type.Ptr ));
+	StrC buffer_name = to_str( str_fmt_buf( "Buffer_%s", type.Ptr ));
 
 	Code ring = parse_struct( token_fmt( "RingName", (StrC)name, "type", type, "BufferName", buffer_name,
 		stringize(
@@ -138,8 +138,8 @@ u32 gen_ring_file()
 	gen_ring_file;
 	gen_ring_file.open( "ring.Parsed.gen.hpp" );
 
-	gen_ring_file.print( def_include( txt_StrC("gen.hpp")) );
-	gen_ring_file.print( def_include( txt_StrC("buffer.Parsed.gen.hpp")) );
+	gen_ring_file.print( def_include( txt("gen.hpp")) );
+	gen_ring_file.print( def_include( txt("buffer.Parsed.gen.hpp")) );
 	// gen_ring_file.print( gen__ring_base() );
 
 	gen_ring_file.print( def_using_namespace( name(gen)));

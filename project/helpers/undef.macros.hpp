@@ -64,7 +64,7 @@
 #undef stringize
 #undef stringize
 #undef stringize_va
-#undef txt_StrC
+#undef txt
 
 #undef GEN_TIME
 #undef gen_main

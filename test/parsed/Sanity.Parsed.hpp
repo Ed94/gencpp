@@ -14,7 +14,7 @@ u32 gen_sanity()
 	gen_sanity_file;
 	gen_sanity_file.open("./sanity.Parsed.gen.hpp");
 
-	gen_sanity_file.print( def_comment( txt_StrC(
+	gen_sanity_file.print( def_comment( txt(
 		"The following will show a series of base cases for the gen parsed api.\n"
 	)));
 
@@ -40,7 +40,7 @@ u32 gen_sanity()
 			{};
 		));
 
-		empty_body->Body.append( def_comment( txt_StrC("Empty class body") ) );
+		empty_body->Body.append( def_comment( txt("Empty class body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -76,7 +76,7 @@ u32 gen_sanity()
 
 	// External Linkage
 	{
-		CodeComment empty_comment = def_comment( txt_StrC("Empty external linkage") );
+		CodeComment empty_comment = def_comment( txt("Empty external linkage") );
 
 		CodeExtern c_extern = parse_extern_link( code(
 			extern "C"
@@ -122,7 +122,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def->Body.append( def_comment( txt_StrC("Empty function body") ) );
+		def->Body.append( def_comment( txt("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -138,7 +138,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def->Body.append( def_comment( txt_StrC("Empty namespace body") ) );
+		def->Body.append( def_comment( txt("Empty namespace body") ) );
 
 		gen_sanity_file.print(def);
 	}
@@ -205,7 +205,7 @@ u32 gen_sanity()
 			}
 		));
 
-		def->Body.append( def_comment( txt_StrC("Empty function body") ) );
+		def->Body.append( def_comment( txt("Empty function body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);
@@ -241,7 +241,7 @@ u32 gen_sanity()
 			{};
 		));
 
-		empty_body->Body.append( def_comment( txt_StrC("Empty struct body") ) );
+		empty_body->Body.append( def_comment( txt("Empty struct body") ) );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(empty_body);
@@ -257,7 +257,7 @@ u32 gen_sanity()
 			};
 		));
 
-		empty->Body.append( def_comment( txt_StrC("Empty union body") ) );
+		empty->Body.append( def_comment( txt("Empty union body") ) );
 
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned short u16; )) );
 		gen_sanity_file.print( parse_typedef( code( typedef unsigned long  u32; )) );
@@ -334,7 +334,7 @@ u32 gen_sanity()
 
 	gen_sanity_file.print_fmt("\n");
 
-	gen_sanity_file.print( def_comment( txt_StrC(
+	gen_sanity_file.print( def_comment( txt(
 		"End of base case tests\n"
 	)));
 

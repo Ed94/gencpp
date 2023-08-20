@@ -15,10 +15,10 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw a
 				Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
 
 				if ( bucket.PhysicalStart == nullptr )
-					fatal( "Failed to create bucket for Global_AllocatorBuckets");
+					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
 				if ( ! Global_AllocatorBuckets.append( bucket ) )
-					fatal( "Failed to append bucket to Global_AllocatorBuckets");
+					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
 				last = & Global_AllocatorBuckets.back();
 			}
@@ -42,10 +42,10 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw a
 				Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
 
 				if ( bucket.PhysicalStart == nullptr )
-					fatal( "Failed to create bucket for Global_AllocatorBuckets");
+					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
 				if ( ! Global_AllocatorBuckets.append( bucket ) )
-					fatal( "Failed to append bucket to Global_AllocatorBuckets");
+					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
 				last = & Global_AllocatorBuckets.back();
 			}
@@ -68,7 +68,7 @@ internal
 void define_constants()
 {
 	Code::Global          = make_code();
-	Code::Global->Name    = get_cached_string( txt_StrC("Global Code") );
+	Code::Global->Name    = get_cached_string( txt("Global Code") );
 	Code::Global->Content = Code::Global->Name;
 
 	Code::Invalid = make_code();
@@ -76,22 +76,22 @@ void define_constants()
 
 	t_empty          = (CodeType) make_code();
 	t_empty->Type    = ECode::Typename;
-	t_empty->Name    = get_cached_string( txt_StrC("") );
+	t_empty->Name    = get_cached_string( txt("") );
 	t_empty.set_global();
 
 	access_private       = make_code();
 	access_private->Type = ECode::Access_Private;
-	access_private->Name = get_cached_string( txt_StrC("private:") );
+	access_private->Name = get_cached_string( txt("private:") );
 	access_private.set_global();
 
 	access_protected       = make_code();
 	access_protected->Type = ECode::Access_Protected;
-	access_protected->Name = get_cached_string( txt_StrC("protected:") );
+	access_protected->Name = get_cached_string( txt("protected:") );
 	access_protected.set_global();
 
 	access_public       = make_code();
 	access_public->Type = ECode::Access_Public;
-	access_public->Name = get_cached_string( txt_StrC("public:") );
+	access_public->Name = get_cached_string( txt("public:") );
 	access_public.set_global();
 
 	attrib_api_export = def_attributes( code(GEN_API_Export_Code));
@@ -102,13 +102,13 @@ void define_constants()
 
 	module_global_fragment          = make_code();
 	module_global_fragment->Type    = ECode::Untyped;
-	module_global_fragment->Name    = get_cached_string( txt_StrC("module;") );
+	module_global_fragment->Name    = get_cached_string( txt("module;") );
 	module_global_fragment->Content = module_global_fragment->Name;
 	module_global_fragment.set_global();
 
 	module_private_fragment          = make_code();
 	module_private_fragment->Type    = ECode::Untyped;
-	module_private_fragment->Name    = get_cached_string( txt_StrC("module : private;") );
+	module_private_fragment->Name    = get_cached_string( txt("module : private;") );
 	module_private_fragment->Content = module_private_fragment->Name;
 	module_private_fragment.set_global();
 
@@ -118,13 +118,13 @@ void define_constants()
 
 	pragma_once          = (CodePragma) make_code();
 	pragma_once->Type    = ECode::Preprocess_Pragma;
-	pragma_once->Name    = get_cached_string( txt_StrC("once") );
+	pragma_once->Name    = get_cached_string( txt("once") );
 	pragma_once->Content = pragma_once->Name;
 	pragma_once.set_global();
 
 	param_varadic            = (CodeType) make_code();
 	param_varadic->Type      = ECode::Parameters;
-	param_varadic->Name      = get_cached_string( txt_StrC("...") );
+	param_varadic->Name      = get_cached_string( txt("...") );
 	param_varadic->ValueType = t_empty;
 	param_varadic.set_global();
 
@@ -226,12 +226,12 @@ void init()
 		Global_AllocatorBuckets = Array<Arena>::init_reserve( heap(), 128 );
 
 		if ( Global_AllocatorBuckets == nullptr )
-			fatal( "Failed to reserve memory for Global_AllocatorBuckets");
+			GEN_FATAL( "Failed to reserve memory for Global_AllocatorBuckets");
 
 		Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
 
 		if ( bucket.PhysicalStart == nullptr )
-			fatal( "Failed to create first bucket for Global_AllocatorBuckets");
+			GEN_FATAL( "Failed to create first bucket for Global_AllocatorBuckets");
 
 		Global_AllocatorBuckets.append( bucket );
 
@@ -242,12 +242,12 @@ void init()
 		CodePools = Array<Pool>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
 
 		if ( CodePools == nullptr )
-			fatal( "gen::init: Failed to initialize the CodePools array" );
+			GEN_FATAL( "gen::init: Failed to initialize the CodePools array" );
 
 		StringArenas = Array<Arena>::init_reserve( Allocator_DataArrays, InitSize_DataArrays );
 
 		if ( StringArenas == nullptr )
-			fatal( "gen::init: Failed to initialize the StringArenas array" );
+			GEN_FATAL( "gen::init: Failed to initialize the StringArenas array" );
 	}
 
 	// Setup the code pool and code entries arena.
@@ -255,7 +255,7 @@ void init()
 		Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
 
 		if ( code_pool.PhysicalStart == nullptr )
-			fatal( "gen::init: Failed to initialize the code pool" );
+			GEN_FATAL( "gen::init: Failed to initialize the code pool" );
 
 		CodePools.append( code_pool );
 
@@ -264,7 +264,7 @@ void init()
 		Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
 		if ( string_arena.PhysicalStart == nullptr )
-			fatal( "gen::init: Failed to initialize the string arena" );
+			GEN_FATAL( "gen::init: Failed to initialize the string arena" );
 
 		StringArenas.append( string_arena );
 	}
@@ -274,7 +274,7 @@ void init()
 		StringCache = StringTable::init( Allocator_StringTable );
 
 		if ( StringCache.Entries == nullptr )
-			fatal( "gen::init: Failed to initialize the StringCache");
+			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
 	}
 
 	define_constants();
@@ -362,7 +362,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 		Arena new_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
 		if ( ! StringArenas.append( new_arena ) )
-			fatal( "gen::get_string_allocator: Failed to allocate a new string arena" );
+			GEN_FATAL( "gen::get_string_allocator: Failed to allocate a new string arena" );
 
 		last = & StringArenas.back();
 	}
@@ -397,10 +397,10 @@ Code make_code()
 		Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
 
 		if ( code_pool.PhysicalStart == nullptr )
-			fatal( "gen::make_code: Failed to allocate a new code pool - CodePool allcoator returned nullptr." );
+			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePool allcoator returned nullptr." );
 
 		if ( ! CodePools.append( code_pool ) )
-			fatal( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
+			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
 
 		allocator = & CodePools.back();
 	}

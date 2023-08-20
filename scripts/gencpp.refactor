@@ -21,8 +21,8 @@
 // Gen Macro namespace
 // namespace GEN_, new_namespace_
 
-// ---------- ZPL Macros
-
+// ---------- Dependency Macros
+    // Platform
 // word GEN_ARCH_64_BIT, new_name
 // word GEN_ARCH_32_BIT, new_name
 
@@ -43,20 +43,86 @@
 // word GEN_COMPILER_MINGW, new_name
 // word GEN_COMPILER_MSVC,  new_name
 
-// word forceinline, new_name
-// word neverinline, new_name
-
+    // General
 // word zpl_cast, new_name
 
 // word global,        new_name
 // word internal,      new_name
 // word local_persist, new_name
+// word forceinline,   new_name
+// word neverinline,   new_name
 
+// word bit,               new_name
+// word bitfield_is_equal, new_name
+
+// word ccast, new_name
+// word pcast, new_name
+// word rcast, new_name
+// word scast, new_name
+
+// word num_args,      new_name
+// word num_args_impl, new_name
+
+// word stringize,    new_name
+// word stringize_va, new_name
+
+// word do_once,           new_name
+// word do_once_start,     new_name
+// word do_once_end,       new_name
+// word label_scope_start, new_name
+// word label_scope_end,   new_name
+
+// word count_of,   new_name
+// word is_between, new_name
+// word min,        new_name
+// word size_of,    new_name
+// word offset_of,  new_name
+// word swap,       new_name
+
+    // Basic Types
+// word GEN_U8_MIN, new_name
+// word GEN_U8_MAX, new_name
+// word GEN_I8_MIN, new_name
+// word GEN_I8_MAX, new_name
+
+// word GEN_U16_MIN, new_name
+// word GEN_U16_MAX, new_name
+// word GEN_I16_MIN, new_name
+// word GEN_I16_MAX, new_name
+
+// word GEN_U32_MIN, new_name
+// word GEN_U32_MAX, new_name
+// word GEN_I32_MIN, new_name
+// word GEN_I32_MAX, new_name
+
+// word GEN_U64_MIN, new_name
+// word GEN_U64_MAX, new_name
+// word GEN_I64_MIN, new_name
+// word GEN_I64_MAX, new_name
+
+// word GEN_USIZE_MIN, new_name
+// word GEN_USIZE_MAX, new_name
+// word GEN_ISIZE_MIN, new_name
+// word GEN_ISIZE_MAX, new_name
+
+// word GEN_F32_MIN, new_name
+// word GEN_F32_MAX, new_name
+// word GEN_F64_MIN, new_name
+// word GEN_F64_MAX, new_name
+
+    // Debug
 // word GEN_DEBUG_TRAP,      new_name
 // word GEN_ASSERT,          new_name
 // word GEN_ASSERT_MSG,      new_name
 // word GEN_ASSERT_NOT_NULL, new_name
 // word GEN_PANIC,           new_name
+// word GEN_FATAL,           new_name
+
+    // Memory
+// word kilobytes, new_name
+// word megabytes, new_name
+// word gigabytes, new_name
+// word terabytes, new_name
 
 // word zero_item,  new_name
 // word zero_array, new_name
@@ -67,13 +133,11 @@
 // word malloc, new_name
 // word mfree,  new_name
 
-// word count_of,   new_name
-// word is_between, new_name
-// word min,        new_name
-// word size_of,    new_name
-// word swap,       new_name
+    // Strings
+// word txt, new_name
+// word cast_to_strc, new_name
 
-// ---------- ZPL Types
+// ---------- Dependency Types
 
 // word b8,   new_name
 // word b16,  new_name
@@ -114,11 +178,11 @@
 // word FileStandardType, new_name
 // word SeekWhenceType,   new_name
 
-// ---------- ZPL Data
+// ---------- Dependency Data
 
 // word default_file_operations, new_name
 
-// ---------- ZPL Procedures
+// ---------- Dependency Procedures
 
 // word align_forward,          new_name
 // word align_fordward_i64,     new_name
@@ -158,6 +222,7 @@
 // word hex_digit_to_int,	    new_name
 // word i64_to_str,			    new_name
 // word is_power_of_two,        new_name
+// word log_fmt,                new_name
 // word mem_copy,               new_name
 // word mem_move,               new_name
 // word mem_set,                new_name
@@ -189,22 +254,10 @@
 
 // ---------- gencpp Macros
 
-// word bit,               new_name
-// word bitfield_is_equal, new_name
+// word log_failure, new_name
 
-// word ccast, new_name
-// word pcast, new_name
-// word rcast, new_name
-// word scast, new_name
-
-// word do_once,       new_name
-// word do_once_start, new_name
-// word do_once_end,   new_name
-// word num_args,      new_name
-// word num_args_impl, new_name
-// word stringize,     new_name
-// word stringize_va,  new_name
-// word txt_StrC,      new_name
+// word NoCode,      new_name
+// word CodeInvalid, new_name
 
 // ------------ gencpp common
 
@@ -215,16 +268,13 @@
 // word StrC,      new_name
 // word String,    new_name
 
-// word log_fmt,  new_name
-// word fatal,    new_name
-// word to_str,   new_name
-// word to_StrC,  new_name
-// word to_type,  new_name
+// word to_str,  new_name
+// word to_str,  new_name
+// word to_type, new_name
 
 // ------------ gencpp Types & Constants
 
 // word LogFailType, new_name
-// word log_failure, new_name
 
 // word AccessSpec,     new_name
 // word ECode,          new_name
@@ -251,7 +301,6 @@
 // word Code,         new_name
 // word Code_POD,     new_name
 // word Keyword,      new_name
-// word NoCode,       new_name
 
 // ------------ gencpp API
 
@@ -277,6 +326,9 @@
 // word def_attributes,      new_name
 // word def_comment,         new_name
 // word def_class,           new_name
+// word def_constructor,     new_name
+// word def_destructor,      new_name
+// word def_define,          new_name
 // word def_enum,            new_name
 // word def_execution,       new_name
 // word def_extern_link,     new_name
@@ -286,7 +338,10 @@
 // word def_module,          new_name
 // word def_namespace,       new_name
 // word def_operator,        new_name
+// word def_operator_cast,   new_name
 // word def_param,           new_name
+// word def_pargma,          new_name
+// word def_preprocess_cond, new_name
 // word def_specifier,       new_name
 // word def_struct,          new_name
 // word def_template,        new_name
@@ -343,22 +398,24 @@
 // word untyped_fmt,       new_name
 // word untyped_token_fmt, new_name
 
-// ------------ File Handling
+// ------------ File Ops
 
 // word Builder, new_name
 // word Editor,  new_name
 // word Scanner, new_name
 
-// ------------ gencpp macros
+// ------------ gencpp user macros
 
 // word gen_main,     new_name
 // word GEN_TIME,     new_name
 
-// word __,           new_name
-// word code,         new_name
-// word name,         new_name
-// word args,         new_name
-// word token_fmt,    new_name
+// word __,        new_name
+// word name,      new_name
+// word code,      new_name
+// word args,      new_name
+// word code_str,  new_name
+// word code_fmt,  new_name
+// word token_fmt, new_name
 
 // ------------ Type AST namespace
 // namespace t_, new_namespace_

@@ -2,14 +2,14 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "gen/gen.hpp"
-#include "gen/gen.builder.hpp"
-#include "gen/gen.scanner.hpp"
+#include "gen.hpp"
+#include "gen.builder.hpp"
+#include "gen.scanner.hpp"
 using namespace gen;
 
 void check_singleheader_ast()
 {
-	#define project_dir "../../"
+	#define project_dir "../"
 	gen::init();
 	log_fmt("\ncheck_singleheader_ast:\n");
 
@@ -23,7 +23,7 @@ void check_singleheader_ast()
 	time_start = time_rel_ms();
 
 	Builder
-	builder = Builder::open( "singleheader_copy.gen.hpp" );
+	builder = Builder::open( "gen/singleheader_copy.gen.hpp" );
 	builder.print( ast );
 	builder.write();
 

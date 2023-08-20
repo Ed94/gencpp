@@ -336,7 +336,7 @@ u32 gen_array_file()
 	gen_array_file;
 	gen_array_file.open( "array.Upfront.gen.hpp" );
 
-	CodeInclude include_gen = def_include( txt_StrC("gen.hpp") );
+	CodeInclude include_gen = def_include( txt("gen.hpp") );
 	gen_array_file.print( include_gen );
 
 	gen_array_file.print( def_using_namespace( name(gen)));

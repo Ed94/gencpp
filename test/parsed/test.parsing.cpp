@@ -43,7 +43,7 @@ int gen_main()
 		using u16 = unsigned short;
 	)));
 
-	soa_test.print( def_include( txt_StrC("gen.hpp")));
+	soa_test.print( def_include( txt("gen.hpp")));
 
 	soa_test.print( def_using_namespace( name(gen) ) );
 
