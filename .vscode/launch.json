@@ -10,7 +10,7 @@
 			"name": "Debug gentime lldb",
 			"program": "${workspaceFolder}/test/test.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}/test/gen/",
+			"cwd": "${workspaceFolder}/test/",
 			"postRunCommands": [
 			]
 		},
@@ -20,7 +20,7 @@
 			"name": "Debug gentime vsdbg",
 			"program": "${workspaceFolder}/test/build/test.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}/test/gen/",
+			"cwd": "${workspaceFolder}/test/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		},
 		{

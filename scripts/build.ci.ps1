@@ -298,7 +298,6 @@ if ( $vendor -match "msvc" )
 #endregion Configuration
 
 #region Building
-
 $path_build        = Join-Path $path_root build
 $path_project      = Join-Path $path_root project
 $path_scripts      = Join-Path $path_root scripts
@@ -348,14 +347,14 @@ if ( $singleheader )
 		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	$includes    = @($path_project)
+	$includes    = @( $path_project )
 	$unit       = join-path $path_singleheader "singleheader.cpp"
 	$executable = join-path $path_build        "singleheader.exe"
 
 	build-simple $includes $unit $executable
 
 	Push-Location $path_singleheader
-		if ( Test-Path($executable) ) {
+		if ( Test-Path( $executable ) ) {
 			write-host "`nRunning singleheader generator"
 			$time_taken = Measure-Command { & $executable
 					| ForEach-Object {
@@ -385,13 +384,11 @@ if ( $test )
 
 	$path_bootstrap = join-path $path_project gen
 
-	$include    = $path_bootstrap
+	$includes    = @( $path_bootstrap )
 	$unit       = join-path $path_test  "test.cpp"
-	$object     = join-path $path_build "test.obj"
 	$executable = join-path $path_build "test.exe"
-	$pdb        = join-path $path_build "test.pdb"
 
-	build-simple $include $unit $executable
+	build-simple $includes $unit $executable
 
 	Push-Location $path_test
 		if ( Test-Path( $executable ) ) {
@@ -408,7 +405,6 @@ if ( $test )
 #endregion Building
 
 #region Formatting
-
 function format-cpp
 {
 	param( $path, $include, $exclude )
@@ -457,7 +453,12 @@ if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp"))
 
 if ( $test )
 {
-
+	$path_gen = join-path $path_test gen
+	$include  = @(
+		'*.gen.hpp'
+	)
+	$exclude  = $null
+	format-cpp $path_gen $include $exclude
 }
 #endregion Formatting
 

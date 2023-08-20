@@ -63,8 +63,7 @@ void check_sanity()
 	log_fmt("Num String Cache Arenas : %llu TotalSize: %llu !\n", StringArenas.num(), StringArenas.num() * SizePer_StringArena);
 	log_fmt("Num String Cache        : %llu\n", StringCache.Entries.num(), StringCache);
 
-	Builder builder;
-	builder.open( "gen/sanity.gen.hpp" );
+	Builder builder = Builder::open( "./gen/sanity.gen.hpp" );
 
 	idx = typedefs.num();
 #ifdef GEN_BENCHMARK

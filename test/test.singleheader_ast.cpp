@@ -9,7 +9,7 @@ using namespace gen;
 
 void check_singleheader_ast()
 {
-	#define project_dir "../../"
+	#define project_dir "../"
 	gen::init();
 	log_fmt("\ncheck_singleheader_ast:\n");
 

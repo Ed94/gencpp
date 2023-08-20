@@ -72,7 +72,7 @@ struct String
 		header->Capacity  = capacity;
 		header->Length    = 0;
 
-		String result = { (char*)allocation + header_size };
+		String result = { rcast(char*, allocation) + header_size };
 		return result;
 	}
 
