@@ -1,8 +1,3 @@
-param (
-    [ValidateSet("amd64", "x86", "arm", "arm64")]
-    [string]$arch = "amd64"
-)
-
 $ErrorActionPreference = "Stop"
 
 # Use vswhere to find the latest Visual Studio installation
@@ -22,10 +17,7 @@ if ( -not (Test-Path $vs_devshell) ) {
     exit 1
 }
 
-# Set the target architecture based on the parameter
-# $env:VSCMD_ARG_TGT_ARCH=$arch
-
 # Launch the Visual Studio Developer Shell
 Push-Location
-& $vs_devshell -Arch amd64
+& $vs_devshell @args
 Pop-Location

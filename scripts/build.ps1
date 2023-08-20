@@ -3,6 +3,7 @@
 # That or just rewrite it in an sh script and call it a day.
 
 Import-Module ./helpers/target_arch.psm1
+$devshell = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 
 cls
 
@@ -31,16 +32,18 @@ if ( $args ) { $args | ForEach-Object {
 #region Building
 write-host "Building gencpp with $compiler"
 
-if ( $IsWindows ) {
-	Invoke-Expression "& $(join-path $PSScriptRoot 'helpers/devshell.ps1')"
+if ($IsWindows) {
+	# This library was really designed to only run on 64-bit systems.
+	# (Its a development tool after all)
+    & $devshell -arch amd64
 }
 
 $path_root         = git rev-parse --show-toplevel
-$path_build        = Join-Path $path_root    build
-$path_project      = Join-Path $path_root    project
-$path_scripts      = Join-Path $path_root    scripts
-$path_singleheader = Join-Path $path_root    singleheader
-$path_test         = Join-Path $path_root    test
+$path_build        = Join-Path $path_root build
+$path_project      = Join-Path $path_root project
+$path_scripts      = Join-Path $path_root scripts
+$path_singleheader = Join-Path $path_root singleheader
+$path_test         = Join-Path $path_root test
 
 write-host "Build Type: $(if ($release) {"Release"} else {"Debug"} )"
 
@@ -62,15 +65,14 @@ function run-compiler
 	}
 
 	$time_taken = Measure-Command {
-		& $compiler $compiler_args
-			| ForEach-Object {
-				$color = 'White'
-				switch ($_){
-					{ $_ -match "error"   } { $color = 'Red'   ; break }
-					{ $_ -match "warning" } { $color = 'Yellow'; break }
-				}
-				write-host `t $_ -ForegroundColor $color
+		& $compiler $compiler_args 2>&1 | ForEach-Object {
+			$color = 'White'
+			switch ($_){
+				{ $_ -match "error"   } { $color = 'Red'   ; break }
+				{ $_ -match "warning" } { $color = 'Yellow'; break }
 			}
+			write-host `t $_ -ForegroundColor $color
+		}
 	}
 
 	if ( Test-Path($unit) ) {
@@ -92,15 +94,14 @@ function run-linker
 	}
 
 	$time_taken = Measure-Command {
-		& $linker $linker_args
-			| ForEach-Object {
-				$color = 'White'
-				switch ($_){
-					{ $_ -match "error"   } { $color = 'Red'   ; break }
-					{ $_ -match "warning" } { $color = 'Yellow'; break }
-				}
-				write-host `t $_ -ForegroundColor $color
+		& $linker $linker_args 2>&1 | ForEach-Object {
+			$color = 'White'
+			switch ($_){
+				{ $_ -match "error"   } { $color = 'Red'   ; break }
+				{ $_ -match "warning" } { $color = 'Yellow'; break }
 			}
+			write-host `t $_ -ForegroundColor $color
+		}
 	}
 
 	if ( Test-Path($binary) ) {
@@ -113,9 +114,10 @@ function run-linker
 
 if ( $compiler -match "clang" )
 {
-	$target_arch = Get-TargetArchClang
-
+	# https://clang.llvm.org/docs/ClangCommandLineReference.html
 	$flag_compile                    = '-c'
+	$flag_color_diagnostics          = '-fcolor-diagnostics'
+	$flag_no_color_diagnostics       = '-fno-color-diagnostics'
 	$flag_debug                      = '-g'
 	$flag_debug_codeview             = '-gcodeview'
 	$flag_define                     = '-D'
@@ -128,63 +130,95 @@ if ( $compiler -match "clang" )
 	$flag_link_win_machine_64        = '/MACHINE:X64'
 	$flag_link_win_debug             = '/DEBUG'
 	$flag_link_win_pdb 			     = '/PDB:'
+	$flag_link_win_path_output       = '/OUT:'
 	$flag_no_optimization 		     = '-O0'
 	$flag_path_output                = '-o'
 	$flag_preprocess_non_intergrated = '-no-integrated-cpp'
 	$flag_profiling_debug            = '-fdebug-info-for-profiling'
 	$flag_target_arch				 = '-target'
-	$flag_x_linker				     = '-Xlinker'
 	$flag_wall 					     = '-Wall'
+	$flag_warning 					 = '-W'
+	$flag_warning_as_error 		     = '-Werror'
 	$flag_win_nologo 			     = '/nologo'
 
-	# $library_paths = @(
-	# 	'C:\Windows\System32'
+	$ignore_warning_ms_include = 'no-microsoft-include'
 
-	# )
+	$target_arch = Get-TargetArchClang
+
+	$env:CLANG_FORCE_COLOR_DIAGNOSTICS = 1
 
 	if ( $bootstrap )
 	{
 		$path_build = join-path $path_project build
 		$path_gen   = join-path $path_project gen
 
+		if ( -not(Test-Path($path_build) )) {
+			New-Item -ItemType Directory -Path $path_build
+		}
+		if ( -not(Test-Path($path_gen) )) {
+			New-Item -ItemType Directory -Path $path_gen
+		}
+
 		$include    = $path_project
 		$unit       = join-path $path_project "bootstrap.cpp"
-		$object     = join-path $path_build   "bootstrap.o"
+		$object     = join-path $path_build   "bootstrap.obj"
 		$executable = join-path $path_build   "bootstrap.exe"
 
+		$warning_ignores = @(
+			$ignore_warning_ms_include
+		)
+
 		$compiler_args = @(
+			$flag_no_color_diagnostics,
 			$flag_target_arch, $target_arch,
 			$flag_wall,
 			$flag_preprocess_non_intergrated,
-			$( $flag_define + 'GEN_TIME' ),
-			$flag_path_output, $executable,
-			$( $flag_include + $include )
+			( $flag_define + 'GEN_TIME' ),
+			( $flag_path_output + $object ),
+			( $flag_include + $include )
 		)
+
+		$warning_ignores | ForEach-Object {
+			$compiler_args += $flag_warning + $_
+		}
+
 		if ( $release -eq $false ) {
-			$compiler_args += $( $flag_define + 'Build_Debug' )
+			$compiler_args += ( $flag_define + 'Build_Debug' )
 			$compiler_args += $flag_debug, $flag_debug_codeview, $flag_profiling_debug
 		}
 
 		$compiler_args += $flag_compile, $unit
-	    run-compiler clang++ $executable $path_build $path_gen $compiler_args
+	    run-compiler clang++ $unit $compiler_args
 
 		$linker_args = @(
-			$flag_x_linker,
-			$( $flag_linker + $flag_win_subsystem_console ),
-			$( $flag_linker + $flag_machine_64 )
+			$flag_link_win_subsystem_console,
+			$flag_link_win_machine_64,
+			$( $flag_link_win_path_output + $executable )
 		)
+		if ( $release -eq $false ) {
+			$linker_args += $flag_link_win_debug
+			$linker_args += $flag_link_win_pdb + $pdb
+		}
+		else {
+		}
+
+		# https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170
 		$libraries = @(
-			'Kernel32',    # For Windows API
-			# 'msvcrt',      # For the C Runtime (Dynamically Linked)
-			'libucrt',
+			'Kernel32' # For Windows API
+			# 'msvcrt', # For the C Runtime (Dynamically Linked)
+			# 'libucrt',
 			'libcmt'    # For the C Runtime (Static Linkage)
 		)
 
-		# $compiler_args += $linker_args
-		# $compiler_args += $libraries | ForEach-Object { $flag_library + $_ }
+		$libraries | ForEach-Object {
+			$linker_args += $_ + '.lib'
+		}
+
+		$linker_args += $object
+		run-linker lld-link $executable $linker_args
 
 		Push-Location $path_project
-			if ( Test-Path($executable) ) {
+			if ( Test-Path( $executable ) ) {
 				write-host "`nRunning bootstrap"
 				$time_taken = Measure-Command { & $executable
 						| ForEach-Object {
@@ -208,12 +242,12 @@ if ( $compiler -match "clang" )
 		$compiler_args = @(
 			$flag_target_arch, $target_arch,
 			$flag_preprocess_non_intergrated,
-			$( $flag_define + 'GEN_TIME' ),
+			( $flag_define + 'GEN_TIME' ),
 			$flag_path_output, $executable,
-			$( $flag_include + $include )
+			( $flag_include + $include )
 		)
 		if ( $release -eq $false ) {
-			$compiler_args += $( $flag_define + 'Build_Debug' )
+			$compiler_args += ( $flag_define + 'Build_Debug' )
 			$compiler_args += $flag_debug, $flag_debug_codeview, $flag_profiling_debug
 		}
 
@@ -221,7 +255,7 @@ if ( $compiler -match "clang" )
 		run-compiler clang $executable $path_build $path_gen $compiler_args
 
 		Push-Location $path_singleheader
-			if ( Test-Path($executable) ) {
+			if ( Test-Path( $executable ) ) {
 				write-host "`nRunning singleheader generator"
 				$time_taken = Measure-Command { & $executable
 						| ForEach-Object {
@@ -241,6 +275,7 @@ if ( $compiler -match "clang" )
 
 if ( $compiler -match "msvc" )
 {
+	# https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170
 	$flag_compile			      = '/c'
 	$flag_debug                   = '/Zi'
 	$flag_define		          = '/D'
@@ -250,6 +285,8 @@ if ( $compiler -match "msvc" )
 	$flag_dll 				      = '/LD'
 	$flag_dll_debug 			  = '/LDd'
 	$flag_linker 		          = '/link'
+	$flag_link_debug 			  = '/DEBUG'
+	$flag_link_pdb 				  = '/PDB:'
 	$flag_link_machine_32         = '/MACHINE:X86'
 	$flag_link_machine_64         = '/MACHINE:X64'
 	$flag_link_path_output 	      = '/OUT:'
@@ -266,6 +303,7 @@ if ( $compiler -match "msvc" )
 	$flag_preprocess_conform      = '/Zc:preprocessor'
 
 	[array] $compiler_args = $null
+	[array] $linker_args   = $null
 
 	if ( $bootstrap )
 	{
@@ -283,21 +321,22 @@ if ( $compiler -match "msvc" )
 		$unit       = join-path $path_project "bootstrap.cpp"
 		$object     = join-path $path_build   "bootstrap.obj"
 		$executable = join-path $path_build   "bootstrap.exe"
+		$pdb 	    = join-path $path_build   "bootstrap.pdb"
 
 		$compiler_args = @(
 			$flag_nologo,
-			$flag_debug,
 			$flag_preprocess_conform,
-			$( $flag_define + 'GEN_TIME' ),
+			$flag_define + 'GEN_TIME',
 			$flag_full_src_path,
-			$( $flag_path_interm + $path_build + '\' ),
-			$( $flag_path_output + $path_build + '\' ),
-			$( $flag_include + $include )
+			( $flag_path_interm + $path_build + '\' ),
+			( $flag_path_output + $path_build + '\' ),
+			( $flag_include + $include )
 		)
 
 		if ( $release -eq $false ) {
-			$compiler_args += $( $flag_define + 'Build_Debug' )
-			$compiler_args += $( $flag_path_debug + $path_build + '\' )
+			$compiler_args += ( $flag_define + 'Build_Debug' )
+			$compiler_args += $flag_debug
+			$compiler_args += ( $flag_path_debug + $path_build + '\' )
 			$compiler_args += $flag_link_rt_static_debug
 		}
 		else {
@@ -311,17 +350,20 @@ if ( $compiler -match "msvc" )
 			$flag_nologo,
 			$flag_link_machine_64,
 			$flag_link_subsystem_console,
-			$( $flag_link_path_output + $executable ),
-			$object
+			( $flag_link_path_output + $executable )
 		)
 		if ( $release -eq $false ) {
+			$linker_args += $flag_link_debug
+			$linker_args += $flag_link_pdb + $pdb
 		}
 		else {
 		}
+
+		$linker_args += $object
 		run-linker link $executable $linker_args
 
 		Push-Location $path_project
-			if ( Test-Path($executable) ) {
+			if ( Test-Path( $executable ) ) {
 				write-host "`nRunning bootstrap"
 				$time_taken = Measure-Command { & $executable
 						| ForEach-Object {
@@ -353,16 +395,16 @@ if ( $compiler -match "msvc" )
 			$flag_nologo,
 			$flag_debug,
 			$flag_preprocess_conform,
-			$( $flag_define + 'GEN_TIME' ),
+			( $flag_define + 'GEN_TIME' ),
 			$flag_full_src_path,
-			$( $flag_path_interm + $path_build + '\' ),
-			$( $flag_path_output + $path_build + '\' ),
-			$( $flag_include + $include )
+			( $flag_path_interm + $path_build + '\' ),
+			( $flag_path_output + $path_build + '\' ),
+			( $flag_include + $include )
 		)
 
 		if ( $release -eq $false ) {
-			$compiler_args += $( $flag_define + 'Build_Debug' )
-			$compiler_args += $( $flag_path_debug + $path_build + '\' )
+			$compiler_args += ( $flag_define + 'Build_Debug' )
+			$compiler_args += ( $flag_path_debug + $path_build + '\' )
 		}
 
 		$compiler_args += $unit

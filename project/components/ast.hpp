@@ -214,7 +214,7 @@ struct AST
 			- sizeof(ModuleFlag)
 			- sizeof(u32)
 	)
-	/ sizeof(SpecifierT) - 1; // -1 for 4 extra bytes
+	/ sizeof(SpecifierT); // -1 for 4 extra bytes
 
 	union {
 		struct
