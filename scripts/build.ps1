@@ -145,7 +145,17 @@ if ( $compiler -match "clang" )
 
 	$target_arch = Get-TargetArchClang
 
-	$env:CLANG_FORCE_COLOR_DIAGNOSTICS = 1
+	$warning_ignores = @(
+		$ignore_warning_ms_include
+	)
+
+	# https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170
+	$libraries = @(
+		'Kernel32' # For Windows API
+		# 'msvcrt', # For the C Runtime (Dynamically Linked)
+		# 'libucrt',
+		'libcmt'    # For the C Runtime (Static Linkage)
+	)
 
 	if ( $bootstrap )
 	{
@@ -163,10 +173,7 @@ if ( $compiler -match "clang" )
 		$unit       = join-path $path_project "bootstrap.cpp"
 		$object     = join-path $path_build   "bootstrap.obj"
 		$executable = join-path $path_build   "bootstrap.exe"
-
-		$warning_ignores = @(
-			$ignore_warning_ms_include
-		)
+		$pdb 	    = join-path $path_build   "bootstrap.pdb"
 
 		$compiler_args = @(
 			$flag_no_color_diagnostics,
@@ -202,14 +209,6 @@ if ( $compiler -match "clang" )
 		else {
 		}
 
-		# https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170
-		$libraries = @(
-			'Kernel32' # For Windows API
-			# 'msvcrt', # For the C Runtime (Dynamically Linked)
-			# 'libucrt',
-			'libcmt'    # For the C Runtime (Static Linkage)
-		)
-
 		$libraries | ForEach-Object {
 			$linker_args += $_ + '.lib'
 		}
@@ -235,15 +234,26 @@ if ( $compiler -match "clang" )
 		$path_build = join-path $path_singleheader build
 		$path_gen   = join-path $path_singleheader gen
 
+		if ( -not(Test-Path($path_build) )) {
+			New-Item -ItemType Directory -Path $path_build
+		}
+		if ( -not(Test-Path($path_gen) )) {
+			New-Item -ItemType Directory -Path $path_gen
+		}
+
 		$include    = $path_project
 		$unit       = join-path $path_singleheader "singleheader.cpp"
+		$object	    = join-path $path_build        "singleheader.obj"
 		$executable = join-path $path_build        "singleheader.exe"
+		$pdb 	    = join-path $path_build        "singleheader.pdb"
 
 		$compiler_args = @(
+			$flag_no_color_diagnostics,
 			$flag_target_arch, $target_arch,
+			$flag_wall,
 			$flag_preprocess_non_intergrated,
 			( $flag_define + 'GEN_TIME' ),
-			$flag_path_output, $executable,
+			( $flag_path_output + $object ),
 			( $flag_include + $include )
 		)
 		if ( $release -eq $false ) {
@@ -251,8 +261,31 @@ if ( $compiler -match "clang" )
 			$compiler_args += $flag_debug, $flag_debug_codeview, $flag_profiling_debug
 		}
 
-		$compiler_args += $unit
-		run-compiler clang $executable $path_build $path_gen $compiler_args
+		$warning_ignores | ForEach-Object {
+			$compiler_args += $flag_warning + $_
+		}
+
+		$compiler_args += $flag_compile, $unit
+		run-compiler clang $unit $compiler_args
+
+		$linker_args = @(
+			$flag_link_win_subsystem_console,
+			$flag_link_win_machine_64,
+			$( $flag_link_win_path_output + $executable )
+		)
+		if ( $release -eq $false ) {
+			$linker_args += $flag_link_win_debug
+			$linker_args += $flag_link_win_pdb + $pdb
+		}
+		else {
+		}
+
+		$libraries | ForEach-Object {
+			$linker_args += $_ + '.lib'
+		}
+
+		$linker_args += $object
+		run-linker lld-link $executable $linker_args
 
 		Push-Location $path_singleheader
 			if ( Test-Path( $executable ) ) {
@@ -389,12 +422,14 @@ if ( $compiler -match "msvc" )
 
 		$include    = $path_project
 		$unit       = join-path $path_singleheader "singleheader.cpp"
+		$object     = join-path $path_build        "singleheader.obj"
 		$executable = join-path $path_build        "singleheader.exe"
+		$pdb 	    = join-path $path_build        "singleheader.pdb"
 
 		$compiler_args = @(
 			$flag_nologo,
-			$flag_debug,
 			$flag_preprocess_conform,
+			$flag_debug,
 			( $flag_define + 'GEN_TIME' ),
 			$flag_full_src_path,
 			( $flag_path_interm + $path_build + '\' ),
@@ -405,10 +440,30 @@ if ( $compiler -match "msvc" )
 		if ( $release -eq $false ) {
 			$compiler_args += ( $flag_define + 'Build_Debug' )
 			$compiler_args += ( $flag_path_debug + $path_build + '\' )
+			$compiler_args += $flag_link_rt_static_debug
+		}
+		else {
+			$compiler_args += $flag_link_rt_static
 		}
 
-		$compiler_args += $unit
-		run-compiler cl $executable $path_build $path_gen $compiler_args
+		$compiler_args += $flag_compile, $unit
+		run-compiler cl $unit $compiler_args
+
+		$linker_args = @(
+			$flag_nologo,
+			$flag_link_machine_64,
+			$flag_link_subsystem_console,
+			( $flag_link_path_output + $executable )
+		)
+		if ( $release -eq $false ) {
+			$linker_args += $flag_link_debug
+			$linker_args += $flag_link_pdb + $pdb
+		}
+		else {
+		}
+
+		$linker_args += $object
+		run-linker link $executable $linker_args
 
 		Push-Location $path_singleheader
 			if ( Test-Path($executable) ) {
@@ -459,7 +514,7 @@ if ( $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 	Write-Host "`nFormatting complete in $($time_taken.TotalMilliseconds) ms"
 }
 
-if ( $singleheader )
+if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp")) )
 {
 	$path_gen = join-path $path_singleheader gen
 
