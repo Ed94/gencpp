@@ -23,7 +23,7 @@ void check_singleheader_ast()
 	time_start = time_rel_ms();
 
 	Builder
-	builder = Builder::open( "singleheader_copy.gen.hpp" );
+	builder = Builder::open( "gen/singleheader_copy.gen.hpp" );
 	builder.print( ast );
 	builder.write();
 

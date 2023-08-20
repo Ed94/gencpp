@@ -8,19 +8,19 @@ $devshell = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 cls
 
 #region Arguments
-       $compiler     = $null
+       $vendor       = $null
        $release      = $null
 [bool] $bootstrap    = $false
 [bool] $singleheader = $false
 [bool] $test         = $false
 
-[array] $compilers = @( "clang", "msvc" )
+[array] $vendors = @( "clang", "msvc" )
 
 # This is a really lazy way of parsing the args, could use actual params down the line...
 
 if ( $args ) { $args | ForEach-Object {
 	switch ($_){
-		{ $_ -in $compilers } { $compiler     = $_; break }
+		{ $_ -in $vendors }   { $vendor      = $_; break }
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
 		"bootstrap"           { $bootstrap    = $true }
@@ -30,8 +30,7 @@ if ( $args ) { $args | ForEach-Object {
 }}
 #endregion Arguments
 
-#region Building
-
+#region Configuration
 if ($IsWindows) {
 	# This library was really designed to only run on 64-bit systems.
 	# (Its a development tool after all)
@@ -46,12 +45,12 @@ $path_singleheader = Join-Path $path_root singleheader
 $path_test         = Join-Path $path_root test
 
 
-if ( $compiler -eq $null ) {
-	write-host "No compilier specified, assuming clang available"
+if ( $vendor -eq $null ) {
+	write-host "No vendor specified, assuming clang available"
 	$compiler = "clang"
 }
 
-if ( $release -eq $null ) {
+if ( $vendor -eq $null ) {
 	write-host "No build type specified, assuming debug"
 	$release = $false
 }
@@ -60,7 +59,7 @@ if ( $bootstrap -eq $false -and $singleheader -eq $false -and $test -eq $false )
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
 
-write-host "Building gencpp with $compiler"
+write-host "Building gencpp with $vendor"
 write-host "Build Type: $(if ($release) {"Release"} else {"Debug"} )"
 
 Push-Location $path_root
@@ -123,7 +122,7 @@ function run-linker
 	}
 }
 
-if ( $compiler -match "clang" )
+if ( $vendor -match "clang" )
 {
 	# https://clang.llvm.org/docs/ClangCommandLineReference.html
 	$flag_compile                    = '-c'
@@ -170,7 +169,8 @@ if ( $compiler -match "clang" )
 
 	function build-simple
 	{
-		param( $compiler, $linker, $includes, $unit, $executable )
+		param( $includes, $unit, $executable )
+		Write-Host "build-simple: clang"
 
 		$object = $executable -replace '\.exe', '.obj'
 		$pdb    = $executable -replace '\.exe', '.pdb'
@@ -217,78 +217,11 @@ if ( $compiler -match "clang" )
 		run-linker $linker $executable $linker_args
 	}
 
-	[array] $compiler_args = $null
-	[array] $linker_args   = $null
-
-	if ( $bootstrap )
-	{
-		$path_build = join-path $path_project build
-		$path_gen   = join-path $path_project gen
-
-		if ( -not(Test-Path($path_build) )) {
-			New-Item -ItemType Directory -Path $path_build
-		}
-		if ( -not(Test-Path($path_gen) )) {
-			New-Item -ItemType Directory -Path $path_gen
-		}
-
-		$includes   = @( $path_project )
-		$unit       = join-path $path_project "bootstrap.cpp"
-		$executable = join-path $path_build   "bootstrap.exe"
-
-		build-simple clang++ lld-link $include $unit $executable
-
-		Push-Location $path_project
-			if ( Test-Path( $executable ) ) {
-				write-host "`nRunning bootstrap"
-				$time_taken = Measure-Command { & $executable
-						| ForEach-Object {
-							write-host `t $_ -ForegroundColor Green
-						}
-					}
-				write-host "`nBootstrap completed in $($time_taken.TotalMilliseconds) ms"
-			}
-		Pop-Location
-	}
-
-	if ( $singleheader )
-	{
-		$path_build = join-path $path_singleheader build
-		$path_gen   = join-path $path_singleheader gen
-
-		if ( -not(Test-Path($path_build) )) {
-			New-Item -ItemType Directory -Path $path_build
-		}
-		if ( -not(Test-Path($path_gen) )) {
-			New-Item -ItemType Directory -Path $path_gen
-		}
-
-		$include    = $path_project
-		$unit       = join-path $path_singleheader "singleheader.cpp"
-		$executable = join-path $path_build        "singleheader.exe"
-
-		build-simple clang++ lld-link $include $unit $executable
-
-		Push-Location $path_singleheader
-			if ( Test-Path( $executable ) ) {
-				write-host "`nRunning singleheader generator"
-				$time_taken = Measure-Command { & $executable
-						| ForEach-Object {
-							write-host `t $_ -ForegroundColor Green
-						}
-					}
-				write-host "`nSingleheader generator completed in $($time_taken.TotalMilliseconds) ms"
-			}
-		Pop-Location
-	}
-
-	if ( $test )
-	{
-	    # ... [your test compilation code here]
-	}
+	$compiler = 'clang++'
+	$linker   = 'lld-link'
 }
 
-if ( $compiler -match "msvc" )
+if ( $vendor -match "msvc" )
 {
 	# https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170
 	$flag_compile			      = '/c'
@@ -321,7 +254,8 @@ if ( $compiler -match "msvc" )
 	# This works because this project uses a single unit to build
 	function build-simple
 	{
-		param( $compiler, $linker, $includes, $unit, $executable )
+		param( $includes, $unit, $executable )
+		Write-Host "build-simple: msvc"
 
 		$object = $executable -replace '\.exe', '.obj'
 		$pdb    = $executable -replace '\.exe', '.pdb'
@@ -365,109 +299,111 @@ if ( $compiler -match "msvc" )
 		run-linker $linker $executable $linker_args
 	}
 
-	[array] $compiler_args = $null
-	[array] $linker_args   = $null
+	$compiler = 'cl'
+	$linker   = 'link'
+}
+#endregion Configuration
 
-	if ( $bootstrap )
-	{
-		$path_build = join-path $path_project build
-		$path_gen   = join-path $path_project gen
+#region Building
+if ( $bootstrap )
+{
+	$path_build = join-path $path_project build
+	$path_gen   = join-path $path_project gen
 
-		if ( -not(Test-Path($path_build) )) {
-			New-Item -ItemType Directory -Path $path_build
-		}
-		if ( -not(Test-Path($path_gen) )) {
-			New-Item -ItemType Directory -Path $path_gen
-		}
-
-		$includes   = @( $path_project)
-		$unit       = join-path $path_project "bootstrap.cpp"
-		$executable = join-path $path_build   "bootstrap.exe"
-
-		build-simple cl link $includes $unit $executable
-
-		Push-Location $path_project
-			if ( Test-Path( $executable ) ) {
-				write-host "`nRunning bootstrap"
-				$time_taken = Measure-Command { & $executable
-						| ForEach-Object {
-							write-host `t $_ -ForegroundColor Green
-						}
-					}
-				write-host "`nBootstrap completed in $($time_taken.TotalMilliseconds) ms"
-			}
-		Pop-Location
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	if ( $singleheader )
-	{
-		$path_build = join-path $path_singleheader build
-		$path_gen   = join-path $path_singleheader gen
+	$includes   = @( $path_project)
+	$unit       = join-path $path_project "bootstrap.cpp"
+	$executable = join-path $path_build   "bootstrap.exe"
 
-		if ( -not(Test-Path($path_build) )) {
-			New-Item -ItemType Directory -Path $path_build
-		}
-		if ( -not(Test-Path($path_gen) )) {
-			New-Item -ItemType Directory -Path $path_gen
-		}
+	build-simple $includes $unit $executable
 
-		$includes    = @($path_project)
-		$unit       = join-path $path_singleheader "singleheader.cpp"
-		$executable = join-path $path_build        "singleheader.exe"
-
-		build-simple cl link $includes $unit $executable
-
-		Push-Location $path_singleheader
-			if ( Test-Path($executable) ) {
-				write-host "`nRunning singleheader generator"
-				$time_taken = Measure-Command { & $executable
-						| ForEach-Object {
-							write-host `t $_ -ForegroundColor Green
-						}
+	Push-Location $path_project
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning bootstrap"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
 					}
-				write-host "`nSingleheader generator completed in $($time_taken.TotalMilliseconds) ms"
-			}
-		Pop-Location
+				}
+			write-host "`nBootstrap completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
+if ( $singleheader )
+{
+	$path_build = join-path $path_singleheader build
+	$path_gen   = join-path $path_singleheader gen
+
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	if ( $test )
-	{
-		$path_gen       = join-path $path_test gen
-		$path_gen_build = join-path $path_gen  build
-		$path_build     = join-path $path_test build
+	$includes    = @($path_project)
+	$unit       = join-path $path_singleheader "singleheader.cpp"
+	$executable = join-path $path_build        "singleheader.exe"
 
-		if ( -not(Test-Path($path_build) )) {
-			New-Item -ItemType Directory -Path $path_build
-		}
-		if ( -not(Test-Path($path_gen) )) {
-			New-Item -ItemType Directory -Path $path_gen
-		}
-		if ( -not(Test-Path($path_gen_build) ))  {
-			New-Item -ItemType Directory -Path $path_gen_build
-		}
+	build-simple $includes $unit $executable
 
-		$path_bootstrap = join-path $path_project gen
-
-		$include    = $path_bootstrap
-		$unit       = join-path $path_test  "test.cpp"
-		$object     = join-path $path_build "test.obj"
-		$executable = join-path $path_build "test.exe"
-		$pdb        = join-path $path_build "test.pdb"
-
-		build-simple cl link $include $unit $executable
-
-		Push-Location $path_test
-			if ( Test-Path( $executable ) ) {
-				write-host "`nRunning test generator"
-				$time_taken = Measure-Command { & $executable
-						| ForEach-Object {
-							write-host `t $_ -ForegroundColor Green
-						}
+	Push-Location $path_singleheader
+		if ( Test-Path($executable) ) {
+			write-host "`nRunning singleheader generator"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
 					}
-				write-host "`nTest generator completed in $($time_taken.TotalMilliseconds) ms"
-			}
-		Pop-Location
+				}
+			write-host "`nSingleheader generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
+if ( $test )
+{
+	$path_gen       = join-path $path_test gen
+	$path_gen_build = join-path $path_gen  build
+	$path_build     = join-path $path_test build
+
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
 	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+	if ( -not(Test-Path($path_gen_build) ))  {
+		New-Item -ItemType Directory -Path $path_gen_build
+	}
+
+	$path_bootstrap = join-path $path_project gen
+
+	$include    = $path_bootstrap
+	$unit       = join-path $path_test  "test.cpp"
+	$object     = join-path $path_build "test.obj"
+	$executable = join-path $path_build "test.exe"
+	$pdb        = join-path $path_build "test.pdb"
+
+	build-simple $include $unit $executable
+
+	Push-Location $path_test
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning test generator"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nTest generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
 }
 #endregion Building
 

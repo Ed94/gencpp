@@ -64,7 +64,7 @@ void check_sanity()
 	log_fmt("Num String Cache        : %llu\n", StringCache.Entries.num(), StringCache);
 
 	Builder builder;
-	builder.open( "sanity.gen.hpp" );
+	builder.open( "gen/sanity.gen.hpp" );
 
 	idx = typedefs.num();
 #ifdef GEN_BENCHMARK
