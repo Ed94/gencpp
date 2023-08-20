@@ -2,10 +2,13 @@
 # It will most likely need a partial rewrite to segment the build process into separate script invocations based on the OS.
 # That or just rewrite it in an sh script and call it a day.
 
-Import-Module ./helpers/target_arch.psm1
-$devshell = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
-
 cls
+
+Import-Module ./helpers/target_arch.psm1
+$devshell  = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
+$path_root = git rev-parse --show-toplevel
+
+Push-Location $path_root
 
 #region Arguments
        $vendor       = $null
@@ -37,20 +40,12 @@ if ($IsWindows) {
     & $devshell -arch amd64
 }
 
-$path_root         = git rev-parse --show-toplevel
-$path_build        = Join-Path $path_root build
-$path_project      = Join-Path $path_root project
-$path_scripts      = Join-Path $path_root scripts
-$path_singleheader = Join-Path $path_root singleheader
-$path_test         = Join-Path $path_root test
-
-
 if ( $vendor -eq $null ) {
 	write-host "No vendor specified, assuming clang available"
 	$compiler = "clang"
 }
 
-if ( $vendor -eq $null ) {
+if ( $release -eq $null ) {
 	write-host "No build type specified, assuming debug"
 	$release = $false
 }
@@ -61,8 +56,6 @@ if ( $bootstrap -eq $false -and $singleheader -eq $false -and $test -eq $false )
 
 write-host "Building gencpp with $vendor"
 write-host "Build Type: $(if ($release) {"Release"} else {"Debug"} )"
-
-Push-Location $path_root
 
 function run-compiler
 {
@@ -305,6 +298,13 @@ if ( $vendor -match "msvc" )
 #endregion Configuration
 
 #region Building
+
+$path_build        = Join-Path $path_root build
+$path_project      = Join-Path $path_root project
+$path_scripts      = Join-Path $path_root scripts
+$path_singleheader = Join-Path $path_root singleheader
+$path_test         = Join-Path $path_root test
+
 if ( $bootstrap )
 {
 	$path_build = join-path $path_project build
@@ -408,6 +408,7 @@ if ( $test )
 #endregion Building
 
 #region Formatting
+
 function format-cpp
 {
 	param( $path, $include, $exclude )
@@ -420,7 +421,10 @@ function format-cpp
 		'-verbose'
 	)
 
-	$targetFiles = @(Get-ChildItem -Recurse -Path $path -Include $include -Exclude $exclude | Select-Object -ExpandProperty FullName)
+	$targetFiles = @(
+		Get-ChildItem -Recurse -Path $path -Include $include -Exclude $exclude
+			| Select-Object -ExpandProperty FullName
+	)
 
 	$time_taken = Measure-Command {
 		clang-format $formatParams $targetFiles
