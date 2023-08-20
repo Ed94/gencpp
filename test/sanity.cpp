@@ -4,8 +4,8 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "gen/gen.hpp"
-#include "gen/gen.builder.hpp"
+#include "gen.hpp"
+#include "gen.builder.hpp"
 
 void check_sanity()
 {

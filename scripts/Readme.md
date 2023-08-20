@@ -36,21 +36,12 @@ args:
     singleheader
     test
     clang
-    msvc
-    release
+    msvc    : By default this project builds with clang, specifying msvc will build with MSVC.
+    debug
+    release : By default this project builds in debug mode, specifying release will build with optimizations.
 ```
 
-**`test.gen.build.ps1`**  
-Build the metaprogram for generating the test code.
-
-**`test.gen.ps1`**  
-Build (if not already) the metaprogram for generating test code, then run it to generate code.
-
-**`test.build.ps1`**  
-Build and run metaprogram, build test program.
-
-**`test.run.ps1`**  
-Build and run metaprogram, build and run test program.
-
+**`package_release.ps1`**  
+Will build the project as fast as possible, then package the release into a zip file.
 
 *Note: My env is Windows 11 with MSVC 2022 and clang 16.0.6*

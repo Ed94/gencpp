@@ -2,9 +2,9 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
-#include "gen/gen.hpp"
-#include "gen/gen.builder.hpp"
-#include "gen/gen.scanner.hpp"
+#include "gen.hpp"
+#include "gen.builder.hpp"
+#include "gen.scanner.hpp"
 using namespace gen;
 
 void check_singleheader_ast()

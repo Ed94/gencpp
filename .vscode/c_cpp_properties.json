@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Win32 msvc",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
@@ -12,10 +12,24 @@
                 "GEN_TIME"
             ],
             "windowsSdkVersion": "10.0.19041.0",
-            // "compilerPath": "C:/Users/Ed/scoop/apps/llvm/current/bin/clang++.exe",
-            "compilerPath": "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\cl.exe",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.29.30133/bin/HostX64/x64/cl.exe",
             "intelliSenseMode": "msvc-x64",
-            // "intelliSenseMode": "windows-clang-x64",
+            "compileCommands": "${workspaceFolder}/project/build/compile_commands.json"
+        },
+        {
+            "name": "Win32 clang",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "GEN_TIME"
+            ],
+            "windowsSdkVersion": "10.0.19041.0",
+            "compilerPath": "C:/Users/Ed/scoop/apps/llvm/current/bin/clang++.exe",
+            "intelliSenseMode": "windows-clang-x64",
             "compileCommands": "${workspaceFolder}/project/build/compile_commands.json"
         }
     ],

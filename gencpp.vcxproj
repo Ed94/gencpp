@@ -103,10 +103,8 @@
     <None Include="scripts\build.ci.ps1" />
     <None Include="scripts\build.ps1" />
     <None Include="scripts\clean.ps1" />
-    <None Include="scripts\gen.ps1" />
     <None Include="scripts\genccp.natstepfilter" />
     <None Include="scripts\gencpp.refactor" />
-    <None Include="scripts\get_sources.ps1" />
     <None Include="test\gen\meson.build" />
     <None Include="test\meson.build" />
     <None Include="test\Readme.md" />
@@ -206,13 +204,9 @@
     <Content Include="project\enums\ESpecifier.csv" />
     <Content Include="project\enums\ETokType.csv" />
     <Content Include="scripts\.clang-format" />
-    <Content Include="scripts\bootstrap.ci.ps1" />
-    <Content Include="scripts\bootstrap.ps1" />
     <Content Include="scripts\helpers\devshell.ps1" />
     <Content Include="scripts\helpers\target_arch.psm1" />
     <Content Include="scripts\refactor.ps1" />
-    <Content Include="scripts\singleheader.ci.ps1" />
-    <Content Include="scripts\singleheader.ps1" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
