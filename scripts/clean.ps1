@@ -7,8 +7,7 @@ $path_singleheader_build = Join-Path $path_singleheader build
 $path_singleheader_gen	 = Join-Path $path_singleheader gen
 $path_test               = Join-Path $path_root test
 $path_test_build         = Join-Path $path_test build
-$path_gen                = Join-Path $path_test gen
-$path_gen_build          = Join-Path $path_gen  build
+$path_test_gen           = Join-Path $path_test gen
 $path_x64				 = Join-Path $path_root x64
 $path_release			 = Join-Path $path_root release
 
@@ -37,9 +36,9 @@ if ( Test-Path $path_test_build )
 	Remove-Item $path_test_build -Recurse
 }
 
-if ( Test-Path $path_gen_build )
+if ( Test-Path $path_test_gen )
 {
-	Remove-Item $path_gen_build -Recurse
+	Remove-Item $path_test_gen -Recurse
 }
 
 if ( Test-Path $path_x64)
