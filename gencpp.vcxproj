@@ -99,12 +99,21 @@
   <ItemGroup>
     <None Include=".editorconfig" />
     <None Include="project\components\temp\Readme.md" />
+    <None Include="project\enums\AttributeTokens.csv" />
+    <None Include="project\enums\ECode.csv" />
+    <None Include="project\enums\EOperator.csv" />
+    <None Include="project\enums\ESpecifier.csv" />
+    <None Include="project\enums\ETokType.csv" />
     <None Include="Readme.md" />
     <None Include="scripts\build.ci.ps1" />
     <None Include="scripts\build.ps1" />
     <None Include="scripts\clean.ps1" />
     <None Include="scripts\genccp.natstepfilter" />
     <None Include="scripts\gencpp.refactor" />
+    <None Include="scripts\helpers\devshell.ps1" />
+    <None Include="scripts\helpers\target_arch.psm1" />
+    <None Include="scripts\package_release.ps1" />
+    <None Include="scripts\refactor.ps1" />
     <None Include="test\gen\meson.build" />
     <None Include="test\meson.build" />
     <None Include="test\Readme.md" />
@@ -185,13 +194,18 @@
     <ClCompile Include="project\gen.cpp" />
     <ClCompile Include="project\gen.dep.cpp" />
     <ClCompile Include="singleheader\singleheader.cpp" />
+    <ClCompile Include="test\parsed\test.parsing.cpp" />
     <ClCompile Include="test\parsing.cpp" />
     <ClCompile Include="test\sanity.cpp" />
     <ClCompile Include="test\SOA.cpp" />
     <ClCompile Include="test\test.cpp" />
     <ClCompile Include="test\test.parsing.cpp" />
+    <ClCompile Include="test\test.singleheader_ast.cpp" />
     <ClCompile Include="test\test.Upfront.cpp" />
     <ClCompile Include="test\upfront.cpp" />
+    <ClCompile Include="test\upfront\test.upfront.cpp" />
+    <ClCompile Include="test\validate_bootstrap.cpp" />
+    <ClCompile Include="test\validate_singleheader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include=".vscode\gencpp.natvis" />
