@@ -1,3 +1,7 @@
+if ($env:VCINSTALLDIR) {
+    return
+}
+
 $ErrorActionPreference = "Stop"
 
 # Use vswhere to find the latest Visual Studio installation

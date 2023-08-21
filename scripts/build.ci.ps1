@@ -2,8 +2,6 @@
 # It will most likely need a partial rewrite to segment the build process into separate script invocations based on the OS.
 # That or just rewrite it in an sh script and call it a day.
 
-cls
-
 Import-Module ./helpers/target_arch.psm1
 $devshell  = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 $path_root = git rev-parse --show-toplevel
