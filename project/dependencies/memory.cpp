@@ -1,3 +1,6 @@
+#pragma once
+#include "printing.cpp"
+
 #pragma region Memory
 
 void* mem_copy( void* dest, void const* source, sw n )
@@ -387,4 +390,3 @@ void Pool::clear()
 }
 
 #pragma endregion Memory
-

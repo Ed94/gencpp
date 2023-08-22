@@ -1,3 +1,6 @@
+#pragma once
+#include "memory.hpp"
+
 #pragma region String Ops
 
 GEN_DEF_INLINE const char* char_first_occurence( const char* str, char c );
@@ -260,4 +263,3 @@ GEN_IMPL_INLINE void str_to_upper( char* str )
 }
 
 #pragma endregion String Ops
-

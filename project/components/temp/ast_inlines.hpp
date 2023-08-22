@@ -1,3 +1,5 @@
+#pragma once
+
 // This is the non-bootstraped version of the Common AST Implementation. This will be obsolete once bootstrap is stress tested.
 
 #pragma region AST Common

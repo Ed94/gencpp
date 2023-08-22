@@ -1,3 +1,6 @@
+#pragma once
+#include "header_start.hpp"
+
 using LogFailType = sw(*)(char const*, ...);
 
 // By default this library will either crash or exit if an error is detected while generating codes.
@@ -74,4 +77,3 @@ constexpr EPreprocessCond PreprocessCond_If       = EPreprocessCond::If;
 constexpr EPreprocessCond PreprocessCond_IfDef    = EPreprocessCond::IfDef;
 constexpr EPreprocessCond PreprocessCond_IfNotDef = EPreprocessCond::IfNotDef;
 constexpr EPreprocessCond PreprocessCond_ElIf     = EPreprocessCond::ElIf;
-

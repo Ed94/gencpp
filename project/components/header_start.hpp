@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 	gencpp: An attempt at "simple" staged metaprogramming for c/c++.
 
@@ -16,11 +18,12 @@
 #	include "gen.dep.hpp"
 #endif
 
-#ifdef GEN_DONT_USE_NAMESPACE
-#	define GEN_NS_BEGIN
-#	define GEN_NS_END
-#else
-#	define GEN_NS_BEGIN namespace gen {
-#	define GEN_NS_END   }
+#ifndef GEN_NS_BEGIN
+#	ifdef GEN_DONT_USE_NAMESPACE
+#		define GEN_NS_BEGIN
+#		define GEN_NS_END
+#	else
+#		define GEN_NS_BEGIN namespace gen {
+#		define GEN_NS_END   }
+#	endif
 #endif
-

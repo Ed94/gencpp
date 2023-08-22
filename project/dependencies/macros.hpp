@@ -1,3 +1,6 @@
+#pragma once
+#include "header_start.hpp"
+
 #pragma region Macros
 
 #define zpl_cast( Type ) ( Type )
@@ -161,4 +164,3 @@ void swap( Type& a, Type& b )
 }
 
 #pragma endregion Macros
-

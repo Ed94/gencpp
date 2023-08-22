@@ -1,3 +1,5 @@
+#pragma once
+
 // This is the non-bootstraped version of the ESpecifier. This will be obsolete once bootstrap is stress tested.
 
 namespace ESpecifier
@@ -15,6 +17,7 @@ namespace ESpecifier
 	Entry( Constinit,        constinit )         \
 	Entry( Explicit,         explicit )          \
 	Entry( External_Linkage, extern )            \
+	Entry( ForceInline, 	 forceinline )       \
 	Entry( Global,           global )            \
 	Entry( Inline,           inline )            \
 	Entry( Internal_Linkage, internal )          \

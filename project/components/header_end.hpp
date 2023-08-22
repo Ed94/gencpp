@@ -1,3 +1,7 @@
+#pragma once
+#include "inlines.hpp"
+#include "temp/ast_inlines.hpp"
+
 #pragma region Constants
 
 #ifndef GEN_GLOBAL_BUCKET_SIZE
@@ -73,6 +77,7 @@ extern CodeSpecifiers spec_constexpr;
 extern CodeSpecifiers spec_constinit;
 extern CodeSpecifiers spec_extern_linkage;
 extern CodeSpecifiers spec_final;
+extern CodeSpeciifers spec_forceinline;
 extern CodeSpecifiers spec_global;
 extern CodeSpecifiers spec_inline;
 extern CodeSpecifiers spec_internal_linkage;
@@ -168,4 +173,3 @@ extern CodeType t_typename;
 	extern AllocatorInfo Allocator_TypeTable;
 
 #endif
-

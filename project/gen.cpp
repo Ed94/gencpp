@@ -25,7 +25,7 @@ GEN_NS_BEGIN
 #include "components/interface.upfront.cpp"
 #include "components/temp/etoktype.cpp"
 #include "components/interface.parsing.cpp"
-#include "components/untyped.cpp"
+#include "components/interface.untyped.cpp"
 
 GEN_NS_END
 

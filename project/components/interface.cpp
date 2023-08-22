@@ -1,3 +1,6 @@
+#pragma once
+#include "ast.cpp"
+
 internal void init_parser();
 internal void deinit_parser();
 
@@ -170,10 +173,12 @@ void define_constants()
 #endif
 #	undef def_constant_code_type
 
+#	pragma push_macro( "forceinline" )
 #	pragma push_macro( "global" )
 #	pragma push_macro( "internal" )
 #	pragma push_macro( "local_persist" )
 #	pragma push_macro( "neverinline" )
+#	undef forceinline
 #	undef global
 #	undef internal
 #	undef local_persist
@@ -189,6 +194,7 @@ void define_constants()
 	def_constant_spec( constinit,        ESpecifier::Constinit );
 	def_constant_spec( extern_linkage,   ESpecifier::External_Linkage );
 	def_constant_spec( final, 		     ESpecifier::Final );
+	def_constant_spec( forceinline,      ESpecifier::ForceInline );
 	def_constant_spec( global,           ESpecifier::Global );
 	def_constant_spec( inline,           ESpecifier::Inline );
 	def_constant_spec( internal_linkage, ESpecifier::Internal_Linkage );
@@ -209,6 +215,7 @@ void define_constants()
 	spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
 	spec_local_persist.set_global();
 
+#	pragma pop_macro( "forceinline" )
 #	pragma pop_macro( "global" )
 #	pragma pop_macro( "internal" )
 #	pragma pop_macro( "local_persist" )
@@ -443,4 +450,3 @@ void set_allocator_string_table( AllocatorInfo allocator )
 {
 	Allocator_StringArena = allocator;
 }
-

@@ -1,3 +1,6 @@
+#pragma once
+#include "debug.hpp"
+
 #pragma region Memory
 
 #define kilobytes( x ) ( ( x ) * ( s64 )( 1024 ) )
@@ -484,4 +487,3 @@ struct Pool
 };
 
 #pragma endregion Memory
-

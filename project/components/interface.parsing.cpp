@@ -1,3 +1,7 @@
+#pragma once
+#include "temp/etoktype.cpp"
+#include "interface.upfront.cpp"
+
 namespace Parser
 {
 	struct Token
@@ -1140,7 +1144,7 @@ internal CodeExtern      parse_exten_link      ();
 internal CodeFriend      parse_friend          ();
 internal CodeFn          parse_function        ();
 internal CodeNS          parse_namespace       ();
-internal CodeOpCast      parse_operator_cast   ();
+internal CodeOpCast      parse_operator_cast   ( CodeSpecifiers specifiers = NoCode );
 internal CodeStruct      parse_struct          ( bool inplace_def = false );
 internal CodeVar         parse_variable        ();
 internal CodeTemplate    parse_template        ();
@@ -2259,6 +2263,27 @@ Code parse_simple_preprocess( Parser::TokType which )
 		}
 		eat( TokType::BraceCurly_Close );
 
+		StrC prev_proc = Context.Scope->Prev->ProcName;
+		if ( str_compare( prev_proc.Ptr, "parse_typedef", prev_proc.Len ) != 0 )
+		{
+			if ( check( TokType::Statement_End ))
+			{
+				eat( TokType::Statement_End );
+			}
+		}
+
+		tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
+	}
+	else
+	{
+		if ( str_compare( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )
+		{
+			if ( check( TokType::Statement_End ))
+			{
+				eat( TokType::Statement_End );
+			}
+		}
+
 		tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
 	}
 
@@ -2266,14 +2291,6 @@ Code parse_simple_preprocess( Parser::TokType which )
 
 	Code result = untyped_str( to_str( content ) );
 	Context.Scope->Name = tok;
-
-	if ( str_compare( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )
-	{
-		if ( check( TokType::Statement_End ))
-		{
-			eat( TokType::Statement_End );
-		}
-	}
 
 	Context.pop();
 	return result;
@@ -2654,8 +2671,10 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::Token name = Pa
 			case TokType::Spec_Consteval:
 			case TokType::Spec_Constexpr:
 			case TokType::Spec_Constinit:
+			case TokType::Spec_ForceInline:
 			case TokType::Spec_Inline:
 			case TokType::Spec_Mutable:
+			case TokType::Spec_NeverInline:
 			case TokType::Spec_Static:
 			case TokType::Spec_Volatile:
 			{
@@ -2671,7 +2690,9 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::Token name = Pa
 						case ESpecifier::Constexpr:
 						case ESpecifier::Constinit:
 						case ESpecifier::Inline:
+						case ESpecifier::ForceInline:
 						case ESpecifier::Mutable:
+						case ESpecifier::NeverInline:
 						case ESpecifier::Static:
 						case ESpecifier::Volatile:
 						break;
@@ -2699,6 +2720,12 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::Token name = Pa
 				if ( currtok.Type == TokType::Operator && currtok.Text[0] == '~' )
 				{
 					member = parse_destructor( specifiers );
+					break;
+				}
+
+				if ( currtok.Type == TokType::Decl_Operator )
+				{
+					member = parse_operator_cast( specifiers );
 					break;
 				}
 			}
@@ -3028,6 +3055,7 @@ CodeBody parse_global_nspace( CodeT which )
 			case TokType::Spec_Constexpr:
 			case TokType::Spec_Constinit:
 			case TokType::Spec_Extern:
+			case TokType::Spec_ForceInline:
 			case TokType::Spec_Global:
 			case TokType::Spec_Inline:
 			case TokType::Spec_Internal_Linkage:
@@ -3047,6 +3075,7 @@ CodeBody parse_global_nspace( CodeT which )
 					{
 						case ESpecifier::Constexpr:
 						case ESpecifier::Constinit:
+						case ESpecifier::ForceInline:
 						case ESpecifier::Global:
 						case ESpecifier::External_Linkage:
 						case ESpecifier::Internal_Linkage:
@@ -3696,7 +3725,9 @@ CodeFn parse_functon()
 			case ESpecifier::Consteval:
 			case ESpecifier::Constexpr:
 			case ESpecifier::External_Linkage:
+			case ESpecifier::ForceInline:
 			case ESpecifier::Inline:
+			case ESpecifier::NeverInline:
 			case ESpecifier::Static:
 			break;
 
@@ -3840,7 +3871,9 @@ CodeOperator parse_operator()
 		{
 			case ESpecifier::Const:
 			case ESpecifier::Constexpr:
+			case ESpecifier::ForceInline:
 			case ESpecifier::Inline:
+			case ESpecifier::NeverInline:
 			case ESpecifier::Static:
 			break;
 
@@ -3885,11 +3918,14 @@ CodeOperator parse_operator( StrC def )
 	return (CodeOperator) parse_operator();
 }
 
-CodeOpCast parse_operator_cast()
+CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 {
 	using namespace Parser;
 	push_scope();
 
+	// Specifiers attributed to the cast
+
+	// Operator's namespace if not within same class.
 	Token name = NullToken;
 	if ( check( TokType::Identifier ) )
 	{
@@ -3914,11 +3950,14 @@ CodeOpCast parse_operator_cast()
 	eat( TokType::Capture_Start );
 	eat( TokType::Capture_End );
 
-	CodeSpecifiers specifiers = { nullptr };
-
 	if ( check(TokType::Spec_Const))
 	{
-		specifiers = spec_const;
+		if ( specifiers.ast == nullptr )
+			specifiers = def_specifier( ESpecifier::Const );
+
+		else
+			specifiers.append( ESpecifier::Const );
+
 		eat( TokType::Spec_Const );
 	}
 
@@ -4852,4 +4891,3 @@ CodeVar parse_variable( StrC def )
 #	undef left
 #	undef check
 #	undef push_scope
-

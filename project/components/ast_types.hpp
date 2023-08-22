@@ -1,3 +1,6 @@
+#pragma once
+#include "ast.hpp"
+
 #pragma region AST Types
 /*
 	Show only relevant members of the AST for its type.
@@ -539,4 +542,3 @@ struct AST_Var
 };
 static_assert( sizeof(AST_Var) == sizeof(AST), "ERROR: AST_Var is not the same size as AST");
 #pragma endregion AST Types
-

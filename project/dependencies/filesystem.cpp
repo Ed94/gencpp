@@ -1,3 +1,6 @@
+#pragma once
+#include "strings.cpp"
+
 #pragma region File Handling
 
 #if defined( GEN_SYSTEM_WINDOWS ) || defined( GEN_SYSTEM_CYGWIN )
@@ -634,4 +637,3 @@ internal GEN_FILE_CLOSE_PROC( _memory_file_close )
 FileOperations const memory_file_operations = { _memory_file_read, _memory_file_write, _memory_file_seek, _memory_file_close };
 
 #pragma endregion File Handling
-

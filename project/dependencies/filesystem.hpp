@@ -1,3 +1,6 @@
+#pragma once
+#include "strings.hpp"
+
 #pragma region File Handling
 
 typedef u32 FileMode;
@@ -370,4 +373,3 @@ u8* file_stream_buf( FileInfo* file, sw* size );
 extern FileOperations const memory_file_operations;
 
 #pragma endregion File Handling
-

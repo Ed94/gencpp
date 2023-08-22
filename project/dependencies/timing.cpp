@@ -1,3 +1,6 @@
+#pragma once
+#include "filesystem.cpp"
+
 #pragma region Timing
 
 #ifdef GEN_BENCHMARK
@@ -160,4 +163,3 @@
 #endif
 
 #pragma endregion Timing
-

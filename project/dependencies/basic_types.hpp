@@ -1,3 +1,6 @@
+#pragma once
+#include "macros.hpp"
+
 #pragma region Basic Types
 
 #define GEN_U8_MIN 0u
@@ -118,4 +121,3 @@ typedef s16 b16;
 typedef s32 b32;
 
 #pragma endregion Basic Types
-

@@ -1,3 +1,6 @@
+#pragma once
+#include "src_start.cpp"
+
 #pragma region Debug
 
 void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... )
@@ -39,4 +42,3 @@ s32 assert_crash( char const* condition )
 #endif
 
 #pragma endregion Debug
-

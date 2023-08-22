@@ -1,3 +1,6 @@
+#pragma once
+#include "interface.hpp"
+
 void AST::append( AST* other )
 {
 	if ( other->Parent )
@@ -211,4 +214,3 @@ StrC token_fmt_impl( sw num, ... )
 
 	return { result, buf };
 }
-

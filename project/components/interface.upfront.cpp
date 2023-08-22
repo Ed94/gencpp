@@ -1,3 +1,6 @@
+#pragma once
+#include "interface.cpp"
+
 #pragma region Upfront
 
 enum class OpValidateResult : u32
@@ -2255,4 +2258,3 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 
 
 #pragma endregion Upfront
-

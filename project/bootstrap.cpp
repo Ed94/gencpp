@@ -20,16 +20,18 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gen.bootstrap.cpp "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
+constexpr bool DontSkipIncludes = false;
+
 int gen_main()
 {
 	gen::init();
 
-	Code push_ignores = scan_file( "helpers/push_ignores.inline.hpp" );
-	Code pop_ignores  = scan_file( "helpers/pop_ignores.inline.hpp" );
+	Code push_ignores = scan_file( "helpers/push_ignores.inline.hpp", DontSkipIncludes );
+	Code pop_ignores  = scan_file( "helpers/pop_ignores.inline.hpp", DontSkipIncludes );
 
 	// gen_dep.hpp
 	{
-		Code header_start = scan_file( "dependencies/header_start.hpp" );
+		Code header_start = scan_file( "dependencies/header_start.hpp", DontSkipIncludes );
 		Code macros 	  = scan_file( "dependencies/macros.hpp" );
 		Code basic_types  = scan_file( "dependencies/basic_types.hpp" );
 		Code debug        = scan_file( "dependencies/debug.hpp" );
@@ -47,7 +49,7 @@ int gen_main()
 		header.print_fmt( generation_notice );
 		header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n" );
 		header.print( header_start );
-		header.print_fmt( "GEN_NS_BEGIN\n\n" );
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
 		header.print( macros );
 		header.print( basic_types );
@@ -61,7 +63,7 @@ int gen_main()
 		header.print( filesystem );
 		header.print( timing );
 
-		header.print_fmt( "GEN_NS_END\n\n" );
+		header.print_fmt( "GEN_NS_END\n" );
 		header.write();
 	}
 
@@ -154,7 +156,7 @@ int gen_main()
 		Code        interface	    = scan_file( "components/interface.cpp" );
 		Code        upfront 	    = scan_file( "components/interface.upfront.cpp" );
 		Code 	    parsing 	    = scan_file( "components/interface.parsing.cpp" );
-		Code        untyped 	    = scan_file( "components/untyped.cpp" );
+		Code        untyped 	    = scan_file( "components/interface.untyped.cpp" );
 
 		CodeBody etoktype      = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
 		CodeNS   parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );

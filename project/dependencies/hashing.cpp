@@ -1,3 +1,6 @@
+#pragma once
+#include "memory.cpp"
+
 #pragma region Hashing
 
 global u32 const _crc32_table[ 256 ] = {
@@ -83,4 +86,3 @@ u64 crc64( void const* data, sw len )
 }
 
 #pragma endregion Hashing
-

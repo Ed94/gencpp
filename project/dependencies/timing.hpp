@@ -1,3 +1,6 @@
+#pragma once
+#include "filesystem.hpp"
+
 #pragma region Timing
 
 #ifdef GEN_BENCHMARK
@@ -12,4 +15,3 @@ u64 time_rel_ms( void );
 #endif
 
 #pragma endregion Timing
-

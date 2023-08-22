@@ -1,3 +1,5 @@
+#pragma once
+
 // This is the non-bootstraped version of the ECode. This will be obsolete once bootstrap is stress tested.
 
 namespace ECode

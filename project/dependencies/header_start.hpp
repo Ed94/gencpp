@@ -1,3 +1,5 @@
+#pragma once
+
 #pragma region Platform Detection
 
 /* Platform architecture */
@@ -120,4 +122,3 @@
 #	define GEN_NS_BEGIN namespace gen {
 #	define GEN_NS_END   }
 #endif
-

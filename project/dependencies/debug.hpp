@@ -1,3 +1,6 @@
+#pragma once
+#include "basic_types.hpp"
+
 #pragma region Debug
 
 #if defined( _MSC_VER )
@@ -56,4 +59,3 @@ void process_exit( u32 code );
 #endif
 
 #pragma endregion Debug
-

@@ -157,9 +157,13 @@ CodeBody gen_especifier( char const* path )
 #pragma push_macro( "local_persist" )
 #pragma push_macro( "do_once_start" )
 #pragma push_macro( "do_once_end" )
+#pragma push_macro( "forceinline" )
+#pragma push_macro( "neverinline" )
 #undef local_persist
 #undef do_once_start
 #undef do_once_end
+#undef forceinline
+#undef neverinline
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
 		StrC to_str( Type type )
 		{
@@ -202,6 +206,8 @@ CodeBody gen_especifier( char const* path )
 #pragma pop_macro( "local_persist" )
 #pragma pop_macro( "do_once_start" )
 #pragma pop_macro( "do_once_end" )
+#pragma pop_macro( "forceinline" )
+#pragma pop_macro( "neverinline" )
 
 	CodeNS nspace = def_namespace( name(ESpecifier), def_namespace_body( args( enum_code, is_trailing, to_str, to_type ) ) );
 

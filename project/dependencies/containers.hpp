@@ -1,3 +1,6 @@
+#pragma once
+#include "printing.hpp"
+
 #pragma region Containers
 
 template<class Type>
@@ -540,4 +543,3 @@ protected:
 };
 
 #pragma endregion Containers
-

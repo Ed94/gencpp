@@ -1,3 +1,6 @@
+#pragma once
+#include "static_data.cpp"
+
 Code Code::Global;
 Code Code::Invalid;
 
@@ -41,36 +44,34 @@ String AST::to_string()
 		case Comment:
 		{
 			if ( Prev && Prev->Type != Comment && Prev->Type != NewLine )
-			result.append("\n");
+				result.append( "\n" );
 
-			static char line[MaxCommentLineLength];
+			static char line[ MaxCommentLineLength ];
 
-			s32 left  = Content.length();
-			s32 index = 0;
-			s32 curr  = 0;
+			char const* end       = & scast(String, Content).back();
+			char*       scanner   = Content.Data;
+			s32         curr      = 0;
 			do
 			{
-				s32 length = 1;
-				while ( left && Content[index] != '\n' )
+				char const* next   = scanner;
+				s32         length = 0;
+				while ( next != end && scanner[ length ] != '\n' )
 				{
+					next = scanner + length;
 					length++;
-					left--;
-					index++;
 				}
-				index++;
-
-				str_copy( line, (char const*)Content + curr, length );
-				result.append_fmt( "//%.*s", length, line );
-				mem_set( line, 0, MaxCommentLineLength);
-
 				length++;
-				left--;
-				curr = index;
+
+				str_copy( line, scanner, length );
+				result.append_fmt( "//%.*s", length, line );
+				mem_set( line, 0, MaxCommentLineLength );
+
+				scanner += length;
 			}
-			while ( left--, left > 0 );
+			while ( scanner <= end );
 
 			if ( result.back() != '\n' )
-				result.append("\n");
+				result.append( "\n" );
 		}
 		break;
 

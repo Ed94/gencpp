@@ -1,3 +1,6 @@
+#pragma once
+#include "ast_types.hpp"
+
 #pragma region Gen Interface
 
 // Initialize the library.
@@ -175,4 +178,3 @@ Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
 #pragma endregion Untyped text
 
 #pragma endregion Gen Interface
-

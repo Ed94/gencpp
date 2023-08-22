@@ -1,3 +1,5 @@
+#pragma once
+
 namespace Parser
 {
 /*
@@ -78,6 +80,7 @@ namespace Parser
 	Entry( Spec_Constinit,         "constinit" )         \
 	Entry( Spec_Explicit,          "explicit" )          \
 	Entry( Spec_Extern,            "extern" )            \
+	Entry( Spec_ForceInline,       "forceinline" )       \
 	Entry( Spec_Final,             "final" )             \
 	Entry( Spec_Global,            "global" )            \
 	Entry( Spec_Inline,            "inline" )            \

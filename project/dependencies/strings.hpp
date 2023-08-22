@@ -1,3 +1,6 @@
+#pragma once
+#include "hashing.hpp"
+
 #pragma region Strings
 
 // Constant string with length.
@@ -54,54 +57,10 @@ struct String
 	}
 
 	static
-	String make_reserve( AllocatorInfo allocator, sw capacity )
-	{
-		constexpr sw header_size = sizeof( Header );
-
-		s32   alloc_size = header_size + capacity + 1;
-		void* allocation = alloc( allocator, alloc_size );
-
-		if ( allocation == nullptr )
-			return { nullptr };
-
-		mem_set( allocation, 0, alloc_size );
-
-		Header*
-			header            = rcast(Header*, allocation);
-		header->Allocator = allocator;
-		header->Capacity  = capacity;
-		header->Length    = 0;
-
-		String result = { rcast(char*, allocation) + header_size };
-		return result;
-	}
+	String make_reserve( AllocatorInfo allocator, sw capacity );
 
 	static
-	String make_length( AllocatorInfo allocator, char const* str, sw length )
-	{
-		constexpr sw header_size = sizeof( Header );
-
-		s32   alloc_size = header_size + length + 1;
-		void* allocation = alloc( allocator, alloc_size );
-
-		if ( allocation == nullptr )
-			return { nullptr };
-
-		Header&
-		header = * rcast(Header*, allocation);
-		header = { allocator, length, length };
-
-		String  result = { rcast( char*, allocation) + header_size };
-
-		if ( length && str )
-			mem_copy( result, str, length );
-		else
-			mem_set( result, 0, alloc_size - header_size );
-
-		result[ length ] = '\0';
-
-		return result;
-	}
+	String make_length( AllocatorInfo allocator, char const* str, sw length );
 
 	static
 	String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... );
@@ -138,44 +97,7 @@ struct String
 		return true;
 	}
 
-	bool make_space_for( char const* str, sw add_len )
-	{
-		sw available = avail_space();
-
-		// NOTE: Return if there is enough space left
-		if ( available >= add_len )
-		{
-			return true;
-		}
-		else
-		{
-			sw new_len, old_size, new_size;
-
-			void* ptr;
-			void* new_ptr;
-
-			AllocatorInfo allocator = get_header().Allocator;
-			Header*       header	= nullptr;
-
-			new_len  = grow_formula( length() + add_len );
-			ptr      = & get_header();
-			old_size = size_of( Header ) + length() + 1;
-			new_size = size_of( Header ) + new_len + 1;
-
-			new_ptr = resize( allocator, ptr, old_size, new_size );
-
-			if ( new_ptr == nullptr )
-				return false;
-
-			header            = zpl_cast( Header* ) new_ptr;
-			header->Allocator = allocator;
-			header->Capacity  = new_len;
-
-			Data = rcast( char*, header + 1 );
-
-			return str;
-		}
-	}
+	bool make_space_for( char const* str, sw add_len );
 
 	bool append( char const* str )
 	{
@@ -209,7 +131,7 @@ struct String
 
 	bool append( const String other )
 	{
-		return append( other.Data, other.length() );;
+		return append( other.Data, other.length() );
 	}
 
 	bool append_fmt( char const* fmt, ... );
@@ -266,6 +188,29 @@ struct String
 		header = * rcast( Header const*, Data - sizeof( Header ));
 
 		return header.Length;
+	}
+
+	void skip_line()
+	{
+	#define current (*scanner)
+		char* scanner = Data;
+		while ( current != '\r' && current != '\n' )
+		{
+			++ scanner;
+		}
+
+		s32 new_length = scanner - Data;
+
+		if ( current == '\r' )
+		{
+			new_length += 1;
+		}
+
+		mem_move( Data, scanner, new_length );
+
+		Header* header = & get_header();
+		header->Length = new_length;
+	#undef current
 	}
 
 	void trim( char const* cut_set )
@@ -372,4 +317,3 @@ using StringTable = HashTable<String const>;
 using StringCached = String const;
 
 #pragma endregion Strings
-

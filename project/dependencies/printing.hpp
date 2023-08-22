@@ -1,3 +1,6 @@
+#pragma once
+#include "string_ops.hpp"
+
 #pragma region Printing
 
 struct FileInfo;
@@ -34,4 +37,3 @@ sw log_fmt(char const* fmt, ...)
 }
 
 #pragma endregion Printing
-

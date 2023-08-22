@@ -4,6 +4,7 @@ Constexpr,        constexpr
 Constinit,        constinit
 Explicit,         explicit
 External_Linkage, extern
+ForceInline, 	  forceinline
 Global,           global
 Inline,           inline
 Internal_Linkage, internal

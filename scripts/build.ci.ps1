@@ -446,7 +446,7 @@ if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp"))
 		'gen.hpp'
 	)
 	$exclude  = $null
-	format-cpp $path_gen $include $exclude
+	# format-cpp $path_gen $include $exclude
 }
 
 if ( $test )

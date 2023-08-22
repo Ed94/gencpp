@@ -1,3 +1,6 @@
+#pragma once
+#include "string_ops.cpp"
+
 #pragma region Printing
 
 enum
@@ -582,4 +585,3 @@ sw str_fmt_out_err( char const* fmt, ... )
 }
 
 #pragma endregion Printing
-

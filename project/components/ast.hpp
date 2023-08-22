@@ -1,3 +1,9 @@
+#pragma once
+#include "types.hpp"
+#include "temp/ecode.hpp"
+#include "temp/eoperator.hpp"
+#include "temp/especifier.hpp"
+
 struct AST;
 struct AST_Body;
 struct AST_Attributes;
@@ -163,9 +169,10 @@ struct AST
 	Code&       entry      ( u32 idx );
 	bool        has_entries();
 	bool        is_equal   ( AST* other );
-	String      to_string  ();
 	char const* type_str();
 	bool        validate_body();
+
+	neverinline String to_string();
 
 	template< class Type >
 	Type cast()
@@ -574,4 +581,3 @@ Define_CodeType( Var );
 #undef Using_Code
 
 #pragma endregion Code Types
-
