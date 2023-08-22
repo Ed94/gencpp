@@ -136,7 +136,7 @@ int gen_main()
 
 		header.print( interface );
 
-		header.print_fmt( "\npragma region Inlines\n" );
+		header.print_fmt( "\n#pragma region Inlines\n" );
 		header.print( inlines );
 		header.print( fmt_newline );
 		header.print( ast_inlines );

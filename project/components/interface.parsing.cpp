@@ -255,6 +255,25 @@ namespace Parser
 			move_forward();                         \
 		}
 
+		#define end_line()                      \
+		do                                      \
+		{                                       \
+			while ( left && current == ' ' )    \
+			{                                   \
+				move_forward();                 \
+			}                                   \
+			if ( left && current == '\r' )      \
+			{                                   \
+				move_forward();                 \
+				move_forward();                 \
+			}                                   \
+			else if ( left && current == '\n' ) \
+			{                                   \
+				move_forward();                 \
+			}                                   \
+		}                                       \
+		while (0)
+
 		s32         left    = content.Len;
 		char const* scanner = content.Ptr;
 
@@ -303,7 +322,6 @@ namespace Parser
 					token.Length++;
 
 					Tokens.append( token );
-					// log_fmt( "NewLine: %d\n", token.Line );
 					continue;
 				}
 			}
@@ -401,11 +419,7 @@ namespace Parser
 					if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
 					{
 						Tokens.append( token );
-						while ( left && current != '\n' )
-						{
-							move_forward();
-						}
-						move_forward();
+						end_line();
 						continue;
 					}
 
@@ -611,6 +625,8 @@ namespace Parser
 
 					if (left)
 						move_forward();
+
+					end_line();
 					goto FoundToken;
 
 				case '[':
@@ -714,6 +730,8 @@ namespace Parser
 
 					if (left)
 						move_forward();
+
+					end_line();
 					goto FoundToken;
 
 				case '"':
@@ -915,11 +933,7 @@ namespace Parser
 							move_forward();
 							move_forward();
 
-							while ( left && current != '\n' )
-							{
-								move_forward();
-							}
-							move_forward();
+							end_line();
 							continue;
 						}
 					}

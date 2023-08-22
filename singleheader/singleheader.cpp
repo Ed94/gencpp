@@ -215,7 +215,7 @@ int gen_main()
 		CodeBody      etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
 		CodeNS parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
-		header.print_fmt( "\njGEN_NS_BEGIN\n");
+		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
 
 		header.print_fmt( "#pragma region AST\n\n" );
@@ -229,7 +229,7 @@ int gen_main()
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
 		header.print( parser_nspace );
 		header.print( parsing );
-		header.print_fmt( "\npragma endregion Parsing\n" );
+		header.print_fmt( "\n#pragma endregion Parsing\n" );
 		header.print( untyped );
 		header.print_fmt( "\n#pragma endregion Interface\n\n");
 
@@ -237,7 +237,7 @@ int gen_main()
 		{
 			header.print_fmt( "#pragma region Builder\n" );
 			header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
-			header.print_fmt( "\npragma endregion Builder\n\n" );
+			header.print_fmt( "\n#pragma endregion Builder\n\n" );
 		}
 
 #if 0
