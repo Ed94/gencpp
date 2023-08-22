@@ -444,7 +444,7 @@ if ( $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 		'gen.scanner.hpp', 'gen.scanner.cpp'
 	)
 	$exclude  = $null
-	format-cpp $path_gen $include $exclude
+	# format-cpp $path_gen $include $exclude
 	format-cpp $path_comp_gen @( 'ast_inlines.hpp', 'ecode.hpp', 'especifier.hpp', 'eoperator.hpp', 'etoktype.cpp' ) $null
 }
 

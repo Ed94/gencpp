@@ -1,6 +1,6 @@
+#pragma once
 // This file was generated automatially by gen.bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
-#pragma once
 #pragma region generated code inline implementation
 
 char const* Code::debug_str( void )

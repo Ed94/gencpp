@@ -401,6 +401,11 @@ namespace Parser
 					if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
 					{
 						Tokens.append( token );
+						while ( left && current != '\n' )
+						{
+							move_forward();
+						}
+						move_forward();
 						continue;
 					}
 
@@ -882,13 +887,13 @@ namespace Parser
 						}
 						else if ( current == '*' )
 						{
-							token.Type = TokType::Comment_Start;
+							token.Type   = TokType::Comment_Start;
 							token.Length = 2;
 							Tokens.append( token );
 
+							Token content = { token.Text, 0, TokType::Comment, line, column, false };
 							move_forward();
-							// move_forward();
-							Token content = { scanner, 0, TokType::Comment, line, column, false };
+							content.Length++;
 
 							bool star   = current == '*';
 							bool slash  = scanner[1] == '/';
@@ -902,13 +907,19 @@ namespace Parser
 								slash  = scanner[1] == '/';
 								at_end = star && slash;
 							}
+							content.Length += 3;
 							Tokens.append( content );
 
 							Token end = { scanner, 2, TokType::Comment_End, line, column, false };
+							Tokens.append( end );
 							move_forward();
 							move_forward();
 
-							Tokens.append( end );
+							while ( left && current != '\n' )
+							{
+								move_forward();
+							}
+							move_forward();
 							continue;
 						}
 					}
@@ -2288,7 +2299,7 @@ Code parse_simple_preprocess( Parser::TokType which )
 		tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
 	}
 
-	char const* content = str_fmt_buf( "%.*s\n", tok.Length, tok.Text );
+	char const* content = str_fmt_buf( "%.*s ", tok.Length, tok.Text );
 
 	Code result = untyped_str( to_str( content ) );
 	Context.Scope->Name = tok;

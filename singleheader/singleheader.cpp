@@ -86,7 +86,7 @@ int gen_main()
 
 			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print( header_start );
-			header.print_fmt( "GEN_NS_BEGIN\n\n" );
+			header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
 			header.print( macros );
 			header.print( basic_types );
@@ -102,7 +102,7 @@ int gen_main()
 
 			if ( generate_scanner )
 			{
-				header.print_fmt( "#pragma region Parsing\n\n" );
+				header.print_fmt( "\n#pragma region Parsing\n" );
 				header.print( scan_file( project_dir "dependencies/parsing.hpp" ) );
 				header.print_fmt( "#pragma endregion Parsing\n\n" );
 			}
@@ -126,37 +126,37 @@ int gen_main()
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n" );
 
-		header.print_fmt("#pragma region Types\n\n");
+		header.print_fmt("#pragma region Types\n");
 		header.print( types );
 		header.print( ecode );
 		header.print( eoperator );
 		header.print( especifier );
 		header.print_fmt("#pragma endregion Types\n\n");
 
-		header.print_fmt("#pragma region AST\n\n");
+		header.print_fmt("#pragma region AST\n");
 		header.print( ast );
 		header.print( ast_types );
-		header.print_fmt("#pragma endregion AST\n\n");
+		header.print_fmt("\n#pragma endregion AST\n");
 
 		header.print( interface );
 
-		header.print_fmt( "#pragma region Inlines\n\n" );
+		header.print_fmt( "\n#pragma region Inlines\n" );
 		header.print( inlines );
 		header.print( ast_inlines );
-		header.print_fmt( "#pragma endregion Inlines\n\n" );
+		header.print_fmt( "#pragma endregion Inlines\n" );
 
 		header.print( header_end );
 
 		if ( generate_builder )
 		{
-			header.print_fmt( "#pragma region Builder\n\n" );
+			header.print_fmt( "\n#pragma region Builder\n" );
 			header.print( scan_file( project_dir "auxillary/builder.hpp" ) );
-			header.print_fmt( "#pragma endregion Builder\n\n" );
+			header.print_fmt( "#pragma endregion Builder\n" );
 		}
 
 		if ( generate_scanner )
 		{
-			header.print_fmt( "#pragma region Scanner\n\n" );
+			header.print_fmt( "\n#pragma region Scanner\n" );
 			header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
 			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
@@ -195,8 +195,8 @@ int gen_main()
 
 			if ( generate_scanner )
 			{
-				header.print_fmt( "#pragma region Parsing\n\n" );
-				header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
+				header.print_fmt( "\n#pragma region Parsing\n" );
+			header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
 				header.print_fmt( "#pragma endregion Parsing\n\n" );
 			}
 
@@ -215,7 +215,7 @@ int gen_main()
 		CodeBody      etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
 		CodeNS parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
-		header.print_fmt( "GEN_NS_BEGIN\n\n");
+		header.print_fmt( "\njGEN_NS_BEGIN\n");
 		header.print( static_data );
 
 		header.print_fmt( "#pragma region AST\n\n" );
@@ -223,21 +223,21 @@ int gen_main()
 		header.print( ast );
 		header.print_fmt( "#pragma endregion AST\n\n" );
 
-		header.print_fmt( "#pragma region Interface\n\n" );
+		header.print_fmt( "#pragma region Interface\n" );
 		header.print( interface );
 		header.print( upfront );
-		header.print_fmt( "#pragma region Parsing\n\n" );
+		header.print_fmt( "\n#pragma region Parsing\n\n" );
 		header.print( parser_nspace );
 		header.print( parsing );
-		header.print_fmt( "#pragma endregion Parsing\n\n" );
+		header.print_fmt( "\npragma endregion Parsing\n" );
 		header.print( untyped );
-		header.print_fmt( "#pragma endregion Interface\n\n");
+		header.print_fmt( "\n#pragma endregion Interface\n\n");
 
 		if ( generate_builder )
 		{
-			header.print_fmt( "#pragma region Builder\n\n" );
+			header.print_fmt( "#pragma region Builder\n" );
 			header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
-			header.print_fmt( "#pragma endregion Builder\n\n" );
+			header.print_fmt( "\npragma endregion Builder\n\n" );
 		}
 
 #if 0

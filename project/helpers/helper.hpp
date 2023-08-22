@@ -50,7 +50,7 @@ CodeBody gen_ecode( char const* path )
 	CodeNS    nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
 	CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
 
-	return def_global_body( args( nspace, code_t ) );
+	return def_global_body( args( nspace, code_t, fmt_newline ) );
 }
 
 CodeBody gen_eoperator( char const* path )
@@ -105,7 +105,7 @@ CodeBody gen_eoperator( char const* path )
 
 	CodeUsing operator_t = def_using( name(OperatorT), def_type( name(EOperator::Type) ) );
 
-	return def_global_body( args( nspace, operator_t ) );
+	return def_global_body( args( nspace, operator_t, fmt_newline ) );
 }
 
 CodeBody gen_especifier( char const* path )
@@ -207,7 +207,7 @@ CodeBody gen_especifier( char const* path )
 
 	CodeUsing specifier_t = def_using( name(SpecifierT), def_type( name(ESpecifier::Type) ) );
 
-	return def_global_body( args( nspace, specifier_t ) );
+	return def_global_body( args( nspace, specifier_t, fmt_newline ) );
 }
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path )

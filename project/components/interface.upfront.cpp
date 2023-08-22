@@ -2255,5 +2255,4 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 #	undef def_body_start
 #	undef def_body_code_array_start
 
-
 #pragma endregion Upfront

@@ -9,7 +9,8 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "GEN_TIME"
+                "GEN_TIME",
+                "GEN_IMPLEMENTATION"
                 // "GEN_DONT_USE_NAMESPACE"
             ],
             "windowsSdkVersion": "10.0.19041.0",
@@ -26,7 +27,8 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "GEN_TIME"
+                "GEN_TIME",
+                "GEN_IMPLEMENTATION"
                 // "GEN_DONT_USE_NAMESPACE"
             ],
             "windowsSdkVersion": "10.0.19041.0",

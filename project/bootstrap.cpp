@@ -63,7 +63,7 @@ int gen_main()
 		header.print( filesystem );
 		header.print( timing );
 
-		header.print_fmt( "GEN_NS_END\n" );
+		header.print_fmt( "\nGEN_NS_END\n" );
 		header.write();
 	}
 
@@ -84,7 +84,7 @@ int gen_main()
 		src.print_fmt( generation_notice );
 		src.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n" );
 		src.print( src_start );
-		src.print_fmt( "GEN_NS_BEGIN\n\n" );
+		src.print_fmt( "\nGEN_NS_BEGIN\n" );
 
 		src.print( debug );
 		src.print( string_ops );
@@ -95,7 +95,7 @@ int gen_main()
 		src.print( filesystem );
 		src.print( timing );
 
-		src.print_fmt( "GEN_NS_END\n\n" );
+		src.print_fmt( "\nGEN_NS_END\n" );
 		src.write();
 	}
 
@@ -120,26 +120,27 @@ int gen_main()
 		header.print_fmt( "#pragma once\n\n" );
 		header.print( push_ignores );
 		header.print( header_start );
-		header.print_fmt( "GEN_NS_BEGIN\n\n" );
+		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
 
-		header.print_fmt( "#pragma region Types\n\n" );
+		header.print_fmt( "#pragma region Types\n" );
 		header.print( types );
 		header.print( ecode );
 		header.print( eoperator );
 		header.print( especifier );
 		header.print_fmt( "#pragma endregion Types\n\n" );
 
-		header.print_fmt( "#pragma region AST\n\n" );
+		header.print_fmt( "#pragma region AST\n" );
 		header.print( ast );
 		header.print( ast_types );
-		header.print_fmt( "#pragma endregion AST\n\n" );
+		header.print_fmt( "\n#pragma endregion AST\n" );
 
 		header.print( interface );
 
-		header.print_fmt( "#pragma region Inlines\n\n" );
+		header.print_fmt( "\npragma region Inlines\n" );
 		header.print( inlines );
+		header.print( fmt_newline );
 		header.print( ast_inlines );
-		header.print_fmt( "#pragma endregion Inlines\n\n" );
+		header.print_fmt( "#pragma endregion Inlines\n" );
 
 		header.print( header_end );
 		header.print_fmt( "GEN_NS_END\n\n" );
@@ -148,29 +149,29 @@ int gen_main()
 
 		Builder
 		header_ecode = Builder::open( "components/gen/ecode.hpp" );
-		header_ecode.print_fmt( generation_notice );
 		header_ecode.print( pragma_once );
+		header_ecode.print_fmt( generation_notice );
 		header_ecode.print( ecode );
 		header_ecode.write();
 
 		Builder
 		header_eoperator = Builder::open( "components/gen/eoperator.hpp" );
-		header_eoperator.print_fmt( generation_notice );
 		header_eoperator.print( pragma_once );
+		header_eoperator.print_fmt( generation_notice );
 		header_eoperator.print( eoperator );
 		header_eoperator.write();
 
 		Builder
 		header_especifier = Builder::open( "components/gen/especifier.hpp" );
-		header_especifier.print_fmt( generation_notice );
 		header_especifier.print( pragma_once );
+		header_especifier.print_fmt( generation_notice );
 		header_especifier.print( especifier );
 		header_especifier.write();
 
 		Builder
 		header_ast_inlines = Builder::open( "components/gen/ast_inlines.hpp" );
-		header_ast_inlines.print_fmt( generation_notice );
 		header_ast_inlines.print( pragma_once );
+		header_ast_inlines.print_fmt( generation_notice );
 		header_ast_inlines.print( ast_inlines );
 		header_ast_inlines.write();
 	}
@@ -194,23 +195,23 @@ int gen_main()
 		src.print_fmt( generation_notice );
 		src.print( push_ignores );
 		src.print( src_start );
-		src.print_fmt( "\nGEN_NS_BEGIN\n\n");
+		src.print_fmt( "GEN_NS_BEGIN\n");
 
 		src.print( static_data );
 
-		src.print_fmt( "#pragma region AST\n\n" );
+		src.print_fmt( "\n#pragma region AST\n\n" );
 		src.print( ast_case_macros );
 		src.print( ast );
-		src.print_fmt( "#pragma endregion AST\n\n" );
+		src.print_fmt( "\n#pragma endregion AST\n" );
 
-		src.print_fmt( "#pragma region Interface\n\n" );
+		src.print_fmt( "\n#pragma region Interface\n" );
 		src.print( interface );
 		src.print( upfront );
-		src.print_fmt( "#pragma region Parsing\n\n" );
+		src.print_fmt( "\n#pragma region Parsing\n\n" );
 		src.print( nspaced_etoktype );
 		src.print( parsing );
 		src.print( untyped );
-		src.print_fmt( "#pragma endregion Parsing\n\n" );
+		src.print_fmt( "\n#pragma endregion Parsing\n\n" );
 		src.print_fmt( "#pragma endregion Interface\n\n" );
 
 		src.print_fmt( "GEN_NS_END\n\n");
@@ -234,9 +235,9 @@ int gen_main()
 		header.print_fmt( generation_notice );
 		header.print_fmt( "#pragma once\n\n" );
 		header.print( def_include( txt("gen.hpp") ));
-		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 		header.print( builder );
-		header.print_fmt( "\nGEN_NS_END\n\n" );
+		header.print_fmt( "GEN_NS_END\n" );
 		header.write();
 	}
 
@@ -248,9 +249,9 @@ int gen_main()
 		src = Builder::open( "gen/gen.builder.cpp" );
 		src.print_fmt( generation_notice );
 		src.print( def_include( txt("gen.builder.hpp") ) );
-		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+		src.print_fmt( "\nGEN_NS_BEGIN\n" );
 		src.print( builder );
-		src.print_fmt( "\nGEN_NS_END\n\n" );
+		src.print_fmt( "\nGEN_NS_END\n" );
 		src.write();
 	}
 
@@ -264,10 +265,10 @@ int gen_main()
 		header.print_fmt( generation_notice );
 		header.print_fmt( "#pragma once\n\n" );
 		header.print( def_include( txt("gen.hpp") ) );
-		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 		header.print( parsing );
 		header.print( scanner );
-		header.print_fmt( "\nGEN_NS_END\n\n" );
+		header.print_fmt( "GEN_NS_END\n" );
 		header.write();
 	}
 
@@ -280,10 +281,10 @@ int gen_main()
 		src = Builder::open( "gen/gen.scanner.cpp" );
 		src.print_fmt( generation_notice );
 		src.print( def_include( txt("gen.scanner.hpp") ) );
-		src.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+		src.print_fmt( "\nGEN_NS_BEGIN\n" );
 		src.print( parsing );
 		src.print( scanner );
-		src.print_fmt( "\nGEN_NS_END\n\n" );
+		src.print_fmt( "GEN_NS_END\n" );
 		src.write();
 	}
 

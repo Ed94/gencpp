@@ -1,6 +1,6 @@
-// This file was generated automatially by gen.bootstrap.cpp (See: https://github.com/Ed94/gencpp)
-
 #pragma once
+
+// This file was generated automatially by gen.bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
 namespace ECode
 {

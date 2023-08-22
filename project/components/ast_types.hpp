@@ -541,4 +541,5 @@ struct AST_Var
 	char 			       _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Var) == sizeof(AST), "ERROR: AST_Var is not the same size as AST");
+
 #pragma endregion AST Types
