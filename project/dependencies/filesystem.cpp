@@ -1,5 +1,5 @@
 #pragma once
-// #include "strings.cpp"
+#include "strings.cpp"
 
 #pragma region File Handling
 

@@ -48,6 +48,8 @@ global bool generate_builder = true;
 global bool generate_editor  = true;
 global bool generate_scanner = true;
 
+constexpr bool DontSkipInitialDirectives = false;
+
 int gen_main()
 {
 #define project_dir "../project/"
@@ -55,7 +57,7 @@ int gen_main()
 
 	Code push_ignores        = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores         = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
-	Code single_header_start = scan_file( "components/header_start.hpp" );
+	Code single_header_start = scan_file( "components/header_start.hpp", DontSkipInitialDirectives );
 
 	Builder
 	header = Builder::open( "gen/gen.hpp" );
@@ -69,7 +71,7 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code header_start = scan_file( project_dir "dependencies/header_start.hpp" );
+			Code header_start = scan_file( project_dir "dependencies/header_start.hpp", DontSkipInitialDirectives );
 			Code macros       = scan_file( project_dir "dependencies/macros.hpp" );
 			Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
 			Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
@@ -148,14 +150,14 @@ int gen_main()
 		if ( generate_builder )
 		{
 			header.print_fmt( "#pragma region Builder\n\n" );
-			header.print( scan_file( project_dir "auxillary/builder.hpp" ) );
+			header.print( scan_file( project_dir "auxillary/builder.hpp",DontSkipInitialDirectives ) );
 			header.print_fmt( "#pragma endregion Builder\n\n" );
 		}
 
 		if ( generate_scanner )
 		{
 			header.print_fmt( "#pragma region Scanner\n\n" );
-			header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
+			header.print( scan_file( project_dir "auxillary/scanner.hpp", DontSkipInitialDirectives ) );
 			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
 
@@ -234,7 +236,7 @@ int gen_main()
 		if ( generate_builder )
 		{
 			header.print_fmt( "#pragma region Builder\n\n" );
-			header.print( scan_file( project_dir "auxillary/builder.cpp" ) );
+			header.print( scan_file( project_dir "auxillary/builder.cpp", DontSkipInitialDirectives ) );
 			header.print_fmt( "#pragma endregion Builder\n\n" );
 		}
 
@@ -242,7 +244,7 @@ int gen_main()
 		if ( generate_scanner )
 		{
 			header.print_fmt( "#pragma region Scanner\n\n" );
-			header.print( scan_file( project_dir "auxillary/scanner.cpp" ) );
+			header.print( scan_file( project_dir "auxillary/scanner.cpp", DontSkipInitialDirectives ) );
 			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
 #endif

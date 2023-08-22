@@ -20,18 +20,18 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gen.bootstrap.cpp "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
-constexpr bool DontSkipIncludes = false;
+constexpr bool DontSkipInitialDirectives = false;
 
 int gen_main()
 {
 	gen::init();
 
-	Code push_ignores = scan_file( "helpers/push_ignores.inline.hpp", DontSkipIncludes );
-	Code pop_ignores  = scan_file( "helpers/pop_ignores.inline.hpp", DontSkipIncludes );
+	Code push_ignores = scan_file( "helpers/push_ignores.inline.hpp", DontSkipInitialDirectives );
+	Code pop_ignores  = scan_file( "helpers/pop_ignores.inline.hpp", DontSkipInitialDirectives );
 
 	// gen_dep.hpp
 	{
-		Code header_start = scan_file( "dependencies/header_start.hpp", DontSkipIncludes );
+		Code header_start = scan_file( "dependencies/header_start.hpp", DontSkipInitialDirectives );
 		Code macros 	  = scan_file( "dependencies/macros.hpp" );
 		Code basic_types  = scan_file( "dependencies/basic_types.hpp" );
 		Code debug        = scan_file( "dependencies/debug.hpp" );
@@ -192,7 +192,7 @@ int gen_main()
 
 	// gen_builder.hpp
 	{
-		Code builder = scan_file( "auxillary/builder.hpp" );
+		Code builder = scan_file( "auxillary/builder.hpp", DontSkipInitialDirectives );
 
 		Builder
 		header = Builder::open( "gen/gen.builder.hpp" );
@@ -207,7 +207,7 @@ int gen_main()
 
 	// gen_builder.cpp
 	{
-		Code builder = scan_file( "auxillary/builder.cpp" );
+		Code builder = scan_file( "auxillary/builder.cpp", DontSkipInitialDirectives );
 
 		Builder
 		src = Builder::open( "gen/gen.builder.cpp" );
@@ -222,7 +222,7 @@ int gen_main()
 	// gen_scanner.hpp
 	{
 		Code parsing = scan_file( "dependencies/parsing.hpp" );
-		Code scanner = scan_file( "auxillary/scanner.hpp" );
+		Code scanner = scan_file( "auxillary/scanner.hpp", DontSkipInitialDirectives );
 
 		Builder
 		header = Builder::open( "gen/gen.scanner.hpp" );
@@ -239,7 +239,7 @@ int gen_main()
 	// gen_scanner.cpp
 	{
 		Code parsing = scan_file( "dependencies/parsing.cpp" );
-		Code scanner = scan_file( "auxillary/scanner.cpp" );
+		Code scanner = scan_file( "auxillary/scanner.cpp", DontSkipInitialDirectives );
 
 		Builder
 		src = Builder::open( "gen/gen.scanner.cpp" );

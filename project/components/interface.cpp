@@ -1,5 +1,5 @@
 #pragma once
-// #include "ast.cpp"
+#include "ast.cpp"
 
 internal void init_parser();
 internal void deinit_parser();

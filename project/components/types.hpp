@@ -1,5 +1,5 @@
 #pragma once
-// #include "header_start.hpp"
+#include "header_start.hpp"
 
 using LogFailType = sw(*)(char const*, ...);
 

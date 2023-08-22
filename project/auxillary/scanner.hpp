@@ -4,7 +4,7 @@
 // This is a simple file reader that reads the entire file into memory.
 // It has an extra option to skip the first few lines for undesired includes.
 // This is done so that includes can be kept in dependency and component files so that intellisense works.
-Code scan_file( char const* path, bool skip_header_includes = true )
+Code scan_file( char const* path, bool skip_initial_directives = true )
 {
 	FileInfo file;
 
@@ -24,7 +24,7 @@ Code scan_file( char const* path, bool skip_header_includes = true )
 		file_read( & file, str, fsize );
 		str.get_header().Length = fsize;
 
-	if ( skip_header_includes )
+	if ( skip_initial_directives )
 	{
 	#define current (*scanner)
 		StrC toks[] {

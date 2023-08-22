@@ -10,6 +10,7 @@
                 "UNICODE",
                 "_UNICODE",
                 "GEN_TIME"
+                // "GEN_DONT_USE_NAMESPACE"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.29.30133/bin/HostX64/x64/cl.exe",
@@ -26,6 +27,7 @@
                 "UNICODE",
                 "_UNICODE",
                 "GEN_TIME"
+                // "GEN_DONT_USE_NAMESPACE"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Users/Ed/scoop/apps/llvm/current/bin/clang++.exe",

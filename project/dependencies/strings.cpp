@@ -1,5 +1,5 @@
 #pragma once
-// #include "hashing.cpp"
+#include "hashing.cpp"
 
 #pragma region String
 

@@ -1,5 +1,5 @@
 #pragma once
-// #include "src_start.cpp"
+#include "gen.hpp"
 
 #pragma region StaticData
 

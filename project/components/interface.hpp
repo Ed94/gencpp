@@ -1,5 +1,5 @@
 #pragma once
-// #include "ast_types.hpp"
+#include "ast_types.hpp"
 
 #pragma region Gen Interface
 
