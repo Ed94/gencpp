@@ -145,6 +145,34 @@ int gen_main()
 		header.print_fmt( "GEN_NS_END\n\n" );
 		header.print( pop_ignores );
 		header.write();
+
+		Builder
+		header_ecode = Builder::open( "components/gen/ecode.hpp" );
+		header_ecode.print_fmt( generation_notice );
+		header_ecode.print( pragma_once );
+		header_ecode.print( ecode );
+		header_ecode.write();
+
+		Builder
+		header_eoperator = Builder::open( "components/gen/eoperator.hpp" );
+		header_eoperator.print_fmt( generation_notice );
+		header_eoperator.print( pragma_once );
+		header_eoperator.print( eoperator );
+		header_eoperator.write();
+
+		Builder
+		header_especifier = Builder::open( "components/gen/especifier.hpp" );
+		header_especifier.print_fmt( generation_notice );
+		header_especifier.print( pragma_once );
+		header_especifier.print( especifier );
+		header_especifier.write();
+
+		Builder
+		header_ast_inlines = Builder::open( "components/gen/ast_inlines.hpp" );
+		header_ast_inlines.print_fmt( generation_notice );
+		header_ast_inlines.print( pragma_once );
+		header_ast_inlines.print( ast_inlines );
+		header_ast_inlines.write();
 	}
 
 	// gen.cpp
@@ -158,8 +186,8 @@ int gen_main()
 		Code 	    parsing 	    = scan_file( "components/interface.parsing.cpp" );
 		Code        untyped 	    = scan_file( "components/interface.untyped.cpp" );
 
-		CodeBody etoktype      = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
-		CodeNS   parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
+		CodeBody etoktype         = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
+		CodeNS   nspaced_etoktype = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
 		Builder
 		src = Builder::open( "gen/gen.cpp" );
@@ -179,7 +207,7 @@ int gen_main()
 		src.print( interface );
 		src.print( upfront );
 		src.print_fmt( "#pragma region Parsing\n\n" );
-		src.print( parser_nspace );
+		src.print( nspaced_etoktype );
 		src.print( parsing );
 		src.print( untyped );
 		src.print_fmt( "#pragma endregion Parsing\n\n" );
@@ -188,11 +216,18 @@ int gen_main()
 		src.print_fmt( "GEN_NS_END\n\n");
 		src.print( pop_ignores );
 		src.write();
+
+		Builder
+		src_etoktype = Builder::open( "components/gen/etoktype.cpp" );
+		src_etoktype.print_fmt( generation_notice );
+		src_etoktype.print( pragma_once );
+		src_etoktype.print( nspaced_etoktype );
+		src_etoktype.write();
 	}
 
 	// gen_builder.hpp
 	{
-		Code builder = scan_file( "auxillary/builder.hpp", DontSkipInitialDirectives );
+		Code builder = scan_file( "auxillary/builder.hpp" );
 
 		Builder
 		header = Builder::open( "gen/gen.builder.hpp" );
@@ -207,7 +242,7 @@ int gen_main()
 
 	// gen_builder.cpp
 	{
-		Code builder = scan_file( "auxillary/builder.cpp", DontSkipInitialDirectives );
+		Code builder = scan_file( "auxillary/builder.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.builder.cpp" );
@@ -222,7 +257,7 @@ int gen_main()
 	// gen_scanner.hpp
 	{
 		Code parsing = scan_file( "dependencies/parsing.hpp" );
-		Code scanner = scan_file( "auxillary/scanner.hpp", DontSkipInitialDirectives );
+		Code scanner = scan_file( "auxillary/scanner.hpp" );
 
 		Builder
 		header = Builder::open( "gen/gen.scanner.hpp" );
@@ -239,7 +274,7 @@ int gen_main()
 	// gen_scanner.cpp
 	{
 		Code parsing = scan_file( "dependencies/parsing.cpp" );
-		Code scanner = scan_file( "auxillary/scanner.cpp", DontSkipInitialDirectives );
+		Code scanner = scan_file( "auxillary/scanner.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.scanner.cpp" );

@@ -1,5 +1,5 @@
 #pragma once
-#include "temp/etoktype.cpp"
+#include "gen/etoktype.cpp"
 #include "interface.upfront.cpp"
 
 namespace Parser

@@ -150,14 +150,14 @@ int gen_main()
 		if ( generate_builder )
 		{
 			header.print_fmt( "#pragma region Builder\n\n" );
-			header.print( scan_file( project_dir "auxillary/builder.hpp",DontSkipInitialDirectives ) );
+			header.print( scan_file( project_dir "auxillary/builder.hpp" ) );
 			header.print_fmt( "#pragma endregion Builder\n\n" );
 		}
 
 		if ( generate_scanner )
 		{
 			header.print_fmt( "#pragma region Scanner\n\n" );
-			header.print( scan_file( project_dir "auxillary/scanner.hpp", DontSkipInitialDirectives ) );
+			header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
 			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
 
@@ -236,7 +236,7 @@ int gen_main()
 		if ( generate_builder )
 		{
 			header.print_fmt( "#pragma region Builder\n\n" );
-			header.print( scan_file( project_dir "auxillary/builder.cpp", DontSkipInitialDirectives ) );
+			header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
 			header.print_fmt( "#pragma endregion Builder\n\n" );
 		}
 
@@ -244,7 +244,7 @@ int gen_main()
 		if ( generate_scanner )
 		{
 			header.print_fmt( "#pragma region Scanner\n\n" );
-			header.print( scan_file( project_dir "auxillary/scanner.cpp", DontSkipInitialDirectives ) );
+			header.print( scan_file( project_dir "auxillary/scanner.cpp" ) );
 			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
 #endif

@@ -1,6 +1,6 @@
 #pragma once
 #include "inlines.hpp"
-#include "temp/ast_inlines.hpp"
+#include "gen/ast_inlines.hpp"
 
 #pragma region Constants
 

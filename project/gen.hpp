@@ -14,9 +14,9 @@
 GEN_NS_BEGIN
 
 #include "components/types.hpp"
-#include "components/temp/ecode.hpp"
-#include "components/temp/eoperator.hpp"
-#include "components/temp/especifier.hpp"
+#include "components/gen/ecode.hpp"
+#include "components/gen/eoperator.hpp"
+#include "components/gen/especifier.hpp"
 
 #include "components/ast.hpp"
 #include "components/ast_types.hpp"
@@ -24,7 +24,7 @@ GEN_NS_BEGIN
 #include "components/interface.hpp"
 
 #include "components/inlines.hpp"
-#include "components/temp/ast_inlines.hpp"
+#include "components/gen/ast_inlines.hpp"
 #include "components/header_end.hpp"
 
 GEN_NS_END

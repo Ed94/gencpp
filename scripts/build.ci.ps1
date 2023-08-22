@@ -307,14 +307,18 @@ $path_test         = Join-Path $path_root test
 
 if ( $bootstrap )
 {
-	$path_build = join-path $path_project build
-	$path_gen   = join-path $path_project gen
+	$path_build    = join-path $path_project build
+	$path_gen      = join-path $path_project gen
+	$path_comp_gen = join-path $path_project components/gen
 
 	if ( -not(Test-Path($path_build) )) {
 		New-Item -ItemType Directory -Path $path_build
 	}
 	if ( -not(Test-Path($path_gen) )) {
 		New-Item -ItemType Directory -Path $path_gen
+	}
+	if ( -not(Test-Path($path_comp_gen) )) {
+		New-Item -ItemType Directory -Path $path_comp_gen
 	}
 
 	$includes   = @( $path_project)
@@ -431,7 +435,8 @@ function format-cpp
 
 if ( $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 {
-	$path_gen = join-path $path_project gen
+	$path_gen      = join-path $path_project gen
+	$path_comp_gen = join-path $path_project components/gen
 	$include  = @(
 		'gen.hpp', 'gen.cpp',
 		'gen.dep.hpp', 'gen.dep.cpp',
@@ -440,6 +445,7 @@ if ( $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 	)
 	$exclude  = $null
 	format-cpp $path_gen $include $exclude
+	format-cpp $path_comp_gen @( 'ast_inlines.hpp', 'ecode.hpp', 'especifier.hpp', 'eoperator.hpp', 'etoktype.cpp' ) $null
 }
 
 if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp")) )
