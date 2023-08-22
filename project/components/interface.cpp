@@ -413,6 +413,8 @@ Code make_code()
 	}
 
 	Code result { rcast( AST*, alloc( * allocator, sizeof(AST) )) };
+	// mem_set( result.ast, 0, sizeof(AST) );
+	result->Type = ECode::Invalid;
 
 	result->Content         = { nullptr };
 	result->Prev            = { nullptr };

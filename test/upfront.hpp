@@ -12,7 +12,7 @@ void check_upfront()
 	log_fmt("\nupfront: ");
 	gen::init();
 
-
+	// TODO
 
 	gen::deinit();
 	log_fmt("Passed!\n");

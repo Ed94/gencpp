@@ -872,23 +872,603 @@ String AST::to_string()
 
 bool AST::is_equal( AST* other )
 {
+/*
+	AST values are either some u32 value, a cached string, or a pointer to another AST.
+
+	u32 values are compared by value.
+	Cached strings are compared by pointer.
+	AST nodes are compared with AST::is_equal.
+*/
+	if ( other == nullptr )
+		return false;
+
 	if ( Type != other->Type )
 		return false;
 
 	switch ( Type )
 	{
-		case ECode::Typedef:
-		case ECode::Typename:
+		using namespace ECode;
+
+		case NewLine:
+		case Access_Public:
+		case Access_Protected:
+		case Access_Private:
+		case Preprocess_Else:
+		case Preprocess_EndIf:
+			return true;
+
+		case Comment:
+		case Execution:
+		case PlatformAttributes:
+		case Untyped:
+		{
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return Content == other->Content;
+		}
+
+		case Class_Fwd:
+		case Struct_Fwd:
 		{
 			if ( Name != other->Name )
+				return false;
+			if ( ParentType != other->ParentType )
+				return false;
+			if ( ParentAccess != other->ParentAccess )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
 				return false;
 
 			return true;
 		}
-	}
 
-	if ( Name != other->Name )
-		return false;
+		case Class:
+		case Struct:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( ParentType != other->ParentType )
+				return false;
+			if ( ParentAccess != other->ParentAccess )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Constructor:
+		{
+			if ( InitializerList ? ! InitializerList->is_equal( other->InitializerList ) : other->InitializerList != nullptr )
+				return false;
+			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Constructor_Fwd:
+		{
+			if ( InitializerList ? ! InitializerList->is_equal( other->InitializerList ) : other->InitializerList != nullptr )
+				return false;
+			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Destructor:
+		{
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Destructor_Fwd:
+		{
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Enum:
+		case Enum_Class:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( UnderlyingType ? ! UnderlyingType->is_equal( other->UnderlyingType ) : other->UnderlyingType != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Enum_Fwd:
+		case Enum_Class_Fwd:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( UnderlyingType ? ! UnderlyingType->is_equal( other->UnderlyingType ) : other->UnderlyingType != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Extern_Linkage:
+		{
+			if ( Name != other->Name )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Friend:
+		{
+			if ( Name != other->Name )
+				return false;
+			if ( Declaration ? ! Declaration->is_equal( other->Declaration ) : other->Declaration != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Function:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Function_Fwd:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Module:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Namespace:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Operator:
+		case Operator_Member:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Operator_Fwd:
+		case Operator_Member_Fwd:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Operator_Cast:
+		{
+			if ( Name != other->Name )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Operator_Cast_Fwd:
+		{
+			if ( Name != other->Name )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Parameters:
+		{
+			if ( NumEntries > 1 )
+			{
+				if ( NumEntries != other->NumEntries )
+					return false;
+
+				AST* curr       = this;
+				AST* curr_other = other;
+				while ( curr != nullptr  )
+				{
+					if ( ! curr->is_equal( curr_other ) )
+						return false;
+
+					curr       = curr->Next;
+					curr_other = curr_other->Next;
+				}
+
+				return true;
+			}
+
+			if ( Name != other->Name )
+				return false;
+			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
+				return false;
+			if ( Value ? ! Value->is_equal( other->Value ) : other->Value != nullptr )
+				return false;
+			if ( ArrExpr ? ! ArrExpr->is_equal( other->ArrExpr ) : other->ArrExpr != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Preprocess_Define:
+		{
+			if ( Name != other->Name )
+				return false;
+			if ( Content != other->Content )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Preprocess_If:
+		case Preprocess_IfDef:
+		case Preprocess_IfNotDef:
+		case Preprocess_ElIf:
+		{
+			if ( Content != other->Content )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Preprocess_Include:
+		case Preprocess_Pragma:
+		{
+			if ( Content != other->Content )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Specifiers:
+		{
+			if ( NumEntries != other->NumEntries )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			for ( s32 idx = 0; idx < NumEntries; ++idx )
+			{
+				if ( ArrSpecs[ idx ] != other->ArrSpecs[ idx ] )
+					return false;
+			}
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Template:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
+				return false;
+			if ( Declaration ? ! Declaration->is_equal( other->Declaration ) : other->Declaration != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Typedef:
+		{
+			if ( IsFunction != other->IsFunction )
+				return false;
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( UnderlyingType != other->UnderlyingType )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+		case Typename:
+		{
+			if ( Name != other->Name )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( ArrExpr ? ! ArrExpr->is_equal( other->ArrExpr ) : other->ArrExpr != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Union:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Using:
+		case Using_Namespace:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( UnderlyingType ? ! UnderlyingType->is_equal( other->UnderlyingType ) : other->UnderlyingType != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Variable:
+		{
+			if ( ModuleFlags != other->ModuleFlags )
+				return false;
+			if ( Name != other->Name )
+				return false;
+			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
+				return false;
+			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
+				return false;
+			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
+				return false;
+			if ( BitfieldSize ? ! BitfieldSize->is_equal( other->BitfieldSize ) : other->BitfieldSize != nullptr )
+				return false;
+			if ( Value ? ! Value->is_equal( other->Value ) : other->Value != nullptr )
+				return false;
+			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
+				return false;
+			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
+				return false;
+
+			return true;
+		}
+
+		case Class_Body:
+		case Enum_Body:
+		case Export_Body:
+		case Global_Body:
+		case Namespace_Body:
+		case Struct_Body:
+		case Union_Body:
+		{
+			if ( NumEntries != other->NumEntries )
+				return false;
+
+			if ( Front != other->Front )
+				return false;
+
+			if ( Back != other->Back )
+				return false;
+
+			AST* curr       = Front;
+			AST* curr_other = other->Front;
+			while ( curr != nullptr )
+			{
+				if ( ! curr->is_equal( curr_other ) )
+					return false;
+
+				curr       = curr->Next;
+				curr_other = curr_other->Next;
+			}
+
+			return true;
+		}
+	}
 
 	return true;
 }

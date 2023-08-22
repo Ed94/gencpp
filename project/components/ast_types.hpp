@@ -89,9 +89,9 @@ struct AST_Constructor
 	Code              Prev;
 	Code              Next;
 	Code              Parent;
-	StringCached      Name;
+	char              _PAD_NAME_[ sizeof(StringCached) ];
 	CodeT             Type;
-	char _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Constructor) == sizeof(AST), "ERROR: AST_Constructor is not the same size as AST");
 
@@ -125,7 +125,7 @@ struct AST_Destructor
 	Code                   Prev;
 	Code                   Next;
 	Code                   Parent;
-	StringCached           Name;
+	char                   _PAD_NAME_[ sizeof(StringCached) ];
 	CodeT                  Type;
 	char                   _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
@@ -158,10 +158,7 @@ struct AST_Exec
 {
 	union {
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
-		struct
-		{
-			char      _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
-		};
+		StringCached  Content;
 	};
 	Code              Prev;
 	Code              Next;
