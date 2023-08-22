@@ -837,7 +837,7 @@ String AST::to_string()
 			}
 
 			if ( BitfieldSize )
-				result.append_fmt( "%S : %S;\n", ValueType->to_string(), BitfieldSize->to_string() );
+				result.append_fmt( "%S %S : %S;\n", ValueType->to_string(), Name, BitfieldSize->to_string() );
 
 			else if ( UnderlyingType->ArrExpr )
 				result.append_fmt( "%S %S[%S];\n", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
