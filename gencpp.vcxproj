@@ -176,6 +176,7 @@
     <ClCompile Include="project\components\ast_case_macros.cpp" />
     <ClCompile Include="project\components\interface.cpp" />
     <ClCompile Include="project\components\interface.parsing.cpp" />
+    <ClCompile Include="project\components\interface.untyped.cpp" />
     <ClCompile Include="project\components\interface.upfront.cpp" />
     <ClCompile Include="project\components\src_start.cpp" />
     <ClCompile Include="project\components\static_data.cpp" />

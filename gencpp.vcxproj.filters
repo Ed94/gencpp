@@ -126,6 +126,9 @@
     <ClCompile Include="test\validate_bootstrap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="project\components\interface.untyped.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project\gen.hpp">
