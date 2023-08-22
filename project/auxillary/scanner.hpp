@@ -1,4 +1,7 @@
-Code scan_file( char const* path )
+// This is a simple file reader that reads the entire file into memory.
+// It has an extra option to skip the first few lines for undesired includes.
+// This is done so that includes can be kept in dependency and component files so that intellisense works.
+Code scan_file( char const* path, bool skip_header_includes = true )
 {
 	FileInfo file;
 
@@ -18,8 +21,61 @@ Code scan_file( char const* path )
 		file_read( & file, str, fsize );
 		str.get_header().Length = fsize;
 
-	file_close( & file );
+	if ( skip_header_includes )
+	{
+	#define current (*scanner)
+		StrC toks[] {
+			txt( "pragma once" ),
+			txt( "include" )
+		};
 
+		char* scanner = str;
+		while ( current != '\r' && current != '\n' )
+		{
+			for ( StrC tok : toks )
+			{
+				if ( current == '#' )
+				{
+					++ scanner;
+				}
+
+				if ( strncmp( scanner, tok.Ptr, tok.Len ) == 0 )
+				{
+					scanner += tok.Len;
+					while ( current != '\r' && current != '\n' )
+					{
+						++ scanner;
+					}
+
+					// Skip the line
+					sptr skip_size = sptr( scanner - str );
+					if ( current == '\r' )
+					{
+						skip_size += 2;
+						scanner   += 2;
+					}
+					else
+					{
+						skip_size += 1;
+						scanner   += 1;
+					}
+
+					sptr new_length = sptr( str.get_header().Length ) - skip_size;
+
+					// scanner -= skip_size;
+					mem_move( str, scanner, new_length );
+					str.get_header().Length = new_length;
+
+					scanner = str;
+				}
+			}
+
+			++ scanner;
+		}
+	#undef current
+	}
+
+	file_close( & file );
 	return untyped_str( str );
 }
 
