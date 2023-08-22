@@ -11,7 +11,7 @@
 #include "helpers/push_ignores.inline.hpp"
 #include "components/header_start.hpp"
 
-GEN_NS_BEGIN
+namespace gen {
 
 #include "components/types.hpp"
 #include "components/temp/ecode.hpp"
@@ -27,6 +27,6 @@ GEN_NS_BEGIN
 #include "components/temp/ast_inlines.hpp"
 #include "components/header_end.hpp"
 
-GEN_NS_END
+}
 
 #include "helpers/pop_ignores.inline.hpp"

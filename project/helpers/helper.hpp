@@ -2,9 +2,9 @@
 
 #include "gen.hpp"
 
-GEN_NS_BEGIN
+namespace gen {
 #include "dependencies/parsing.hpp"
-GEN_NS_END
+}
 
 using namespace gen;
 
@@ -30,13 +30,7 @@ CodeBody gen_ecode( char const* path )
 		to_str_entries.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 	}
 
-	CodeEnum enum_code = parse_enum( token_fmt( "entries", (StrC)enum_entries, stringize(
-		enum Type : u32
-		{
-			<entries>
-			NumTypes
-		};
-	)));
+	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", (StrC)enum_entries, "enum Type : u32 { <entries> NumTypes };"));
 
 #pragma push_macro( "local_persist" )
 #undef local_persist

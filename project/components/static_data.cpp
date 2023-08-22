@@ -1,5 +1,5 @@
 #pragma once
-#include "src_start.cpp"
+// #include "src_start.cpp"
 
 #pragma region StaticData
 
@@ -50,7 +50,7 @@ global CodeSpecifiers spec_constexpr;
 global CodeSpecifiers spec_constinit;
 global CodeSpecifiers spec_extern_linkage;
 global CodeSpecifiers spec_final;
-global CodeSpeciifers spec_forceinline;
+global CodeSpecifiers spec_forceinline;
 global CodeSpecifiers spec_global;
 global CodeSpecifiers spec_inline;
 global CodeSpecifiers spec_internal_linkage;

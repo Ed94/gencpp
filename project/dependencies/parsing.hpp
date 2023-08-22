@@ -1,3 +1,5 @@
+#pragma once
+
 #pragma region ADT
 
 enum ADT_Type : u32

@@ -1,3 +1,5 @@
+#include "builder.hpp"
+
 Builder Builder::open( char const* path )
 {
 	Builder result;

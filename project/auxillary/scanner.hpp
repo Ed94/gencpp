@@ -1,3 +1,6 @@
+#pragma once
+#include "gen.hpp"
+
 // This is a simple file reader that reads the entire file into memory.
 // It has an extra option to skip the first few lines for undesired includes.
 // This is done so that includes can be kept in dependency and component files so that intellisense works.
@@ -48,7 +51,7 @@ Code scan_file( char const* path, bool skip_header_includes = true )
 					}
 
 					// Skip the line
-					sptr skip_size = sptr( scanner - str );
+					sptr skip_size = sptr( scanner - str.Data );
 					if ( current == '\r' )
 					{
 						skip_size += 2;

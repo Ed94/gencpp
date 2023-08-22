@@ -1,8 +1,8 @@
 #pragma once
-#include "types.hpp"
-#include "temp/ecode.hpp"
-#include "temp/eoperator.hpp"
-#include "temp/especifier.hpp"
+// #include "types.hpp"
+// #include "temp/ecode.hpp"
+// #include "temp/eoperator.hpp"
+// #include "temp/especifier.hpp"
 
 struct AST;
 struct AST_Body;

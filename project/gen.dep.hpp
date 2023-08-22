@@ -3,7 +3,7 @@
 
 #include "dependencies/header_start.hpp"
 
-GEN_NS_BEGIN
+namespace gen {
 
 #include "dependencies/macros.hpp"
 #include "dependencies/basic_types.hpp"
@@ -17,4 +17,4 @@ GEN_NS_BEGIN
 #include "dependencies/filesystem.hpp"
 #include "dependencies/timing.hpp"
 
-GEN_NS_END
+}

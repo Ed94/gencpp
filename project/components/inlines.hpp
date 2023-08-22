@@ -1,5 +1,5 @@
 #pragma once
-#include "interface.hpp"
+// #include "interface.hpp"
 
 void AST::append( AST* other )
 {

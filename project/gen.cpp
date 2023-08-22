@@ -14,7 +14,7 @@
 #	include "gen.dep.cpp"
 #endif
 
-GEN_NS_BEGIN
+namespace gen {
 
 #include "components/static_data.cpp"
 
@@ -27,6 +27,6 @@ GEN_NS_BEGIN
 #include "components/interface.parsing.cpp"
 #include "components/interface.untyped.cpp"
 
-GEN_NS_END
+}
 
 #include "helpers/pop_ignores.inline.hpp"

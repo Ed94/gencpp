@@ -1,5 +1,5 @@
 #pragma once
-#include "static_data.cpp"
+// #include "static_data.cpp"
 
 Code Code::Global;
 Code Code::Invalid;

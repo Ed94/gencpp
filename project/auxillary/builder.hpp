@@ -1,3 +1,6 @@
+#pragma once
+#include "gen.hpp"
+
 struct Builder
 {
 	FileInfo File;

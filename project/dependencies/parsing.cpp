@@ -1,3 +1,5 @@
+#pragma once
+
 #pragma region ADT
 
 #define _adt_fprintf( s_, fmt_, ... )                      \

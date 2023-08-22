@@ -1,8 +1,5 @@
 #pragma once
-
 #include "gen.scanner.hpp"
-
-namespace gen {
 
 struct Policy
 {
@@ -67,7 +64,4 @@ struct Editor
 #	endif
 
 	bool process_requests( Array<Receipt> out_receipts );
-};
-
-// namespace gen
 };

@@ -1,6 +1,6 @@
 #pragma once
-#include "inlines.hpp"
-#include "temp/ast_inlines.hpp"
+// #include "inlines.hpp"
+// #include "temp/ast_inlines.hpp"
 
 #pragma region Constants
 
@@ -77,7 +77,7 @@ extern CodeSpecifiers spec_constexpr;
 extern CodeSpecifiers spec_constinit;
 extern CodeSpecifiers spec_extern_linkage;
 extern CodeSpecifiers spec_final;
-extern CodeSpeciifers spec_forceinline;
+extern CodeSpecifiers spec_forceinline;
 extern CodeSpecifiers spec_global;
 extern CodeSpecifiers spec_inline;
 extern CodeSpecifiers spec_internal_linkage;
@@ -144,11 +144,11 @@ extern CodeType t_typename;
 
 #	define args( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
 
-#	define code_str( ... ) gen::untyped_str( code( __VA_ARGS__ ) )
-#	define code_fmt( ... ) gen::untyped_str( token_fmt( __VA_ARGS__ ) )
+#	define code_str( ... ) GEN_NS untyped_str( code( __VA_ARGS__ ) )
+#	define code_fmt( ... ) GEN_NS untyped_str( token_fmt( __VA_ARGS__ ) )
 
 	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-#	define token_fmt( ... ) gen::token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+#	define token_fmt( ... ) GEN_NS token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
 
 #pragma endregion Macros
 
