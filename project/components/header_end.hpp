@@ -5,10 +5,10 @@
 #pragma region Constants
 
 #ifndef GEN_GLOBAL_BUCKET_SIZE
-#	define GEN_GLOBAL_BUCKET_SIZE megabytes(10)
+#	define GEN_GLOBAL_BUCKET_SIZE megabytes(4)
 #endif
 #ifndef GEN_CODEPOOL_NUM_BLOCKS
-#	define GEN_CODEPOOL_NUM_BLOCKS kilobytes(64)
+#	define GEN_CODEPOOL_NUM_BLOCKS kilobytes(16)
 #endif
 #ifndef GEN_SIZE_PER_STRING_ARENA
 #	define GEN_SIZE_PER_STRING_ARENA megabytes(1)
@@ -26,7 +26,7 @@
 #	define GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE kilobytes(4)
 #endif
 #ifndef GEN_LEX_ALLOCATOR_SIZE
-#	define GEN_LEX_ALLOCATOR_SIZE megabytes(10)
+#	define GEN_LEX_ALLOCATOR_SIZE megabytes(4)
 #endif
 #ifndef GEN_BUILDER_STR_BUFFER_RESERVE
 #	define GEN_BUILDER_STR_BUFFER_RESERVE megabytes(1)

@@ -229,6 +229,7 @@ namespace Parser
 
 	global Array<Token> Tokens;
 
+	neverinline
 	TokArray lex( StrC content )
 	{
 	#	define current ( * scanner )
@@ -1155,7 +1156,7 @@ internal CodeUsing       parse_using           ();
 
 constexpr bool inplace_def = true;
 
-internal inline
+internal
 CodeComment parse_comment()
 {
 	using namespace Parser;
@@ -1214,7 +1215,7 @@ CodeDefine parse_define()
 	return define;
 }
 
-internal inline
+internal
 CodePreprocessCond parse_preprocess_cond()
 {
 	using namespace Parser;
@@ -1247,7 +1248,7 @@ CodePreprocessCond parse_preprocess_cond()
 	return cond;
 }
 
-internal inline
+internal
 CodeInclude parse_include()
 {
 	using namespace Parser;
@@ -1273,7 +1274,7 @@ CodeInclude parse_include()
 	return include;
 }
 
-internal inline
+internal
 CodePragma parse_pragma()
 {
 	using namespace Parser;
@@ -1299,7 +1300,7 @@ CodePragma parse_pragma()
 	return pragma;
 }
 
-internal inline
+internal
 Code parse_static_assert()
 {
 	using namespace Parser;
@@ -1340,7 +1341,7 @@ Code parse_static_assert()
 	return assert;
 }
 
-internal inline
+internal
 Code parse_array_decl()
 {
 	using namespace Parser;
@@ -1478,7 +1479,7 @@ CodeAttributes parse_attributes()
 	return { nullptr };
 }
 
-internal inline
+internal
 Parser::Token parse_identifier()
 {
 	using namespace Parser;
@@ -1572,7 +1573,7 @@ Parser::Token parse_identifier()
 	return name;
 }
 
-internal
+internal inline
 CodeParam parse_params( bool use_template_capture = false )
 {
 	using namespace Parser;
@@ -1836,7 +1837,7 @@ CodeFn parse_function_after_name(
 	return result;
 }
 
-internal inline
+internal
 CodeOperator parse_operator_after_ret_type(
 	  ModuleFlag     mflags
 	, CodeAttributes attributes
@@ -2122,7 +2123,7 @@ CodeOperator parse_operator_after_ret_type(
 }
 
 // Variable parsing is handled in multiple places because its initial signature is shared with function parsing
-internal inline
+internal
 CodeVar parse_variable_after_name(
 	  ModuleFlag        mflags
 	, CodeAttributes    attributes
@@ -2296,7 +2297,7 @@ Code parse_simple_preprocess( Parser::TokType which )
 	return result;
 }
 
-internal inline
+internal
 Code parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers )
 {
 	using namespace Parser;
@@ -2418,7 +2419,7 @@ Code parse_foward_or_definition( Parser::TokType which, bool is_inplace )
 	return CodeInvalid;
 }
 
-internal inline
+internal
 Code parse_complicated_definition( Parser::TokType which )
 {
 	using namespace Parser;
@@ -2511,7 +2512,7 @@ Code parse_complicated_definition( Parser::TokType which )
 	}
 }
 
-internal
+internal neverinline
 CodeBody parse_class_struct_body( Parser::TokType which, Parser::Token name = Parser::NullToken )
 {
 	using namespace Parser;
@@ -2909,7 +2910,7 @@ Code parse_function_body()
 	return result;
 }
 
-internal
+internal neverinline
 CodeBody parse_global_nspace( CodeT which )
 {
 	using namespace Parser;
@@ -4559,7 +4560,7 @@ CodeTypedef parse_typedef( StrC def )
 	return parse_typedef();
 }
 
-internal
+internal neverinline
 CodeUnion parse_union( bool inplace_def )
 {
 	using namespace Parser;

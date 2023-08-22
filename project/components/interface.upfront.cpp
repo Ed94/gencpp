@@ -10,7 +10,6 @@ enum class OpValidateResult : u32
 	Member
 };
 
-inline
 OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeType ret_type, CodeSpecifiers specifier )
 {
 	using namespace EOperator;
