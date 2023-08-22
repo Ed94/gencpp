@@ -122,6 +122,7 @@ if ( $vendor -match "clang" )
 	$flag_debug                      = '-g'
 	$flag_debug_codeview             = '-gcodeview'
 	$flag_define                     = '-D'
+	$flag_preprocess 			     = '-E'
 	$flag_include                    = '-I'
 	$flag_library					 = '-l'
 	$flag_library_path				 = '-L'
@@ -184,6 +185,8 @@ if ( $vendor -match "clang" )
 		$warning_ignores | ForEach-Object {
 			$compiler_args += $flag_warning + $_
 		}
+
+		# $compiler_args += $flag_preprocess
 
 		$compiler_args += $flag_compile, $unit
 		run-compiler $compiler $unit $compiler_args
