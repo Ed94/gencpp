@@ -45,13 +45,21 @@ Code scan_file( char const* path, bool skip_header_includes = true )
 				if ( strncmp( scanner, tok.Ptr, tok.Len ) == 0 )
 				{
 					scanner += tok.Len;
-					while ( current != '\r' && current != '\n' )
+					while ( scanner < ( str.Data + str.length() ) && current != '\r' && current != '\n' )
 					{
 						++ scanner;
 					}
 
 					// Skip the line
 					sptr skip_size = sptr( scanner - str.Data );
+					if ( (scanner + 2) >= ( str.Data + str.length() ) )
+					{
+						sptr new_length = sptr( str.get_header().Length ) - skip_size;
+						mem_move( str, scanner, new_length );
+						str.get_header().Length = new_length;
+						break;
+					}
+
 					if ( current == '\r' )
 					{
 						skip_size += 2;
@@ -64,8 +72,6 @@ Code scan_file( char const* path, bool skip_header_includes = true )
 					}
 
 					sptr new_length = sptr( str.get_header().Length ) - skip_size;
-
-					// scanner -= skip_size;
 					mem_move( str, scanner, new_length );
 					str.get_header().Length = new_length;
 

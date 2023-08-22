@@ -3,7 +3,7 @@
 
 #include "dependencies/src_start.cpp"
 
-namespace gen {
+GEN_NS_BEGIN
 
 #include "dependencies/debug.cpp"
 #include "dependencies/string_ops.cpp"
@@ -14,4 +14,4 @@ namespace gen {
 #include "dependencies/filesystem.cpp"
 #include "dependencies/timing.cpp"
 
-}
+GEN_NS_END

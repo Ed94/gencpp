@@ -208,7 +208,7 @@ int gen_main()
 		Code interface       = scan_file( project_dir "components/interface.cpp" );
 		Code upfront         = scan_file( project_dir "components/interface.upfront.cpp" );
 		Code parsing         = scan_file( project_dir "components/interface.parsing.cpp" );
-		Code untyped         = scan_file( project_dir "components/untyped.cpp" );
+		Code untyped         = scan_file( project_dir "components/interface.untyped.cpp" );
 
 		CodeBody      etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
 		CodeNS parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );

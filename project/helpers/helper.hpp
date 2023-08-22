@@ -2,9 +2,9 @@
 
 #include "gen.hpp"
 
-namespace gen {
+GEN_NS_BEGIN
 #include "dependencies/parsing.hpp"
-}
+GEN_NS_END
 
 using namespace gen;
 
