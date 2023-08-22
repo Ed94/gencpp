@@ -18,7 +18,10 @@
 		"algorithm": "cpp",
 		"limits": "cpp",
 		"concepts": "cpp",
-		"*.rh": "cpp"
+		"*.rh": "cpp",
+		"chrono": "cpp",
+		"string": "cpp",
+		"filesystem": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
