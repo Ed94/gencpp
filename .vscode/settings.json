@@ -21,7 +21,10 @@
 		"*.rh": "cpp",
 		"chrono": "cpp",
 		"string": "cpp",
-		"filesystem": "cpp"
+		"filesystem": "cpp",
+		"format": "cpp",
+		"ratio": "cpp",
+		"xstring": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
