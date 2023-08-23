@@ -56,6 +56,21 @@ namespace Parser
 		{
 			return scast(AccessSpec, Type);
 		}
+
+		String to_string()
+		{
+			String result = String::make_reserve( GlobalAllocator, kilobytes(4) );
+
+			StrC type_str = ETokType::to_str( Type );
+
+			result.append_fmt( "Line: %d Column: %d, Type: %.*s Content: %.*s"
+				, Line, Column
+				, type_str.Len, type_str.Ptr
+				, Length, Text
+			);
+
+			return result;
+		}
 	};
 
 	constexpr Token NullToken { nullptr, 0, TokType::Invalid, false, 0, 0 };
@@ -303,6 +318,13 @@ namespace Parser
 
 		while (left )
 		{
+			#if 0
+			if (Tokens.num())
+			{
+				log_fmt("\nLastTok: %S", Tokens.back().to_string());
+			}
+			#endif
+
 			Token token = { scanner, 0, TokType::Invalid, line, column, false };
 
 			bool is_define = false;
@@ -873,18 +895,15 @@ namespace Parser
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Operator;
+					move_forward();
 
 					if ( left )
 					{
-						move_forward();
-
 						if ( current == '/' )
 						{
 							token.Type = TokType::Comment;
 							token.Length = 2;
-
 							move_forward();
-							token.Length++;
 
 							while ( left && current != '\n' && current != '\r' )
 							{
@@ -909,9 +928,7 @@ namespace Parser
 						{
 							token.Type   = TokType::Comment;
 							token.Length = 2;
-							
 							move_forward();
-							token.Length++;
 
 							bool star   = current    == '*';
 							bool slash  = scanner[1] == '/';
@@ -925,11 +942,21 @@ namespace Parser
 								slash  = scanner[1] == '/';
 								at_end = star && slash;
 							}
-							token.Length += 3;
-							Tokens.append( token );
+							token.Length += 2;
 							move_forward();
 							move_forward();
 
+							if ( current == '\r' )
+							{
+								move_forward();
+								token.Length++;
+							}
+							if ( current == '\n' )
+							{
+								move_forward();
+								token.Length++;
+							}
+							Tokens.append( token );
 							end_line();
 							continue;
 						}

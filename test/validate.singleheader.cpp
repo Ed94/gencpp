@@ -27,7 +27,24 @@ void check_singleheader_ast()
 	builder.print( ast );
 	builder.write();
 
-	log_fmt("passed!! Time taken: %llu ms\n", time_rel_ms() - time_start);
+	log_fmt("Serialized. Time taken: %llu ms\n", time_rel_ms() - time_start);
+
+	FileContents file_gen  = file_read_contents( GlobalAllocator, true, "gen/singleheader_copy.gen.hpp" );
+
+	log_fmt("Reconstructing from generated file:\n");
+	        time_start = time_rel_ms();
+	CodeBody ast_gen   = parse_global_body( { file_gen.size, (char const*)file_gen.data } );
+
+	log_fmt("\nAst generated. Time taken: %llu ms\n", time_rel_ms() - time_start);
+
+	time_start = time_rel_ms();
+
+	if ( ast.is_equal( ast_gen ) )
+		log_fmt( "Passed!: AST passed validation!\n" );
+	else
+		log_fmt( "Failed: AST did not pass validation\n" );
+
+	log_fmt( "Time taken: %llu ms\n", time_rel_ms() - time_start );
 
 	gen::deinit();
 }
