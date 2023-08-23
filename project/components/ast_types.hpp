@@ -57,7 +57,7 @@ struct AST_Class
 		char                _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			CodeComment     InlineCmt;
+			CodeComment     InlineCmt; // Only supported by forward declarations
 			CodeAttributes  Attributes;
 			char 	        _PAD_SPECS_ [ sizeof(AST*) ];
 			CodeType        ParentType;
@@ -81,11 +81,12 @@ struct AST_Constructor
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			CodeComment InlineCmt;
-			char        _PAD_PROPERTIES_ [ sizeof(AST*) * 3 ];
-			Code        InitializerList;
-			CodeParam   Params;
-			Code        Body;
+			CodeComment    InlineCmt; // Only supported by forward declarations
+			char           _PAD_PROPERTIES_ [ sizeof(AST*) * 1 ];
+			CodeSpecifiers Specs;
+			Code           InitializerList;
+			CodeParam      Params;
+			Code           Body;
 		};
 	};
 	Code              Prev;

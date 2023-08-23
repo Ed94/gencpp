@@ -1184,7 +1184,7 @@ CodeComment parse_comment()
 	using namespace Parser;
 	StackNode scope { nullptr, currtok_noskip, NullToken, txt( __func__ ) };
 	Context.push( & scope );
-	
+
 	CodeComment
 	result          = (CodeComment) make_code();
 	result->Type    = ECode::Comment;
@@ -1812,7 +1812,7 @@ CodeFn parse_function_after_name(
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
-		
+
 		if ( currtok_noskip.Type && TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
@@ -1855,7 +1855,7 @@ CodeFn parse_function_after_name(
 
 	if ( params )
 		result->Params = params;
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
@@ -2142,7 +2142,7 @@ CodeOperator parse_operator_after_ret_type(
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
-		
+
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
@@ -2152,7 +2152,7 @@ CodeOperator parse_operator_after_ret_type(
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
-	
+
 	Context.pop();
 	return result;
 }
@@ -2319,7 +2319,7 @@ Code parse_simple_preprocess( Parser::TokType which )
 			{
 				Token stmt_end = currtok;
 				eat( TokType::Statement_End );
-				
+
 				if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 					eat( TokType::Comment );
 			}
@@ -2335,7 +2335,7 @@ Code parse_simple_preprocess( Parser::TokType which )
 			{
 				Token stmt_end = currtok;
 				eat( TokType::Statement_End );
-				
+
 				if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 					eat( TokType::Comment );
 			}
@@ -2361,6 +2361,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 
 	Code result = CodeInvalid;
 
+#ifndef GEN_PARSER_DISABLE_MACRO_FUNCTION_SIGNATURES
 	if ( currtok.Type == TokType::Preprocess_Macro )
 	{
 		// Were dealing with a macro after attributes/specifiers.
@@ -2368,6 +2369,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		Context.pop();
 		return result;
 	}
+#endif
 
 	CodeType type = parse_type();
 
@@ -3594,12 +3596,12 @@ CodeEnum parse_enum( bool inplace_def )
 	}
 
 	CodeComment inline_cmt = NoCode;
-	
+
 	if ( ! inplace_def )
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
-		
+
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
@@ -3626,7 +3628,7 @@ CodeEnum parse_enum( bool inplace_def )
 
 	if ( type )
 		result->UnderlyingType = type;
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
@@ -4518,7 +4520,11 @@ CodeTypedef parse_typedef()
 
 	constexpr bool from_typedef = true;
 
+#if GEN_PARSER_DISABLE_MACRO_TYPEDEF
+	if ( false )
+#else
 	if ( check( TokType::Preprocess_Macro ))
+#endif
 	{
 		type = t_empty;
 		name = currtok;
@@ -4631,10 +4637,10 @@ CodeTypedef parse_typedef()
 	}
 
 	array_expr = parse_array_decl();
-	
+
 	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
-	
+
 	CodeComment inline_cmt = NoCode;
 	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 		inline_cmt = parse_comment();
@@ -4661,7 +4667,7 @@ CodeTypedef parse_typedef()
 
 	if ( type->Type == Typename && array_expr && array_expr->Type != Invalid )
 		type.cast<CodeType>()->ArrExpr = array_expr;
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 

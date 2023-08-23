@@ -38,49 +38,8 @@ String AST::to_string()
 
 		case Untyped:
 		case Execution:
-			result.append( Content );
-		break;
-
 		case Comment:
-		{
-			// TODO : Move this formmating process to def_comment,
-			// Were going to preserve as much of the original formatting as possible
-			// so that the parsed comments don't have any artifacts.
-			// Just doing what untyped and execution do
-#if 0
-			if ( Prev && Prev->Type != Comment && Prev->Type != NewLine )
-				result.append( "\n" );
-
-			static char line[ MaxCommentLineLength ];
-
-			char const* end       = & scast(String, Content).back();
-			char*       scanner   = Content.Data;
-			s32         curr      = 0;
-			do
-			{
-				char const* next   = scanner;
-				s32         length = 0;
-				while ( next != end && scanner[ length ] != '\n' )
-				{
-					next = scanner + length;
-					length++;
-				}
-				length++;
-
-				str_copy( line, scanner, length );
-				result.append_fmt( "//%.*s", length, line );
-				mem_set( line, 0, MaxCommentLineLength );
-
-				scanner += length;
-			}
-			while ( scanner <= end );
-
-			if ( result.back() != '\n' )
-				result.append( "\n" );
-#else 
 			result.append( Content );
-#endif
-		}
 		break;
 
 		case Access_Private:
@@ -148,7 +107,7 @@ String AST::to_string()
 				result.append_fmt( "class %S %S", Attributes->to_string(), Name );
 
 			else result.append_fmt( "class %S", Name );
-			
+
 			// Check if it can have an end-statement
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
 			{
@@ -226,7 +185,7 @@ String AST::to_string()
 			}
 			else
 				result.append_fmt( "~%S();", Parent->Name );
-			
+
 			if ( InlineCmt )
 				result.append_fmt( "  %S", InlineCmt->Content );
 			else
@@ -364,7 +323,7 @@ String AST::to_string()
 			{
 				result.append( ";" );
 			}
-			
+
 			if ( InlineCmt )
 				result.append_fmt("  %S", InlineCmt->Content );
 			else
@@ -539,7 +498,7 @@ String AST::to_string()
 					}
 				}
 			}
-			
+
 			if ( InlineCmt )
 				result.append_fmt( ";  %S", InlineCmt->Content );
 			else
@@ -552,7 +511,7 @@ String AST::to_string()
 			if ( Specs )
 			{
 				// TODO : Add support for specifies before the operator keyword
-				
+
 				if ( Name && Name.length() )
 					result.append_fmt( "%Soperator %S()", Name, ValueType->to_string() );
 				else
@@ -582,7 +541,7 @@ String AST::to_string()
 			if ( Specs )
 			{
 				// TODO : Add support for specifies before the operator keyword
-				
+
 				result.append_fmt( "operator %S()", ValueType->to_string() );
 
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
@@ -795,7 +754,7 @@ String AST::to_string()
 			{
 				result.append( ";" );
 			}
-			
+
 			if ( InlineCmt )
 				result.append_fmt("  %S", InlineCmt->Content);
 			else
@@ -872,7 +831,7 @@ String AST::to_string()
 			}
 			else
 				result.append_fmt( "using %S;", Name );
-			
+
 			if ( InlineCmt )
 				result.append_fmt("  %S\n", InlineCmt->Content );
 			else
@@ -927,7 +886,7 @@ String AST::to_string()
 
 			else
 				result.append_fmt( "%S %S;", UnderlyingType->to_string(), Name );
-			
+
 			if ( InlineCmt )
 				result.append_fmt("  %S", InlineCmt->Content);
 			else
