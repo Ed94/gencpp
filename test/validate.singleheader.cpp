@@ -31,7 +31,7 @@ void check_singleheader_ast()
 
 	FileContents file_gen  = file_read_contents( GlobalAllocator, true, "gen/singleheader_copy.gen.hpp" );
 
-	log_fmt("Reconstructing from generated file:\n");
+	log_fmt("\nReconstructing from generated file:\n");
 	        time_start = time_rel_ms();
 	CodeBody ast_gen   = parse_global_body( { file_gen.size, (char const*)file_gen.data } );
 

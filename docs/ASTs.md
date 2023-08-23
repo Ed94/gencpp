@@ -567,12 +567,13 @@ Code           Next;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
+b32            IsParamPack;
 ```
 
 Serialization:
 
 ```cpp
-<Attributes> <Name> <Specs>
+<Attributes> <Name> <Specs> <IsParamPack ?: ...>
 ```
 
 ## Typedef
