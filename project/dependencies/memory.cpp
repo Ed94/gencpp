@@ -206,6 +206,132 @@ void* heap_allocator_proc( void* allocator_data, AllocType type, sw size, sw ali
 	return ptr;
 }
 
+#pragma region VirtualMemory
+VirtualMemory vm_from_memory( void* data, sw size )
+{
+	VirtualMemory vm;
+	vm.data = data;
+	vm.size = size;
+	return vm;
+}
+
+#if defined( GEN_SYSTEM_WINDOWS )
+VirtualMemory vm_alloc( void* addr, sw size )
+{
+	VirtualMemory vm;
+	GEN_ASSERT( size > 0 );
+	vm.data = VirtualAlloc( addr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
+	vm.size = size;
+	return vm;
+}
+
+b32 vm_free( VirtualMemory vm )
+{
+	MEMORY_BASIC_INFORMATION info;
+	while ( vm.size > 0 )
+	{
+		if ( VirtualQuery( vm.data, &info, size_of( info ) ) == 0 )
+			return false;
+		if ( info.BaseAddress != vm.data || info.AllocationBase != vm.data || info.State != MEM_COMMIT || info.RegionSize > zpl_cast( uw ) vm.size )
+		{
+			return false;
+		}
+		if ( VirtualFree( vm.data, 0, MEM_RELEASE ) == 0 )
+			return false;
+		vm.data  = pointer_add( vm.data, info.RegionSize );
+		vm.size -= info.RegionSize;
+	}
+	return true;
+}
+
+VirtualMemory vm_trim( VirtualMemory vm, sw lead_size, sw size )
+{
+	VirtualMemory new_vm = { 0 };
+	void*             ptr;
+	GEN_ASSERT( vm.size >= lead_size + size );
+
+	ptr = pointer_add( vm.data, lead_size );
+
+	vm_free( vm );
+	new_vm = vm_alloc( ptr, size );
+	if ( new_vm.data == ptr )
+		return new_vm;
+	if ( new_vm.data )
+		vm_free( new_vm );
+	return new_vm;
+}
+
+b32 vm_purge( VirtualMemory vm )
+{
+	VirtualAlloc( vm.data, vm.size, MEM_RESET, PAGE_READWRITE );
+	// NOTE: Can this really fail?
+	return true;
+}
+
+sw virtual_memory_page_size( sw* alignment_out )
+{
+	SYSTEM_INFO info;
+	GetSystemInfo( &info );
+	if ( alignment_out )
+		*alignment_out = info.dwAllocationGranularity;
+	return info.dwPageSize;
+}
+
+#else
+#	include <sys/mman.h>
+
+#	ifndef MAP_ANONYMOUS
+#		define MAP_ANONYMOUS MAP_ANON
+#	endif
+VirtualMemory vm_alloc( void* addr, sw size )
+{
+	VirtualMemory vm;
+	GEN_ASSERT( size > 0 );
+	vm.data = mmap( addr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0 );
+	vm.size = size;
+	return vm;
+}
+
+b32 vm_free( VirtualMemory vm )
+{
+	munmap( vm.data, vm.size );
+	return true;
+}
+
+VirtualMemory vm_trim( VirtualMemory vm, sw lead_size, sw size )
+{
+	void*  ptr;
+	sw trail_size;
+	GEN_ASSERT( vm.size >= lead_size + size );
+
+	ptr        = pointer_add( vm.data, lead_size );
+	trail_size = vm.size - lead_size - size;
+
+	if ( lead_size != 0 )
+		vm_free( vm_from_memory(( vm.data, lead_size ) );
+	if ( trail_size != 0 )
+		vm_free( vm_from_memory( ptr, trail_size ) );
+	return vm_from_memory( ptr, size );
+}
+
+b32 vm_purge( VirtualMemory vm )
+{
+	int err = madvise( vm.data, vm.size, MADV_DONTNEED );
+	return err != 0;
+}
+
+sw virtual_memory_page_size( sw* alignment_out )
+{
+	// TODO: Is this always true?
+	sw result = zpl_cast( sw ) sysconf( _SC_PAGE_SIZE );
+	if ( alignment_out )
+		*alignment_out = result;
+	return result;
+}
+#endif
+
+#pragma endregion VirtualMemory
+
 void* Arena::allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
 {
 	Arena* arena = rcast(Arena*, allocator_data);

@@ -363,6 +363,33 @@ GEN_IMPL_INLINE void zero_size( void* ptr, sw size )
 	mem_set( ptr, 0, size );
 }
 
+struct VirtualMemory
+{
+	void*  data;
+	sw size;
+};
+
+//! Initialize virtual memory from existing data.
+VirtualMemory vm_from_memory( void* data, sw size );
+
+//! Allocate virtual memory at address with size.
+
+//! @param addr The starting address of the region to reserve. If NULL, it lets operating system to decide where to allocate it.
+//! @param size The size to serve.
+VirtualMemory vm_alloc( void* addr, sw size );
+
+//! Release the virtual memory.
+b32 vm_free( VirtualMemory vm );
+
+//! Trim virtual memory.
+VirtualMemory vm_trim( VirtualMemory vm, sw lead_size, sw size );
+
+//! Purge virtual memory.
+b32 gen_vm_purge( VirtualMemory vm );
+
+//! Retrieve VM's page size and alignment.
+sw gen_virtual_memory_page_size( sw* alignment_out );
+
 struct Arena
 {
 	static

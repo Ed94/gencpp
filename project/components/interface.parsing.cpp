@@ -4454,6 +4454,13 @@ CodeType parse_type( bool* is_function )
 		brute_sig.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)brute_sig.Text;
 		is_first_capture = false;
 	}
+	
+	bool is_param_pack = false;
+	if ( check(TokType::Varadic_Argument) )
+	{
+		is_param_pack = true;
+		eat( TokType::Varadic_Argument );
+	}
 
 	using namespace ECode;
 
@@ -4479,6 +4486,9 @@ CodeType parse_type( bool* is_function )
 
 	if ( attributes )
 		result->Attributes = attributes;
+	
+	if ( is_param_pack )
+		result->IsParamPack = true;
 
 	Context.pop();
 	return result;

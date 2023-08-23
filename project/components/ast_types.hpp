@@ -459,7 +459,8 @@ struct AST_Type
 	Code                   Parent;
 	StringCached           Name;
 	CodeT                  Type;
-	char 			       _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	char 			       _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	b32                    IsParamPack;
 };
 static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same size as AST");
 

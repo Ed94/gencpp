@@ -779,6 +779,9 @@ String AST::to_string()
 			{
 				result.append_fmt( "%S", Name );
 			}
+			
+			if ( IsParamPack )
+				result.append("...");
 		}
 		break;
 

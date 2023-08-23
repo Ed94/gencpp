@@ -40,6 +40,7 @@
 		</AdditionalIncludePaths>
 		<Defines>
 			<Define>GEN_TIME</Define>
+			<Define>GEN_SYSTEM_WINDOWS</Define>
 		</Defines>
 		<ConfigProperties>
 			<ConfigAndPlatform>

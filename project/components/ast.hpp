@@ -264,7 +264,8 @@ struct AST
 	CodeT             Type;
 	ModuleFlag        ModuleFlags;
 	union {
-		b32           IsFunction; // Used by typedef to not serialize the name field.
+		b32           IsFunction;  // Used by typedef to not serialize the name field.
+		b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
@@ -314,7 +315,8 @@ struct AST_POD
 	CodeT             Type;
 	ModuleFlag        ModuleFlags;
 	union {
-		b32           IsFunction; // Used by typedef to not serialize the name field.
+		b32           IsFunction;  // Used by typedef to not serialize the name field.
+		b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
