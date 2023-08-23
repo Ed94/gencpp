@@ -17,7 +17,7 @@ GEN_NS_END
 using namespace gen;
 
 constexpr char const* generation_notice =
-"// This file was generated automatially by gen.bootstrap.cpp "
+"// This file was generated automatially by gencpp's singleheader.cpp"
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
 constexpr StrC implementation_guard_start = txt(R"(

@@ -415,11 +415,41 @@ CodeComment def_comment( StrC content )
 		return CodeInvalid;
 	}
 
+	static char line[ MaxCommentLineLength ];
+	
+	String      cmt_formatted = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	char const* end           = content.Ptr + content.Len;
+	char const* scanner       = content.Ptr;
+	s32         curr          = 0;
+	do
+	{
+		char const* next   = scanner;
+		s32         length = 0;
+		while ( next != end && scanner[ length ] != '\n' )
+		{
+			next = scanner + length;
+			length++;
+		}
+		length++;
+
+		str_copy( line, scanner, length );
+		cmt_formatted.append_fmt( "//%.*s", length, line );
+		mem_set( line, 0, MaxCommentLineLength );
+
+		scanner += length;
+	}
+	while ( scanner <= end );
+
+	if ( cmt_formatted.back() != '\n' )
+		cmt_formatted.append( "\n" );
+	
 	Code
 	result          = make_code();
 	result->Type    = ECode::Comment;
-	result->Name    = get_cached_string( content );
+	result->Name    = get_cached_string( cmt_formatted );
 	result->Content = result->Name;
+	
+	cmt_formatted.free();
 
 	return (CodeComment) result;
 }

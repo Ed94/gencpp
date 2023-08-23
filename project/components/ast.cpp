@@ -43,6 +43,11 @@ String AST::to_string()
 
 		case Comment:
 		{
+			// TODO : Move this formmating process to def_comment,
+			// Were going to preserve as much of the original formatting as possible
+			// so that the parsed comments don't have any artifacts.
+			// Just doing what untyped and execution do
+#if 0
 			if ( Prev && Prev->Type != Comment && Prev->Type != NewLine )
 				result.append( "\n" );
 
@@ -72,6 +77,9 @@ String AST::to_string()
 
 			if ( result.back() != '\n' )
 				result.append( "\n" );
+#else 
+			result.append( Content );
+#endif
 		}
 		break;
 
@@ -140,9 +148,15 @@ String AST::to_string()
 				result.append_fmt( "class %S %S", Attributes->to_string(), Name );
 
 			else result.append_fmt( "class %S", Name );
-
+			
+			// Check if it can have an end-statement
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt( "; // %S\n", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -169,7 +183,12 @@ String AST::to_string()
 			if ( Params )
 				result.append_fmt( "( %S )", Params->to_string() );
 			else
-				result.append( "(void);\n" );
+			{
+				if ( InlineCmt )
+					result.append_fmt( "(void); // %S\n", InlineCmt->Content );
+				else
+					result.append( "(void);\n" );
+			}
 		}
 		break;
 
@@ -203,10 +222,15 @@ String AST::to_string()
 					result.append_fmt( "~%S()", Parent->Name );
 
 				if ( specs.has( ESpecifier::Pure ) )
-					result.append( " = 0;\n" );
+					result.append( " = 0;" );
 			}
 			else
-				result.append_fmt( "~%S();\n", Parent->Name );
+				result.append_fmt( "~%S();", Parent->Name );
+			
+			if ( InlineCmt )
+				result.append_fmt( "  %S", InlineCmt->Content );
+			else
+				result.append("\n");
 		}
 		break;
 
@@ -249,7 +273,12 @@ String AST::to_string()
 			result.append_fmt( "enum %S : %S", Name, UnderlyingType->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -299,7 +328,12 @@ String AST::to_string()
 			result.append_fmt( "%S : %S", Name, UnderlyingType->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -327,7 +361,14 @@ String AST::to_string()
 			result.append_fmt( "friend %S", Declaration->to_string() );
 
 			if ( result[ result.length() -1 ] != ';' )
-				result.append( ";\n" );
+			{
+				result.append( ";" );
+			}
+			
+			if ( InlineCmt )
+				result.append_fmt("  %S", InlineCmt->Content );
+			else
+				result.append("\n");
 		break;
 
 		case Function:
@@ -404,7 +445,10 @@ String AST::to_string()
 				}
 			}
 
-			result.append( ";\n" );
+			if ( InlineCmt )
+				result.append_fmt( ";  %S", InlineCmt->Content );
+			else
+				result.append( ";\n" );
 		}
 		break;
 
@@ -495,8 +539,11 @@ String AST::to_string()
 					}
 				}
 			}
-
-			result.append( ";\n" );
+			
+			if ( InlineCmt )
+				result.append_fmt( ";  %S", InlineCmt->Content );
+			else
+				result.append( ";\n" );
 		}
 		break;
 
@@ -504,6 +551,8 @@ String AST::to_string()
 		{
 			if ( Specs )
 			{
+				// TODO : Add support for specifies before the operator keyword
+				
 				if ( Name && Name.length() )
 					result.append_fmt( "%Soperator %S()", Name, ValueType->to_string() );
 				else
@@ -532,6 +581,8 @@ String AST::to_string()
 		case Operator_Cast_Fwd:
 			if ( Specs )
 			{
+				// TODO : Add support for specifies before the operator keyword
+				
 				result.append_fmt( "operator %S()", ValueType->to_string() );
 
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
@@ -543,11 +594,17 @@ String AST::to_string()
 					}
 				}
 
-				result.append( ";" );
+				if ( InlineCmt )
+					result.append_fmt( ";  %S", InlineCmt->Content );
+				else
+					result.append( ";\n" );
 				break;
 			}
 
-			result.append_fmt("operator %S();\n", ValueType->to_string() );
+			if ( InlineCmt )
+				result.append_fmt("operator %S();  %S", ValueType->to_string() );
+			else
+				result.append_fmt("operator %S();\n", ValueType->to_string() );
 		break;
 
 		case Parameters:
@@ -680,7 +737,12 @@ String AST::to_string()
 			}
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -695,7 +757,12 @@ String AST::to_string()
 			else result.append_fmt( "struct %S", Name );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -726,8 +793,13 @@ String AST::to_string()
 			}
 			else
 			{
-				result.append( ";\n" );
+				result.append( ";" );
 			}
+			
+			if ( InlineCmt )
+				result.append_fmt("  %S", InlineCmt->Content);
+			else
+				result.append("\n");
 		}
 		break;
 
@@ -796,15 +868,23 @@ String AST::to_string()
 				if ( UnderlyingType->ArrExpr )
 					result.append_fmt( "[%S]", UnderlyingType->ArrExpr->to_string() );
 
-				result.append( ";\n" );
+				result.append( ";" );
 			}
 			else
-				result.append_fmt( "using %S;\n", Name );
+				result.append_fmt( "using %S;", Name );
+			
+			if ( InlineCmt )
+				result.append_fmt("  %S\n", InlineCmt->Content );
+			else
+				result.append("\n");
 		}
 		break;
 
 		case Using_Namespace:
-			result.append_fmt( "using namespace %s;\n", Name );
+			if ( InlineCmt )
+				result.append_fmt( "using namespace $S;  %S", Name, InlineCmt->Content );
+			else
+				result.append_fmt( "using namespace %s;\n", Name );
 		break;
 
 		case Variable:
@@ -831,19 +911,27 @@ String AST::to_string()
 				if ( Value )
 					result.append_fmt( " = %S", Value->to_string() );
 
-				result.append( ";\n" );
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content);
+				else
+					result.append( ";\n" );
 
 				break;
 			}
 
 			if ( BitfieldSize )
-				result.append_fmt( "%S %S : %S;\n", ValueType->to_string(), Name, BitfieldSize->to_string() );
+				result.append_fmt( "%S %S : %S;", ValueType->to_string(), Name, BitfieldSize->to_string() );
 
 			else if ( UnderlyingType->ArrExpr )
-				result.append_fmt( "%S %S[%S];\n", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
+				result.append_fmt( "%S %S[%S];", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
 
 			else
-				result.append_fmt( "%S %S;\n", UnderlyingType->to_string(), Name );
+				result.append_fmt( "%S %S;", UnderlyingType->to_string(), Name );
+			
+			if ( InlineCmt )
+				result.append_fmt("  %S", InlineCmt->Content);
+			else
+				result.append("\n");
 		}
 		break;
 

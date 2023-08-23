@@ -226,10 +226,11 @@ struct AST
 	union {
 		struct
 		{
+			AST*      InlineCmt;      // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
 			AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-			AST*      Specs;          // Function, Operator, Type symbol, Variable
+			AST*      Specs;          // Destructor, Function, Operator, Type symbol, Variable
 			union {
-				AST*  InitializerList; // Constructor, Destructor
+				AST*  InitializerList; // Constructor
 				AST*  ParentType;      // Class, Struct
 				AST*  ReturnType;      // Function, Operator
 				AST*  UnderlyingType;  // Enum, Typedef
@@ -237,7 +238,7 @@ struct AST
 			};
 			union {
 				AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
-				AST*  Params;          // Function, Operator, Template
+				AST*  Params;          // Constructor, Function, Operator, Template
 			};
 			union {
 				AST*  ArrExpr;        // Type Symbol
@@ -275,10 +276,11 @@ struct AST_POD
 	union {
 		struct
 		{
+			AST*      InlineCmt;      // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
 			AST*      Attributes;     // Class, Enum, Function, Struct, Typename, Union, Using, Variable
 			AST*      Specs;          // Function, Operator, Type symbol, Variable
 			union {
-				AST*  InitializerList; // Constructor, Destructor
+				AST*  InitializerList; // Constructor
 				AST*  ParentType;      // Class, Struct
 				AST*  ReturnType;      // Function, Operator
 				AST*  UnderlyingType;  // Enum, Typedef

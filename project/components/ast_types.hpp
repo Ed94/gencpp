@@ -57,6 +57,7 @@ struct AST_Class
 		char                _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment     InlineCmt;
 			CodeAttributes  Attributes;
 			char 	        _PAD_SPECS_ [ sizeof(AST*) ];
 			CodeType        ParentType;
@@ -80,10 +81,11 @@ struct AST_Constructor
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			char      _PAD_PROPERTIES_ [ sizeof(AST*) * 3 ];
-			Code      InitializerList;
-			CodeParam Params;
-			Code      Body;
+			CodeComment InlineCmt;
+			char        _PAD_PROPERTIES_ [ sizeof(AST*) * 3 ];
+			Code        InitializerList;
+			CodeParam   Params;
+			Code        Body;
 		};
 	};
 	Code              Prev;
@@ -116,6 +118,7 @@ struct AST_Destructor
 		char               _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment    InlineCmt;
 			char           _PAD_PROPERTIES_ [ sizeof(AST*) * 1 ];
 			CodeSpecifiers Specs;
 			char           _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
@@ -137,6 +140,7 @@ struct AST_Enum
 		char                _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment    InlineCmt;
 			CodeAttributes Attributes;
 			char           _PAD_SPEC_  [ sizeof(AST*) ];
 			CodeType       UnderlyingType;
@@ -175,7 +179,7 @@ struct AST_Extern
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
+			char      _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
 			CodeBody  Body;
 		};
 	};
@@ -209,8 +213,9 @@ struct AST_Friend
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			char      _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
-			Code      Declaration;
+			CodeComment InlineCmt;
+			char        _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
+			Code        Declaration;
 		};
 	};
 	Code              Prev;
@@ -228,6 +233,7 @@ struct AST_Fn
 		char                _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment     InlineCmt;
 			CodeAttributes  Attributes;
 			CodeSpecifiers  Specs;
 			CodeType        ReturnType;
@@ -263,7 +269,7 @@ struct AST_NS
 	union {
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct {
-			char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
+			char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
 			CodeBody  Body;
 		};
 	};
@@ -283,6 +289,7 @@ struct AST_Operator
 		char                _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment     InlineCmt;
 			CodeAttributes  Attributes;
 			CodeSpecifiers  Specs;
 			CodeType        ReturnType;
@@ -306,6 +313,7 @@ struct AST_OpCast
 		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment    InlineCmt;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*)  ];
 			CodeSpecifiers Specs;
 			CodeType       ValueType;
@@ -328,7 +336,7 @@ struct AST_Param
 		char 		  _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) * 2 ];
+			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 			CodeType  ValueType;
 			char 	  _PAD_PROPERTIES_[ sizeof(AST*) ];
 			Code      Value;
@@ -393,6 +401,7 @@ struct AST_Struct
 		char               _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment    InlineCmt;
 			CodeAttributes Attributes;
 			char 	       _PAD_SPECS_ [ sizeof(AST*) ];
 			CodeType       ParentType;
@@ -416,7 +425,7 @@ struct AST_Template
 		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
+			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
 			CodeParam 	   Params;
 			Code           Declaration;
 		};
@@ -437,6 +446,7 @@ struct AST_Type
 		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			char           _PAD_CMT_[ sizeof(AST*) ];
 			CodeAttributes Attributes;
 			CodeSpecifiers Specs;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
@@ -458,6 +468,7 @@ struct AST_Typedef
 		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment    InlineCmt;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
 			Code           UnderlyingType;
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) * 2 ];
@@ -479,6 +490,7 @@ struct AST_Union
 		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			char           _PAD_INLINE_CMT_[ sizeof(AST*) ];
 			CodeAttributes Attributes;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
 			CodeBody       Body;
@@ -500,6 +512,7 @@ struct AST_Using
 		char 		        _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment     InlineCmt;
 			CodeAttributes  Attributes;
 			char 	        _PAD_SPECS_     [ sizeof(AST*) ];
 			CodeType        UnderlyingType;
@@ -522,6 +535,7 @@ struct AST_Var
 		char               _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
+			CodeComment    InlineCmt;
 			CodeAttributes Attributes;
 			CodeSpecifiers Specs;
 			CodeType       ValueType;

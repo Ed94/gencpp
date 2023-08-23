@@ -67,22 +67,22 @@ namespace Parser
 
 		bool __eat( TokType type );
 
-		Token& current( bool skip_new_lines = true )
+		Token& current( bool skip_formatting = true )
 		{
-			if ( skip_new_lines )
+			if ( skip_formatting )
 			{
-				while ( Arr[Idx].Type == TokType::NewLine )
+				while ( Arr[Idx].Type == TokType::NewLine || Arr[Idx].Type == TokType::Comment  )
 					Idx++;
 			}
 
 			return Arr[Idx];
 		}
 
-		Token& previous( bool skip_new_lines = false )
+		Token& previous( bool skip_formatting = false )
 		{
 			s32 idx = this->Idx;
 
-			if ( skip_new_lines )
+			if ( skip_formatting )
 			{
 				while ( Arr[idx].Type == TokType::NewLine )
 					idx--;
@@ -93,11 +93,11 @@ namespace Parser
 			return Arr[idx - 1];
 		}
 
-		Token& next( bool skip_new_lines = false )
+		Token& next( bool skip_formatting = false )
 		{
 			s32 idx = this->Idx;
 
-			if ( skip_new_lines )
+			if ( skip_formatting )
 			{
 				while ( Arr[idx].Type == TokType::NewLine )
 					idx++;
@@ -114,7 +114,7 @@ namespace Parser
 		}
 	};
 
-	constexpr bool dont_skip_new_lines = false;
+	constexpr bool dont_skip_formatting = false;
 
 	struct StackNode
 	{
@@ -200,7 +200,8 @@ namespace Parser
 			return false;
 		}
 
-		if ( Arr[Idx].Type == TokType::NewLine && type != TokType::NewLine )
+		if ( Arr[ Idx ].Type == TokType::NewLine && type != TokType::NewLine
+		||   Arr[ Idx ].Type == TokType::Comment && type != TokType::Comment )
 		{
 			Idx++;
 		}
@@ -879,57 +880,53 @@ namespace Parser
 
 						if ( current == '/' )
 						{
-							token.Type = TokType::Comment_Start;
+							token.Type = TokType::Comment;
 							token.Length = 2;
-							Tokens.append( token );
 
 							move_forward();
-							Token content = { scanner, 1, TokType::Comment, line, column, false };
+							token.Length++;
 
 							while ( left && current != '\n' && current != '\r' )
 							{
 								move_forward();
-								content.Length++;
+								token.Length++;
 							}
-							Tokens.append( content );
 
 							if ( current == '\r' )
 							{
 								move_forward();
+								token.Length++;
 							}
 							if ( current == '\n' )
 							{
 								move_forward();
+								token.Length++;
 							}
+							Tokens.append( token );
 							continue;
 						}
 						else if ( current == '*' )
 						{
-							token.Type   = TokType::Comment_Start;
+							token.Type   = TokType::Comment;
 							token.Length = 2;
-							Tokens.append( token );
-
-							Token content = { token.Text, 0, TokType::Comment, line, column, false };
+							
 							move_forward();
-							content.Length++;
+							token.Length++;
 
-							bool star   = current == '*';
+							bool star   = current    == '*';
 							bool slash  = scanner[1] == '/';
 							bool at_end = star && slash;
 							while ( left && ! at_end  )
 							{
 								move_forward();
-								content.Length++;
+								token.Length++;
 
-								star   = current == '*';
+								star   = current    == '*';
 								slash  = scanner[1] == '/';
 								at_end = star && slash;
 							}
-							content.Length += 3;
-							Tokens.append( content );
-
-							Token end = { scanner, 2, TokType::Comment_End, line, column, false };
-							Tokens.append( end );
+							token.Length += 3;
+							Tokens.append( token );
 							move_forward();
 							move_forward();
 
@@ -1141,7 +1138,7 @@ if ( def.Ptr == nullptr )                                                      \
 	return CodeInvalid;                                                        \
 }
 
-#	define currtok_noskip Context.Tokens.current( dont_skip_new_lines )
+#	define currtok_noskip Context.Tokens.current( dont_skip_formatting )
 #	define currtok        Context.Tokens.current()
 #	define prevtok        Context.Tokens.previous()
 #	define nexttok		  Context.Tokens.next()
@@ -1185,19 +1182,15 @@ internal
 CodeComment parse_comment()
 {
 	using namespace Parser;
-	push_scope();
-
-	eat( TokType::Comment_Start );
-
+	StackNode scope { nullptr, currtok_noskip, NullToken, txt( __func__ ) };
+	Context.push( & scope );
+	
 	CodeComment
 	result          = (CodeComment) make_code();
 	result->Type    = ECode::Comment;
-	result->Content = get_cached_string( currtok );
+	result->Content = get_cached_string( currtok_noskip );
 	result->Name    = result->Content;
 	eat( TokType::Comment );
-
-	if ( check( TokType::Comment_End ) )
-		eat( TokType::Comment_End );
 
 	Context.pop();
 	return result;
@@ -1804,7 +1797,8 @@ CodeFn parse_function_after_name(
 		eat( currtok.Type );
 	}
 
-	CodeBody body = { nullptr };
+	CodeBody    body       = NoCode;
+	CodeComment inline_cmt = NoCode;
 	if ( check( TokType::BraceCurly_Open ) )
 	{
 		body = parse_function_body();
@@ -1816,7 +1810,11 @@ CodeFn parse_function_after_name(
 	}
 	else
 	{
+		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
+		
+		if ( currtok_noskip.Type && TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+			inline_cmt = parse_comment();
 	}
 
 	using namespace ECode;
@@ -1857,6 +1855,9 @@ CodeFn parse_function_after_name(
 
 	if ( params )
 		result->Params = params;
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	Context.pop();
 	return result;
@@ -2126,7 +2127,8 @@ CodeOperator parse_operator_after_ret_type(
 	}
 
 	// Parse Body
-	CodeBody body = { nullptr };
+	CodeBody    body       = { nullptr };
+	CodeComment inline_cmt = NoCode;
 	if ( check( TokType::BraceCurly_Open ) )
 	{
 		body = parse_function_body();
@@ -2138,11 +2140,19 @@ CodeOperator parse_operator_after_ret_type(
 	}
 	else
 	{
+		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
+		
+		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+			inline_cmt = parse_comment();
 	}
 
 	// OpValidateResult check_result = operator__validate( op, params, ret_type, specifiers );
 	CodeOperator result = def_operator( op, nspace, params, ret_type, body, specifiers, attributes, mflags );
+
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
+	
 	Context.pop();
 	return result;
 }
@@ -2230,8 +2240,18 @@ CodeVar parse_variable_after_name(
 		expr_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_tok.Text;
 		bitfield_expr   = untyped_str( expr_tok );
 	}
-
+	
+	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
+	
+	// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
+	CodeComment inline_cmt = NoCode;
+	if (	left 
+		&&	( currtok_noskip.Type == TokType::Comment )
+		&&	currtok_noskip.Line == stmt_end.Line )
+	{
+		inline_cmt = parse_comment();
+	}
 
 	using namespace ECode;
 
@@ -2257,6 +2277,9 @@ CodeVar parse_variable_after_name(
 
 	if ( expr )
 		result->Value = expr;
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	Context.pop();
 	return result;
@@ -2294,7 +2317,11 @@ Code parse_simple_preprocess( Parser::TokType which )
 		{
 			if ( check( TokType::Statement_End ))
 			{
+				Token stmt_end = currtok;
 				eat( TokType::Statement_End );
+				
+				if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+					eat( TokType::Comment );
 			}
 		}
 
@@ -2306,7 +2333,11 @@ Code parse_simple_preprocess( Parser::TokType which )
 		{
 			if ( check( TokType::Statement_End ))
 			{
+				Token stmt_end = currtok;
 				eat( TokType::Statement_End );
+				
+				if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+					eat( TokType::Comment );
 			}
 		}
 
@@ -2382,7 +2413,6 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		if ( check( TokType::Capture_Start) )
 		{
 			// Dealing with a function
-
 			result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name );
 		}
 		else
@@ -2575,7 +2605,7 @@ CodeBody parse_class_struct_body( Parser::TokType which, Parser::Token name = Pa
 				eat( TokType::NewLine );
 			break;
 
-			case TokType::Comment_Start:
+			case TokType::Comment:
 				member = parse_comment();
 			break;
 
@@ -2880,14 +2910,24 @@ Code parse_class_struct( Parser::TokType which, bool inplace_def = false )
 		body = parse_class_struct_body( which, name );
 	}
 
+	CodeComment inline_cmt = NoCode;
 	if ( ! inplace_def )
+	{
+		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
+		
+		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+			inline_cmt = parse_comment();
+	}
 
 	if ( which == TokType::Decl_Class )
 		result = def_class( name, body, parent, access, attributes, mflags );
 
 	else
 		result = def_struct( name, body, (CodeType)parent, access, attributes, mflags );
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	interfaces.free();
 	return result;
@@ -2972,7 +3012,7 @@ CodeBody parse_global_nspace( CodeT which )
 				eat( TokType::NewLine );
 			break;
 
-			case TokType::Comment_Start:
+			case TokType::Comment:
 				member = parse_comment();
 			break;
 
@@ -3232,10 +3272,11 @@ CodeConstructor parse_constructor()
 	using namespace Parser;
 	push_scope();
 
-	Token     identifier       = parse_identifier();
-	CodeParam params           = parse_params();
-	Code      initializer_list = { nullptr };
-	CodeBody  body             = { nullptr };
+	Token       identifier       = parse_identifier();
+	CodeParam   params           = parse_params();
+	Code        initializer_list = NoCode;
+	CodeBody    body             = NoCode;
+	CodeComment inline_cmt       = NoCode;
 
 	if ( check( TokType::Assign_Classifer ) )
 	{
@@ -3263,6 +3304,14 @@ CodeConstructor parse_constructor()
 	{
 		body = parse_function_body();
 	}
+	else
+	{
+		Token stmt_end = currtok;
+		eat( TokType::Statement_End );
+		
+		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+			inline_cmt = parse_comment();
+	}
 
 	CodeConstructor result = (CodeConstructor) make_code();
 
@@ -3279,6 +3328,9 @@ CodeConstructor parse_constructor()
 	}
 	else
 		result->Type = ECode::Constructor_Fwd;
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	Context.pop();
 	return result;
@@ -3321,8 +3373,8 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 		return CodeInvalid;
 	}
 
-	Token          identifier = parse_identifier();
-	CodeBody       body       = { nullptr };
+	Token    identifier = parse_identifier();
+	CodeBody body       = { nullptr };
 
 	eat( TokType::Capture_Start );
 	eat( TokType::Capture_End );
@@ -3343,9 +3395,19 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 			return CodeInvalid;
 		}
 	}
+	
+	CodeComment inline_cmt = NoCode;
 
 	if ( check( TokType::BraceCurly_Open ) )
 		body = parse_function_body();
+	else
+	{
+		Token stmt_end = currtok;
+		eat( TokType::Statement_End );
+		
+		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+			inline_cmt = parse_comment();
+	}
 
 	CodeDestructor result = (CodeDestructor) make_code();
 
@@ -3359,6 +3421,9 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	}
 	else
 		result->Type = ECode::Destructor_Fwd;
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	Context.pop();
 	return result;
@@ -3452,7 +3517,7 @@ CodeEnum parse_enum( bool inplace_def )
 					eat( TokType::NewLine );
 				break;
 
-				case TokType::Comment_Start:
+				case TokType::Comment:
 					member = parse_comment();
 				break;
 
@@ -3528,8 +3593,16 @@ CodeEnum parse_enum( bool inplace_def )
 		eat( TokType::BraceCurly_Close );
 	}
 
+	CodeComment inline_cmt = NoCode;
+	
 	if ( ! inplace_def )
+	{
+		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
+		
+		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+			inline_cmt = parse_comment();
+	}
 
 	using namespace ECode;
 
@@ -3553,6 +3626,9 @@ CodeEnum parse_enum( bool inplace_def )
 
 	if ( type )
 		result->UnderlyingType = type;
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	Context.pop();
 	return result;
@@ -3690,8 +3766,13 @@ CodeFriend parse_friend()
 		if ( params )
 			function->Params = params;
 	}
-
+	
+	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
+	
+	CodeComment inline_cmt = NoCode;
+	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+		inline_cmt = parse_comment();
 
 	CodeFriend
 	result       = (CodeFriend) make_code();
@@ -3702,6 +3783,9 @@ CodeFriend parse_friend()
 
 	else
 		result->Declaration = type;
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	Context.pop();
 	return result;
@@ -3949,7 +4033,7 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 	using namespace Parser;
 	push_scope();
 
-	// Specifiers attributed to the cast
+	// TODO : Specifiers attributed to the cast
 
 	// Operator's namespace if not within same class.
 	Token name = NullToken;
@@ -3987,7 +4071,8 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 		eat( TokType::Spec_Const );
 	}
 
-	Code body = { nullptr };
+	Code        body       = NoCode;
+	CodeComment inline_cmt = NoCode;
 
 	if ( check( TokType::BraceCurly_Open) )
 	{
@@ -4014,7 +4099,11 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 	}
 	else
 	{
+		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
+		
+		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+			inline_cmt = parse_comment();
 	}
 
 	CodeOpCast result = (CodeOpCast) make_code();
@@ -4542,8 +4631,13 @@ CodeTypedef parse_typedef()
 	}
 
 	array_expr = parse_array_decl();
-
+	
+	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
+	
+	CodeComment inline_cmt = NoCode;
+	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+		inline_cmt = parse_comment();
 
 	using namespace ECode;
 
@@ -4567,6 +4661,9 @@ CodeTypedef parse_typedef()
 
 	if ( type->Type == Typename && array_expr && array_expr->Type != Invalid )
 		type.cast<CodeType>()->ArrExpr = array_expr;
+	
+	if ( inline_cmt )
+		result->InlineCmt = inline_cmt;
 
 	Context.pop();
 	return result;
@@ -4633,7 +4730,7 @@ CodeUnion parse_union( bool inplace_def )
 				eat( TokType::NewLine );
 			break;
 
-			case TokType::Comment_Start:
+			case TokType::Comment:
 				member = parse_comment();
 			break;
 
@@ -4778,7 +4875,14 @@ CodeUsing parse_using()
 
 	array_expr = parse_array_decl();
 
+	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
+	
+	CodeComment inline_cmt = NoCode;
+	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+	{
+		inline_cmt = parse_comment();
+	}
 
 	using namespace ECode;
 
@@ -4803,6 +4907,9 @@ CodeUsing parse_using()
 
 		if ( attributes )
 			result->Attributes = attributes;
+		
+		if ( inline_cmt )
+			result->InlineCmt = inline_cmt;
 	}
 
 	Context.pop();
