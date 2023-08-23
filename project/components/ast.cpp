@@ -351,7 +351,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append( "void)" );
+				result.append( ")" );
 
 			if ( Specs )
 			{
@@ -390,7 +390,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append( "void)" );
+				result.append( ")" );
 
 			if ( Specs )
 			{
@@ -447,7 +447,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append( "void)" );
+				result.append( ")" );
 
 			if ( Specs )
 			{
@@ -485,7 +485,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append_fmt( "void)" );
+				result.append_fmt( ")" );
 
 			if ( Specs )
 			{
@@ -779,7 +779,7 @@ String AST::to_string()
 			{
 				result.append_fmt( "%S", Name );
 			}
-			
+
 			if ( IsParamPack )
 				result.append("...");
 		}
@@ -930,14 +930,86 @@ bool AST::is_equal( AST* other )
 	AST nodes are compared with AST::is_equal.
 */
 	if ( other == nullptr )
+	{
+		log_fmt( "AST::is_equal: other is null\nAST: %S", debug_str() );
 		return false;
+	}
 
 	if ( Type != other->Type )
+	{
+		log_fmt("AST::is_equal: Type check failure with other\nAST: %S\nOther: %S"
+			, debug_str()
+			, other->debug_str()
+		);
+
 		return false;
+	}
 
 	switch ( Type )
 	{
 		using namespace ECode;
+
+	#define check_member_val( val )                         \
+	if ( val != other->val )                                \
+	{                                                       \
+		log_fmt("AST::is_equal: Member - " #val "\n failed" \
+		        "AST  : %S\n"                               \
+		        "Other: %S\n"                               \
+		        "For val member: " #val                     \
+		    , debug_str()                                   \
+		    , other->debug_str()                            \
+		);                                                  \
+	                                                        \
+		return false;                                       \
+	}
+
+	#define check_member_str( str )                                       \
+	if ( str != other->str )                                              \
+	{                                                                     \
+		log_fmt("AST::is_equal: Member string check failure with other\n" \
+				"AST  : %S\n"                                             \
+				"Other: %S\n"                                             \
+				"For str member: " #str                                   \
+			, debug_str()                                                 \
+			, other->debug_str()                                          \
+		);                                                                \
+	                                                                      \
+		return false;                                                     \
+	}
+
+	#define check_member_ast( ast )                                                              \
+	if ( ast )                                                                                   \
+	{                                                                                            \
+		if ( other->ast == nullptr )                                                             \
+		{                                                                                        \
+			log_fmt("AST::is_equal: Failed for member " #ast " other equivalent param is null\n" \
+					"AST  : %S\n"                                                                \
+					"Other: %S\n"                                                                \
+					"For ast member: %S\n"                                                       \
+				, debug_str()                                                                    \
+				, other->debug_str()                                                             \
+				, ast->debug_str()                                                               \
+			);                                                                                   \
+                                                                                                 \
+			return false;                                                                        \
+		}                                                                                        \
+                                                                                                 \
+		if ( ! ast->is_equal( other->ast ) )                                                     \
+		{                                                                                        \
+			log_fmt( "AST::is_equal: Failed for " #ast"\n"                                       \
+			         "AST  : %S\n"                                                               \
+			         "Other: %S\n"                                                               \
+			         "For     ast member: %S\n"                                                  \
+			         "other's ast member: %S\n"                                                  \
+				, debug_str()                                                                    \
+				, other->debug_str()                                                             \
+				, ast->debug_str()                                                               \
+				, other->ast->debug_str()                                                        \
+			);                                                                                   \
+		}                                                                                        \
+		                                                                                         \
+		return false;                                                                            \
+	}
 
 		case NewLine:
 		case Access_Public:
@@ -952,29 +1024,20 @@ bool AST::is_equal( AST* other )
 		case PlatformAttributes:
 		case Untyped:
 		{
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
-
-			return Content == other->Content;
+			check_member_str( Content );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 		}
 
 		case Class_Fwd:
 		case Struct_Fwd:
 		{
-			if ( Name != other->Name )
-				return false;
-			if ( ParentType != other->ParentType )
-				return false;
-			if ( ParentAccess != other->ParentAccess )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Name );
+			check_member_ast( ParentType );
+			check_member_val( ParentAccess );
+			check_member_ast( Attributes );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -982,76 +1045,54 @@ bool AST::is_equal( AST* other )
 		case Class:
 		case Struct:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( ParentType != other->ParentType )
-				return false;
-			if ( ParentAccess != other->ParentAccess )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ParentType );
+			check_member_val( ParentAccess );
+			check_member_ast( Attributes );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Constructor:
 		{
-			if ( InitializerList ? ! InitializerList->is_equal( other->InitializerList ) : other->InitializerList != nullptr )
-				return false;
-			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_ast( InitializerList );
+			check_member_ast( Params );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Constructor_Fwd:
 		{
-			if ( InitializerList ? ! InitializerList->is_equal( other->InitializerList ) : other->InitializerList != nullptr )
-				return false;
-			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_ast( InitializerList );
+			check_member_ast( Params );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Destructor:
 		{
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_ast( Specs );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Destructor_Fwd:
 		{
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_ast( Specs );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1059,20 +1100,13 @@ bool AST::is_equal( AST* other )
 		case Enum:
 		case Enum_Class:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( UnderlyingType ? ! UnderlyingType->is_equal( other->UnderlyingType ) : other->UnderlyingType != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Attributes );
+			check_member_ast( UnderlyingType );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1080,122 +1114,82 @@ bool AST::is_equal( AST* other )
 		case Enum_Fwd:
 		case Enum_Class_Fwd:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( UnderlyingType ? ! UnderlyingType->is_equal( other->UnderlyingType ) : other->UnderlyingType != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Attributes );
+			check_member_ast( UnderlyingType );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Extern_Linkage:
 		{
-			if ( Name != other->Name )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Name );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Friend:
 		{
-			if ( Name != other->Name )
-				return false;
-			if ( Declaration ? ! Declaration->is_equal( other->Declaration ) : other->Declaration != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Name );
+			check_member_ast( Declaration );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Function:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Function_Fwd:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Module:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Namespace:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1203,24 +1197,15 @@ bool AST::is_equal( AST* other )
 		case Operator:
 		case Operator_Member:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1228,56 +1213,37 @@ bool AST::is_equal( AST* other )
 		case Operator_Fwd:
 		case Operator_Member_Fwd:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( ReturnType ? ! ReturnType->is_equal( other->ReturnType ) : other->ReturnType != nullptr )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Operator_Cast:
 		{
-			if ( Name != other->Name )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( ValueType );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Operator_Cast_Fwd:
 		{
-			if ( Name != other->Name )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( ValueType );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1286,15 +1252,42 @@ bool AST::is_equal( AST* other )
 		{
 			if ( NumEntries > 1 )
 			{
-				if ( NumEntries != other->NumEntries )
-					return false;
+				check_member_val( NumEntries );
 
 				AST* curr       = this;
 				AST* curr_other = other;
 				while ( curr != nullptr  )
 				{
-					if ( ! curr->is_equal( curr_other ) )
+					if ( curr )
+					{
+						if ( curr_other == nullptr )
+						{
+							log_fmt("AST::is_equal: Failed for parameter, other equivalent param is null\n"
+							        "AST  : %S\n"
+							        "Other: %S\n"
+							        "For ast member: %S\n"
+							    , curr->debug_str()
+							);
+
+							return false;
+						}
+
+						if ( ! curr->is_equal( curr_other ) )
+						{
+							log_fmt( "AST::is_equal: Failed for parameter\n"
+									"AST  : %S\n"
+									"Other: %S\n"
+									"For     ast member: %S\n"
+									"other's ast member: %S\n"
+								, debug_str()
+								, other->debug_str()
+								, curr->debug_str()
+								, curr_other->debug_str()
+							);
+						}
+
 						return false;
+					}
 
 					curr       = curr->Next;
 					curr_other = curr_other->Next;
@@ -1303,28 +1296,20 @@ bool AST::is_equal( AST* other )
 				return true;
 			}
 
-			if ( Name != other->Name )
-				return false;
-			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
-				return false;
-			if ( Value ? ! Value->is_equal( other->Value ) : other->Value != nullptr )
-				return false;
-			if ( ArrExpr ? ! ArrExpr->is_equal( other->ArrExpr ) : other->ArrExpr != nullptr )
-				return false;
+			check_member_str( Name );
+			check_member_ast( ValueType );
+			check_member_ast( Value );
+			check_member_ast( ArrExpr );
 
 			return true;
 		}
 
 		case Preprocess_Define:
 		{
-			if ( Name != other->Name )
-				return false;
-			if ( Content != other->Content )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Name );
+			check_member_str( Content );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1334,12 +1319,9 @@ bool AST::is_equal( AST* other )
 		case Preprocess_IfNotDef:
 		case Preprocess_ElIf:
 		{
-			if ( Content != other->Content )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Content );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1347,100 +1329,70 @@ bool AST::is_equal( AST* other )
 		case Preprocess_Include:
 		case Preprocess_Pragma:
 		{
-			if ( Content != other->Content )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_str( Content );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Specifiers:
 		{
-			if ( NumEntries != other->NumEntries )
-				return false;
-			if ( Name != other->Name )
-				return false;
+			check_member_val( NumEntries );
+			check_member_str( Name );
 			for ( s32 idx = 0; idx < NumEntries; ++idx )
 			{
-				if ( ArrSpecs[ idx ] != other->ArrSpecs[ idx ] )
-					return false;
+				check_member_val( ArrSpecs[ idx ] );
 			}
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
-
+			check_member_ast( Prev );
+			check_member_ast( Next );
 			return true;
 		}
 
 		case Template:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Params ? ! Params->is_equal( other->Params ) : other->Params != nullptr )
-				return false;
-			if ( Declaration ? ! Declaration->is_equal( other->Declaration ) : other->Declaration != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Params );
+			check_member_ast( Declaration );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Typedef:
 		{
-			if ( IsFunction != other->IsFunction )
-				return false;
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( UnderlyingType != other->UnderlyingType )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( IsFunction );
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( UnderlyingType );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 		case Typename:
 		{
-			if ( Name != other->Name )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( ArrExpr ? ! ArrExpr->is_equal( other->ArrExpr ) : other->ArrExpr != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( IsParamPack );
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( ArrExpr );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Union:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Body ? ! Body->is_equal( other->Body ) : other->Body != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Attributes );
+			check_member_ast( Body );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1448,42 +1400,27 @@ bool AST::is_equal( AST* other )
 		case Using:
 		case Using_Namespace:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( UnderlyingType ? ! UnderlyingType->is_equal( other->UnderlyingType ) : other->UnderlyingType != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( UnderlyingType );
+			check_member_ast( Attributes );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
 
 		case Variable:
 		{
-			if ( ModuleFlags != other->ModuleFlags )
-				return false;
-			if ( Name != other->Name )
-				return false;
-			if ( Attributes ? ! Attributes->is_equal( other->Attributes ) : other->Attributes != nullptr )
-				return false;
-			if ( Specs ? ! Specs->is_equal( other->Specs ) : other->Specs != nullptr )
-				return false;
-			if ( ValueType ? ! ValueType->is_equal( other->ValueType ) : other->ValueType != nullptr )
-				return false;
-			if ( BitfieldSize ? ! BitfieldSize->is_equal( other->BitfieldSize ) : other->BitfieldSize != nullptr )
-				return false;
-			if ( Value ? ! Value->is_equal( other->Value ) : other->Value != nullptr )
-				return false;
-			if ( Prev ? ! Prev->is_equal( other->Prev ) : other->Prev != nullptr )
-				return false;
-			if ( Next ? ! Next->is_equal( other->Next ) : other->Next != nullptr )
-				return false;
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ValueType );
+			check_member_ast( BitfieldSize );
+			check_member_ast( Value );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Prev );
+			check_member_ast( Next );
 
 			return true;
 		}
@@ -1496,21 +1433,41 @@ bool AST::is_equal( AST* other )
 		case Struct_Body:
 		case Union_Body:
 		{
-			if ( NumEntries != other->NumEntries )
-				return false;
-
-			if ( Front != other->Front )
-				return false;
-
-			if ( Back != other->Back )
-				return false;
+			check_member_val( NumEntries );
+			check_member_ast( Front );
+			check_member_ast( Back );
 
 			AST* curr       = Front;
 			AST* curr_other = other->Front;
 			while ( curr != nullptr )
 			{
-				if ( ! curr->is_equal( curr_other ) )
+				if ( curr_other == nullptr )
+				{
+					log_fmt("AST::is_equal: Failed for body, other equivalent param is null\n"
+					        "AST  : %S\n"
+					        "Other: %S\n"
+					        "For ast member: %S\n"
+					    , curr->debug_str()
+					);
+
 					return false;
+				}
+
+				if ( ! curr->is_equal( curr_other ) )
+				{
+					log_fmt( "AST::is_equal: Failed for body\n"
+							"AST  : %S\n"
+							"Other: %S\n"
+							"For     ast member: %S\n"
+							"other's ast member: %S\n"
+						, debug_str()
+						, other->debug_str()
+						, curr->debug_str()
+						, curr_other->debug_str()
+					);
+
+					return false;
+				}
 
 				curr       = curr->Next;
 				curr_other = curr_other->Next;
@@ -1518,6 +1475,10 @@ bool AST::is_equal( AST* other )
 
 			return true;
 		}
+
+	#undef check_member_val
+	#undef check_member_str
+	#undef check_member_ast
 	}
 
 	return true;

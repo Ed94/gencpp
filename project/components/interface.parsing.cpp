@@ -149,10 +149,17 @@ namespace Parser
 		{
 			node->Prev = Scope;
 			Scope      = node;
+
+		#if 0 && Build_Debug
+			log_fmt("\tEntering Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
+		#endif
 		}
 
 		void pop()
 		{
+		#if 0 && Build_Debug
+			log_fmt("\tPopping  Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
+		#endif
 			Scope = Scope->Prev;
 		}
 
@@ -233,6 +240,10 @@ namespace Parser
 
 			return false;
 		}
+
+	#if 0 && Build_Debug
+		log_fmt("Ate: %S\n", Arr[Idx].to_string() );
+	#endif
 
 		Idx++;
 		return true;
@@ -1027,8 +1038,18 @@ namespace Parser
 			}
 			else
 			{
-				String context_str = String::fmt_buf( GlobalAllocator, "%.*s", min( 100, left ), scanner );
+				s32 start = max( 0, Tokens.num() - 100 );
+				log_fmt("\n%d\n", start);
+				for ( s32 idx = start; idx < Tokens.num(); idx++ )
+				{
+					log_fmt( "Token %d Type: %s : %.*s\n"
+						, idx
+						, ETokType::to_str( Tokens[ idx ].Type ).Ptr
+						, Tokens[ idx ].Length, Tokens[ idx ].Text
+					);
+				}
 
+				String context_str = String::fmt_buf( GlobalAllocator, "%.*s", min( 100, left ), scanner );
 				log_failure( "Failed to lex token '%c' (%d, %d)\n%s", current, line, column, context_str );
 
 				// Skip to next whitespace since we can't know if anything else is valid until then.
@@ -1175,7 +1196,7 @@ if ( def.Ptr == nullptr )                                                      \
 #	define check_noskip( Type_ ) ( left && currtok_noskip.Type == Type_ )
 #	define check( Type_ )        ( left && currtok.Type == Type_ )
 
-#	define push_scope()                                                    \
+#	define push_scope()                                               \
 	StackNode scope { nullptr, currtok, NullToken, txt( __func__ ) }; \
 	Context.push( & scope )
 
@@ -2267,13 +2288,13 @@ CodeVar parse_variable_after_name(
 		expr_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_tok.Text;
 		bitfield_expr   = untyped_str( expr_tok );
 	}
-	
+
 	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
-	
+
 	// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
 	CodeComment inline_cmt = NoCode;
-	if (	left 
+	if (	left
 		&&	( currtok_noskip.Type == TokType::Comment )
 		&&	currtok_noskip.Line == stmt_end.Line )
 	{
@@ -2304,7 +2325,7 @@ CodeVar parse_variable_after_name(
 
 	if ( expr )
 		result->Value = expr;
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
@@ -2944,7 +2965,7 @@ Code parse_class_struct( Parser::TokType which, bool inplace_def = false )
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
-		
+
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
@@ -2954,7 +2975,7 @@ Code parse_class_struct( Parser::TokType which, bool inplace_def = false )
 
 	else
 		result = def_struct( name, body, (CodeType)parent, access, attributes, mflags );
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
@@ -3337,7 +3358,7 @@ CodeConstructor parse_constructor()
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
-		
+
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
@@ -3357,7 +3378,7 @@ CodeConstructor parse_constructor()
 	}
 	else
 		result->Type = ECode::Constructor_Fwd;
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
@@ -3795,10 +3816,10 @@ CodeFriend parse_friend()
 		if ( params )
 			function->Params = params;
 	}
-	
+
 	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
-	
+
 	CodeComment inline_cmt = NoCode;
 	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 		inline_cmt = parse_comment();
@@ -3812,7 +3833,7 @@ CodeFriend parse_friend()
 
 	else
 		result->Declaration = type;
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
@@ -4761,7 +4782,7 @@ CodeUnion parse_union( bool inplace_def )
 
 	while ( ! check_noskip( TokType::BraceCurly_Close ) )
 	{
-		if ( currtok.Type == TokType::Preprocess_Hash )
+		if ( currtok_noskip.Type == TokType::Preprocess_Hash )
 			eat( TokType::Preprocess_Hash );
 
 		Code member = { nullptr };

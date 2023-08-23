@@ -3,14 +3,14 @@
 
 #pragma region generated code inline implementation
 
-char const* Code::debug_str( void )
+char const* Code::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code Code::duplicate( void )
+Code Code::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -30,12 +30,12 @@ bool Code::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool Code::is_valid( void )
+bool Code::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void Code::set_global( void )
+void Code::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -45,7 +45,7 @@ void Code::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String Code::to_string( void )
+String Code::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -81,14 +81,14 @@ Code::operator bool()
 	return ast != nullptr;
 }
 
-char const* CodeBody::debug_str( void )
+char const* CodeBody::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeBody::duplicate( void )
+Code CodeBody::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -108,12 +108,12 @@ bool CodeBody::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeBody::is_valid( void )
+bool CodeBody::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeBody::set_global( void )
+void CodeBody::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -123,7 +123,7 @@ void CodeBody::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeBody::to_string( void )
+String CodeBody::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -159,14 +159,14 @@ CodeBody::operator bool()
 	return ast != nullptr;
 }
 
-char const* CodeAttributes::debug_str( void )
+char const* CodeAttributes::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeAttributes::duplicate( void )
+Code CodeAttributes::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -186,12 +186,12 @@ bool CodeAttributes::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeAttributes::is_valid( void )
+bool CodeAttributes::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeAttributes::set_global( void )
+void CodeAttributes::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -201,7 +201,7 @@ void CodeAttributes::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeAttributes::to_string( void )
+String CodeAttributes::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -237,7 +237,7 @@ CodeAttributes::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeAttributes::raw( void )
+AST* CodeAttributes::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -247,7 +247,7 @@ CodeAttributes::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Attributes* CodeAttributes::operator->( void )
+AST_Attributes* CodeAttributes::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -257,14 +257,14 @@ AST_Attributes* CodeAttributes::operator->( void )
 	return ast;
 }
 
-char const* CodeComment::debug_str( void )
+char const* CodeComment::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeComment::duplicate( void )
+Code CodeComment::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -284,12 +284,12 @@ bool CodeComment::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeComment::is_valid( void )
+bool CodeComment::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeComment::set_global( void )
+void CodeComment::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -299,7 +299,7 @@ void CodeComment::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeComment::to_string( void )
+String CodeComment::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -335,7 +335,7 @@ CodeComment::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeComment::raw( void )
+AST* CodeComment::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -345,7 +345,7 @@ CodeComment::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Comment* CodeComment::operator->( void )
+AST_Comment* CodeComment::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -355,14 +355,14 @@ AST_Comment* CodeComment::operator->( void )
 	return ast;
 }
 
-char const* CodeConstructor::debug_str( void )
+char const* CodeConstructor::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeConstructor::duplicate( void )
+Code CodeConstructor::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -382,12 +382,12 @@ bool CodeConstructor::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeConstructor::is_valid( void )
+bool CodeConstructor::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeConstructor::set_global( void )
+void CodeConstructor::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -397,7 +397,7 @@ void CodeConstructor::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeConstructor::to_string( void )
+String CodeConstructor::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -433,7 +433,7 @@ CodeConstructor::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeConstructor::raw( void )
+AST* CodeConstructor::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -443,7 +443,7 @@ CodeConstructor::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Constructor* CodeConstructor::operator->( void )
+AST_Constructor* CodeConstructor::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -453,14 +453,14 @@ AST_Constructor* CodeConstructor::operator->( void )
 	return ast;
 }
 
-char const* CodeClass::debug_str( void )
+char const* CodeClass::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeClass::duplicate( void )
+Code CodeClass::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -480,12 +480,12 @@ bool CodeClass::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeClass::is_valid( void )
+bool CodeClass::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeClass::set_global( void )
+void CodeClass::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -495,7 +495,7 @@ void CodeClass::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeClass::to_string( void )
+String CodeClass::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -531,14 +531,14 @@ CodeClass::operator bool()
 	return ast != nullptr;
 }
 
-char const* CodeDefine::debug_str( void )
+char const* CodeDefine::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeDefine::duplicate( void )
+Code CodeDefine::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -558,12 +558,12 @@ bool CodeDefine::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeDefine::is_valid( void )
+bool CodeDefine::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeDefine::set_global( void )
+void CodeDefine::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -573,7 +573,7 @@ void CodeDefine::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeDefine::to_string( void )
+String CodeDefine::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -609,7 +609,7 @@ CodeDefine::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeDefine::raw( void )
+AST* CodeDefine::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -619,7 +619,7 @@ CodeDefine::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Define* CodeDefine::operator->( void )
+AST_Define* CodeDefine::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -629,14 +629,14 @@ AST_Define* CodeDefine::operator->( void )
 	return ast;
 }
 
-char const* CodeDestructor::debug_str( void )
+char const* CodeDestructor::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeDestructor::duplicate( void )
+Code CodeDestructor::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -656,12 +656,12 @@ bool CodeDestructor::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeDestructor::is_valid( void )
+bool CodeDestructor::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeDestructor::set_global( void )
+void CodeDestructor::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -671,7 +671,7 @@ void CodeDestructor::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeDestructor::to_string( void )
+String CodeDestructor::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -707,7 +707,7 @@ CodeDestructor::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeDestructor::raw( void )
+AST* CodeDestructor::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -717,7 +717,7 @@ CodeDestructor::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Destructor* CodeDestructor::operator->( void )
+AST_Destructor* CodeDestructor::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -727,14 +727,14 @@ AST_Destructor* CodeDestructor::operator->( void )
 	return ast;
 }
 
-char const* CodeEnum::debug_str( void )
+char const* CodeEnum::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeEnum::duplicate( void )
+Code CodeEnum::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -754,12 +754,12 @@ bool CodeEnum::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeEnum::is_valid( void )
+bool CodeEnum::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeEnum::set_global( void )
+void CodeEnum::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -769,7 +769,7 @@ void CodeEnum::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeEnum::to_string( void )
+String CodeEnum::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -805,7 +805,7 @@ CodeEnum::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeEnum::raw( void )
+AST* CodeEnum::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -815,7 +815,7 @@ CodeEnum::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Enum* CodeEnum::operator->( void )
+AST_Enum* CodeEnum::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -825,14 +825,14 @@ AST_Enum* CodeEnum::operator->( void )
 	return ast;
 }
 
-char const* CodeExec::debug_str( void )
+char const* CodeExec::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeExec::duplicate( void )
+Code CodeExec::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -852,12 +852,12 @@ bool CodeExec::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeExec::is_valid( void )
+bool CodeExec::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeExec::set_global( void )
+void CodeExec::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -867,7 +867,7 @@ void CodeExec::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeExec::to_string( void )
+String CodeExec::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -903,7 +903,7 @@ CodeExec::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeExec::raw( void )
+AST* CodeExec::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -913,7 +913,7 @@ CodeExec::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Exec* CodeExec::operator->( void )
+AST_Exec* CodeExec::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -923,14 +923,14 @@ AST_Exec* CodeExec::operator->( void )
 	return ast;
 }
 
-char const* CodeExtern::debug_str( void )
+char const* CodeExtern::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeExtern::duplicate( void )
+Code CodeExtern::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -950,12 +950,12 @@ bool CodeExtern::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeExtern::is_valid( void )
+bool CodeExtern::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeExtern::set_global( void )
+void CodeExtern::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -965,7 +965,7 @@ void CodeExtern::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeExtern::to_string( void )
+String CodeExtern::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1001,7 +1001,7 @@ CodeExtern::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeExtern::raw( void )
+AST* CodeExtern::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1011,7 +1011,7 @@ CodeExtern::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Extern* CodeExtern::operator->( void )
+AST_Extern* CodeExtern::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1021,14 +1021,14 @@ AST_Extern* CodeExtern::operator->( void )
 	return ast;
 }
 
-char const* CodeFriend::debug_str( void )
+char const* CodeFriend::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeFriend::duplicate( void )
+Code CodeFriend::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1048,12 +1048,12 @@ bool CodeFriend::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeFriend::is_valid( void )
+bool CodeFriend::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeFriend::set_global( void )
+void CodeFriend::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1063,7 +1063,7 @@ void CodeFriend::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeFriend::to_string( void )
+String CodeFriend::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1099,7 +1099,7 @@ CodeFriend::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeFriend::raw( void )
+AST* CodeFriend::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1109,7 +1109,7 @@ CodeFriend::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Friend* CodeFriend::operator->( void )
+AST_Friend* CodeFriend::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1119,14 +1119,14 @@ AST_Friend* CodeFriend::operator->( void )
 	return ast;
 }
 
-char const* CodeFn::debug_str( void )
+char const* CodeFn::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeFn::duplicate( void )
+Code CodeFn::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1146,12 +1146,12 @@ bool CodeFn::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeFn::is_valid( void )
+bool CodeFn::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeFn::set_global( void )
+void CodeFn::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1161,7 +1161,7 @@ void CodeFn::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeFn::to_string( void )
+String CodeFn::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1197,7 +1197,7 @@ CodeFn::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeFn::raw( void )
+AST* CodeFn::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1207,7 +1207,7 @@ CodeFn::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Fn* CodeFn::operator->( void )
+AST_Fn* CodeFn::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1217,14 +1217,14 @@ AST_Fn* CodeFn::operator->( void )
 	return ast;
 }
 
-char const* CodeInclude::debug_str( void )
+char const* CodeInclude::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeInclude::duplicate( void )
+Code CodeInclude::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1244,12 +1244,12 @@ bool CodeInclude::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeInclude::is_valid( void )
+bool CodeInclude::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeInclude::set_global( void )
+void CodeInclude::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1259,7 +1259,7 @@ void CodeInclude::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeInclude::to_string( void )
+String CodeInclude::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1295,7 +1295,7 @@ CodeInclude::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeInclude::raw( void )
+AST* CodeInclude::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1305,7 +1305,7 @@ CodeInclude::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Include* CodeInclude::operator->( void )
+AST_Include* CodeInclude::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1315,14 +1315,14 @@ AST_Include* CodeInclude::operator->( void )
 	return ast;
 }
 
-char const* CodeModule::debug_str( void )
+char const* CodeModule::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeModule::duplicate( void )
+Code CodeModule::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1342,12 +1342,12 @@ bool CodeModule::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeModule::is_valid( void )
+bool CodeModule::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeModule::set_global( void )
+void CodeModule::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1357,7 +1357,7 @@ void CodeModule::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeModule::to_string( void )
+String CodeModule::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1393,7 +1393,7 @@ CodeModule::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeModule::raw( void )
+AST* CodeModule::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1403,7 +1403,7 @@ CodeModule::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Module* CodeModule::operator->( void )
+AST_Module* CodeModule::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1413,14 +1413,14 @@ AST_Module* CodeModule::operator->( void )
 	return ast;
 }
 
-char const* CodeNS::debug_str( void )
+char const* CodeNS::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeNS::duplicate( void )
+Code CodeNS::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1440,12 +1440,12 @@ bool CodeNS::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeNS::is_valid( void )
+bool CodeNS::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeNS::set_global( void )
+void CodeNS::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1455,7 +1455,7 @@ void CodeNS::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeNS::to_string( void )
+String CodeNS::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1491,7 +1491,7 @@ CodeNS::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeNS::raw( void )
+AST* CodeNS::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1501,7 +1501,7 @@ CodeNS::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_NS* CodeNS::operator->( void )
+AST_NS* CodeNS::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1511,14 +1511,14 @@ AST_NS* CodeNS::operator->( void )
 	return ast;
 }
 
-char const* CodeOperator::debug_str( void )
+char const* CodeOperator::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeOperator::duplicate( void )
+Code CodeOperator::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1538,12 +1538,12 @@ bool CodeOperator::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeOperator::is_valid( void )
+bool CodeOperator::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeOperator::set_global( void )
+void CodeOperator::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1553,7 +1553,7 @@ void CodeOperator::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeOperator::to_string( void )
+String CodeOperator::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1589,7 +1589,7 @@ CodeOperator::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeOperator::raw( void )
+AST* CodeOperator::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1599,7 +1599,7 @@ CodeOperator::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Operator* CodeOperator::operator->( void )
+AST_Operator* CodeOperator::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1609,14 +1609,14 @@ AST_Operator* CodeOperator::operator->( void )
 	return ast;
 }
 
-char const* CodeOpCast::debug_str( void )
+char const* CodeOpCast::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeOpCast::duplicate( void )
+Code CodeOpCast::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1636,12 +1636,12 @@ bool CodeOpCast::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeOpCast::is_valid( void )
+bool CodeOpCast::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeOpCast::set_global( void )
+void CodeOpCast::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1651,7 +1651,7 @@ void CodeOpCast::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeOpCast::to_string( void )
+String CodeOpCast::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1687,7 +1687,7 @@ CodeOpCast::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeOpCast::raw( void )
+AST* CodeOpCast::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1697,7 +1697,7 @@ CodeOpCast::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_OpCast* CodeOpCast::operator->( void )
+AST_OpCast* CodeOpCast::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1707,14 +1707,14 @@ AST_OpCast* CodeOpCast::operator->( void )
 	return ast;
 }
 
-char const* CodeParam::debug_str( void )
+char const* CodeParam::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeParam::duplicate( void )
+Code CodeParam::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1734,12 +1734,12 @@ bool CodeParam::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeParam::is_valid( void )
+bool CodeParam::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeParam::set_global( void )
+void CodeParam::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1749,7 +1749,7 @@ void CodeParam::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeParam::to_string( void )
+String CodeParam::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1785,14 +1785,14 @@ CodeParam::operator bool()
 	return ast != nullptr;
 }
 
-char const* CodePragma::debug_str( void )
+char const* CodePragma::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodePragma::duplicate( void )
+Code CodePragma::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1812,12 +1812,12 @@ bool CodePragma::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodePragma::is_valid( void )
+bool CodePragma::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodePragma::set_global( void )
+void CodePragma::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1827,7 +1827,7 @@ void CodePragma::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodePragma::to_string( void )
+String CodePragma::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1863,7 +1863,7 @@ CodePragma::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodePragma::raw( void )
+AST* CodePragma::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1873,7 +1873,7 @@ CodePragma::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Pragma* CodePragma::operator->( void )
+AST_Pragma* CodePragma::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1883,14 +1883,14 @@ AST_Pragma* CodePragma::operator->( void )
 	return ast;
 }
 
-char const* CodePreprocessCond::debug_str( void )
+char const* CodePreprocessCond::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodePreprocessCond::duplicate( void )
+Code CodePreprocessCond::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -1910,12 +1910,12 @@ bool CodePreprocessCond::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodePreprocessCond::is_valid( void )
+bool CodePreprocessCond::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodePreprocessCond::set_global( void )
+void CodePreprocessCond::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -1925,7 +1925,7 @@ void CodePreprocessCond::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodePreprocessCond::to_string( void )
+String CodePreprocessCond::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -1961,7 +1961,7 @@ CodePreprocessCond::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodePreprocessCond::raw( void )
+AST* CodePreprocessCond::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -1971,7 +1971,7 @@ CodePreprocessCond::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_PreprocessCond* CodePreprocessCond::operator->( void )
+AST_PreprocessCond* CodePreprocessCond::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -1981,14 +1981,14 @@ AST_PreprocessCond* CodePreprocessCond::operator->( void )
 	return ast;
 }
 
-char const* CodeSpecifiers::debug_str( void )
+char const* CodeSpecifiers::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeSpecifiers::duplicate( void )
+Code CodeSpecifiers::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2008,12 +2008,12 @@ bool CodeSpecifiers::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeSpecifiers::is_valid( void )
+bool CodeSpecifiers::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeSpecifiers::set_global( void )
+void CodeSpecifiers::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2023,7 +2023,7 @@ void CodeSpecifiers::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeSpecifiers::to_string( void )
+String CodeSpecifiers::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2059,14 +2059,14 @@ CodeSpecifiers::operator bool()
 	return ast != nullptr;
 }
 
-char const* CodeStruct::debug_str( void )
+char const* CodeStruct::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeStruct::duplicate( void )
+Code CodeStruct::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2086,12 +2086,12 @@ bool CodeStruct::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeStruct::is_valid( void )
+bool CodeStruct::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeStruct::set_global( void )
+void CodeStruct::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2101,7 +2101,7 @@ void CodeStruct::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeStruct::to_string( void )
+String CodeStruct::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2137,14 +2137,14 @@ CodeStruct::operator bool()
 	return ast != nullptr;
 }
 
-char const* CodeTemplate::debug_str( void )
+char const* CodeTemplate::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeTemplate::duplicate( void )
+Code CodeTemplate::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2164,12 +2164,12 @@ bool CodeTemplate::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeTemplate::is_valid( void )
+bool CodeTemplate::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeTemplate::set_global( void )
+void CodeTemplate::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2179,7 +2179,7 @@ void CodeTemplate::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeTemplate::to_string( void )
+String CodeTemplate::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2215,7 +2215,7 @@ CodeTemplate::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeTemplate::raw( void )
+AST* CodeTemplate::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -2225,7 +2225,7 @@ CodeTemplate::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Template* CodeTemplate::operator->( void )
+AST_Template* CodeTemplate::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -2235,14 +2235,14 @@ AST_Template* CodeTemplate::operator->( void )
 	return ast;
 }
 
-char const* CodeType::debug_str( void )
+char const* CodeType::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeType::duplicate( void )
+Code CodeType::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2262,12 +2262,12 @@ bool CodeType::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeType::is_valid( void )
+bool CodeType::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeType::set_global( void )
+void CodeType::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2277,7 +2277,7 @@ void CodeType::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeType::to_string( void )
+String CodeType::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2313,7 +2313,7 @@ CodeType::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeType::raw( void )
+AST* CodeType::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -2323,7 +2323,7 @@ CodeType::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Type* CodeType::operator->( void )
+AST_Type* CodeType::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -2333,14 +2333,14 @@ AST_Type* CodeType::operator->( void )
 	return ast;
 }
 
-char const* CodeTypedef::debug_str( void )
+char const* CodeTypedef::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeTypedef::duplicate( void )
+Code CodeTypedef::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2360,12 +2360,12 @@ bool CodeTypedef::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeTypedef::is_valid( void )
+bool CodeTypedef::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeTypedef::set_global( void )
+void CodeTypedef::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2375,7 +2375,7 @@ void CodeTypedef::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeTypedef::to_string( void )
+String CodeTypedef::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2411,7 +2411,7 @@ CodeTypedef::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeTypedef::raw( void )
+AST* CodeTypedef::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -2421,7 +2421,7 @@ CodeTypedef::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Typedef* CodeTypedef::operator->( void )
+AST_Typedef* CodeTypedef::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -2431,14 +2431,14 @@ AST_Typedef* CodeTypedef::operator->( void )
 	return ast;
 }
 
-char const* CodeUnion::debug_str( void )
+char const* CodeUnion::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeUnion::duplicate( void )
+Code CodeUnion::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2458,12 +2458,12 @@ bool CodeUnion::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeUnion::is_valid( void )
+bool CodeUnion::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeUnion::set_global( void )
+void CodeUnion::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2473,7 +2473,7 @@ void CodeUnion::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeUnion::to_string( void )
+String CodeUnion::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2509,7 +2509,7 @@ CodeUnion::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeUnion::raw( void )
+AST* CodeUnion::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -2519,7 +2519,7 @@ CodeUnion::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Union* CodeUnion::operator->( void )
+AST_Union* CodeUnion::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -2529,14 +2529,14 @@ AST_Union* CodeUnion::operator->( void )
 	return ast;
 }
 
-char const* CodeUsing::debug_str( void )
+char const* CodeUsing::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeUsing::duplicate( void )
+Code CodeUsing::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2556,12 +2556,12 @@ bool CodeUsing::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeUsing::is_valid( void )
+bool CodeUsing::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeUsing::set_global( void )
+void CodeUsing::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2571,7 +2571,7 @@ void CodeUsing::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeUsing::to_string( void )
+String CodeUsing::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2607,7 +2607,7 @@ CodeUsing::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeUsing::raw( void )
+AST* CodeUsing::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -2617,7 +2617,7 @@ CodeUsing::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Using* CodeUsing::operator->( void )
+AST_Using* CodeUsing::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -2627,14 +2627,14 @@ AST_Using* CodeUsing::operator->( void )
 	return ast;
 }
 
-char const* CodeVar::debug_str( void )
+char const* CodeVar::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
 	return rcast( AST*, ast )->debug_str();
 }
 
-Code CodeVar::duplicate( void )
+Code CodeVar::duplicate()
 {
 	if ( ast == nullptr )
 	{
@@ -2654,12 +2654,12 @@ bool CodeVar::is_equal( Code other )
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
-bool CodeVar::is_valid( void )
+bool CodeVar::is_valid()
 {
 	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
-void CodeVar::set_global( void )
+void CodeVar::set_global()
 {
 	if ( ast == nullptr )
 	{
@@ -2669,7 +2669,7 @@ void CodeVar::set_global( void )
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeVar::to_string( void )
+String CodeVar::to_string()
 {
 	if ( ast == nullptr )
 	{
@@ -2705,7 +2705,7 @@ CodeVar::operator bool()
 	return ast != nullptr;
 }
 
-AST* CodeVar::raw( void )
+AST* CodeVar::raw()
 {
 	return rcast( AST*, ast );
 }
@@ -2715,7 +2715,7 @@ CodeVar::operator Code()
 	return *rcast( Code*, this );
 }
 
-AST_Var* CodeVar::operator->( void )
+AST_Var* CodeVar::operator->()
 {
 	if ( ast == nullptr )
 	{

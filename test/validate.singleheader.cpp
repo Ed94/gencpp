@@ -40,9 +40,9 @@ void check_singleheader_ast()
 	time_start = time_rel_ms();
 
 	if ( ast.is_equal( ast_gen ) )
-		log_fmt( "Passed!: AST passed validation!\n" );
+		log_fmt( "\nPassed!: AST passed validation!\n" );
 	else
-		log_fmt( "Failed: AST did not pass validation\n" );
+		log_fmt( "\nFailed: AST did not pass validation\n" );
 
 	log_fmt( "Time taken: %llu ms\n", time_rel_ms() - time_start );
 
