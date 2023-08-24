@@ -35,7 +35,7 @@ void check_singleheader_ast()
 	        time_start = time_rel_ms();
 	CodeBody ast_gen   = parse_global_body( { file_gen.size, (char const*)file_gen.data } );
 
-	log_fmt("\nAst generated. Time taken: %llu ms\n", time_rel_ms() - time_start);
+	log_fmt("\nAst generated. Time taken: %llu ms\n\n", time_rel_ms() - time_start);
 
 	time_start = time_rel_ms();
 

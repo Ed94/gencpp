@@ -523,10 +523,10 @@ namespace Parser
 					s32 within_char   = false;
 					while ( left )
 					{
-						if ( current == '"' )
+						if ( current == '"' && ! within_char )
 							within_string ^= true;
 
-						if ( current == '\'' )
+						if ( current == '\'' && ! within_string )
 							within_char ^= true;
 
 						if ( current == '\\' && ! within_string && ! within_char )

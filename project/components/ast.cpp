@@ -4,6 +4,36 @@
 Code Code::Global;
 Code Code::Invalid;
 
+char const* AST::debug_str()
+{
+	if ( Parent )
+	{
+		String
+		result = String::make_reserve( GlobalAllocator, kilobytes(1) );
+		result.append_fmt(
+				"\nType    : %s"
+				"\nParent  : %s %s"
+				"\nName    : %s"
+			, type_str()
+			, Parent->type_str()
+			, Parent->Name, Name ? Name : ""
+		);
+
+		return result;
+	}
+
+	String
+	result = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	result.append_fmt(
+			"\nType    : %s"
+			"\nName    : %s"
+		, type_str()
+		, Name ? Name : ""
+	);
+
+	return result;
+}
+
 AST* AST::duplicate()
 {
 	using namespace ECode;
@@ -952,10 +982,9 @@ bool AST::is_equal( AST* other )
 	#define check_member_val( val )                         \
 	if ( val != other->val )                                \
 	{                                                       \
-		log_fmt("AST::is_equal: Member - " #val "\n failed" \
+		log_fmt("AST::is_equal: Member - " #val " failed\n" \
 		        "AST  : %S\n"                               \
 		        "Other: %S\n"                               \
-		        "For val member: " #val                     \
 		    , debug_str()                                   \
 		    , other->debug_str()                            \
 		);                                                  \
@@ -963,18 +992,17 @@ bool AST::is_equal( AST* other )
 		return false;                                       \
 	}
 
-	#define check_member_str( str )                                       \
-	if ( str != other->str )                                              \
-	{                                                                     \
-		log_fmt("AST::is_equal: Member string check failure with other\n" \
-				"AST  : %S\n"                                             \
-				"Other: %S\n"                                             \
-				"For str member: " #str                                   \
-			, debug_str()                                                 \
-			, other->debug_str()                                          \
-		);                                                                \
-	                                                                      \
-		return false;                                                     \
+	#define check_member_str( str )                               \
+	if ( str != other->str )                                      \
+	{                                                             \
+		log_fmt("AST::is_equal: Member string - "#str " failed\n" \
+				"AST  : %S\n"                                     \
+				"Other: %S\n"                                     \
+			, debug_str()                                         \
+			, other->debug_str()                                  \
+		);                                                        \
+	                                                              \
+		return false;                                             \
 	}
 
 	#define check_member_ast( ast )                                                              \
@@ -983,9 +1011,9 @@ bool AST::is_equal( AST* other )
 		if ( other->ast == nullptr )                                                             \
 		{                                                                                        \
 			log_fmt("AST::is_equal: Failed for member " #ast " other equivalent param is null\n" \
-					"AST  : %S\n"                                                                \
-					"Other: %S\n"                                                                \
-					"For ast member: %S\n"                                                       \
+					"AST  : %s\n"                                                                \
+					"Other: %s\n"                                                                \
+					"For ast member: %s\n"                                                       \
 				, debug_str()                                                                    \
 				, other->debug_str()                                                             \
 				, ast->debug_str()                                                               \
@@ -1000,7 +1028,7 @@ bool AST::is_equal( AST* other )
 			         "AST  : %S\n"                                                               \
 			         "Other: %S\n"                                                               \
 			         "For     ast member: %S\n"                                                  \
-			         "other's ast member: %S\n"                                                  \
+			         "other   ast member: %S\n"                                                  \
 				, debug_str()                                                                    \
 				, other->debug_str()                                                             \
 				, ast->debug_str()                                                               \
