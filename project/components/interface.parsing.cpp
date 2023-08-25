@@ -4502,7 +4502,7 @@ CodeType parse_type( bool* is_function )
 		brute_sig.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)brute_sig.Text;
 		is_first_capture = false;
 	}
-	
+
 	bool is_param_pack = false;
 	if ( check(TokType::Varadic_Argument) )
 	{
@@ -4534,7 +4534,7 @@ CodeType parse_type( bool* is_function )
 
 	if ( attributes )
 		result->Attributes = attributes;
-	
+
 	if ( is_param_pack )
 		result->IsParamPack = true;
 

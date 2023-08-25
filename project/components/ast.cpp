@@ -1005,6 +1005,25 @@ bool AST::is_equal( AST* other )
 		return false;                                             \
 	}
 
+	#define check_member_content( content ) \
+	if ( content != other->content )       \
+	{                                      \
+		log_fmt("AST::is_equal: Member content - "#content " failed\n"    \
+				"AST  : %S\n"                                             \
+				"Other: %S\n"                                             \
+			, debug_str()                                                 \
+			, other->debug_str()                                          \
+		);                                                                \
+                                                                          \
+		log_fmt("Content cannot be trusted to be unique with this check " \
+			"so it must be verified by eye for now\n"                     \
+			"AST   Content:\n%S\n"                                        \
+			"Other Content:\n%S\n"                                        \
+			, content                                                     \
+			, other->content                                              \
+		);                                                                \
+	}
+
 	#define check_member_ast( ast )                                                              \
 	if ( ast )                                                                                   \
 	{                                                                                            \
@@ -1039,12 +1058,6 @@ bool AST::is_equal( AST* other )
 		}                                                                                        \
 	}
 
-	// Need to check to make sure the prev->is_equal wont lead to a recursion.
-	// #define check_member_prev() \
-	// if ( Prev )                \
-	// {                          \
-
-
 		case NewLine:
 		case Access_Public:
 		case Access_Protected:
@@ -1058,7 +1071,7 @@ bool AST::is_equal( AST* other )
 		case PlatformAttributes:
 		case Untyped:
 		{
-			check_member_str( Content );
+			check_member_content( Content );
 			// check_member_ast( Prev );
 			// check_member_ast( Next );
 		}
@@ -1340,7 +1353,7 @@ bool AST::is_equal( AST* other )
 		case Preprocess_Define:
 		{
 			check_member_str( Name );
-			check_member_str( Content );
+			check_member_content( Content );
 			// check_member_ast( Prev );
 			// check_member_ast( Next );
 
@@ -1352,7 +1365,7 @@ bool AST::is_equal( AST* other )
 		case Preprocess_IfNotDef:
 		case Preprocess_ElIf:
 		{
-			check_member_str( Content );
+			check_member_content( Content );
 			// check_member_ast( Prev );
 			// check_member_ast( Next );
 
@@ -1362,7 +1375,7 @@ bool AST::is_equal( AST* other )
 		case Preprocess_Include:
 		case Preprocess_Pragma:
 		{
-			check_member_str( Content );
+			check_member_content( Content );
 			// check_member_ast( Prev );
 			// check_member_ast( Next );
 
