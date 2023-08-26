@@ -11,9 +11,9 @@ char const* AST::debug_str()
 		String
 		result = String::make_reserve( GlobalAllocator, kilobytes(1) );
 		result.append_fmt(
-				"\nType    : %s"
-				"\nParent  : %s %s"
-				"\nName    : %s"
+				"\n\tType    : %s"
+				"\n\tParent  : %s %s"
+				"\n\tName    : %s"
 			, type_str()
 			, Parent->type_str()
 			, Parent->Name, Name ? Name : ""
@@ -25,8 +25,8 @@ char const* AST::debug_str()
 	String
 	result = String::make_reserve( GlobalAllocator, kilobytes(1) );
 	result.append_fmt(
-			"\nType    : %s"
-			"\nName    : %s"
+			"\n\tType    : %s"
+			"\n\tName    : %s"
 		, type_str()
 		, Name ? Name : ""
 	);
@@ -1066,7 +1066,11 @@ bool AST::is_equal( AST* other )
 		case Preprocess_EndIf:
 			return true;
 
+
+		// Comments are not validated.
 		case Comment:
+			// return true;
+
 		case Execution:
 		case PlatformAttributes:
 		case Untyped:

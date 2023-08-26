@@ -424,6 +424,7 @@ Code make_code()
 	result->Type            = ECode::Invalid;
 	result->ModuleFlags     = ModuleFlag::Invalid;
 	result->NumEntries      = 0;
+	result->Token		    = -1;
 
 	return result;
 }

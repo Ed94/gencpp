@@ -213,6 +213,27 @@ struct String
 	#undef current
 	}
 
+	void strip_space()
+	{
+		char* write_pos = Data;
+		char* read_pos  = Data;
+
+		while ( * read_pos)
+		{
+			if ( ! char_is_space( *read_pos ))
+			{
+				*write_pos = *read_pos;
+				write_pos++;
+			}
+			read_pos++;
+		}
+
+		write_pos[0] = '\0';  // Null-terminate the modified string
+
+		// Update the length if needed
+		get_header().Length = write_pos - Data;
+	}
+
 	void trim( char const* cut_set )
 	{
 		sw len = 0;

@@ -4,6 +4,11 @@
 #include "gen/eoperator.hpp"
 #include "gen/especifier.hpp"
 
+namespace Parser
+{
+	struct Token;
+}
+
 struct AST;
 struct AST_Body;
 struct AST_Attributes;
@@ -220,6 +225,7 @@ struct AST
 			- sizeof(CodeT)
 			- sizeof(ModuleFlag)
 			- sizeof(u32)
+			- sizeof(s32)
 	)
 	/ sizeof(SpecifierT) - 1; // -1 for 4 extra bytes
 
@@ -270,6 +276,7 @@ struct AST
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 	};
+	s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
 };
 
 struct AST_POD
@@ -321,6 +328,7 @@ struct AST_POD
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 	};
+	s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
 };
 
 // Its intended for the AST to have equivalent size to its POD.

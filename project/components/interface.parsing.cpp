@@ -521,6 +521,8 @@ namespace Parser
 
 					s32 within_string = false;
 					s32 within_char   = false;
+
+					// SkipWhitespace();
 					while ( left )
 					{
 						if ( current == '"' && ! within_char )
@@ -563,13 +565,11 @@ namespace Parser
 						if ( current == '\r' )
 						{
 							move_forward();
-							// content.Length++;
 						}
 
 						if ( current == '\n' )
 						{
 							move_forward();
-							// content.Length++;
 							break;
 						}
 
@@ -1274,6 +1274,18 @@ CodeDefine parse_define()
 		return CodeInvalid;
 	}
 
+	// s32 left = currtok.Length;
+	// char const* scanner = currtok.Text;
+	// while ( left )
+	// {
+	// 	if ( scanner[0] == ' ' )
+	// 	{
+	// 		scanner++;
+	// 		left--;
+	// 		continue;
+	// 	}
+	// }
+
 	define->Content = get_cached_string( currtok );
 	eat( TokType::Preprocess_Content );
 
@@ -1359,7 +1371,12 @@ CodePragma parse_pragma()
 	}
 
 	Context.Scope->Name = currtok;
-	pragma->Content = get_cached_string( currtok );
+
+	String
+	content_stripped = String::make( GlobalAllocator, currtok );
+	content_stripped.strip_space();
+
+	pragma->Content = get_cached_string( content_stripped );
 	eat( TokType::Preprocess_Content );
 
 	Context.pop();
@@ -1398,7 +1415,16 @@ Code parse_static_assert()
 
 	content.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
 
+
+	String
+	content_stripped = String::make( GlobalAllocator, content );
+	content_stripped.strip_space();
+
 	char const* result = str_fmt_buf( "%.*s\n", content.Length, content.Text );
+	if ( content_stripped )
+	{
+		result = str_fmt_buf( "%S\n", content_stripped );
+	}
 
 	assert->Content = get_cached_string( to_str( result ) );
 	assert->Name	= assert->Content;
@@ -1538,7 +1564,18 @@ CodeAttributes parse_attributes()
 	{
 		StrC attribute_txt = { len, start.Text };
 		Context.pop();
-		return def_attributes( attribute_txt );
+
+		String
+		name_stripped = String::make( GlobalAllocator, attribute_txt );
+		name_stripped.strip_space();
+
+		Code
+		result          = make_code();
+		result->Type    = ECode::PlatformAttributes;
+		result->Name    = get_cached_string( name_stripped );
+		result->Content = result->Name;
+
+		return (CodeAttributes) result;
 	}
 
 	Context.pop();
@@ -1867,9 +1904,15 @@ CodeFn parse_function_after_name(
 
 	using namespace ECode;
 
+
+
+	String
+	name_stripped = String::make( GlobalAllocator, name );
+	name_stripped.strip_space();
+
 	CodeFn
 	result              = (CodeFn) make_code();
-	result->Name        = get_cached_string( name );
+	result->Name        = get_cached_string( name_stripped );
 	result->ModuleFlags = mflags;
 
 	if ( body )
@@ -3445,7 +3488,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 			return CodeInvalid;
 		}
 	}
-	
+
 	CodeComment inline_cmt = NoCode;
 
 	if ( check( TokType::BraceCurly_Open ) )
@@ -3454,7 +3497,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
-		
+
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
@@ -3471,7 +3514,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	}
 	else
 		result->Type = ECode::Destructor_Fwd;
-	
+
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
@@ -4151,7 +4194,7 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
-		
+
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
@@ -4530,7 +4573,11 @@ CodeType parse_type( bool* is_function )
 		}
 	}
 
-	result->Name = get_cached_string( name );
+	String
+	name_stripped = String::make( GlobalAllocator, name );
+	name_stripped.strip_space();
+
+	result->Name = get_cached_string( name_stripped );
 
 	if ( attributes )
 		result->Attributes = attributes;
@@ -4941,7 +4988,7 @@ CodeUsing parse_using()
 
 	Token stmt_end = currtok;
 	eat( TokType::Statement_End );
-	
+
 	CodeComment inline_cmt = NoCode;
 	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 	{
@@ -4971,7 +5018,7 @@ CodeUsing parse_using()
 
 		if ( attributes )
 			result->Attributes = attributes;
-		
+
 		if ( inline_cmt )
 			result->InlineCmt = inline_cmt;
 	}
