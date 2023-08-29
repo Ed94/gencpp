@@ -1,5 +1,7 @@
-#pragma once
-#include "strings.cpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "strings.cpp"
+#endif
 
 #pragma region File Handling
 

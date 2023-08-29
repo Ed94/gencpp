@@ -1,5 +1,7 @@
-#pragma once
-#include "printing.cpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "printing.cpp"
+#endif
 
 #pragma region Memory
 

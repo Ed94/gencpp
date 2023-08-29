@@ -1,8 +1,10 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "types.hpp"
 #include "gen/ecode.hpp"
 #include "gen/eoperator.hpp"
 #include "gen/especifier.hpp"
+#endif
 
 namespace Parser
 {

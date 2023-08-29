@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "interface.parsing.cpp"
+#endif
 
 sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 {

@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "interface.hpp"
+#endif
 
 void AST::append( AST* other )
 {

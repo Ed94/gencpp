@@ -1,6 +1,8 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "gen/etoktype.cpp"
 #include "interface.upfront.cpp"
+#endif
 
 namespace Parser
 {

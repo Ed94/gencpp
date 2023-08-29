@@ -1,5 +1,7 @@
-#pragma once
-#include "filesystem.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "filesystem.hpp"
+#endif
 
 #pragma region Timing
 

@@ -1,5 +1,7 @@
+#if GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "static_data.cpp"
+#endif
 
 Code Code::Global;
 Code Code::Invalid;

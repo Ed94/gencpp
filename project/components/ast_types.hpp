@@ -1,5 +1,7 @@
-#pragma once
-#include "ast.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "ast.hpp"
+#endif
 
 #pragma region AST Types
 /*

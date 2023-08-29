@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "ast.cpp"
+#endif
 
 internal void init_parser();
 internal void deinit_parser();

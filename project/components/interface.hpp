@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "ast_types.hpp"
+#endif
 
 #pragma region Gen Interface
 

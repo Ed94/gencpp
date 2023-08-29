@@ -1,5 +1,7 @@
-#pragma once
-#include "debug.cpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "debug.cpp"
+#endif
 
 #pragma region String Ops
 

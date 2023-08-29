@@ -1,5 +1,7 @@
-#pragma once
-#include "hashing.cpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "hashing.cpp"
+#endif
 
 #pragma region String
 

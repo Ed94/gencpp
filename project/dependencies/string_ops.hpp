@@ -1,5 +1,7 @@
-#pragma once
-#include "memory.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "memory.hpp"
+#endif
 
 #pragma region String Ops
 

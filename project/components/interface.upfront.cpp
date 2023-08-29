@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "interface.cpp"
+#endif
 
 #pragma region Upfront
 

@@ -1,5 +1,7 @@
-#pragma once
-#include "debug.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "debug.hpp"
+#endif
 
 #pragma region Memory
 
