@@ -1,4 +1,4 @@
-#if GEN_INTELLISENSE_DIRECTIVES
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "static_data.cpp"
 #endif

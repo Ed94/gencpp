@@ -1,4 +1,6 @@
-#include "builder.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	include "builder.hpp"
+#endif
 
 Builder Builder::open( char const* path )
 {

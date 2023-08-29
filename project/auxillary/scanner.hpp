@@ -1,6 +1,7 @@
-
-#pragma once
-#include "gen.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "gen.hpp"
+#endif
 
 // This is a simple file reader that reads the entire file into memory.
 // It has an extra option to skip the first few lines for undesired includes.
