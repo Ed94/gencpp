@@ -48,8 +48,6 @@ global bool generate_builder = true;
 global bool generate_editor  = true;
 global bool generate_scanner = true;
 
-constexpr bool DontSkipInitialDirectives = false;
-
 int gen_main()
 {
 #define project_dir "../project/"
@@ -57,7 +55,7 @@ int gen_main()
 
 	Code push_ignores        = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores         = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
-	Code single_header_start = scan_file( "components/header_start.hpp", DontSkipInitialDirectives );
+	Code single_header_start = scan_file( "components/header_start.hpp" );
 
 	Builder
 	header = Builder::open( "gen/gen.hpp" );
@@ -71,7 +69,7 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code header_start = scan_file( project_dir "dependencies/header_start.hpp", DontSkipInitialDirectives );
+			Code header_start = scan_file( project_dir "dependencies/header_start.hpp" );
 			Code macros       = scan_file( project_dir "dependencies/macros.hpp" );
 			Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
 			Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
