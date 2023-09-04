@@ -1323,7 +1323,7 @@ bool AST::is_equal( AST* other )
 							return false;
 						}
 
-						if ( ! curr->Name != curr_other->Name )
+						if ( curr->Name != curr_other->Name )
 						{
 							log_fmt( "\nAST::is_equal: Failed for parameter name check\n"
 									"AST  : %S\n"
