@@ -1276,19 +1276,148 @@ CodeDefine parse_define()
 		return CodeInvalid;
 	}
 
-	// s32 left = currtok.Length;
-	// char const* scanner = currtok.Text;
-	// while ( left )
-	// {
-	// 	if ( scanner[0] == ' ' )
-	// 	{
-	// 		scanner++;
-	// 		left--;
-	// 		continue;
-	// 	}
-	// }
+	if ( currtok.Length == 0 )
+	{
+		define->Content = get_cached_string( currtok );
+		eat( TokType::Preprocess_Content );
 
-	define->Content = get_cached_string( currtok );
+		Context.pop();
+		return define;
+	}
+
+	String content = String::make_reserve( GlobalAllocator, currtok.Length );
+
+#define cut_length ( scanner - currtok.Text - last_cut )
+#define cut_ptr    ( currtok.Text   + last_cut )
+#define pos        ( sptr( scanner ) - sptr( currtok.Text ) )
+	s32         tokleft  = currtok.Length;
+	sptr        last_cut = 0;
+	char const* scanner  = currtok.Text;
+
+	if ( scanner[0] == ' ' )
+	{
+		++ scanner;
+		-- tokleft;
+		last_cut = 1;
+	}
+
+	while ( tokleft )
+	{
+		if ( tokleft > 1 && char_is_space( scanner[0] ) && char_is_space( scanner[ 1 ] ) )
+		{
+			content.append( cut_ptr, cut_length );
+			do
+			{
+				++ scanner;
+				-- tokleft;
+			}
+			while ( tokleft && char_is_space( scanner[0] ) );
+
+			last_cut = sptr( scanner ) - sptr( currtok.Text );
+
+			// Preserve only 1 space of formattting
+			if ( content.back() != ' ' )
+				content.append( ' ' );
+			continue;
+		}
+
+		if ( scanner[0] == '\t' )
+		{
+			if ( pos > last_cut )
+				content.append( cut_ptr, cut_length );
+
+			// Replace with a space
+			if ( content.back() != ' ' )
+				content.append( ' ' );
+
+			++ scanner;
+			-- tokleft;
+			last_cut = sptr( scanner ) - sptr( currtok.Text );
+			continue;
+		}
+
+		if ( tokleft > 1 && scanner[0] == '\r' && scanner[1] == '\n' )
+		{
+			if ( pos > last_cut )
+				content.append( cut_ptr, cut_length );
+
+			// Replace with a space
+			if ( content.back() != ' ' )
+				content.append( ' ' );
+
+			scanner += 2;
+			tokleft -= 2;
+			last_cut = sptr( scanner ) - sptr( currtok.Text );
+			continue;
+		}
+
+		if ( scanner[0] == '\n' )
+		{
+			if ( pos > last_cut )
+				content.append( cut_ptr, cut_length );
+
+			// Replace with a space
+			if ( content.back() != ' ' )
+				content.append( ' ' );
+
+			++ scanner;
+			-- tokleft;
+			last_cut = sptr( scanner ) - sptr( currtok.Text );
+			continue;
+		}
+
+		if ( scanner[0] == '\\' )
+		{
+			s32 amount_to_skip = 1;
+			if ( tokleft > 1 && scanner[1] == '\n' )
+			{
+				amount_to_skip = 2;
+			}
+			else if ( tokleft > 2 && scanner[1] == '\r' && scanner[2] == '\n' )
+			{
+				amount_to_skip = 3;
+			}
+
+			if ( amount_to_skip > 1 )
+			{
+				if ( pos == last_cut )
+				{
+					// If the backslash is the first character on the line, then skip it
+					scanner += amount_to_skip;
+					tokleft -= amount_to_skip;
+					last_cut = sptr( scanner ) - sptr( currtok.Text );
+					continue;
+				}
+
+				// We have content to add.
+				content.append( cut_ptr, pos - last_cut );
+
+				scanner += amount_to_skip;
+				tokleft -= amount_to_skip;
+			}
+			else
+			{
+				++ scanner;
+				-- tokleft;
+			}
+
+			last_cut = sptr( scanner ) - sptr( currtok.Text );
+			continue;
+		}
+
+		++ scanner;
+		-- tokleft;
+	}
+
+	if ( last_cut < currtok.Length )
+	{
+		content.append( cut_ptr, currtok.Length - last_cut );
+	}
+#undef cut_ptr
+#undef cut_length
+#undef pos
+
+	define->Content = get_cached_string( content );
 	eat( TokType::Preprocess_Content );
 
 	Context.pop();

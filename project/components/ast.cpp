@@ -981,36 +981,36 @@ bool AST::is_equal( AST* other )
 	{
 		using namespace ECode;
 
-	#define check_member_val( val )                         \
-	if ( val != other->val )                                \
-	{                                                       \
-		log_fmt("AST::is_equal: Member - " #val " failed\n" \
-		        "AST  : %S\n"                               \
-		        "Other: %S\n"                               \
-		    , debug_str()                                   \
-		    , other->debug_str()                            \
-		);                                                  \
-	                                                        \
-		return false;                                       \
+	#define check_member_val( val )                           \
+	if ( val != other->val )                                  \
+	{                                                         \
+		log_fmt("\nAST::is_equal: Member - " #val " failed\n" \
+		        "AST  : %S\n"                                 \
+		        "Other: %S\n"                                 \
+		    , debug_str()                                     \
+		    , other->debug_str()                              \
+		);                                                    \
+	                                                          \
+		return false;                                         \
 	}
 
-	#define check_member_str( str )                               \
-	if ( str != other->str )                                      \
-	{                                                             \
-		log_fmt("AST::is_equal: Member string - "#str " failed\n" \
-				"AST  : %S\n"                                     \
-				"Other: %S\n"                                     \
-			, debug_str()                                         \
-			, other->debug_str()                                  \
-		);                                                        \
-	                                                              \
-		return false;                                             \
+	#define check_member_str( str )                                 \
+	if ( str != other->str )                                        \
+	{                                                               \
+		log_fmt("\nAST::is_equal: Member string - "#str " failed\n" \
+				"AST  : %S\n"                                       \
+				"Other: %S\n"                                       \
+			, debug_str()                                           \
+			, other->debug_str()                                    \
+		);                                                          \
+	                                                                \
+		return false;                                               \
 	}
 
-	#define check_member_content( content ) \
-	if ( content != other->content )       \
-	{                                      \
-		log_fmt("AST::is_equal: Member content - "#content " failed\n"    \
+	#define check_member_content( content )                               \
+	if ( content != other->content )                                      \
+	{                                                                     \
+		log_fmt("\nAST::is_equal: Member content - "#content " failed\n"  \
 				"AST  : %S\n"                                             \
 				"Other: %S\n"                                             \
 			, debug_str()                                                 \
@@ -1021,43 +1021,43 @@ bool AST::is_equal( AST* other )
 			"so it must be verified by eye for now\n"                     \
 			"AST   Content:\n%S\n"                                        \
 			"Other Content:\n%S\n"                                        \
-			, content                                                     \
-			, other->content                                              \
+			, content.visualize_whitespace()                              \
+			, other->content.visualize_whitespace()                       \
 		);                                                                \
 	}
 
-	#define check_member_ast( ast )                                                              \
-	if ( ast )                                                                                   \
-	{                                                                                            \
-		if ( other->ast == nullptr )                                                             \
-		{                                                                                        \
-			log_fmt("AST::is_equal: Failed for member " #ast " other equivalent param is null\n" \
-					"AST  : %s\n"                                                                \
-					"Other: %s\n"                                                                \
-					"For ast member: %s\n"                                                       \
-				, debug_str()                                                                    \
-				, other->debug_str()                                                             \
-				, ast->debug_str()                                                               \
-			);                                                                                   \
-                                                                                                 \
-			return false;                                                                        \
-		}                                                                                        \
-                                                                                                 \
-		if ( ! ast->is_equal( other->ast ) )                                                     \
-		{                                                                                        \
-			log_fmt( "AST::is_equal: Failed for " #ast"\n"                                       \
-			         "AST  : %S\n"                                                               \
-			         "Other: %S\n"                                                               \
-			         "For     ast member: %S\n"                                                  \
-			         "other's ast member: %S\n"                                                  \
-				, debug_str()                                                                    \
-				, other->debug_str()                                                             \
-				, ast->debug_str()                                                               \
-				, other->ast->debug_str()                                                        \
-			);                                                                                   \
-		                                                                                         \
-			return false;                                                                        \
-		}                                                                                        \
+	#define check_member_ast( ast )                                                                \
+	if ( ast )                                                                                     \
+	{                                                                                              \
+		if ( other->ast == nullptr )                                                               \
+		{                                                                                          \
+			log_fmt("\nAST::is_equal: Failed for member " #ast " other equivalent param is null\n" \
+					"AST  : %s\n"                                                                  \
+					"Other: %s\n"                                                                  \
+					"For ast member: %s\n"                                                         \
+				, debug_str()                                                                      \
+				, other->debug_str()                                                               \
+				, ast->debug_str()                                                                 \
+			);                                                                                     \
+                                                                                                   \
+			return false;                                                                          \
+		}                                                                                          \
+                                                                                                   \
+		if ( ! ast->is_equal( other->ast ) )                                                       \
+		{                                                                                          \
+			log_fmt( "\nAST::is_equal: Failed for " #ast"\n"                                       \
+			         "AST  : %S\n"                                                                 \
+			         "Other: %S\n"                                                                 \
+			         "For     ast member: %S\n"                                                    \
+			         "other's ast member: %S\n"                                                    \
+				, debug_str()                                                                      \
+				, other->debug_str()                                                               \
+				, ast->debug_str()                                                                 \
+				, other->ast->debug_str()                                                          \
+			);                                                                                     \
+		                                                                                           \
+			return false;                                                                          \
+		}                                                                                          \
 	}
 
 		case NewLine:
@@ -1313,7 +1313,7 @@ bool AST::is_equal( AST* other )
 					{
 						if ( curr_other == nullptr )
 						{
-							log_fmt("AST::is_equal: Failed for parameter, other equivalent param is null\n"
+							log_fmt("\nAST::is_equal: Failed for parameter, other equivalent param is null\n"
 							        "AST  : %S\n"
 							        "Other: %S\n"
 							        "For ast member: %S\n"
@@ -1323,9 +1323,39 @@ bool AST::is_equal( AST* other )
 							return false;
 						}
 
-						if ( ! curr->is_equal( curr_other ) )
+						if ( ! curr->Name != curr_other->Name )
 						{
-							log_fmt( "AST::is_equal: Failed for parameter\n"
+							log_fmt( "\nAST::is_equal: Failed for parameter name check\n"
+									"AST  : %S\n"
+									"Other: %S\n"
+									"For     ast member: %S\n"
+									"other's ast member: %S\n"
+								, debug_str()
+								, other->debug_str()
+								, curr->debug_str()
+								, curr_other->debug_str()
+							);
+							return false;
+						}
+
+						if ( curr->ValueType && ! curr->ValueType->is_equal(curr_other->ValueType) )
+						{
+							log_fmt( "\nAST::is_equal: Failed for parameter value type check\n"
+									"AST  : %S\n"
+									"Other: %S\n"
+									"For     ast member: %S\n"
+									"other's ast member: %S\n"
+								, debug_str()
+								, other->debug_str()
+								, curr->debug_str()
+								, curr_other->debug_str()
+							);
+							return false;
+						}
+
+						if ( curr->Value && ! curr->Value->is_equal(curr_other->Value) )
+						{
+							log_fmt( "\nAST::is_equal: Failed for parameter value check\n"
 									"AST  : %S\n"
 									"Other: %S\n"
 									"For     ast member: %S\n"
@@ -1494,7 +1524,7 @@ bool AST::is_equal( AST* other )
 			{
 				if ( curr_other == nullptr )
 				{
-					log_fmt("AST::is_equal: Failed for body, other equivalent param is null\n"
+					log_fmt("\nAST::is_equal: Failed for body, other equivalent param is null\n"
 					        "AST  : %S\n"
 					        "Other: %S\n"
 					        "For ast member: %S\n"
@@ -1506,7 +1536,7 @@ bool AST::is_equal( AST* other )
 
 				if ( ! curr->is_equal( curr_other ) )
 				{
-					log_fmt( "AST::is_equal: Failed for body\n"
+					log_fmt( "\nAST::is_equal: Failed for body\n"
 							"AST  : %S\n"
 							"Other: %S\n"
 							"For     ast member: %S\n"

@@ -101,6 +101,11 @@ struct String
 
 	bool make_space_for( char const* str, sw add_len );
 
+	bool append( char c )
+	{
+		return append( & c, 1 );
+	}
+
 	bool append( char const* str )
 	{
 		return append( str, str_len( str ) );
@@ -264,14 +269,52 @@ struct String
 		return trim( " \t\r\n\v\f" );
 	}
 
+	// Debug function that provides a copy of the string with whitespace characters visualized.
+	String visualize_whitespace() const
+	{
+		Header* header = (Header*)(Data - sizeof(Header));
+
+		String result = make_reserve(header->Allocator, length() * 2); // Assume worst case for space requirements.
+
+		for ( char c : *this )
+		{
+			switch ( c )
+			{
+				case ' ':
+					result.append('·');
+				break;
+				case '\t':
+					result.append('→');
+				break;
+				case '\n':
+					result.append('↵');
+				break;
+				case '\r':
+					result.append('⏎');
+				break;
+				case '\v':
+					result.append('⇕');
+				break;
+				case '\f':
+					result.append('⌂');
+				break;
+				default:
+					result.append(c);
+				break;
+			}
+		}
+
+		return result;
+	}
+
 	// For-range support
 
-	char* begin()
+	char* begin() const
 	{
 		return Data;
 	}
 
-	char* end()
+	char* end() const
 	{
 		Header const&
 		header = * rcast( Header const*, Data - sizeof( Header ));
