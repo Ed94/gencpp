@@ -475,7 +475,8 @@ struct AST_Type
 			char           _PAD_CMT_[ sizeof(AST*) ];
 			CodeAttributes Attributes;
 			CodeSpecifiers Specs;
-			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+			CodeType       ReturnType; // Only used for function signatures
+			CodeParam      Params;     // Only used for function signatures
 			Code           ArrExpr;
 		};
 	};

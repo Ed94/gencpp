@@ -1713,6 +1713,40 @@ CodeAttributes parse_attributes()
 	return { nullptr };
 }
 
+/*
+	This a brute-froce make all the arguments part of the token provided.
+	Can have in-place function signatures, regular identifiers, in-place typenames, compile-time expressions, parameter-pack expansion, etc.
+	This means that validation can only go so far, and so if there is any different in formatting
+	passed the basic stripping supported it report a soft failure.
+*/
+internal inline
+void parse_template_args( Parser::Token& token )
+{
+	using namespace Parser;
+
+	if ( currtok.Type == TokType::Operator && currtok.Text[0] == '<' && currtok.Length == 1 )
+	{
+		eat( TokType::Operator );
+
+		s32 level = 0;
+		while ( left && ( currtok.Text[0] != '>' || level > 0 ))
+		{
+			if ( currtok.Text[0] == '<' )
+				level++;
+
+			if ( currtok.Text[0] == '>' )
+				level--;
+
+			eat( currtok.Type );
+		}
+
+		eat( TokType::Operator );
+
+		// Extend length of name to last token
+		token.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)token.Text;
+	}
+}
+
 internal
 Parser::Token parse_identifier()
 {
@@ -1721,8 +1755,9 @@ Parser::Token parse_identifier()
 
 	Token name = currtok;
 	Context.Scope->Name = name;
-
 	eat( TokType::Identifier );
+
+	parse_template_args( name );
 
 	while ( check( TokType::Access_StaticSymbol ) )
 	{
@@ -1745,62 +1780,7 @@ Parser::Token parse_identifier()
 		name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
 		eat( TokType::Identifier );
 
-		if ( check( TokType::Operator ) && currtok.Text[0] == '<' )
-		{
-			eat( TokType::Operator );
-
-			// Template arguments can be complex so were not validating if they are correct.
-			s32 level = 0;
-			while ( left && (currtok.Text[0] != '>' || level > 0 ) )
-			{
-				if ( currtok.Text[0] == '<' )
-					level++;
-
-				else if ( currtok.Text[0] == '>' && level > 0 )
-					level--;
-
-				eat( currtok.Type );
-			}
-
-			if ( left == 0 )
-			{
-				log_failure( "Error, unexpected end of template arguments\n%s", Context.to_string() );
-				Context.pop();
-				return { nullptr, 0, TokType::Invalid };
-			}
-
-			eat( TokType::Operator );
-			name.Length = ( (sptr)prevtok.Text + (sptr)prevtok.Length ) - (sptr)name.Text;
-		}
-	}
-
-	if ( check( TokType::Operator ) && currtok.Text[0] == '<' )
-	{
-		eat( TokType::Operator );
-
-		// Template arguments can be complex so were not validating if they are correct.
-		s32 level = 0;
-		while ( left && (currtok.Text[0] != '>' || level > 0 ) )
-		{
-			if ( currtok.Text[0] == '<' )
-				level++;
-
-			else if ( currtok.Text[0] == '>' && level > 0 )
-				level--;
-
-			eat( currtok.Type );
-		}
-
-		if ( left == 0 )
-		{
-			log_failure( "Error, unexpected end of template arguments\n%s", Context.to_string() );
-			Context.pop();
-			return { nullptr, 0, TokType::Invalid };
-		}
-
-		eat( TokType::Operator );
-
-		name.Length = ( (sptr)prevtok.Text + (sptr)prevtok.Length ) - (sptr)name.Text;
+		parse_template_args( name );
 	}
 
 	Context.pop();
@@ -4525,6 +4505,9 @@ CodeTemplate parse_template( StrC def )
 	return parse_template();
 }
 
+// This is a bit of a mess, but it works
+// Parsing typename is arguably one of the worst aspects of C/C++. 
+// This is an effort to parse it without a full blown or half-blown compliant parser.
 internal
 CodeType parse_type( bool* is_function )
 {
@@ -4539,8 +4522,10 @@ CodeType parse_type( bool* is_function )
 	Token name      = { nullptr, 0, TokType::Invalid };
 	Token brute_sig = { currtok.Text, 0, TokType::Invalid };
 
+	// Attributes are assumed to be before the type signature
 	CodeAttributes attributes = parse_attributes();
 
+	// Deal with specifiers before the type signature
 	while ( left && currtok.is_specifier() )
 	{
 		SpecifierT spec = ESpecifier::to_type( currtok );
@@ -4564,9 +4549,11 @@ CodeType parse_type( bool* is_function )
 		return CodeInvalid;
 	}
 
+	// All kinds of nonsense can makeup a type signature, first we check for a in-place definition of a class, enum, or struct
 	if (   currtok.Type == TokType::Decl_Class
 		|| currtok.Type == TokType::Decl_Enum
-		|| currtok.Type == TokType::Decl_Struct )
+		|| currtok.Type == TokType::Decl_Struct
+		|| currtok.Type == TokType::Decl_Union )
 	{
 		name = currtok;
 		eat( currtok.Type );
@@ -4575,6 +4562,8 @@ CodeType parse_type( bool* is_function )
 		eat( TokType::Identifier );
 		Context.Scope->Name = name;
 	}
+
+	// Check if native type keywords are used, eat them for the signature.
 	else if ( currtok.Type >= TokType::Type_Unsigned && currtok.Type <= TokType::Type_MS_W64 )
 	{
 		name = currtok;
@@ -4588,6 +4577,8 @@ CodeType parse_type( bool* is_function )
 		name.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)name.Text;
 		Context.Scope->Name = name;
 	}
+
+	// The usual Identifier type signature that may have namespace qualifiers
 	else
 	{
 		name = parse_identifier();
@@ -4597,29 +4588,6 @@ CodeType parse_type( bool* is_function )
 			log_failure( "Error, failed to type signature\n%s", Context.to_string() );
 			Context.pop();
 			return CodeInvalid;
-		}
-
-		// Problably dealing with a templated symbol
-		if ( currtok.Type == TokType::Operator && currtok.Text[0] == '<' && currtok.Length == 1 )
-		{
-			eat( TokType::Operator );
-
-			s32 level = 0;
-			while ( left && ( currtok.Text[0] != '>' || level > 0 ))
-			{
-				if ( currtok.Text[0] == '<' )
-					level++;
-
-				if ( currtok.Text[0] == '>' )
-					level--;
-
-				eat( currtok.Type );
-			}
-
-			eat( TokType::Operator );
-
-			// Extend length of name to last token
-			name.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)name.Text;
 		}
 	}
 
@@ -4642,10 +4610,14 @@ CodeType parse_type( bool* is_function )
 		eat( currtok.Type );
 	}
 
+	// For function type signatures
+	CodeType  return_type = NoCode;
+	CodeParam params      = NoCode;
+
 	bool is_first_capture = true;
 	while ( check( TokType::Capture_Start ) && context_tok.Type != TokType::Decl_Operator )
 	{
-		// Brute force capture the entire thing.
+		// Brute force capture the entire thing
 		// Function typedefs are complicated and there are not worth dealing with for validation at this point...
 		eat( TokType::Capture_Start );
 
@@ -4704,9 +4676,9 @@ CodeType parse_type( bool* is_function )
 		}
 	}
 
-	String
-	name_stripped = String::make( GlobalAllocator, name );
-	name_stripped.strip_space();
+	// This is bad we cannot strip the name if it contains the full function signature's parameters, parameters at minimum must be separate.
+	String name_stripped = String::make( GlobalAllocator, name );
+	// name_stripped.strip_space();
 
 	result->Name = get_cached_string( name_stripped );
 
@@ -4715,6 +4687,12 @@ CodeType parse_type( bool* is_function )
 
 	if ( is_param_pack )
 		result->IsParamPack = true;
+
+	if ( return_type )
+		result->ReturnType = return_type;
+
+	if ( params )
+		result->Params = params;
 
 	Context.pop();
 	return result;

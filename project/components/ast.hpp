@@ -236,7 +236,7 @@ struct AST
 		{
 			AST*      InlineCmt;      // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
 			AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-			AST*      Specs;          // Destructor, Function, Operator, Type symbol, Variable
+			AST*      Specs;          // Destructor, Function, Operator, Typename, Variable
 			union {
 				AST*  InitializerList; // Constructor
 				AST*  ParentType;      // Class, Struct
@@ -249,7 +249,7 @@ struct AST
 				AST*  Params;          // Constructor, Function, Operator, Template
 			};
 			union {
-				AST*  ArrExpr;        // Type Symbol
+				AST*  ArrExpr;        // Typename
 				AST*  Body;           // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
 				AST*  Declaration;    // Friend, Template
 				AST*  Value;          // Parameter, Variable
@@ -288,7 +288,7 @@ struct AST_POD
 		{
 			AST*      InlineCmt;      // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
 			AST*      Attributes;     // Class, Enum, Function, Struct, Typename, Union, Using, Variable
-			AST*      Specs;          // Function, Operator, Type symbol, Variable
+			AST*      Specs;          // Function, Operator, Typename, Variable
 			union {
 				AST*  InitializerList; // Constructor
 				AST*  ParentType;      // Class, Struct
