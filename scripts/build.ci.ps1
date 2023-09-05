@@ -396,6 +396,7 @@ if ( $test )
 	build-simple $includes $unit $executable
 
 	Push-Location $path_test
+		Write-Host $path_test
 		if ( Test-Path( $executable ) ) {
 			write-host "`nRunning test generator"
 			$time_taken = Measure-Command { & $executable
@@ -458,7 +459,7 @@ if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp"))
 	format-cpp $path_gen $include $exclude
 }
 
-if ( $test )
+if ( $test -and $false )
 {
 	$path_gen = join-path $path_test gen
 	$include  = @(

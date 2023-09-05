@@ -4554,8 +4554,7 @@ CodeTemplate parse_template( StrC def )
 	AST_1->Name: (* A    ( int   (*)    (short a,unsigned b,long c) ) )
 	AST_2->Name: (* A       ( int(*)(short a, unsigned b, long c) ) )
 
-	The excess whitespace can be stripped however, because there is no semantic awareness within the first capture group,
-	it cannot entirely remove the whitespaceto remove insignificant whitespace.
+	The excess whitespace cannot be stripped however, because there is no semantic awareness within the first capture group.
 */
 internal
 CodeType parse_type( bool* typedef_is_function )
@@ -4894,9 +4893,10 @@ CodeType parse_type( bool* typedef_is_function )
 	result       = (CodeType) make_code();
 	result->Type = Typename;
 
+	// Need to wait until were using the new parsing method to do this.
 	String
 	name_stripped = String::make( GlobalAllocator, name );
-	name_stripped.strip_space();
+	// name_stripped.strip_space();
 
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
 	if ( params_nested )
