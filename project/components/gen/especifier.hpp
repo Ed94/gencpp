@@ -31,6 +31,7 @@ namespace ESpecifier
 		Virtual,
 		Const,
 		Final,
+		NoExceptions,
 		Override,
 		Pure,
 		NumSpecifiers
@@ -67,6 +68,7 @@ namespace ESpecifier
 			{ sizeof( "virtual" ),       "virtual"      },
 			{ sizeof( "const" ),         "const"        },
 			{ sizeof( "final" ),         "final"        },
+			{ sizeof( "noexcept" ),      "noexcept"     },
 			{ sizeof( "override" ),      "override"     },
 			{ sizeof( "= 0" ),           "= 0"          },
 		};

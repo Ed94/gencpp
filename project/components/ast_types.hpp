@@ -472,11 +472,11 @@ struct AST_Type
 		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			char           _PAD_CMT_[ sizeof(AST*) ];
+			CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 			CodeAttributes Attributes;
 			CodeSpecifiers Specs;
-			CodeType       ReturnType; // Only used for function signatures
-			CodeParam      Params;     // Only used for function signatures
+			CodeType       ReturnType;      // Only used for function signatures
+			CodeParam      Params;          // Only used for function signatures
 			Code           ArrExpr;
 		};
 	};

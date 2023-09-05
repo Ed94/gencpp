@@ -6,11 +6,6 @@
 #include "gen/especifier.hpp"
 #endif
 
-namespace Parser
-{
-	struct Token;
-}
-
 struct AST;
 struct AST_Body;
 struct AST_Attributes;
@@ -234,12 +229,15 @@ struct AST
 	union {
 		struct
 		{
-			AST*      InlineCmt;      // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-			AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-			AST*      Specs;          // Destructor, Function, Operator, Typename, Variable
+			union {
+				AST*  InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
+				AST*  SpecsFuncSuffix; // Only used with typenames, to store the function suffix if typename is function signature.
+			};
+			AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+			AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
 			union {
 				AST*  InitializerList; // Constructor
-				AST*  ParentType;      // Class, Struct
+				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
 				AST*  ReturnType;      // Function, Operator
 				AST*  UnderlyingType;  // Enum, Typedef
 				AST*  ValueType;       // Parameter, Variable
@@ -249,13 +247,13 @@ struct AST
 				AST*  Params;          // Constructor, Function, Operator, Template
 			};
 			union {
-				AST*  ArrExpr;        // Typename
-				AST*  Body;           // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-				AST*  Declaration;    // Friend, Template
-				AST*  Value;          // Parameter, Variable
+				AST*  ArrExpr;          // Typename
+				AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+				AST*  Declaration;      // Friend, Template
+				AST*  Value;            // Parameter, Variable
 			};
 		};
-		StringCached  Content;        // Attributes, Comment, Execution, Include
+		StringCached  Content;          // Attributes, Comment, Execution, Include
 		SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 	};
 	union {
@@ -286,12 +284,15 @@ struct AST_POD
 	union {
 		struct
 		{
-			AST*      InlineCmt;      // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-			AST*      Attributes;     // Class, Enum, Function, Struct, Typename, Union, Using, Variable
-			AST*      Specs;          // Function, Operator, Typename, Variable
+			union {
+				AST*  InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
+				AST*  SpecsFuncSuffix; // Only used with typenames, to store the function suffix if typename is function signature.
+			};
+			AST*      Attributes;      // Class, Enum, Function, Struct, Typename, Union, Using, Variable
+			AST*      Specs;           // Function, Operator, Typename, Variable
 			union {
 				AST*  InitializerList; // Constructor
-				AST*  ParentType;      // Class, Struct
+				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
 				AST*  ReturnType;      // Function, Operator
 				AST*  UnderlyingType;  // Enum, Typedef
 				AST*  ValueType;       // Parameter, Variable
@@ -301,13 +302,13 @@ struct AST_POD
 				AST*  Params;          // Function, Operator, Template
 			};
 			union {
-				AST*  ArrExpr;        // Type Symbol
-				AST*  Body;           // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-				AST*  Declaration;    // Friend, Template
-				AST*  Value;          // Parameter, Variable
+				AST*  ArrExpr;         // Type Symbol
+				AST*  Body;            // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+				AST*  Declaration;     // Friend, Template
+				AST*  Value;           // Parameter, Variable
 			};
 		};
-		StringCached  Content;        // Attributes, Comment, Execution, Include
+		StringCached  Content;         // Attributes, Comment, Execution, Include
 		SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 	};
 	union {

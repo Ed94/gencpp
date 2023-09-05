@@ -561,6 +561,8 @@ Fields:
 ```cpp
 CodeAttributes Attributes;
 CodeSpecifiers Specs;
+CodeReturnType ReturnType;
+CodeParam      Params;
 Code           ArrExpr;
 Code           Prev;
 Code           Next;

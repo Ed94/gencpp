@@ -773,7 +773,8 @@ String AST::to_string()
 
 			result.append( "typedef ");
 
-			if ( IsFunction )
+			// Determines if the typedef is a function typename
+			if ( UnderlyingType->ReturnType )
 				result.append( UnderlyingType->to_string() );
 			else
 				result.append_fmt( "%S %S", UnderlyingType->to_string(), Name );
@@ -796,21 +797,45 @@ String AST::to_string()
 
 		case Typename:
 		{
-			if ( Attributes || Specs )
+		#if GEN_USE_NEW_TYPENAME_PARSING
+			if ( ReturnType && Params )
 			{
 				if ( Attributes )
 					result.append_fmt( "%S ", Attributes->to_string() );
-
-				if ( Specs )
-					result.append_fmt( "%S %S", Name, Specs->to_string() );
-
 				else
-					result.append_fmt( "%S", Name );
+				{
+					if ( Specs )
+						result.append_fmt( "%S ( %S ) ( %S ) %S", ReturnType->to_string(), Name, Params->to_string(), Specs->to_string() );
+					else
+						result.append_fmt( "%S ( %S ) ( %S )", ReturnType->to_string(), Name, Params->to_string() );
+				}
+
+				break;
 			}
-			else
+		#else
+			if ( ReturnType && Params )
 			{
-				result.append_fmt( "%S", Name );
+				if ( Attributes )
+					result.append_fmt( "%S ", Attributes->to_string() );
+				else
+				{
+					if ( Specs )
+						result.append_fmt( "%S %S ( %S ) %S", ReturnType->to_string(), Name, Params->to_string(), Specs->to_string() );
+					else
+						result.append_fmt( "%S %S ( %S )", ReturnType->to_string(), Name, Params->to_string() );
+				}
+
+				break;
 			}
+		#endif
+
+			if ( Attributes )
+				result.append_fmt( "%S ", Attributes->to_string() );
+
+			if ( Specs )
+				result.append_fmt( "%S %S", Name, Specs->to_string() );
+			else
+				result.append_fmt( "%S", Name );
 
 			if ( IsParamPack )
 				result.append("...");
