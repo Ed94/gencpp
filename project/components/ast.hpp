@@ -229,28 +229,29 @@ struct AST
 	union {
 		struct
 		{
-			union {
-				AST*  InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-				AST*  SpecsFuncSuffix; // Only used with typenames, to store the function suffix if typename is function signature.
-			};
+			AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
 			AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
 			AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
 			union {
 				AST*  InitializerList; // Constructor
 				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
-				AST*  ReturnType;      // Function, Operator
+				AST*  ReturnType;      // Function, Operator, Typename
 				AST*  UnderlyingType;  // Enum, Typedef
 				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
-				AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
-				AST*  Params;          // Constructor, Function, Operator, Template
+				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
+				AST*  Params;          // Constructor, Function, Operator, Template, Typename
 			};
 			union {
 				AST*  ArrExpr;          // Typename
 				AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
 				AST*  Declaration;      // Friend, Template
 				AST*  Value;            // Parameter, Variable
+			};
+			union {
+				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
@@ -284,28 +285,29 @@ struct AST_POD
 	union {
 		struct
 		{
-			union {
-				AST*  InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-				AST*  SpecsFuncSuffix; // Only used with typenames, to store the function suffix if typename is function signature.
-			};
-			AST*      Attributes;      // Class, Enum, Function, Struct, Typename, Union, Using, Variable
-			AST*      Specs;           // Function, Operator, Typename, Variable
+			AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
+			AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+			AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
 			union {
 				AST*  InitializerList; // Constructor
 				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
-				AST*  ReturnType;      // Function, Operator
+				AST*  ReturnType;      // Function, Operator, Typename
 				AST*  UnderlyingType;  // Enum, Typedef
 				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
-				AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
-				AST*  Params;          // Function, Operator, Template
+				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
+				AST*  Params;          // Constructor, Function, Operator, Template, Typename
 			};
 			union {
-				AST*  ArrExpr;         // Type Symbol
-				AST*  Body;            // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-				AST*  Declaration;     // Friend, Template
-				AST*  Value;           // Parameter, Variable
+				AST*  ArrExpr;          // Typename
+				AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+				AST*  Declaration;      // Friend, Template
+				AST*  Value;            // Parameter, Variable
+			};
+			union {
+				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
 			};
 		};
 		StringCached  Content;         // Attributes, Comment, Execution, Include

@@ -4963,6 +4963,7 @@ CodeType parse_type( bool* typedef_is_function )
 			SpecifierT spec = ESpecifier::to_type( currtok );
 
 			if (   spec != ESpecifier::Const
+				// TODO : Add support for NoExcept
 				// && spec != ESpecifier::NoExcept
 				&& spec != ESpecifier::RValue )
 			{

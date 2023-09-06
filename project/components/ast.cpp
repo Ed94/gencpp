@@ -103,7 +103,7 @@ String AST::to_string()
 
 					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-					CodeType interface = Next->cast< CodeType >();
+					CodeType interface = ParentType->Next->cast< CodeType >();
 					if ( interface )
 						result.append( "\n" );
 
@@ -703,7 +703,7 @@ String AST::to_string()
 
 					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-					CodeType interface = Next->cast< CodeType >();
+					CodeType interface = ParentType->Next->cast< CodeType >();
 					if ( interface )
 						result.append( "\n" );
 
@@ -924,6 +924,35 @@ String AST::to_string()
 
 		case Variable:
 		{
+			if ( Parent && Parent->Type == Variable )
+			{
+				// Its a comma-separated variable ( a NextVar )
+
+				if ( Specs )
+					result.append_fmt( "%S ", Specs->to_string() );
+
+				result.append( Name );
+
+				if ( ArrExpr )
+				{
+					result.append_fmt( "[ %S ]", ArrExpr->to_string() );
+
+					AST* next_arr_expr = ArrExpr->Next;
+					while ( next_arr_expr )
+					{
+						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+						next_arr_expr = next_arr_expr->Next;
+					}
+				}
+
+				if ( Value )
+					result.append_fmt( " = %S", Value->to_string() );
+
+				// Keep the chain going...
+				if ( NextVar )
+					result.append_fmt( ", %S", NextVar->to_string() );
+			}
+
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
@@ -955,6 +984,9 @@ String AST::to_string()
 				if ( Value )
 					result.append_fmt( " = %S", Value->to_string() );
 
+				if ( NextVar )
+					result.append_fmt( ", %S", NextVar->to_string() );
+
 				if ( InlineCmt )
 					result.append_fmt(";  %S", InlineCmt->Content);
 				else
@@ -964,7 +996,7 @@ String AST::to_string()
 			}
 
 			if ( BitfieldSize )
-				result.append_fmt( "%S %S : %S;", ValueType->to_string(), Name, BitfieldSize->to_string() );
+				result.append_fmt( "%S %S : %S", ValueType->to_string(), Name, BitfieldSize->to_string() );
 
 			else if ( ValueType->ArrExpr )
 			{
@@ -976,12 +1008,18 @@ String AST::to_string()
 					result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
 					next_arr_expr = next_arr_expr->Next;
 				}
-
-				result.append( ";" );
 			}
 
 			else
-				result.append_fmt( "%S %S;", ValueType->to_string(), Name );
+				result.append_fmt( "%S %S", ValueType->to_string(), Name );
+
+			if ( Value )
+				result.append_fmt( " = %S", Value->to_string() );
+
+			if ( NextVar )
+				result.append_fmt( ", %S", NextVar->to_string() );
+
+			result.append( ";" );
 
 			if ( InlineCmt )
 				result.append_fmt("  %S", InlineCmt->Content);
@@ -1508,6 +1546,7 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Value );
 			check_member_ast( Attributes );
 			check_member_ast( Specs );
+			check_member_ast( NextVar );
 
 			return true;
 		}

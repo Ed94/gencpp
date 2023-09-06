@@ -68,6 +68,7 @@ struct AST_Class
 			CodeType        ParentType;
 			char 	        _PAD_PARAMS_[ sizeof(AST*) ];
 			CodeBody        Body;
+			char 	        _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	CodeType                Last;
@@ -93,6 +94,7 @@ struct AST_Constructor
 			Code           InitializerList;
 			CodeParam      Params;
 			Code           Body;
+			char 		   _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
 		};
 	};
 	Code              Prev;
@@ -132,6 +134,7 @@ struct AST_Destructor
 			CodeSpecifiers Specs;
 			char           _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
 			Code           Body;
+			char 		   _PAD_PROPERTIES_3_ [ sizeof(AST*) ];
 		};
 	};
 	Code                   Prev;
@@ -156,6 +159,7 @@ struct AST_Enum
 			CodeType       UnderlyingType;
 			char	       _PAD_PARAMS_[ sizeof(AST*) ];
 			CodeBody       Body;
+			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	Code                   Prev;
@@ -193,6 +197,7 @@ struct AST_Extern
 		{
 			char      _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
 			CodeBody  Body;
+			char      _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	Code              Prev;
@@ -230,6 +235,7 @@ struct AST_Friend
 			CodeComment InlineCmt;
 			char        _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
 			Code        Declaration;
+			char 	    _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	Code              Prev;
@@ -254,6 +260,7 @@ struct AST_Fn
 			CodeType        ReturnType;
 			CodeParam 	    Params;
 			CodeBody        Body;
+			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
 	};
 	Code                    Prev;
@@ -288,6 +295,7 @@ struct AST_NS
 		struct {
 			char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
 			CodeBody  Body;
+			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	Code              Prev;
@@ -313,6 +321,7 @@ struct AST_Operator
 			CodeType        ReturnType;
 			CodeParam 	    Params;
 			CodeBody        Body;
+			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
 	};
 	Code                    Prev;
@@ -338,6 +347,7 @@ struct AST_OpCast
 			CodeType       ValueType;
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 			CodeBody       Body;
+			char 	       _PAD_PROPERTIES_3_[ sizeof(AST*) ];
 		};
 	};
 	Code              Prev;
@@ -360,6 +370,7 @@ struct AST_Param
 			CodeType  ValueType;
 			char 	  _PAD_PROPERTIES_[ sizeof(AST*) ];
 			Code      Value;
+			char 	  _PAD_PROPERTIES_3_[ sizeof(AST*) ];
 		};
 	};
 	CodeParam         Last;
@@ -431,6 +442,7 @@ struct AST_Struct
 			CodeType       ParentType;
 			char 	       _PAD_PARAMS_[ sizeof(AST*) ];
 			CodeBody       Body;
+			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	CodeType               Last;
@@ -453,6 +465,7 @@ struct AST_Template
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
 			CodeParam 	   Params;
 			Code           Declaration;
+			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	Code                   Prev;
@@ -472,12 +485,13 @@ struct AST_Type
 		char 		       _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap ];
 		struct
 		{
-			CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
+			char           _PAD_INLINE_CMT_[ sizeof(AST*) ];
 			CodeAttributes Attributes;
 			CodeSpecifiers Specs;
 			CodeType       ReturnType;      // Only used for function signatures
 			CodeParam      Params;          // Only used for function signatures
 			Code           ArrExpr;
+			CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 		};
 	};
 	Code                   Prev;
@@ -500,7 +514,7 @@ struct AST_Typedef
 			CodeComment    InlineCmt;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
 			Code           UnderlyingType;
-			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) * 2 ];
+			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 		};
 	};
 	Code                   Prev;
@@ -524,6 +538,7 @@ struct AST_Union
 			CodeAttributes Attributes;
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
 			CodeBody       Body;
+			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
 	Code                   Prev;
@@ -547,7 +562,7 @@ struct AST_Using
 			CodeAttributes  Attributes;
 			char 	        _PAD_SPECS_     [ sizeof(AST*) ];
 			CodeType        UnderlyingType;
-			char 	        _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+			char 	        _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
 		};
 	};
 	Code                    Prev;
@@ -573,6 +588,7 @@ struct AST_Var
 			CodeType       ValueType;
 			Code           BitfieldSize;
 			Code           Value;
+			CodeVar		   NextVar;
 		};
 	};
 	Code                   Prev;
