@@ -1253,7 +1253,6 @@ constexpr bool inplace_def = true;
 // Internal parsing functions
 
 constexpr bool strip_formatting_dont_preserve_newlines = false;
-// constexpr bool strip_formatting_for_preprocess_define  = true;
 /*
 	This function was an attempt at stripping formatting from any c++ code.
 	It has edge case failures that prevent it from being used in function bodies.
@@ -1289,9 +1288,6 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Skip over the content of string literals
 		if ( scanner[0] == '"' )
 		{
-			// content.append( cut_ptr, cut_length );
-			// last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
-
 			move_fwd();
 
 			while ( tokleft && ( scanner[0] != '"' || *( scanner - 1 ) == '\\' ) )
@@ -1319,9 +1315,6 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Skip over the content of character literals
 		if ( scanner[0] == '\'' )
 		{
-			// content.append( cut_ptr, cut_length );
-			// last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
-
 			move_fwd();
 
 			while ( tokleft
@@ -1341,21 +1334,6 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			continue;
 		}
 
-	// Most likely removing as its only useful for funciton bodies.
-	#if 0
-		// Preprocessed lines
-		if ( ! for_preprocess_define && scanner[0] == '#')
-		{
-			must_keep_newline = true;
-
-			if ( content.back() != '\n' )
-				content.append( '\n' );
-
-			move_fwd();
-			continue;
-		}
-	#endif
-
 		// Block comments
 		if ( tokleft > 1 && scanner[0] == '/' && scanner[1] == '*' )
 		{
@@ -1374,9 +1352,6 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		if ( tokleft > 1 && scanner[0] == '/' && scanner[1] == '/' )
 		{
 			must_keep_newline = true;
-
-			// if ( content.back() != '\n' )
-				// content.append( '\n' );
 
 			scanner += 2;
 			tokleft -= 2;
@@ -2355,6 +2330,7 @@ Code parse_function_body()
 	result = (CodeBody) make_code();
 	result->Type = Function_Body;
 
+	// TODO : Support actual parsing of function body
 	Token start = currtok;
 
 	s32 level = 0;
@@ -2375,13 +2351,7 @@ Code parse_function_body()
 
 	if ( len > 0 )
 	{
-	// #define GEN_STRIP_FUNCTION_BODY_FORMATTING
-	#ifdef GEN_STRIP_FUNCTION_BODY_FORMATTING
-		String content = strip_formatting( { len, start.Text }, strip_formatting_dont_preserve_newlines );
-		result.append( def_execution( content ) );
-	#else
 		result.append( def_execution( { len, start.Text } ) );
-	#endif
 	}
 
 	eat( TokType::BraceCurly_Close );
