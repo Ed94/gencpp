@@ -184,7 +184,7 @@ namespace Parser
 			result.append_fmt("\tScope    : %s\n", line );
 			line.free();
 
-			sptr dist = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
+			sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
 			sptr   length_from_err = dist;
 			String line_from_err   = String::make( GlobalAllocator, { length_from_err, last_valid.Text } );
 
@@ -396,10 +396,10 @@ namespace Parser
 						s32 within_char   = false;
 						while ( left )
 						{
-							if ( current == '"' )
+							if ( current == '"' && ! within_char )
 								within_string ^= true;
 
-							if ( current == '\'' )
+							if ( current == '\'' && ! within_string )
 								within_char ^= true;
 
 							if ( current == '\\' && ! within_string && ! within_char )
@@ -1252,6 +1252,276 @@ constexpr bool inplace_def = true;
 
 // Internal parsing functions
 
+constexpr bool strip_formatting_dont_preserve_newlines = false;
+// constexpr bool strip_formatting_for_preprocess_define  = true;
+/*
+	This function was an attempt at stripping formatting from any c++ code.
+	It has edge case failures that prevent it from being used in function bodies.
+*/
+String strip_formatting( StrC raw_text, bool preserve_newlines = true )
+//, bool for_preprocess_define = false )
+{
+	String content = String::make_reserve( GlobalAllocator, raw_text.Len );
+
+	if ( raw_text.Len == 0 )
+		return content;
+
+#define cut_length ( scanner - raw_text.Ptr - last_cut )
+#define cut_ptr    ( raw_text.Ptr   + last_cut )
+#define pos        ( sptr( scanner ) - sptr( raw_text.Ptr ) )
+#define move_fwd() do { scanner++; tokleft--; } while(0)
+
+	s32         tokleft  = raw_text.Len;
+	sptr        last_cut = 0;
+	char const* scanner  = raw_text.Ptr;
+
+	if ( scanner[0] == ' ' )
+	{
+		move_fwd();
+		last_cut = 1;
+	}
+
+	bool within_string     = false;
+	bool within_char       = false;
+	bool must_keep_newline = false;
+	while ( tokleft )
+	{
+		// Skip over the content of string literals
+		if ( scanner[0] == '"' )
+		{
+			// content.append( cut_ptr, cut_length );
+			// last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+
+			move_fwd();
+
+			while ( tokleft && ( scanner[0] != '"' || *( scanner - 1 ) == '\\' ) )
+			{
+				if ( scanner[0] == '\\' && tokleft > 1 )
+				{
+					scanner += 2;
+					tokleft -= 2;
+				}
+				else
+				{
+					move_fwd();
+				}
+			}
+
+			// Skip the closing "
+			if ( tokleft )
+				move_fwd();
+
+			content.append( cut_ptr, cut_length );
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+			continue;
+		}
+
+		// Skip over the content of character literals
+		if ( scanner[0] == '\'' )
+		{
+			// content.append( cut_ptr, cut_length );
+			// last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+
+			move_fwd();
+
+			while ( tokleft
+			&& ( scanner[0] != '\''
+				|| ( *(scanner -1 ) == '\\' )
+			) )
+			{
+				move_fwd();
+			}
+
+			// Skip the closing '
+			if ( tokleft )
+				move_fwd();
+
+			content.append( cut_ptr, cut_length );
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+			continue;
+		}
+
+	// Most likely removing as its only useful for funciton bodies.
+	#if 0
+		// Preprocessed lines
+		if ( ! for_preprocess_define && scanner[0] == '#')
+		{
+			must_keep_newline = true;
+
+			if ( content.back() != '\n' )
+				content.append( '\n' );
+
+			move_fwd();
+			continue;
+		}
+	#endif
+
+		// Block comments
+		if ( tokleft > 1 && scanner[0] == '/' && scanner[1] == '*' )
+		{
+			while ( tokleft > 1 && !(scanner[0] == '*' && scanner[1] == '/') )
+				move_fwd();
+
+			scanner += 2;
+			tokleft -= 2;
+
+			content.append( cut_ptr, cut_length );
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+			continue;
+		}
+
+		// Line comments
+		if ( tokleft > 1 && scanner[0] == '/' && scanner[1] == '/' )
+		{
+			must_keep_newline = true;
+
+			// if ( content.back() != '\n' )
+				// content.append( '\n' );
+
+			scanner += 2;
+			tokleft -= 2;
+
+			while ( tokleft && scanner[ 0 ] != '\n' )
+				move_fwd();
+
+			if (tokleft)
+				move_fwd();
+
+			content.append( cut_ptr, cut_length );
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+			continue;
+		}
+
+		// Tabs
+		if (scanner[0] == '\t')
+		{
+			if (pos > last_cut)
+				content.append(cut_ptr, cut_length);
+
+			if ( content.back() != ' ' )
+				content.append(' ');
+
+			move_fwd();
+			last_cut = sptr(scanner) - sptr(raw_text.Ptr);
+			continue;
+		}
+
+		if ( tokleft > 1 && scanner[0] == '\r' && scanner[1] == '\n' )
+		{
+			if ( must_keep_newline || preserve_newlines )
+			{
+				must_keep_newline = false;
+
+				scanner += 2;
+				tokleft -= 2;
+
+				content.append( cut_ptr, cut_length );
+				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+				continue;
+			}
+
+			if ( pos > last_cut )
+				content.append( cut_ptr, cut_length );
+
+			// Replace with a space
+			if ( content.back() != ' ' )
+				content.append( ' ' );
+
+			scanner += 2;
+			tokleft -= 2;
+
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+			continue;
+		}
+
+		if ( scanner[0] == '\n' )
+		{
+			if ( must_keep_newline || preserve_newlines )
+			{
+				must_keep_newline = false;
+
+				move_fwd();
+
+				content.append( cut_ptr, cut_length );
+				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+				continue;
+			}
+
+			if ( pos > last_cut )
+				content.append( cut_ptr, cut_length );
+
+			// Replace with a space
+			if ( content.back() != ' ' )
+				content.append( ' ' );
+
+			move_fwd();
+
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+			continue;
+		}
+
+		// Escaped newlines
+		if ( scanner[0] == '\\' )
+		{
+			content.append( cut_ptr, cut_length );
+
+			s32 amount_to_skip = 1;
+			if ( tokleft > 1 && scanner[1] == '\n' )
+			{
+				amount_to_skip = 2;
+			}
+			else if ( tokleft > 2 && scanner[1] == '\r' && scanner[2] == '\n' )
+			{
+				amount_to_skip = 3;
+			}
+
+			if ( amount_to_skip > 1 && pos == last_cut )
+			{
+				scanner += amount_to_skip;
+				tokleft -= amount_to_skip;
+			}
+			else
+				move_fwd();
+
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+			continue;
+		}
+
+		// Consectuive spaces
+		if ( tokleft > 1 && char_is_space( scanner[0] ) && char_is_space( scanner[ 1 ] ) )
+		{
+			content.append( cut_ptr, cut_length );
+			do
+			{
+				move_fwd();
+			}
+			while ( tokleft && char_is_space( scanner[0] ) );
+
+			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
+
+			// Preserve only 1 space of formattting
+			if ( content.back() != ' ' )
+				content.append( ' ' );
+
+			continue;
+		}
+
+		move_fwd();
+	}
+
+	if ( last_cut < raw_text.Len )
+	{
+		content.append( cut_ptr, raw_text.Len - last_cut );
+	}
+
+#undef cut_ptr
+#undef cut_length
+#undef pos
+#undef move_fwd
+
+	return content;
+}
+
 internal
 Code parse_array_decl()
 {
@@ -1280,7 +1550,7 @@ Code parse_array_decl()
 
 		if ( currtok.Type == TokType::BraceSquare_Close )
 		{
-			log_failure( "Error, empty array expression in typedef definition\n%s", Context.to_string() );
+			log_failure( "Error, empty array expression in definition\n%s", Context.to_string() );
 			Context.pop();
 			return CodeInvalid;
 		}
@@ -1311,6 +1581,15 @@ Code parse_array_decl()
 		}
 
 		eat( TokType::BraceSquare_Close );
+
+		// Its a multi-dimensional array
+		if ( check( TokType::BraceSquare_Open ))
+		{
+			Code adjacent_arr_expr = parse_array_decl();
+
+			array_expr->Next = adjacent_arr_expr.ast;
+		}
+
 		Context.pop();
 		return array_expr;
 	}
@@ -1384,9 +1663,7 @@ CodeAttributes parse_attributes()
 		StrC attribute_txt = { len, start.Text };
 		Context.pop();
 
-		String
-		name_stripped = String::make( GlobalAllocator, attribute_txt );
-		name_stripped.strip_space();
+		String name_stripped = strip_formatting( attribute_txt, strip_formatting_dont_preserve_newlines );
 
 		Code
 		result          = make_code();
@@ -1917,139 +2194,7 @@ CodeDefine parse_define()
 		return define;
 	}
 
-	String content = String::make_reserve( GlobalAllocator, currtok.Length );
-
-#define cut_length ( scanner - currtok.Text - last_cut )
-#define cut_ptr    ( currtok.Text   + last_cut )
-#define pos        ( sptr( scanner ) - sptr( currtok.Text ) )
-	s32         tokleft  = currtok.Length;
-	sptr        last_cut = 0;
-	char const* scanner  = currtok.Text;
-
-	if ( scanner[0] == ' ' )
-	{
-		++ scanner;
-		-- tokleft;
-		last_cut = 1;
-	}
-
-	while ( tokleft )
-	{
-		if ( tokleft > 1 && char_is_space( scanner[0] ) && char_is_space( scanner[ 1 ] ) )
-		{
-			content.append( cut_ptr, cut_length );
-			do
-			{
-				++ scanner;
-				-- tokleft;
-			}
-			while ( tokleft && char_is_space( scanner[0] ) );
-
-			last_cut = sptr( scanner ) - sptr( currtok.Text );
-
-			// Preserve only 1 space of formattting
-			if ( content.back() != ' ' )
-				content.append( ' ' );
-			continue;
-		}
-
-		if ( scanner[0] == '\t' )
-		{
-			if ( pos > last_cut )
-				content.append( cut_ptr, cut_length );
-
-			// Replace with a space
-			if ( content.back() != ' ' )
-				content.append( ' ' );
-
-			++ scanner;
-			-- tokleft;
-			last_cut = sptr( scanner ) - sptr( currtok.Text );
-			continue;
-		}
-
-		if ( tokleft > 1 && scanner[0] == '\r' && scanner[1] == '\n' )
-		{
-			if ( pos > last_cut )
-				content.append( cut_ptr, cut_length );
-
-			// Replace with a space
-			if ( content.back() != ' ' )
-				content.append( ' ' );
-
-			scanner += 2;
-			tokleft -= 2;
-			last_cut = sptr( scanner ) - sptr( currtok.Text );
-			continue;
-		}
-
-		if ( scanner[0] == '\n' )
-		{
-			if ( pos > last_cut )
-				content.append( cut_ptr, cut_length );
-
-			// Replace with a space
-			if ( content.back() != ' ' )
-				content.append( ' ' );
-
-			++ scanner;
-			-- tokleft;
-			last_cut = sptr( scanner ) - sptr( currtok.Text );
-			continue;
-		}
-
-		if ( scanner[0] == '\\' )
-		{
-			s32 amount_to_skip = 1;
-			if ( tokleft > 1 && scanner[1] == '\n' )
-			{
-				amount_to_skip = 2;
-			}
-			else if ( tokleft > 2 && scanner[1] == '\r' && scanner[2] == '\n' )
-			{
-				amount_to_skip = 3;
-			}
-
-			if ( amount_to_skip > 1 )
-			{
-				if ( pos == last_cut )
-				{
-					// If the backslash is the first character on the line, then skip it
-					scanner += amount_to_skip;
-					tokleft -= amount_to_skip;
-					last_cut = sptr( scanner ) - sptr( currtok.Text );
-					continue;
-				}
-
-				// We have content to add.
-				content.append( cut_ptr, pos - last_cut );
-
-				scanner += amount_to_skip;
-				tokleft -= amount_to_skip;
-			}
-			else
-			{
-				++ scanner;
-				-- tokleft;
-			}
-
-			last_cut = sptr( scanner ) - sptr( currtok.Text );
-			continue;
-		}
-
-		++ scanner;
-		-- tokleft;
-	}
-
-	if ( last_cut < currtok.Length )
-	{
-		content.append( cut_ptr, currtok.Length - last_cut );
-	}
-#undef cut_ptr
-#undef cut_length
-#undef pos
-
-	define->Content = get_cached_string( content );
+	define->Content = get_cached_string( strip_formatting( currtok, strip_formatting_dont_preserve_newlines ) );
 	eat( TokType::Preprocess_Content );
 
 	Context.pop();
@@ -2230,7 +2375,13 @@ Code parse_function_body()
 
 	if ( len > 0 )
 	{
+	// #define GEN_STRIP_FUNCTION_BODY_FORMATTING
+	#ifdef GEN_STRIP_FUNCTION_BODY_FORMATTING
+		String content = strip_formatting( { len, start.Text }, strip_formatting_dont_preserve_newlines );
+		result.append( def_execution( content ) );
+	#else
 		result.append( def_execution( { len, start.Text } ) );
+	#endif
 	}
 
 	eat( TokType::BraceCurly_Close );
@@ -2979,11 +3130,7 @@ CodePragma parse_pragma()
 
 	Context.Scope->Name = currtok;
 
-	String
-	content_stripped = String::make( GlobalAllocator, currtok );
-	content_stripped.strip_space();
-
-	pragma->Content = get_cached_string( content_stripped );
+	pragma->Content = get_cached_string( currtok );
 	eat( TokType::Preprocess_Content );
 
 	Context.pop();
@@ -3060,7 +3207,7 @@ CodeParam parse_params( bool use_template_capture )
 				eat( currtok.Type );
 			}
 
-			value = untyped_str( value_tok );
+			value = untyped_str( strip_formatting( value_tok, strip_formatting_dont_preserve_newlines ) );
 		}
 	}
 
@@ -3130,7 +3277,7 @@ CodeParam parse_params( bool use_template_capture )
 					eat( currtok.Type );
 				}
 
-				value = untyped_str( value_tok );
+				value = untyped_str( strip_formatting( value_tok, strip_formatting_dont_preserve_newlines ) );
 			}
 		}
 
@@ -3300,19 +3447,7 @@ Code parse_static_assert()
 	eat( TokType::Statement_End );
 
 	content.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
-
-
-	String
-	content_stripped = String::make( GlobalAllocator, content );
-	content_stripped.strip_space();
-
-	char const* result = str_fmt_buf( "%.*s\n", content.Length, content.Text );
-	if ( content_stripped )
-	{
-		result = str_fmt_buf( "%S\n", content_stripped );
-	}
-
-	assert->Content = get_cached_string( to_str( result ) );
+	assert->Content = get_cached_string( content );
 	assert->Name	= assert->Content;
 
 	Context.pop();
@@ -4894,8 +5029,8 @@ CodeType parse_type( bool* typedef_is_function )
 	result->Type = Typename;
 
 	// Need to wait until were using the new parsing method to do this.
-	String
-	name_stripped = String::make( GlobalAllocator, name );
+	String name_stripped = strip_formatting( name, strip_formatting_dont_preserve_newlines );
+
 	// name_stripped.strip_space();
 
 #ifdef GEN_USE_NEW_TYPENAME_PARSING

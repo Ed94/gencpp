@@ -781,7 +781,14 @@ String AST::to_string()
 
 			if ( UnderlyingType->Type == Typename && UnderlyingType->ArrExpr )
 			{
-				result.append_fmt( "[%S];", UnderlyingType->ArrExpr->to_string() );
+				result.append_fmt( "[ %S ];", UnderlyingType->ArrExpr->to_string() );
+
+				AST* next_arr_expr = UnderlyingType->ArrExpr->Next;
+				while ( next_arr_expr )
+				{
+					result.append_fmt( "[ %S ];", next_arr_expr->to_string() );
+					next_arr_expr = next_arr_expr->Next;
+				}
 			}
 			else
 			{
@@ -885,7 +892,16 @@ String AST::to_string()
 				result.append_fmt( "using %S = %S", Name, UnderlyingType->to_string() );
 
 				if ( UnderlyingType->ArrExpr )
-					result.append_fmt( "[%S]", UnderlyingType->ArrExpr->to_string() );
+				{
+					result.append_fmt( "[ %S ]", UnderlyingType->ArrExpr->to_string() );
+
+					AST* next_arr_expr = UnderlyingType->ArrExpr->Next;
+					while ( next_arr_expr )
+					{
+						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+						next_arr_expr = next_arr_expr->Next;
+					}
+				}
 
 				result.append( ";" );
 			}
@@ -922,7 +938,16 @@ String AST::to_string()
 				result.append_fmt( "%S %S", ValueType->to_string(), Name );
 
 				if ( ValueType->ArrExpr )
-					result.append_fmt( "[%S]", ValueType->ArrExpr->to_string() );
+				{
+					result.append_fmt( "[ %S ]", ValueType->ArrExpr->to_string() );
+
+					AST* next_arr_expr = ValueType->ArrExpr->Next;
+					while ( next_arr_expr )
+					{
+						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+						next_arr_expr = next_arr_expr->Next;
+					}
+				}
 
 				if ( BitfieldSize )
 					result.append_fmt( " : %S", BitfieldSize->to_string() );
@@ -941,11 +966,22 @@ String AST::to_string()
 			if ( BitfieldSize )
 				result.append_fmt( "%S %S : %S;", ValueType->to_string(), Name, BitfieldSize->to_string() );
 
-			else if ( UnderlyingType->ArrExpr )
-				result.append_fmt( "%S %S[%S];", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
+			else if ( ValueType->ArrExpr )
+			{
+				result.append_fmt( "%S %S[ %S ]", ValueType->to_string(), Name, ValueType->ArrExpr->to_string() );
+
+				AST* next_arr_expr = ValueType->ArrExpr->Next;
+				while ( next_arr_expr )
+				{
+					result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+					next_arr_expr = next_arr_expr->Next;
+				}
+
+				result.append( ";" );
+			}
 
 			else
-				result.append_fmt( "%S %S;", UnderlyingType->to_string(), Name );
+				result.append_fmt( "%S %S;", ValueType->to_string(), Name );
 
 			if ( InlineCmt )
 				result.append_fmt("  %S", InlineCmt->Content);
@@ -1096,15 +1132,15 @@ bool AST::is_equal( AST* other )
 
 		// Comments are not validated.
 		case Comment:
-			// return true;
+			return true;
 
 		case Execution:
 		case PlatformAttributes:
 		case Untyped:
 		{
 			check_member_content( Content );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
+
+			return true;
 		}
 
 		case Class_Fwd:
@@ -1114,8 +1150,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( ParentType );
 			check_member_val( ParentAccess );
 			check_member_ast( Attributes );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1129,8 +1163,6 @@ bool AST::is_equal( AST* other )
 			check_member_val( ParentAccess );
 			check_member_ast( Attributes );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1140,8 +1172,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( InitializerList );
 			check_member_ast( Params );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1150,8 +1180,6 @@ bool AST::is_equal( AST* other )
 		{
 			check_member_ast( InitializerList );
 			check_member_ast( Params );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1160,8 +1188,6 @@ bool AST::is_equal( AST* other )
 		{
 			check_member_ast( Specs );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1169,8 +1195,6 @@ bool AST::is_equal( AST* other )
 		case Destructor_Fwd:
 		{
 			check_member_ast( Specs );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1183,8 +1207,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Attributes );
 			check_member_ast( UnderlyingType );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1196,8 +1218,6 @@ bool AST::is_equal( AST* other )
 			check_member_str( Name );
 			check_member_ast( Attributes );
 			check_member_ast( UnderlyingType );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1206,8 +1226,6 @@ bool AST::is_equal( AST* other )
 		{
 			check_member_str( Name );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1216,8 +1234,6 @@ bool AST::is_equal( AST* other )
 		{
 			check_member_str( Name );
 			check_member_ast( Declaration );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1231,8 +1247,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Specs );
 			check_member_ast( Params );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1245,8 +1259,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Attributes );
 			check_member_ast( Specs );
 			check_member_ast( Params );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1255,8 +1267,6 @@ bool AST::is_equal( AST* other )
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1266,8 +1276,6 @@ bool AST::is_equal( AST* other )
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1282,8 +1290,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Specs );
 			check_member_ast( Params );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1297,8 +1303,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Attributes );
 			check_member_ast( Specs );
 			check_member_ast( Params );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1309,8 +1313,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Specs );
 			check_member_ast( ValueType );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1320,8 +1322,6 @@ bool AST::is_equal( AST* other )
 			check_member_str( Name );
 			check_member_ast( Specs );
 			check_member_ast( ValueType );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1415,8 +1415,6 @@ bool AST::is_equal( AST* other )
 		{
 			check_member_str( Name );
 			check_member_content( Content );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1427,8 +1425,6 @@ bool AST::is_equal( AST* other )
 		case Preprocess_ElIf:
 		{
 			check_member_content( Content );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1437,8 +1433,6 @@ bool AST::is_equal( AST* other )
 		case Preprocess_Pragma:
 		{
 			check_member_content( Content );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1451,8 +1445,6 @@ bool AST::is_equal( AST* other )
 			{
 				check_member_val( ArrSpecs[ idx ] );
 			}
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 			return true;
 		}
 
@@ -1462,8 +1454,6 @@ bool AST::is_equal( AST* other )
 			check_member_str( Name );
 			check_member_ast( Params );
 			check_member_ast( Declaration );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1475,8 +1465,6 @@ bool AST::is_equal( AST* other )
 			check_member_str( Name );
 			check_member_ast( Specs );
 			check_member_ast( UnderlyingType );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1486,8 +1474,6 @@ bool AST::is_equal( AST* other )
 			check_member_str( Name );
 			check_member_ast( Specs );
 			check_member_ast( ArrExpr );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1498,8 +1484,6 @@ bool AST::is_equal( AST* other )
 			check_member_str( Name );
 			check_member_ast( Attributes );
 			check_member_ast( Body );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1511,8 +1495,6 @@ bool AST::is_equal( AST* other )
 			check_member_str( Name );
 			check_member_ast( UnderlyingType );
 			check_member_ast( Attributes );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
@@ -1526,8 +1508,6 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Value );
 			check_member_ast( Attributes );
 			check_member_ast( Specs );
-			// check_member_ast( Prev );
-			// check_member_ast( Next );
 
 			return true;
 		}
