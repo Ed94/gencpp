@@ -1,8 +1,40 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "static_data.cpp"
+#endif
 
 Code Code::Global;
 Code Code::Invalid;
+
+char const* AST::debug_str()
+{
+	if ( Parent )
+	{
+		String
+		result = String::make_reserve( GlobalAllocator, kilobytes(1) );
+		result.append_fmt(
+				"\n\tType    : %s"
+				"\n\tParent  : %s %s"
+				"\n\tName    : %s"
+			, type_str()
+			, Parent->type_str()
+			, Parent->Name, Name ? Name : ""
+		);
+
+		return result;
+	}
+
+	String
+	result = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	result.append_fmt(
+			"\n\tType    : %s"
+			"\n\tName    : %s"
+		, type_str()
+		, Name ? Name : ""
+	);
+
+	return result;
+}
 
 AST* AST::duplicate()
 {
@@ -38,41 +70,8 @@ String AST::to_string()
 
 		case Untyped:
 		case Execution:
-			result.append( Content );
-		break;
-
 		case Comment:
-		{
-			if ( Prev && Prev->Type != Comment && Prev->Type != NewLine )
-				result.append( "\n" );
-
-			static char line[ MaxCommentLineLength ];
-
-			char const* end       = & scast(String, Content).back();
-			char*       scanner   = Content.Data;
-			s32         curr      = 0;
-			do
-			{
-				char const* next   = scanner;
-				s32         length = 0;
-				while ( next != end && scanner[ length ] != '\n' )
-				{
-					next = scanner + length;
-					length++;
-				}
-				length++;
-
-				str_copy( line, scanner, length );
-				result.append_fmt( "//%.*s", length, line );
-				mem_set( line, 0, MaxCommentLineLength );
-
-				scanner += length;
-			}
-			while ( scanner <= end );
-
-			if ( result.back() != '\n' )
-				result.append( "\n" );
-		}
+			result.append( Content );
 		break;
 
 		case Access_Private:
@@ -104,7 +103,7 @@ String AST::to_string()
 
 					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-					CodeType interface = Next->cast< CodeType >();
+					CodeType interface = ParentType->Next->cast< CodeType >();
 					if ( interface )
 						result.append( "\n" );
 
@@ -141,8 +140,14 @@ String AST::to_string()
 
 			else result.append_fmt( "class %S", Name );
 
+			// Check if it can have an end-statement
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt( "; // %S\n", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -169,7 +174,12 @@ String AST::to_string()
 			if ( Params )
 				result.append_fmt( "( %S )", Params->to_string() );
 			else
-				result.append( "(void);\n" );
+			{
+				if ( InlineCmt )
+					result.append_fmt( "(void); // %S\n", InlineCmt->Content );
+				else
+					result.append( "(void);\n" );
+			}
 		}
 		break;
 
@@ -203,10 +213,15 @@ String AST::to_string()
 					result.append_fmt( "~%S()", Parent->Name );
 
 				if ( specs.has( ESpecifier::Pure ) )
-					result.append( " = 0;\n" );
+					result.append( " = 0;" );
 			}
 			else
-				result.append_fmt( "~%S();\n", Parent->Name );
+				result.append_fmt( "~%S();", Parent->Name );
+
+			if ( InlineCmt )
+				result.append_fmt( "  %S", InlineCmt->Content );
+			else
+				result.append("\n");
 		}
 		break;
 
@@ -249,7 +264,12 @@ String AST::to_string()
 			result.append_fmt( "enum %S : %S", Name, UnderlyingType->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -299,7 +319,12 @@ String AST::to_string()
 			result.append_fmt( "%S : %S", Name, UnderlyingType->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -327,7 +352,14 @@ String AST::to_string()
 			result.append_fmt( "friend %S", Declaration->to_string() );
 
 			if ( result[ result.length() -1 ] != ';' )
-				result.append( ";\n" );
+			{
+				result.append( ";" );
+			}
+
+			if ( InlineCmt )
+				result.append_fmt("  %S", InlineCmt->Content );
+			else
+				result.append("\n");
 		break;
 
 		case Function:
@@ -351,7 +383,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append( "void)" );
+				result.append( ")" );
 
 			if ( Specs )
 			{
@@ -390,7 +422,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append( "void)" );
+				result.append( ")" );
 
 			if ( Specs )
 			{
@@ -404,7 +436,10 @@ String AST::to_string()
 				}
 			}
 
-			result.append( ";\n" );
+			if ( InlineCmt )
+				result.append_fmt( ";  %S", InlineCmt->Content );
+			else
+				result.append( ";\n" );
 		}
 		break;
 
@@ -444,7 +479,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append( "void)" );
+				result.append( ")" );
 
 			if ( Specs )
 			{
@@ -482,7 +517,7 @@ String AST::to_string()
 				result.append_fmt( "%S)", Params->to_string() );
 
 			else
-				result.append_fmt( "void)" );
+				result.append_fmt( ")" );
 
 			if ( Specs )
 			{
@@ -496,7 +531,10 @@ String AST::to_string()
 				}
 			}
 
-			result.append( ";\n" );
+			if ( InlineCmt )
+				result.append_fmt( ";  %S", InlineCmt->Content );
+			else
+				result.append( ";\n" );
 		}
 		break;
 
@@ -504,6 +542,8 @@ String AST::to_string()
 		{
 			if ( Specs )
 			{
+				// TODO : Add support for specifies before the operator keyword
+
 				if ( Name && Name.length() )
 					result.append_fmt( "%Soperator %S()", Name, ValueType->to_string() );
 				else
@@ -532,6 +572,8 @@ String AST::to_string()
 		case Operator_Cast_Fwd:
 			if ( Specs )
 			{
+				// TODO : Add support for specifies before the operator keyword
+
 				result.append_fmt( "operator %S()", ValueType->to_string() );
 
 				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
@@ -543,11 +585,17 @@ String AST::to_string()
 					}
 				}
 
-				result.append( ";" );
+				if ( InlineCmt )
+					result.append_fmt( ";  %S", InlineCmt->Content );
+				else
+					result.append( ";\n" );
 				break;
 			}
 
-			result.append_fmt("operator %S();\n", ValueType->to_string() );
+			if ( InlineCmt )
+				result.append_fmt("operator %S();  %S", ValueType->to_string() );
+			else
+				result.append_fmt("operator %S();\n", ValueType->to_string() );
 		break;
 
 		case Parameters:
@@ -593,7 +641,7 @@ String AST::to_string()
 		break;
 
 		case Preprocess_Include:
-			result.append_fmt( "#include \"%S\"\n", Content );
+			result.append_fmt( "#include %S\n", Content );
 		break;
 
 		case Preprocess_ElIf:
@@ -655,7 +703,7 @@ String AST::to_string()
 
 					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-					CodeType interface = Next->cast< CodeType >();
+					CodeType interface = ParentType->Next->cast< CodeType >();
 					if ( interface )
 						result.append( "\n" );
 
@@ -680,7 +728,12 @@ String AST::to_string()
 			}
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -695,7 +748,12 @@ String AST::to_string()
 			else result.append_fmt( "struct %S", Name );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
+			{
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content );
+				else
+					result.append(";\n");
+			}
 		}
 		break;
 
@@ -715,39 +773,79 @@ String AST::to_string()
 
 			result.append( "typedef ");
 
-			if ( IsFunction )
+			// Determines if the typedef is a function typename
+			if ( UnderlyingType->ReturnType )
 				result.append( UnderlyingType->to_string() );
 			else
 				result.append_fmt( "%S %S", UnderlyingType->to_string(), Name );
 
 			if ( UnderlyingType->Type == Typename && UnderlyingType->ArrExpr )
 			{
-				result.append_fmt( "[%S];", UnderlyingType->ArrExpr->to_string() );
+				result.append_fmt( "[ %S ];", UnderlyingType->ArrExpr->to_string() );
+
+				AST* next_arr_expr = UnderlyingType->ArrExpr->Next;
+				while ( next_arr_expr )
+				{
+					result.append_fmt( "[ %S ];", next_arr_expr->to_string() );
+					next_arr_expr = next_arr_expr->Next;
+				}
 			}
 			else
 			{
-				result.append( ";\n" );
+				result.append( ";" );
 			}
+
+			if ( InlineCmt )
+				result.append_fmt("  %S", InlineCmt->Content);
+			else
+				result.append("\n");
 		}
 		break;
 
 		case Typename:
 		{
-			if ( Attributes || Specs )
+		#if GEN_USE_NEW_TYPENAME_PARSING
+			if ( ReturnType && Params )
 			{
 				if ( Attributes )
 					result.append_fmt( "%S ", Attributes->to_string() );
-
-				if ( Specs )
-					result.append_fmt( "%S %S", Name, Specs->to_string() );
-
 				else
-					result.append_fmt( "%S", Name );
+				{
+					if ( Specs )
+						result.append_fmt( "%S ( %S ) ( %S ) %S", ReturnType->to_string(), Name, Params->to_string(), Specs->to_string() );
+					else
+						result.append_fmt( "%S ( %S ) ( %S )", ReturnType->to_string(), Name, Params->to_string() );
+				}
+
+				break;
 			}
-			else
+		#else
+			if ( ReturnType && Params )
 			{
-				result.append_fmt( "%S", Name );
+				if ( Attributes )
+					result.append_fmt( "%S ", Attributes->to_string() );
+				else
+				{
+					if ( Specs )
+						result.append_fmt( "%S %S ( %S ) %S", ReturnType->to_string(), Name, Params->to_string(), Specs->to_string() );
+					else
+						result.append_fmt( "%S %S ( %S )", ReturnType->to_string(), Name, Params->to_string() );
+				}
+
+				break;
 			}
+		#endif
+
+			if ( Attributes )
+				result.append_fmt( "%S ", Attributes->to_string() );
+
+			if ( Specs )
+				result.append_fmt( "%S %S", Name, Specs->to_string() );
+			else
+				result.append_fmt( "%S", Name );
+
+			if ( IsParamPack )
+				result.append("...");
 		}
 		break;
 
@@ -794,21 +892,67 @@ String AST::to_string()
 				result.append_fmt( "using %S = %S", Name, UnderlyingType->to_string() );
 
 				if ( UnderlyingType->ArrExpr )
-					result.append_fmt( "[%S]", UnderlyingType->ArrExpr->to_string() );
+				{
+					result.append_fmt( "[ %S ]", UnderlyingType->ArrExpr->to_string() );
 
-				result.append( ";\n" );
+					AST* next_arr_expr = UnderlyingType->ArrExpr->Next;
+					while ( next_arr_expr )
+					{
+						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+						next_arr_expr = next_arr_expr->Next;
+					}
+				}
+
+				result.append( ";" );
 			}
 			else
-				result.append_fmt( "using %S;\n", Name );
+				result.append_fmt( "using %S;", Name );
+
+			if ( InlineCmt )
+				result.append_fmt("  %S\n", InlineCmt->Content );
+			else
+				result.append("\n");
 		}
 		break;
 
 		case Using_Namespace:
-			result.append_fmt( "using namespace %s;\n", Name );
+			if ( InlineCmt )
+				result.append_fmt( "using namespace $S;  %S", Name, InlineCmt->Content );
+			else
+				result.append_fmt( "using namespace %s;\n", Name );
 		break;
 
 		case Variable:
 		{
+			if ( Parent && Parent->Type == Variable )
+			{
+				// Its a comma-separated variable ( a NextVar )
+
+				if ( Specs )
+					result.append_fmt( "%S ", Specs->to_string() );
+
+				result.append( Name );
+
+				if ( ArrExpr )
+				{
+					result.append_fmt( "[ %S ]", ArrExpr->to_string() );
+
+					AST* next_arr_expr = ArrExpr->Next;
+					while ( next_arr_expr )
+					{
+						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+						next_arr_expr = next_arr_expr->Next;
+					}
+				}
+
+				if ( Value )
+					result.append_fmt( " = %S", Value->to_string() );
+
+				// Keep the chain going...
+				if ( NextVar )
+					result.append_fmt( ", %S", NextVar->to_string() );
+			}
+
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
@@ -823,7 +967,16 @@ String AST::to_string()
 				result.append_fmt( "%S %S", ValueType->to_string(), Name );
 
 				if ( ValueType->ArrExpr )
-					result.append_fmt( "[%S]", ValueType->ArrExpr->to_string() );
+				{
+					result.append_fmt( "[ %S ]", ValueType->ArrExpr->to_string() );
+
+					AST* next_arr_expr = ValueType->ArrExpr->Next;
+					while ( next_arr_expr )
+					{
+						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+						next_arr_expr = next_arr_expr->Next;
+					}
+				}
 
 				if ( BitfieldSize )
 					result.append_fmt( " : %S", BitfieldSize->to_string() );
@@ -831,19 +984,47 @@ String AST::to_string()
 				if ( Value )
 					result.append_fmt( " = %S", Value->to_string() );
 
-				result.append( ";\n" );
+				if ( NextVar )
+					result.append_fmt( ", %S", NextVar->to_string() );
+
+				if ( InlineCmt )
+					result.append_fmt(";  %S", InlineCmt->Content);
+				else
+					result.append( ";\n" );
 
 				break;
 			}
 
 			if ( BitfieldSize )
-				result.append_fmt( "%S %S : %S;\n", ValueType->to_string(), Name, BitfieldSize->to_string() );
+				result.append_fmt( "%S %S : %S", ValueType->to_string(), Name, BitfieldSize->to_string() );
 
-			else if ( UnderlyingType->ArrExpr )
-				result.append_fmt( "%S %S[%S];\n", UnderlyingType->to_string(), Name, UnderlyingType->ArrExpr->to_string() );
+			else if ( ValueType->ArrExpr )
+			{
+				result.append_fmt( "%S %S[ %S ]", ValueType->to_string(), Name, ValueType->ArrExpr->to_string() );
+
+				AST* next_arr_expr = ValueType->ArrExpr->Next;
+				while ( next_arr_expr )
+				{
+					result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
+					next_arr_expr = next_arr_expr->Next;
+				}
+			}
 
 			else
-				result.append_fmt( "%S %S;\n", UnderlyingType->to_string(), Name );
+				result.append_fmt( "%S %S", ValueType->to_string(), Name );
+
+			if ( Value )
+				result.append_fmt( " = %S", Value->to_string() );
+
+			if ( NextVar )
+				result.append_fmt( ", %S", NextVar->to_string() );
+
+			result.append( ";" );
+
+			if ( InlineCmt )
+				result.append_fmt("  %S", InlineCmt->Content);
+			else
+				result.append("\n");
 		}
 		break;
 
@@ -872,23 +1053,560 @@ String AST::to_string()
 
 bool AST::is_equal( AST* other )
 {
-	if ( Type != other->Type )
+/*
+	AST values are either some u32 value, a cached string, or a pointer to another AST.
+
+	u32 values are compared by value.
+	Cached strings are compared by pointer.
+	AST nodes are compared with AST::is_equal.
+*/
+	if ( other == nullptr )
+	{
+		log_fmt( "AST::is_equal: other is null\nAST: %S", debug_str() );
 		return false;
+	}
+
+	if ( Type != other->Type )
+	{
+		log_fmt("AST::is_equal: Type check failure with other\nAST: %S\nOther: %S"
+			, debug_str()
+			, other->debug_str()
+		);
+
+		return false;
+	}
 
 	switch ( Type )
 	{
-		case ECode::Typedef:
-		case ECode::Typename:
+		using namespace ECode;
+
+	#define check_member_val( val )                           \
+	if ( val != other->val )                                  \
+	{                                                         \
+		log_fmt("\nAST::is_equal: Member - " #val " failed\n" \
+		        "AST  : %S\n"                                 \
+		        "Other: %S\n"                                 \
+		    , debug_str()                                     \
+		    , other->debug_str()                              \
+		);                                                    \
+	                                                          \
+		return false;                                         \
+	}
+
+	#define check_member_str( str )                                 \
+	if ( str != other->str )                                        \
+	{                                                               \
+		log_fmt("\nAST::is_equal: Member string - "#str " failed\n" \
+				"AST  : %S\n"                                       \
+				"Other: %S\n"                                       \
+			, debug_str()                                           \
+			, other->debug_str()                                    \
+		);                                                          \
+	                                                                \
+		return false;                                               \
+	}
+
+	#define check_member_content( content )                               \
+	if ( content != other->content )                                      \
+	{                                                                     \
+		log_fmt("\nAST::is_equal: Member content - "#content " failed\n"  \
+				"AST  : %S\n"                                             \
+				"Other: %S\n"                                             \
+			, debug_str()                                                 \
+			, other->debug_str()                                          \
+		);                                                                \
+                                                                          \
+		log_fmt("Content cannot be trusted to be unique with this check " \
+			"so it must be verified by eye for now\n"                     \
+			"AST   Content:\n%S\n"                                        \
+			"Other Content:\n%S\n"                                        \
+			, content.visualize_whitespace()                              \
+			, other->content.visualize_whitespace()                       \
+		);                                                                \
+	}
+
+	#define check_member_ast( ast )                                                                \
+	if ( ast )                                                                                     \
+	{                                                                                              \
+		if ( other->ast == nullptr )                                                               \
+		{                                                                                          \
+			log_fmt("\nAST::is_equal: Failed for member " #ast " other equivalent param is null\n" \
+					"AST  : %s\n"                                                                  \
+					"Other: %s\n"                                                                  \
+					"For ast member: %s\n"                                                         \
+				, debug_str()                                                                      \
+				, other->debug_str()                                                               \
+				, ast->debug_str()                                                                 \
+			);                                                                                     \
+                                                                                                   \
+			return false;                                                                          \
+		}                                                                                          \
+                                                                                                   \
+		if ( ! ast->is_equal( other->ast ) )                                                       \
+		{                                                                                          \
+			log_fmt( "\nAST::is_equal: Failed for " #ast"\n"                                       \
+			         "AST  : %S\n"                                                                 \
+			         "Other: %S\n"                                                                 \
+			         "For     ast member: %S\n"                                                    \
+			         "other's ast member: %S\n"                                                    \
+				, debug_str()                                                                      \
+				, other->debug_str()                                                               \
+				, ast->debug_str()                                                                 \
+				, other->ast->debug_str()                                                          \
+			);                                                                                     \
+		                                                                                           \
+			return false;                                                                          \
+		}                                                                                          \
+	}
+
+		case NewLine:
+		case Access_Public:
+		case Access_Protected:
+		case Access_Private:
+		case Preprocess_Else:
+		case Preprocess_EndIf:
+			return true;
+
+
+		// Comments are not validated.
+		case Comment:
+			return true;
+
+		case Execution:
+		case PlatformAttributes:
+		case Untyped:
 		{
-			if ( Name != other->Name )
-				return false;
+			check_member_content( Content );
 
 			return true;
 		}
-	}
 
-	if ( Name != other->Name )
-		return false;
+		case Class_Fwd:
+		case Struct_Fwd:
+		{
+			check_member_str( Name );
+			check_member_ast( ParentType );
+			check_member_val( ParentAccess );
+			check_member_ast( Attributes );
+
+			return true;
+		}
+
+		case Class:
+		case Struct:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ParentType );
+			check_member_val( ParentAccess );
+			check_member_ast( Attributes );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Constructor:
+		{
+			check_member_ast( InitializerList );
+			check_member_ast( Params );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Constructor_Fwd:
+		{
+			check_member_ast( InitializerList );
+			check_member_ast( Params );
+
+			return true;
+		}
+
+		case Destructor:
+		{
+			check_member_ast( Specs );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Destructor_Fwd:
+		{
+			check_member_ast( Specs );
+
+			return true;
+		}
+
+		case Enum:
+		case Enum_Class:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Attributes );
+			check_member_ast( UnderlyingType );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Enum_Fwd:
+		case Enum_Class_Fwd:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Attributes );
+			check_member_ast( UnderlyingType );
+
+			return true;
+		}
+
+		case Extern_Linkage:
+		{
+			check_member_str( Name );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Friend:
+		{
+			check_member_str( Name );
+			check_member_ast( Declaration );
+
+			return true;
+		}
+
+		case Function:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Function_Fwd:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+
+			return true;
+		}
+
+		case Module:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+
+			return true;
+		}
+
+		case Namespace:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Operator:
+		case Operator_Member:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Operator_Fwd:
+		case Operator_Member_Fwd:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ReturnType );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( Params );
+
+			return true;
+		}
+
+		case Operator_Cast:
+		{
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( ValueType );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Operator_Cast_Fwd:
+		{
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( ValueType );
+
+			return true;
+		}
+
+		case Parameters:
+		{
+			if ( NumEntries > 1 )
+			{
+				AST* curr       = this;
+				AST* curr_other = other;
+				while ( curr != nullptr  )
+				{
+					if ( curr )
+					{
+						if ( curr_other == nullptr )
+						{
+							log_fmt("\nAST::is_equal: Failed for parameter, other equivalent param is null\n"
+							        "AST  : %S\n"
+							        "Other: %S\n"
+							        "For ast member: %S\n"
+							    , curr->debug_str()
+							);
+
+							return false;
+						}
+
+						if ( curr->Name != curr_other->Name )
+						{
+							log_fmt( "\nAST::is_equal: Failed for parameter name check\n"
+									"AST  : %S\n"
+									"Other: %S\n"
+									"For     ast member: %S\n"
+									"other's ast member: %S\n"
+								, debug_str()
+								, other->debug_str()
+								, curr->debug_str()
+								, curr_other->debug_str()
+							);
+							return false;
+						}
+
+						if ( curr->ValueType && ! curr->ValueType->is_equal(curr_other->ValueType) )
+						{
+							log_fmt( "\nAST::is_equal: Failed for parameter value type check\n"
+									"AST  : %S\n"
+									"Other: %S\n"
+									"For     ast member: %S\n"
+									"other's ast member: %S\n"
+								, debug_str()
+								, other->debug_str()
+								, curr->debug_str()
+								, curr_other->debug_str()
+							);
+							return false;
+						}
+
+						if ( curr->Value && ! curr->Value->is_equal(curr_other->Value) )
+						{
+							log_fmt( "\nAST::is_equal: Failed for parameter value check\n"
+									"AST  : %S\n"
+									"Other: %S\n"
+									"For     ast member: %S\n"
+									"other's ast member: %S\n"
+								, debug_str()
+								, other->debug_str()
+								, curr->debug_str()
+								, curr_other->debug_str()
+							);
+							return false;
+						}
+					}
+
+					curr       = curr->Next;
+					curr_other = curr_other->Next;
+				}
+
+				check_member_val( NumEntries );
+
+				return true;
+			}
+
+			check_member_str( Name );
+			check_member_ast( ValueType );
+			check_member_ast( Value );
+			check_member_ast( ArrExpr );
+
+			return true;
+		}
+
+		case Preprocess_Define:
+		{
+			check_member_str( Name );
+			check_member_content( Content );
+
+			return true;
+		}
+
+		case Preprocess_If:
+		case Preprocess_IfDef:
+		case Preprocess_IfNotDef:
+		case Preprocess_ElIf:
+		{
+			check_member_content( Content );
+
+			return true;
+		}
+
+		case Preprocess_Include:
+		case Preprocess_Pragma:
+		{
+			check_member_content( Content );
+
+			return true;
+		}
+
+		case Specifiers:
+		{
+			check_member_val( NumEntries );
+			check_member_str( Name );
+			for ( s32 idx = 0; idx < NumEntries; ++idx )
+			{
+				check_member_val( ArrSpecs[ idx ] );
+			}
+			return true;
+		}
+
+		case Template:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Params );
+			check_member_ast( Declaration );
+
+			return true;
+		}
+
+		case Typedef:
+		{
+			check_member_val( IsFunction );
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( UnderlyingType );
+
+			return true;
+		}
+		case Typename:
+		{
+			check_member_val( IsParamPack );
+			check_member_str( Name );
+			check_member_ast( Specs );
+			check_member_ast( ArrExpr );
+
+			return true;
+		}
+
+		case Union:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Attributes );
+			check_member_ast( Body );
+
+			return true;
+		}
+
+		case Using:
+		case Using_Namespace:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( UnderlyingType );
+			check_member_ast( Attributes );
+
+			return true;
+		}
+
+		case Variable:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( ValueType );
+			check_member_ast( BitfieldSize );
+			check_member_ast( Value );
+			check_member_ast( Attributes );
+			check_member_ast( Specs );
+			check_member_ast( NextVar );
+
+			return true;
+		}
+
+		case Class_Body:
+		case Enum_Body:
+		case Export_Body:
+		case Global_Body:
+		case Namespace_Body:
+		case Struct_Body:
+		case Union_Body:
+		{
+			check_member_ast( Front );
+			check_member_ast( Back );
+
+			AST* curr       = Front;
+			AST* curr_other = other->Front;
+			while ( curr != nullptr )
+			{
+				if ( curr_other == nullptr )
+				{
+					log_fmt("\nAST::is_equal: Failed for body, other equivalent param is null\n"
+					        "AST  : %S\n"
+					        "Other: %S\n"
+					        "For ast member: %S\n"
+					    , curr->debug_str()
+					);
+
+					return false;
+				}
+
+				if ( ! curr->is_equal( curr_other ) )
+				{
+					log_fmt( "\nAST::is_equal: Failed for body\n"
+							"AST  : %S\n"
+							"Other: %S\n"
+							"For     ast member: %S\n"
+							"other's ast member: %S\n"
+						, debug_str()
+						, other->debug_str()
+						, curr->debug_str()
+						, curr_other->debug_str()
+					);
+
+					return false;
+				}
+
+				curr       = curr->Next;
+				curr_other = curr_other->Next;
+			}
+
+			check_member_val( NumEntries );
+
+			return true;
+		}
+
+	#undef check_member_val
+	#undef check_member_str
+	#undef check_member_ast
+	}
 
 	return true;
 }

@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "ast_types.hpp"
+#endif
 
 #pragma region Gen Interface
 
@@ -68,7 +70,7 @@ CodeFn def_function( StrC name
 	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
 	, ModuleFlag mflags     = ModuleFlag::None );
 
-CodeInclude   def_include  ( StrC content );
+CodeInclude   def_include  ( StrC content, bool foreign = false );
 CodeModule    def_module   ( StrC name,            ModuleFlag mflags = ModuleFlag::None );
 CodeNS        def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag::None );
 

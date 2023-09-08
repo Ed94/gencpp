@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "header_start.hpp"
+#endif
 
 using LogFailType = sw(*)(char const*, ...);
 

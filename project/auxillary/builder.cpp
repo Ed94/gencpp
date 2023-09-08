@@ -1,4 +1,6 @@
-#include "builder.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	include "builder.hpp"
+#endif
 
 Builder Builder::open( char const* path )
 {
@@ -26,8 +28,7 @@ void Builder::pad_lines( s32 num )
 void Builder::print( Code code )
 {
 	String   str = code->to_string();
-	const sw len = str.length();
-
+	// const sw len = str.length();
 	// log_fmt( "%s - print: %.*s\n", File.filename, len > 80 ? 80 : len, str.Data );
 	Buffer.append( str );
 }

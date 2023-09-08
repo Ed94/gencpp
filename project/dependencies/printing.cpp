@@ -1,5 +1,7 @@
-#pragma once
-#include "string_ops.cpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "string_ops.cpp"
+#endif
 
 #pragma region Printing
 

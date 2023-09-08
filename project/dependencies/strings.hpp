@@ -1,5 +1,7 @@
-#pragma once
-#include "hashing.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "hashing.hpp"
+#endif
 
 #pragma region Strings
 
@@ -98,6 +100,11 @@ struct String
 	}
 
 	bool make_space_for( char const* str, sw add_len );
+
+	bool append( char c )
+	{
+		return append( & c, 1 );
+	}
 
 	bool append( char const* str )
 	{
@@ -213,6 +220,27 @@ struct String
 	#undef current
 	}
 
+	void strip_space()
+	{
+		char* write_pos = Data;
+		char* read_pos  = Data;
+
+		while ( * read_pos)
+		{
+			if ( ! char_is_space( *read_pos ))
+			{
+				*write_pos = *read_pos;
+				write_pos++;
+			}
+			read_pos++;
+		}
+
+		write_pos[0] = '\0';  // Null-terminate the modified string
+
+		// Update the length if needed
+		get_header().Length = write_pos - Data;
+	}
+
 	void trim( char const* cut_set )
 	{
 		sw len = 0;
@@ -241,14 +269,52 @@ struct String
 		return trim( " \t\r\n\v\f" );
 	}
 
+	// Debug function that provides a copy of the string with whitespace characters visualized.
+	String visualize_whitespace() const
+	{
+		Header* header = (Header*)(Data - sizeof(Header));
+
+		String result = make_reserve(header->Allocator, length() * 2); // Assume worst case for space requirements.
+
+		for ( char c : *this )
+		{
+			switch ( c )
+			{
+				case ' ':
+					result.append( txt("·") );
+				break;
+				case '\t':
+					result.append( txt("→") );
+				break;
+				case '\n':
+					result.append( txt("↵") );
+				break;
+				case '\r':
+					result.append( txt("⏎") );
+				break;
+				case '\v':
+					result.append( txt("⇕") );
+				break;
+				case '\f':
+					result.append( txt("⌂") );
+				break;
+				default:
+					result.append(c);
+				break;
+			}
+		}
+
+		return result;
+	}
+
 	// For-range support
 
-	char* begin()
+	char* begin() const
 	{
 		return Data;
 	}
 
-	char* end()
+	char* end() const
 	{
 		Header const&
 		header = * rcast( Header const*, Data - sizeof( Header ));

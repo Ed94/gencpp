@@ -1,5 +1,7 @@
-#pragma once
-#include "memory.cpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "memory.cpp"
+#endif
 
 #pragma region Hashing
 

@@ -1,6 +1,8 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
+#endif
 
-// This file was generated automatially by gen.bootstrap.cpp (See: https://github.com/Ed94/gencpp)
+// This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
 namespace EOperator
 {

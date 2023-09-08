@@ -17,21 +17,19 @@ GEN_NS_END
 using namespace gen;
 
 constexpr char const* generation_notice =
-"// This file was generated automatially by gen.bootstrap.cpp "
+"// This file was generated automatially by gencpp's bootstrap.cpp "
 "(See: https://github.com/Ed94/gencpp)\n\n";
-
-constexpr bool DontSkipInitialDirectives = false;
 
 int gen_main()
 {
 	gen::init();
 
-	Code push_ignores = scan_file( "helpers/push_ignores.inline.hpp", DontSkipInitialDirectives );
-	Code pop_ignores  = scan_file( "helpers/pop_ignores.inline.hpp", DontSkipInitialDirectives );
+	Code push_ignores = scan_file( "helpers/push_ignores.inline.hpp" );
+	Code pop_ignores  = scan_file( "helpers/pop_ignores.inline.hpp" );
 
 	// gen_dep.hpp
 	{
-		Code header_start = scan_file( "dependencies/header_start.hpp", DontSkipInitialDirectives );
+		Code header_start = scan_file( "dependencies/header_start.hpp" );
 		Code macros 	  = scan_file( "dependencies/macros.hpp" );
 		Code basic_types  = scan_file( "dependencies/basic_types.hpp" );
 		Code debug        = scan_file( "dependencies/debug.hpp" );
@@ -147,31 +145,35 @@ int gen_main()
 		header.print( pop_ignores );
 		header.write();
 
+		CodeBody gen_component_header = def_global_body( args(
+			def_preprocess_cond( PreprocessCond_IfDef, txt("GEN_INTELLISENSE_DIRECTIVES") ),
+			pragma_once,
+			preprocess_endif,
+			fmt_newline,
+			untyped_str( to_str(generation_notice) )
+		));
+
 		Builder
 		header_ecode = Builder::open( "components/gen/ecode.hpp" );
-		header_ecode.print( pragma_once );
-		header_ecode.print_fmt( generation_notice );
+		header_ecode.print( gen_component_header );
 		header_ecode.print( ecode );
 		header_ecode.write();
 
 		Builder
 		header_eoperator = Builder::open( "components/gen/eoperator.hpp" );
-		header_eoperator.print( pragma_once );
-		header_eoperator.print_fmt( generation_notice );
+		header_eoperator.print( gen_component_header );
 		header_eoperator.print( eoperator );
 		header_eoperator.write();
 
 		Builder
 		header_especifier = Builder::open( "components/gen/especifier.hpp" );
-		header_especifier.print( pragma_once );
-		header_especifier.print_fmt( generation_notice );
+		header_especifier.print( gen_component_header );
 		header_especifier.print( especifier );
 		header_especifier.write();
 
 		Builder
 		header_ast_inlines = Builder::open( "components/gen/ast_inlines.hpp" );
-		header_ast_inlines.print( pragma_once );
-		header_ast_inlines.print_fmt( generation_notice );
+		header_ast_inlines.print( gen_component_header );
 		header_ast_inlines.print( ast_inlines );
 		header_ast_inlines.write();
 	}

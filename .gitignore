@@ -32,3 +32,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 vc140.pdb
+
+
+# Unreal
+**/Unreal/*.h
+**/Unreal/*.cpp
+! **/Unreal/validate.unreal.cpp

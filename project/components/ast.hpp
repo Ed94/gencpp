@@ -1,8 +1,10 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "types.hpp"
 #include "gen/ecode.hpp"
 #include "gen/eoperator.hpp"
 #include "gen/especifier.hpp"
+#endif
 
 struct AST;
 struct AST_Body;
@@ -80,7 +82,7 @@ struct Code
 	static Code Invalid;
 #	pragma endregion Statics
 
-	#define Using_Code( Typename )         \
+#	define Using_Code( Typename )         \
 	char const* debug_str();               \
 	Code        duplicate();			   \
 	bool        is_equal( Code other );    \
@@ -220,33 +222,39 @@ struct AST
 			- sizeof(CodeT)
 			- sizeof(ModuleFlag)
 			- sizeof(u32)
+			- sizeof(s32)
 	)
 	/ sizeof(SpecifierT) - 1; // -1 for 4 extra bytes
 
 	union {
 		struct
 		{
-			AST*      Attributes;     // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-			AST*      Specs;          // Function, Operator, Type symbol, Variable
+			AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
+			AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+			AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
 			union {
-				AST*  InitializerList; // Constructor, Destructor
-				AST*  ParentType;      // Class, Struct
-				AST*  ReturnType;      // Function, Operator
+				AST*  InitializerList; // Constructor
+				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
+				AST*  ReturnType;      // Function, Operator, Typename
 				AST*  UnderlyingType;  // Enum, Typedef
 				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
-				AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
-				AST*  Params;          // Function, Operator, Template
+				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
+				AST*  Params;          // Constructor, Function, Operator, Template, Typename
 			};
 			union {
-				AST*  ArrExpr;        // Type Symbol
-				AST*  Body;           // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-				AST*  Declaration;    // Friend, Template
-				AST*  Value;          // Parameter, Variable
+				AST*  ArrExpr;          // Typename
+				AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+				AST*  Declaration;      // Friend, Template
+				AST*  Value;            // Parameter, Variable
+			};
+			union {
+				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
 			};
 		};
-		StringCached  Content;        // Attributes, Comment, Execution, Include
+		StringCached  Content;          // Attributes, Comment, Execution, Include
 		SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 	};
 	union {
@@ -263,11 +271,13 @@ struct AST
 	CodeT             Type;
 	ModuleFlag        ModuleFlags;
 	union {
-		b32           IsFunction; // Used by typedef to not serialize the name field.
+		b32           IsFunction;  // Used by typedef to not serialize the name field.
+		b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 	};
+	s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
 };
 
 struct AST_POD
@@ -275,27 +285,32 @@ struct AST_POD
 	union {
 		struct
 		{
-			AST*      Attributes;     // Class, Enum, Function, Struct, Typename, Union, Using, Variable
-			AST*      Specs;          // Function, Operator, Type symbol, Variable
+			AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
+			AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+			AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
 			union {
-				AST*  InitializerList; // Constructor, Destructor
-				AST*  ParentType;      // Class, Struct
-				AST*  ReturnType;      // Function, Operator
+				AST*  InitializerList; // Constructor
+				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
+				AST*  ReturnType;      // Function, Operator, Typename
 				AST*  UnderlyingType;  // Enum, Typedef
 				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
-				AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
-				AST*  Params;          // Function, Operator, Template
+				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
+				AST*  Params;          // Constructor, Function, Operator, Template, Typename
 			};
 			union {
-				AST*  ArrExpr;        // Type Symbol
-				AST*  Body;           // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-				AST*  Declaration;    // Friend, Template
-				AST*  Value;          // Parameter, Variable
+				AST*  ArrExpr;          // Typename
+				AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+				AST*  Declaration;      // Friend, Template
+				AST*  Value;            // Parameter, Variable
+			};
+			union {
+				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
 			};
 		};
-		StringCached  Content;        // Attributes, Comment, Execution, Include
+		StringCached  Content;         // Attributes, Comment, Execution, Include
 		SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
 	};
 	union {
@@ -312,11 +327,13 @@ struct AST_POD
 	CodeT             Type;
 	ModuleFlag        ModuleFlags;
 	union {
-		b32           IsFunction; // Used by typedef to not serialize the name field.
+		b32           IsFunction;  // Used by typedef to not serialize the name field.
+		b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 	};
+	s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
 };
 
 // Its intended for the AST to have equivalent size to its POD.

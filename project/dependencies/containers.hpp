@@ -1,5 +1,7 @@
-#pragma once
-#include "printing.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "printing.hpp"
+#endif
 
 #pragma region Containers
 

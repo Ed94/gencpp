@@ -1,6 +1,8 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
+#endif
 
-// This file was generated automatially by gen.bootstrap.cpp (See: https://github.com/Ed94/gencpp)
+// This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
 namespace ESpecifier
 {
@@ -29,6 +31,7 @@ namespace ESpecifier
 		Virtual,
 		Const,
 		Final,
+		NoExceptions,
 		Override,
 		Pure,
 		NumSpecifiers
@@ -65,6 +68,7 @@ namespace ESpecifier
 			{ sizeof( "virtual" ),       "virtual"      },
 			{ sizeof( "const" ),         "const"        },
 			{ sizeof( "final" ),         "final"        },
+			{ sizeof( "noexcept" ),      "noexcept"     },
 			{ sizeof( "override" ),      "override"     },
 			{ sizeof( "= 0" ),           "= 0"          },
 		};

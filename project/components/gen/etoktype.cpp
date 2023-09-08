@@ -1,4 +1,4 @@
-// This file was generated automatially by gen.bootstrap.cpp (See: https://github.com/Ed94/gencpp)
+// This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
 #pragma once
 
@@ -128,7 +128,7 @@ namespace Parser
 				{ sizeof( "]" ),                   "]"                  },
 				{ sizeof( "(" ),                   "("                  },
 				{ sizeof( ")" ),                   ")"                  },
-				{ sizeof( "__comemnt__" ),         "__comemnt__"        },
+				{ sizeof( "__comment__" ),         "__comment__"        },
 				{ sizeof( "__comment_end__" ),     "__comment_end__"    },
 				{ sizeof( "__comment_start__" ),   "__comment_start__"  },
 				{ sizeof( "__character__" ),       "__character__"      },

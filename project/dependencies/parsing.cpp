@@ -1,4 +1,6 @@
-#pragma once
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#endif
 
 #pragma region ADT
 

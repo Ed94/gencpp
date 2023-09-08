@@ -1,10 +1,12 @@
-#pragma once
-#include "gen.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "gen.hpp"
+#endif
 
 // This is a simple file reader that reads the entire file into memory.
 // It has an extra option to skip the first few lines for undesired includes.
 // This is done so that includes can be kept in dependency and component files so that intellisense works.
-Code scan_file( char const* path, bool skip_initial_directives = true )
+Code scan_file( char const* path )
 {
 	FileInfo file;
 
@@ -24,63 +26,92 @@ Code scan_file( char const* path, bool skip_initial_directives = true )
 		file_read( & file, str, fsize );
 		str.get_header().Length = fsize;
 
-	if ( skip_initial_directives )
+	// Skip GEN_INTELLISENSE_DIRECTIVES preprocessor blocks
+	// Its designed so that the directive should be the first thing in the file.
+	// Anything that comes before it will also be omitted.
 	{
 	#define current (*scanner)
-		StrC toks[] {
-			txt( "pragma once" ),
-			txt( "include" )
-		};
+	#define matched    0
+	#define move_fwd() do { ++ scanner; -- left; } while (0)
+		const StrC directive_start = txt( "ifdef" );
+		const StrC directive_end   = txt( "endif" );
+		const StrC def_intellisense = txt("GEN_INTELLISENSE_DIRECTIVES" );
 
-		char* scanner = str;
-		while ( current != '\r' && current != '\n' )
+		bool        found_directive = false;
+		char const* scanner         = str.Data;
+		s32         left            = fsize;
+		while ( left )
 		{
-			for ( StrC tok : toks )
+			// Processing directive.
+			if ( current == '#' )
 			{
-				if ( current == '#' )
-				{
-					++ scanner;
-				}
+				move_fwd();
+				while ( left && char_is_space( current ) )
+					move_fwd();
 
-				if ( strncmp( scanner, tok.Ptr, tok.Len ) == 0 )
+				if ( ! found_directive )
 				{
-					scanner += tok.Len;
-					while ( scanner < ( str.Data + str.length() ) && current != '\r' && current != '\n' )
+					if ( left && str_compare( scanner, directive_start.Ptr, directive_start.Len ) == matched )
 					{
-						++ scanner;
+						scanner += directive_start.Len;
+						left    -= directive_start.Len;
+
+						while ( left && char_is_space( current ) )
+							move_fwd();
+
+						if ( left && str_compare( scanner, def_intellisense.Ptr, def_intellisense.Len ) == matched )
+						{
+							scanner += def_intellisense.Len;
+							left    -= def_intellisense.Len;
+
+							found_directive = true;
+						}
 					}
 
-					// Skip the line
-					sptr skip_size = sptr( scanner - str.Data );
-					if ( (scanner + 2) >= ( str.Data + str.length() ) )
+					// Skip to end of line
+					while ( left && current != '\r' && current != '\n' )
+						move_fwd();
+					move_fwd();
+
+					if ( left && current == '\n' )
+						move_fwd();
+
+					continue;
+				}
+
+				if ( left && str_compare( scanner, directive_end.Ptr, directive_end.Len ) == matched )
+				{
+					scanner += directive_end.Len;
+					left    -= directive_end.Len;
+
+					// Skip to end of line
+					while ( left && current != '\r' && current != '\n' )
+						move_fwd();
+					move_fwd();
+
+					if ( left && current == '\n' )
+						move_fwd();
+
+					// sptr skip_size = fsize - left;
+					if ( (scanner + 2) >= ( str.Data + fsize ) )
 					{
-						sptr new_length = sptr( str.get_header().Length ) - skip_size;
-						mem_move( str, scanner, new_length );
-						str.get_header().Length = new_length;
+						mem_move( str, scanner, left );
+						str.get_header().Length = left;
 						break;
 					}
 
-					if ( current == '\r' )
-					{
-						skip_size += 2;
-						scanner   += 2;
-					}
-					else
-					{
-						skip_size += 1;
-						scanner   += 1;
-					}
+					mem_move( str, scanner, left );
+					str.get_header().Length = left;
 
-					sptr new_length = sptr( str.get_header().Length ) - skip_size;
-					mem_move( str, scanner, new_length );
-					str.get_header().Length = new_length;
-
-					scanner = str;
+					break;
 				}
+
 			}
 
-			++ scanner;
+			move_fwd();
 		}
+	#undef move_fwd
+	#undef matched
 	#undef current
 	}
 

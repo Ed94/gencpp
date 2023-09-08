@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "ast.cpp"
+#endif
 
 internal void init_parser();
 internal void deinit_parser();
@@ -413,6 +415,8 @@ Code make_code()
 	}
 
 	Code result { rcast( AST*, alloc( * allocator, sizeof(AST) )) };
+	// mem_set( result.ast, 0, sizeof(AST) );
+	result->Type = ECode::Invalid;
 
 	result->Content         = { nullptr };
 	result->Prev            = { nullptr };
@@ -422,6 +426,7 @@ Code make_code()
 	result->Type            = ECode::Invalid;
 	result->ModuleFlags     = ModuleFlag::Invalid;
 	result->NumEntries      = 0;
+	result->Token		    = -1;
 
 	return result;
 }

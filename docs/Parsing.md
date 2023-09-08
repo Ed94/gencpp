@@ -1,9 +1,12 @@
 # Parsing
 
-The library features a naive parser tailored for only what the library needs to construct the supported syntax of C++ into its AST.  
-This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) under 5000 loc.
+The library features a naive parser tailored for only what the library needs to construct the supported syntax of C++ into its AST.
 
-The parsing implementation supports the following for the user:
+This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around 5000 loc.
+
+You can think of this parser of a frontend parser vs a semantic parser. Its intuitively similar to WYSIWYG. What you precerive as the syntax from the user-side before the compiler gets a hold of it, is what you get.
+
+User exposed interface:
 
 ```cpp
 CodeClass       parse_class        ( StrC class_def       );
@@ -27,10 +30,12 @@ CodeUsing       parse_using        ( StrC using_def       );
 CodeVar         parse_variable     ( StrC var_def         );
 ```
 
+To parse file buffers, use the `parse_global_body` function.
+
 ***Parsing will aggregate any tokens within a function body or expression statement to an untyped Code AST.***
 
 Everything is done in one pass for both the preprocessor directives and the rest of the language.  
-The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, and ***includes***, and ***pragmas***.  
+The parser performs no macro expansion as the scope of gencpp feature-set is to only support the preprocessor for the goal of having rudimentary awareness of preprocessor ***conditionals***,  ***defines***, ***includes***, and ***pragmas***.  
 
 The keywords supported for the preprocessor are:
 
@@ -51,9 +56,16 @@ Any preprocessor definition abuse that changes the syntax of the core language i
 Exceptions:
 
 * function signatures are allowed for a preprocessed macro: `neverinline MACRO() { ... }`
+  * Disable with: `#define GEN_PARSER_DISABLE_MACRO_FUNCTION_SIGNATURES`
 * typedefs allow for a preprocessed macro: `typedef MACRO();`
+  * Disable with: `#define GEN_PARSER_DISABLE_MACRO_TYPEDEF`
 
 *(See functions `parse_operator_function_or_variable` and `parse_typedef` )*
+
+Adding your own exceptions is possible by simply modifying the parser to allow for the syntax you need.
+
+*Note: You could interpret this strictness as a feature. This would allow the user to see if their codebase or a third-party's codebase some some egregious preprocessor abuse.*
+
 
 The lexing and parsing takes shortcuts from whats expected in the standard.
 
@@ -64,8 +76,7 @@ The lexing and parsing takes shortcuts from whats expected in the standard.
   * Assumed to *come before specifiers* (`const`, `constexpr`, `extern`, `static`, etc) for a function
   * Or in the usual spot for class, structs, (*right after the declaration keyword*)
   * typedefs have attributes with the type (`parse_type`)
-* As a general rule; if its not available from the upfront constructors, its not available in the parsing constructors.
-  * *Upfront constructors are not necessarily used in the parsing constructors, this is just a good metric to know what can be parsed.*
 * Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
 
 Empty lines used throughout the file are preserved for formatting purposes during ast serialization.
+

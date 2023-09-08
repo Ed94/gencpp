@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "interface.hpp"
+#endif
 
 void AST::append( AST* other )
 {
@@ -23,43 +25,6 @@ void AST::append( AST* other )
 	other->Prev   = Current;
 	Back          = other;
 	NumEntries++;
-}
-
-char const* AST::debug_str()
-{
-	if ( Parent )
-	{
-		char const* fmt = stringize(
-			\nType    : %s
-			\nParent  : %s %s
-			\nName    : %s
-		);
-
-		// These should be used immediately in a log.
-		// Thus if its desired to keep the debug str
-		// for multiple calls to bprintf,
-		// allocate this to proper string.
-		return str_fmt_buf( fmt
-			,	type_str()
-			,	Parent->Name
-			,   Parent->type_str()
-			,	Name     ? Name         : ""
-		);
-	}
-
-	char const* fmt = stringize(
-		\nType    : %s
-		\nName    : %s
-	);
-
-	// These should be used immediately in a log.
-	// Thus if its desired to keep the debug str
-	// for multiple calls to bprintf,
-	// allocate this to proper string.
-	return str_fmt_buf( fmt
-		,	type_str()
-		,	Name     ? Name         : ""
-	);
 }
 
 Code& AST::entry( u32 idx )
@@ -102,15 +67,21 @@ Code& Code::operator ++()
 
 void CodeClass::add_interface( CodeType type )
 {
-	if ( ! ast->Next )
+	CodeType possible_slot = ast->ParentType;
+	if ( possible_slot.ast )
 	{
-		ast->Next = type;
-		ast->Last = ast->Next;
-		return;
+		// Were adding an interface to parent type, so we need to make sure the parent type is public.
+		ast->ParentAccess = AccessSpec::Public;
+		// If your planning on adding a proper parent,
+		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}
 
-	ast->Next->Next = type;
-	ast->Last       = ast->Next->Next;
+	while ( possible_slot.ast != nullptr )
+	{
+		possible_slot.ast = (AST_Type*) possible_slot->Next.ast;
+	}
+
+	possible_slot.ast = type.ast;
 }
 
 void CodeParam::append( CodeParam other )
@@ -164,14 +135,21 @@ CodeParam& CodeParam::operator ++()
 
 void CodeStruct::add_interface( CodeType type )
 {
-	if ( ! ast->Next )
+	CodeType possible_slot = ast->ParentType;
+	if ( possible_slot.ast )
 	{
-		ast->Next = type;
-		ast->Last = ast->Next;
+		// Were adding an interface to parent type, so we need to make sure the parent type is public.
+		ast->ParentAccess = AccessSpec::Public;
+		// If your planning on adding a proper parent,
+		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}
 
-	ast->Next->Next = type;
-	ast->Last       = ast->Next->Next;
+	while ( possible_slot.ast != nullptr )
+	{
+		possible_slot.ast = (AST_Type*) possible_slot->Next.ast;
+	}
+
+	possible_slot.ast = type.ast;
 }
 
 CodeBody def_body( CodeT type )

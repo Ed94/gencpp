@@ -1,5 +1,7 @@
-#pragma once
-#include "basic_types.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVESj
+#	pragma once
+#	include "basic_types.hpp"
+#endif
 
 #pragma region Debug
 

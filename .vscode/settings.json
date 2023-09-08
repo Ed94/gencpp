@@ -24,7 +24,11 @@
 		"filesystem": "cpp",
 		"format": "cpp",
 		"ratio": "cpp",
-		"xstring": "cpp"
+		"xstring": "cpp",
+		"functional": "cpp",
+		"vector": "cpp",
+		"list": "cpp",
+		"xhash": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

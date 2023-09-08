@@ -1,5 +1,7 @@
-#pragma once
-#include "header_start.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "header_start.hpp"
+#endif
 
 #pragma region Macros
 

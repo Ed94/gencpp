@@ -1,5 +1,7 @@
-#pragma once
-#include "macros.hpp"
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#	include "macros.hpp"
+#endif
 
 #pragma region Basic Types
 

@@ -21,5 +21,6 @@ Volatile,         volatile
 Virtual,          virtual
 Const,            const
 Final,            final
+NoExceptions,     noexcept
 Override,         override
 Pure,             = 0

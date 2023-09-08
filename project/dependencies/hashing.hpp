@@ -1,5 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "containers.hpp"
+#endif
 
 #pragma region Hashing
 

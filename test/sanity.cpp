@@ -4,6 +4,11 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_BENCHMARK
+
+#define GEN_GLOBAL_BUCKET_SIZE   megabytes(10)
+#define GEN_CODE_POOL_BLOCK_SIZE megabytes(32)
+#define GEN_STRING_ARENA_SIZE    megabytes(1)
+
 #include "gen.hpp"
 #include "gen.builder.hpp"
 
