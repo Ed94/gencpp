@@ -477,6 +477,45 @@ struct Arena
 	}
 };
 
+// Just a wrapper around using an arena with memory associated with its scope instead of from an allocator.
+// Used for static segment or stack allocations.
+template< s32 Size >
+struct FixedArena
+{
+	static
+	FixedArena init()
+	{
+		FixedArena result = { Arena::init_from_memory( result.memory, Size ), 0 };
+		return result;
+	}
+
+	sw size_remaining( sw alignment )
+	{
+		return arena.size_remaining( alignment );
+	}
+
+	operator AllocatorInfo()
+	{
+		return { Arena::allocator_proc, &arena };
+	}
+
+	Arena arena;
+	char  memory[ Size ];
+};
+
+using Arena_1KB   = FixedArena< kilobytes( 1 ) >;
+using Arena_4KB   = FixedArena< kilobytes( 4 ) >;
+using Arena_8KB   = FixedArena< kilobytes( 8 ) >;
+using Arena_16KB  = FixedArena< kilobytes( 16 ) >;
+using Arena_32KB  = FixedArena< kilobytes( 32 ) >;
+using Arena_64KB  = FixedArena< kilobytes( 64 ) >;
+using Arena_128KB = FixedArena< kilobytes( 128 ) >;
+using Arena_256KB = FixedArena< kilobytes( 256 ) >;
+using Arena_512KB = FixedArena< kilobytes( 512 ) >;
+using Arena_1MB   = FixedArena< megabytes( 1 ) >;
+using Arena_2MB   = FixedArena< megabytes( 2 ) >;
+using Arena_4MB   = FixedArena< megabytes( 4 ) >;
+
 struct Pool
 {
 	static
