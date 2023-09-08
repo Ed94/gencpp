@@ -152,13 +152,6 @@ int gen_main()
 			header.print_fmt( "#pragma endregion Builder\n" );
 		}
 
-		if ( generate_scanner )
-		{
-			header.print_fmt( "\n#pragma region Scanner\n" );
-			header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
-			header.print_fmt( "#pragma endregion Scanner\n\n" );
-		}
-
 		header.print_fmt( "GEN_NS_END\n" );
 	}
 
@@ -210,8 +203,8 @@ int gen_main()
 		Code parsing         = scan_file( project_dir "components/interface.parsing.cpp" );
 		Code untyped         = scan_file( project_dir "components/interface.untyped.cpp" );
 
-		CodeBody      etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
-		CodeNS parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
+		CodeBody etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
+		CodeNS   parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
@@ -236,6 +229,14 @@ int gen_main()
 			header.print_fmt( "#pragma region Builder\n" );
 			header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
 			header.print_fmt( "\n#pragma endregion Builder\n\n" );
+		}
+
+		// Scanner header depends on implementation
+		if ( generate_scanner )
+		{
+			header.print_fmt( "\n#pragma region Scanner\n" );
+			header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
+			header.print_fmt( "#pragma endregion Scanner\n\n" );
 		}
 
 #if 0
