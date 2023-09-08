@@ -4821,7 +4821,7 @@ CodeType parse_type( bool* typedef_is_function )
 		if ( is_function_typename )
 		{
 			// Go to the end of the signature
-			while ( scanner->Type != TokType::Statement_End && scanner->TokType::BraceCurly_Open )
+			while ( scanner->Type != TokType::Statement_End && scanner->Type != TokType::BraceCurly_Open )
 				++ scanner;
 
 			// Go back to the first capture start found

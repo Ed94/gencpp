@@ -281,22 +281,22 @@ struct String
 			switch ( c )
 			{
 				case ' ':
-					result.append('·');
+					result.append( txt("·") );
 				break;
 				case '\t':
-					result.append('→');
+					result.append( txt("→") );
 				break;
 				case '\n':
-					result.append('↵');
+					result.append( txt("↵") );
 				break;
 				case '\r':
-					result.append('⏎');
+					result.append( txt("⏎") );
 				break;
 				case '\v':
-					result.append('⇕');
+					result.append( txt("⇕") );
 				break;
 				case '\f':
-					result.append('⌂');
+					result.append( txt("⌂") );
 				break;
 				default:
 					result.append(c);
