@@ -82,7 +82,7 @@ struct Code
 	static Code Invalid;
 #	pragma endregion Statics
 
-	#define Using_Code( Typename )         \
+#	define Using_Code( Typename )         \
 	char const* debug_str();               \
 	Code        duplicate();			   \
 	bool        is_equal( Code other );    \

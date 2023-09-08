@@ -87,5 +87,3 @@ Each internal procedure will be
 
 ## parse_type
 
-This is the worst part of the parser. Because other than actual expression values in C++, typenames are the second worst thing to parse in the langauge.
-

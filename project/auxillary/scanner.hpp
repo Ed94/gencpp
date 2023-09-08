@@ -92,7 +92,7 @@ Code scan_file( char const* path )
 					if ( left && current == '\n' )
 						move_fwd();
 
-					sptr skip_size = fsize - left;
+					// sptr skip_size = fsize - left;
 					if ( (scanner + 2) >= ( str.Data + fsize ) )
 					{
 						mem_move( str, scanner, left );

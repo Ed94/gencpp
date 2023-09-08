@@ -224,8 +224,8 @@ namespace Parser
 			return false;
 		}
 
-		if ( Arr[ Idx ].Type == TokType::NewLine && type != TokType::NewLine
-		||   Arr[ Idx ].Type == TokType::Comment && type != TokType::Comment )
+		if ( ( Arr[ Idx ].Type == TokType::NewLine && type != TokType::NewLine )
+		||   ( Arr[ Idx ].Type == TokType::Comment && type != TokType::Comment ) )
 		{
 			Idx++;
 		}
@@ -284,7 +284,7 @@ namespace Parser
 			move_forward();                         \
 		}
 
-		#define end_line()                      \
+	#	define end_line()                       \
 		do                                      \
 		{                                       \
 			while ( left && current == ' ' )    \
@@ -319,13 +319,8 @@ namespace Parser
 			return { { nullptr }, 0 };
 		}
 
-		local_persist char defines_map_mem[ kilobytes(64) ];
-		local_persist Arena defines_map_arena;
-		HashTable<StrC> defines;
-		{
-			defines_map_arena = Arena::init_from_memory( defines_map_mem, sizeof(defines_map_mem) );
-			defines           = HashTable<StrC>::init( defines_map_arena );
-		}
+		local_persist Arena_64KB defines_map_arena = Arena_64KB::init();
+		HashTable<StrC> defines = HashTable<StrC>::init( defines_map_arena );
 
 		Tokens.clear();
 
@@ -583,6 +578,7 @@ namespace Parser
 					continue; // Skip found token, its all handled here.
 				}
 				case '.':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Access_MemberSymbol;
@@ -609,8 +605,9 @@ namespace Parser
 					}
 
 					goto FoundToken;
-
+				}
 				case '&' :
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Ampersand;
@@ -628,11 +625,14 @@ namespace Parser
 					}
 
 					goto FoundToken;
-
+				}
 				case ':':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Assign_Classifer;
+					// Can be either a classifier (ParentType, Bitfield width), or ternary else
+					// token.Type   = TokType::Colon;
 
 					if (left)
 						move_forward();
@@ -644,8 +644,9 @@ namespace Parser
 						token.Length++;
 					}
 					goto FoundToken;
-
+				}
 				case '{':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::BraceCurly_Open;
@@ -653,8 +654,9 @@ namespace Parser
 					if (left)
 						move_forward();
 					goto FoundToken;
-
+				}
 				case '}':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::BraceCurly_Close;
@@ -664,8 +666,9 @@ namespace Parser
 
 					end_line();
 					goto FoundToken;
-
+				}
 				case '[':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::BraceSquare_Open;
@@ -681,8 +684,9 @@ namespace Parser
 						}
 					}
 					goto FoundToken;
-
+				}
 				case ']':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::BraceSquare_Close;
@@ -690,8 +694,9 @@ namespace Parser
 					if (left)
 						move_forward();
 					goto FoundToken;
-
+				}
 				case '(':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Capture_Start;
@@ -699,8 +704,9 @@ namespace Parser
 					if (left)
 						move_forward();
 					goto FoundToken;
-
+				}
 				case ')':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Capture_End;
@@ -708,8 +714,9 @@ namespace Parser
 					if (left)
 						move_forward();
 					goto FoundToken;
-
+				}
 				case '\'':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Char;
@@ -740,8 +747,9 @@ namespace Parser
 						token.Length++;
 					}
 					goto FoundToken;
-
+				}
 				case ',':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Comma;
@@ -749,8 +757,9 @@ namespace Parser
 					if (left)
 						move_forward();
 					goto FoundToken;
-
+				}
 				case '*':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Star;
@@ -758,8 +767,9 @@ namespace Parser
 					if (left)
 						move_forward();
 					goto FoundToken;
-
+				}
 				case ';':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Statement_End;
@@ -769,8 +779,9 @@ namespace Parser
 
 					end_line();
 					goto FoundToken;
-
+				}
 				case '"':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::String;
@@ -801,24 +812,28 @@ namespace Parser
 						token.Length++;
 					}
 					goto FoundToken;
-
+				}
 				case '?':
+				{
 					token.Text     = scanner;
 					token.Length   = 1;
 					token.Type     = TokType::Operator;
+					// token.Type     = TokType::Ternary;
 					token.IsAssign = false;
 
 					if (left)
 						move_forward();
 
 					goto FoundToken;
-
-				// All other operators we just label as an operator and move forward.
+				}
 				case '=':
+				{
 					token.Text     = scanner;
 					token.Length   = 1;
 					token.Type     = TokType::Operator;
+					// token.Type     = TokType::Assign;
 					token.IsAssign = true;
+					// token.Flags |= TokFlags::Assignment;
 
 					if (left)
 						move_forward();
@@ -833,18 +848,46 @@ namespace Parser
 					}
 
 					goto FoundToken;
-
+				}
 				case '+':
+				{
+					// token.Type = TokType::Add
+
+				}
 				case '%':
+				{
+					// token.Type = TokType::Modulo;
+
+				}
 				case '^':
+				{
+					// token.Type = TokType::B_XOr;
+				}
 				case '~':
+				{
+					// token.Type = TokType::Unary_Not;
+
+				}
 				case '!':
+				{
+					// token.Type = TokType::L_Not;
+				}
 				case '<':
+				{
+					// token.Type = TokType::Lesser;
+
+				}
 				case '>':
+				{
+					// token.Type = TokType::Greater;
+
+				}
 				case '|':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Operator;
+					// token.Type   = TokType::L_Or;
 
 					if (left)
 						move_forward();
@@ -853,6 +896,8 @@ namespace Parser
 					{
 						token.Length++;
 						token.IsAssign = true;
+						// token.Flags |= TokFlags::Assignment;
+						// token.Type = TokType::Assign_L_Or;
 
 						if (left)
 							move_forward();
@@ -865,12 +910,15 @@ namespace Parser
 							move_forward();
 					}
 					goto FoundToken;
+				}
 
 				// Dash is unfortunatlly a bit more complicated...
 				case '-':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Operator;
+					// token.Type = TokType::Subtract;
 					if ( left )
 					{
 						move_forward();
@@ -890,6 +938,8 @@ namespace Parser
 						{
 							token.Length++;
 							token.IsAssign = true;
+							// token.Flags |= TokFlags::Assignment;
+							// token.Type = TokType::Assign_Subtract;
 
 							if (left)
 								move_forward();
@@ -903,11 +953,13 @@ namespace Parser
 						}
 					}
 					goto FoundToken;
-
+				}
 				case '/':
+				{
 					token.Text   = scanner;
 					token.Length = 1;
 					token.Type   = TokType::Operator;
+					// token.Type   = TokType::Divide;
 					move_forward();
 
 					if ( left )
@@ -970,11 +1022,12 @@ namespace Parser
 								token.Length++;
 							}
 							Tokens.append( token );
-							end_line();
+							// end_line();
 							continue;
 						}
 					}
 					goto FoundToken;
+				}
 			}
 
 			if ( char_is_alpha( current ) || current == '_' )
@@ -1148,7 +1201,7 @@ namespace Parser
 		}
 
 		defines.clear();
-		defines_map_arena.free();
+		// defines_map_arena.free();
 		return { Tokens, 0 };
 	#	undef current
 	#	undef move_forward
@@ -1199,7 +1252,7 @@ if ( def.Ptr == nullptr )                                                      \
 #	define check( Type_ )        ( left && currtok.Type == Type_ )
 
 #	define push_scope()                                               \
-	StackNode scope { nullptr, currtok, NullToken, txt( __func__ ) }; \
+	StackNode scope { nullptr, currtok_noskip, NullToken, txt( __func__ ) }; \
 	Context.push( & scope )
 
 #pragma endregion Helper Macros
@@ -1258,7 +1311,6 @@ constexpr bool strip_formatting_dont_preserve_newlines = false;
 	It has edge case failures that prevent it from being used in function bodies.
 */
 String strip_formatting( StrC raw_text, bool preserve_newlines = true )
-//, bool for_preprocess_define = false )
 {
 	String content = String::make_reserve( GlobalAllocator, raw_text.Len );
 
@@ -2261,7 +2313,7 @@ CodeFn parse_function_after_name(
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
 
-		if ( currtok_noskip.Type && TokType::Comment && currtok_noskip.Line == stmt_end.Line )
+		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 	}
 
@@ -3416,8 +3468,10 @@ Code parse_static_assert()
 	eat( TokType::Capture_End );
 	eat( TokType::Statement_End );
 
-	content.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
-	assert->Content = get_cached_string( content );
+	content.Length  = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
+
+	char const* str = str_fmt_buf( "%.*s\n", content.Length, content.Text );
+	assert->Content = get_cached_string( { content.Length + 1, str } );
 	assert->Name	= assert->Content;
 
 	Context.pop();

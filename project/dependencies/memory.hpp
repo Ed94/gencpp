@@ -485,7 +485,7 @@ struct FixedArena
 	static
 	FixedArena init()
 	{
-		FixedArena result = { Arena::init_from_memory( result.memory, Size ), 0 };
+		FixedArena result = { Arena::init_from_memory( result.memory, Size ), {0} };
 		return result;
 	}
 
