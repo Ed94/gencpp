@@ -60,6 +60,7 @@ Exceptions:
 * typedefs allow for a preprocessed macro: `typedef MACRO();`
   * Disable with: `#define GEN_PARSER_DISABLE_MACRO_TYPEDEF`
 
+*(Exceptions are added on an on-demand basis)*
 *(See functions `parse_operator_function_or_variable` and `parse_typedef` )*
 
 Adding your own exceptions is possible by simply modifying the parser to allow for the syntax you need.
