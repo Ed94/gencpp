@@ -1,20 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
+    <ProjectConfiguration Include="bootstrap debug|Win32">
+      <Configuration>bootstrap debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
+    <ProjectConfiguration Include="bootstrap debug|x64">
+      <Configuration>bootstrap debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
-      <Configuration>Release</Configuration>
+    <ProjectConfiguration Include="bootstrap release|Win32">
+      <Configuration>bootstrap release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="bootstrap release|x64">
+      <Configuration>bootstrap release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="singleheader debug|Win32">
+      <Configuration>singleheader debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="singleheader debug|x64">
+      <Configuration>singleheader debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="singleheader release|Win32">
+      <Configuration>singleheader release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="singleheader release|x64">
+      <Configuration>singleheader release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="test debug|Win32">
+      <Configuration>test debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="test debug|x64">
+      <Configuration>test debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -25,24 +49,54 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap debug|Win32'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test debug|Win32'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader debug|Win32'" Label="Configuration">
     <ConfigurationType>Makefile</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -50,48 +104,132 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='test debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='singleheader debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='singleheader release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='test debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='singleheader debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='singleheader release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap debug|Win32'">
     <NMakeBuildCommandLine>./scripts/build.ps1</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>./scripts/clean.ps1</NMakeCleanCommandLine>
     <NMakeReBuildCommandLine>./scripts/build.ps1</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test debug|Win32'">
     <NMakeBuildCommandLine>./scripts/build.ps1</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>./scripts/clean.ps1</NMakeCleanCommandLine>
     <NMakeReBuildCommandLine>./scripts/build.ps1</NMakeReBuildCommandLine>
-    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NMakeBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
-    <NMakePreprocessorDefinitions>GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath>$(ProjectDir)thirdparty;$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)project;$(ProjectDir)test;$(SourcePath)</SourcePath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader debug|Win32'">
+    <NMakeBuildCommandLine>./scripts/build.ps1</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>./scripts/clean.ps1</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>./scripts/build.ps1</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <NMakeBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1"</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine>powershell.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
-    <NMakePreprocessorDefinitions>GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath>$(ProjectDir)thirdparty;$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)project;$(ProjectDir)test;$(SourcePath)</SourcePath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader release|Win32'">
+    <NMakeBuildCommandLine>./scripts/build.ps1</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>./scripts/clean.ps1</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>./scripts/build.ps1</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap release|Win32'">
+    <NMakeBuildCommandLine>./scripts/build.ps1</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>./scripts/clean.ps1</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>./scripts/build.ps1</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap debug|x64'">
+    <NMakeBuildCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1" msvc debug bootstrap</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>
+    </NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>GEN_INTELLISENSE_DIRECTIVES;GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)project;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='test debug|x64'">
+    <NMakeBuildCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1" msvc debug test</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine />
+    <NMakeCleanCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>GEN_INTELLISENSE_DIRECTIVES;GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)project;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader debug|x64'">
+    <NMakeBuildCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1" msvc debug singleheader</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>
+    </NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>GEN_INTELLISENSE_DIRECTIVES;GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)project;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='singleheader release|x64'">
+    <NMakeBuildCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1" msvc release singleheader</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>
+    </NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>GEN_INTELLISENSE_DIRECTIVES;GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)project;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap release|x64'">
+    <NMakeBuildCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\build.ps1" msvc release bootstrap</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>
+    </NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>pwsh.exe -ExecutionPolicy Unrestricted -File "$(ProjectDir)scripts\clean.ps1"</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>GEN_INTELLISENSE_DIRECTIVES;GEN_TIME;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)project;$(ProjectDir)test;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)project;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap debug|x64'">
+    <ClCompile>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='test debug|x64'">
+    <ClCompile>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='singleheader debug|x64'">
+    <ClCompile>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='singleheader release|x64'">
+    <ClCompile>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='bootstrap release|x64'">
     <ClCompile>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
@@ -105,6 +243,7 @@
     <None Include="project\enums\ESpecifier.csv" />
     <None Include="project\enums\ETokType.csv" />
     <None Include="Readme.md" />
+    <None Include="scripts\.clang-format" />
     <None Include="scripts\build.ci.ps1" />
     <None Include="scripts\build.ps1" />
     <None Include="scripts\clean.ps1" />
@@ -124,6 +263,10 @@
     <ClInclude Include="project\auxillary\scanner.hpp" />
     <ClInclude Include="project\components\ast.hpp" />
     <ClInclude Include="project\components\ast_types.hpp" />
+    <ClInclude Include="project\components\gen\ast_inlines.hpp" />
+    <ClInclude Include="project\components\gen\ecode.hpp" />
+    <ClInclude Include="project\components\gen\eoperator.hpp" />
+    <ClInclude Include="project\components\gen\especifier.hpp" />
     <ClInclude Include="project\components\header_end.hpp" />
     <ClInclude Include="project\components\header_start.hpp" />
     <ClInclude Include="project\components\inlines.hpp" />
@@ -153,6 +296,7 @@
     <ClInclude Include="project\helpers\push_ignores.inline.hpp" />
     <ClInclude Include="project\helpers\undef.macros.hpp" />
     <ClInclude Include="singleheader\components\header_start.hpp" />
+    <ClInclude Include="test\CURSED_TYPEDEF.h" />
     <ClInclude Include="test\DummyInclude.hpp" />
     <ClInclude Include="test\Parsed\Buffer.Parsed.hpp" />
     <ClInclude Include="test\Parsed\HashTable.Parsed.hpp" />
@@ -174,6 +318,7 @@
     <ClCompile Include="project\bootstrap.cpp" />
     <ClCompile Include="project\components\ast.cpp" />
     <ClCompile Include="project\components\ast_case_macros.cpp" />
+    <ClCompile Include="project\components\gen\etoktype.cpp" />
     <ClCompile Include="project\components\interface.cpp" />
     <ClCompile Include="project\components\interface.parsing.cpp" />
     <ClCompile Include="project\components\interface.untyped.cpp" />

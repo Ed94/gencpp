@@ -8,21 +8,22 @@
 		<ShowEmptyFolders>true</ShowEmptyFolders>
 		<IsVirtual>false</IsVirtual>
 		<IsFolder>false</IsFolder>
-		<BuildCommand>powershell ./scripts/test.gen_run.ps1</BuildCommand>
+		<BuildCommand>pwsh ./scripts/build.ps1 msvc debug bootstrap</BuildCommand>
 		<RebuildCommand></RebuildCommand>
 		<BuildFileCommand></BuildFileCommand>
-		<CleanCommand>powershell ./scripts/clean.ps1</CleanCommand>
+		<CleanCommand>psh ./scripts/clean.ps1</CleanCommand>
 		<BuildWorkingDirectory></BuildWorkingDirectory>
 		<CancelBuild></CancelBuild>
 		<RunCommand>./test/gen/build/gencpp.exe</RunCommand>
 		<RunCommandWorkingDirectory></RunCommandWorkingDirectory>
-		<DebugCommand>powershell ./scripts/build.ps1</DebugCommand>
+		<DebugCommand>pwsh ./scripts/build.ps1</DebugCommand>
 		<ExePathCommand>./test/gen/build/gencpp.exe</ExePathCommand>
-		<DebugSln>gencpp.sln</DebugSln>
+		<DebugSln></DebugSln>
 		<UseVisualStudioEnvBat>false</UseVisualStudioEnvBat>
 		<Configurations>
 			<Configuration>Debug</Configuration>
 			<Configuration>Release</Configuration>
+			<Configuration>bootstrap debug</Configuration>
 		</Configurations>
 		<Platforms>
 			<Platform>x64</Platform>
@@ -41,6 +42,7 @@
 		<Defines>
 			<Define>GEN_TIME</Define>
 			<Define>GEN_SYSTEM_WINDOWS</Define>
+			<Define>GEN_INTELLISENSE_DIRECTIVES</Define>
 		</Defines>
 		<ConfigProperties>
 			<ConfigAndPlatform>
@@ -48,8 +50,17 @@
 				<Defines></Defines>
 				<ForceIncludes></ForceIncludes>
 			</ConfigAndPlatform>
+			<ConfigAndPlatform>
+				<Name>bootstrap debug:x64</Name>
+				<Defines></Defines>
+				<ForceIncludes></ForceIncludes>
+			</ConfigAndPlatform>
 			<Config>
 				<Name>Debug</Name>
+				<Defines></Defines>
+			</Config>
+			<Config>
+				<Name>bootstrap debug</Name>
 				<Defines></Defines>
 			</Config>
 			<Platform>

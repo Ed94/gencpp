@@ -56,11 +56,25 @@ enum class ModuleFlag : u32
 	None    = 0,
 	Export  = bit(0),
 	Import  = bit(1),
-	// Private = bit(2),
 
 	Num_ModuleFlags,
 	Invalid,
 };
+
+StrC to_str( ModuleFlag flag )
+{
+	local_persist
+	StrC lookup[ (u32)ModuleFlag::Num_ModuleFlags ] = {
+		{ sizeof("__none__"), "__none__" },
+		{ sizeof("export"), "export" },
+		{ sizeof("import"), "import" },
+	};
+
+	if ( flag > ModuleFlag::Import )
+		return { sizeof("invalid"), "invalid" };
+
+	return lookup[ (u32)flag ];
+}
 
 ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
 {

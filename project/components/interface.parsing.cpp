@@ -5050,8 +5050,9 @@ CodeType parse_type( bool* typedef_is_function )
 	using namespace ECode;
 
 	CodeType
-	result       = (CodeType) make_code();
-	result->Type = Typename;
+	result        = (CodeType) make_code();
+	result->Type  = Typename;
+	result->Token = Context.Scope->Start;
 
 	// Need to wait until were using the new parsing method to do this.
 	String name_stripped = strip_formatting( name, strip_formatting_dont_preserve_newlines );

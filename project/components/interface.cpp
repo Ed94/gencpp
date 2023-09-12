@@ -203,6 +203,7 @@ void define_constants()
 	def_constant_spec( local_persist,    ESpecifier::Local_Persist );
 	def_constant_spec( mutable,          ESpecifier::Mutable );
 	def_constant_spec( neverinline,      ESpecifier::NeverInline );
+	def_constant_spec( noexcept,         ESpecifier::NoExceptions );
 	def_constant_spec( override,         ESpecifier::Override );
 	def_constant_spec( ptr,              ESpecifier::Ptr );
 	def_constant_spec( pure,             ESpecifier::Pure )

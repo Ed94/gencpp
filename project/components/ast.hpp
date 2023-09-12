@@ -41,10 +41,10 @@ struct CodeBody;
 // These are to offer ease of use and optionally strong type safety for the AST.
 struct CodeAttributes;
 struct CodeComment;
-struct CodeConstructor;
-struct CodeDestructor;
 struct CodeClass;
+struct CodeConstructor;
 struct CodeDefine;
+struct CodeDestructor;
 struct CodeEnum;
 struct CodeExec;
 struct CodeExtern;
@@ -217,14 +217,14 @@ struct AST
 	uw ArrSpecs_Cap =
 	(
 			AST_POD_Size
-			- sizeof(AST*) * 3
+			- sizeof(AST*) * 4
 			- sizeof(StringCached)
 			- sizeof(CodeT)
 			- sizeof(ModuleFlag)
 			- sizeof(u32)
 			- sizeof(s32)
 	)
-	/ sizeof(SpecifierT) - 1; // -1 for 4 extra bytes
+	/ sizeof(SpecifierT); // -1 for 4 extra bytes
 
 	union {
 		struct
@@ -255,7 +255,10 @@ struct AST
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
-		SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+		struct {
+			SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+			AST*       NextSpecs;                   // Specifiers
+		};
 	};
 	union {
 		AST* Prev;
@@ -310,8 +313,11 @@ struct AST_POD
 				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
 			};
 		};
-		StringCached  Content;         // Attributes, Comment, Execution, Include
-		SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+		StringCached  Content;          // Attributes, Comment, Execution, Include
+		struct {
+			SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+			AST*       NextSpecs;                   // Specifiers
+		};
 	};
 	union {
 		AST* Prev;

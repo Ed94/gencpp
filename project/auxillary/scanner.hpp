@@ -120,45 +120,40 @@ Code scan_file( char const* path )
 }
 
 #if 0
-struct Policy
+struct CodeFile
 {
-	// Nothing for now.
+	using namespace Parser;
+
+	String              FilePath;
+	TokArray            Tokens;
+	Array<ParseFailure> ParseFailures;
+	Code                CodeRoot;
 };
 
-struct SymbolInfo
+namespace Parser
 {
-	StringCached File;
-	char const*  Marker;
-	Code         Signature;
-};
-
-struct Scanner
-{
-	struct RequestEntry
+	struct ParseFailure
 	{
-		SymbolInfo Info;
+		String Reason;
+		Code   Node;
 	};
+}
 
-	struct Receipt
-	{
-		StringCached File;
-		Code         Defintion;
-		bool         Result;
-	};
+CodeFile scan_file( char const* path )
+{
+	using namespace Parser;
 
-	AllocatorInfo MemAlloc;
+	CodeFile
+	result = {};
+	result.FilePath = String::make( GlobalAllocator, path );
 
-	static void set_allocator( AllocatorInfo allocator );
+	Code code = scan_file( path );
+	result.CodeRoot = code;
 
-	Array<FileInfo>     Files;
-	String              Buffer;
-	Array<RequestEntry> Requests;
+	ParseContext context = parser_get_last_context();
+	result.Tokens        = context.Tokens;
+	result.ParseFailures = context.Failures;
 
-	void add_files( s32 num, char const** files );
-
-	void add( SymbolInfo signature, Policy policy );
-
-	bool process_requests( Array<Receipt> out_receipts );
-};
+	return result;
+}
 #endif
-
