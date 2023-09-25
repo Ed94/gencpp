@@ -42,6 +42,7 @@ Otherwise the library is free of any templates.
 
 **There is no support for validating expressions.**  
 Its difficult to parse without enough benefits (At the metaprogramming level).  
+I plan to add this only at the tail of the project parsing milestone.
 
 **Only trivial template support is provided.**  
 The intention is for only simple, non-recursive substitution.  

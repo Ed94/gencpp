@@ -1,4 +1,4 @@
-# ASTs Documentation
+# AST Types Documentation
 
 While the Readme for docs covers the data layout per AST, this will focus on the AST types avaialble, and their nuances.
 
@@ -95,12 +95,12 @@ The upfront constructor: `def_comment` expects to recieve a comment without the 
 Fields:
 
 ```cpp
-CodeComment    InlineCmt; // Only supported by forward declarations
+CodeComment    InlineCmt;  // Only supported by forward declarations
 CodeAttributes Attributes;
 CodeType       ParentType;
 CodeBody       Body;
-CodeType       Last; // Used to store references to interfaces
-CodeType       Next; // Used to store references to interfaces
+CodeType       Prev;       // Used to store references to interfaces
+CodeType       Next;       // Used to store references to interfaces
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -115,7 +115,7 @@ Serialization:
 <ModuleFlags> <class/struct> <Name>; <InlineCmt>
 
 // Class
-<ModuleFlags> <class/struct> <Attributes> <Name> : <ParentAccess> <ParentType>, public <Next>, ...<Last>
+<ModuleFlags> <class/struct> <Attributes> <Name> : <ParentAccess> <ParentType>, public <ParentType->Next>, ... <InlineCmt>
 {
     <Body>
 };
@@ -145,7 +145,8 @@ Serialization:
 <Specs> <Parent->Name>( <Params> ); <InlineCmt>
 
 // Constructor
-<Specs> <Parent->Name>( <Params> ): <InitializerList>
+<Specs> <Parent->Name>( <Params> ) <InlineCmt>
+    : <InitializerList>
 {
     <Body>
 }

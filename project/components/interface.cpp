@@ -419,15 +419,15 @@ Code make_code()
 	// mem_set( result.ast, 0, sizeof(AST) );
 	result->Type = ECode::Invalid;
 
-	result->Content         = { nullptr };
-	result->Prev            = { nullptr };
-	result->Next			= { nullptr };
-	result->Parent          = { nullptr };
-	result->Name            = { nullptr };
-	result->Type            = ECode::Invalid;
-	result->ModuleFlags     = ModuleFlag::Invalid;
-	result->NumEntries      = 0;
-	result->Token		    = -1;
+	result->Content     = { nullptr };
+	result->Prev        = { nullptr };
+	result->Next        = { nullptr };
+	result->Token		= nullptr;
+	result->Parent      = { nullptr };
+	result->Name        = { nullptr };
+	result->Type        = ECode::Invalid;
+	result->ModuleFlags = ModuleFlag::Invalid;
+	result->NumEntries  = 0;
 
 	return result;
 }

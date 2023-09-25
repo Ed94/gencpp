@@ -41,6 +41,15 @@ char const* to_str( AccessSpec type )
 	return lookup[ (u32)type ];
 }
 
+
+enum CodeFlag : u32
+{
+	FunctionType  = bit(0),
+	ParamPack     = bit(1),
+	Module_Export = bit(2),
+	Module_Import = bit(3),
+};
+
 // Used to indicate if enum definitoin is an enum class or regular enum.
 enum class EnumT : u8
 {

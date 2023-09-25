@@ -6,6 +6,18 @@
 
 namespace Parser
 {
+	enum TokFlags : u32
+	{
+		TF_Operator		   = bit(0),
+		TF_Assign          = bit(0),
+		TF_Preprocess      = bit(1),
+		TF_Comment         = bit(2),
+		TF_Attribute       = bit(3),
+		TF_AccessSpecifier = bit(4),
+		TF_Specifier 	   = bit(5),
+		TF_EndDefinition   = bit(6), // Either ; or }
+	};
+
 	struct Token
 	{
 		char const* Text;
@@ -250,11 +262,6 @@ namespace Parser
 		Idx++;
 		return true;
 	}
-
-	enum TokFlags : u32
-	{
-		IsAssign = bit(0),
-	};
 
 	global Array<Token> Tokens;
 
@@ -1638,6 +1645,7 @@ CodeAttributes parse_attributes()
 	{
 		eat( TokType::Attribute_Open);
 
+		start = currtok;
 		while ( left && currtok.Type != TokType::Attribute_Close )
 		{
 			eat( currtok.Type );
@@ -1653,6 +1661,7 @@ CodeAttributes parse_attributes()
 		eat(TokType::Capture_Start);
 		eat(TokType::Capture_Start);
 
+		start = currtok;
 		while ( left && currtok.Type != TokType::Capture_End )
 		{
 			eat(currtok.Type);
@@ -1669,6 +1678,7 @@ CodeAttributes parse_attributes()
 		eat( TokType::Decl_MSVC_Attribute );
 		eat( TokType::Capture_Start);
 
+		start = currtok;
 		while ( left && currtok.Type != TokType::Capture_End )
 		{
 			eat(currtok.Type);
@@ -1697,6 +1707,7 @@ CodeAttributes parse_attributes()
 		result->Type    = ECode::PlatformAttributes;
 		result->Name    = get_cached_string( name_stripped );
 		result->Content = result->Name;
+		// result->Token   = 
 
 		return (CodeAttributes) result;
 	}
@@ -1717,6 +1728,7 @@ CodeComment parse_comment()
 	result->Type    = ECode::Comment;
 	result->Content = get_cached_string( currtok_noskip );
 	result->Name    = result->Content;
+	// result->Token   = currtok_noskip;
 	eat( TokType::Comment );
 
 	Context.pop();
@@ -5052,7 +5064,7 @@ CodeType parse_type( bool* typedef_is_function )
 	CodeType
 	result        = (CodeType) make_code();
 	result->Type  = Typename;
-	result->Token = Context.Scope->Start;
+	// result->Token = Context.Scope->Start;
 
 	// Need to wait until were using the new parsing method to do this.
 	String name_stripped = strip_formatting( name, strip_formatting_dont_preserve_newlines );

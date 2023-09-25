@@ -67,7 +67,6 @@ Adding your own exceptions is possible by simply modifying the parser to allow f
 
 *Note: You could interpret this strictness as a feature. This would allow the user to see if their codebase or a third-party's codebase some some egregious preprocessor abuse.*
 
-
 The lexing and parsing takes shortcuts from whats expected in the standard.
 
 * Numeric literals are not checked for validity.
@@ -80,4 +79,3 @@ The lexing and parsing takes shortcuts from whats expected in the standard.
 * Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
 
 Empty lines used throughout the file are preserved for formatting purposes during ast serialization.
-

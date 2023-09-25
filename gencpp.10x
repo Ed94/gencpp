@@ -19,7 +19,7 @@
 		<DebugCommand>pwsh ./scripts/build.ps1</DebugCommand>
 		<ExePathCommand>./test/gen/build/gencpp.exe</ExePathCommand>
 		<DebugSln></DebugSln>
-		<UseVisualStudioEnvBat>false</UseVisualStudioEnvBat>
+		<UseVisualStudioEnvBat>true</UseVisualStudioEnvBat>
 		<Configurations>
 			<Configuration>Debug</Configuration>
 			<Configuration>Release</Configuration>

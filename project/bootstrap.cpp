@@ -148,7 +148,7 @@ int gen_main()
 		CodeBody gen_component_header = def_global_body( args(
 			def_preprocess_cond( PreprocessCond_IfDef, txt("GEN_INTELLISENSE_DIRECTIVES") ),
 			pragma_once,
-			def_include(txt("types.hpp")),
+			def_include(txt("components/types.hpp")),
 			preprocess_endif,
 			fmt_newline,
 			untyped_str( to_str(generation_notice) )

@@ -67,6 +67,11 @@ struct CodeUnion;
 struct CodeUsing;
 struct CodeVar;
 
+// namespace Parser
+// {
+// 	struct Token;
+// }
+
 /*
 	AST* wrapper
 	- Not constantly have to append the '*' as this is written often..
@@ -82,7 +87,7 @@ struct Code
 	static Code Invalid;
 #	pragma endregion Statics
 
-#	define Using_Code( Typename )         \
+#	define Using_Code( Typename )          \
 	char const* debug_str();               \
 	Code        duplicate();			   \
 	bool        is_equal( Code other );    \
@@ -108,7 +113,7 @@ struct Code
 		return ast;
 	}
 	Code& operator ++();
-	Code& operator*()
+	auto& operator*()
 	{
 		return *this;
 	}
@@ -157,7 +162,7 @@ struct Code_POD
 static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 
 // Desired width of the AST data structure.
-constexpr u32 AST_POD_Size = 128;
+constexpr int AST_POD_Size = 128;
 
 /*
 	Simple AST POD with functionality to seralize into C++ syntax.
@@ -214,17 +219,20 @@ struct AST
 #	pragma endregion Member Functions
 
 	constexpr static
-	uw ArrSpecs_Cap =
+	int ArrSpecs_Cap =
+	#if 1
 	(
 			AST_POD_Size
-			- sizeof(AST*) * 4
-			- sizeof(StringCached)
-			- sizeof(CodeT)
+			- sizeof(void*) * 4
+			// - sizeof(Parser::Token*)
+			// - sizeof(AST*)
+			- sizeof(void*)
+			- sizeof(int)
 			- sizeof(ModuleFlag)
-			- sizeof(u32)
-			- sizeof(s32)
+			- sizeof(int)
 	)
 	/ sizeof(SpecifierT); // -1 for 4 extra bytes
+	#endif
 
 	union {
 		struct
@@ -251,13 +259,13 @@ struct AST
 			};
 			union {
 				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
+				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
 			SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
-			AST*       NextSpecs;                   // Specifiers
+			AST*       NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
 	union {
@@ -269,6 +277,7 @@ struct AST
 		AST* Next;
 		AST* Back;
 	};
+	// Parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
 	AST*              Parent;
 	StringCached      Name;
 	CodeT             Type;
@@ -280,7 +289,6 @@ struct AST
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 	};
-	s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
 };
 
 struct AST_POD
@@ -310,13 +318,13 @@ struct AST_POD
 			};
 			union {
 				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
+				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
 			SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
-			AST*       NextSpecs;                   // Specifiers
+			AST*       NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
 	union {
@@ -328,6 +336,7 @@ struct AST_POD
 		AST* Next;
 		AST* Back;
 	};
+	// Parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
 	AST*              Parent;
 	StringCached      Name;
 	CodeT             Type;
@@ -339,8 +348,10 @@ struct AST_POD
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 	};
-	s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
 };
+
+constexpr int specifierT_size = sizeof(SpecifierT);
+constexpr int AST_SIZE = sizeof(AST);
 
 // Its intended for the AST to have equivalent size to its POD.
 // All extra functionality within the AST namespace should just be syntatic sugar.

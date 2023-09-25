@@ -53,3 +53,8 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 The library has its code segmented into component files, use it to help create a derived version without needing to have to rewrite a generated file directly or build on top of the header via composition or inheritance.
 
 The parser is documented under `docs/Parsing.md` and `docs/Parser_Algo.md`.  
+
+## A note on compilation and runtime generation speed
+
+The library is designed to be fast to compile and generate code at runtime as fast as resonable possible on a debug build.
+Its recommended that your metaprogam be compiled using a single translation unit (unity build).

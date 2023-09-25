@@ -11,7 +11,6 @@ char const* AST::debug_str()
 {
 	String result = String::make_reserve( GlobalAllocator, kilobytes(1) );
 
-#if 1
 	if ( Parent )
 		result.append_fmt( "\n\tParent       : %S %S", Parent->type_str(), Name ? Name : "" );
 	else
@@ -20,7 +19,6 @@ char const* AST::debug_str()
 	result.append_fmt( "\n\tName         : %S", Name ? Name : "Null" );
 	result.append_fmt( "\n\tType         : %S", type_str() );
 	result.append_fmt( "\n\tModule Flags : %S", to_str( ModuleFlags ) );
-	result.append_fmt( "\n\tToken		 : %d", Token );
 
 	switch ( Type )
 	{
@@ -71,6 +69,19 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tBody        : %S", Body       ? Body->debug_str()       : "Null" );
 		break;
 
+		case Class_Fwd:
+		case Struct_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+
+			result.append_fmt( "\n\tInlineCmd   : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes  : %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tParentAccess: %s", ParentType ? to_str( ParentAccess )  : "No Parent" );
+			result.append_fmt( "\n\tParentType  : %s", ParentType ? ParentType->type_str()  : "Null" );
+		break;
+
 		case Constructor:
 			if ( Prev )
 				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
@@ -84,6 +95,18 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tBody           : %S", Body            ? Body->debug_str()            : "Null" );
 		break;
 
+		case Constructor_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+
+			result.append_fmt( "\n\tInlineCmt      : %S", InlineCmt       ? InlineCmt->Content           : "Null" );
+			result.append_fmt( "\n\tSpecs          : %S", Specs           ? Specs->to_string()           : "Null" );
+			result.append_fmt( "\n\tInitializerList: %S", InitializerList ? InitializerList->to_string() : "Null" );
+			result.append_fmt( "\n\tParams         : %S", Params          ? Params->to_string()          : "Null" );
+		break;
+
 		case Destructor:
 			if ( Prev )
 				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
@@ -95,7 +118,11 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tBody           : %S", Body      ? Body->debug_str()  : "Null" );
 		break;
 
+		case Destructor_Fwd:
+		break;
+
 		case Enum:
+		case Enum_Class:
 			if ( Prev )
 				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
 			if ( Next )
@@ -105,6 +132,10 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tAttributes      : %S", Attributes     ? Attributes->to_string()     : "Null" );
 			result.append_fmt( "\n\tUnderlying Type : %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );
 			result.append_fmt( "\n\tBody            : %S", Body           ? Body->debug_str()           : "Null" );
+		break;
+
+		case Enum_Class_Fwd:
+		
 		break;
 
 		case Extern_Linkage:
@@ -275,7 +306,6 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tNextVar     : %S", NextVar      ? NextVar->debug_str()      : "Null" );
 		break;
 	}
-#endif
 
 	return result;
 }
@@ -334,42 +364,36 @@ String AST::to_string()
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			if ( Attributes || ParentType )
+			result.append( "class " );
+
+			if ( Attributes )
 			{
-				result.append( "class " );
+				result.append_fmt( "%S ", Attributes->to_string() );
+			}
 
-				if ( Attributes )
+			if ( ParentType )
+			{
+				char const* access_level = to_str( ParentAccess );
+
+				result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
+
+				CodeType interface = ParentType->Next->cast< CodeType >();
+				if ( interface )
+					result.append( "\n" );
+
+				while ( interface )
 				{
-					result.append_fmt( "%S ", Attributes->to_string() );
-				}
-
-				if ( ParentType )
-				{
-					char const* access_level = to_str( ParentAccess );
-
-					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
-
-					CodeType interface = ParentType->Next->cast< CodeType >();
-					if ( interface )
-						result.append( "\n" );
-
-					while ( interface )
-					{
-						result.append_fmt( ", %S", interface.to_string() );
-						interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
-					}
-
-					result.append_fmt( "\n{\n%S\n}", Body->to_string() );
-				}
-				else
-				{
-					result.append_fmt( "%S \n{\n%S\n}", Name, Body->to_string() );
+					result.append_fmt( ", %S", interface.to_string() );
+					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 				}
 			}
-			else
+
+			if ( InlineCmt )
 			{
-				result.append_fmt( "class %S\n{\n%S\n}", Name, Body->to_string() );
+				result.append_fmt( " // %S", InlineCmt->Content );
 			}
+
+			result.append_fmt( "\n{\n%S\n}", Body->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
 				result.append(";\n");
@@ -408,6 +432,9 @@ String AST::to_string()
 
 			if ( InitializerList )
 				result.append_fmt( " : %S", InitializerList->to_string() );
+
+			if ( InlineCmt )
+				result.append_fmt( " // %S", InlineCmt->Content );
 
 			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
 		}
@@ -930,56 +957,39 @@ String AST::to_string()
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			if ( Name == nullptr)
+			result.append( "struct " );
+
+			if ( Attributes )
 			{
-				result.append_fmt( "struct\n{\n%S\n};\n", Body->to_string() );
-				break;
+				result.append_fmt( "%S ", Attributes->to_string() );
 			}
 
-			if ( Attributes || ParentType )
+			if ( ParentType )
 			{
-				result.append( "struct " );
+				char const* access_level = to_str( ParentAccess );
 
-				if ( Attributes )
-					result.append_fmt( "%S ", Attributes->to_string() );
+				result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-				if ( ParentType )
+				CodeType interface = ParentType->Next->cast< CodeType >();
+				if ( interface )
+					result.append( "\n" );
+
+				while ( interface )
 				{
-					char const* access_level = to_str( ParentAccess );
-
-					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
-
-					CodeType interface = ParentType->Next->cast< CodeType >();
-					if ( interface )
-						result.append( "\n" );
-
-					while ( interface )
-					{
-						result.append_fmt( ", %S", interface.to_string() );
-
-						interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
-					}
-
-					result.append_fmt( "\n{\n%S\n}", Body->to_string() );
-				}
-				else
-				{
-					if ( Name )
-						result.append_fmt( "%S \n{\n%S\n}", Name, Body->to_string() );
+					result.append_fmt( ", %S", interface.to_string() );
+					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 				}
 			}
-			else
+
+			if ( InlineCmt )
 			{
-				result.append_fmt( "struct %S\n{\n%S\n}", Name, Body->to_string() );
+				result.append_fmt( " // %S", InlineCmt->Content );
 			}
+
+			result.append_fmt( "\n{\n%S\n}", Body->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-			{
-				if ( InlineCmt )
-					result.append_fmt(";  %S", InlineCmt->Content );
-				else
-					result.append(";\n");
-			}
+				result.append(";\n");
 		}
 		break;
 
