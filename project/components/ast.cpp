@@ -690,13 +690,25 @@ String AST::to_string()
 		case Function:
 		{
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
+				result.append( "export" );
 
 			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
+				result.append_fmt( " %S ", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%S", Specs->to_string() );
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+				result.append( "\n" );
 
 			if ( ReturnType )
 				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
@@ -735,7 +747,21 @@ String AST::to_string()
 				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%S", Specs->to_string() );
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+			{
+				result.append("\n" );
+			}
 
 			if ( ReturnType )
 				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
@@ -795,7 +821,24 @@ String AST::to_string()
 				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Attributes )
-				result.append_fmt( "%S\n", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
+
+			if ( Specs )
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+			{
+				result.append("\n" );
+			}
 
 			if ( ReturnType )
 				result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
@@ -834,7 +877,21 @@ String AST::to_string()
 				result.append_fmt( "%S\n", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%S\n", Specs->to_string() );
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+			{
+				result.append("\n" );
+			}
 
 			result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
 
@@ -991,12 +1048,6 @@ String AST::to_string()
 			s32 left = NumEntries;
 			while ( left-- )
 			{
-				if ( ESpecifier::is_trailing( ArrSpecs[idx]) && ArrSpecs[idx] != ESpecifier::Const )
-				{
-					idx++;
-					continue;
-				}
-
 				StrC spec = ESpecifier::to_str( ArrSpecs[idx] );
 				result.append_fmt( "%.*s ", spec.Len, spec.Ptr );
 				idx++;

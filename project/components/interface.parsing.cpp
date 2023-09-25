@@ -2296,6 +2296,7 @@ CodeFn parse_function_after_name(
 
 	CodeParam params = parse_params();
 
+	// These have to be kept separate from the return type's specifiers.
 	while ( left && currtok.is_specifier() )
 	{
 		if ( specifiers.ast == nullptr )
@@ -4784,7 +4785,7 @@ CodeType parse_type( bool* typedef_is_function )
 #if 0
 	else if ( currtok.Type == TokType::DeclType )
 	{
-		// Will have a capture and its own parsing rules, were going to just shove everything in a string.
+		// Will have a capture and its own parsing rules, were going to just shove everything in a string (for now).
 		name = currtok;
 		eat( TokType::DeclType );
 

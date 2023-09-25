@@ -257,7 +257,7 @@ struct AST
 			};
 			union {
 				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
+				AST*  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
@@ -316,7 +316,7 @@ struct AST_POD
 			};
 			union {
 				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-				AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
+				AST*  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
