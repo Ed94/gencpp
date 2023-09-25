@@ -3921,7 +3921,7 @@ CodeEnum parse_enum( bool inplace_def )
 
 		while ( left && currtok_noskip.Type != TokType::BraceCurly_Close )
 		{
-			if ( currtok.Type == TokType::Preprocess_Hash )
+			if ( currtok_noskip.Type == TokType::Preprocess_Hash )
 				eat( TokType::Preprocess_Hash );
 
 			switch ( currtok_noskip.Type )

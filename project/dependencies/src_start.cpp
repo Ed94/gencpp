@@ -1,3 +1,7 @@
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	include "header_start.hpp"
+#endif
+
 #pragma region Macros and Includes
 
 #	include <stdio.h>

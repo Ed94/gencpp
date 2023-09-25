@@ -30,9 +30,9 @@ char const* AST::debug_str()
 		case Access_Protected:
 		case Access_Public:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 		break;
 
 		case Untyped:
@@ -48,9 +48,9 @@ char const* AST::debug_str()
 		case Preprocess_IfDef:
 		case Preprocess_IfNotDef:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tContent: %S", Content );
 		break;
@@ -58,9 +58,9 @@ char const* AST::debug_str()
 		case Class:
 		case Struct:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmd   : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
 			result.append_fmt( "\n\tAttributes  : %S", Attributes ? Attributes->to_string() : "Null" );
@@ -72,9 +72,9 @@ char const* AST::debug_str()
 		case Class_Fwd:
 		case Struct_Fwd:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmd   : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
 			result.append_fmt( "\n\tAttributes  : %S", Attributes ? Attributes->to_string() : "Null" );
@@ -84,9 +84,9 @@ char const* AST::debug_str()
 
 		case Constructor:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt      : %S", InlineCmt       ? InlineCmt->Content           : "Null" );
 			result.append_fmt( "\n\tSpecs          : %S", Specs           ? Specs->to_string()           : "Null" );
@@ -97,9 +97,9 @@ char const* AST::debug_str()
 
 		case Constructor_Fwd:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt      : %S", InlineCmt       ? InlineCmt->Content           : "Null" );
 			result.append_fmt( "\n\tSpecs          : %S", Specs           ? Specs->to_string()           : "Null" );
@@ -109,9 +109,9 @@ char const* AST::debug_str()
 
 		case Destructor:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt      : %S", InlineCmt ? InlineCmt->Content : "Null" );
 			result.append_fmt( "\n\tSpecs          : %S", Specs     ? Specs->to_string() : "Null" );
@@ -124,9 +124,9 @@ char const* AST::debug_str()
 		case Enum:
 		case Enum_Class:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt       : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
 			result.append_fmt( "\n\tAttributes      : %S", Attributes     ? Attributes->to_string()     : "Null" );
@@ -134,25 +134,33 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tBody            : %S", Body           ? Body->debug_str()           : "Null" );
 		break;
 
+		case Enum_Fwd:
 		case Enum_Class_Fwd:
-		
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt       : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
+			result.append_fmt( "\n\tAttributes      : %S", Attributes     ? Attributes->to_string()     : "Null" );
+			result.append_fmt( "\n\tUnderlying Type : %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );
 		break;
 
 		case Extern_Linkage:
 		case Namespace:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tBody: %S", Body ? Body->debug_str() : "Null" );
 		break;
 
 		case Friend:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt  : %S", InlineCmt   ? InlineCmt->Content       : "Null" );
 			result.append_fmt( "\n\tDeclaration: %S", Declaration ? Declaration->to_string() : "Null" );
@@ -160,9 +168,9 @@ char const* AST::debug_str()
 
 		case Function:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
 			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
@@ -172,18 +180,32 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tBody      : %S", Body       ? Body->debug_str()       : "Null" );
 		break;
 
+		case Function_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()      : "Null" );
+			result.append_fmt( "\n\tReturnType: %S", ReturnType ? ReturnType->to_string() : "Null" );
+			result.append_fmt( "\n\tParams    : %S", Params     ? Params->to_string()     : "Null" );
+		break;
+
 		case Module:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 		break;
 
 		case Operator:
+		case Operator_Member:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
 			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
@@ -194,16 +216,42 @@ char const* AST::debug_str()
 			result.append_fmt( "\n\tOp        : %S", to_str( Op ) );
 		break;
 
+		case Operator_Fwd:
+		case Operator_Member_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()      : "Null" );
+			result.append_fmt( "\n\tReturnType: %S", ReturnType ? ReturnType->to_string() : "Null" );
+			result.append_fmt( "\n\tParams    : %S", Params     ? Params->to_string()     : "Null" );
+			result.append_fmt( "\n\tOp        : %S", to_str( Op ) );
+		break;
+
 		case Operator_Cast:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content     : "Null" );
 			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()     : "Null" );
 			result.append_fmt( "\n\tValueType : %S", ValueType  ? ValueType->to_string() : "Null" );
 			result.append_fmt( "\n\tBody      : %S", Body       ? Body->debug_str()      : "Null" );
+		break;
+
+		case Operator_Cast_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content     : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()     : "Null" );
+			result.append_fmt( "\n\tValueType : %S", ValueType  ? ValueType->to_string() : "Null" );
 		break;
 
 		case Parameters:
@@ -233,9 +281,9 @@ char const* AST::debug_str()
 
 		case Template:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tParams     : %S", Params      ? Params->to_string()      : "Null" );
 			result.append_fmt( "\n\tDeclaration: %S", Declaration ? Declaration->to_string() : "Null" );
@@ -243,12 +291,12 @@ char const* AST::debug_str()
 
 		case Typedef:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt     : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
-			result.append_fmt( "\n\tUnderlyingType: %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );		
+			result.append_fmt( "\n\tUnderlyingType: %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );
 		break;
 
 		case Typename:
@@ -261,9 +309,9 @@ char const* AST::debug_str()
 
 		case Union:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
 			result.append_fmt( "\n\tBody      : %S", Body       ? Body->debug_str()       : "Null" );
@@ -271,9 +319,9 @@ char const* AST::debug_str()
 
 		case Using:
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt     : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
 			result.append_fmt( "\n\tAttributes    : %S", Attributes     ? Attributes->to_string()     : "Null" );
@@ -293,9 +341,9 @@ char const* AST::debug_str()
 			}
 
 			if ( Prev )
-				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 			if ( Next )
-				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name );
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
 
 			result.append_fmt( "\n\tInlineCmt   : %S", InlineCmt    ? InlineCmt->Content        : "Null" );
 			result.append_fmt( "\n\tAttributes  : %S", Attributes   ? Attributes->to_string()   : "Null" );
@@ -386,6 +434,10 @@ String AST::to_string()
 					result.append_fmt( ", %S", interface.to_string() );
 					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 				}
+			}
+			else if ( Name )
+			{
+				result.append( Name );
 			}
 
 			if ( InlineCmt )
@@ -979,6 +1031,10 @@ String AST::to_string()
 					result.append_fmt( ", %S", interface.to_string() );
 					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 				}
+			}
+			else if ( Name )
+			{
+				result.append( Name );
 			}
 
 			if ( InlineCmt )

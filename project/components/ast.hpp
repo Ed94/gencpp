@@ -67,10 +67,10 @@ struct CodeUnion;
 struct CodeUsing;
 struct CodeVar;
 
-// namespace Parser
-// {
-// 	struct Token;
-// }
+namespace Parser
+{
+	struct Token;
+}
 
 /*
 	AST* wrapper
@@ -162,7 +162,7 @@ struct Code_POD
 static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 
 // Desired width of the AST data structure.
-constexpr int AST_POD_Size = 128;
+constexpr int const AST_POD_Size = 128;
 
 /*
 	Simple AST POD with functionality to seralize into C++ syntax.
@@ -220,19 +220,17 @@ struct AST
 
 	constexpr static
 	int ArrSpecs_Cap =
-	#if 1
 	(
 			AST_POD_Size
-			- sizeof(void*) * 4
-			// - sizeof(Parser::Token*)
-			// - sizeof(AST*)
-			- sizeof(void*)
-			- sizeof(int)
+			- sizeof(AST*) * 3
+			- sizeof(Parser::Token*)
+			- sizeof(AST*)
+			- sizeof(StringCached)
+			- sizeof(CodeT)
 			- sizeof(ModuleFlag)
 			- sizeof(int)
 	)
-	/ sizeof(SpecifierT); // -1 for 4 extra bytes
-	#endif
+	/ sizeof(int) - 1; // -1 for 4 extra bytes
 
 	union {
 		struct
@@ -264,7 +262,7 @@ struct AST
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
-			SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+			SpecifierT ArrSpecs[ArrSpecs_Cap]; // Specifiers
 			AST*       NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
@@ -277,7 +275,7 @@ struct AST
 		AST* Next;
 		AST* Back;
 	};
-	// Parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
+	Parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
 	AST*              Parent;
 	StringCached      Name;
 	CodeT             Type;
@@ -336,7 +334,7 @@ struct AST_POD
 		AST* Next;
 		AST* Back;
 	};
-	// Parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
+	Parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
 	AST*              Parent;
 	StringCached      Name;
 	CodeT             Type;
@@ -350,8 +348,12 @@ struct AST_POD
 	};
 };
 
-constexpr int specifierT_size = sizeof(SpecifierT);
-constexpr int AST_SIZE = sizeof(AST);
+struct test {
+	SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+	AST* NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
+};
+
+constexpr int pls = sizeof(test);
 
 // Its intended for the AST to have equivalent size to its POD.
 // All extra functionality within the AST namespace should just be syntatic sugar.

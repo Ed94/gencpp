@@ -32,11 +32,11 @@
 			<AdditionalIncludePath>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.36.32532\include</AdditionalIncludePath>
 			<AdditionalIncludePath>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.36.32532\ATLMFC\include</AdditionalIncludePath>
 			<AdditionalIncludePath>C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\VS\include</AdditionalIncludePath>
-			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt</AdditionalIncludePath>
-			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um</AdditionalIncludePath>
-			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared</AdditionalIncludePath>
-			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt</AdditionalIncludePath>
-			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt</AdditionalIncludePath>
+			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\ucrt</AdditionalIncludePath>
+			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.22621.0\\um</AdditionalIncludePath>
+			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.22621.0\\shared</AdditionalIncludePath>
+			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.22621.0\\winrt</AdditionalIncludePath>
+			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\10\\include\10.0.22621.0\\cppwinrt</AdditionalIncludePath>
 			<AdditionalIncludePath>C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um</AdditionalIncludePath>
 		</AdditionalIncludePaths>
 		<Defines>
