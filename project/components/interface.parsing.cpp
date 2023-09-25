@@ -6,6 +6,18 @@
 
 namespace Parser
 {
+	enum TokFlags : u32
+	{
+		TF_Operator		   = bit(0),
+		TF_Assign          = bit(0),
+		TF_Preprocess      = bit(1),
+		TF_Comment         = bit(2),
+		TF_Attribute       = bit(3),
+		TF_AccessSpecifier = bit(4),
+		TF_Specifier 	   = bit(5),
+		TF_EndDefinition   = bit(6), // Either ; or }
+	};
+
 	struct Token
 	{
 		char const* Text;
@@ -250,11 +262,6 @@ namespace Parser
 		Idx++;
 		return true;
 	}
-
-	enum TokFlags : u32
-	{
-		IsAssign = bit(0),
-	};
 
 	global Array<Token> Tokens;
 
@@ -1638,6 +1645,7 @@ CodeAttributes parse_attributes()
 	{
 		eat( TokType::Attribute_Open);
 
+		start = currtok;
 		while ( left && currtok.Type != TokType::Attribute_Close )
 		{
 			eat( currtok.Type );
@@ -1653,6 +1661,7 @@ CodeAttributes parse_attributes()
 		eat(TokType::Capture_Start);
 		eat(TokType::Capture_Start);
 
+		start = currtok;
 		while ( left && currtok.Type != TokType::Capture_End )
 		{
 			eat(currtok.Type);
@@ -1669,6 +1678,7 @@ CodeAttributes parse_attributes()
 		eat( TokType::Decl_MSVC_Attribute );
 		eat( TokType::Capture_Start);
 
+		start = currtok;
 		while ( left && currtok.Type != TokType::Capture_End )
 		{
 			eat(currtok.Type);
@@ -1697,6 +1707,7 @@ CodeAttributes parse_attributes()
 		result->Type    = ECode::PlatformAttributes;
 		result->Name    = get_cached_string( name_stripped );
 		result->Content = result->Name;
+		// result->Token   = 
 
 		return (CodeAttributes) result;
 	}
@@ -1717,6 +1728,7 @@ CodeComment parse_comment()
 	result->Type    = ECode::Comment;
 	result->Content = get_cached_string( currtok_noskip );
 	result->Name    = result->Content;
+	// result->Token   = currtok_noskip;
 	eat( TokType::Comment );
 
 	Context.pop();
@@ -2284,6 +2296,7 @@ CodeFn parse_function_after_name(
 
 	CodeParam params = parse_params();
 
+	// These have to be kept separate from the return type's specifiers.
 	while ( left && currtok.is_specifier() )
 	{
 		if ( specifiers.ast == nullptr )
@@ -3909,7 +3922,7 @@ CodeEnum parse_enum( bool inplace_def )
 
 		while ( left && currtok_noskip.Type != TokType::BraceCurly_Close )
 		{
-			if ( currtok.Type == TokType::Preprocess_Hash )
+			if ( currtok_noskip.Type == TokType::Preprocess_Hash )
 				eat( TokType::Preprocess_Hash );
 
 			switch ( currtok_noskip.Type )
@@ -4772,7 +4785,7 @@ CodeType parse_type( bool* typedef_is_function )
 #if 0
 	else if ( currtok.Type == TokType::DeclType )
 	{
-		// Will have a capture and its own parsing rules, were going to just shove everything in a string.
+		// Will have a capture and its own parsing rules, were going to just shove everything in a string (for now).
 		name = currtok;
 		eat( TokType::DeclType );
 
@@ -5050,8 +5063,9 @@ CodeType parse_type( bool* typedef_is_function )
 	using namespace ECode;
 
 	CodeType
-	result       = (CodeType) make_code();
-	result->Type = Typename;
+	result        = (CodeType) make_code();
+	result->Type  = Typename;
+	// result->Token = Context.Scope->Start;
 
 	// Need to wait until were using the new parsing method to do this.
 	String name_stripped = strip_formatting( name, strip_formatting_dont_preserve_newlines );

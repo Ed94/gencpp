@@ -32,7 +32,7 @@ Two generic templated containers are used throughout the library:
 * `template< class Type> struct Array`
 * `template< class Type> struct HashTable`
 
-Both Code and AST definitions have a `template< class Type> Code/AST cast()`. Its just an alternative way to explicitly cast to each other.
+Both Code and AST definitions have a `template< class Type> Code/AST :: cast()`. Its just an alternative way to explicitly cast to each other.
 
 `template< class Type> swap( Type& a, Type& b)` is used over a macro.
 
@@ -42,6 +42,7 @@ Otherwise the library is free of any templates.
 
 **There is no support for validating expressions.**  
 Its difficult to parse without enough benefits (At the metaprogramming level).  
+I plan to add this only at the tail of the project parsing milestone.
 
 **Only trivial template support is provided.**  
 The intention is for only simple, non-recursive substitution.  
@@ -70,28 +71,36 @@ Data layout of AST struct:
 union {
     struct
     {
+        AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
         AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-        AST*      Specs;           // Function, Operator, Type symbol, Variable
+        AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
         union {
-            AST*  InitializerList; // Constructor, Destructor
-            AST*  ParentType;      // Class, Struct
-            AST*  ReturnType;      // Function, Operator
+            AST*  InitializerList; // Constructor
+            AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
+            AST*  ReturnType;      // Function, Operator, Typename
             AST*  UnderlyingType;  // Enum, Typedef
             AST*  ValueType;       // Parameter, Variable
         };
         union {
-            AST*  BitfieldSize;    // Varaiable (Class/Struct Data Member)
-            AST*  Params;          // Function, Operator, Template
+            AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
+            AST*  Params;          // Constructor, Function, Operator, Template, Typename
         };
         union {
-            AST*  ArrExpr;         // Type Symbol
-            AST*  Body;            // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-            AST*  Declaration;     // Friend, Template
-            AST*  Value;           // Parameter, Variable
+            AST*  ArrExpr;          // Typename
+            AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+            AST*  Declaration;      // Friend, Template
+            AST*  Value;            // Parameter, Variable
+        };
+        union {
+            AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+            AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
         };
     };
-    StringCached  Content;                     // Attributes, Comment, Execution, Include
-    SpecifierT    ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+    StringCached  Content;          // Attributes, Comment, Execution, Include
+    struct {
+        SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+        AST*       NextSpecs;                   // Specifiers
+    };
 };
 union {
     AST* Prev;
@@ -107,11 +116,13 @@ StringCached      Name;
 CodeT             Type;
 ModuleFlag        ModuleFlags;
 union {
-    b32           IsFunction; // Used by typedef to not serialize the name field.
+    b32           IsFunction;  // Used by typedef to not serialize the name field.
+    b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
     OperatorT     Op;
     AccessSpec    ParentAccess;
     s32           NumEntries;
 };
+s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
 ```
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
@@ -142,6 +153,13 @@ Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
   * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_string_allocator`, `get_cached_string`, `make_code`.
+  * Allocators are defined with the `AllocatorInfo` structure found in `dependencies\memory.hpp`
+  * Most of the work is just defining the allocation procedure:
+
+```cpp
+    void* ( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+```
+
 * ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.
 * Both AST and Code have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
@@ -233,6 +251,7 @@ Interface :``
 * def_operator_cast
 * def_param
 * def_params
+* def_pragma
 * def_preprocess_cond
 * def_specifier
 * def_specifiers
@@ -382,8 +401,8 @@ The following are provided predefined by the library as they are commonly used:
 * `module_global_fragment`
 * `module_private_fragment`
 * `fmt_newline`
-* `pragma_once`
 * `param_varaidc` (Used for varadic definitions)
+* `pragma_once`
 * `preprocess_else`
 * `preprocess_endif`
 * `spec_const`
@@ -392,6 +411,7 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_constinit`
 * `spec_extern_linkage` (extern)
 * `spec_final`
+* `spec_forceinline`
 * `spec_global` (global macro)
 * `spec_inline`
 * `spec_internal_linkage` (internal macro)
@@ -429,8 +449,8 @@ Optionally the following may be defined if `GEN_DEFINE_LIBRARY_CODE_CONSTANTS` i
 * `t_u16`
 * `t_u32`
 * `t_u64`
-* `t_sw`
-* `t_uw`
+* `t_sw` (ssize_t)
+* `t_uw` (size_t)
 * `t_f32`
 * `t_f64`
 
@@ -458,50 +478,10 @@ Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FE
 ### Builder is a similar object to the jai language's string_builder
 
 * The purpose of it is to generate a file.
-* A file is specified and opened for writing using the open( file_path) ) function.
+* A file is specified and opened for writing using the open( file_path) function.
 * The code is provided via print( code ) function  will be serialized to its buffer.
 * When all serialization is finished, use the write() command to write the buffer to the file.
 
-### Editor is for editing a series of files/asts based on a set of requests provided to it
+### Scanner Auxillary Interface
 
-**Note: Not implemented yet**
-
-* The purpose is to overrite a specific file, it places its contents in a buffer to scan.
-* If editing an AST it will generate a new ast as a result (ASTs are not edited).
-* Requests are populated using the following interface:
-  * add : Add code.
-  * remove : Remove code.
-  * replace: Replace code.
-
-All three have the same parameters with exception to remove which only has SymbolInfo and Policy:
-
-* SymbolInfo:
-  * File      : The file the symbol resides in. Leave null to indicate to search all files. Leave null to indicated all-file search.
-  * Marker    : #define symbol that indicates a location or following signature is valid to manipulate. Leave null to indicate the signature should only be used.
-  * Signature : Use a Code symbol to find a valid location to manipulate, can be further filtered with the marker. Leave null to indicate the marker should only be used.
-
-* Policy : Additional policy info for completing the request (empty for now)
-* Code   : Code to inject if adding, or replace existing code with.
-
-Additionally if `GEN_FEATURE_EDITOR_REFACTOR` is defined, refactor( file_path, specification_path ) wil be made available.  
-Refactor is based of the refactor library and uses its interface.  
-It will on call add a request to the queue to run the refactor script on the file.
-
-### Scanner allows the user to sift through a series of files/asts based on a set of requests provided to it
-
-**Note: Not implemented yet**
-
-* The purpose is to grab definitions to generate metadata or generate new code from these definitions.
-* Requests are populated using the add( SymbolInfo, Policy ) function. The symbol info is the same as the one used for the editor. So is the case with Policy.
-
-The file will only be read from, no writing supported.
-
-### Additional Info (Editor and Scanner)
-
-When all requests have been populated, call process_requests().  
-It will provide an output of receipt data of the results when it completes.
-
-Files may be added to the Editor and Scanner additionally with add_files( num, files ).  
-This is intended for when you have requests that are for multiple files.
-
-Request queue in both Editor and Scanner are cleared once process_requests completes.
+Provides *(eventually)* `scan_file` to automatically populate a CodeFile which contains a parsed AST (`Code`) of the file, with any contextual failures that are reported from the parser.

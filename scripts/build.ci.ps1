@@ -113,6 +113,39 @@ function run-linker
 	}
 }
 
+function run-compile-and-link
+{
+	param( $vendor, $unit, $compiler_args, $linker_args )
+
+	write-host "`Compiling & Linking $unit"
+	write-host "Compiler config:"
+	$compiler_args | ForEach-Object {
+		write-host $_ -ForegroundColor Cyan
+	}
+	write-host "Linker config:"
+	$linker_args | ForEach-Object {
+		write-host $_ -ForegroundColor Cyan
+	}
+
+	$time_taken = Measure-Command {
+		& $vendor $compiler_args $linker_args 2>&1 | ForEach-Object {
+			$color = 'White'
+			switch ($_){
+				{ $_ -match "error"   } { $color = 'Red'   ; break }
+				{ $_ -match "warning" } { $color = 'Yellow'; break }
+			}
+			write-host `t $_ -ForegroundColor $color
+		}
+	}
+
+	# if ( Test-Path($binary) ) {
+	# 	write-host "$binary compile & link finished in $($time_taken.TotalMilliseconds) ms"
+	# }
+	# else {
+	# 	write-host "Compile & Link failed for $binary" -ForegroundColor Red
+	# }
+}
+
 if ( $vendor -match "clang" )
 {
 	# https://clang.llvm.org/docs/ClangCommandLineReference.html
@@ -173,7 +206,8 @@ if ( $vendor -match "clang" )
 			$flag_wall,
 			$flag_preprocess_non_intergrated,
 			( $flag_define + 'GEN_TIME' ),
-			( $flag_path_output + $object ),
+			# ( $flag_path_output + $object ),
+			( $flag_path_output + $executable )
 			( $flag_include + $includes )
 		)
 		if ( $release -eq $false ) {
@@ -188,8 +222,8 @@ if ( $vendor -match "clang" )
 
 		# $compiler_args += $flag_preprocess
 
-		$compiler_args += $flag_compile, $unit
-		run-compiler $compiler $unit $compiler_args
+		# $compiler_args += $flag_compile, $unit
+		# run-compiler $compiler $unit $compiler_args
 
 		$linker_args = @(
 			$flag_link_win_subsystem_console,
@@ -207,8 +241,12 @@ if ( $vendor -match "clang" )
 			$linker_args += $_ + '.lib'
 		}
 
-		$linker_args += $object
-		run-linker $linker $executable $linker_args
+		# $linker_args += $object
+		# run-linker $linker $executable $linker_args
+
+		$compiler_args += $unit
+		# $linker_args += $object
+		run-compile-and-link $compiler $unit $compiler_args
 	}
 
 	$compiler = 'clang++'

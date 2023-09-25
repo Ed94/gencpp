@@ -6,32 +6,354 @@
 Code Code::Global;
 Code Code::Invalid;
 
+// This serializes all the data-members in a "debug" format, where each member is printed with its associated value.
 char const* AST::debug_str()
 {
+	String result = String::make_reserve( GlobalAllocator, kilobytes(1) );
+
 	if ( Parent )
+		result.append_fmt( "\n\tParent       : %S %S", Parent->type_str(), Name ? Name : "" );
+	else
+		result.append_fmt( "\n\tParent       : %S", "Null" );
+
+	result.append_fmt( "\n\tName         : %S", Name ? Name : "Null" );
+	result.append_fmt( "\n\tType         : %S", type_str() );
+	result.append_fmt( "\n\tModule Flags : %S", to_str( ModuleFlags ) );
+
+	switch ( Type )
 	{
-		String
-		result = String::make_reserve( GlobalAllocator, kilobytes(1) );
-		result.append_fmt(
-				"\n\tType    : %s"
-				"\n\tParent  : %s %s"
-				"\n\tName    : %s"
-			, type_str()
-			, Parent->type_str()
-			, Parent->Name, Name ? Name : ""
-		);
+		using namespace ECode;
 
-		return result;
+		case Invalid:
+		case NewLine:
+		case Access_Private:
+		case Access_Protected:
+		case Access_Public:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+		break;
+
+		case Untyped:
+		case Execution:
+		case Comment:
+		case PlatformAttributes:
+		case Preprocess_Define:
+		case Preprocess_Include:
+		case Preprocess_Pragma:
+		case Preprocess_If:
+		case Preprocess_ElIf:
+		case Preprocess_Else:
+		case Preprocess_IfDef:
+		case Preprocess_IfNotDef:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tContent: %S", Content );
+		break;
+
+		case Class:
+		case Struct:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmd   : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes  : %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tParentAccess: %s", ParentType ? to_str( ParentAccess )  : "No Parent" );
+			result.append_fmt( "\n\tParentType  : %s", ParentType ? ParentType->type_str()  : "Null" );
+			result.append_fmt( "\n\tBody        : %S", Body       ? Body->debug_str()       : "Null" );
+		break;
+
+		case Class_Fwd:
+		case Struct_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmd   : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes  : %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tParentAccess: %s", ParentType ? to_str( ParentAccess )  : "No Parent" );
+			result.append_fmt( "\n\tParentType  : %s", ParentType ? ParentType->type_str()  : "Null" );
+		break;
+
+		case Constructor:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt      : %S", InlineCmt       ? InlineCmt->Content           : "Null" );
+			result.append_fmt( "\n\tSpecs          : %S", Specs           ? Specs->to_string()           : "Null" );
+			result.append_fmt( "\n\tInitializerList: %S", InitializerList ? InitializerList->to_string() : "Null" );
+			result.append_fmt( "\n\tParams         : %S", Params          ? Params->to_string()          : "Null" );
+			result.append_fmt( "\n\tBody           : %S", Body            ? Body->debug_str()            : "Null" );
+		break;
+
+		case Constructor_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt      : %S", InlineCmt       ? InlineCmt->Content           : "Null" );
+			result.append_fmt( "\n\tSpecs          : %S", Specs           ? Specs->to_string()           : "Null" );
+			result.append_fmt( "\n\tInitializerList: %S", InitializerList ? InitializerList->to_string() : "Null" );
+			result.append_fmt( "\n\tParams         : %S", Params          ? Params->to_string()          : "Null" );
+		break;
+
+		case Destructor:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt      : %S", InlineCmt ? InlineCmt->Content : "Null" );
+			result.append_fmt( "\n\tSpecs          : %S", Specs     ? Specs->to_string() : "Null" );
+			result.append_fmt( "\n\tBody           : %S", Body      ? Body->debug_str()  : "Null" );
+		break;
+
+		case Destructor_Fwd:
+		break;
+
+		case Enum:
+		case Enum_Class:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt       : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
+			result.append_fmt( "\n\tAttributes      : %S", Attributes     ? Attributes->to_string()     : "Null" );
+			result.append_fmt( "\n\tUnderlying Type : %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );
+			result.append_fmt( "\n\tBody            : %S", Body           ? Body->debug_str()           : "Null" );
+		break;
+
+		case Enum_Fwd:
+		case Enum_Class_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt       : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
+			result.append_fmt( "\n\tAttributes      : %S", Attributes     ? Attributes->to_string()     : "Null" );
+			result.append_fmt( "\n\tUnderlying Type : %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );
+		break;
+
+		case Extern_Linkage:
+		case Namespace:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tBody: %S", Body ? Body->debug_str() : "Null" );
+		break;
+
+		case Friend:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt  : %S", InlineCmt   ? InlineCmt->Content       : "Null" );
+			result.append_fmt( "\n\tDeclaration: %S", Declaration ? Declaration->to_string() : "Null" );
+		break;
+
+		case Function:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()      : "Null" );
+			result.append_fmt( "\n\tReturnType: %S", ReturnType ? ReturnType->to_string() : "Null" );
+			result.append_fmt( "\n\tParams    : %S", Params     ? Params->to_string()     : "Null" );
+			result.append_fmt( "\n\tBody      : %S", Body       ? Body->debug_str()       : "Null" );
+		break;
+
+		case Function_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()      : "Null" );
+			result.append_fmt( "\n\tReturnType: %S", ReturnType ? ReturnType->to_string() : "Null" );
+			result.append_fmt( "\n\tParams    : %S", Params     ? Params->to_string()     : "Null" );
+		break;
+
+		case Module:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+		break;
+
+		case Operator:
+		case Operator_Member:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()      : "Null" );
+			result.append_fmt( "\n\tReturnType: %S", ReturnType ? ReturnType->to_string() : "Null" );
+			result.append_fmt( "\n\tParams    : %S", Params     ? Params->to_string()     : "Null" );
+			result.append_fmt( "\n\tBody      : %S", Body       ? Body->debug_str()       : "Null" );
+			result.append_fmt( "\n\tOp        : %S", to_str( Op ) );
+		break;
+
+		case Operator_Fwd:
+		case Operator_Member_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content      : "Null" );
+			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()      : "Null" );
+			result.append_fmt( "\n\tReturnType: %S", ReturnType ? ReturnType->to_string() : "Null" );
+			result.append_fmt( "\n\tParams    : %S", Params     ? Params->to_string()     : "Null" );
+			result.append_fmt( "\n\tOp        : %S", to_str( Op ) );
+		break;
+
+		case Operator_Cast:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content     : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()     : "Null" );
+			result.append_fmt( "\n\tValueType : %S", ValueType  ? ValueType->to_string() : "Null" );
+			result.append_fmt( "\n\tBody      : %S", Body       ? Body->debug_str()      : "Null" );
+		break;
+
+		case Operator_Cast_Fwd:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt : %S", InlineCmt  ? InlineCmt->Content     : "Null" );
+			result.append_fmt( "\n\tSpecs     : %S", Specs      ? Specs->to_string()     : "Null" );
+			result.append_fmt( "\n\tValueType : %S", ValueType  ? ValueType->to_string() : "Null" );
+		break;
+
+		case Parameters:
+			result.append_fmt( "\n\tNumEntries: %d", NumEntries );
+			result.append_fmt( "\n\tLast      : %S", Last->Name );
+			result.append_fmt( "\n\tNext      : %S", Next->Name );
+			result.append_fmt( "\n\tValueType : %S", ValueType ? ValueType->to_string() : "Null" );
+			result.append_fmt( "\n\tValue     : %S", Value     ? Value->to_string()     : "Null" );
+		break;
+
+		case Specifiers:
+		{
+			result.append_fmt( "\n\tNumEntries: %d", NumEntries );
+			result.append( "\n\tArrSpecs: " );
+
+			s32 idx  = 0;
+			s32 left = NumEntries;
+			while ( left-- )
+			{
+				StrC spec = ESpecifier::to_str( ArrSpecs[idx] );
+				result.append_fmt( "%.*s, ", spec.Len, spec.Ptr );
+				idx++;
+			}
+			result.append_fmt( "\n\tNextSpecs: %S", NextSpecs ? NextSpecs->debug_str() : "Null" );
+		}
+		break;
+
+		case Template:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tParams     : %S", Params      ? Params->to_string()      : "Null" );
+			result.append_fmt( "\n\tDeclaration: %S", Declaration ? Declaration->to_string() : "Null" );
+		break;
+
+		case Typedef:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt     : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
+			result.append_fmt( "\n\tUnderlyingType: %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );
+		break;
+
+		case Typename:
+			result.append_fmt( "\n\tAttributes     : %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tSpecs          : %S", Specs      ? Specs->to_string()      : "Null" );
+			result.append_fmt( "\n\tReturnType     : %S", ReturnType ? ReturnType->to_string() : "Null" );
+			result.append_fmt( "\n\tParams         : %S", Params     ? Params->to_string()     : "Null" );
+			result.append_fmt( "\n\tArrExpr        : %S", ArrExpr    ? ArrExpr->to_string()    : "Null" );
+		break;
+
+		case Union:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tAttributes: %S", Attributes ? Attributes->to_string() : "Null" );
+			result.append_fmt( "\n\tBody      : %S", Body       ? Body->debug_str()       : "Null" );
+		break;
+
+		case Using:
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt     : %S", InlineCmt      ? InlineCmt->Content          : "Null" );
+			result.append_fmt( "\n\tAttributes    : %S", Attributes     ? Attributes->to_string()     : "Null" );
+			result.append_fmt( "\n\tUnderlyingType: %S", UnderlyingType ? UnderlyingType->to_string() : "Null" );
+		break;
+
+		case Variable:
+
+			if ( Parent && Parent->Type == Variable )
+			{
+				// Its a NextVar
+				result.append_fmt( "\n\tSpecs       : %S", Specs        ? Specs->to_string()        : "Null" );
+				result.append_fmt( "\n\tValue       : %S", Value        ? Value->to_string()        : "Null" );
+				result.append_fmt( "\n\tBitfieldSize: %S", BitfieldSize ? BitfieldSize->to_string() : "Null" );
+				result.append_fmt( "\n\tNextVar     : %S", NextVar      ? NextVar->debug_str()      : "Null" );
+				break;
+			}
+
+			if ( Prev )
+				result.append_fmt( "\n\tPrev: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+			if ( Next )
+				result.append_fmt( "\n\tNext: %S %S", Prev->type_str(), Prev->Name ? Prev->Name : "Null" );
+
+			result.append_fmt( "\n\tInlineCmt   : %S", InlineCmt    ? InlineCmt->Content        : "Null" );
+			result.append_fmt( "\n\tAttributes  : %S", Attributes   ? Attributes->to_string()   : "Null" );
+			result.append_fmt( "\n\tSpecs       : %S", Specs        ? Specs->to_string()        : "Null" );
+			result.append_fmt( "\n\tValueType   : %S", ValueType    ? ValueType->to_string()    : "Null" );
+			result.append_fmt( "\n\tBitfieldSize: %S", BitfieldSize ? BitfieldSize->to_string() : "Null" );
+			result.append_fmt( "\n\tValue       : %S", Value        ? Value->to_string()        : "Null" );
+			result.append_fmt( "\n\tNextVar     : %S", NextVar      ? NextVar->debug_str()      : "Null" );
+		break;
 	}
-
-	String
-	result = String::make_reserve( GlobalAllocator, kilobytes(1) );
-	result.append_fmt(
-			"\n\tType    : %s"
-			"\n\tName    : %s"
-		, type_str()
-		, Name ? Name : ""
-	);
 
 	return result;
 }
@@ -61,7 +383,11 @@ String AST::to_string()
 		using namespace ECode;
 
 		case Invalid:
+		#ifdef GEN_DONT_ALLOW_INVALID_CODE
 			log_failure("Attempted to serialize invalid code! - %S", Parent ? Parent->debug_str() : Name );
+		#else
+			result.append_fmt( "Invalid Code!" );
+		#endif
 		break;
 
 		case NewLine:
@@ -71,6 +397,7 @@ String AST::to_string()
 		case Untyped:
 		case Execution:
 		case Comment:
+		case PlatformAttributes:
 			result.append( Content );
 		break;
 
@@ -80,50 +407,45 @@ String AST::to_string()
 			result.append( Name );
 		break;
 
-		case PlatformAttributes:
-			result.append( Content );
-
 		case Class:
 		{
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			if ( Attributes || ParentType )
+			result.append( "class " );
+
+			if ( Attributes )
 			{
-				result.append( "class " );
+				result.append_fmt( "%S ", Attributes->to_string() );
+			}
 
-				if ( Attributes )
+			if ( ParentType )
+			{
+				char const* access_level = to_str( ParentAccess );
+
+				result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
+
+				CodeType interface = ParentType->Next->cast< CodeType >();
+				if ( interface )
+					result.append( "\n" );
+
+				while ( interface )
 				{
-					result.append_fmt( "%S ", Attributes->to_string() );
-				}
-
-				if ( ParentType )
-				{
-					char const* access_level = to_str( ParentAccess );
-
-					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
-
-					CodeType interface = ParentType->Next->cast< CodeType >();
-					if ( interface )
-						result.append( "\n" );
-
-					while ( interface )
-					{
-						result.append_fmt( ", %S", interface.to_string() );
-						interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
-					}
-
-					result.append_fmt( "\n{\n%S\n}", Body->to_string() );
-				}
-				else
-				{
-					result.append_fmt( "%S \n{\n%S\n}", Name, Body->to_string() );
+					result.append_fmt( ", %S", interface.to_string() );
+					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 				}
 			}
-			else
+			else if ( Name )
 			{
-				result.append_fmt( "class %S\n{\n%S\n}", Name, Body->to_string() );
+				result.append( Name );
 			}
+
+			if ( InlineCmt )
+			{
+				result.append_fmt( " // %S", InlineCmt->Content );
+			}
+
+			result.append_fmt( "\n{\n%S\n}", Body->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
 				result.append(";\n");
@@ -162,6 +484,9 @@ String AST::to_string()
 
 			if ( InitializerList )
 				result.append_fmt( " : %S", InitializerList->to_string() );
+
+			if ( InlineCmt )
+				result.append_fmt( " // %S", InlineCmt->Content );
 
 			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
 		}
@@ -365,13 +690,25 @@ String AST::to_string()
 		case Function:
 		{
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
+				result.append( "export" );
 
 			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
+				result.append_fmt( " %S ", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%S", Specs->to_string() );
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+				result.append( "\n" );
 
 			if ( ReturnType )
 				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
@@ -410,7 +747,21 @@ String AST::to_string()
 				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%S", Specs->to_string() );
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+			{
+				result.append("\n" );
+			}
 
 			if ( ReturnType )
 				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
@@ -470,7 +821,24 @@ String AST::to_string()
 				result.append_fmt( "%S ", Attributes->to_string() );
 
 			if ( Attributes )
-				result.append_fmt( "%S\n", Attributes->to_string() );
+				result.append_fmt( "%S ", Attributes->to_string() );
+
+			if ( Specs )
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+			{
+				result.append("\n" );
+			}
 
 			if ( ReturnType )
 				result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
@@ -509,7 +877,21 @@ String AST::to_string()
 				result.append_fmt( "%S\n", Attributes->to_string() );
 
 			if ( Specs )
-				result.append_fmt( "%S\n", Specs->to_string() );
+			{
+				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
+				{
+					if ( ! ESpecifier::is_trailing( spec ) )
+					{
+						StrC spec_str = ESpecifier::to_str( spec );
+						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+					}
+				}
+			}
+
+			if ( Attributes || Specs )
+			{
+				result.append("\n" );
+			}
 
 			result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
 
@@ -666,12 +1048,6 @@ String AST::to_string()
 			s32 left = NumEntries;
 			while ( left-- )
 			{
-				if ( ESpecifier::is_trailing( ArrSpecs[idx]) && ArrSpecs[idx] != ESpecifier::Const )
-				{
-					idx++;
-					continue;
-				}
-
 				StrC spec = ESpecifier::to_str( ArrSpecs[idx] );
 				result.append_fmt( "%.*s ", spec.Len, spec.Ptr );
 				idx++;
@@ -684,56 +1060,43 @@ String AST::to_string()
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			if ( Name == nullptr)
+			result.append( "struct " );
+
+			if ( Attributes )
 			{
-				result.append_fmt( "struct\n{\n%S\n};\n", Body->to_string() );
-				break;
+				result.append_fmt( "%S ", Attributes->to_string() );
 			}
 
-			if ( Attributes || ParentType )
+			if ( ParentType )
 			{
-				result.append( "struct " );
+				char const* access_level = to_str( ParentAccess );
 
-				if ( Attributes )
-					result.append_fmt( "%S ", Attributes->to_string() );
+				result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
 
-				if ( ParentType )
+				CodeType interface = ParentType->Next->cast< CodeType >();
+				if ( interface )
+					result.append( "\n" );
+
+				while ( interface )
 				{
-					char const* access_level = to_str( ParentAccess );
-
-					result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
-
-					CodeType interface = ParentType->Next->cast< CodeType >();
-					if ( interface )
-						result.append( "\n" );
-
-					while ( interface )
-					{
-						result.append_fmt( ", %S", interface.to_string() );
-
-						interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
-					}
-
-					result.append_fmt( "\n{\n%S\n}", Body->to_string() );
-				}
-				else
-				{
-					if ( Name )
-						result.append_fmt( "%S \n{\n%S\n}", Name, Body->to_string() );
+					result.append_fmt( ", %S", interface.to_string() );
+					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
 				}
 			}
-			else
+			else if ( Name )
 			{
-				result.append_fmt( "struct %S\n{\n%S\n}", Name, Body->to_string() );
+				result.append( Name );
 			}
+
+			if ( InlineCmt )
+			{
+				result.append_fmt( " // %S", InlineCmt->Content );
+			}
+
+			result.append_fmt( "\n{\n%S\n}", Body->to_string() );
 
 			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-			{
-				if ( InlineCmt )
-					result.append_fmt(";  %S", InlineCmt->Content );
-				else
-					result.append(";\n");
-			}
+				result.append(";\n");
 		}
 		break;
 

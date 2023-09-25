@@ -5,14 +5,17 @@ An attempt at simple staged metaprogramming for c/c++.
 The library API is a composition of code element constructors.  
 These build up a code AST to then serialize with a file builder.
 
-This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto),  
-its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.
+This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).  
+Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.  
 
 ## Notes
 
-The project has reached an *alpha* state, all the current functionality works for the test cases but it will most likely break in many other cases.  
+This project is still in development (very much an alpha state), so expect bugs and missing features.  
+See [issues](https://github.com/Ed94/gencpp/issues) for a list of known bugs or todos.
 
-A `natvis` and `natstepfilter` are provided in the scripts directory.
+The library can already be used to generate code just fine, but the parser is where the most work is needed. If your C++ isn't "down to earth" expect issues.
+
+A `natvis` and `natstepfilter` are provided in the scripts directory (its outdated, I'll update this readme when its not).
 
 ***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
 
@@ -123,7 +126,7 @@ struct ArrayHeader
 ```
 
 **Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**
-*(The library currently uses clang-format for formatting, beaware its pretty slow...)*
+*(The library currently uses clang-format for formatting, beware its pretty slow...)*
 
 ## Building
 

@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVESj
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #	pragma once
 #	include "basic_types.hpp"
 #endif

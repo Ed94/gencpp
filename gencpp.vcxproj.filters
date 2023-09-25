@@ -129,6 +129,9 @@
     <ClCompile Include="project\components\interface.untyped.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="project\components\gen\etoktype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project\gen.hpp">
@@ -275,6 +278,21 @@
     <ClInclude Include="singleheader\components\header_start.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="project\components\gen\ast_inlines.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\gen\ecode.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\gen\eoperator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="project\components\gen\especifier.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test\CURSED_TYPEDEF.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
@@ -297,6 +315,7 @@
     <None Include="scripts\helpers\target_arch.psm1" />
     <None Include="scripts\package_release.ps1" />
     <None Include="scripts\refactor.ps1" />
+    <None Include="scripts\.clang-format" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include=".vscode\gencpp.natvis" />

@@ -8,8 +8,7 @@ They contain includes for its various components: `components/<component_name>.<
 Dependencies are bundled into `gen.dep.<hpp/cpp>`.  
 Just like the `gen.<hpp/cpp>` they include their components: `dependencies/<dependency_name>.<hpp/cpp>`
 
-The fle processors are in their own respective files. (Ex: `file_processors/<file_processor>.<hpp/cpp>` )  
-They directly include `depedencies/file_handling.<hpp/cpp>` as the core library does not include file processing by defualt.
+Code not making up the core library is located in `auxiliary/<auxiliary_name>.<hpp/cpp>`. These are optional extensions or tools for the library.
 
 **TODO : Right now the library is not finished, as such the first self-hosting iteration is still WIP**  
 Both libraries use *pre-generated* (self-hosting I guess) version of the library to then generate the latest version of itself.  
@@ -30,10 +29,11 @@ Feature Macros:
 * `GEN_ENFORCE_STRONG_CODE_TYPES` : Enforces casts to filtered code types.
 * `GEN_EXPOSE_BACKEND` : Will expose symbols meant for internal use only.
 * `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
+* `GEN_DONT_ALLOW_INVALID_CODE` (Not implemented yet) : Will fail when an invalid code is constructed, parsed, or serialized.
 
 ## On multi-threading
 
-Currently unsupported.
+Currently unsupported. I want the library to be *stable* and *correct*, with the addition of exhausting all basic single-threaded optimizations before I consider multi-threading.
 
 ## Extending the library
 
@@ -51,5 +51,10 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 `def_operator` is the most sophisticated constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
 The library has its code segmented into component files, use it to help create a derived version without needing to have to rewrite a generated file directly or build on top of the header via composition or inheritance.
-When the scanner is implemented, this will be even easier to customize.
 
+The parser is documented under `docs/Parsing.md` and `docs/Parser_Algo.md`.  
+
+## A note on compilation and runtime generation speed
+
+The library is designed to be fast to compile and generate code at runtime as fast as resonable possible on a debug build.
+Its recommended that your metaprogam be compiled using a single translation unit (unity build).

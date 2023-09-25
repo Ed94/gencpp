@@ -86,6 +86,7 @@ extern CodeSpecifiers spec_internal_linkage;
 extern CodeSpecifiers spec_local_persist;
 extern CodeSpecifiers spec_mutable;
 extern CodeSpecifiers spec_neverinline;
+extern CodeSpecifiers spec_noexcept;
 extern CodeSpecifiers spec_override;
 extern CodeSpecifiers spec_ptr;
 extern CodeSpecifiers spec_pure;

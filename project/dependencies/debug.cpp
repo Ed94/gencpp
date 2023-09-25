@@ -1,5 +1,8 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #	pragma once
+#	include "debug.hpp"
+#	include "basic_types.hpp"
+#   include "src_start.cpp"
 #endif
 
 #pragma region Debug

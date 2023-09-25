@@ -861,8 +861,8 @@ CodeInclude def_include( StrC path, bool foreign )
 	}
 
 	StrC content = foreign ?
-			to_str( str_fmt_buf( "<%.*s>\n", path.Len, path.Ptr ))
-		:	to_str( str_fmt_buf( "\"%.*s\"\n", path.Len, path.Ptr ));
+			to_str( str_fmt_buf( "<%.*s>", path.Len, path.Ptr ))
+		:	to_str( str_fmt_buf( "\"%.*s\"", path.Len, path.Ptr ));
 
 	Code
 	result          = make_code();

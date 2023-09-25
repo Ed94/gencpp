@@ -203,6 +203,7 @@ void define_constants()
 	def_constant_spec( local_persist,    ESpecifier::Local_Persist );
 	def_constant_spec( mutable,          ESpecifier::Mutable );
 	def_constant_spec( neverinline,      ESpecifier::NeverInline );
+	def_constant_spec( noexcept,         ESpecifier::NoExceptions );
 	def_constant_spec( override,         ESpecifier::Override );
 	def_constant_spec( ptr,              ESpecifier::Ptr );
 	def_constant_spec( pure,             ESpecifier::Pure )
@@ -418,15 +419,15 @@ Code make_code()
 	// mem_set( result.ast, 0, sizeof(AST) );
 	result->Type = ECode::Invalid;
 
-	result->Content         = { nullptr };
-	result->Prev            = { nullptr };
-	result->Next			= { nullptr };
-	result->Parent          = { nullptr };
-	result->Name            = { nullptr };
-	result->Type            = ECode::Invalid;
-	result->ModuleFlags     = ModuleFlag::Invalid;
-	result->NumEntries      = 0;
-	result->Token		    = -1;
+	result->Content     = { nullptr };
+	result->Prev        = { nullptr };
+	result->Next        = { nullptr };
+	result->Token		= nullptr;
+	result->Parent      = { nullptr };
+	result->Name        = { nullptr };
+	result->Type        = ECode::Invalid;
+	result->ModuleFlags = ModuleFlag::Invalid;
+	result->NumEntries  = 0;
 
 	return result;
 }

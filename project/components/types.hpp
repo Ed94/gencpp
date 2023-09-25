@@ -41,6 +41,15 @@ char const* to_str( AccessSpec type )
 	return lookup[ (u32)type ];
 }
 
+
+enum CodeFlag : u32
+{
+	FunctionType  = bit(0),
+	ParamPack     = bit(1),
+	Module_Export = bit(2),
+	Module_Import = bit(3),
+};
+
 // Used to indicate if enum definitoin is an enum class or regular enum.
 enum class EnumT : u8
 {
@@ -56,11 +65,25 @@ enum class ModuleFlag : u32
 	None    = 0,
 	Export  = bit(0),
 	Import  = bit(1),
-	// Private = bit(2),
 
 	Num_ModuleFlags,
 	Invalid,
 };
+
+StrC to_str( ModuleFlag flag )
+{
+	local_persist
+	StrC lookup[ (u32)ModuleFlag::Num_ModuleFlags ] = {
+		{ sizeof("__none__"), "__none__" },
+		{ sizeof("export"), "export" },
+		{ sizeof("import"), "import" },
+	};
+
+	if ( flag > ModuleFlag::Import )
+		return { sizeof("invalid"), "invalid" };
+
+	return lookup[ (u32)flag ];
+}
 
 ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
 {

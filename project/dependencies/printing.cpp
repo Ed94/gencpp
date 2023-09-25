@@ -1,5 +1,7 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #	pragma once
+#	include "filesystem.hpp"
+#	include "strings.hpp"
 #	include "string_ops.cpp"
 #endif
 

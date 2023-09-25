@@ -97,6 +97,15 @@ int gen_main()
 		src.write();
 	}
 
+	CodeBody gen_component_header = def_global_body( args(
+		def_preprocess_cond( PreprocessCond_IfDef, txt("GEN_INTELLISENSE_DIRECTIVES") ),
+		pragma_once,
+		def_include(txt("components/types.hpp")),
+		preprocess_endif,
+		fmt_newline,
+		untyped_str( to_str(generation_notice) )
+	));
+
 	// gen.hpp
 	{
 		Code header_start = scan_file( "components/header_start.hpp" );
@@ -144,14 +153,6 @@ int gen_main()
 		header.print_fmt( "GEN_NS_END\n\n" );
 		header.print( pop_ignores );
 		header.write();
-
-		CodeBody gen_component_header = def_global_body( args(
-			def_preprocess_cond( PreprocessCond_IfDef, txt("GEN_INTELLISENSE_DIRECTIVES") ),
-			pragma_once,
-			preprocess_endif,
-			fmt_newline,
-			untyped_str( to_str(generation_notice) )
-		));
 
 		Builder
 		header_ecode = Builder::open( "components/gen/ecode.hpp" );
@@ -222,8 +223,7 @@ int gen_main()
 
 		Builder
 		src_etoktype = Builder::open( "components/gen/etoktype.cpp" );
-		src_etoktype.print_fmt( generation_notice );
-		src_etoktype.print( pragma_once );
+		src_etoktype.print( gen_component_header );
 		src_etoktype.print( nspaced_etoktype );
 		src_etoktype.write();
 	}
