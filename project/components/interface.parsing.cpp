@@ -5620,7 +5620,7 @@ CodeVar parse_variable()
 
 		// Ignore const specifiers, they're handled by the type
 		if ( spec == ESpecifier::Const )
-			continue;
+			break;
 
 		specs_found[NumSpecifiers] = spec;
 		NumSpecifiers++;
