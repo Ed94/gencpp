@@ -10,6 +10,8 @@ Its not meant to be a black box metaprogramming utility, it should be easy to in
 
 ## Notes
 
+**On Partial Hiatus: Working on handmade hero for now. Only fixes will be pushed as I come across them until I get what I want done from the series**
+
 This project is still in development (very much an alpha state), so expect bugs and missing features.  
 See [issues](https://github.com/Ed94/gencpp/issues) for a list of known bugs or todos.
 
