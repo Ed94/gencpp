@@ -35,17 +35,17 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 		return OpValidateResult::Fail;                                                                    \
 	}
 
-#	define check_param_eq_ret()                                                                    \
-	if ( ! is_member_symbol && params_code->ValueType != ret_type )                                \
-	{                                                                                              \
-		log_failure("gen_def_operator: operator%s requires first parameter to equal return type\n" \
-			"param types: %s\n"                                                                    \
-			"return type: %s",                                                                     \
-			to_str(op),                                                                            \
-			params_code.debug_str(),                                                               \
-			ret_type.debug_str()                                                                   \
-		);                                                                                         \
-		return OpValidateResult::Fail;                                                             \
+#	define check_param_eq_ret()                                                                     \
+	if ( ! is_member_symbol && ! params_code->ValueType.is_equal( ret_type) )                       \
+	{                                                                                               \
+		log_failure("gen::def_operator: operator%s requires first parameter to equal return type\n" \
+			"param types: %s\n"                                                                     \
+			"return type: %s",                                                                      \
+			to_str(op).Ptr,                                                                         \
+			params_code.debug_str(),                                                                \
+			ret_type.debug_str()                                                                    \
+		);                                                                                          \
+		return OpValidateResult::Fail;                                                              \
 	}
 #pragma endregion Helper Macros
 
@@ -947,6 +947,7 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 	result              = (CodeOperator) make_code();
 	result->Name        = get_cached_string( { str_len(name), name } );
 	result->ModuleFlags = mflags;
+	result->Op          = op;
 
 	if ( body )
 	{

@@ -175,21 +175,21 @@ void define_constants()
 #endif
 #	undef def_constant_code_type
 
-#	pragma push_macro( "forceinline" )
-#	pragma push_macro( "global" )
-#	pragma push_macro( "internal" )
-#	pragma push_macro( "local_persist" )
-#	pragma push_macro( "neverinline" )
-#	undef forceinline
-#	undef global
-#	undef internal
-#	undef local_persist
-#	undef neverinline
 
 #	define def_constant_spec( Type_, ... )                                  \
 		spec_##Type_ = def_specifiers( num_args(__VA_ARGS__), __VA_ARGS__); \
 		spec_##Type_.set_global();
 
+#	pragma push_macro("forceinline")
+#	pragma push_macro("global")
+#	pragma push_macro("internal")
+#	pragma push_macro("local_persist")
+#	pragma push_macro("neverinline")
+#	undef forceinline
+#	undef global
+#	undef internal
+#	undef local_persist
+#	undef neverinline
 	def_constant_spec( const,            ESpecifier::Const );
 	def_constant_spec( consteval,        ESpecifier::Consteval );
 	def_constant_spec( constexpr,        ESpecifier::Constexpr );
@@ -218,11 +218,11 @@ void define_constants()
 	spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
 	spec_local_persist.set_global();
 
-#	pragma pop_macro( "forceinline" )
-#	pragma pop_macro( "global" )
-#	pragma pop_macro( "internal" )
-#	pragma pop_macro( "local_persist" )
-#	pragma pop_macro( "neverinline" )
+#	pragma pop_macro("forceinline")
+#	pragma pop_macro("global")
+#	pragma pop_macro("internal")
+#	pragma pop_macro("local_persist")
+#	pragma pop_macro("neverinline")
 
 #	undef def_constant_spec
 }

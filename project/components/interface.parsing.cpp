@@ -775,6 +775,18 @@ namespace Parser
 
 					if (left)
 						move_forward();
+
+					if ( current == '=' )
+					{
+						token.Length++;
+						token.IsAssign = true;
+						// token.Flags |= TokFlags::Assignment;
+						// token.Type = TokType::Assign_Multiply;
+
+						if ( left )
+							move_forward();
+					}
+
 					goto FoundToken;
 				}
 				case ';':
@@ -973,7 +985,14 @@ namespace Parser
 
 					if ( left )
 					{
-						if ( current == '/' )
+						if ( current == '=' )
+						{
+							// token.Type = TokeType::Assign_Divide;
+							move_forward();
+							token.Length++;
+							token.IsAssign = true;
+						}
+						else if ( current == '/' )
 						{
 							token.Type = TokType::Comment;
 							token.Length = 2;
@@ -2820,7 +2839,7 @@ CodeOperator parse_operator_after_ret_type(
 			if ( currtok.Text[1] == '=' )
 				op = Assign_Add;
 
-			if ( currtok.Text[1] == '+' )
+			else if ( currtok.Text[1] == '+' )
 				op = Increment;
 
 			else
@@ -2840,7 +2859,7 @@ CodeOperator parse_operator_after_ret_type(
 				break;
 			}
 
-			if ( currtok.Text[1] == '=' )
+			else if ( currtok.Text[1] == '=' )
 				op = Assign_Subtract;
 
 			else
@@ -3193,6 +3212,12 @@ CodeParam parse_params( bool use_template_capture )
 	if ( ! use_template_capture &&  check(TokType::Capture_End) )
 	{
 		eat( TokType::Capture_End );
+		Context.pop();
+		return { nullptr };
+	}
+	else if ( check ( TokType::Operator ) && currtok.Text[0] == '>' )
+	{
+		eat( TokType::Operator );
 		Context.pop();
 		return { nullptr };
 	}

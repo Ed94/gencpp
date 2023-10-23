@@ -330,6 +330,7 @@
     <ClCompile Include="project\dependencies\strings.cpp" />
     <ClCompile Include="project\dependencies\string_ops.cpp" />
     <ClCompile Include="project\dependencies\timing.cpp" />
+    <ClCompile Include="project\Example.cpp" />
     <ClCompile Include="project\gen.cpp" />
     <ClCompile Include="project\gen.dep.cpp" />
     <ClCompile Include="singleheader\singleheader.cpp" />

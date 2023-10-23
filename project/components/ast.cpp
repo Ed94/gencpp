@@ -1125,7 +1125,10 @@ String AST::to_string()
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
 				result.append( "export " );
 
-			result.append_fmt( "template< %S >\n%S", Params->to_string(), Declaration->to_string() );
+			if ( Params )
+				result.append_fmt( "template< %S >\n%S", Params->to_string(), Declaration->to_string() );
+			else
+				result.append_fmt( "template<>\n%S", Declaration->to_string() );
 		}
 		break;
 

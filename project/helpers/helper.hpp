@@ -32,7 +32,7 @@ CodeBody gen_ecode( char const* path )
 
 	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", (StrC)enum_entries, "enum Type : u32 { <entries> NumTypes };"));
 
-#pragma push_macro( "local_persist" )
+#pragma push_macro("local_persist")
 #undef local_persist
 	CodeFn to_str = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
 		StrC to_str( Type type )
@@ -45,7 +45,7 @@ CodeBody gen_ecode( char const* path )
 			return lookup[ type ];
 		}
 	)));
-#pragma pop_macro( "local_persist" )
+#pragma pop_macro("local_persist")
 
 	CodeNS    nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
 	CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
@@ -86,7 +86,7 @@ CodeBody gen_eoperator( char const* path )
 		};
 	)));
 
-#pragma push_macro( "local_persist" )
+#pragma push_macro("local_persist")
 #undef local_persist
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
 		StrC to_str( Type op )
@@ -99,7 +99,7 @@ CodeBody gen_eoperator( char const* path )
 			return lookup[ op ];
 		}
 	)));
-#pragma pop_macro( "local_persist" )
+#pragma pop_macro("local_persist")
 
 	CodeNS nspace = def_namespace( name(EOperator), def_namespace_body( args( enum_code, to_str ) ) );
 
@@ -148,11 +148,11 @@ CodeBody gen_especifier( char const* path )
 		}
 	)));
 
-#pragma push_macro( "local_persist" )
-#pragma push_macro( "do_once_start" )
-#pragma push_macro( "do_once_end" )
-#pragma push_macro( "forceinline" )
-#pragma push_macro( "neverinline" )
+#pragma push_macro("local_persist")
+#pragma push_macro("do_once_start")
+#pragma push_macro("do_once_end")
+#pragma push_macro("forceinline")
+#pragma push_macro("neverinline")
 #undef local_persist
 #undef do_once_start
 #undef do_once_end
@@ -197,11 +197,11 @@ CodeBody gen_especifier( char const* path )
 			return Invalid;
 		}
 	)));
-#pragma pop_macro( "local_persist" )
-#pragma pop_macro( "do_once_start" )
-#pragma pop_macro( "do_once_end" )
-#pragma pop_macro( "forceinline" )
-#pragma pop_macro( "neverinline" )
+#pragma pop_macro("local_persist")
+#pragma pop_macro("do_once_start")
+#pragma pop_macro("do_once_end")
+#pragma pop_macro("forceinline")
+#pragma pop_macro("neverinline")
 
 	CodeNS nspace = def_namespace( name(ESpecifier), def_namespace_body( args( enum_code, is_trailing, to_str, to_type ) ) );
 
@@ -260,10 +260,10 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 			attribute_define_entries.append( "\n");
 	}
 
-#pragma push_macro( "GEN_DEFINE_ATTRIBUTE_TOKENS" )
+#pragma push_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 #undef GEN_DEFINE_ATTRIBUTE_TOKENS
 	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), attribute_define_entries  );
-#pragma pop_macro( "GEN_DEFINE_ATTRIBUTE_TOKENS" )
+#pragma pop_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 
 	CodeEnum enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, "attribute_toks", (StrC)attribute_entries, stringize(
 		enum Type : u32
@@ -274,9 +274,9 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		};
 	)));
 
-#pragma push_macro( "local_persist" )
-#pragma push_macro( "do_once_start" )
-#pragma push_macro( "do_once_end" )
+#pragma push_macro("local_persist")
+#pragma push_macro("do_once_start")
+#pragma push_macro("do_once_end")
 #undef local_persist
 #undef do_once_start
 #undef do_once_end
@@ -320,9 +320,9 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 			return Invalid;
 		}
 	)));
-#pragma pop_macro( "local_persist" )
-#pragma pop_macro( "do_once_start" )
-#pragma pop_macro( "do_once_end" )
+#pragma pop_macro("local_persist")
+#pragma pop_macro("do_once_start")
+#pragma pop_macro("do_once_end")
 
 	CodeNS    nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
 	CodeUsing td_toktype = def_using( name(TokType), def_type( name(ETokType::Type) ) );
