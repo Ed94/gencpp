@@ -23,5 +23,6 @@ if ( -not (Test-Path $vs_devshell) ) {
 
 # Launch the Visual Studio Developer Shell
 Push-Location
+write-host @args
 & $vs_devshell @args
 Pop-Location
