@@ -28,7 +28,8 @@
 		"functional": "cpp",
 		"vector": "cpp",
 		"list": "cpp",
-		"xhash": "cpp"
+		"xhash": "cpp",
+		"glfw3.h": "c"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

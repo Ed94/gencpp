@@ -161,22 +161,99 @@ if ( $vendor -match "clang" )
 		)
 	}
 
+	function build
+	{
+		param( [string]$path_output, [array]$includes, [array]$compiler_args, [array]$linker_args, [array]$units, [string]$binary )
+		$result = $false
+		#Write-Host "build: clang"
+
+		$map    = $binary -replace '\.(exe|dll)$', '.map'
+		$map    = join-path $path_output (split-path $map    -Leaf)
+
+		# This allows dll reloads at runtime to work (jankily, use below if not interested)
+		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
+
+		$compiler_args += @(
+			$flag_no_color_diagnostics,
+			$flag_exceptions_disabled,
+			$flag_target_arch, $target_arch,
+			$flag_wall,
+			$flag_preprocess_non_intergrated
+			# $flag_section_data,
+			# $flag_section_functions,
+		)
+		if ( $verbose ) {
+			# $compiler_args += $flag_verbose
+			# $compiler_args += $flag_time_trace
+		}
+		if ( $optimize ) {
+			$compiler_args += $flag_optimize_fast
+		}
+		else {
+			$compiler_args += $flag_no_optimization
+		}
+		if ( $debug ) {
+			$compiler_args += ( $flag_define + 'Build_Debug=1' )
+			$compiler_args += $flag_debug, $flag_debug_codeview, $flag_profiling_debug
+		}
+		else {
+			$compiler_args += ( $flag_define + 'Build_Debug=0' )
+		}
+
+		$warning_ignores | ForEach-Object {
+			$compiler_args += $flag_warning + $_
+		}
+		$compiler_args += $includes | ForEach-Object { $flag_include + $_ }
+
+		$objects = @()
+		foreach ( $unit in $units )
+		{
+			$object = $unit -replace '\.(cpp|c)$', '.obj'
+			$object = join-path $path_output (split-path $object -Leaf)
+			$objects += $object
+
+			$unit_compiler_args  = $compiler_args
+			$unit_compiler_args += ( $flag_path_output + $object )
+
+			$unit_compiler_args += $flag_compile, $unit
+			run-compiler $compiler $unit $unit_compiler_args
+		}
+
+		$linker_args += @(
+			$flag_link_win_machine_64,
+			$( $flag_link_win_path_output + $binary )
+		)
+		if ( $debug ) {
+			$linker_args += $flag_link_win_debug
+			$linker_args += $flag_link_win_pdb + $pdb
+			$linker_args += $flag_link_mapfile + $map
+		}
+
+		$libraries | ForEach-Object {
+			$linker_args += $_ + '.lib'
+		}
+
+		$linker_args += $objects
+		return run-linker $linker $binary $linker_args
+	}
+
 	function build-simple
 	{
 		param( [string]$path_output, [array]$includes, [array]$compiler_args, [array]$linker_args, [string]$unit, [string]$binary )
 		$result = $false
 		#Write-Host "build-simple: clang"
 
-		$object = $unit -replace '\.cpp', '.obj'
-		$map    = $unit -replace '\.cpp', '.map'
+		$object = $unit -replace '\.(cpp|c)$', '.obj'
+		$map    = $unit -replace '\.(cpp|c)$', '.map'
 		$object = join-path $path_output (split-path $object -Leaf)
 		$map    = join-path $path_output (split-path $map    -Leaf)
 
-		# The PDB file has to also be time-stamped so that we can reload the DLL at runtime
+		# This allows dll reloads at runtime to work (jankily, use below if not interested)
 		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
 
 		$compiler_args += @(
-			( $flag_define + 'INTELLISENSE_DIRECTIVES=0' ),
 			$flag_no_color_diagnostics,
 			$flag_exceptions_disabled,
 			$flag_target_arch, $target_arch,
@@ -282,24 +359,107 @@ if ( $vendor -match "msvc" )
 	$flag_wall 					     = '/Wall'
 	$flag_warnings_as_errors 		 = '/WX'
 
-	# This works because this project uses a single unit to build
+	function build
+	{
+		param( [string]$path_output, [array]$includes, [array]$compiler_args, [array]$linker_args, [array]$units, [string]$binary )
+		$result = $false
+		#Write-Host "build-simple: msvc"
+
+		$map    = $binary -replace '\.(exe|dll)$', '.map'
+		$map    = join-path $path_output (split-path $map    -Leaf)
+
+		# This allows dll reloads at runtime to work (jankily, use below if not interested)
+		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
+
+		$compiler_args += @(
+			$flag_nologo,
+			# $flag_all_cpp,
+			$flag_exceptions_disabled,
+			( $flag_define + '_HAS_EXCEPTIONS=0' ),
+			$flag_RTTI_disabled,
+			$flag_preprocess_conform,
+			$flag_full_src_path,
+			( $flag_path_interm + $path_output + '\' ),
+			( $flag_path_output + $path_output + '\' )
+		)
+
+		if ( $verbose ) {
+		}
+
+		if ( $optimize ) {
+			$compiler_args += $flag_optimize_fast
+		}
+		else {
+			$compiler_args += $flag_no_optimization
+		}
+
+		if ( $debug )
+		{
+			$compiler_args += $flag_debug
+			$compiler_args += ( $flag_define + 'Build_Debug=1' )
+			$compiler_args += ( $flag_path_debug + $path_output + '\' )
+			$compiler_args += $flag_link_win_rt_static_debug
+
+			if ( $optimize ) {
+				$compiler_args += $flag_optimized_debug
+			}
+		}
+		else {
+			$compiler_args += ( $flag_define + 'Build_Debug=0' )
+			$compiler_args += $flag_link_win_rt_static
+		}
+		$compiler_args += $includes | ForEach-Object { $flag_include + $_ }
+
+		$objects = @()
+		foreach ( $unit in $units )
+		{
+			$object   = $unit -replace '\.(cpp|c)$', '.obj'
+			$object   = join-path $path_output (split-path $object -Leaf)
+			$objects += $object
+
+			$unit_compiler_args  = $compiler_args
+			# $unit_compiler_args += ( $flag_path_output + $object )
+
+			$unit_compiler_args += $flag_compile, $unit
+			run-compiler $compiler $unit $unit_compiler_args
+		}
+
+		$linker_args += @(
+			$flag_nologo,
+			$flag_link_win_machine_64,
+			$flag_link_no_incremental,
+			( $flag_link_win_path_output + $binary )
+		)
+		if ( $debug ) {
+			$linker_args += $flag_link_win_debug
+			$linker_args += $flag_link_win_pdb + $pdb
+			$linker_args += $flag_link_mapfile + $map
+		}
+		else {
+		}
+
+		$linker_args += $objects
+		return run-linker $linker $binary $linker_args
+	}
+
 	function build-simple
 	{
 		param( [string]$path_output, [array]$includes, [array]$compiler_args, [array]$linker_args, [string]$unit, [string]$binary )
 		$result = $false
 		#Write-Host "build-simple: msvc"
 
-		$object = $unit -replace '\.(cpp)$', '.obj'
-		$map    = $unit -replace '\.(cpp)$', '.map'
+		$object = $unit -replace '\.(cpp|c)$', '.obj'
+		$map    = $unit -replace '\.(cpp|c)$', '.map'
 		$object = join-path $path_output (split-path $object -Leaf)
 		$map    = join-path $path_output (split-path $map    -Leaf)
 
-		# The PDB file has to also be time-stamped so that we can reload the DLL at runtime
+		# This allows dll reloads at runtime to work (jankily, use below if not interested)
 		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
 
 		$compiler_args += @(
 			$flag_nologo,
-			( $flag_define + 'INTELLISENSE_DIRECTIVES=0'),
 			# $flag_all_cpp,
 			$flag_exceptions_disabled,
 			( $flag_define + '_HAS_EXCEPTIONS=0' ),

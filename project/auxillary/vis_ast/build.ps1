@@ -8,7 +8,6 @@ $devshell           = Join-Path $path_scripts 'helpers/devshell.ps1'
 $format_cpp	        = Join-Path $path_scripts 'helpers/format_cpp.psm1'
 $incremental_checks = Join-Path $path_scripts 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $path_scripts 'helpers/vendor_toolchain.ps1'
-$update_deps        = Join-Path $path_scripts 'update_deps.ps1'
 
 $path_project  = Join-Path $path_root     'project'
 $path_aux      = Join-Path $path_project  'auxillary'
