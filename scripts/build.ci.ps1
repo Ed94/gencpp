@@ -19,6 +19,7 @@ Push-Location $path_root
 #region Arguments
        $vendor       = $null
        $release      = $null
+	   $verbose      = $false
 [bool] $bootstrap    = $false
 [bool] $singleheader = $false
 [bool] $test         = $false
@@ -29,7 +30,8 @@ Push-Location $path_root
 
 if ( $args ) { $args | ForEach-Object {
 	switch ($_){
-		{ $_ -in $vendors }   { $vendor      = $_; break }
+		{ $_ -in $vendors }   { $vendor       = $_; break }
+		"verbose"			  { $verbose      = $true }
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
 		"bootstrap"           { $bootstrap    = $true }
