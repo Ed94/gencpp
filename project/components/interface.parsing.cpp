@@ -1309,6 +1309,7 @@ internal Code               parse_simple_preprocess            ( Parser::TokType
 internal Code               parse_static_assert                ();
 internal void               parse_template_args                ( Parser::Token& token );
 internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeType type, StrC name );
+internal CodeVar            parse_variable_declaration_list    ();
 
 internal CodeClass       parse_class           ( bool inplace_def = false );
 internal CodeConstructor parse_constructor     ();
@@ -1783,7 +1784,9 @@ Code parse_complicated_definition( Parser::TokType which )
 	if ( (idx - 2 ) == tokens.Idx )
 	{
 		// Its a forward declaration only
-		return parse_foward_or_definition( which, is_inplace );
+		Code result = parse_foward_or_definition( which, is_inplace );
+		Context.pop();
+		return result;
 	}
 
 	Token tok = tokens[ idx - 1 ];
@@ -1831,7 +1834,9 @@ Code parse_complicated_definition( Parser::TokType which )
 	{
 		// Its a definition
 		// <which> { ... };
-		return parse_foward_or_definition( which, is_inplace );
+		Code result = parse_foward_or_definition( which, is_inplace );
+		Context.pop();
+		return result;
 	}
 	else if ( tok.Type == TokType::BraceSquare_Close)
 	{
@@ -2272,22 +2277,18 @@ Code parse_foward_or_definition( Parser::TokType which, bool is_inplace )
 	{
 		case TokType::Decl_Class:
 			result = parse_class( is_inplace );
-			Context.pop();
 			return result;
 
 		case TokType::Decl_Enum:
 			result = parse_enum( is_inplace );
-			Context.pop();
 			return result;
 
 		case TokType::Decl_Struct:
 			result = parse_struct( is_inplace );
-			Context.pop();
 			return result;
 
 		case TokType::Decl_Union:
 			result = parse_union( is_inplace );
-			Context.pop();
 			return result;
 
 		default:
@@ -2295,7 +2296,6 @@ Code parse_foward_or_definition( Parser::TokType which, bool is_inplace )
 				"(only supports class, enum, struct, union) \n%s"
 				, Context.to_string() );
 
-			Context.pop();
 			return CodeInvalid;
 	}
 
@@ -3636,16 +3636,30 @@ CodeVar parse_variable_after_name(
 		bitfield_expr   = untyped_str( expr_tok );
 	}
 
-	Token stmt_end = currtok;
-	eat( TokType::Statement_End );
-
-	// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
+	CodeVar     next_var   = NoCode;
+	Token       stmt_end   = NullToken;
 	CodeComment inline_cmt = NoCode;
-	if (	left
-		&&	( currtok_noskip.Type == TokType::Comment )
-		&&	currtok_noskip.Line == stmt_end.Line )
+	if ( currtok.Type == TokType::Comma )
 	{
-		inline_cmt = parse_comment();
+		// Were dealing with a statement with more than one declaration
+		// This is only handled this way if its the first declaration
+		// Otherwise its looped through in parse_variable_declaration_list
+		next_var = parse_variable_declaration_list();
+	}
+
+	// If we're dealing with a "comma-procedding then we cannot expect a statement end or inline comment
+	// Any comma procedding variable will not have a type provided so it can act as a indicator to skip this
+	else if ( type )
+	{
+		Token stmt_end = currtok;
+		eat( TokType::Statement_End );
+
+		// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
+		CodeComment inline_cmt = NoCode;
+		if ( left && ( currtok_noskip.Type == TokType::Comment ) && currtok_noskip.Line == stmt_end.Line )
+		{
+			inline_cmt = parse_comment();
+		}
 	}
 
 	using namespace ECode;
@@ -3656,7 +3670,9 @@ CodeVar parse_variable_after_name(
 	result->Name        = get_cached_string( name );
 	result->ModuleFlags = mflags;
 
-	result->ValueType = type;
+	// Type can be null if we're dealing with a declaration from a variable declaration-list
+	if ( type )
+		result->ValueType = type;
 
 	if (array_expr )
 		type->ArrExpr = array_expr;
@@ -3675,6 +3691,84 @@ CodeVar parse_variable_after_name(
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
+
+	if ( next_var )
+		result->NextVar = next_var;
+
+	Context.pop();
+	return result;
+}
+
+/*
+	Note(Ed): This does not support the following:
+	* Function Pointers
+*/
+internal CodeVar parse_variable_declaration_list()
+{
+	using namespace Parser;
+	push_scope();
+
+	CodeVar result   = NoCode;
+	CodeVar last_var = NoCode;
+	while ( check( TokType::Comma ) )
+	{
+		eat( TokType::Comma );
+
+		CodeSpecifiers specifiers = NoCode;
+
+		while ( left && currtok.is_specifier() )
+		{
+			SpecifierT spec = ESpecifier::to_type( currtok );
+
+			switch ( spec )
+			{
+				case ESpecifier::Const:
+					if ( specifiers->NumEntries && specifiers->ArrSpecs[ specifiers->NumEntries - 1 ] != ESpecifier::Ptr )
+					{
+						log_failure( "Error, const specifier must come after pointer specifier for variable declaration proceeding comma\n"
+						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%s"
+						, Context.to_string() );
+
+						specifiers.append( spec );
+					}
+				break;
+
+				case ESpecifier::Ptr:
+				case ESpecifier::Ref:
+				case ESpecifier::RValue:
+				break;
+
+				default:
+				{
+					log_failure( "Error, invalid specifier '%s' proceeding comma\n"
+					"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%s"
+					, currtok.Text, Context.to_string() );
+					continue;
+				}
+				break;
+			}
+
+			if ( specifiers )
+				specifiers.append( spec );
+			else
+				specifiers = def_specifier( spec );
+		}
+
+		StrC name = currtok;
+		eat( TokType::Identifier );
+
+		CodeVar var = parse_variable_after_name( ModuleFlag::None, NoCode, specifiers, NoCode, name );
+		if ( ! result )
+		{
+			result   = var;
+			last_var = var;
+		}
+		else
+		{
+			last_var->NextVar = var;
+			last_var 		  = var;
+		}
+	}
 
 	Context.pop();
 	return result;
@@ -4837,6 +4931,7 @@ CodeType parse_type( bool* typedef_is_function )
 	// Check if native type keywords are used, eat them for the signature.
 	else if ( currtok.Type >= TokType::Type_Unsigned && currtok.Type <= TokType::Type_MS_W64 )
 	{
+		// TODO(Ed) : Review this... Its necessary for parsing however the algo's path to this is lost...
 		name = currtok;
 		eat( currtok.Type );
 
@@ -4846,7 +4941,6 @@ CodeType parse_type( bool* typedef_is_function )
 		}
 
 		name.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)name.Text;
-		Context.Scope->Name = name;
 	}
 
 	// The usual Identifier type signature that may have namespace qualifiers
@@ -5203,6 +5297,7 @@ CodeTypedef parse_typedef()
 			||	currtok.Type == TokType::Decl_Struct
 			||	currtok.Type == TokType::Decl_Union;
 
+		// This code is highly correlated with parse_compilcated_definition
 		if ( is_complicated )
 		{
 			TokArray tokens = Context.Tokens;
@@ -5263,7 +5358,9 @@ CodeTypedef parse_typedef()
 					return CodeInvalid;
 				}
 
-				type = parse_type();
+				// TODO(Ed) : I'm not sure if I have to use parse_type here, I'd rather not as that would complicate parse_type.
+				// type = parse_type();
+				type = parse_foward_or_definition( currtok.Type, from_typedef );
 			}
 			else if ( tok.Type == TokType::BraceCurly_Close )
 			{
@@ -5327,7 +5424,12 @@ CodeTypedef parse_typedef()
 		result->IsFunction = false;
 	}
 
-	result->UnderlyingType = type;
+	if ( type )
+	{
+		result->UnderlyingType         = type;
+		result->UnderlyingType->Parent = rcast(AST*, result.ast);
+	}
+	// Type needs to be aware of its parent so that it can be serialized properly.
 
 	if ( type->Type == Typename && array_expr && array_expr->Type != Invalid )
 		type.cast<CodeType>()->ArrExpr = array_expr;

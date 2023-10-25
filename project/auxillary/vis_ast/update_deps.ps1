@@ -87,7 +87,7 @@ function setup-raylib {
 
 	# Refactor raylib
 	if ( $true ) {
-		$path_gencpp = join-path $path_root 'singleheader/gen'
+		$path_gencpp = join-path $path_root 'project/gen'
 
 		$includes = @(
 			$path_gencpp

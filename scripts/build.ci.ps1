@@ -57,10 +57,17 @@ if ( $release -eq $null ) {
 	write-host "No build type specified, assuming debug"
 	$release = $false
 }
+elseif ( $release -eq $false ) {
+	$debug = $true
+}
+else {
+	$optimize = treu
+}
 
 if ( $bootstrap -eq $false -and $singleheader -eq $false -and $test -eq $false ) {
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
+
 
 . $vendor_toolchain
 . $incremental_checks

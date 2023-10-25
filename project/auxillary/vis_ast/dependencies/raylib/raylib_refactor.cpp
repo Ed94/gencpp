@@ -1,8 +1,9 @@
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_BENCHMARK
 #define GEN_ENFORCE_STRONG_CODE_TYPES
-#define GEN_IMPLEMENTATION
-#include "gen.hpp"
+// #define GEN_IMPLEMENTATION
+#include "gen.cpp"
+#include "gen.builder.cpp"
 
 
 constexpr char const* path_config    = "config.h";
