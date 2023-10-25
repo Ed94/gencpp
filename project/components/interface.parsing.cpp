@@ -4941,7 +4941,7 @@ CodeType parse_type( bool* typedef_is_function )
 		name = currtok;
 		eat( currtok.Type );
 
-		while (currtok.Type >= TokType::Type_Unsigned && currtok.Type <= TokType::Type_MS_W64 )
+		while ( left && currtok.Type >= TokType::Type_Unsigned && currtok.Type <= TokType::Type_MS_W64 )
 		{
 			eat( currtok.Type );
 		}
@@ -5025,7 +5025,8 @@ CodeType parse_type( bool* typedef_is_function )
 			last_capture = scanner;
 		}
 
-		bool is_for_opcast = str_compare( Context.Scope->Prev->ProcName, "parse_operator_cast" ) == 0;
+		bool has_context = Context.Scope && Context.Scope->Prev;
+		bool is_for_opcast = has_context && str_compare( Context.Scope->Prev->ProcName, "parse_operator_cast" ) == 0;
 		if ( is_for_opcast && is_function_typename && last_capture )
 		{
 			// If we're parsing for an operator cast, having one capture start is not enough

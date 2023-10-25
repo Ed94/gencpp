@@ -1155,13 +1155,13 @@ namespace raylib
 		RLAPI void        minimize_window( void );               // Set window state: minimized, if resizable (only PLATFORM_DESKTOP)
 		RLAPI void        restore_window( void );                // Set window state: not minimized/maximized (only PLATFORM_DESKTOP)
 		RLAPI void        set_window_icon( Image image );        // Set icon for window (single image, RGBA 32bit, only PLATFORM_DESKTOP)
-		RLAPI void        set_window_icons( Image* images, int count );    // Set icon for window (multiple images, RGBA 32bit, only PLATFORM_DESKTOP)
+		RLAPI void        set_window_icons( Image* images, s32 count );    // Set icon for window (multiple images, RGBA 32bit, only PLATFORM_DESKTOP)
 		RLAPI void        set_window_title( char const* title );           // Set title for window (only PLATFORM_DESKTOP and PLATFORM_WEB)
-		RLAPI void        set_window_position( s32 x, int y );             // Set window position on screen (only PLATFORM_DESKTOP)
+		RLAPI void        set_window_position( s32 x, s32 y );             // Set window position on screen (only PLATFORM_DESKTOP)
 		RLAPI void        set_window_monitor( s32 monitor );               // Set monitor for the current window
-		RLAPI void        set_window_min_size( s32 width, int height );    // Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
-		RLAPI void        set_window_max_size( s32 width, int height );    // Set window maximum dimensions (for FLAG_WINDOW_RESIZABLE)
-		RLAPI void        set_window_size( s32 width, int height );        // Set window dimensions
+		RLAPI void        set_window_min_size( s32 width, s32 height );    // Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)
+		RLAPI void        set_window_max_size( s32 width, s32 height );    // Set window maximum dimensions (for FLAG_WINDOW_RESIZABLE)
+		RLAPI void        set_window_size( s32 width, s32 height );        // Set window dimensions
 		RLAPI void        set_window_opacity( f32 opacity );               // Set window opacity [0.0f..1.0f] (only PLATFORM_DESKTOP)
 		RLAPI void        set_window_focused( void );                      // Set window focused (only PLATFORM_DESKTOP)
 		RLAPI void*       get_window_handle( void );                       // Get native window handle
@@ -1207,7 +1207,7 @@ namespace raylib
 		RLAPI void end_shader_mode( void );                                      // End custom shader drawing (use default shader)
 		RLAPI void begin_blend_mode( s32 mode );                                 // Begin blending mode (alpha, additive, multiplied, subtract, custom)
 		RLAPI void end_blend_mode( void );                                       // End blending mode (reset to default: alpha blending)
-		RLAPI void begin_scissor_mode( s32 x, s32 y, s32 width, int height );    // Begin scissor mode (define screen area for following drawing)
+		RLAPI void begin_scissor_mode( s32 x, s32 y, s32 width, s32 height );    // Begin scissor mode (define screen area for following drawing)
 		RLAPI void end_scissor_mode( void );                                     // End scissor mode
 		RLAPI void begin_vr_stereo_mode( VrStereoConfig config );                // Begin stereo rendering (requires VR simulator)
 		RLAPI void end_vr_stereo_mode( void );                                   // End stereo rendering (requires VR simulator)
@@ -1223,8 +1223,8 @@ namespace raylib
 		RLAPI bool   is_shader_ready( Shader shader );                                       // Check if a shader is ready
 		RLAPI int    get_shader_location( Shader shader, char const* uniformName );          // Get shader uniform location
 		RLAPI int    get_shader_location_attrib( Shader shader, char const* attribName );    // Get shader attribute location
-		RLAPI void   set_shader_value( Shader shader, s32 locIndex, void const* value, int uniformType );                 // Set shader uniform value
-		RLAPI void   set_shader_value_v( Shader shader, s32 locIndex, void const* value, s32 uniformType, int count );    // Set shader uniform value vector
+		RLAPI void   set_shader_value( Shader shader, s32 locIndex, void const* value, s32 uniformType );                 // Set shader uniform value
+		RLAPI void   set_shader_value_v( Shader shader, s32 locIndex, void const* value, s32 uniformType, s32 count );    // Set shader uniform value vector
 		RLAPI void   set_shader_value_matrix( Shader shader, s32 locIndex, Matrix mat );            // Set shader uniform value (matrix 4x4)
 		RLAPI void   set_shader_value_texture( Shader shader, s32 locIndex, Texture2D texture );    // Set shader uniform value for texture (sampler2d)
 		RLAPI void   unload_shader( Shader shader );                                                // Unload shader from GPU memory (VRAM)
@@ -1235,7 +1235,7 @@ namespace raylib
 		RLAPI Matrix  get_camera_matrix_2d( Camera2D camera );                        // Get camera 2d transform matrix
 		RLAPI Vector2 get_world_to_screen( Vector3 position, Camera camera );         // Get the screen space position for a 3d world space position
 		RLAPI Vector2 get_screen_to_world_2d( Vector2 position, Camera2D camera );    // Get the world space position for a 2d camera screen space position
-		RLAPI Vector2 get_world_to_screen_ex( Vector3 position, Camera camera, s32 width, int height );    // Get size position for a 3d world space position
+		RLAPI Vector2 get_world_to_screen_ex( Vector3 position, Camera camera, s32 width, s32 height );    // Get size position for a 3d world space position
 		RLAPI Vector2 get_world_to_screen_2d( Vector2 position, Camera2D camera );    // Get the screen space position for a 2d camera world space position
 
 		// Timing-related functions
@@ -1253,7 +1253,7 @@ namespace raylib
 		RLAPI void wait_time( double seconds );    // Wait for some time (halt program execution)
 
 		// Misc. functions
-		RLAPI int  get_random_value( s32 min, int max );       // Get a random value between min and max (both included)
+		RLAPI int  get_random_value( s32 min, s32 max );       // Get a random value between min and max (both included)
 		RLAPI void set_random_seed( u32 seed );                // Set the seed for the random number generator
 		RLAPI void take_screenshot( char const* fileName );    // Takes a screenshot of current screen (filename extension defines format)
 		RLAPI void set_config_flags( u32 flags );              // Setup init configuration flags (view FLAGS)
@@ -1264,7 +1264,7 @@ namespace raylib
 		RLAPI void  trace_log( s32 logLevel, char const* text, ... );    // Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
 		RLAPI void  set_trace_log_level( s32 logLevel );                 // Set the current threshold (minimum) log level
 		RLAPI void* mem_alloc( u32 size );                               // Internal memory allocator
-		RLAPI void* mem_realloc( void* ptr, unsigned int size );         // Internal memory reallocator
+		RLAPI void* mem_realloc( void* ptr, u32 size );                  // Internal memory reallocator
 		RLAPI void  mem_free( void* ptr );                               // Internal memory free
 
 		// Set custom callbacks
@@ -1276,9 +1276,9 @@ namespace raylib
 		RLAPI void set_save_file_text_callback( SaveFileTextCallback callback );    // Set custom file text data saver
 
 		// Files management functions
-		RLAPI unsigned char* load_file_data( char const* fileName, int* dataSize );     // Load file data as byte array (read)
+		RLAPI unsigned char* load_file_data( char const* fileName, s32* dataSize );     // Load file data as byte array (read)
 		RLAPI void           unload_file_data( u8* data );                              // Unload file data allocated by LoadFileData()
-		RLAPI bool save_file_data( char const* fileName, void* data, int dataSize );    // Save data to file from byte array (write), returns true on success
+		RLAPI bool save_file_data( char const* fileName, void* data, s32 dataSize );    // Save data to file from byte array (write), returns true on success
 		RLAPI bool export_data_as_code( unsigned char const* data, s32 dataSize, char const* fileName );    // Export data to code (.h), returns true on success
 		RLAPI char* load_file_text( char const* fileName );    // Load text data from file (read), returns a '\0' terminated string
 		RLAPI void  unload_file_text( char* text );            // Unload file text data allocated by LoadFileText()
@@ -1314,14 +1314,14 @@ namespace raylib
 
 		// Compression/Encoding functionality
 		RLAPI unsigned char*
-		    compress_data( unsigned char const* data, s32 dataSize, int* compDataSize );    // Compress data (DEFLATE algorithm), memory must be MemFree()
+		    compress_data( unsigned char const* data, s32 dataSize, s32* compDataSize );    // Compress data (DEFLATE algorithm), memory must be MemFree()
 		RLAPI unsigned char* decompress_data(
 		    unsigned char const* compData,
 		    s32                  compDataSize,
-		    int*                 dataSize
+		    s32*                 dataSize
 		);    // Decompress data (DEFLATE algorithm), memory must be MemFree()
-		RLAPI char* encode_data_base64( unsigned char const* data, s32 dataSize, int* outputSize );    // Encode data to Base64 string, memory must be MemFree()
-		RLAPI unsigned char* decode_data_base64( unsigned char const* data, int* outputSize );         // Decode Base64 string data, memory must be MemFree()
+		RLAPI char* encode_data_base64( unsigned char const* data, s32 dataSize, s32* outputSize );    // Encode data to Base64 string, memory must be MemFree()
+		RLAPI unsigned char* decode_data_base64( unsigned char const* data, s32* outputSize );         // Decode Base64 string data, memory must be MemFree()
 
 		//------------------------------------------------------------------------------------
 		// Input Handling Functions (Module: core)
@@ -1340,13 +1340,13 @@ namespace raylib
 		// Input-related functions: gamepads
 		RLAPI bool        is_gamepad_available( s32 gamepad );                      // Check if a gamepad is available
 		RLAPI char const* get_gamepad_name( s32 gamepad );                          // Get gamepad internal name id
-		RLAPI bool        is_gamepad_button_pressed( s32 gamepad, int button );     // Check if a gamepad button has been pressed once
-		RLAPI bool        is_gamepad_button_down( s32 gamepad, int button );        // Check if a gamepad button is being pressed
-		RLAPI bool        is_gamepad_button_released( s32 gamepad, int button );    // Check if a gamepad button has been released once
-		RLAPI bool        is_gamepad_button_up( s32 gamepad, int button );          // Check if a gamepad button is NOT being pressed
+		RLAPI bool        is_gamepad_button_pressed( s32 gamepad, s32 button );     // Check if a gamepad button has been pressed once
+		RLAPI bool        is_gamepad_button_down( s32 gamepad, s32 button );        // Check if a gamepad button is being pressed
+		RLAPI bool        is_gamepad_button_released( s32 gamepad, s32 button );    // Check if a gamepad button has been released once
+		RLAPI bool        is_gamepad_button_up( s32 gamepad, s32 button );          // Check if a gamepad button is NOT being pressed
 		RLAPI int         get_gamepad_button_pressed( void );                       // Get the last gamepad button pressed
 		RLAPI int         get_gamepad_axis_count( s32 gamepad );                    // Get gamepad axis count for a gamepad
-		RLAPI float       get_gamepad_axis_movement( s32 gamepad, int axis );       // Get axis movement value for a gamepad axis
+		RLAPI float       get_gamepad_axis_movement( s32 gamepad, s32 axis );       // Get axis movement value for a gamepad axis
 		RLAPI int         set_gamepad_mappings( char const* mappings );             // Set internal gamepad mappings (SDL_GameControllerDB)
 
 		// Input-related functions: mouse
@@ -1358,9 +1358,9 @@ namespace raylib
 		RLAPI int     get_mouse_y( void );                             // Get mouse position Y
 		RLAPI Vector2 get_mouse_position( void );                      // Get mouse position XY
 		RLAPI Vector2 get_mouse_delta( void );                         // Get mouse delta between frames
-		RLAPI void    set_mouse_position( s32 x, int y );              // Set mouse position XY
-		RLAPI void    set_mouse_offset( s32 offsetX, int offsetY );    // Set mouse offset
-		RLAPI void    set_mouse_scale( f32 scaleX, float scaleY );     // Set mouse scaling
+		RLAPI void    set_mouse_position( s32 x, s32 y );              // Set mouse position XY
+		RLAPI void    set_mouse_offset( s32 offsetX, s32 offsetY );    // Set mouse offset
+		RLAPI void    set_mouse_scale( f32 scaleX, f32 scaleY );       // Set mouse scaling
 		RLAPI float   get_mouse_wheel_move( void );                    // Get mouse wheel movement for X or Y, whichever is larger
 		RLAPI Vector2 get_mouse_wheel_move_v( void );                  // Get mouse wheel movement for both X and Y
 		RLAPI void    set_mouse_cursor( s32 cursor );                  // Set mouse cursor
@@ -1387,8 +1387,8 @@ namespace raylib
 		//------------------------------------------------------------------------------------
 		// Camera System Functions (Module: rcamera)
 		//------------------------------------------------------------------------------------
-		RLAPI void update_camera( Camera* camera, int mode );                                              // Update camera position for selected mode
-		RLAPI void update_camera_pro( Camera* camera, Vector3 movement, Vector3 rotation, float zoom );    // Update camera movement/rotation
+		RLAPI void update_camera( Camera* camera, s32 mode );                                            // Update camera position for selected mode
+		RLAPI void update_camera_pro( Camera* camera, Vector3 movement, Vector3 rotation, f32 zoom );    // Update camera movement/rotation
 
 		//------------------------------------------------------------------------------------
 		// Basic Shapes Drawing Functions (Module: shapes)
@@ -1456,16 +1456,16 @@ namespace raylib
 		                                                                                                                     // sides with extended parameters
 
 		// Basic shapes collision detection functions
-		RLAPI bool check_collision_recs( Rectangle rec1, Rectangle rec2 );                                     // Check collision between two rectangles
-		RLAPI bool check_collision_circles( Vector2 center1, f32 radius1, Vector2 center2, float radius2 );    // Check collision between two circles
-		RLAPI bool check_collision_circle_rec( Vector2 center, f32 radius, Rectangle rec );                    // Check collision between circle and rectangle
-		RLAPI bool check_collision_point_rec( Vector2 point, Rectangle rec );                                  // Check if point is inside rectangle
-		RLAPI bool check_collision_point_circle( Vector2 point, Vector2 center, float radius );                // Check if point is inside circle
-		RLAPI bool check_collision_point_triangle( Vector2 point, Vector2 p1, Vector2 p2, Vector2 p3 );        // Check if point is inside a triangle
+		RLAPI bool check_collision_recs( Rectangle rec1, Rectangle rec2 );                                   // Check collision between two rectangles
+		RLAPI bool check_collision_circles( Vector2 center1, f32 radius1, Vector2 center2, f32 radius2 );    // Check collision between two circles
+		RLAPI bool check_collision_circle_rec( Vector2 center, f32 radius, Rectangle rec );                  // Check collision between circle and rectangle
+		RLAPI bool check_collision_point_rec( Vector2 point, Rectangle rec );                                // Check if point is inside rectangle
+		RLAPI bool check_collision_point_circle( Vector2 point, Vector2 center, f32 radius );                // Check if point is inside circle
+		RLAPI bool check_collision_point_triangle( Vector2 point, Vector2 p1, Vector2 p2, Vector2 p3 );      // Check if point is inside a triangle
 		RLAPI bool check_collision_point_poly(
 		    Vector2  point,
 		    Vector2* points,
-		    int      pointCount
+		    s32      pointCount
 		);    // Check if point is within a polygon described by array of vertices
 		RLAPI bool check_collision_lines(
 		    Vector2  startPos1,
@@ -1478,7 +1478,7 @@ namespace raylib
 		    Vector2 point,
 		    Vector2 p1,
 		    Vector2 p2,
-		    int     threshold
+		    s32     threshold
 		);    // Check if point belongs to line created between two points [p1] and [p2] with defined margin in pixels [threshold]
 		RLAPI Rectangle get_collision_rec( Rectangle rec1, Rectangle rec2 );    // Get collision rectangle for two rectangles collision
 
@@ -1489,20 +1489,20 @@ namespace raylib
 		// Image loading functions
 		// NOTE: These functions do not require GPU access
 		RLAPI Image load_image( char const* fileName );                                                           // Load image from file into CPU memory (RAM)
-		RLAPI Image load_image_raw( char const* fileName, s32 width, s32 height, s32 format, int headerSize );    // Load image from RAW file data
-		RLAPI Image load_image_svg( char const* fileNameOrString, s32 width, int height );    // Load image from SVG file data or string with specified size
-		RLAPI Image load_image_anim( char const* fileName, int* frames );                     // Load image sequence from file (frames appended to image.data)
+		RLAPI Image load_image_raw( char const* fileName, s32 width, s32 height, s32 format, s32 headerSize );    // Load image from RAW file data
+		RLAPI Image load_image_svg( char const* fileNameOrString, s32 width, s32 height );    // Load image from SVG file data or string with specified size
+		RLAPI Image load_image_anim( char const* fileName, s32* frames );                     // Load image sequence from file (frames appended to image.data)
 		RLAPI Image load_image_from_memory(
 		    char const*          fileType,
 		    unsigned char const* fileData,
-		    int                  dataSize
+		    s32                  dataSize
 		);                                                                         // Load image from memory buffer, fileType refers to extension: i.e. '.png'
 		RLAPI Image          load_image_from_texture( Texture2D texture );         // Load image from GPU texture data
 		RLAPI Image          load_image_from_screen( void );                       // Load image from screen buffer and (screenshot)
 		RLAPI bool           is_image_ready( Image image );                        // Check if an image is ready
 		RLAPI void           unload_image( Image image );                          // Unload image from CPU memory (RAM)
 		RLAPI bool           export_image( Image image, char const* fileName );    // Export image data to file, returns true on success
-		RLAPI unsigned char* export_image_to_memory( Image image, char const* fileType, int* fileSize );    // Export image to memory buffer
+		RLAPI unsigned char* export_image_to_memory( Image image, char const* fileType, s32* fileSize );    // Export image to memory buffer
 		RLAPI bool
 		    export_image_as_code( Image image, char const* fileName );    // Export image as code file defining an array of bytes, returns true on success
 
@@ -1513,9 +1513,9 @@ namespace raylib
 		RLAPI Image gen_image_gradient_radial( s32 width, s32 height, f32 density, Color inner, Color outer );    // Generate image: radial gradient
 		RLAPI Image gen_image_gradient_square( s32 width, s32 height, f32 density, Color inner, Color outer );    // Generate image: square gradient
 		RLAPI Image gen_image_checked( s32 width, s32 height, s32 checksX, s32 checksY, Color col1, Color col2 );    // Generate image: checked
-		RLAPI Image gen_image_white_noise( s32 width, s32 height, float factor );                                    // Generate image: white noise
-		RLAPI Image gen_image_perlin_noise( s32 width, s32 height, s32 offsetX, s32 offsetY, float scale );          // Generate image: perlin noise
-		RLAPI Image gen_image_cellular( s32 width, s32 height, int tileSize );    // Generate image: cellular algorithm, bigger tileSize means bigger cells
+		RLAPI Image gen_image_white_noise( s32 width, s32 height, f32 factor );                                      // Generate image: white noise
+		RLAPI Image gen_image_perlin_noise( s32 width, s32 height, s32 offsetX, s32 offsetY, f32 scale );            // Generate image: perlin noise
+		RLAPI Image gen_image_cellular( s32 width, s32 height, s32 tileSize );    // Generate image: cellular algorithm, bigger tileSize means bigger cells
 		RLAPI Image gen_image_text( s32 width, s32 height, char const* text );    // Generate image: grayscale image from text data
 
 		// Image manipulation functions
@@ -1523,38 +1523,38 @@ namespace raylib
 		RLAPI Image image_from_image( Image image, Rectangle rec );               // Create an image from another image piece
 		RLAPI Image image_text( char const* text, s32 fontSize, Color color );    // Create an image from text (default font)
 		RLAPI Image image_text_ex( Font font, char const* text, f32 fontSize, f32 spacing, Color tint );    // Create an image from text (custom sprite font)
-		RLAPI void  image_format( Image* image, int newFormat );                                            // Convert image data to desired format
+		RLAPI void  image_format( Image* image, s32 newFormat );                                            // Convert image data to desired format
 		RLAPI void  image_to_pot( Image* image, Color fill );                                               // Convert image to POT (power-of-two)
 		RLAPI void  image_crop( Image* image, Rectangle crop );                                             // Crop an image to a defined rectangle
-		RLAPI void  image_alpha_crop( Image* image, float threshold );                                      // Crop image depending on alpha value
-		RLAPI void  image_alpha_clear( Image* image, Color color, float threshold );                        // Clear alpha channel to desired color
+		RLAPI void  image_alpha_crop( Image* image, f32 threshold );                                        // Crop image depending on alpha value
+		RLAPI void  image_alpha_clear( Image* image, Color color, f32 threshold );                          // Clear alpha channel to desired color
 		RLAPI void  image_alpha_mask( Image* image, Image alphaMask );                                      // Apply alpha mask to image
 		RLAPI void  image_alpha_premultiply( Image* image );                                                // Premultiply alpha channel
-		RLAPI void  image_blur_gaussian( Image* image, int blurSize );               // Apply Gaussian blur using a box blur approximation
-		RLAPI void  image_resize( Image* image, s32 newWidth, int newHeight );       // Resize image (Bicubic scaling algorithm)
-		RLAPI void  image_resize_nn( Image* image, s32 newWidth, int newHeight );    // Resize image (Nearest-Neighbor scaling algorithm)
+		RLAPI void  image_blur_gaussian( Image* image, s32 blurSize );               // Apply Gaussian blur using a box blur approximation
+		RLAPI void  image_resize( Image* image, s32 newWidth, s32 newHeight );       // Resize image (Bicubic scaling algorithm)
+		RLAPI void  image_resize_nn( Image* image, s32 newWidth, s32 newHeight );    // Resize image (Nearest-Neighbor scaling algorithm)
 		RLAPI void
 		    image_resize_canvas( Image* image, s32 newWidth, s32 newHeight, s32 offsetX, s32 offsetY, Color fill );    // Resize canvas and fill with color
 		RLAPI void   image_mipmaps( Image* image );                                           // Compute all mipmap levels for a provided image
-		RLAPI void   image_dither( Image* image, s32 rBpp, s32 gBpp, s32 bBpp, int aBpp );    // Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
+		RLAPI void   image_dither( Image* image, s32 rBpp, s32 gBpp, s32 bBpp, s32 aBpp );    // Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
 		RLAPI void   image_flip_vertical( Image* image );                                     // Flip image vertically
 		RLAPI void   image_flip_horizontal( Image* image );                                   // Flip image horizontally
-		RLAPI void   image_rotate( Image* image, int degrees );                               // Rotate image by input angle in degrees (-359 to 359)
+		RLAPI void   image_rotate( Image* image, s32 degrees );                               // Rotate image by input angle in degrees (-359 to 359)
 		RLAPI void   image_rotate_cw( Image* image );                                         // Rotate image clockwise 90deg
 		RLAPI void   image_rotate_ccw( Image* image );                                        // Rotate image counter-clockwise 90deg
 		RLAPI void   image_color_tint( Image* image, Color color );                           // Modify image color: tint
 		RLAPI void   image_color_invert( Image* image );                                      // Modify image color: invert
 		RLAPI void   image_color_grayscale( Image* image );                                   // Modify image color: grayscale
-		RLAPI void   image_color_contrast( Image* image, float contrast );                    // Modify image color: contrast (-100 to 100)
-		RLAPI void   image_color_brightness( Image* image, int brightness );                  // Modify image color: brightness (-255 to 255)
+		RLAPI void   image_color_contrast( Image* image, f32 contrast );                      // Modify image color: contrast (-100 to 100)
+		RLAPI void   image_color_brightness( Image* image, s32 brightness );                  // Modify image color: brightness (-255 to 255)
 		RLAPI void   image_color_replace( Image* image, Color color, Color replace );         // Modify image color: replace color
 		RLAPI Color* load_image_colors( Image image );                                        // Load color data from image as a Color array (RGBA - 32bit)
 		RLAPI Color*
-		           load_image_palette( Image image, s32 maxPaletteSize, int* colorCount );    // Load colors palette from image as a Color array (RGBA - 32bit)
+		           load_image_palette( Image image, s32 maxPaletteSize, s32* colorCount );    // Load colors palette from image as a Color array (RGBA - 32bit)
 		RLAPI void unload_image_colors( Color* colors );                                      // Unload color data loaded with LoadImageColors()
 		RLAPI void unload_image_palette( Color* colors );                                     // Unload colors palette loaded with LoadImagePalette()
-		RLAPI Rectangle get_image_alpha_border( Image image, float threshold );               // Get image alpha border rectangle
-		RLAPI Color     get_image_color( Image image, s32 x, int y );                         // Get image pixel color at (x, y) position
+		RLAPI Rectangle get_image_alpha_border( Image image, f32 threshold );                 // Get image alpha border rectangle
+		RLAPI Color     get_image_color( Image image, s32 x, s32 y );                         // Get image pixel color at (x, y) position
 
 		// Image drawing functions
 		// NOTE: Image software-rendering functions (CPU)
@@ -1589,8 +1589,8 @@ namespace raylib
 		// NOTE: These functions require GPU access
 		RLAPI Texture2D       load_texture( char const* fileName );                       // Load texture from file into GPU memory (VRAM)
 		RLAPI Texture2D       load_texture_from_image( Image image );                     // Load texture from image data
-		RLAPI TextureCubemap  load_texture_cubemap( Image image, int layout );            // Load cubemap from image, multiple image cubemap layouts supported
-		RLAPI RenderTexture2D load_render_texture( s32 width, int height );               // Load texture for rendering (framebuffer)
+		RLAPI TextureCubemap  load_texture_cubemap( Image image, s32 layout );            // Load cubemap from image, multiple image cubemap layouts supported
+		RLAPI RenderTexture2D load_render_texture( s32 width, s32 height );               // Load texture for rendering (framebuffer)
 		RLAPI bool            is_texture_ready( Texture2D texture );                      // Check if a texture is ready
 		RLAPI void            unload_texture( Texture2D texture );                        // Unload texture from GPU memory (VRAM)
 		RLAPI bool            is_render_texture_ready( RenderTexture2D target );          // Check if a render texture is ready
@@ -1600,8 +1600,8 @@ namespace raylib
 
 		// Texture configuration functions
 		RLAPI void gen_texture_mipmaps( Texture2D* texture );              // Generate GPU mipmaps for a texture
-		RLAPI void set_texture_filter( Texture2D texture, int filter );    // Set texture scaling filter mode
-		RLAPI void set_texture_wrap( Texture2D texture, int wrap );        // Set texture wrapping mode
+		RLAPI void set_texture_filter( Texture2D texture, s32 filter );    // Set texture scaling filter mode
+		RLAPI void set_texture_wrap( Texture2D texture, s32 wrap );        // Set texture wrapping mode
 
 		// Texture drawing functions
 		RLAPI void draw_texture( Texture2D texture, s32 posX, s32 posY, Color tint );    // Draw a Texture2D
@@ -1626,21 +1626,21 @@ namespace raylib
 		);    // Draws a texture (or part of it) that stretches or shrinks nicely
 
 		// Color/pixel related functions
-		RLAPI Color   fade( Color color, float alpha );                          // Get color with alpha applied, alpha goes from 0.0f to 1.0f
-		RLAPI int     color_to_int( Color color );                               // Get hexadecimal value for a Color
-		RLAPI Vector4 color_normalize( Color color );                            // Get Color normalized as float [0..1]
-		RLAPI Color   color_from_normalized( Vector4 normalized );               // Get Color from normalized values [0..1]
-		RLAPI Vector3 color_to_hsv( Color color );                               // Get HSV values for a Color, hue [0..360], saturation/value [0..1]
-		RLAPI Color   color_from_hsv( f32 hue, f32 saturation, float value );    // Get a Color from HSV values, hue [0..360], saturation/value [0..1]
-		RLAPI Color   color_tint( Color color, Color tint );                     // Get color multiplied with another color
-		RLAPI Color   color_brightness( Color color, float factor );    // Get color with brightness correction, brightness factor goes from -1.0f to 1.0f
-		RLAPI Color   color_contrast( Color color, float contrast );    // Get color with contrast correction, contrast values between -1.0f and 1.0f
-		RLAPI Color   color_alpha( Color color, float alpha );          // Get color with alpha applied, alpha goes from 0.0f to 1.0f
+		RLAPI Color   fade( Color color, f32 alpha );                          // Get color with alpha applied, alpha goes from 0.0f to 1.0f
+		RLAPI int     color_to_int( Color color );                             // Get hexadecimal value for a Color
+		RLAPI Vector4 color_normalize( Color color );                          // Get Color normalized as float [0..1]
+		RLAPI Color   color_from_normalized( Vector4 normalized );             // Get Color from normalized values [0..1]
+		RLAPI Vector3 color_to_hsv( Color color );                             // Get HSV values for a Color, hue [0..360], saturation/value [0..1]
+		RLAPI Color   color_from_hsv( f32 hue, f32 saturation, f32 value );    // Get a Color from HSV values, hue [0..360], saturation/value [0..1]
+		RLAPI Color   color_tint( Color color, Color tint );                   // Get color multiplied with another color
+		RLAPI Color   color_brightness( Color color, f32 factor );    // Get color with brightness correction, brightness factor goes from -1.0f to 1.0f
+		RLAPI Color   color_contrast( Color color, f32 contrast );    // Get color with contrast correction, contrast values between -1.0f and 1.0f
+		RLAPI Color   color_alpha( Color color, f32 alpha );          // Get color with alpha applied, alpha goes from 0.0f to 1.0f
 		RLAPI Color   color_alpha_blend( Color dst, Color src, Color tint );       // Get src alpha-blended into dst color with tint
 		RLAPI Color   get_color( u32 hexValue );                                   // Get Color structure from hexadecimal value
-		RLAPI Color   get_pixel_color( void* srcPtr, int format );                 // Get Color from a source pixel pointer of certain format
-		RLAPI void    set_pixel_color( void* dstPtr, Color color, int format );    // Set color formatted into destination pixel pointer
-		RLAPI int     get_pixel_data_size( s32 width, s32 height, int format );    // Get pixel data size in bytes for certain format
+		RLAPI Color   get_pixel_color( void* srcPtr, s32 format );                 // Get Color from a source pixel pointer of certain format
+		RLAPI void    set_pixel_color( void* dstPtr, Color color, s32 format );    // Set color formatted into destination pixel pointer
+		RLAPI int     get_pixel_data_size( s32 width, s32 height, s32 format );    // Get pixel data size in bytes for certain format
 
 		//------------------------------------------------------------------------------------
 		// Font Loading and Text Drawing Functions (Module: text)
@@ -1653,20 +1653,20 @@ namespace raylib
 		    char const* fileName,
 		    s32         fontSize,
 		    s32*        codepoints,
-		    int         codepointCount
+		    s32         codepointCount
 		);    // Load font from file with extended parameters, use NULL for codepoints and 0 for codepointCount to load the default character set
-		RLAPI Font load_font_from_image( Image image, Color key, int firstChar );    // Load font from Image (XNA style)
+		RLAPI Font load_font_from_image( Image image, Color key, s32 firstChar );    // Load font from Image (XNA style)
 		RLAPI Font load_font_from_memory(
 		    char const*          fileType,
 		    unsigned char const* fileData,
 		    s32                  dataSize,
 		    s32                  fontSize,
 		    s32*                 codepoints,
-		    int                  codepointCount
+		    s32                  codepointCount
 		);                                        // Load font from memory buffer, fileType refers to extension: i.e. '.ttf'
 		RLAPI bool is_font_ready( Font font );    // Check if a font is ready
 		RLAPI GlyphInfo*
-		    load_font_data( unsigned char const* fileData, s32 dataSize, s32 fontSize, s32* codepoints, s32 codepointCount, int type );    // Load font data for
+		    load_font_data( unsigned char const* fileData, s32 dataSize, s32 fontSize, s32* codepoints, s32 codepointCount, s32 type );    // Load font data for
 		                                                                                                                                   // further use
 		RLAPI Image gen_image_font_atlas(
 		    GlyphInfo const* glyphs,
@@ -1674,14 +1674,14 @@ namespace raylib
 		    s32              glyphCount,
 		    s32              fontSize,
 		    s32              padding,
-		    int              packMethod
+		    s32              packMethod
 		);                                                                    // Generate image font atlas using chars info
-		RLAPI void unload_font_data( GlyphInfo* glyphs, int glyphCount );     // Unload font chars info data (RAM)
+		RLAPI void unload_font_data( GlyphInfo* glyphs, s32 glyphCount );     // Unload font chars info data (RAM)
 		RLAPI void unload_font( Font font );                                  // Unload font from GPU memory (VRAM)
 		RLAPI bool export_font_as_code( Font font, char const* fileName );    // Export font as code file, returns true on success
 
 		// Text drawing functions
-		RLAPI void draw_fps( s32 posX, int posY );                                                                          // Draw current FPS
+		RLAPI void draw_fps( s32 posX, s32 posY );                                                                          // Draw current FPS
 		RLAPI void draw_text( char const* text, s32 posX, s32 posY, s32 fontSize, Color color );                            // Draw text (using default font)
 		RLAPI void draw_text_ex( Font font, char const* text, Vector2 position, f32 fontSize, f32 spacing, Color tint );    // Draw text using font and
 		                                                                                                                    // additional parameters
@@ -1707,35 +1707,35 @@ namespace raylib
 		);    // Draw multiple character (codepoint)
 
 		// Text font info functions
-		RLAPI void    set_text_line_spacing( s32 spacing );                                           // Set vertical line spacing when drawing with line-breaks
-		RLAPI int     measure_text( char const* text, int fontSize );                                 // Measure string width for default font
-		RLAPI Vector2 measure_text_ex( Font font, char const* text, f32 fontSize, float spacing );    // Measure string size for Font
+		RLAPI void    set_text_line_spacing( s32 spacing );                                         // Set vertical line spacing when drawing with line-breaks
+		RLAPI int     measure_text( char const* text, s32 fontSize );                               // Measure string width for default font
+		RLAPI Vector2 measure_text_ex( Font font, char const* text, f32 fontSize, f32 spacing );    // Measure string size for Font
 		RLAPI int     get_glyph_index(
 		        Font font,
-		        int  codepoint
+		        s32  codepoint
 		    );    // Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found
 		RLAPI GlyphInfo
-		    get_glyph_info( Font font, int codepoint );    // Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found
+		    get_glyph_info( Font font, s32 codepoint );    // Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found
 		RLAPI Rectangle get_glyph_atlas_rec(
 		    Font font,
-		    int  codepoint
+		    s32  codepoint
 		);    // Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found
 
 		// Text codepoints management functions (unicode characters)
-		RLAPI char* load_utf8( int const* codepoints, int length );     // Load UTF-8 text encoded from codepoints array
+		RLAPI char* load_utf8( int const* codepoints, s32 length );     // Load UTF-8 text encoded from codepoints array
 		RLAPI void  unload_utf8( char* text );                          // Unload UTF-8 text encoded from codepoints array
-		RLAPI int*  load_codepoints( char const* text, int* count );    // Load all codepoints from a UTF-8 text string, codepoints count returned by parameter
+		RLAPI int*  load_codepoints( char const* text, s32* count );    // Load all codepoints from a UTF-8 text string, codepoints count returned by parameter
 		RLAPI void  unload_codepoints( s32* codepoints );               // Unload codepoints data from memory
 		RLAPI int   get_codepoint_count( char const* text );            // Get total number of codepoints in a UTF-8 encoded string
-		RLAPI int   get_codepoint( char const* text, int* codepointSize );    // Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
+		RLAPI int   get_codepoint( char const* text, s32* codepointSize );    // Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
 		RLAPI int
-		    get_codepoint_next( char const* text, int* codepointSize );    // Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
+		    get_codepoint_next( char const* text, s32* codepointSize );    // Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
 		RLAPI int get_codepoint_previous(
 		    char const* text,
-		    int*        codepointSize
+		    s32*        codepointSize
 		);    // Get previous codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure
 		RLAPI char const*
-		    codepoint_to_utf8( s32 codepoint, int* utf8Size );    // Encode one codepoint into UTF-8 byte array (array length returned as parameter)
+		    codepoint_to_utf8( s32 codepoint, s32* utf8Size );    // Encode one codepoint into UTF-8 byte array (array length returned as parameter)
 
 		// Text strings management functions (no UTF-8 strings, only byte chars)
 		// NOTE: Some strings allocate memory internally for returned strings, just be careful!
@@ -1743,12 +1743,12 @@ namespace raylib
 		RLAPI bool         text_is_equal( char const* text1, char const* text2 );                // Check if two text string are equal
 		RLAPI unsigned int text_length( char const* text );                                      // Get text length, checks for '\0' ending
 		RLAPI char const*  text_format( char const* text, ... );                                 // Text formatting with variables (sprintf() style)
-		RLAPI char const*  text_subtext( char const* text, s32 position, int length );           // Get a piece of a text string
+		RLAPI char const*  text_subtext( char const* text, s32 position, s32 length );           // Get a piece of a text string
 		RLAPI char*        text_replace( char* text, char const* replace, char const* by );      // Replace text string (WARNING: memory must be freed!)
-		RLAPI char*        text_insert( char const* text, char const* insert, int position );    // Insert text in a position (WARNING: memory must be freed!)
+		RLAPI char*        text_insert( char const* text, char const* insert, s32 position );    // Insert text in a position (WARNING: memory must be freed!)
 		RLAPI char const*  text_join( char const** textList, s32 count, char const* delimiter );    // Join text strings with delimiter
-		RLAPI char const** text_split( char const* text, char delimiter, int* count );              // Split text into multiple strings
-		RLAPI void         text_append( char* text, char const* append, int* position );            // Append text at specific position and move cursor!
+		RLAPI char const** text_split( char const* text, char delimiter, s32* count );              // Split text into multiple strings
+		RLAPI void         text_append( char* text, char const* append, s32* position );            // Append text at specific position and move cursor!
 		RLAPI int          text_find_index( char const* text, char const* find );                   // Find first text occurrence within a string
 		RLAPI char const*  text_to_upper( char const* text );                                       // Get upper case version of provided string
 		RLAPI char const*  text_to_lower( char const* text );                                       // Get lower case version of provided string
@@ -1798,7 +1798,7 @@ namespace raylib
 		);    // Draw capsule wireframe with the center of its sphere caps at startPos and endPos
 		RLAPI void draw_plane( Vector3 centerPos, Vector2 size, Color color );    // Draw a plane XZ
 		RLAPI void draw_ray( Ray ray, Color color );                              // Draw a ray line
-		RLAPI void draw_grid( s32 slices, float spacing );                        // Draw a grid (centered at (0, 0, 0))
+		RLAPI void draw_grid( s32 slices, f32 spacing );                          // Draw a grid (centered at (0, 0, 0))
 
 		//------------------------------------------------------------------------------------
 		// Model 3d Loading and Drawing Functions (Module: models)
@@ -1843,31 +1843,31 @@ namespace raylib
 
 		// Mesh management functions
 		RLAPI void upload_mesh( Mesh* mesh, bool dynamic );    // Upload mesh vertex data in GPU and provide VAO/VBO ids
-		RLAPI void update_mesh_buffer( Mesh mesh, s32 index, void const* data, s32 dataSize, int offset );    // Update mesh vertex data in GPU for a specific
+		RLAPI void update_mesh_buffer( Mesh mesh, s32 index, void const* data, s32 dataSize, s32 offset );    // Update mesh vertex data in GPU for a specific
 		                                                                                                      // buffer index
 		RLAPI void unload_mesh( Mesh mesh );                                                                  // Unload mesh data from CPU and GPU
 		RLAPI void draw_mesh( Mesh mesh, Material material, Matrix transform );                               // Draw a 3d mesh with material and transform
-		RLAPI void draw_mesh_instanced( Mesh mesh, Material material, Matrix const* transforms, int instances );    // Draw multiple mesh instances with
+		RLAPI void draw_mesh_instanced( Mesh mesh, Material material, Matrix const* transforms, s32 instances );    // Draw multiple mesh instances with
 		                                                                                                            // material and different transforms
 		RLAPI bool        export_mesh( Mesh mesh, char const* fileName );    // Export mesh data to file, returns true on success
 		RLAPI BoundingBox get_mesh_bounding_box( Mesh mesh );                // Compute mesh bounding box limits
 		RLAPI void        gen_mesh_tangents( Mesh* mesh );                   // Compute mesh tangents
 
 		// Mesh generation functions
-		RLAPI Mesh gen_mesh_poly( s32 sides, float radius );                         // Generate polygonal mesh
-		RLAPI Mesh gen_mesh_plane( f32 width, f32 length, s32 resX, int resZ );      // Generate plane mesh (with subdivisions)
-		RLAPI Mesh gen_mesh_cube( f32 width, f32 height, float length );             // Generate cuboid mesh
-		RLAPI Mesh gen_mesh_sphere( f32 radius, s32 rings, int slices );             // Generate sphere mesh (standard sphere)
-		RLAPI Mesh gen_mesh_hemi_sphere( f32 radius, s32 rings, int slices );        // Generate half-sphere mesh (no bottom cap)
-		RLAPI Mesh gen_mesh_cylinder( f32 radius, f32 height, int slices );          // Generate cylinder mesh
-		RLAPI Mesh gen_mesh_cone( f32 radius, f32 height, int slices );              // Generate cone/pyramid mesh
-		RLAPI Mesh gen_mesh_torus( f32 radius, f32 size, s32 radSeg, int sides );    // Generate torus mesh
-		RLAPI Mesh gen_mesh_knot( f32 radius, f32 size, s32 radSeg, int sides );     // Generate trefoil knot mesh
+		RLAPI Mesh gen_mesh_poly( s32 sides, f32 radius );                           // Generate polygonal mesh
+		RLAPI Mesh gen_mesh_plane( f32 width, f32 length, s32 resX, s32 resZ );      // Generate plane mesh (with subdivisions)
+		RLAPI Mesh gen_mesh_cube( f32 width, f32 height, f32 length );               // Generate cuboid mesh
+		RLAPI Mesh gen_mesh_sphere( f32 radius, s32 rings, s32 slices );             // Generate sphere mesh (standard sphere)
+		RLAPI Mesh gen_mesh_hemi_sphere( f32 radius, s32 rings, s32 slices );        // Generate half-sphere mesh (no bottom cap)
+		RLAPI Mesh gen_mesh_cylinder( f32 radius, f32 height, s32 slices );          // Generate cylinder mesh
+		RLAPI Mesh gen_mesh_cone( f32 radius, f32 height, s32 slices );              // Generate cone/pyramid mesh
+		RLAPI Mesh gen_mesh_torus( f32 radius, f32 size, s32 radSeg, s32 sides );    // Generate torus mesh
+		RLAPI Mesh gen_mesh_knot( f32 radius, f32 size, s32 radSeg, s32 sides );     // Generate trefoil knot mesh
 		RLAPI Mesh gen_mesh_heightmap( Image heightmap, Vector3 size );              // Generate heightmap mesh from image data
 		RLAPI Mesh gen_mesh_cubicmap( Image cubicmap, Vector3 cubeSize );            // Generate cubes-based map mesh from image data
 
 		// Material loading/unloading functions
-		RLAPI Material* load_materials( char const* fileName, int* materialCount );    // Load materials from model file
+		RLAPI Material* load_materials( char const* fileName, s32* materialCount );    // Load materials from model file
 		RLAPI Material  load_material_default( void );                                 // Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)
 		RLAPI bool      is_material_ready( Material material );                        // Check if a material is ready
 		RLAPI void      unload_material( Material material );                          // Unload material from GPU memory (VRAM)
@@ -1876,20 +1876,20 @@ namespace raylib
 		         s32       mapType,
 		         Texture2D texture
 		     );    // Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)
-		RLAPI void set_model_mesh_material( Model* model, s32 meshId, int materialId );    // Set material for a mesh
+		RLAPI void set_model_mesh_material( Model* model, s32 meshId, s32 materialId );    // Set material for a mesh
 
 		// Model animations loading/unloading functions
-		RLAPI ModelAnimation* load_model_animations( char const* fileName, int* animCount );            // Load model animations from file
-		RLAPI void            update_model_animation( Model model, ModelAnimation anim, int frame );    // Update model animation pose
+		RLAPI ModelAnimation* load_model_animations( char const* fileName, s32* animCount );            // Load model animations from file
+		RLAPI void            update_model_animation( Model model, ModelAnimation anim, s32 frame );    // Update model animation pose
 		RLAPI void            unload_model_animation( ModelAnimation anim );                            // Unload animation data
-		RLAPI void            unload_model_animations( ModelAnimation* animations, int animCount );     // Unload animation array data
+		RLAPI void            unload_model_animations( ModelAnimation* animations, s32 animCount );     // Unload animation array data
 		RLAPI bool            is_model_animation_valid( Model model, ModelAnimation anim );             // Check model animation skeleton match
 
 		// Collision detection functions
-		RLAPI bool         check_collision_spheres( Vector3 center1, f32 radius1, Vector3 center2, float radius2 );    // Check collision between two spheres
+		RLAPI bool         check_collision_spheres( Vector3 center1, f32 radius1, Vector3 center2, f32 radius2 );    // Check collision between two spheres
 		RLAPI bool         check_collision_boxes( BoundingBox box1, BoundingBox box2 );                          // Check collision between two bounding boxes
-		RLAPI bool         check_collision_box_sphere( BoundingBox box, Vector3 center, float radius );          // Check collision between box and sphere
-		RLAPI RayCollision get_ray_collision_sphere( Ray ray, Vector3 center, float radius );                    // Get collision info between ray and sphere
+		RLAPI bool         check_collision_box_sphere( BoundingBox box, Vector3 center, f32 radius );            // Check collision between box and sphere
+		RLAPI RayCollision get_ray_collision_sphere( Ray ray, Vector3 center, f32 radius );                      // Get collision info between ray and sphere
 		RLAPI RayCollision get_ray_collision_box( Ray ray, BoundingBox box );                                    // Get collision info between ray and box
 		RLAPI RayCollision get_ray_collision_mesh( Ray ray, Mesh mesh, Matrix transform );                       // Get collision info between ray and mesh
 		RLAPI RayCollision get_ray_collision_triangle( Ray ray, Vector3 p1, Vector3 p2, Vector3 p3 );            // Get collision info between ray and triangle
@@ -1912,14 +1912,14 @@ namespace raylib
 		RLAPI Wave load_wave_from_memory(
 		    char const*          fileType,
 		    unsigned char const* fileData,
-		    int                  dataSize
+		    s32                  dataSize
 		);                                                 // Load wave from memory buffer, fileType refers to extension: i.e. '.wav'
 		RLAPI bool  is_wave_ready( Wave wave );            // Checks if wave data is ready
 		RLAPI Sound load_sound( char const* fileName );    // Load sound from file
 		RLAPI Sound load_sound_from_wave( Wave wave );     // Load sound from wave data
 		RLAPI Sound load_sound_alias( Sound source );    // Create a new sound that shares the same sample data as the source sound, does not own the sound data
 		RLAPI bool  is_sound_ready( Sound sound );       // Checks if a sound is ready
-		RLAPI void  update_sound( Sound sound, void const* data, int sampleCount );    // Update sound buffer with new data
+		RLAPI void  update_sound( Sound sound, void const* data, s32 sampleCount );    // Update sound buffer with new data
 		RLAPI void  unload_wave( Wave wave );                                          // Unload wave data
 		RLAPI void  unload_sound( Sound sound );                                       // Unload sound
 		RLAPI void  unload_sound_alias( Sound alias );                                 // Unload a sound alias (does not deallocate sample data)
@@ -1932,18 +1932,18 @@ namespace raylib
 		RLAPI void   pause_sound( Sound sound );                                                 // Pause a sound
 		RLAPI void   resume_sound( Sound sound );                                                // Resume a paused sound
 		RLAPI bool   is_sound_playing( Sound sound );                                            // Check if a sound is currently playing
-		RLAPI void   set_sound_volume( Sound sound, float volume );                              // Set volume for a sound (1.0 is max level)
-		RLAPI void   set_sound_pitch( Sound sound, float pitch );                                // Set pitch for a sound (1.0 is base level)
-		RLAPI void   set_sound_pan( Sound sound, float pan );                                    // Set pan for a sound (0.5 is center)
+		RLAPI void   set_sound_volume( Sound sound, f32 volume );                                // Set volume for a sound (1.0 is max level)
+		RLAPI void   set_sound_pitch( Sound sound, f32 pitch );                                  // Set pitch for a sound (1.0 is base level)
+		RLAPI void   set_sound_pan( Sound sound, f32 pan );                                      // Set pan for a sound (0.5 is center)
 		RLAPI Wave   wave_copy( Wave wave );                                                     // Copy a wave to a new wave
-		RLAPI void   wave_crop( Wave* wave, s32 initSample, int finalSample );                   // Crop a wave to defined samples range
-		RLAPI void   wave_format( Wave* wave, s32 sampleRate, s32 sampleSize, int channels );    // Convert wave data to desired format
+		RLAPI void   wave_crop( Wave* wave, s32 initSample, s32 finalSample );                   // Crop a wave to defined samples range
+		RLAPI void   wave_format( Wave* wave, s32 sampleRate, s32 sampleSize, s32 channels );    // Convert wave data to desired format
 		RLAPI float* load_wave_samples( Wave wave );                                             // Load samples data from wave as a 32bit float data array
 		RLAPI void   unload_wave_samples( f32* samples );                                        // Unload samples data loaded with LoadWaveSamples()
 
 		// Music management functions
 		RLAPI Music load_music_stream( char const* fileName );                                                         // Load music stream from file
-		RLAPI Music load_music_stream_from_memory( char const* fileType, unsigned char const* data, int dataSize );    // Load music stream from data
+		RLAPI Music load_music_stream_from_memory( char const* fileType, unsigned char const* data, s32 dataSize );    // Load music stream from data
 		RLAPI bool  is_music_ready( Music music );                                                                     // Checks if a music stream is ready
 		RLAPI void  unload_music_stream( Music music );                                                                // Unload music stream
 		RLAPI void  play_music_stream( Music music );                                                                  // Start music playing
@@ -1952,27 +1952,27 @@ namespace raylib
 		RLAPI void  stop_music_stream( Music music );                                                                  // Stop music playing
 		RLAPI void  pause_music_stream( Music music );                                                                 // Pause music playing
 		RLAPI void  resume_music_stream( Music music );                                                                // Resume playing paused music
-		RLAPI void  seek_music_stream( Music music, float position );                                                  // Seek music to a position (in seconds)
-		RLAPI void  set_music_volume( Music music, float volume );    // Set volume for music (1.0 is max level)
-		RLAPI void  set_music_pitch( Music music, float pitch );      // Set pitch for a music (1.0 is base level)
-		RLAPI void  set_music_pan( Music music, float pan );          // Set pan for a music (0.5 is center)
-		RLAPI float get_music_time_length( Music music );             // Get music time length (in seconds)
-		RLAPI float get_music_time_played( Music music );             // Get current music time played (in seconds)
+		RLAPI void  seek_music_stream( Music music, f32 position );                                                    // Seek music to a position (in seconds)
+		RLAPI void  set_music_volume( Music music, f32 volume );    // Set volume for music (1.0 is max level)
+		RLAPI void  set_music_pitch( Music music, f32 pitch );      // Set pitch for a music (1.0 is base level)
+		RLAPI void  set_music_pan( Music music, f32 pan );          // Set pan for a music (0.5 is center)
+		RLAPI float get_music_time_length( Music music );           // Get music time length (in seconds)
+		RLAPI float get_music_time_played( Music music );           // Get current music time played (in seconds)
 
 		// AudioStream management functions
-		RLAPI AudioStream load_audio_stream( u32 sampleRate, u32 sampleSize, unsigned int channels );     // Load audio stream (to stream raw audio pcm data)
+		RLAPI AudioStream load_audio_stream( u32 sampleRate, u32 sampleSize, u32 channels );              // Load audio stream (to stream raw audio pcm data)
 		RLAPI bool        is_audio_stream_ready( AudioStream stream );                                    // Checks if an audio stream is ready
 		RLAPI void        unload_audio_stream( AudioStream stream );                                      // Unload audio stream and free memory
-		RLAPI void        update_audio_stream( AudioStream stream, void const* data, int frameCount );    // Update audio stream buffers with data
+		RLAPI void        update_audio_stream( AudioStream stream, void const* data, s32 frameCount );    // Update audio stream buffers with data
 		RLAPI bool        is_audio_stream_processed( AudioStream stream );                                // Check if any audio stream buffers requires refill
 		RLAPI void        play_audio_stream( AudioStream stream );                                        // Play audio stream
 		RLAPI void        pause_audio_stream( AudioStream stream );                                       // Pause audio stream
 		RLAPI void        resume_audio_stream( AudioStream stream );                                      // Resume audio stream
 		RLAPI bool        is_audio_stream_playing( AudioStream stream );                                  // Check if audio stream is playing
 		RLAPI void        stop_audio_stream( AudioStream stream );                                        // Stop audio stream
-		RLAPI void        set_audio_stream_volume( AudioStream stream, float volume );                    // Set volume for audio stream (1.0 is max level)
-		RLAPI void        set_audio_stream_pitch( AudioStream stream, float pitch );                      // Set pitch for audio stream (1.0 is base level)
-		RLAPI void        set_audio_stream_pan( AudioStream stream, float pan );                          // Set pan for audio stream (0.5 is centered)
+		RLAPI void        set_audio_stream_volume( AudioStream stream, f32 volume );                      // Set volume for audio stream (1.0 is max level)
+		RLAPI void        set_audio_stream_pitch( AudioStream stream, f32 pitch );                        // Set pitch for audio stream (1.0 is base level)
+		RLAPI void        set_audio_stream_pan( AudioStream stream, f32 pan );                            // Set pan for audio stream (0.5 is centered)
 		RLAPI void        set_audio_stream_buffer_size_default( s32 size );                               // Default size for new audio streams
 		RLAPI void        set_audio_stream_callback( AudioStream stream, AudioCallback callback );        // Audio thread callback to request new data
 

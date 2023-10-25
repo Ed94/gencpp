@@ -179,7 +179,7 @@ typedef struct float16
 //----------------------------------------------------------------------------------
 
 // Clamp float value
-RMAPI float clamp( f32 value, f32 min, float max )
+RMAPI float clamp( f32 value, f32 min, f32 max )
 {
 	float result = ( value < min ) ? min : value;
 
@@ -190,7 +190,7 @@ RMAPI float clamp( f32 value, f32 min, float max )
 }
 
 // Calculate linear interpolation between two floats
-RMAPI float lerp( f32 start, f32 end, float amount )
+RMAPI float lerp( f32 start, f32 end, f32 amount )
 {
 	float result = start + amount * ( end - start );
 
@@ -198,7 +198,7 @@ RMAPI float lerp( f32 start, f32 end, float amount )
 }
 
 // Normalize input value within input range
-RMAPI float normalize( f32 value, f32 start, float end )
+RMAPI float normalize( f32 value, f32 start, f32 end )
 {
 	float result = ( value - start ) / ( end - start );
 
@@ -206,7 +206,7 @@ RMAPI float normalize( f32 value, f32 start, float end )
 }
 
 // Remap input value within input range to output range
-RMAPI float remap( f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, float outputEnd )
+RMAPI float remap( f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, f32 outputEnd )
 {
 	float result = ( value - inputStart ) / ( inputEnd - inputStart ) * ( outputEnd - outputStart ) + outputStart;
 
@@ -214,7 +214,7 @@ RMAPI float remap( f32 value, f32 inputStart, f32 inputEnd, f32 outputStart, flo
 }
 
 // Wrap input value from min to max
-RMAPI float wrap( f32 value, f32 min, float max )
+RMAPI float wrap( f32 value, f32 min, f32 max )
 {
 	float result = value - ( max - min ) * floorf( ( value - min ) / ( max - min ) );
 
@@ -222,7 +222,7 @@ RMAPI float wrap( f32 value, f32 min, float max )
 }
 
 // Check whether two given floats are almost equal
-RMAPI int float_equals( f32 x, float y )
+RMAPI int float_equals( f32 x, f32 y )
 {
 #if ! defined( EPSILON )
 #define EPSILON 0.000001f
@@ -262,7 +262,7 @@ RMAPI Vector2 vector2_add( Vector2 v1, Vector2 v2 )
 }
 
 // Add vector and float value
-RMAPI Vector2 vector2_add_value( Vector2 v, float add )
+RMAPI Vector2 vector2_add_value( Vector2 v, f32 add )
 {
 	Vector2 result = { v.x + add, v.y + add };
 
@@ -278,7 +278,7 @@ RMAPI Vector2 vector2_subtract( Vector2 v1, Vector2 v2 )
 }
 
 // Subtract vector by float value
-RMAPI Vector2 vector2_subtract_value( Vector2 v, float sub )
+RMAPI Vector2 vector2_subtract_value( Vector2 v, f32 sub )
 {
 	Vector2 result = { v.x - sub, v.y - sub };
 
@@ -353,7 +353,7 @@ RMAPI float vector2_line_angle( Vector2 start, Vector2 end )
 }
 
 // Scale vector (multiply by value)
-RMAPI Vector2 vector2_scale( Vector2 v, float scale )
+RMAPI Vector2 vector2_scale( Vector2 v, f32 scale )
 {
 	Vector2 result = { v.x * scale, v.y * scale };
 
@@ -416,7 +416,7 @@ RMAPI Vector2 vector2_transform( Vector2 v, Matrix mat )
 }
 
 // Calculate linear interpolation between two vectors
-RMAPI Vector2 vector2_lerp( Vector2 v1, Vector2 v2, float amount )
+RMAPI Vector2 vector2_lerp( Vector2 v1, Vector2 v2, f32 amount )
 {
 	Vector2 result = { 0 };
 
@@ -440,7 +440,7 @@ RMAPI Vector2 vector2_reflect( Vector2 v, Vector2 normal )
 }
 
 // Rotate vector by angle
-RMAPI Vector2 vector2_rotate( Vector2 v, float angle )
+RMAPI Vector2 vector2_rotate( Vector2 v, f32 angle )
 {
 	Vector2 result = { 0 };
 
@@ -454,7 +454,7 @@ RMAPI Vector2 vector2_rotate( Vector2 v, float angle )
 }
 
 // Move Vector towards target
-RMAPI Vector2 vector2_move_towards( Vector2 v, Vector2 target, float maxDistance )
+RMAPI Vector2 vector2_move_towards( Vector2 v, Vector2 target, f32 maxDistance )
 {
 	Vector2 result = { 0 };
 
@@ -494,7 +494,7 @@ RMAPI Vector2 vector2_clamp( Vector2 v, Vector2 min, Vector2 max )
 }
 
 // Clamp the magnitude of the vector between two min and max values
-RMAPI Vector2 vector2_clamp_value( Vector2 v, f32 min, float max )
+RMAPI Vector2 vector2_clamp_value( Vector2 v, f32 min, f32 max )
 {
 	Vector2 result = v;
 
@@ -562,7 +562,7 @@ RMAPI Vector3 vector3_add( Vector3 v1, Vector3 v2 )
 }
 
 // Add vector and float value
-RMAPI Vector3 vector3_add_value( Vector3 v, float add )
+RMAPI Vector3 vector3_add_value( Vector3 v, f32 add )
 {
 	Vector3 result = { v.x + add, v.y + add, v.z + add };
 
@@ -578,7 +578,7 @@ RMAPI Vector3 vector3_subtract( Vector3 v1, Vector3 v2 )
 }
 
 // Subtract vector by float value
-RMAPI Vector3 vector3_subtract_value( Vector3 v, float sub )
+RMAPI Vector3 vector3_subtract_value( Vector3 v, f32 sub )
 {
 	Vector3 result = { v.x - sub, v.y - sub, v.z - sub };
 
@@ -586,7 +586,7 @@ RMAPI Vector3 vector3_subtract_value( Vector3 v, float sub )
 }
 
 // Multiply vector by scalar
-RMAPI Vector3 vector3_scale( Vector3 v, float scalar )
+RMAPI Vector3 vector3_scale( Vector3 v, f32 scalar )
 {
 	Vector3 result = { v.x * scalar, v.y * scalar, v.z * scalar };
 
@@ -835,7 +835,7 @@ RMAPI Vector3 vector3_rotate_by_quaternion( Vector3 v, Quaternion q )
 }
 
 // Rotates a vector around an axis
-RMAPI Vector3 vector3_rotate_by_axis_angle( Vector3 v, Vector3 axis, float angle )
+RMAPI Vector3 vector3_rotate_by_axis_angle( Vector3 v, Vector3 axis, f32 angle )
 {
 	Vector3 result = v;
 
@@ -885,7 +885,7 @@ RMAPI Vector3 vector3_rotate_by_axis_angle( Vector3 v, Vector3 axis, float angle
 }
 
 // Calculate linear interpolation between two vectors
-RMAPI Vector3 vector3_lerp( Vector3 v1, Vector3 v2, float amount )
+RMAPI Vector3 vector3_lerp( Vector3 v1, Vector3 v2, f32 amount )
 {
 	Vector3 result = { 0 };
 
@@ -1073,7 +1073,7 @@ RMAPI Vector3 vector3_clamp( Vector3 v, Vector3 min, Vector3 max )
 }
 
 // Clamp the magnitude of the vector between two values
-RMAPI Vector3 vector3_clamp_value( Vector3 v, f32 min, float max )
+RMAPI Vector3 vector3_clamp_value( Vector3 v, f32 min, f32 max )
 {
 	Vector3 result = v;
 
@@ -1120,7 +1120,7 @@ RMAPI int vector3_equals( Vector3 p, Vector3 q )
 // n: normalized normal vector of the interface of two optical media
 // r: ratio of the refractive index of the medium from where the ray comes
 //    to the refractive index of the medium on the other side of the surface
-RMAPI Vector3 vector3_refract( Vector3 v, Vector3 n, float r )
+RMAPI Vector3 vector3_refract( Vector3 v, Vector3 n, f32 r )
 {
 	Vector3 result = { 0 };
 
@@ -1328,7 +1328,7 @@ RMAPI Matrix matrix_multiply( Matrix left, Matrix right )
 }
 
 // Get translation matrix
-RMAPI Matrix matrix_translate( f32 x, f32 y, float z )
+RMAPI Matrix matrix_translate( f32 x, f32 y, f32 z )
 {
 	Matrix result = { 1.0f, 0.0f, 0.0f, x, 0.0f, 1.0f, 0.0f, y, 0.0f, 0.0f, 1.0f, z, 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -1337,7 +1337,7 @@ RMAPI Matrix matrix_translate( f32 x, f32 y, float z )
 
 // Create rotation matrix from axis and angle
 // NOTE: Angle should be provided in radians
-RMAPI Matrix matrix_rotate( Vector3 axis, float angle )
+RMAPI Matrix matrix_rotate( Vector3 axis, f32 angle )
 {
 	Matrix result = { 0 };
 
@@ -1496,7 +1496,7 @@ RMAPI Matrix matrix_rotate_zyx( Vector3 angle )
 }
 
 // Get scaling matrix
-RMAPI Matrix matrix_scale( f32 x, f32 y, float z )
+RMAPI Matrix matrix_scale( f32 x, f32 y, f32 z )
 {
 	Matrix result = { x, 0.0f, 0.0f, 0.0f, 0.0f, y, 0.0f, 0.0f, 0.0f, 0.0f, z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -1686,7 +1686,7 @@ RMAPI Quaternion quaternion_add( Quaternion q1, Quaternion q2 )
 }
 
 // Add quaternion and float value
-RMAPI Quaternion quaternion_add_value( Quaternion q, float add )
+RMAPI Quaternion quaternion_add_value( Quaternion q, f32 add )
 {
 	Quaternion result = { q.x + add, q.y + add, q.z + add, q.w + add };
 
@@ -1702,7 +1702,7 @@ RMAPI Quaternion quaternion_subtract( Quaternion q1, Quaternion q2 )
 }
 
 // Subtract quaternion and float value
-RMAPI Quaternion quaternion_subtract_value( Quaternion q, float sub )
+RMAPI Quaternion quaternion_subtract_value( Quaternion q, f32 sub )
 {
 	Quaternion result = { q.x - sub, q.y - sub, q.z - sub, q.w - sub };
 
@@ -1780,7 +1780,7 @@ RMAPI Quaternion quaternion_multiply( Quaternion q1, Quaternion q2 )
 }
 
 // Scale quaternion by float value
-RMAPI Quaternion quaternion_scale( Quaternion q, float mul )
+RMAPI Quaternion quaternion_scale( Quaternion q, f32 mul )
 {
 	Quaternion result = { 0 };
 
@@ -1801,7 +1801,7 @@ RMAPI Quaternion quaternion_divide( Quaternion q1, Quaternion q2 )
 }
 
 // Calculate linear interpolation between two quaternions
-RMAPI Quaternion quaternion_lerp( Quaternion q1, Quaternion q2, float amount )
+RMAPI Quaternion quaternion_lerp( Quaternion q1, Quaternion q2, f32 amount )
 {
 	Quaternion result = { 0 };
 
@@ -1814,7 +1814,7 @@ RMAPI Quaternion quaternion_lerp( Quaternion q1, Quaternion q2, float amount )
 }
 
 // Calculate slerp-optimized interpolation between two quaternions
-RMAPI Quaternion quaternion_nlerp( Quaternion q1, Quaternion q2, float amount )
+RMAPI Quaternion quaternion_nlerp( Quaternion q1, Quaternion q2, f32 amount )
 {
 	Quaternion result = { 0 };
 
@@ -1840,7 +1840,7 @@ RMAPI Quaternion quaternion_nlerp( Quaternion q1, Quaternion q2, float amount )
 }
 
 // Calculates spherical linear interpolation between two quaternions
-RMAPI Quaternion quaternion_slerp( Quaternion q1, Quaternion q2, float amount )
+RMAPI Quaternion quaternion_slerp( Quaternion q1, Quaternion q2, f32 amount )
 {
 	Quaternion result = { 0 };
 
@@ -2015,7 +2015,7 @@ RMAPI Matrix quaternion_to_matrix( Quaternion q )
 
 // Get rotation quaternion for an angle and axis
 // NOTE: Angle must be provided in radians
-RMAPI Quaternion quaternion_from_axis_angle( Vector3 axis, float angle )
+RMAPI Quaternion quaternion_from_axis_angle( Vector3 axis, f32 angle )
 {
 	Quaternion result = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -2062,7 +2062,7 @@ RMAPI Quaternion quaternion_from_axis_angle( Vector3 axis, float angle )
 }
 
 // Get the rotation angle and axis for a given quaternion
-RMAPI void quaternion_to_axis_angle( Quaternion q, Vector3* outAxis, float* outAngle )
+RMAPI void quaternion_to_axis_angle( Quaternion q, Vector3* outAxis, f32* outAngle )
 {
 	if ( fabsf( q.w ) > 1.0f )
 	{
@@ -2101,7 +2101,7 @@ RMAPI void quaternion_to_axis_angle( Quaternion q, Vector3* outAxis, float* outA
 
 // Get the quaternion equivalent to Euler angles
 // NOTE: Rotation order is ZYX
-RMAPI Quaternion quaternion_from_euler( f32 pitch, f32 yaw, float roll )
+RMAPI Quaternion quaternion_from_euler( f32 pitch, f32 yaw, f32 roll )
 {
 	Quaternion result = { 0 };
 

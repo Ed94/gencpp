@@ -476,7 +476,7 @@ struct CodeParam
 	CodeParam end()
 	{
 		// return { (AST_Param*) rcast( AST*, ast)->Last };
-		return { nullptr }
+		return { nullptr };
 	}
 	CodeParam& operator++();
 	CodeParam operator*()
