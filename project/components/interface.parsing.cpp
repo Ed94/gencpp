@@ -1294,7 +1294,7 @@ internal Code               parse_compilcated_definition       ();
 internal CodeBody           parse_class_struct_body            ( Parser::TokType which, Parser::Token name = Parser::NullToken );
 internal Code               parse_class_struct                 ( Parser::TokType which, bool inplace_def );
 internal CodeDefine         parse_define                       ();
-internal Code               parse_foward_or_definition         ( Parser::TokType which, bool is_inplace );
+internal Code               parse_forward_or_definition         ( Parser::TokType which, bool is_inplace );
 internal CodeFn             parse_function_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeType ret_type, Parser::Token name );
 internal Code               parse_function_body                ();
 internal Code               parse_global_nspace                ();
@@ -1317,7 +1317,7 @@ internal CodeDestructor  parse_destructor      ( CodeSpecifiers specifiers = NoC
 internal CodeEnum        parse_enum            ( bool inplace_def = false );
 internal CodeBody        parse_export_body     ();
 internal CodeBody        parse_extern_link_body();
-internal CodeExtern      parse_exten_link      ();
+internal CodeExtern      parse_extern_link     ();
 internal CodeFriend      parse_friend          ();
 internal CodeFn          parse_function        ();
 internal CodeNS          parse_namespace       ();
@@ -1784,7 +1784,7 @@ Code parse_complicated_definition( Parser::TokType which )
 	if ( (idx - 2 ) == tokens.Idx )
 	{
 		// Its a forward declaration only
-		Code result = parse_foward_or_definition( which, is_inplace );
+		Code result = parse_forward_or_definition( which, is_inplace );
 		Context.pop();
 		return result;
 	}
@@ -1834,7 +1834,7 @@ Code parse_complicated_definition( Parser::TokType which )
 	{
 		// Its a definition
 		// <which> { ... };
-		Code result = parse_foward_or_definition( which, is_inplace );
+		Code result = parse_forward_or_definition( which, is_inplace );
 		Context.pop();
 		return result;
 	}
@@ -2267,7 +2267,7 @@ CodeDefine parse_define()
 }
 
 internal inline
-Code parse_foward_or_definition( Parser::TokType which, bool is_inplace )
+Code parse_forward_or_definition( Parser::TokType which, bool is_inplace )
 {
 	using namespace Parser;
 
@@ -2499,7 +2499,7 @@ CodeBody parse_global_nspace( CodeT which )
 				if ( which == Extern_Linkage_Body )
 					log_failure( "Nested extern linkage\n%s", Context.to_string() );
 
-				member = parse_extern_link_body();
+				member = parse_extern_link();
 			break;
 
 			case TokType::Decl_Namespace:
@@ -3693,7 +3693,10 @@ CodeVar parse_variable_after_name(
 		result->InlineCmt = inline_cmt;
 
 	if ( next_var )
-		result->NextVar = next_var;
+	{
+		result->NextVar         = next_var;
+		result->NextVar->Parent = result;
+	}
 
 	Context.pop();
 	return result;
@@ -3758,15 +3761,18 @@ internal CodeVar parse_variable_declaration_list()
 		eat( TokType::Identifier );
 
 		CodeVar var = parse_variable_after_name( ModuleFlag::None, NoCode, specifiers, NoCode, name );
+
+		// TODO(Ed) : CodeVar is going to need a procedure to append comma-defined vars to itself.
 		if ( ! result )
 		{
-			result   = var;
-			last_var = var;
+			result.ast   = var.ast;
+			last_var.ast = var.ast;
 		}
 		else
 		{
-			last_var->NextVar = var;
-			last_var 		  = var;
+			last_var->NextVar.ast         = var.ast;
+			last_var->NextVar->Parent.ast = rcast(AST*, var.ast);
+			last_var.ast                  = var.ast;
 		}
 	}
 
@@ -5319,7 +5325,7 @@ CodeTypedef parse_typedef()
 			if ( (idx - 2 ) == tokens.Idx )
 			{
 				// Its a forward declaration only
-				type = parse_foward_or_definition( currtok.Type, from_typedef );
+				type = parse_forward_or_definition( currtok.Type, from_typedef );
 			}
 
 			Token tok = tokens[ idx - 1 ];
@@ -5360,13 +5366,13 @@ CodeTypedef parse_typedef()
 
 				// TODO(Ed) : I'm not sure if I have to use parse_type here, I'd rather not as that would complicate parse_type.
 				// type = parse_type();
-				type = parse_foward_or_definition( currtok.Type, from_typedef );
+				type = parse_forward_or_definition( currtok.Type, from_typedef );
 			}
 			else if ( tok.Type == TokType::BraceCurly_Close )
 			{
 				// Its a definition
 				// <which> { ... };
-				type = parse_foward_or_definition( currtok.Type, from_typedef );
+				type = parse_forward_or_definition( currtok.Type, from_typedef );
 			}
 			else if ( tok.Type == TokType::BraceSquare_Close)
 			{

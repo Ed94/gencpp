@@ -7,7 +7,7 @@
 #pragma region Constants
 
 #ifndef GEN_GLOBAL_BUCKET_SIZE
-#	define GEN_GLOBAL_BUCKET_SIZE megabytes(4)
+#	define GEN_GLOBAL_BUCKET_SIZE megabytes(8)
 #endif
 #ifndef GEN_CODEPOOL_NUM_BLOCKS
 #	define GEN_CODEPOOL_NUM_BLOCKS kilobytes(16)
@@ -31,7 +31,7 @@
 #	define GEN_LEX_ALLOCATOR_SIZE megabytes(4)
 #endif
 #ifndef GEN_BUILDER_STR_BUFFER_RESERVE
-#	define GEN_BUILDER_STR_BUFFER_RESERVE megabytes(1)
+#	define GEN_BUILDER_STR_BUFFER_RESERVE megabytes(2)
 #endif
 
 // These constexprs are used for allocation behavior of data structures

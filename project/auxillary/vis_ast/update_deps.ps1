@@ -85,8 +85,12 @@ function setup-raylib {
 		New-Item $path_build -ItemType Directory
 	}
 
+	$raylib_headers = Get-ChildItem -Path $path_raylib_src -Filter "*.h" -File
+	$raylib_modules = get-childitem -path $path_raylib_src -filter "*.c" -file
+
 	# Refactor raylib
 	if ( $true ) {
+	# if ( $false ) {
 		$path_gencpp = join-path $path_root 'project/gen'
 
 		$includes = @(
@@ -114,6 +118,18 @@ function setup-raylib {
 					}
 			}
 		Pop-Location
+
+		push-location $path_scripts
+		# Time to format
+		$fmt_includes = @()
+		foreach ( $header in $raylib_headers ) {
+			$fmt_includes +=  split-path $header -leaf
+		}
+		foreach ( $module in $raylib_modules ) {
+			$fmt_includes +=  split-path $module -leaf
+		}
+		format-cpp $path_raylib_src $fmt_includes $null
+		pop-location
 	}
 
 	# Build raylib
@@ -151,12 +167,10 @@ function setup-raylib {
 		$dll  = join-path $path_raylib_lib 'raylib.dll'
 		# $build_result = build-simple $path_build $includes $compiler_args $linker_args $unit $dll
 
-		$raylib_modules = get-childitem -path $path_raylib_src -filter "*.c" -file
 		$build_result = build $path_build $includes $compiler_args $linker_args $raylib_modules $dll
 	}
 
 	# Move headers to used include
-	$raylib_headers = Get-ChildItem -Path $path_raylib_src -Filter "*.h" -File
 	foreach ($header in $raylib_headers) {
 		Copy-Item -Path $header -Destination (join-path $path_raylib_inc (split-path $header -Leaf))
 	}
