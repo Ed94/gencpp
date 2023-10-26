@@ -9,6 +9,7 @@
 constexpr char const* path_config    = "config.h";
 constexpr char const* path_raylib    = "raylib.h";
 constexpr char const* path_raymath   = "raymath.h";
+constexpr char const* path_rcamera   = "rcamera.h";
 constexpr char const* path_rcore     = "rcore.h";
 constexpr char const* path_rgestures = "rgestures.h";
 constexpr char const* path_rgl       = "rgl.h";
@@ -207,7 +208,7 @@ void refactor_file( char const* path )
 
 	String name_scratch = String::make_reserve( GlobalAllocator, kilobytes(1) );
 
-	// CodeBody includes
+	// CodeBody includes 
 	// CodeBody nspace_body = def_body( ECode::Namespace );
 	CodeBody new_code = def_body( ECode::Global_Body );
 
@@ -283,6 +284,7 @@ int gen_main()
 	refactor_file( path_config );
 	refactor_file( path_raylib );
 	refactor_file( path_raymath );
+	refactor_file( path_rcamera );
 
 	return 0;
 }

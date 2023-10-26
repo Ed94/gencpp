@@ -111,7 +111,7 @@ function setup-raylib {
 		$build_result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 		Push-Location $path_raylib_src
 			if ( Test-Path( $executable ) ) {
-				$time_taken = Measure-Command { & $executable
+				Measure-Command { & $executable
 						| ForEach-Object {
 							write-host `t $_ -ForegroundColor Green
 						}

@@ -292,27 +292,27 @@ typedef enum bool
 // Vector2, 2 components
 typedef struct Vector2
 {
-	f32 x;
-	f32 y;
+	f32 x;    // Vector x component
+	f32 y;    // Vector y component
 
 } Vector2;
 
 // Vector3, 3 components
 typedef struct Vector3
 {
-	f32 x;
-	f32 y;
-	f32 z;
+	f32 x;    // Vector x component
+	f32 y;    // Vector y component
+	f32 z;    // Vector z component
 
 } Vector3;
 
 // Vector4, 4 components
 typedef struct Vector4
 {
-	f32 x;
-	f32 y;
-	f32 z;
-	f32 w;
+	f32 x;    // Vector x component
+	f32 y;    // Vector y component
+	f32 z;    // Vector z component
+	f32 w;    // Vector w component
 
 } Vector4;
 
@@ -322,52 +322,52 @@ typedef Vector4 Quaternion;
 // Matrix, 4x4 components, column major, OpenGL style, right-handed
 typedef struct Matrix
 {
-	f32 m0, m4, m8, m12;
-	f32 m1, m5, m9, m13;
-	f32 m2, m6, m10, m14;
-	f32 m3, m7, m11, m15;
+	f32 m0, m4, m8, m12;     // Matrix first row (4 components)
+	f32 m1, m5, m9, m13;     // Matrix second row (4 components)
+	f32 m2, m6, m10, m14;    // Matrix third row (4 components)
+	f32 m3, m7, m11, m15;    // Matrix fourth row (4 components)
 
 } Matrix;
 
 // Color, 4 components, R8G8B8A8 (32bit)
 typedef struct Color
 {
-	u8 r;
-	u8 g;
-	u8 b;
-	u8 a;
+	u8 r;    // Color red value
+	u8 g;    // Color green value
+	u8 b;    // Color blue value
+	u8 a;    // Color alpha value
 
 } Color;
 
 // Rectangle, 4 components
 typedef struct Rectangle
 {
-	f32 x;
-	f32 y;
-	f32 width;
-	f32 height;
+	f32 x;         // Rectangle top-left corner position x
+	f32 y;         // Rectangle top-left corner position y
+	f32 width;     // Rectangle width
+	f32 height;    // Rectangle height
 
 } Rectangle;
 
 // Image, pixel data stored in CPU memory (RAM)
 typedef struct Image
 {
-	void* data;
-	s32   width;
-	s32   height;
-	s32   mipmaps;
-	s32   format;
+	void* data;       // Image raw data
+	s32   width;      // Image base width
+	s32   height;     // Image base height
+	s32   mipmaps;    // Mipmap levels, 1 by default
+	s32   format;     // Data format (PixelFormat type)
 
 } Image;
 
 // Texture, tex data stored in GPU memory (VRAM)
 typedef struct Texture
 {
-	u32 id;
-	s32 width;
-	s32 height;
-	s32 mipmaps;
-	s32 format;
+	u32 id;         // OpenGL texture id
+	s32 width;      // Texture base width
+	s32 height;     // Texture base height
+	s32 mipmaps;    // Mipmap levels, 1 by default
+	s32 format;     // Data format (PixelFormat type)
 
 } Texture;
 
@@ -380,9 +380,9 @@ typedef Texture TextureCubemap;
 // RenderTexture, fbo for texture rendering
 typedef struct RenderTexture
 {
-	u32     id;
-	Texture texture;
-	Texture depth;
+	u32     id;         // OpenGL framebuffer object id
+	Texture texture;    // Color buffer attachment texture
+	Texture depth;      // Depth buffer attachment texture
 
 } RenderTexture;
 
@@ -392,46 +392,46 @@ typedef RenderTexture RenderTexture2D;
 // NPatchInfo, n-patch layout info
 typedef struct NPatchInfo
 {
-	Rectangle source;
-	s32       left;
-	s32       top;
-	s32       right;
-	s32       bottom;
-	s32       layout;
+	Rectangle source;    // Texture source rectangle
+	s32       left;      // Left border offset
+	s32       top;       // Top border offset
+	s32       right;     // Right border offset
+	s32       bottom;    // Bottom border offset
+	s32       layout;    // Layout of the n-patch: 3x3, 1x3 or 3x1
 
 } NPatchInfo;
 
 // GlyphInfo, font characters glyphs info
 typedef struct GlyphInfo
 {
-	s32   value;
-	s32   offsetX;
-	s32   offsetY;
-	s32   advanceX;
-	Image image;
+	s32   value;       // Character value (Unicode)
+	s32   offsetX;     // Character offset X when drawing
+	s32   offsetY;     // Character offset Y when drawing
+	s32   advanceX;    // Character advance position X
+	Image image;       // Character image data
 
 } GlyphInfo;
 
 // Font, font texture and GlyphInfo array data
 typedef struct Font
 {
-	s32        baseSize;
-	s32        glyphCount;
-	s32        glyphPadding;
-	Texture2D  texture;
-	Rectangle* recs;
-	GlyphInfo* glyphs;
+	s32        baseSize;        // Base size (default chars height)
+	s32        glyphCount;      // Number of glyph characters
+	s32        glyphPadding;    // Padding around the glyph characters
+	Texture2D  texture;         // Texture atlas containing the glyphs
+	Rectangle* recs;            // Rectangles in texture for the glyphs
+	GlyphInfo* glyphs;          // Glyphs info data
 
 } Font;
 
 // Camera, defines position/orientation in 3d space
 typedef struct Camera3D
 {
-	Vector3 position;
-	Vector3 target;
-	Vector3 up;
-	f32     fovy;
-	s32     projection;
+	Vector3 position;      // Camera position
+	Vector3 target;        // Camera target it looks-at
+	Vector3 up;            // Camera up vector (rotation over its axis)
+	f32     fovy;          // Camera field-of-view aperture in Y (degrees) in perspective, used as near plane width in orthographic
+	s32     projection;    // Camera projection: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC
 
 } Camera3D;
 
@@ -440,146 +440,146 @@ typedef Camera3D Camera;    // Camera type fallback, defaults to Camera3D
 // Camera2D, defines position/orientation in 2d space
 typedef struct Camera2D
 {
-	Vector2 offset;
-	Vector2 target;
-	f32     rotation;
-	f32     zoom;
+	Vector2 offset;      // Camera offset (displacement from target)
+	Vector2 target;      // Camera target (rotation and zoom origin)
+	f32     rotation;    // Camera rotation in degrees
+	f32     zoom;        // Camera zoom (scaling), should be 1.0f by default
 
 } Camera2D;
 
 // Mesh, vertex data and vao/vbo
 typedef struct Mesh
 {
-	s32 vertexCount;
-	s32 triangleCount;
+	s32 vertexCount;      // Number of vertices stored in arrays
+	s32 triangleCount;    // Number of triangles stored (indexed or not)
 
 	// Vertex attributes data
-	f32* vertices;
-	f32* texcoords;
-	f32* texcoords2;
-	f32* normals;
-	f32* tangents;
-	u8*  colors;
-	u8*  indices;
+	f32* vertices;      // Vertex position (XYZ - 3 components per vertex) (shader-location = 0)
+	f32* texcoords;     // Vertex texture coordinates (UV - 2 components per vertex) (shader-location = 1)
+	f32* texcoords2;    // Vertex texture second coordinates (UV - 2 components per vertex) (shader-location = 5)
+	f32* normals;       // Vertex normals (XYZ - 3 components per vertex) (shader-location = 2)
+	f32* tangents;      // Vertex tangents (XYZW - 4 components per vertex) (shader-location = 4)
+	u8*  colors;        // Vertex colors (RGBA - 4 components per vertex) (shader-location = 3)
+	u8*  indices;       // Vertex indices (in case vertex data comes indexed)
 
 	// Animation vertex data
-	f32* animVertices;
-	f32* animNormals;
-	u8*  boneIds;
-	f32* boneWeights;
+	f32* animVertices;    // Animated vertex positions (after bones transformations)
+	f32* animNormals;     // Animated normals (after bones transformations)
+	u8*  boneIds;         // Vertex bone ids, max 255 bone ids, up to 4 bones influence by vertex (skinning)
+	f32* boneWeights;     // Vertex bone weight, up to 4 bones influence by vertex (skinning)
 
 	// OpenGL identifiers
-	u32           vaoId;
-	unsigned int* vboId;
+	u32           vaoId;    // OpenGL Vertex Array Object id
+	unsigned int* vboId;    // OpenGL Vertex Buffer Objects id (default vertex data)
 
 } Mesh;
 
 // Shader
 typedef struct Shader
 {
-	u32  id;
-	s32* locs;
+	u32  id;      // Shader program id
+	s32* locs;    // Shader locations array (RL_MAX_SHADER_LOCATIONS)
 
 } Shader;
 
 // MaterialMap
 typedef struct MaterialMap
 {
-	Texture2D texture;
-	Color     color;
-	f32       value;
+	Texture2D texture;    // Material map texture
+	Color     color;      // Material map color
+	f32       value;      // Material map value
 
 } MaterialMap;
 
 // Material, includes shader and maps
 typedef struct Material
 {
-	Shader       shader;
-	MaterialMap* maps;
-	f32          params;
+	Shader       shader;    // Material shader
+	MaterialMap* maps;      // Material maps array (MAX_MATERIAL_MAPS)
+	f32          params;    // Material generic parameters (if required)
 
 } Material;
 
 // Transform, vertex transformation data
 typedef struct Transform
 {
-	Vector3    translation;
-	Quaternion rotation;
-	Vector3    scale;
+	Vector3    translation;    // Translation
+	Quaternion rotation;       // Rotation
+	Vector3    scale;          // Scale
 
 } Transform;
 
 // Bone, skeletal animation bone
 typedef struct BoneInfo
 {
-	char name[ 32 ];
-	s32  parent;
+	char name[ 32 ];    // Bone name
+	s32  parent;        // Bone parent
 
 } BoneInfo;
 
 // Model, meshes, materials and animation data
 typedef struct Model
 {
-	Matrix transform;
+	Matrix transform;    // Local transform matrix
 
-	s32       meshCount;
-	s32       materialCount;
-	Mesh*     meshes;
-	Material* materials;
-	s32*      meshMaterial;
+	s32       meshCount;        // Number of meshes
+	s32       materialCount;    // Number of materials
+	Mesh*     meshes;           // Meshes array
+	Material* materials;        // Materials array
+	s32*      meshMaterial;     // Mesh material number
 
 	// Animation data
-	s32        boneCount;
-	BoneInfo*  bones;
-	Transform* bindPose;
+	s32        boneCount;    // Number of bones
+	BoneInfo*  bones;        // Bones information (skeleton)
+	Transform* bindPose;     // Bones base transformation (pose)
 
 } Model;
 
 // ModelAnimation
 typedef struct ModelAnimation
 {
-	s32         boneCount;
-	s32         frameCount;
-	BoneInfo*   bones;
-	Transform** framePoses;
-	char        name[ 32 ];
+	s32         boneCount;     // Number of bones
+	s32         frameCount;    // Number of animation frames
+	BoneInfo*   bones;         // Bones information (skeleton)
+	Transform** framePoses;    // Poses array by frame
+	char        name[ 32 ];    // Animation name
 
 } ModelAnimation;
 
 // Ray, ray for raycasting
 typedef struct Ray
 {
-	Vector3 position;
-	Vector3 direction;
+	Vector3 position;     // Ray position (origin)
+	Vector3 direction;    // Ray direction
 
 } Ray;
 
 // RayCollision, ray hit information
 typedef struct RayCollision
 {
-	bool    hit;
-	f32     distance;
-	Vector3 point;
-	Vector3 normal;
+	bool    hit;         // Did the ray hit something?
+	f32     distance;    // Distance to the nearest hit
+	Vector3 point;       // Point of the nearest hit
+	Vector3 normal;      // Surface normal of hit
 
 } RayCollision;
 
 // BoundingBox
 typedef struct BoundingBox
 {
-	Vector3 min;
-	Vector3 max;
+	Vector3 min;    // Minimum vertex box-corner
+	Vector3 max;    // Maximum vertex box-corner
 
 } BoundingBox;
 
 // Wave, audio wave data
 typedef struct Wave
 {
-	u32   frameCount;
-	u32   sampleRate;
-	u32   sampleSize;
-	u32   channels;
-	void* data;
+	u32   frameCount;    // Total number of frames (considering channels)
+	u32   sampleRate;    // Frequency (samples per second)
+	u32   sampleSize;    // Bit depth (bits per sample): 8, 16, 32 (24 not supported)
+	u32   channels;      // Number of channels (1-mono, 2-stereo, ...)
+	void* data;          // Buffer data pointer
 
 } Wave;
 
@@ -591,71 +591,71 @@ typedef struct rAudioProcessor rAudioProcessor;
 // AudioStream, custom audio stream
 typedef struct AudioStream
 {
-	rAudioBuffer*    buffer;
-	rAudioProcessor* processor;
+	rAudioBuffer*    buffer;       // Pointer to internal data used by the audio system
+	rAudioProcessor* processor;    // Pointer to internal data processor, useful for audio effects
 
-	u32 sampleRate;
-	u32 sampleSize;
-	u32 channels;
+	u32 sampleRate;    // Frequency (samples per second)
+	u32 sampleSize;    // Bit depth (bits per sample): 8, 16, 32 (24 not supported)
+	u32 channels;      // Number of channels (1-mono, 2-stereo, ...)
 
 } AudioStream;
 
 // Sound
 typedef struct Sound
 {
-	AudioStream stream;
-	u32         frameCount;
+	AudioStream stream;        // Audio stream
+	u32         frameCount;    // Total number of frames (considering channels)
 
 } Sound;
 
 // Music, audio stream, anything longer than ~10 seconds should be streamed
 typedef struct Music
 {
-	AudioStream stream;
-	u32         frameCount;
-	bool        looping;
+	AudioStream stream;        // Audio stream
+	u32         frameCount;    // Total number of frames (considering channels)
+	bool        looping;       // Music looping enable
 
-	s32   ctxType;
-	void* ctxData;
+	s32   ctxType;    // Type of music context (audio filetype)
+	void* ctxData;    // Audio context data, depends on type
 
 } Music;
 
 // VrDeviceInfo, Head-Mounted-Display device parameters
 typedef struct VrDeviceInfo
 {
-	s32 hResolution;
-	s32 vResolution;
-	f32 hScreenSize;
-	f32 vScreenSize;
-	f32 vScreenCenter;
-	f32 eyeToScreenDistance;
-	f32 lensSeparationDistance;
-	f32 interpupillaryDistance;
-	f32 lensDistortionValues;
-	f32 chromaAbCorrection;
+	s32 hResolution;               // Horizontal resolution in pixels
+	s32 vResolution;               // Vertical resolution in pixels
+	f32 hScreenSize;               // Horizontal size in meters
+	f32 vScreenSize;               // Vertical size in meters
+	f32 vScreenCenter;             // Screen center in meters
+	f32 eyeToScreenDistance;       // Distance between eye and display in meters
+	f32 lensSeparationDistance;    // Lens separation distance in meters
+	f32 interpupillaryDistance;    // IPD (distance between pupils) in meters
+	f32 lensDistortionValues;      // Lens distortion constant parameters
+	f32 chromaAbCorrection;        // Chromatic aberration correction parameters
 
 } VrDeviceInfo;
 
 // VrStereoConfig, VR stereo rendering configuration for simulator
 typedef struct VrStereoConfig
 {
-	Matrix projection[ 2 ];
-	Matrix viewOffset[ 2 ];
-	f32    leftLensCenter;
-	f32    rightLensCenter;
-	f32    leftScreenCenter;
-	f32    rightScreenCenter;
-	f32    scale;
-	f32    scaleIn;
+	Matrix projection[ 2 ];      // VR projection matrices (per eye)
+	Matrix viewOffset[ 2 ];      // VR view offset matrices (per eye)
+	f32    leftLensCenter;       // VR left lens center
+	f32    rightLensCenter;      // VR right lens center
+	f32    leftScreenCenter;     // VR left screen center
+	f32    rightScreenCenter;    // VR right screen center
+	f32    scale;                // VR distortion scale
+	f32    scaleIn;              // VR distortion scale in
 
 } VrStereoConfig;
 
 // File path list
 typedef struct FilePathList
 {
-	u32    capacity;
-	u32    count;
-	char** paths;
+	u32    capacity;    // Filepaths max entries
+	u32    count;       // Filepaths entries count
+	char** paths;       // Filepaths entries
 
 } FilePathList;
 

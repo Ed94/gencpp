@@ -40,7 +40,7 @@
  **********************************************************************************************/
 
 #ifndef RCAMERA_H
-#define RCAMERA_H
+#define RL_RCAMERA_H
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -52,24 +52,21 @@
 #if defined( _WIN32 )
 #if defined( BUILD_LIBTYPE_SHARED )
 #if defined( __TINYC__ )
-#define __declspec( x ) __attribute__( ( x ) )
+#define RL___declspec( x ) __attribute__( ( x ) )
 #endif
-#define RLAPI __declspec( dllexport )    // We are building the library as a Win32 shared library (.dll)
 #elif defined( USE_LIBTYPE_SHARED )
-#define RLAPI __declspec( dllimport )    // We are using the library as a Win32 shared library (.dll)
 #endif
 #endif
 
 #ifndef RLAPI
-#define RLAPI    // Functions defined as 'extern' by default (implicit specifiers)
 #endif
 
 #if defined( RCAMERA_STANDALONE )
-#define CAMERA_CULL_DISTANCE_NEAR 0.01
-#define CAMERA_CULL_DISTANCE_FAR  1000.0
+#define RL_CAMERA_CULL_DISTANCE_NEAR 0.01
+#define RL_CAMERA_CULL_DISTANCE_FAR  1000.0
 #else
-#define CAMERA_CULL_DISTANCE_NEAR RL_CULL_DISTANCE_NEAR
-#define CAMERA_CULL_DISTANCE_FAR  RL_CULL_DISTANCE_FAR
+#define RL_CAMERA_CULL_DISTANCE_NEAR RL_CULL_DISTANCE_NEAR
+#define RL_CAMERA_CULL_DISTANCE_FAR  RL_CULL_DISTANCE_FAR
 #endif
 
 //----------------------------------------------------------------------------------
@@ -80,25 +77,28 @@
 // Vector2, 2 components
 typedef struct Vector2
 {
-	float x;    // Vector x component
-	float y;    // Vector y component
+	f32 x;    // Vector x component
+	f32 y;    // Vector y component
+
 } Vector2;
 
 // Vector3, 3 components
 typedef struct Vector3
 {
-	float x;    // Vector x component
-	float y;    // Vector y component
-	float z;    // Vector z component
+	f32 x;    // Vector x component
+	f32 y;    // Vector y component
+	f32 z;    // Vector z component
+
 } Vector3;
 
 // Matrix, 4x4 components, column major, OpenGL style, right-handed
 typedef struct Matrix
 {
-	float m0, m4, m8, m12;     // Matrix first row (4 components)
-	float m1, m5, m9, m13;     // Matrix second row (4 components)
-	float m2, m6, m10, m14;    // Matrix third row (4 components)
-	float m3, m7, m11, m15;    // Matrix fourth row (4 components)
+	f32 m0, m4, m8, m12;     // Matrix first row (4 components)
+	f32 m1, m5, m9, m13;     // Matrix second row (4 components)
+	f32 m2, m6, m10, m14;    // Matrix third row (4 components)
+	f32 m3, m7, m11, m15;    // Matrix fourth row (4 components)
+
 } Matrix;
 
 // Camera type, defines a camera position/orientation in 3d space
@@ -107,8 +107,9 @@ typedef struct Camera3D
 	Vector3 position;      // Camera position
 	Vector3 target;        // Camera target it looks-at
 	Vector3 up;            // Camera up vector (rotation over its axis)
-	float   fovy;          // Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
-	int     projection;    // Camera projection type: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC
+	f32     fovy;          // Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
+	s32     projection;    // Camera projection type: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC
+
 } Camera3D;
 
 typedef Camera3D Camera;    // Camera type fallback, defaults to Camera3D
@@ -116,18 +117,20 @@ typedef Camera3D Camera;    // Camera type fallback, defaults to Camera3D
 // Camera projection
 typedef enum
 {
-	CAMERA_PERSPECTIVE = 0,    // Perspective projection
-	CAMERA_ORTHOGRAPHIC        // Orthographic projection
+	Camera_Perspective = 0,    // Perspective projection
+	Camera_Orthographic        // orthographic projection
+
 } CameraProjection;
 
 // Camera system modes
 typedef enum
 {
-	CAMERA_CUSTOM = 0,      // Camera custom, controlled by user (UpdateCamera() does nothing)
-	CAMERA_FREE,            // Camera free mode
-	CAMERA_ORBITAL,         // Camera orbital, around target, zoom supported
-	CAMERA_FIRST_PERSON,    // Camera first person
-	CAMERA_THIRD_PERSON     // Camera third person
+	Camera_Custom = 0,      // Camera custom, controlled by user (UpdateCamera() does nothing)
+	Camera_Free,            // Camera free mode
+	Camera_Orbital,         // Camera orbital, around target, zoom supported
+	Camera_First_Person,    // Camera first person
+	Camera_Third_Person     // camera third person
+
 } CameraMode;
 #endif
 
@@ -141,33 +144,38 @@ typedef enum
 //----------------------------------------------------------------------------------
 
 #if defined( __cplusplus )
-extern "C"
-{    // Prevents name mangling of functions
+namespace raylib
+{
+	extern "C"
+	{
+// Prevents name mangling of functions
 #endif
 
-	RLAPI Vector3 GetCameraForward( Camera* camera );
-	RLAPI Vector3 GetCameraUp( Camera* camera );
-	RLAPI Vector3 GetCameraRight( Camera* camera );
+		RLAPI Vector3 get_camera_forward( Camera* camera );
+		RLAPI Vector3 get_camera_up( Camera* camera );
+		RLAPI Vector3 get_camera_right( Camera* camera );
 
-	// Camera movement
-	RLAPI void CameraMoveForward( Camera* camera, float distance, bool moveInWorldPlane );
-	RLAPI void CameraMoveUp( Camera* camera, float distance );
-	RLAPI void CameraMoveRight( Camera* camera, float distance, bool moveInWorldPlane );
-	RLAPI void CameraMoveToTarget( Camera* camera, float delta );
+		// Camera movement
+		RLAPI void camera_move_forward( Camera* camera, f32 distance, bool moveInWorldPlane );
+		RLAPI void camera_move_up( Camera* camera, f32 distance );
+		RLAPI void camera_move_right( Camera* camera, f32 distance, bool moveInWorldPlane );
+		RLAPI void camera_move_to_target( Camera* camera, f32 delta );
 
-	// Camera rotation
-	RLAPI void CameraYaw( Camera* camera, float angle, bool rotateAroundTarget );
-	RLAPI void CameraPitch( Camera* camera, float angle, bool lockView, bool rotateAroundTarget, bool rotateUp );
-	RLAPI void CameraRoll( Camera* camera, float angle );
+		// Camera rotation
+		RLAPI void camera_yaw( Camera* camera, f32 angle, bool rotateAroundTarget );
+		RLAPI void camera_pitch( Camera* camera, f32 angle, bool lockView, bool rotateAroundTarget, bool rotateUp );
+		RLAPI void camera_roll( Camera* camera, f32 angle );
 
-	RLAPI Matrix GetCameraViewMatrix( Camera* camera );
-	RLAPI Matrix GetCameraProjectionMatrix( Camera* camera, float aspect );
+		RLAPI Matrix get_camera_view_matrix( Camera* camera );
+		RLAPI Matrix get_camera_projection_matrix( Camera* camera, f32 aspect );
 
 #if defined( __cplusplus )
+	}
 }
 #endif
 
-#endif    // RCAMERA_H
+#endif
+// RCAMERA_H
 
 
 /***********************************************************************************
@@ -178,20 +186,21 @@ extern "C"
 
 #if defined( RCAMERA_IMPLEMENTATION )
 
-#include "raymath.h"    // Required for vector maths:
-                        // Vector3Add()
-                        // Vector3Subtract()
-                        // Vector3Scale()
-                        // Vector3Normalize()
-                        // Vector3Distance()
-                        // Vector3CrossProduct()
-                        // Vector3RotateByAxisAngle()
-                        // Vector3Angle()
-                        // Vector3Negate()
-                        // MatrixLookAt()
-                        // MatrixPerspective()
-                        // MatrixOrtho()
-                        // MatrixIdentity()
+#include "raymath.h"
+// Required for vector maths:
+// Vector3Add()
+// Vector3Subtract()
+// Vector3Scale()
+// Vector3Normalize()
+// Vector3Distance()
+// Vector3CrossProduct()
+// Vector3RotateByAxisAngle()
+// Vector3Angle()
+// Vector3Negate()
+// MatrixLookAt()
+// MatrixPerspective()
+// MatrixOrtho()
+// MatrixIdentity()
 
 // raylib required functionality:
 // GetMouseDelta()
@@ -203,23 +212,23 @@ extern "C"
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-#define CAMERA_MOVE_SPEED     0.09f
-#define CAMERA_ROTATION_SPEED 0.03f
-#define CAMERA_PAN_SPEED      0.2f
+#define RL_CAMERA_MOVE_SPEED     0.09f
+#define RL_CAMERA_ROTATION_SPEED 0.03f
+#define RL_CAMERA_PAN_SPEED      0.2f
 
 // Camera mouse movement sensitivity
-#define CAMERA_MOUSE_MOVE_SENSITIVITY                  0.003f    // TODO: it should be independant of framerate
-#define CAMERA_MOUSE_SCROLL_SENSITIVITY                1.5f
+#define RL_CAMERA_MOUSE_MOVE_SENSITIVITY                  0.003f    // TODO: it should be independant of framerate
+#define RL_CAMERA_MOUSE_SCROLL_SENSITIVITY                1.5f
 
-#define CAMERA_ORBITAL_SPEED                           0.5f    // Radians per second
+#define RL_CAMERA_ORBITAL_SPEED                           0.5f    // Radians per second
 
 
-#define CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER 8.0f
-#define CAMERA_FIRST_PERSON_STEP_DIVIDER               30.0f
-#define CAMERA_FIRST_PERSON_WAVING_DIVIDER             200.0f
+#define RL_CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER 8.0f
+#define RL_CAMERA_FIRST_PERSON_STEP_DIVIDER               30.0f
+#define RL_CAMERA_FIRST_PERSON_WAVING_DIVIDER             200.0f
 
 // PLAYER (used by camera)
-#define PLAYER_MOVEMENT_SENSITIVITY 20.0f
+#define RL_PLAYER_MOVEMENT_SENSITIVITY 20.0f
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -240,20 +249,20 @@ extern "C"
 // Module Functions Definition
 //----------------------------------------------------------------------------------
 // Returns the cameras forward vector (normalized)
-Vector3 GetCameraForward( Camera* camera )
+Vector3 get_camera_forward( Camera* camera )
 {
 	return Vector3Normalize( Vector3Subtract( camera->target, camera->position ) );
 }
 
 // Returns the cameras up vector (normalized)
 // Note: The up vector might not be perpendicular to the forward vector
-Vector3 GetCameraUp( Camera* camera )
+Vector3 get_camera_up( Camera* camera )
 {
 	return Vector3Normalize( camera->up );
 }
 
 // Returns the cameras right vector (normalized)
-Vector3 GetCameraRight( Camera* camera )
+Vector3 get_camera_right( Camera* camera )
 {
 	Vector3 forward = GetCameraForward( camera );
 	Vector3 up      = GetCameraUp( camera );
@@ -262,7 +271,7 @@ Vector3 GetCameraRight( Camera* camera )
 }
 
 // Moves the camera in its forward direction
-void CameraMoveForward( Camera* camera, float distance, bool moveInWorldPlane )
+void camera_move_forward( Camera* camera, f32 distance, bool moveInWorldPlane )
 {
 	Vector3 forward = GetCameraForward( camera );
 
@@ -282,7 +291,7 @@ void CameraMoveForward( Camera* camera, float distance, bool moveInWorldPlane )
 }
 
 // Moves the camera in its up direction
-void CameraMoveUp( Camera* camera, float distance )
+void camera_move_up( Camera* camera, f32 distance )
 {
 	Vector3 up = GetCameraUp( camera );
 
@@ -295,7 +304,7 @@ void CameraMoveUp( Camera* camera, float distance )
 }
 
 // Moves the camera target in its current right direction
-void CameraMoveRight( Camera* camera, float distance, bool moveInWorldPlane )
+void camera_move_right( Camera* camera, f32 distance, bool moveInWorldPlane )
 {
 	Vector3 right = GetCameraRight( camera );
 
@@ -315,7 +324,7 @@ void CameraMoveRight( Camera* camera, float distance, bool moveInWorldPlane )
 }
 
 // Moves the camera position closer/farther to/from the camera target
-void CameraMoveToTarget( Camera* camera, float delta )
+void camera_move_to_target( Camera* camera, f32 delta )
 {
 	float distance = Vector3Distance( camera->position, camera->target );
 
@@ -335,9 +344,8 @@ void CameraMoveToTarget( Camera* camera, float delta )
 // Yaw is "looking left and right"
 // If rotateAroundTarget is false, the camera rotates around its position
 // Note: angle must be provided in radians
-void CameraYaw( Camera* camera, float angle, bool rotateAroundTarget )
+void camera_yaw( Camera* camera, f32 angle, bool rotateAroundTarget )
 {
-	// Rotation axis
 	Vector3 up = GetCameraUp( camera );
 
 	// View vector
@@ -363,9 +371,8 @@ void CameraYaw( Camera* camera, float angle, bool rotateAroundTarget )
 //  - rotateAroundTarget defines if rotation is around target or around its position
 //  - rotateUp rotates the up direction as well (typically only usefull in CAMERA_FREE)
 // NOTE: angle must be provided in radians
-void CameraPitch( Camera* camera, float angle, bool lockView, bool rotateAroundTarget, bool rotateUp )
+void camera_pitch( Camera* camera, f32 angle, bool lockView, bool rotateAroundTarget, bool rotateUp )
 {
-	// Up direction
 	Vector3 up = GetCameraUp( camera );
 
 	// View vector
@@ -417,9 +424,8 @@ void CameraPitch( Camera* camera, float angle, bool lockView, bool rotateAroundT
 // Rotates the camera around its forward vector
 // Roll is "turning your head sideways to the left or right"
 // Note: angle must be provided in radians
-void CameraRoll( Camera* camera, float angle )
+void camera_roll( Camera* camera, f32 angle )
 {
-	// Rotation axis
 	Vector3 forward = GetCameraForward( camera );
 
 	// Rotate up direction around forward axis
@@ -427,13 +433,13 @@ void CameraRoll( Camera* camera, float angle )
 }
 
 // Returns the camera view matrix
-Matrix GetCameraViewMatrix( Camera* camera )
+Matrix get_camera_view_matrix( Camera* camera )
 {
 	return MatrixLookAt( camera->position, camera->target, camera->up );
 }
 
 // Returns the camera projection matrix
-Matrix GetCameraProjectionMatrix( Camera* camera, float aspect )
+Matrix get_camera_projection_matrix( Camera* camera, f32 aspect )
 {
 	if ( camera->projection == CAMERA_PERSPECTIVE )
 	{
@@ -453,7 +459,7 @@ Matrix GetCameraProjectionMatrix( Camera* camera, float aspect )
 #if ! defined( RCAMERA_STANDALONE )
 // Update camera position for selected mode
 // Camera mode: CAMERA_FREE, CAMERA_FIRST_PERSON, CAMERA_THIRD_PERSON, CAMERA_ORBITAL or CUSTOM
-void UpdateCamera( Camera* camera, int mode )
+void update_camera( Camera* camera, s32 mode )
 {
 	Vector2 mousePositionDelta = GetMouseDelta();
 
@@ -560,20 +566,12 @@ void UpdateCamera( Camera* camera, int mode )
 			CameraMoveToTarget( camera, -2.0f );
 	}
 }
-#endif    // !RCAMERA_STANDALONE
+#endif
+// !RCAMERA_STANDALONE
 
 // Update camera movement, movement/rotation values should be provided by user
-void UpdateCameraPro( Camera* camera, Vector3 movement, Vector3 rotation, float zoom )
+void update_camera_pro( Camera* camera, Vector3 movement, Vector3 rotation, f32 zoom )
 {
-	// Required values
-	// movement.x - Move forward/backward
-	// movement.y - Move right/left
-	// movement.z - Move up/down
-	// rotation.x - yaw
-	// rotation.y - pitch
-	// rotation.z - roll
-	// zoom - Move towards target
-
 	bool lockView           = true;
 	bool rotateAroundTarget = false;
 	bool rotateUp           = false;
@@ -593,4 +591,5 @@ void UpdateCameraPro( Camera* camera, Vector3 movement, Vector3 rotation, float 
 	CameraMoveToTarget( camera, zoom );
 }
 
-#endif    // RCAMERA_IMPLEMENTATION
+#endif
+// RCAMERA_IMPLEMENTATION

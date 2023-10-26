@@ -3655,7 +3655,6 @@ CodeVar parse_variable_after_name(
 		eat( TokType::Statement_End );
 
 		// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
-		CodeComment inline_cmt = NoCode;
 		if ( left && ( currtok_noskip.Type == TokType::Comment ) && currtok_noskip.Line == stmt_end.Line )
 		{
 			inline_cmt = parse_comment();
