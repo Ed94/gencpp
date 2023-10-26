@@ -61,7 +61,7 @@ elseif ( $release -eq $false ) {
 	$debug = $true
 }
 else {
-	$optimize = treu
+	$optimize = $true
 }
 
 if ( $bootstrap -eq $false -and $singleheader -eq $false -and $test -eq $false ) {
