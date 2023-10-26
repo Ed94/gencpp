@@ -3639,18 +3639,18 @@ CodeVar parse_variable_after_name(
 	CodeVar     next_var   = NoCode;
 	Token       stmt_end   = NullToken;
 	CodeComment inline_cmt = NoCode;
-	if ( currtok.Type == TokType::Comma )
+	if ( type )
 	{
-		// Were dealing with a statement with more than one declaration
-		// This is only handled this way if its the first declaration
-		// Otherwise its looped through in parse_variable_declaration_list
-		next_var = parse_variable_declaration_list();
-	}
+		if ( currtok.Type == TokType::Comma )
+		{
+			// Were dealing with a statement with more than one declaration
+			// This is only handled this way if its the first declaration
+			// Otherwise its looped through in parse_variable_declaration_list
+			next_var = parse_variable_declaration_list();
+		}
 
-	// If we're dealing with a "comma-procedding then we cannot expect a statement end or inline comment
-	// Any comma procedding variable will not have a type provided so it can act as a indicator to skip this
-	else if ( type )
-	{
+		// If we're dealing with a "comma-procedding then we cannot expect a statement end or inline comment
+		// Any comma procedding variable will not have a type provided so it can act as a indicator to skip this
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
 

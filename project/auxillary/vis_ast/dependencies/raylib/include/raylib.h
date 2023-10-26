@@ -323,10 +323,10 @@ typedef Vector4 Quaternion;
 typedef struct Matrix
 {
 	f32 m0, m4, m8, m12;
-	;                          // Matrix first row (4 components)
-	float m1, m5, m9, m13;     // Matrix second row (4 components)
-	float m2, m6, m10, m14;    // Matrix third row (4 components)
-	float m3, m7, m11, m15;
+	f32 m1, m5, m9, m13;
+	f32 m2, m6, m10, m14;
+	f32 m3, m7, m11, m15;
+
 } Matrix;
 
 // Color, 4 components, R8G8B8A8 (32bit)
