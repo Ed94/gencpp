@@ -12,7 +12,8 @@
                 "GEN_TIME",
                 "GEN_IMPLEMENTATION",
                 // "GEN_DONT_USE_NAMESPACE"
-                "GEN_INTELLISENSE_DIRECTIVES"
+                "GEN_INTELLISENSE_DIRECTIVES",
+                "INTELLISENSE_DIRECTIVES"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.29.30133/bin/HostX64/x64/cl.exe",
@@ -31,7 +32,8 @@
                 "GEN_TIME",
                 "GEN_IMPLEMENTATION",
                 // "GEN_DONT_USE_NAMESPACE"
-                "GEN_INTELLISENSE_DIRECTIVES"
+                "GEN_INTELLISENSE_DIRECTIVES",
+                "INTELLISENSE_DIRECTIVES"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Users/Ed/scoop/apps/llvm/current/bin/clang++.exe",

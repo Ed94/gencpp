@@ -1317,6 +1317,8 @@ String AST::to_string()
 				// Keep the chain going...
 				if ( NextVar )
 					result.append_fmt( ", %S", NextVar->to_string() );
+
+				break;
 			}
 
 			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))

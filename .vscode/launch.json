@@ -40,6 +40,15 @@
 			"args": [],
 			"cwd": "${workspaceFolder}/singleheader/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
+		},
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
+			"name": "Debug raylib refactor vsdbg",
+			"program": "${workspaceFolder}/project/auxillary/vis_ast/dependencies/raylib/build/raylib_refactor.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}/project/auxillary/vis_ast/dependencies/temp/raylib-master/src/",
+			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		}
 	]
 }
