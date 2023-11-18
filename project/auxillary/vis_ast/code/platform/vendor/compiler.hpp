@@ -1,4 +1,5 @@
 // Platform compiler
+#pragma once
 
 #if defined( _MSC_VER )
 #	define Compiler_MSVC 1

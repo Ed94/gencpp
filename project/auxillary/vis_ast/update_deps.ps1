@@ -67,15 +67,17 @@ function setup-raylib {
 	new-item -path $path_raylib_inc -ItemType Directory
 	new-item -path $path_raylib_lib -ItemType Directory
 
-	$url_raylib_zip  = 'https://github.com/raysan5/raylib/archive/refs/heads/master.zip'
+	$url_raylib_zip  = 'https://github.com/Ed94/raylib_refactored/archive/refs/heads/refactor-support.zip'
 	$path_raylib_zip = join-path $path_temp 'raylib.zip'
 
-	$path_raylib_master      = join-path $path_temp          'raylib-master'
+	$path_raylib_master      = join-path $path_temp          'raylib_refactored-refactor-support'
 	$path_raylib_src         = join-path $path_raylib_master 'src'
+	$path_raylib_platforms   = join-path $path_raylib_src    'platforms'
 	$path_raylib_glfw_inc    = join-path $path_raylib_src    'external/glfw/include'
+	$path_raylib_gputex      = join-path $path_raylib_src    'external/rl_gputex.h'
 
 	remove-item $path_raylib_master -Recurse
-	# invoke-webrequest -uri $url_raylib_zip   -outfile $path_raylib_zip
+	#invoke-webrequest -uri $url_raylib_zip   -outfile $path_raylib_zip
 	expand-archive    -path $path_raylib_zip -destinationpath $path_temp
 
 	write-host "Building raylib with $vendor"
@@ -85,11 +87,79 @@ function setup-raylib {
 		New-Item $path_build -ItemType Directory
 	}
 
-	$raylib_headers = Get-ChildItem -Path $path_raylib_src -Filter "*.h" -File
-	$raylib_modules = get-childitem -path $path_raylib_src -filter "*.c" -file
+	$raylib_headers  = Get-ChildItem -Path $path_raylib_src       -Filter '*.h' -File
+	$raylib_modules  = get-childitem -path $path_raylib_src       -filter '*.c' -file
 
-	# Refactor raylib
+	# Refactor with refactor.exe
 	if ( $true ) {
+		$path_refactor      = join-path $path_raylib 'raylib_c.refactor'
+		$path_refactor_rlgl = join-path $path_raylib 'raylib_c_gl.refactor'
+
+		$fmt_includes = @()
+		foreach ( $header in $raylib_headers ) {
+			$file_name = split-path $header -leaf
+
+			if ( -not $file_name.Equals('rlgl.h' ) ) {
+				$fmt_includes += "$header"
+			}
+		}
+		foreach ( $module in $raylib_modules ) {
+			$fmt_includes += "$module"
+		}
+
+		$fmt_includes += "$path_raylib_gputex"
+
+		$platform_modules = @()
+		foreach ( $module in (get-childitem -path $path_raylib_platforms -filter '*.c' -file) ) {
+			$platform_modules += "$module"
+		}
+
+		$path_rlgl = join-path $path_raylib_src 'rlgl.h'
+
+		Push-Location $path_raylib_src
+			write-host "Beginning refactor...`n"
+			$refactors = @(@())
+			$refactorParams = @(
+				"-debug",
+				"-num=$($fmt_includes.Count)"
+				"-src=$($fmt_includes)",
+				"-spec=$($path_refactor)"
+			)
+			& refactor $refactorParams
+			Write-Host "`nRefactoring complete`n`n"
+		Pop-Location
+
+		Push-Location $path_raylib_platforms
+		write-host "Beginning refactor...`n"
+			$refactors = @(@())
+			$refactorParams = @(
+				"-debug",
+				"-num=$($platform_modules.Count)"
+				"-src=$($platform_modules)",
+				"-spec=$($path_refactor)"
+			)
+			& refactor $refactorParams
+			Write-Host "`nRefactoring complete`n`n"
+		Pop-Location
+
+		Push-Location $path_raylib_src
+			$gl_modules = @( "$path_rlgl", "$path_raylib_gputex" )
+
+			write-host "Beginning refactor just for rlgl.h...`n"
+			$refactors = @(@())
+			$refactorParams = @(
+				"-debug",
+				"-num=$($gl_modules.Count)"
+				"-src=$($gl_modules)",
+				"-spec=$($path_refactor_rlgl)"
+			)
+			& refactor $refactorParams
+			Write-Host "`nRefactoring complete`n`n"
+		Pop-Location
+	}
+
+	# Refactor raylib with gencpp
+	if ( $false ) {
 	# if ( $false ) {
 		$path_gencpp = join-path $path_root 'project/gen'
 
@@ -133,7 +203,7 @@ function setup-raylib {
 	}
 
 	# Build raylib
-	if ( $false ) {
+	if ( $true ) {
 		# Microsoft
 		$lib_gdi32   = 'Gdi32.lib'
 		$lib_shell32 = 'Shell32.lib'

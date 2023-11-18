@@ -1,0 +1,34 @@
+// rlgl.h
+
+//namespace rlgl, RL_
+namespace rl,   RLGL_
+//namespace RL_,  RLGL_
+
+namespace RL_OPENGL, RLGL_OPENGL
+
+//word RLAPI, RLGLAPI
+
+not include rlgl.h
+
+word TRACELOG, RL_TRACELOG
+
+not word RL_TEXTURE_MIN_FILTER
+not word RL_TEXTURE_MAG_FILTER
+not word RL_TEXTURE_FILTER_LINEAR
+not word RL_PROJECTION
+not word RL_MODELVIEW
+not word RL_LINES
+not word RL_TRIANGLES
+not word RL_QUADS
+not word RL_FLOAT
+not word RL_UNSIGNED_BYTE
+not word RL_MATRIX
+
+word RLGL, RLGL_GLOBAL_DATA
+
+word Matrix, RL_Matrix
+
+word LOG_WARNING, RL_LOG_WARNING
+
+word rlglInit, RLGL_Init
+word rlglClose, RLGL_Close

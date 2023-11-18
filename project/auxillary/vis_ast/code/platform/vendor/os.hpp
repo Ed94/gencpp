@@ -1,4 +1,5 @@
 // Platform OS detection
+#pragma once
 
 #if defined( _WIN32 ) || defined( _WIN64 )
 #	ifndef System_Windows
