@@ -6,15 +6,24 @@
 #include "gen.builder.cpp"
 
 
-constexpr char const* path_config    = "config.h";
-constexpr char const* path_raylib    = "raylib.h";
-constexpr char const* path_raymath   = "raymath.h";
-constexpr char const* path_rcamera   = "rcamera.h";
-constexpr char const* path_rcore     = "rcore.h";
-constexpr char const* path_rgestures = "rgestures.h";
-constexpr char const* path_rgl       = "rgl.h";
-constexpr char const* path_rtext     = "rtext.h";
+constexpr char const* path_config_h    = "config.h";
+constexpr char const* path_raylib_h    = "raylib.h";
+constexpr char const* path_raymath_h   = "raymath.h";
+constexpr char const* path_rcamera_h   = "rcamera.h";
+constexpr char const* path_rcore_h     = "rcore.h";
+constexpr char const* path_rgestures_h = "rgestures.h";
+constexpr char const* path_rgl_h       = "rgl.h";
+constexpr char const* path_rtext_h     = "rtext.h";
 
+constexpr char const* path_rcore_desktop_c = "rcore_desktop.c";
+
+constexpr char const* path_raudio_c    = "raudio.c";
+constexpr char const* path_rcore_c     = "rcore.c";
+constexpr char const* path_rglfw_c     = "rglfw.c";
+constexpr char const* path_rmodels_c   = "rmodels.c";
+constexpr char const* path_rtext_c     = "rtext.c";
+constexpr char const* path_rtextures_c = "rtextures.c";
+constexpr char const* path_rutils_c    = "rutils.c";
 
 using namespace gen;
 
@@ -117,6 +126,18 @@ StringCached pascal_to_lower_snake(StringCached str)
     return result;
 }
 
+void refactor_define( CodeDefine& code )
+{
+	local_persist String name_scratch = String::make_reserve( GlobalAllocator, kilobytes(1) );
+
+	if ( str_compare( elem->Name, txt("RL"), 2 ) == 0 || str_compare( elem->Name, txt("RAYLIB"), 6 ) == 0 )
+		continue;
+
+	name_scratch.append_fmt( "%RL_%S", elem->Name );
+	elem->Name = get_cached_string( name_scratch );
+	name_scratch.clear();
+}
+
 void refactor_enum( CodeEnum& code )
 {
 	for ( Code elem : code->Body )
@@ -181,7 +202,10 @@ void refactor_typename( CodeType& type )
 
 void refactor_fn( CodeFn& fn )
 {
+	StringCached original_name = fn->Name;
 	fn->Name = pascal_to_lower_snake( fn->Name );
+
+	log_fmt( "%S", "Proc ID: %S -> %S", original_name, fn->Name );
 
 	for ( CodeParam param : fn->Params )
 	{
@@ -206,9 +230,9 @@ void refactor_file( char const* path )
 	FileContents contents = file_read_contents( GlobalAllocator, true, path );
 	CodeBody     code     = parse_global_body( { contents.size, rcast(char const*, contents.data) } );
 
-	String name_scratch = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	local_perist String name_scratch = String::make_reserve( GlobalAllocator, kilobytes(1) );
 
-	// CodeBody includes 
+	// CodeBody includes
 	// CodeBody nspace_body = def_body( ECode::Namespace );
 	CodeBody new_code = def_body( ECode::Global_Body );
 
@@ -216,12 +240,7 @@ void refactor_file( char const* path )
 	{
 		if ( elem->Type == ECode::Preprocess_Define )
 		{
-			if ( str_compare( elem->Name, txt("RL"), 2 ) == 0 || str_compare( elem->Name, txt("RAYLIB"), 6 ) == 0 )
-				continue;
-
-			name_scratch.append_fmt( "%RL_%S", elem->Name );
-			elem->Name = get_cached_string( name_scratch );
-			name_scratch.clear();
+			refactor_define( elem.cast<CodeDefine>() );
 		}
 
 		if ( elem->Type == ECode::Enum )
@@ -275,16 +294,29 @@ void refactor_file( char const* path )
 	Builder builder = Builder::open( path );
 	builder.print( new_code );
 	builder.write();
+
+	name_scratch.clear();
 }
 
 int gen_main()
 {
 	gen::init();
 
-	refactor_file( path_config );
-	refactor_file( path_raylib );
-	refactor_file( path_raymath );
-	refactor_file( path_rcamera );
+	refactor_file( path_config_h );
+	refactor_file( path_raylib_h );
+	refactor_file( path_rcamera_h );
+	refactor_file( path_raymath_h );
+	refactor_file( path_rcore_h );
+	refactor_file( path_rgl_h );
+	refactor_file( path_rtext_h );
+
+	refactor_file( path_rcore_desktop_c );
+	refactor_file( path_raudio_c );
+	refactor_file( path_rcore_c );
+	refactor_file( path_rglfw_c );
+	refactor_file( path_rmodels_c );
+	refactor_file( path_rtext_c );
+	refactor_file( path_rutils_c );
 
 	return 0;
 }

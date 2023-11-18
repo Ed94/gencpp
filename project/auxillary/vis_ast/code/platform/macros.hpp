@@ -1,3 +1,4 @@
+#pragma once
 #if INTELLISENSE_DIRECTIVES
 #include "vendor/compiler.hpp"
 #endif

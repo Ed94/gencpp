@@ -30,7 +30,13 @@
 		"list": "cpp",
 		"xhash": "cpp",
 		"glfw3.h": "c",
-		"stdbool.h": "c"
+		"stdbool.h": "c",
+		"objbase.h": "c",
+		"mmreg.h": "c",
+		"mmsystem.h": "c",
+		"propidl.h": "c",
+		"android_native_app_glue.h": "c",
+		"raylib.h": "c"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
