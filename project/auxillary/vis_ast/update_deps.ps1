@@ -49,8 +49,10 @@ switch ($_){
 . $incremental_checks
 
 # Clear out the current content first
-# remove-item $path_temp -Recurse
-# New-Item -ItemType Directory -Path $path_temp
+if ( test-path $path_temp) {
+	remove-item $path_temp -Recurse
+}
+New-Item -ItemType Directory -Path $path_temp
 
 if ( -not (Test-Path $path_binaries) ) {
 	New-Item -ItemType Directory -Path $path_binaries
@@ -76,8 +78,10 @@ function setup-raylib {
 	$path_raylib_glfw_inc    = join-path $path_raylib_src    'external/glfw/include'
 	$path_raylib_gputex      = join-path $path_raylib_src    'external/rl_gputex.h'
 
-	remove-item $path_raylib_master -Recurse
-	#invoke-webrequest -uri $url_raylib_zip   -outfile $path_raylib_zip
+	if ( test-path $path_raylib_master ) {
+		remove-item $path_raylib_master -Recurse
+	}
+	invoke-webrequest -uri $url_raylib_zip   -outfile $path_raylib_zip
 	expand-archive    -path $path_raylib_zip -destinationpath $path_temp
 
 	write-host "Building raylib with $vendor"
@@ -87,27 +91,27 @@ function setup-raylib {
 		New-Item $path_build -ItemType Directory
 	}
 
-	$raylib_headers  = Get-ChildItem -Path $path_raylib_src       -Filter '*.h' -File
-	$raylib_modules  = get-childitem -path $path_raylib_src       -filter '*.c' -file
+	$raylib_headers  = Get-ChildItem -Path $path_raylib_src -Filter '*.h' -File
+	$raylib_modules  = get-childitem -path $path_raylib_src -filter '*.c' -file
 
 	# Refactor with refactor.exe
 	if ( $true ) {
-		$path_refactor      = join-path $path_raylib 'raylib_c.refactor'
-		$path_refactor_rlgl = join-path $path_raylib 'raylib_c_gl.refactor'
+		$path_refactor      = join-path $path_raylib 'raylib_cpp.refactor'
+		$path_refactor_rlgl = join-path $path_raylib 'raylib_cpp_gl.refactor'
 
-		$fmt_includes = @()
+		$files = @()
 		foreach ( $header in $raylib_headers ) {
 			$file_name = split-path $header -leaf
 
 			if ( -not $file_name.Equals('rlgl.h' ) ) {
-				$fmt_includes += "$header"
+				$files += "$header"
 			}
 		}
 		foreach ( $module in $raylib_modules ) {
-			$fmt_includes += "$module"
+			$files += "$module"
 		}
 
-		$fmt_includes += "$path_raylib_gputex"
+		$files += "$path_raylib_gputex"
 
 		$platform_modules = @()
 		foreach ( $module in (get-childitem -path $path_raylib_platforms -filter '*.c' -file) ) {
@@ -120,9 +124,9 @@ function setup-raylib {
 			write-host "Beginning refactor...`n"
 			$refactors = @(@())
 			$refactorParams = @(
-				"-debug",
-				"-num=$($fmt_includes.Count)"
-				"-src=$($fmt_includes)",
+				# "-debug",
+				"-num=$($files.Count)"
+				"-src=$($files)",
 				"-spec=$($path_refactor)"
 			)
 			& refactor $refactorParams
@@ -133,7 +137,7 @@ function setup-raylib {
 		write-host "Beginning refactor...`n"
 			$refactors = @(@())
 			$refactorParams = @(
-				"-debug",
+				# "-debug",
 				"-num=$($platform_modules.Count)"
 				"-src=$($platform_modules)",
 				"-spec=$($path_refactor)"
@@ -148,7 +152,7 @@ function setup-raylib {
 			write-host "Beginning refactor just for rlgl.h...`n"
 			$refactors = @(@())
 			$refactorParams = @(
-				"-debug",
+				# "-debug",
 				"-num=$($gl_modules.Count)"
 				"-src=$($gl_modules)",
 				"-spec=$($path_refactor_rlgl)"
@@ -221,7 +225,8 @@ function setup-raylib {
 
 		$compiler_args = @(
 			($flag_define + 'PLATFORM_DESKTOP'),
-			($flag_define + 'BUILD_LIBTYPE_SHARED')
+			($flag_define + 'RL_BUILD_LIBTYPE_SHARED'),
+			$flag_all_cpp
 		)
 		$linker_args   = @(
 			$flag_link_dll,
@@ -244,5 +249,6 @@ function setup-raylib {
 	foreach ($header in $raylib_headers) {
 		Copy-Item -Path $header -Destination (join-path $path_raylib_inc (split-path $header -Leaf))
 	}
+	remove-item -path $path_temp -Recurse
 }
 setup-raylib

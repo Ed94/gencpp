@@ -25,12 +25,12 @@
 *
 **********************************************************************************************/
 
-#ifndef RL_CONFIG_H
-#define RL_CONFIG_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
 //------------------------------------------------------------------------------------
 // Module selection - Some modules could be avoided
-// Mandatory modules: rcore, RLGL_, utils
+// Mandatory modules: rcore, rlgl, utils
 //------------------------------------------------------------------------------------
 #define RL_SUPPORT_MODULE_RSHAPES          1
 #define RL_SUPPORT_MODULE_RTEXTURES        1
@@ -41,12 +41,12 @@
 //------------------------------------------------------------------------------------
 // Module: rcore - Configuration Flags
 //------------------------------------------------------------------------------------
-// RL_Camera module is included (rcamera.h) and multiple predefined cameras are available: free, 1st/3rd person, orbital
+// Camera module is included (rcamera.h) and multiple predefined cameras are available: free, 1st/3rd person, orbital
 #define RL_SUPPORT_CAMERA_SYSTEM           1
 // Gestures module is included (rgestures.h) to support gestures detection: tap, hold, swipe, drag
 #define RL_SUPPORT_GESTURES_SYSTEM         1
 // Include pseudo-random numbers generator (rprand.h), based on Xoshiro128** and SplitMix64
-#define SUPPORT_RPRAND_GENERATOR        1
+#define RL_SUPPORT_RPRAND_GENERATOR        1
 // Mouse gestures are directly mapped like touches and processed by gestures system
 #define RL_SUPPORT_MOUSE_GESTURES          1
 // Reconfigure standard input to receive key inputs, works with SSH connection.
@@ -55,21 +55,21 @@
 // However, it can also reduce overall system performance, because the thread scheduler switches tasks more often.
 #define RL_SUPPORT_WINMM_HIGHRES_TIMER     1
 // Use busy wait loop for timing sync, if not defined, a high-resolution timer is set up and used
-//#define SUPPORT_BUSY_WAIT_LOOP          1
+//#define RL_SUPPORT_BUSY_WAIT_LOOP          1
 // Use a partial-busy wait loop, in this case frame sleeps for most of the time, but then runs a busy loop at the end for accuracy
 #define RL_SUPPORT_PARTIALBUSY_WAIT_LOOP    1
 // Allow automatic screen capture of current screen pressing F12, defined in KeyCallback()
 #define RL_SUPPORT_SCREEN_CAPTURE          1
 // Allow automatic gif recording of current screen pressing CTRL+F12, defined in KeyCallback()
 #define RL_SUPPORT_GIF_RECORDING           1
-// Support RL_CompressData() and RL_DecompressData() functions
+// Support CompressData() and DecompressData() functions
 #define RL_SUPPORT_COMPRESSION_API         1
 // Support automatic generated events, loading and recording of those events when required
 #define RL_SUPPORT_AUTOMATION_EVENTS       1
 // Support custom frame control, only for advance users
-// By default RL_EndDrawing() does this job: draws everything + RL_SwapScreenBuffer() + manage frame timing + RL_PollInputEvents()
+// By default end_drawing() does this job: draws everything + swap_screen_buffer() + manage frame timing + poll_input_events()
 // Enabling this flag allows manual control of the frame processes, use at your own risk
-//#define SUPPORT_CUSTOM_FRAME_CONTROL    1
+//#define RL_SUPPORT_CUSTOM_FRAME_CONTROL    1
 
 // rcore: Configuration values
 //------------------------------------------------------------------------------------
@@ -90,7 +90,7 @@
 #define RL_MAX_AUTOMATION_EVENTS       16384       // Maximum number of automation events to record
 
 //------------------------------------------------------------------------------------
-// Module: RLGL_ - Configuration values
+// Module: rlgl - Configuration values
 //------------------------------------------------------------------------------------
 
 // Enable OpenGL Debug Context (only available on OpenGL 4.3)
@@ -102,9 +102,9 @@
 //#define RL_DEFAULT_BATCH_BUFFER_ELEMENTS    4096    // Default internal render batch elements limits
 #define RL_DEFAULT_BATCH_BUFFERS               1      // Default number of batch buffers (multi-buffering)
 #define RL_DEFAULT_BATCH_DRAWCALLS           256      // Default number of batch draw calls (by state changes: mode, texture)
-#define RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS     4      // Maximum number of textures units that can be activated on batch drawing (RL_SetShaderValueTexture())
+#define RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS     4      // Maximum number of textures units that can be activated on batch drawing (set_shader_value_texture())
 
-#define RL_MAX_MATRIX_STACK_SIZE              32      // Maximum size of internal RL_Matrix stack
+#define RL_MAX_MATRIX_STACK_SIZE              32      // Maximum size of internal Matrix stack
 
 #define RL_MAX_SHADER_LOCATIONS               32      // Maximum number of shader locations supported
 
@@ -168,7 +168,7 @@
 // Support procedural image generation functionality (gradient, spot, perlin-noise, cellular)
 #define RL_SUPPORT_IMAGE_GENERATION        1
 // Support multiple image editing functions to scale, adjust colors, flip, draw on images, crop...
-// If not defined, still some functions are supported: RL_ImageFormat(), RL_ImageCrop(), RL_ImageToPOT()
+// If not defined, still some functions are supported: image_format(), image_crop(), image_to_pot()
 #define RL_SUPPORT_IMAGE_MANIPULATION      1
 
 
@@ -183,18 +183,18 @@
 #define RL_SUPPORT_FILEFORMAT_TTF          1
 
 // Support text management functions
-// If not defined, still some functions are supported: RL_TextLength(), RL_TextFormat()
+// If not defined, still some functions are supported: text_length(), TextFormat()
 #define RL_SUPPORT_TEXT_MANIPULATION       1
 
-// On font atlas image generation [RL_GenImageFontAtlas()], add a 3x3 pixels white rectangle
+// On font atlas image generation [gen_image_font_atlas()], add a 3x3 pixels white rectangle
 // at the bottom-right corner of the atlas. It can be useful to for shapes drawing, to allow
-// drawing text and shapes with a single draw call [RL_SetShapesTexture()].
+// drawing text and shapes with a single draw call [set_shapes_texture()].
 #define RL_SUPPORT_FONT_ATLAS_WHITE_REC    1
 
 // rtext: Configuration values
 //------------------------------------------------------------------------------------
-#define RL_MAX_TEXT_BUFFER_LENGTH       1024       // RL_Size of internal static buffers used on some functions:
-                                                // RL_TextFormat(), RL_TextSubtext(), RL_TextToUpper(), RL_TextToLower(), RL_TextToPascal(), TextSplit()
+#define RL_MAX_TEXT_BUFFER_LENGTH       1024       // Size of internal static buffers used on some functions:
+                                                // TextFormat(), TextSubtext(), TextToUpper(), TextToLower(), TextToPascal(), TextSplit()
 #define RL_MAX_TEXTSPLIT_COUNT           128       // Maximum number of substrings to split: TextSplit()
 
 
@@ -243,7 +243,7 @@
 // Standard file io library (stdio.h) included
 #define RL_SUPPORT_STANDARD_FILEIO         1
 // Show RL_TRACELOG() output messages
-// NOTE: By default RL_LOG_DEBUG traces not shown
+// NOTE: By default LOG_DEBUG traces not shown
 #define RL_SUPPORT_TRACELOG                1
 //#define RL_SUPPORT_TRACELOG_DEBUG          1
 
@@ -251,12 +251,35 @@
 //------------------------------------------------------------------------------------
 #define RL_MAX_TRACELOG_MSG_LENGTH       256       // Max length of one trace-log message
 
-#endif // RL_CONFIG_H
+#endif // CONFIG_H
 
-#if defined(__cplusplus)
-    #define RL_NS_BEGIN namespace raylib {
+// Indicates of raylib has been refactored
+#ifndef RL_REFACTORED_CPP
+#define RL_REFACTORED_CPP
+#endif
+
+#define RL_USE_CPP_NAMESPACE 1
+#define RL_USE_CPP_MANGLING  1
+
+#if RL_USE_CPP_NAMESPACE && defined(__cplusplus)
+    #pragma message("USING CPP NAMESPACE")
+    #define RL_NS_BEGIN namespace rl {
     #define RL_NS_END }
 #else
     #define RL_NS_BEGIN
     #define RL_NS_END
+#endif
+
+#if RL_USE_CPP_MANGLING && defined(__cplusplus)
+    #pragma message("USING CPP MANGLING")
+    #define RL_EXTERN_C_BEGIN
+    #define RL_EXTERN_C_END
+#else
+    #ifdef __cplusplus
+        #define RL_EXTERN_C_BEGIN extern "C" {
+        #define RL_EXTERN_C_END   }
+    #else
+        #define RL_EXTERN_C_BEGIN
+        #define RL_EXTERN_C_END
+    #endif
 #endif

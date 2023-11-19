@@ -15,6 +15,7 @@ $path_vis_root = Join-Path $path_aux      'vis_ast'
 $path_binaries = Join-Path $path_vis_root 'binaries'
 $path_build    = Join-Path $path_vis_root 'build'
 $path_code     = Join-Path $path_vis_root 'code'
+$path_deps     = Join-Path $path_vis_root 'dependencies'
 $path_win32    = Join-Path $path_code     'win32'
 
 Import-Module $target_arch
@@ -66,9 +67,25 @@ if ( (Test-Path $path_binaries) -eq $false ) {
 	New-Item $path_binaries -ItemType Directory
 }
 
+$path_raylib     = join-path $path_deps   'raylib'
+$path_raylib_inc = join-path $path_raylib 'include'
+$path_raylib_lib = join-path $path_raylib 'lib'
+
+$path_raylib_dll     = join-path $path_raylib_lib 'raylib.dll'
+$path_raylib_dll_bin = join-path $path_binaries 'raylib.dll'
+
+Copy-Item $path_raylib_dll $path_raylib_dll_bin -Force
+
 $includes = @(
-	$paht_code
+	$path_code,
+	$path_deps
 )
+
+write-host $path_code
+
+foreach ( $include in $includes ) {
+	Write-Host 'include: ' $include
+}
 
 # Microsoft
 $lib_gdi32  = 'Gdi32.lib'
@@ -82,6 +99,7 @@ $compiler_args = @(
 	($flag_define + 'UNICODE'),
 	($flag_define + '_UNICODE')
 	( $flag_define + 'INTELLISENSE_DIRECTIVES=0'),
+	( $flag_define + 'RL_USE_LIBTYPE_SHARED')
 	# ($flag_set_stack_size + $stack_size)
 	$flag_wall
 	$flag_warnings_as_errors
@@ -97,7 +115,9 @@ else {
 
 $linker_args = @(
 	$flag_link_win_subsystem_windows,
-	$flag_link_optiiize_references
+	$flag_link_optiiize_references,
+
+	( join-path $path_raylib_lib 'raylib.lib' )
 )
 
 $unit       = join-path $path_code     'vis_ast_windows.cpp'

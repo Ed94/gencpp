@@ -49,6 +49,15 @@
 			"args": [],
 			"cwd": "${workspaceFolder}/project/auxillary/vis_ast/dependencies/temp/raylib-master/src/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
+		},
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
+			"name": "Debug VIS AST",
+			"program": "${workspaceFolder}/project/auxillary/vis_ast/binaries/vis_ast.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}/project/auxillary/vis_ast/binaries/",
+			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		}
 	]
 }

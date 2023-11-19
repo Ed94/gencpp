@@ -33,10 +33,10 @@
 #endif
 
 #if defined(RL_SUPPORT_TRACELOG)
-    #define RL_TRACELOG(level, ...) RL_TraceLog(level, __VA_ARGS__)
+    #define RL_TRACELOG(level, ...) RL_NS(trace_log)(level, __VA_ARGS__)
 
     #if defined(RL_SUPPORT_TRACELOG_DEBUG)
-        #define TRACELOGD(...) RL_TraceLog(RL_LOG_DEBUG, __VA_ARGS__)
+        #define TRACELOGD(...) RL_NS(trace_log)(LOG_DEBUG, __VA_ARGS__)
     #else
         #define TRACELOGD(...) (void)0
     #endif
@@ -70,7 +70,7 @@ extern "C" {            // Prevents name mangling of functions
 #endif
 
 #if defined(PLATFORM_ANDROID)
-void InitAssetManager(AAssetManager *manager, const char *dataPath);   // Initialize asset manager from android app
+void init_asset_manager(AAssetManager *manager, const char *dataPath);   // Initialize asset manager from android app
 FILE *android_fopen(const char *fileName, const char *mode);           // Replacement for fopen() -> Read-only!
 #endif
 

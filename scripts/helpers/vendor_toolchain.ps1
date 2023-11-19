@@ -92,8 +92,8 @@ function run-linker
 if ( $vendor -match "clang" )
 {
 	# https://clang.llvm.org/docs/ClangCommandLineReference.html
-	$flag_all_c 					   = '/TC'
-	$flag_all_cpp                      = '/TP'
+	$flag_all_c 					   = '-x c'
+	$flag_all_cpp                      = '-x c++'
 	$flag_compile                      = '-c'
 	$flag_color_diagnostics            = '-fcolor-diagnostics'
 	$flag_no_color_diagnostics         = '-fno-color-diagnostics'

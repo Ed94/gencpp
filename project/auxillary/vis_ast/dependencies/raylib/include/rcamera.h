@@ -72,57 +72,59 @@
     #define RL_CAMERA_CULL_DISTANCE_FAR    RL_CULL_DISTANCE_FAR
 #endif
 
+RL_NS_BEGIN
+
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 // NOTE: Below types are required for standalone usage
 //----------------------------------------------------------------------------------
 #if defined(RCAMERA_STANDALONE)
-    // RL_Vector2, 2 components
-    typedef struct RL_Vector2 {
+    // Vector2, 2 components
+    typedef struct Vector2 {
         float x;                // Vector x component
         float y;                // Vector y component
-    } RL_Vector2;
+    } Vector2;
 
-    // RL_Vector3, 3 components
-    typedef struct RL_Vector3 {
+    // Vector3, 3 components
+    typedef struct Vector3 {
         float x;                // Vector x component
         float y;                // Vector y component
         float z;                // Vector z component
-    } RL_Vector3;
+    } Vector3;
 
-    // RL_Matrix, 4x4 components, column major, OpenGL style, right-handed
-    typedef struct RL_Matrix {
-        float m0, m4, m8, m12;  // RL_Matrix first row (4 components)
-        float m1, m5, m9, m13;  // RL_Matrix second row (4 components)
-        float m2, m6, m10, m14; // RL_Matrix third row (4 components)
-        float m3, m7, m11, m15; // RL_Matrix fourth row (4 components)
-    } RL_Matrix;
+    // Matrix, 4x4 components, column major, OpenGL style, right-handed
+    typedef struct Matrix {
+        float m0, m4, m8, m12;  // Matrix first row (4 components)
+        float m1, m5, m9, m13;  // Matrix second row (4 components)
+        float m2, m6, m10, m14; // Matrix third row (4 components)
+        float m3, m7, m11, m15; // Matrix fourth row (4 components)
+    } Matrix;
 
-    // RL_Camera type, defines a camera position/orientation in 3d space
-    typedef struct RL_Camera3D {
-        RL_Vector3 position;       // RL_Camera position
-        RL_Vector3 target;         // RL_Camera target it looks-at
-        RL_Vector3 up;             // RL_Camera up vector (rotation over its axis)
-        float fovy;             // RL_Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
-        int projection;         // RL_Camera projection type: RL_CAMERA_PERSPECTIVE or RL_CAMERA_ORTHOGRAPHIC
-    } RL_Camera3D;
+    // Camera type, defines a camera position/orientation in 3d space
+    typedef struct Camera3D {
+        Vector3 position;       // Camera position
+        Vector3 target;         // Camera target it looks-at
+        Vector3 up;             // Camera up vector (rotation over its axis)
+        float fovy;             // Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
+        int projection;         // Camera projection type: CAMERA_PERSPECTIVE or CAMERA_ORTHOGRAPHIC
+    } Camera3D;
 
-    typedef RL_Camera3D RL_Camera;    // RL_Camera type fallback, defaults to RL_Camera3D
+    typedef Camera3D Camera;    // Camera type fallback, defaults to Camera3D
 
-    // RL_Camera projection
+    // Camera projection
     typedef enum {
-        RL_CAMERA_PERSPECTIVE = 0, // Perspective projection
-        RL_CAMERA_ORTHOGRAPHIC     // Orthographic projection
-    } RL_CameraProjection;
+        CAMERA_PERSPECTIVE = 0, // Perspective projection
+        CAMERA_ORTHOGRAPHIC     // Orthographic projection
+    } CameraProjection;
 
-    // RL_Camera system modes
+    // Camera system modes
     typedef enum {
-        RL_CAMERA_CUSTOM = 0,      // RL_Camera custom, controlled by user (RL_UpdateCamera() does nothing)
-        RL_CAMERA_FREE,            // RL_Camera free mode
-        RL_CAMERA_ORBITAL,         // RL_Camera orbital, around target, zoom supported
-        RL_CAMERA_FIRST_PERSON,    // RL_Camera first person
-        RL_CAMERA_THIRD_PERSON     // RL_Camera third person
-    } RL_CameraMode;
+        CAMERA_CUSTOM = 0,      // Camera custom, controlled by user (update_camera() does nothing)
+        CAMERA_FREE,            // Camera free mode
+        CAMERA_ORBITAL,         // Camera orbital, around target, zoom supported
+        CAMERA_FIRST_PERSON,    // Camera first person
+        CAMERA_THIRD_PERSON     // Camera third person
+    } CameraMode;
 #endif
 
 //----------------------------------------------------------------------------------
@@ -134,31 +136,29 @@
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 
-#if defined(__cplusplus)
-extern "C" {            // Prevents name mangling of functions
-#endif
+RL_EXTERN_C_BEGIN
 
-RLAPI RL_Vector3 GetCameraForward(RL_Camera *camera);
-RLAPI RL_Vector3 GetCameraUp(RL_Camera *camera);
-RLAPI RL_Vector3 GetCameraRight(RL_Camera *camera);
+RLAPI Vector3 get_camera_forward(Camera *camera);
+RLAPI Vector3 get_camera_up(Camera *camera);
+RLAPI Vector3 get_camera_right(Camera *camera);
 
-// RL_Camera movement
-RLAPI void CameraMoveForward(RL_Camera *camera, float distance, bool moveInWorldPlane);
-RLAPI void CameraMoveUp(RL_Camera *camera, float distance);
-RLAPI void CameraMoveRight(RL_Camera *camera, float distance, bool moveInWorldPlane);
-RLAPI void CameraMoveToTarget(RL_Camera *camera, float delta);
+// Camera movement
+RLAPI void camera_move_forward(Camera *camera, float distance, bool moveInWorldPlane);
+RLAPI void camera_move_up(Camera *camera, float distance);
+RLAPI void camera_move_right(Camera *camera, float distance, bool moveInWorldPlane);
+RLAPI void camera_move_to_target(Camera *camera, float delta);
 
-// RL_Camera rotation
-RLAPI void CameraYaw(RL_Camera *camera, float angle, bool rotateAroundTarget);
-RLAPI void CameraPitch(RL_Camera *camera, float angle, bool lockView, bool rotateAroundTarget, bool rotateUp);
-RLAPI void CameraRoll(RL_Camera *camera, float angle);
+// Camera rotation
+RLAPI void camera_yaw(Camera *camera, float angle, bool rotateAroundTarget);
+RLAPI void camera_pitch(Camera *camera, float angle, bool lockView, bool rotateAroundTarget, bool rotateUp);
+RLAPI void camera_roll(Camera *camera, float angle);
 
-RLAPI RL_Matrix GetCameraViewMatrix(RL_Camera *camera);
-RLAPI RL_Matrix GetCameraProjectionMatrix(RL_Camera* camera, float aspect);
+RLAPI Matrix get_camera_view_matrix(Camera *camera);
+RLAPI Matrix get_camera_projection_matrix(Camera* camera, float aspect);
 
-#if defined(__cplusplus)
-}
-#endif
+RL_EXTERN_C_END
+
+RL_NS_END
 
 #endif // RCAMERA_H
 
@@ -172,47 +172,47 @@ RLAPI RL_Matrix GetCameraProjectionMatrix(RL_Camera* camera, float aspect);
 #if defined(RCAMERA_IMPLEMENTATION)
 
 #include "raymath.h"        // Required for vector maths:
-                            // RL_Vector3Add()
-                            // RL_Vector3Subtract()
-                            // RL_Vector3Scale()
-                            // RL_Vector3Normalize()
-                            // RL_Vector3Distance()
-                            // RL_Vector3CrossProduct()
-                            // RL_Vector3RotateByAxisAngle()
-                            // RL_Vector3Angle()
-                            // RL_Vector3Negate()
-                            // RL_MatrixLookAt()
-                            // RL_MatrixPerspective()
-                            // RL_MatrixOrtho()
-                            // RL_MatrixIdentity()
+                            // vector3_add()
+                            // vector3_subtract()
+                            // vector3_scale()
+                            // vector3_normalize()
+                            // vector3_distance()
+                            // vector3_cross_product()
+                            // vector3_rotate_by_axis_angle()
+                            // vector3_angle()
+                            // vector3_negate()
+                            // matrix_look_at()
+                            // matrix_perspective()
+                            // matrix_ortho()
+                            // matrix_identity()
 
 // raylib required functionality:
-                            // RL_GetMouseDelta()
-                            // RL_GetMouseWheelMove()
-                            // RL_IsKeyDown()
-                            // RL_IsKeyPressed()
-                            // RL_GetFrameTime()
+                            // get_mouse_delta()
+                            // get_mouse_wheel_move()
+                            // is_key_down()
+                            // is_key_pressed()
+                            // get_frame_time()
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-#define RL_CAMERA_MOVE_SPEED                               0.09f
-#define RL_CAMERA_ROTATION_SPEED                           0.03f
-#define RL_CAMERA_PAN_SPEED                                0.2f
+#define CAMERA_MOVE_SPEED                               0.09f
+#define CAMERA_ROTATION_SPEED                           0.03f
+#define CAMERA_PAN_SPEED                                0.2f
 
-// RL_Camera mouse movement sensitivity
-#define RL_CAMERA_MOUSE_MOVE_SENSITIVITY                   0.003f     // TODO: it should be independant of framerate
-#define RL_CAMERA_MOUSE_SCROLL_SENSITIVITY                 1.5f
+// Camera mouse movement sensitivity
+#define CAMERA_MOUSE_MOVE_SENSITIVITY                   0.003f     // TODO: it should be independant of framerate
+#define CAMERA_MOUSE_SCROLL_SENSITIVITY                 1.5f
 
-#define RL_CAMERA_ORBITAL_SPEED                            0.5f       // Radians per second
+#define CAMERA_ORBITAL_SPEED                            0.5f       // Radians per second
 
 
-#define RL_CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER  8.0f
-#define RL_CAMERA_FIRST_PERSON_STEP_DIVIDER                30.0f
-#define RL_CAMERA_FIRST_PERSON_WAVING_DIVIDER              200.0f
+#define CAMERA_FIRST_PERSON_STEP_TRIGONOMETRIC_DIVIDER  8.0f
+#define CAMERA_FIRST_PERSON_STEP_DIVIDER                30.0f
+#define CAMERA_FIRST_PERSON_WAVING_DIVIDER              200.0f
 
 // PLAYER (used by camera)
-#define RL_PLAYER_MOVEMENT_SENSITIVITY                     20.0f
+#define PLAYER_MOVEMENT_SENSITIVITY                     20.0f
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -229,88 +229,90 @@ RLAPI RL_Matrix GetCameraProjectionMatrix(RL_Camera* camera, float aspect);
 //----------------------------------------------------------------------------------
 //...
 
+RL_NS_BEGIN
+
 //----------------------------------------------------------------------------------
 // Module Functions Definition
 //----------------------------------------------------------------------------------
 // Returns the cameras forward vector (normalized)
-RL_Vector3 GetCameraForward(RL_Camera *camera)
+Vector3 get_camera_forward(Camera *camera)
 {
-    return RL_Vector3Normalize(RL_Vector3Subtract(camera->target, camera->position));
+    return vector3_normalize(vector3_subtract(camera->target, camera->position));
 }
 
 // Returns the cameras up vector (normalized)
 // Note: The up vector might not be perpendicular to the forward vector
-RL_Vector3 GetCameraUp(RL_Camera *camera)
+Vector3 get_camera_up(Camera *camera)
 {
-    return RL_Vector3Normalize(camera->up);
+    return vector3_normalize(camera->up);
 }
 
 // Returns the cameras right vector (normalized)
-RL_Vector3 GetCameraRight(RL_Camera *camera)
+Vector3 get_camera_right(Camera *camera)
 {
-    RL_Vector3 forward = GetCameraForward(camera);
-    RL_Vector3 up = GetCameraUp(camera);
+    Vector3 forward = get_camera_forward(camera);
+    Vector3 up = get_camera_up(camera);
 
-    return RL_Vector3CrossProduct(forward, up);
+    return vector3_cross_product(forward, up);
 }
 
 // Moves the camera in its forward direction
-void CameraMoveForward(RL_Camera *camera, float distance, bool moveInWorldPlane)
+void camera_move_forward(Camera *camera, float distance, bool moveInWorldPlane)
 {
-    RL_Vector3 forward = GetCameraForward(camera);
+    Vector3 forward = get_camera_forward(camera);
 
     if (moveInWorldPlane)
     {
         // Project vector onto world plane
         forward.y = 0;
-        forward = RL_Vector3Normalize(forward);
+        forward = vector3_normalize(forward);
     }
 
     // Scale by distance
-    forward = RL_Vector3Scale(forward, distance);
+    forward = vector3_scale(forward, distance);
 
     // Move position and target
-    camera->position = RL_Vector3Add(camera->position, forward);
-    camera->target = RL_Vector3Add(camera->target, forward);
+    camera->position = vector3_add(camera->position, forward);
+    camera->target = vector3_add(camera->target, forward);
 }
 
 // Moves the camera in its up direction
-void CameraMoveUp(RL_Camera *camera, float distance)
+void camera_move_up(Camera *camera, float distance)
 {
-    RL_Vector3 up = GetCameraUp(camera);
+    Vector3 up = get_camera_up(camera);
 
     // Scale by distance
-    up = RL_Vector3Scale(up, distance);
+    up = vector3_scale(up, distance);
 
     // Move position and target
-    camera->position = RL_Vector3Add(camera->position, up);
-    camera->target = RL_Vector3Add(camera->target, up);
+    camera->position = vector3_add(camera->position, up);
+    camera->target = vector3_add(camera->target, up);
 }
 
 // Moves the camera target in its current right direction
-void CameraMoveRight(RL_Camera *camera, float distance, bool moveInWorldPlane)
+void camera_move_right(Camera *camera, float distance, bool moveInWorldPlane)
 {
-    RL_Vector3 right = GetCameraRight(camera);
+    Vector3 right = get_camera_right(camera);
 
     if (moveInWorldPlane)
     {
         // Project vector onto world plane
         right.y = 0;
-        right = RL_Vector3Normalize(right);
+        right = vector3_normalize(right);
     }
 
     // Scale by distance
-    right = RL_Vector3Scale(right, distance);
+    right = vector3_scale(right, distance);
 
     // Move position and target
-    camera->position = RL_Vector3Add(camera->position, right);
-    camera->target = RL_Vector3Add(camera->target, right);
+    camera->position = vector3_add(camera->position, right);
+    camera->target = vector3_add(camera->target, right);
 }
 
 // Moves the camera position closer/farther to/from the camera target
-void CameraMoveToTarget(RL_Camera *camera, float delta)
+void camera_move_to_target(Camera *camera, float delta)
 {
-    float distance = RL_Vector3Distance(camera->position, camera->target);
+    float distance = vector3_distance(camera->position, camera->target);
 
     // Apply delta
     distance += delta;
@@ -319,213 +321,213 @@ void CameraMoveToTarget(RL_Camera *camera, float delta)
     if (distance <= 0) distance = 0.001f;
 
     // Set new distance by moving the position along the forward vector
-    RL_Vector3 forward = GetCameraForward(camera);
-    camera->position = RL_Vector3Add(camera->target, RL_Vector3Scale(forward, -distance));
+    Vector3 forward = get_camera_forward(camera);
+    camera->position = vector3_add(camera->target, vector3_scale(forward, -distance));
 }
 
 // Rotates the camera around its up vector
 // Yaw is "looking left and right"
 // If rotateAroundTarget is false, the camera rotates around its position
 // Note: angle must be provided in radians
-void CameraYaw(RL_Camera *camera, float angle, bool rotateAroundTarget)
+void camera_yaw(Camera *camera, float angle, bool rotateAroundTarget)
 {
     // Rotation axis
-    RL_Vector3 up = GetCameraUp(camera);
+    Vector3 up = get_camera_up(camera);
 
     // View vector
-    RL_Vector3 targetPosition = RL_Vector3Subtract(camera->target, camera->position);
+    Vector3 targetPosition = vector3_subtract(camera->target, camera->position);
 
     // Rotate view vector around up axis
-    targetPosition = RL_Vector3RotateByAxisAngle(targetPosition, up, angle);
+    targetPosition = vector3_rotate_by_axis_angle(targetPosition, up, angle);
 
     if (rotateAroundTarget)
     {
         // Move position relative to target
-        camera->position = RL_Vector3Subtract(camera->target, targetPosition);
+        camera->position = vector3_subtract(camera->target, targetPosition);
     }
     else // rotate around camera.position
     {
         // Move target relative to position
-        camera->target = RL_Vector3Add(camera->position, targetPosition);
+        camera->target = vector3_add(camera->position, targetPosition);
     }
 }
 
 // Rotates the camera around its right vector, pitch is "looking up and down"
 //  - lockView prevents camera overrotation (aka "somersaults")
 //  - rotateAroundTarget defines if rotation is around target or around its position
-//  - rotateUp rotates the up direction as well (typically only usefull in RL_CAMERA_FREE)
+//  - rotateUp rotates the up direction as well (typically only usefull in CAMERA_FREE)
 // NOTE: angle must be provided in radians
-void CameraPitch(RL_Camera *camera, float angle, bool lockView, bool rotateAroundTarget, bool rotateUp)
+void camera_pitch(Camera *camera, float angle, bool lockView, bool rotateAroundTarget, bool rotateUp)
 {
     // Up direction
-    RL_Vector3 up = GetCameraUp(camera);
+    Vector3 up = get_camera_up(camera);
 
     // View vector
-    RL_Vector3 targetPosition = RL_Vector3Subtract(camera->target, camera->position);
+    Vector3 targetPosition = vector3_subtract(camera->target, camera->position);
 
     if (lockView)
     {
         // In these camera modes we clamp the Pitch angle
         // to allow only viewing straight up or down.
 
-        // RL_Clamp view up
-        float maxAngleUp = RL_Vector3Angle(up, targetPosition);
+        // clamp view up
+        float maxAngleUp = vector3_angle(up, targetPosition);
         maxAngleUp -= 0.001f; // avoid numerical errors
         if (angle > maxAngleUp) angle = maxAngleUp;
 
-        // RL_Clamp view down
-        float maxAngleDown = RL_Vector3Angle(RL_Vector3Negate(up), targetPosition);
+        // clamp view down
+        float maxAngleDown = vector3_angle(vector3_negate(up), targetPosition);
         maxAngleDown *= -1.0f; // downwards angle is negative
         maxAngleDown += 0.001f; // avoid numerical errors
         if (angle < maxAngleDown) angle = maxAngleDown;
     }
 
     // Rotation axis
-    RL_Vector3 right = GetCameraRight(camera);
+    Vector3 right = get_camera_right(camera);
 
     // Rotate view vector around right axis
-    targetPosition = RL_Vector3RotateByAxisAngle(targetPosition, right, angle);
+    targetPosition = vector3_rotate_by_axis_angle(targetPosition, right, angle);
 
     if (rotateAroundTarget)
     {
         // Move position relative to target
-        camera->position = RL_Vector3Subtract(camera->target, targetPosition);
+        camera->position = vector3_subtract(camera->target, targetPosition);
     }
     else // rotate around camera.position
     {
         // Move target relative to position
-        camera->target = RL_Vector3Add(camera->position, targetPosition);
+        camera->target = vector3_add(camera->position, targetPosition);
     }
 
     if (rotateUp)
     {
         // Rotate up direction around right axis
-        camera->up = RL_Vector3RotateByAxisAngle(camera->up, right, angle);
+        camera->up = vector3_rotate_by_axis_angle(camera->up, right, angle);
     }
 }
 
 // Rotates the camera around its forward vector
 // Roll is "turning your head sideways to the left or right"
 // Note: angle must be provided in radians
-void CameraRoll(RL_Camera *camera, float angle)
+void camera_roll(Camera *camera, float angle)
 {
     // Rotation axis
-    RL_Vector3 forward = GetCameraForward(camera);
+    Vector3 forward = get_camera_forward(camera);
 
     // Rotate up direction around forward axis
-    camera->up = RL_Vector3RotateByAxisAngle(camera->up, forward, angle);
+    camera->up = vector3_rotate_by_axis_angle(camera->up, forward, angle);
 }
 
 // Returns the camera view matrix
-RL_Matrix GetCameraViewMatrix(RL_Camera *camera)
+Matrix get_camera_view_matrix(Camera *camera)
 {
-    return RL_MatrixLookAt(camera->position, camera->target, camera->up);
+    return matrix_look_at(camera->position, camera->target, camera->up);
 }
 
 // Returns the camera projection matrix
-RL_Matrix GetCameraProjectionMatrix(RL_Camera *camera, float aspect)
+Matrix get_camera_projection_matrix(Camera *camera, float aspect)
 {
-    if (camera->projection == RL_CAMERA_PERSPECTIVE)
+    if (camera->projection == CAMERA_PERSPECTIVE)
     {
-        return RL_MatrixPerspective(camera->fovy*RL_DEG2RAD, aspect, RL_CAMERA_CULL_DISTANCE_NEAR, RL_CAMERA_CULL_DISTANCE_FAR);
+        return matrix_perspective(camera->fovy*RL_DEG2RAD, aspect, RL_CAMERA_CULL_DISTANCE_NEAR, RL_CAMERA_CULL_DISTANCE_FAR);
     }
-    else if (camera->projection == RL_CAMERA_ORTHOGRAPHIC)
+    else if (camera->projection == CAMERA_ORTHOGRAPHIC)
     {
         double top = camera->fovy/2.0;
         double right = top*aspect;
 
-        return RL_MatrixOrtho(-right, right, -top, top, RL_CAMERA_CULL_DISTANCE_NEAR, RL_CAMERA_CULL_DISTANCE_FAR);
+        return matrix_ortho(-right, right, -top, top, RL_CAMERA_CULL_DISTANCE_NEAR, RL_CAMERA_CULL_DISTANCE_FAR);
     }
 
-    return RL_MatrixIdentity();
+    return matrix_identity();
 }
 
 #if !defined(RCAMERA_STANDALONE)
 // Update camera position for selected mode
-// RL_Camera mode: RL_CAMERA_FREE, RL_CAMERA_FIRST_PERSON, RL_CAMERA_THIRD_PERSON, RL_CAMERA_ORBITAL or CUSTOM
-void RL_UpdateCamera(RL_Camera *camera, int mode)
+// Camera mode: CAMERA_FREE, CAMERA_FIRST_PERSON, CAMERA_THIRD_PERSON, CAMERA_ORBITAL or CUSTOM
+void update_camera(Camera *camera, int mode)
 {
-    RL_Vector2 mousePositionDelta = RL_GetMouseDelta();
+    Vector2 mousePositionDelta = get_mouse_delta();
 
-    bool moveInWorldPlane = ((mode == RL_CAMERA_FIRST_PERSON) || (mode == RL_CAMERA_THIRD_PERSON));
-    bool rotateAroundTarget = ((mode == RL_CAMERA_THIRD_PERSON) || (mode == RL_CAMERA_ORBITAL));
-    bool lockView = ((mode == RL_CAMERA_FIRST_PERSON) || (mode == RL_CAMERA_THIRD_PERSON) || (mode == RL_CAMERA_ORBITAL));
+    bool moveInWorldPlane = ((mode == CAMERA_FIRST_PERSON) || (mode == CAMERA_THIRD_PERSON));
+    bool rotateAroundTarget = ((mode == CAMERA_THIRD_PERSON) || (mode == CAMERA_ORBITAL));
+    bool lockView = ((mode == CAMERA_FIRST_PERSON) || (mode == CAMERA_THIRD_PERSON) || (mode == CAMERA_ORBITAL));
     bool rotateUp = false;
 
-    if (mode == RL_CAMERA_ORBITAL)
+    if (mode == CAMERA_ORBITAL)
     {
         // Orbital can just orbit
-        RL_Matrix rotation = RL_MatrixRotate(GetCameraUp(camera), RL_CAMERA_ORBITAL_SPEED*RL_GetFrameTime());
-        RL_Vector3 view = RL_Vector3Subtract(camera->position, camera->target);
-        view = RL_Vector3Transform(view, rotation);
-        camera->position = RL_Vector3Add(camera->target, view);
+        Matrix rotation = matrix_rotate(get_camera_up(camera), CAMERA_ORBITAL_SPEED*get_frame_time());
+        Vector3 view = vector3_subtract(camera->position, camera->target);
+        view = vector3_transform(view, rotation);
+        camera->position = vector3_add(camera->target, view);
     }
     else
     {
-        // RL_Camera rotation
-        if (RL_IsKeyDown(RL_KEY_DOWN)) CameraPitch(camera, -RL_CAMERA_ROTATION_SPEED, lockView, rotateAroundTarget, rotateUp);
-        if (RL_IsKeyDown(RL_KEY_UP)) CameraPitch(camera, RL_CAMERA_ROTATION_SPEED, lockView, rotateAroundTarget, rotateUp);
-        if (RL_IsKeyDown(RL_KEY_RIGHT)) CameraYaw(camera, -RL_CAMERA_ROTATION_SPEED, rotateAroundTarget);
-        if (RL_IsKeyDown(RL_KEY_LEFT)) CameraYaw(camera, RL_CAMERA_ROTATION_SPEED, rotateAroundTarget);
-        if (RL_IsKeyDown(RL_KEY_Q)) CameraRoll(camera, -RL_CAMERA_ROTATION_SPEED);
-        if (RL_IsKeyDown(RL_KEY_E)) CameraRoll(camera, RL_CAMERA_ROTATION_SPEED);
+        // Camera rotation
+        if (is_key_down(KEY_DOWN)) camera_pitch(camera, -CAMERA_ROTATION_SPEED, lockView, rotateAroundTarget, rotateUp);
+        if (is_key_down(KEY_UP)) camera_pitch(camera, CAMERA_ROTATION_SPEED, lockView, rotateAroundTarget, rotateUp);
+        if (is_key_down(KEY_RIGHT)) camera_yaw(camera, -CAMERA_ROTATION_SPEED, rotateAroundTarget);
+        if (is_key_down(KEY_LEFT)) camera_yaw(camera, CAMERA_ROTATION_SPEED, rotateAroundTarget);
+        if (is_key_down(KEY_Q)) camera_roll(camera, -CAMERA_ROTATION_SPEED);
+        if (is_key_down(KEY_E)) camera_roll(camera, CAMERA_ROTATION_SPEED);
 
-        // RL_Camera movement
-        if (!RL_IsGamepadAvailable(0))
+        // Camera movement
+        if (!is_gamepad_available(0))
         {
-            // RL_Camera pan (for RL_CAMERA_FREE)
-            if ((mode == RL_CAMERA_FREE) && (RL_IsMouseButtonDown(RL_MOUSE_BUTTON_MIDDLE)))
+            // Camera pan (for CAMERA_FREE)
+            if ((mode == CAMERA_FREE) && (is_mouse_button_down(MOUSE_BUTTON_MIDDLE)))
             {
-                const RL_Vector2 mouseDelta = RL_GetMouseDelta();
-                if (mouseDelta.x > 0.0f) CameraMoveRight(camera, RL_CAMERA_PAN_SPEED, moveInWorldPlane);
-                if (mouseDelta.x < 0.0f) CameraMoveRight(camera, -RL_CAMERA_PAN_SPEED, moveInWorldPlane);
-                if (mouseDelta.y > 0.0f) CameraMoveUp(camera, -RL_CAMERA_PAN_SPEED);
-                if (mouseDelta.y < 0.0f) CameraMoveUp(camera, RL_CAMERA_PAN_SPEED);
+                const Vector2 mouseDelta = get_mouse_delta();
+                if (mouseDelta.x > 0.0f) camera_move_right(camera, CAMERA_PAN_SPEED, moveInWorldPlane);
+                if (mouseDelta.x < 0.0f) camera_move_right(camera, -CAMERA_PAN_SPEED, moveInWorldPlane);
+                if (mouseDelta.y > 0.0f) camera_move_up(camera, -CAMERA_PAN_SPEED);
+                if (mouseDelta.y < 0.0f) camera_move_up(camera, CAMERA_PAN_SPEED);
             }
             else
             {
                 // Mouse support
-                CameraYaw(camera, -mousePositionDelta.x*RL_CAMERA_MOUSE_MOVE_SENSITIVITY, rotateAroundTarget);
-                CameraPitch(camera, -mousePositionDelta.y*RL_CAMERA_MOUSE_MOVE_SENSITIVITY, lockView, rotateAroundTarget, rotateUp);
+                camera_yaw(camera, -mousePositionDelta.x*CAMERA_MOUSE_MOVE_SENSITIVITY, rotateAroundTarget);
+                camera_pitch(camera, -mousePositionDelta.y*CAMERA_MOUSE_MOVE_SENSITIVITY, lockView, rotateAroundTarget, rotateUp);
             }
 
             // Keyboard support
-            if (RL_IsKeyDown(RL_KEY_W)) CameraMoveForward(camera, RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
-            if (RL_IsKeyDown(RL_KEY_A)) CameraMoveRight(camera, -RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
-            if (RL_IsKeyDown(RL_KEY_S)) CameraMoveForward(camera, -RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
-            if (RL_IsKeyDown(RL_KEY_D)) CameraMoveRight(camera, RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (is_key_down(KEY_W)) camera_move_forward(camera, CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (is_key_down(KEY_A)) camera_move_right(camera, -CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (is_key_down(KEY_S)) camera_move_forward(camera, -CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (is_key_down(KEY_D)) camera_move_right(camera, CAMERA_MOVE_SPEED, moveInWorldPlane);
         }
         else
         {
             // Gamepad controller support
-            CameraYaw(camera, -(RL_GetGamepadAxisMovement(0, RL_GAMEPAD_AXIS_RIGHT_X) * 2)*RL_CAMERA_MOUSE_MOVE_SENSITIVITY, rotateAroundTarget);
-            CameraPitch(camera, -(RL_GetGamepadAxisMovement(0, RL_GAMEPAD_AXIS_RIGHT_Y) * 2)*RL_CAMERA_MOUSE_MOVE_SENSITIVITY, lockView, rotateAroundTarget, rotateUp);
+            camera_yaw(camera, -(get_gamepad_axis_movement(0, GAMEPAD_AXIS_RIGHT_X) * 2)*CAMERA_MOUSE_MOVE_SENSITIVITY, rotateAroundTarget);
+            camera_pitch(camera, -(get_gamepad_axis_movement(0, GAMEPAD_AXIS_RIGHT_Y) * 2)*CAMERA_MOUSE_MOVE_SENSITIVITY, lockView, rotateAroundTarget, rotateUp);
 
-            if (RL_GetGamepadAxisMovement(0, RL_GAMEPAD_AXIS_LEFT_Y) <= -0.25f) CameraMoveForward(camera, RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
-            if (RL_GetGamepadAxisMovement(0, RL_GAMEPAD_AXIS_LEFT_X) <= -0.25f) CameraMoveRight(camera, -RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
-            if (RL_GetGamepadAxisMovement(0, RL_GAMEPAD_AXIS_LEFT_Y) >= 0.25f) CameraMoveForward(camera, -RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
-            if (RL_GetGamepadAxisMovement(0, RL_GAMEPAD_AXIS_LEFT_X) >= 0.25f) CameraMoveRight(camera, RL_CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (get_gamepad_axis_movement(0, GAMEPAD_AXIS_LEFT_Y) <= -0.25f) camera_move_forward(camera, CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (get_gamepad_axis_movement(0, GAMEPAD_AXIS_LEFT_X) <= -0.25f) camera_move_right(camera, -CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (get_gamepad_axis_movement(0, GAMEPAD_AXIS_LEFT_Y) >= 0.25f) camera_move_forward(camera, -CAMERA_MOVE_SPEED, moveInWorldPlane);
+            if (get_gamepad_axis_movement(0, GAMEPAD_AXIS_LEFT_X) >= 0.25f) camera_move_right(camera, CAMERA_MOVE_SPEED, moveInWorldPlane);
         }
 
-        if (mode == RL_CAMERA_FREE)
+        if (mode == CAMERA_FREE)
         {
-            if (RL_IsKeyDown(RL_KEY_SPACE)) CameraMoveUp(camera, RL_CAMERA_MOVE_SPEED);
-            if (RL_IsKeyDown(RL_KEY_LEFT_CONTROL)) CameraMoveUp(camera, -RL_CAMERA_MOVE_SPEED);
+            if (is_key_down(KEY_SPACE)) camera_move_up(camera, CAMERA_MOVE_SPEED);
+            if (is_key_down(KEY_LEFT_CONTROL)) camera_move_up(camera, -CAMERA_MOVE_SPEED);
         }
     }
 
-    if ((mode == RL_CAMERA_THIRD_PERSON) || (mode == RL_CAMERA_ORBITAL) || (mode == RL_CAMERA_FREE))
+    if ((mode == CAMERA_THIRD_PERSON) || (mode == CAMERA_ORBITAL) || (mode == CAMERA_FREE))
     {
         // Zoom target distance
-        CameraMoveToTarget(camera, -RL_GetMouseWheelMove());
-        if (RL_IsKeyPressed(RL_KEY_KP_SUBTRACT)) CameraMoveToTarget(camera, 2.0f);
-        if (RL_IsKeyPressed(RL_KEY_KP_ADD)) CameraMoveToTarget(camera, -2.0f);
+        camera_move_to_target(camera, -get_mouse_wheel_move());
+        if (is_key_pressed(KEY_KP_SUBTRACT)) camera_move_to_target(camera, 2.0f);
+        if (is_key_pressed(KEY_KP_ADD)) camera_move_to_target(camera, -2.0f);
     }
 }
 #endif // !RCAMERA_STANDALONE
 
 // Update camera movement, movement/rotation values should be provided by user
-void RL_UpdateCameraPro(RL_Camera *camera, RL_Vector3 movement, RL_Vector3 rotation, float zoom)
+void update_camera_pro(Camera *camera, Vector3 movement, Vector3 rotation, float zoom)
 {
     // Required values
     // movement.x - Move forward/backward
@@ -541,18 +543,20 @@ void RL_UpdateCameraPro(RL_Camera *camera, RL_Vector3 movement, RL_Vector3 rotat
     bool rotateUp = false;
     bool moveInWorldPlane = true;
 
-    // RL_Camera rotation
-    CameraPitch(camera, -rotation.y*RL_DEG2RAD, lockView, rotateAroundTarget, rotateUp);
-    CameraYaw(camera, -rotation.x*RL_DEG2RAD, rotateAroundTarget);
-    CameraRoll(camera, rotation.z*RL_DEG2RAD);
+    // Camera rotation
+    camera_pitch(camera, -rotation.y*RL_DEG2RAD, lockView, rotateAroundTarget, rotateUp);
+    camera_yaw(camera, -rotation.x*RL_DEG2RAD, rotateAroundTarget);
+    camera_roll(camera, rotation.z*RL_DEG2RAD);
 
-    // RL_Camera movement
-    CameraMoveForward(camera, movement.x, moveInWorldPlane);
-    CameraMoveRight(camera, movement.y, moveInWorldPlane);
-    CameraMoveUp(camera, movement.z);
+    // Camera movement
+    camera_move_forward(camera, movement.x, moveInWorldPlane);
+    camera_move_right(camera, movement.y, moveInWorldPlane);
+    camera_move_up(camera, movement.z);
 
     // Zoom target distance
-    CameraMoveToTarget(camera, zoom);
+    camera_move_to_target(camera, zoom);
 }
+
+RL_NS_END
 
 #endif // RCAMERA_IMPLEMENTATION
