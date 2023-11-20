@@ -379,16 +379,6 @@ CodeBody gen_ast_inlines()
 
 			rcast(AST*, ast)->Parent = Code::Global.ast;
 		}
-//		String <typename>::to_string()
-//		{
-//			if ( ast == nullptr )
-//			{
-//			log_failure("Code::to_string: Cannot convert code to string, AST is null!");
-//			return { nullptr };
-//			}
-//
-//			return rcast(AST*, ast)->to_string();
-//		}
 		<typename>& <typename>::operator =( Code other )
 		{
 			if ( other.ast && other->Parent )

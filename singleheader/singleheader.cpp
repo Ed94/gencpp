@@ -187,7 +187,7 @@ int gen_main()
 			if ( generate_scanner )
 			{
 				header.print_fmt( "\n#pragma region Parsing\n" );
-			header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
+				header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
 				header.print_fmt( "#pragma endregion Parsing\n\n" );
 			}
 
@@ -195,14 +195,16 @@ int gen_main()
 			header.print_fmt( roll_own_dependencies_guard_end );
 		}
 
-		Code static_data 	 = scan_file( project_dir "components/static_data.cpp" );
-		Code ast_case_macros = scan_file( project_dir "components/ast_case_macros.cpp" );
-		Code ast             = scan_file( project_dir "components/ast.cpp" );
-		Code code            = scan_file( project_dir "components/code_serialization.cpp" );
-		Code interface       = scan_file( project_dir "components/interface.cpp" );
-		Code upfront         = scan_file( project_dir "components/interface.upfront.cpp" );
-		Code parsing         = scan_file( project_dir "components/interface.parsing.cpp" );
-		Code untyped         = scan_file( project_dir "components/interface.untyped.cpp" );
+		Code static_data 	   = scan_file( project_dir "components/static_data.cpp" );
+		Code ast_case_macros   = scan_file( project_dir "components/ast_case_macros.cpp" );
+		Code ast               = scan_file( project_dir "components/ast.cpp" );
+		Code code              = scan_file( project_dir "components/code_serialization.cpp" );
+		Code interface         = scan_file( project_dir "components/interface.cpp" );
+		Code upfront           = scan_file( project_dir "components/interface.upfront.cpp" );
+		Code lexer             = scan_file( project_dir "components/lexer.cpp" );
+		Code parser            = scan_file( project_dir "components/parser.cpp" );
+		Code parsing_interface = scan_file( project_dir "components/interface.parsing.cpp" );
+		Code untyped           = scan_file( project_dir "components/interface.untyped.cpp" );
 
 		CodeBody etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
 		CodeNS   parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
@@ -221,7 +223,9 @@ int gen_main()
 		header.print( upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
 		header.print( parser_nspace );
-		header.print( parsing );
+		header.print( lexer );
+		header.print( parser );
+		header.print( parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
 		header.print( untyped );
 		header.print_fmt( "\n#pragma endregion Interface\n\n");

@@ -869,16 +869,6 @@ void CodeExtern::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeExtern::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeExtern& CodeExtern::operator=( Code other )
 {
 	if ( other.ast && other->Parent )

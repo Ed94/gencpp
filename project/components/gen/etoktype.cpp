@@ -5,7 +5,7 @@
 
 // This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
-namespace Parser
+namespace parser
 {
 	namespace ETokType
 	{
@@ -234,4 +234,4 @@ namespace Parser
 
 	using TokType = ETokType::Type;
 
-}    // namespace Parser
+}    // namespace parser

@@ -381,7 +381,7 @@ void AST::to_string( String& result )
 {
 	local_persist thread_local
 	char SerializationLevel = 0;
-	
+
 	switch ( Type )
 	{
 		using namespace ECode;
@@ -410,7 +410,7 @@ void AST::to_string( String& result )
 		case Access_Public:
 			result.append( Name );
 		break;
-		
+
 		case Class:
 			cast<CodeClass>().to_string_def( result );
 		break;
@@ -500,7 +500,7 @@ void AST::to_string( String& result )
 		case Parameters:
 			cast<CodeParam>().to_string( result );
 		break;
-		
+
 		case Preprocess_Define:
 			cast<CodeDefine>().to_string( result );
 		break;

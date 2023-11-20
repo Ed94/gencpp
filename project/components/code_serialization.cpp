@@ -1,4 +1,4 @@
-#if GEN_INTELLISENSE_DIRECTIVES
+#ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "ast.cpp"
 #endif
@@ -24,6 +24,11 @@ String CodeBody::to_string()
 	switch ( ast->Type )
 	{
 		using namespace ECode;
+		case Untyped:
+		case Execution:
+			result.append( raw()->Content );
+		break;
+
 		case Enum_Body:
 		case Class_Body:
 		case Extern_Linkage_Body:
@@ -34,7 +39,7 @@ String CodeBody::to_string()
 		case Union_Body:
 			to_string( result );
 		break;
-			
+
 		case Export_Body:
 			to_string_export( result );
 		break;
@@ -57,7 +62,7 @@ void CodeBody::to_string_export( String& result )
 {
 	result.append_fmt( "export\n{\n" );
 
-	Code curr = { this };
+	Code curr = *this;
 	s32  left = ast->NumEntries;
 	while ( left-- )
 	{
@@ -91,26 +96,26 @@ String CodeConstructor::to_string()
 
 void CodeConstructor::to_string_def( String& result )
 {
-	result.append( ast->Parent->name );
-	
+	result.append( ast->Parent->Name );
+
 	if ( ast->Params )
 		result.append_fmt( "( %S )", ast->Params.to_string() );
 	else
 		result.append( "(void)" );
-	
+
 	if ( ast->InitializerList )
 		result.append_fmt( " : %S", ast->InitializerList.to_string() );
-	
+
 	if ( ast->InlineCmt )
 		result.append_fmt( " // %S", ast->InlineCmt->Content );
-	
+
 	result.append_fmt( "\n{\n%S\n}\n", ast->Body.to_string() );
 }
 
 void CodeConstructor::to_string_fwd( String& result )
 {
 	result.append( ast->Parent->Name );
-	
+
 	if ( ast->Params )
 		result.append_fmt( "( %S )", ast->Params.to_string() );
 	else
@@ -178,7 +183,7 @@ void CodeClass::to_string_def( String& result )
 
 	result.append_fmt( "\n{\n%S\n}", ast->Body.to_string() );
 
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 		result.append(";\n");
 }
 
@@ -193,7 +198,7 @@ void CodeClass::to_string_fwd( String& result )
 	else result.append_fmt( "class %S", ast->Name );
 
 	// Check if it can have an end-statement
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 	{
 		if ( ast->InlineCmt )
 			result.append_fmt( "; // %S\n", ast->InlineCmt->Content );
@@ -209,7 +214,7 @@ String CodeDefine::to_string()
 
 void CodeDefine::to_string( String& result )
 {
-	return result.append_fmt( "#define %S %S\n", ast->Name, ast->Content );
+	result.append_fmt( "#define %S %S\n", ast->Name, ast->Content );
 }
 
 String CodeDestructor::to_string()
@@ -239,7 +244,7 @@ void CodeDestructor::to_string_def( String& result )
 	}
 	else
 		result.append_fmt( "~%S()", ast->Parent->Name );
-	
+
 	result.append_fmt( "\n{\n%S\n}\n", ast->Body.to_string() );
 }
 
@@ -290,26 +295,26 @@ void CodeEnum::to_string_def( String& result )
 {
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
 		result.append( "export " );
-	
+
 	if ( ast->Attributes || ast->UnderlyingType )
 	{
 		result.append( "enum " );
-	
+
 		if ( ast->Attributes )
 			result.append_fmt( "%S ", ast->Attributes.to_string() );
-	
-		if ( UnderlyingType )
+
+		if ( ast->UnderlyingType )
 			result.append_fmt( "%S : %S\n{\n%S\n}"
 				, ast->Name
 				, ast->UnderlyingType.to_string()
 				, ast->Body.to_string()
 			);
-	
+
 		else result.append_fmt( "%S\n{\n%S\n}", ast->Name, ast->Body.to_string() );
 	}
 	else result.append_fmt( "enum %S\n{\n%S\n}", ast->Name, ast->Body.to_string() );
-	
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 		result.append(";\n");
 }
 
@@ -323,7 +328,7 @@ void CodeEnum::to_string_fwd( String& result )
 
 	result.append_fmt( "enum %S : %S", ast->Name, ast->UnderlyingType.to_string() );
 
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 	{
 		if ( ast->InlineCmt )
 			result.append_fmt(";  %S", ast->InlineCmt->Content );
@@ -336,16 +341,16 @@ void CodeEnum::to_string_class_def( String& result )
 {
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
 		result.append( "export " );
-	
+
 	if ( ast->Attributes || ast->UnderlyingType )
 	{
 		result.append( "enum class " );
-	
+
 		if ( ast->Attributes )
 		{
 			result.append_fmt( "%S ", ast->Attributes.to_string() );
 		}
-	
+
 		if ( ast->UnderlyingType )
 		{
 			result.append_fmt( "%S : %S\n{\n%S\n}", ast->Name, ast->UnderlyingType.to_string(), ast->Body.to_string() );
@@ -359,8 +364,8 @@ void CodeEnum::to_string_class_def( String& result )
 	{
 		result.append_fmt( "enum class %S\n{\n%S\n}", ast->Body.to_string() );
 	}
-	
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 		result.append(";\n");
 }
 
@@ -376,7 +381,7 @@ void CodeEnum::to_string_class_fwd( String& result )
 
 	result.append_fmt( "%S : %S", ast->Name, ast->UnderlyingType.to_string() );
 
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 	{
 		if ( ast->InlineCmt )
 			result.append_fmt(";  %S", ast->InlineCmt->Content );
@@ -390,13 +395,6 @@ String CodeExec::to_string()
 	return ast->Content.duplicate( GlobalAllocator );
 }
 
-String CodeExtern::to_string()
-{
-	String result = String::make( GlobalAllocator, "" );
-	to_string( result );
-	return result;
-}
-
 void CodeExtern::to_string( String& result )
 {
 	if ( ast->Body )
@@ -407,7 +405,7 @@ void CodeExtern::to_string( String& result )
 
 String CodeInclude::to_string()
 {
-	return String::fmt( GlobalAllocator, "#include %S\n", ast->Content );
+	return String::fmt_buf( GlobalAllocator, "#include %S\n", ast->Content );
 }
 
 void CodeInclude::to_string( String& result )
@@ -415,7 +413,7 @@ void CodeInclude::to_string( String& result )
 	result.append_fmt( "#include %S\n", ast->Content );
 }
 
-String CodeFriend::to_string( String& result )
+String CodeFriend::to_string()
 {
 	String result = String::make( GlobalAllocator, "" );
 	to_string( result );
@@ -437,7 +435,7 @@ void CodeFriend::to_string( String& result )
 		result.append("\n");
 }
 
-String CodeFn::to_string( String& result )
+String CodeFn::to_string()
 {
 	String result = String::make( GlobalAllocator, "" );
 	switch ( ast->Type )
@@ -482,7 +480,7 @@ void CodeFn::to_string_def( String& result )
 	else
 		result.append_fmt( "%S(", ast->Name );
 
-	if ( Params )
+	if ( ast->Params )
 		result.append_fmt( "%S)", ast->Params.to_string() );
 
 	else
@@ -511,9 +509,9 @@ void CodeFn::to_string_fwd( String& result )
 	if ( ast->Attributes )
 		result.append_fmt( "%S ", ast->Attributes.to_string() );
 
-	if ( Specs )
+	if ( ast->Specs )
 	{
-		for ( SpecifierT spec : Specs )
+		for ( SpecifierT spec : ast->Specs )
 		{
 			if ( ! ESpecifier::is_trailing( spec ) )
 			{
@@ -542,7 +540,7 @@ void CodeFn::to_string_fwd( String& result )
 
 	if ( ast->Specs )
 	{
-		for ( SpecifierT spec : Specs )
+		for ( SpecifierT spec : ast->Specs )
 		{
 			if ( ESpecifier::is_trailing( spec ) )
 			{
@@ -673,7 +671,7 @@ void CodeOperator::to_string_fwd( String& result )
 
 	if ( ast->Specs )
 	{
-		for ( SpecifierT spec : Specs )
+		for ( SpecifierT spec : ast->Specs )
 		{
 			if ( ! ESpecifier::is_trailing( spec ) )
 			{
@@ -698,7 +696,7 @@ void CodeOperator::to_string_fwd( String& result )
 
 	if ( ast->Specs )
 	{
-		for ( SpecifierT spec : Specs )
+		for ( SpecifierT spec : ast->Specs )
 		{
 			if ( ESpecifier::is_trailing( spec ) )
 			{
@@ -741,7 +739,7 @@ void CodeOpCast::to_string_def( String& result )
 		else
 			result.append_fmt( "operator %S()", ast->ValueType.to_string() );
 
-		for ( SpecifierT spec : Specs )
+		for ( SpecifierT spec : ast->Specs )
 		{
 			if ( ESpecifier::is_trailing( spec ) )
 			{
@@ -751,7 +749,7 @@ void CodeOpCast::to_string_def( String& result )
 		}
 
 		result.append_fmt( "\n{\n%S\n}\n", ast->Body.to_string() );
-		break;
+		return;
 	}
 
 	if ( ast->Name && ast->Name.length() )
@@ -765,10 +763,10 @@ void CodeOpCast::to_string_fwd( String& result )
 	if ( ast->Specs )
 	{
 		// TODO : Add support for specifies before the operator keyword
-	
+
 		result.append_fmt( "operator %S()", ast->ValueType.to_string() );
-	
-		for ( SpecifierT spec : Specs )
+
+		for ( SpecifierT spec : ast->Specs )
 		{
 			if ( ESpecifier::is_trailing( spec ) )
 			{
@@ -776,14 +774,14 @@ void CodeOpCast::to_string_fwd( String& result )
 				result.append_fmt( " %*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
-	
+
 		if ( ast->InlineCmt )
 			result.append_fmt( ";  %S", ast->InlineCmt->Content );
 		else
 			result.append( ";\n" );
-		break;
+		return;
 	}
-	
+
 	if ( ast->InlineCmt )
 		result.append_fmt("operator %S();  %S", ast->ValueType.to_string() );
 	else
@@ -799,10 +797,10 @@ String CodeParam::to_string()
 
 void CodeParam::to_string( String& result )
 {
-	if ( ast->ValueType == nullptr )
+	if ( ast->ValueType.ast == nullptr )
 	{
 		result.append_fmt( "%S", ast->Name );
-		break;
+		return;
 	}
 
 	if ( ast->Name )
@@ -835,7 +833,7 @@ String CodePreprocessCond::to_string()
 		case Preprocess_IfDef:
 			to_string_ifdef( result );
 		break;
-		case Preprocess_IfNotDef
+		case Preprocess_IfNotDef:
 			to_string_ifndef( result );
 		break;
 		case Preprocess_ElIf:
@@ -968,7 +966,7 @@ void CodeStruct::to_string_def( String& result )
 
 	result.append_fmt( "\n{\n%S\n}", ast->Body.to_string() );
 
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 		result.append(";\n");
 }
 
@@ -982,7 +980,7 @@ void CodeStruct::to_string_fwd( String& result )
 
 	else result.append_fmt( "struct %S", ast->Name );
 
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 	{
 		if ( ast->InlineCmt )
 			result.append_fmt(";  %S", ast->InlineCmt->Content );
@@ -1029,14 +1027,14 @@ void CodeTypedef::to_string( String& result )
 	else
 		result.append_fmt( "%S %S", ast->UnderlyingType.to_string(), ast->Name );
 
-	if ( ast->UnderlyingType->Type == Typename && ast->UnderlyingType->ArrExpr )
+	if ( ast->UnderlyingType->Type == ECode::Typename && ast->UnderlyingType->ArrExpr )
 	{
 		result.append_fmt( "[ %S ];", ast->UnderlyingType->ArrExpr->to_string() );
 
 		AST* next_arr_expr = ast->UnderlyingType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			result.append_fmt( "[ %S ];", next_arr_expr.to_string() );
+			result.append_fmt( "[ %S ];", next_arr_expr->to_string() );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
@@ -1082,13 +1080,13 @@ void CodeType::to_string( String& result )
 				result.append_fmt( "%S ", ast->Attributes.to_string() );
 			else
 			{
-				if ( Specs )
+				if ( ast->Specs )
 					result.append_fmt( "%S %S ( %S ) %S", ast->ReturnType.to_string(), ast->Name, ast->Params.to_string(), ast->Specs.to_string() );
 				else
 					result.append_fmt( "%S %S ( %S )", ast->ReturnType.to_string(), ast->Name, ast->Params.to_string() );
 			}
 
-			break;
+			return;
 		}
 	#endif
 
@@ -1136,7 +1134,7 @@ void CodeUnion::to_string( String& result )
 		);
 	}
 
-	if ( ast->Parent == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 		result.append(";\n");
 }
 
@@ -1236,7 +1234,7 @@ void CodeVar::to_string( String& result )
 		if ( ast->NextVar )
 			result.append_fmt( ", %S", ast->NextVar.to_string() );
 
-		break;
+		return;
 	}
 
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
@@ -1278,13 +1276,13 @@ void CodeVar::to_string( String& result )
 		else
 			result.append( ";\n" );
 
-		break;
+		return;
 	}
 
 	if ( ast->BitfieldSize )
 		result.append_fmt( "%S %S : %S", ast->ValueType.to_string(), ast->Name, ast->BitfieldSize.to_string() );
 
-	else if ( ValueType->ArrExpr )
+	else if ( ast->ValueType->ArrExpr )
 	{
 		result.append_fmt( "%S %S[ %S ]", ast->ValueType.to_string(), ast->Name, ast->ValueType->ArrExpr.to_string() );
 
@@ -1299,15 +1297,15 @@ void CodeVar::to_string( String& result )
 	else
 		result.append_fmt( "%S %S", ast->ValueType.to_string(), ast->Name );
 
-	if ( Value )
+	if ( ast->Value )
 		result.append_fmt( " = %S", ast->Value.to_string() );
 
-	if ( NextVar )
+	if ( ast->NextVar )
 		result.append_fmt( ", %S", ast->NextVar.to_string() );
 
 	result.append( ";" );
 
-	if ( InlineCmt )
+	if ( ast->InlineCmt )
 		result.append_fmt("  %S", ast->InlineCmt->Content);
 	else
 		result.append("\n");

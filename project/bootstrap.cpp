@@ -188,7 +188,9 @@ int gen_main()
 		Code        code_serialization = scan_file( "components/code_serialization.cpp" );
 		Code        interface	       = scan_file( "components/interface.cpp" );
 		Code        upfront 	       = scan_file( "components/interface.upfront.cpp" );
-		Code 	    parsing 	       = scan_file( "components/interface.parsing.cpp" );
+		Code        lexer              = scan_file( "components/lexer.cpp" );
+		Code        parser             = scan_file( "components/parser.cpp" );
+		Code 	    parsing_interface  = scan_file( "components/interface.parsing.cpp" );
 		Code        untyped 	       = scan_file( "components/interface.untyped.cpp" );
 
 		CodeBody etoktype         = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
@@ -206,7 +208,7 @@ int gen_main()
 		src.print_fmt( "\n#pragma region AST\n\n" );
 		src.print( ast_case_macros );
 		src.print( ast );
-		src.print( code );
+		src.print( code_serialization );
 		src.print_fmt( "\n#pragma endregion AST\n" );
 
 		src.print_fmt( "\n#pragma region Interface\n" );
@@ -214,7 +216,9 @@ int gen_main()
 		src.print( upfront );
 		src.print_fmt( "\n#pragma region Parsing\n\n" );
 		src.print( nspaced_etoktype );
-		src.print( parsing );
+		src.print( lexer );
+		src.print( parser );
+		src.print( parsing_interface );
 		src.print( untyped );
 		src.print_fmt( "\n#pragma endregion Parsing\n\n" );
 		src.print_fmt( "#pragma endregion Interface\n\n" );

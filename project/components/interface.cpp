@@ -3,8 +3,10 @@
 #include "code_serialization.cpp"
 #endif
 
-internal void init_parser();
-internal void deinit_parser();
+namespace parser {
+internal void init();
+internal void deinit();
+}
 
 internal
 void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
@@ -288,7 +290,7 @@ void init()
 	}
 
 	define_constants();
-	init_parser();
+	parser::init();
 }
 
 void deinit()
@@ -331,7 +333,7 @@ void deinit()
 	while ( left--, left );
 
 	Global_AllocatorBuckets.free();
-	deinit_parser();
+	parser::deinit();
 }
 
 void reset()

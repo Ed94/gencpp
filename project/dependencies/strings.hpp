@@ -169,7 +169,7 @@ struct String
 		get_header().Length = 0;
 	}
 
-	String duplicate( AllocatorInfo allocator )
+	String duplicate( AllocatorInfo allocator ) const
 	{
 		return make_length( allocator, Data, length() );
 	}

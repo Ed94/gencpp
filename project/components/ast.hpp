@@ -113,13 +113,19 @@ struct Code
 		return ast;
 	}
 	Code& operator ++();
-	
-	
+
+
 	// TODO(Ed) : Remove this overload.
-//	auto& operator*()
-//	{
-//		return *this;
-//	}
+	auto& operator*()
+	{
+		local_persist thread_local
+		Code NullRef = { nullptr };
+
+		if ( ast == nullptr )
+			return NullRef;
+
+		return *this;
+	}
 
 	AST* ast;
 
@@ -182,7 +188,10 @@ struct AST
 	char const* type_str();
 	bool        validate_body();
 
-	neverinline String to_string();
+	String to_string();
+
+	neverinline
+	void to_string( String& result );
 
 	template< class Type >
 	forceinline Type cast()
@@ -282,6 +291,7 @@ struct AST
 	AST*              Parent;
 	StringCached      Name;
 	CodeT             Type;
+//	CodeFlag          CodeFlags;
 	ModuleFlag        ModuleFlags;
 	union {
 		b32           IsFunction;  // Used by typedef to not serialize the name field.
@@ -341,6 +351,7 @@ struct AST_POD
 	AST*              Parent;
 	StringCached      Name;
 	CodeT             Type;
+	CodeFlag          CodeFlags;
 	ModuleFlag        ModuleFlags;
 	union {
 		b32           IsFunction;  // Used by typedef to not serialize the name field.
@@ -368,6 +379,14 @@ static_assert( sizeof(AST_POD) == AST_POD_Size,    "ERROR: AST POD is not size o
 #define CodeInvalid (* Code::Invalid.ast) // Uses an implicitly overloaded cast from the AST to the desired code type.
 
 #pragma region Code Types
+
+// struct CodeIterator
+// {
+// 	Code begin()
+// 	{
+
+// 	}
+// };
 
 struct CodeBody
 {
@@ -424,7 +443,7 @@ struct CodeClass
 	Using_Code( CodeClass );
 
 	void add_interface( CodeType interface );
-	
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
 
@@ -569,7 +588,7 @@ struct CodeStruct
 	Using_Code( CodeStruct );
 
 	void add_interface( CodeType interface );
-	
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
 
@@ -609,10 +628,10 @@ Define_CodeType( Comment );
 struct CodeConstructor
 {
 	Using_Code( CodeConstructor );
-	
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
-	
+
 	AST*             raw();
 	operator         Code();
 	AST_Constructor* operator->();
@@ -622,9 +641,9 @@ struct CodeConstructor
 struct CodeDefine
 {
 	Using_Code( CodeDefine );
-	
+
 	void to_string( String& result );
-	
+
 	AST*        raw();
 	operator    Code();
 	AST_Define* operator->();
@@ -634,10 +653,10 @@ struct CodeDefine
 struct CodeDestructor
 {
 	Using_Code( CodeDestructor );
-	
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
-	
+
 	AST*             raw();
 	operator         Code();
 	AST_Destructor* operator->();
@@ -647,10 +666,12 @@ struct CodeDestructor
 struct CodeEnum
 {
 	Using_Code( CodeEnum );
-	
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
-	
+	void to_string_class_def( String& result );
+	void to_string_class_fwd( String& result );
+
 	AST*      raw();
 	operator  Code();
 	AST_Enum* operator->();
@@ -662,9 +683,9 @@ Define_CodeType( Exec );
 struct CodeExtern
 {
 	Using_Code( CodeExtern );
-	
+
 	void to_string( String& result );
-	
+
 	AST*        raw();
 	operator    Code();
 	AST_Extern* operator->();
@@ -674,9 +695,9 @@ struct CodeExtern
 struct CodeInclude
 {
 	Using_Code( CodeInclude );
-	
+
 	void to_string( String& result );
-	
+
 	AST*         raw();
 	operator     Code();
 	AST_Include* operator->();
@@ -686,9 +707,9 @@ struct CodeInclude
 struct CodeFriend
 {
 	Using_Code( CodeFriend );
-	
+
 	void to_string( String& result );
-	
+
 	AST*        raw();
 	operator    Code();
 	AST_Friend* operator->();
@@ -697,11 +718,11 @@ struct CodeFriend
 
 struct CodeFn
 {
-	Using_Code( CodeFriend );
-	
+	Using_Code( CodeFn );
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
-	
+
 	AST*     raw();
 	operator Code();
 	AST_Fn*  operator->();
@@ -711,9 +732,9 @@ struct CodeFn
 struct CodeModule
 {
 	Using_Code( CodeModule );
-	
+
 	void to_string( String& result );
-	
+
 	AST*        raw();
 	operator    Code();
 	AST_Module* operator->();
@@ -723,9 +744,9 @@ struct CodeModule
 struct CodeNS
 {
 	Using_Code( CodeNS );
-	
+
 	void to_string( String& result );
-	
+
 	AST*     raw();
 	operator Code();
 	AST_NS*  operator->();
@@ -735,10 +756,10 @@ struct CodeNS
 struct CodeOperator
 {
 	Using_Code( CodeOperator );
-	
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
-	
+
 	AST*          raw();
 	operator      Code();
 	AST_Operator* operator->();
@@ -748,10 +769,10 @@ struct CodeOperator
 struct CodeOpCast
 {
 	Using_Code( CodeOpCast );
-	
+
 	void to_string_def( String& result );
 	void to_string_fwd( String& result );
-	
+
 	AST*        raw();
 	operator    Code();
 	AST_OpCast* operator->();
@@ -761,9 +782,9 @@ struct CodeOpCast
 struct CodePragma
 {
 	Using_Code( CodePragma );
-	
+
 	void to_string( String& result );
-	
+
 	AST*        raw();
 	operator    Code();
 	AST_Pragma* operator->();
@@ -773,14 +794,14 @@ struct CodePragma
 struct CodePreprocessCond
 {
 	Using_Code( CodePreprocessCond );
-	
+
 	void to_string_if( String& result );
 	void to_string_ifdef( String& result );
 	void to_string_ifndef( String& result );
 	void to_string_elif( String& result );
 	void to_string_else( String& result );
 	void to_string_endif( String& result );
-	
+
 	AST*                raw();
 	operator            Code();
 	AST_PreprocessCond* operator->();
@@ -790,9 +811,9 @@ struct CodePreprocessCond
 struct CodeTemplate
 {
 	Using_Code( CodeTemplate );
-	
+
 	void to_string( String& result );
-	
+
 	AST*          raw();
 	operator      Code();
 	AST_Template* operator->();
@@ -802,9 +823,9 @@ struct CodeTemplate
 struct CodeType
 {
 	Using_Code( CodeType );
-	
+
 	void to_string( String& result );
-	
+
 	AST*      raw();
 	operator  Code();
 	AST_Type* operator->();
@@ -814,9 +835,9 @@ struct CodeType
 struct CodeTypedef
 {
 	Using_Code( CodeTypedef );
-	
+
 	void to_string( String& result );
-	
+
 	AST*         raw();
 	operator     Code();
 	AST_Typedef* operator->();
@@ -826,9 +847,9 @@ struct CodeTypedef
 struct CodeUnion
 {
 	Using_Code( CodeUnion );
-	
+
 	void to_string( String& result );
-	
+
 	AST*         raw();
 	operator     Code();
 	AST_Union* operator->();
@@ -838,10 +859,10 @@ struct CodeUnion
 struct CodeUsing
 {
 	Using_Code( CodeUsing );
-	
+
 	void to_string( String& result );
 	void to_string_ns( String& result );
-	
+
 	AST*       raw();
 	operator   Code();
 	AST_Using* operator->();
@@ -851,9 +872,9 @@ struct CodeUsing
 struct CodeVar
 {
 	Using_Code( CodeVar );
-	
+
 	void to_string( String& result );
-	
+
 	AST*     raw();
 	operator Code();
 	AST_Var* operator->();
