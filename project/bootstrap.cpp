@@ -181,17 +181,18 @@ int gen_main()
 
 	// gen.cpp
 	{
-		Code        src_start       = scan_file( "components/src_start.cpp" );
-		Code        static_data 	= scan_file( "components/static_data.cpp" );
-		Code        ast_case_macros = scan_file( "components/ast_case_macros.cpp" );
-		Code        ast			    = scan_file( "components/ast.cpp" );
-		Code        interface	    = scan_file( "components/interface.cpp" );
-		Code        upfront 	    = scan_file( "components/interface.upfront.cpp" );
-		Code 	    parsing 	    = scan_file( "components/interface.parsing.cpp" );
-		Code        untyped 	    = scan_file( "components/interface.untyped.cpp" );
+		Code        src_start          = scan_file( "components/src_start.cpp" );
+		Code        static_data 	   = scan_file( "components/static_data.cpp" );
+		Code        ast_case_macros    = scan_file( "components/ast_case_macros.cpp" );
+		Code        ast			       = scan_file( "components/ast.cpp" );
+		Code        code_serialization = scan_file( "components/code_serialization.cpp" );
+		Code        interface	       = scan_file( "components/interface.cpp" );
+		Code        upfront 	       = scan_file( "components/interface.upfront.cpp" );
+		Code 	    parsing 	       = scan_file( "components/interface.parsing.cpp" );
+		Code        untyped 	       = scan_file( "components/interface.untyped.cpp" );
 
 		CodeBody etoktype         = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
-		CodeNS   nspaced_etoktype = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
+		CodeNS   nspaced_etoktype = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
 
 		Builder
 		src = Builder::open( "gen/gen.cpp" );
@@ -205,6 +206,7 @@ int gen_main()
 		src.print_fmt( "\n#pragma region AST\n\n" );
 		src.print( ast_case_macros );
 		src.print( ast );
+		src.print( code );
 		src.print_fmt( "\n#pragma endregion AST\n" );
 
 		src.print_fmt( "\n#pragma region Interface\n" );

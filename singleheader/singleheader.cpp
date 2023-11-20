@@ -198,6 +198,7 @@ int gen_main()
 		Code static_data 	 = scan_file( project_dir "components/static_data.cpp" );
 		Code ast_case_macros = scan_file( project_dir "components/ast_case_macros.cpp" );
 		Code ast             = scan_file( project_dir "components/ast.cpp" );
+		Code code            = scan_file( project_dir "components/code_serialization.cpp" );
 		Code interface       = scan_file( project_dir "components/interface.cpp" );
 		Code upfront         = scan_file( project_dir "components/interface.upfront.cpp" );
 		Code parsing         = scan_file( project_dir "components/interface.parsing.cpp" );
@@ -212,6 +213,7 @@ int gen_main()
 		header.print_fmt( "#pragma region AST\n\n" );
 		header.print( ast_case_macros );
 		header.print( ast );
+		header.print( code );
 		header.print_fmt( "#pragma endregion AST\n\n" );
 
 		header.print_fmt( "#pragma region Interface\n" );

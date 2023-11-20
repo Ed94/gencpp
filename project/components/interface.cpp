@@ -1,6 +1,6 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
-#include "ast.cpp"
+#include "code_serialization.cpp"
 #endif
 
 internal void init_parser();

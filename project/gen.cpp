@@ -20,6 +20,7 @@ GEN_NS_BEGIN
 
 #include "components/ast_case_macros.cpp"
 #include "components/ast.cpp"
+#include "components/code_serialization.cpp"
 
 #include "components/interface.cpp"
 #include "components/interface.upfront.cpp"

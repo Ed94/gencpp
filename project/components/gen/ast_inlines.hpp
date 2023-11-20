@@ -49,16 +49,6 @@ void Code::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String Code::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 Code& Code::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -127,16 +117,6 @@ void CodeBody::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeBody::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeBody& CodeBody::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -203,16 +183,6 @@ void CodeAttributes::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeAttributes::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeAttributes& CodeAttributes::operator=( Code other )
@@ -303,16 +273,6 @@ void CodeComment::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeComment::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeComment& CodeComment::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -399,16 +359,6 @@ void CodeConstructor::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeConstructor::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeConstructor& CodeConstructor::operator=( Code other )
@@ -499,16 +449,6 @@ void CodeClass::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeClass::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeClass& CodeClass::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -575,16 +515,6 @@ void CodeDefine::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeDefine::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeDefine& CodeDefine::operator=( Code other )
@@ -675,16 +605,6 @@ void CodeDestructor::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeDestructor::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeDestructor& CodeDestructor::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -773,16 +693,6 @@ void CodeEnum::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeEnum::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeEnum& CodeEnum::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -869,16 +779,6 @@ void CodeExec::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeExec::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeExec& CodeExec::operator=( Code other )
@@ -1067,16 +967,6 @@ void CodeFriend::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeFriend::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeFriend& CodeFriend::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1163,16 +1053,6 @@ void CodeFn::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeFn::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeFn& CodeFn::operator=( Code other )
@@ -1263,16 +1143,6 @@ void CodeInclude::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeInclude::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeInclude& CodeInclude::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1359,16 +1229,6 @@ void CodeModule::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeModule::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeModule& CodeModule::operator=( Code other )
@@ -1459,16 +1319,6 @@ void CodeNS::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeNS::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeNS& CodeNS::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1555,16 +1405,6 @@ void CodeOperator::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeOperator::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeOperator& CodeOperator::operator=( Code other )
@@ -1655,16 +1495,6 @@ void CodeOpCast::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeOpCast::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeOpCast& CodeOpCast::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1753,16 +1583,6 @@ void CodeParam::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeParam::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeParam& CodeParam::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1829,16 +1649,6 @@ void CodePragma::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodePragma::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodePragma& CodePragma::operator=( Code other )
@@ -1929,16 +1739,6 @@ void CodePreprocessCond::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodePreprocessCond::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodePreprocessCond& CodePreprocessCond::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -2027,16 +1827,6 @@ void CodeSpecifiers::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeSpecifiers::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeSpecifiers& CodeSpecifiers::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -2105,16 +1895,6 @@ void CodeStruct::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeStruct::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeStruct& CodeStruct::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -2181,16 +1961,6 @@ void CodeTemplate::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeTemplate::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeTemplate& CodeTemplate::operator=( Code other )
@@ -2281,16 +2051,6 @@ void CodeType::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeType::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeType& CodeType::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -2377,16 +2137,6 @@ void CodeTypedef::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeTypedef::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeTypedef& CodeTypedef::operator=( Code other )
@@ -2477,16 +2227,6 @@ void CodeUnion::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeUnion::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeUnion& CodeUnion::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -2575,16 +2315,6 @@ void CodeUsing::set_global()
 	rcast( AST*, ast )->Parent = Code::Global.ast;
 }
 
-String CodeUsing::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
-}
-
 CodeUsing& CodeUsing::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -2671,16 +2401,6 @@ void CodeVar::set_global()
 		return;
 	}
 	rcast( AST*, ast )->Parent = Code::Global.ast;
-}
-
-String CodeVar::to_string()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return rcast( AST*, ast )->to_string();
 }
 
 CodeVar& CodeVar::operator=( Code other )

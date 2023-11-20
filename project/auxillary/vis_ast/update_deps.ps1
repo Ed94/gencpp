@@ -249,6 +249,8 @@ function setup-raylib {
 	foreach ($header in $raylib_headers) {
 		Copy-Item -Path $header -Destination (join-path $path_raylib_inc (split-path $header -Leaf))
 	}
-	remove-item -path $path_temp -Recurse
+
+	# Don't want to remove as it hampers debugging.
+	# remove-item -path $path_temp -Recurse
 }
 setup-raylib

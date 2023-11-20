@@ -103,7 +103,7 @@ struct Code
 	Using_Code( Code );
 
 	template< class Type >
-	Type cast()
+	forceinline Type cast()
 	{
 		return * rcast( Type*, this );
 	}
@@ -113,10 +113,13 @@ struct Code
 		return ast;
 	}
 	Code& operator ++();
-	auto& operator*()
-	{
-		return *this;
-	}
+	
+	
+	// TODO(Ed) : Remove this overload.
+//	auto& operator*()
+//	{
+//		return *this;
+//	}
 
 	AST* ast;
 
@@ -182,7 +185,7 @@ struct AST
 	neverinline String to_string();
 
 	template< class Type >
-	Type cast()
+	forceinline Type cast()
 	{
 		return * this;
 	}
@@ -263,7 +266,7 @@ struct AST
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
 			SpecifierT ArrSpecs[ArrSpecs_Cap]; // Specifiers
-			AST*       NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
+			AST*       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
 	union {
@@ -350,7 +353,7 @@ struct AST_POD
 
 struct test {
 	SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
-	AST* NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
+	AST* NextSpecs;                         // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 };
 
 constexpr int pls = sizeof(test);
@@ -385,6 +388,8 @@ struct CodeBody
 	{
 		return rcast( AST*, ast )->has_entries();
 	}
+	void to_string( String& result );
+	void to_string_export( String& result );
 	AST* raw()
 	{
 		return rcast( AST*, ast );
@@ -419,6 +424,9 @@ struct CodeClass
 	Using_Code( CodeClass );
 
 	void add_interface( CodeType interface );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
 
 	AST* raw()
 	{
@@ -448,6 +456,7 @@ struct CodeParam
 
 	CodeParam get( s32 idx );
 	bool has_entries();
+	void to_string( String& result );
 	AST* raw()
 	{
 		return rcast( AST*, ast );
@@ -520,6 +529,7 @@ struct CodeSpecifiers
 
 		return -1;
 	}
+	void to_string( String& result );
 	AST* raw()
 	{
 		return rcast( AST*, ast );
@@ -559,6 +569,9 @@ struct CodeStruct
 	Using_Code( CodeStruct );
 
 	void add_interface( CodeType interface );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
 
 	AST* raw()
 	{
@@ -592,27 +605,260 @@ struct CodeStruct
 
 Define_CodeType( Attributes );
 Define_CodeType( Comment );
-Define_CodeType( Constructor );
-Define_CodeType( Define );
-Define_CodeType( Destructor );
-Define_CodeType( Enum );
+
+struct CodeConstructor
+{
+	Using_Code( CodeConstructor );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
+	
+	AST*             raw();
+	operator         Code();
+	AST_Constructor* operator->();
+	AST_Constructor* ast;
+};
+
+struct CodeDefine
+{
+	Using_Code( CodeDefine );
+	
+	void to_string( String& result );
+	
+	AST*        raw();
+	operator    Code();
+	AST_Define* operator->();
+	AST_Define* ast;
+};
+
+struct CodeDestructor
+{
+	Using_Code( CodeDestructor );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
+	
+	AST*             raw();
+	operator         Code();
+	AST_Destructor* operator->();
+	AST_Destructor* ast;
+};
+
+struct CodeEnum
+{
+	Using_Code( CodeEnum );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
+	
+	AST*      raw();
+	operator  Code();
+	AST_Enum* operator->();
+	AST_Enum* ast;
+};
+
 Define_CodeType( Exec );
-Define_CodeType( Extern );
-Define_CodeType( Include );
-Define_CodeType( Friend );
-Define_CodeType( Fn );
-Define_CodeType( Module );
-Define_CodeType( NS );
-Define_CodeType( Operator );
-Define_CodeType( OpCast );
-Define_CodeType( Pragma );
-Define_CodeType( PreprocessCond );
-Define_CodeType( Template );
-Define_CodeType( Type );
-Define_CodeType( Typedef );
-Define_CodeType( Union );
-Define_CodeType( Using );
-Define_CodeType( Var );
+
+struct CodeExtern
+{
+	Using_Code( CodeExtern );
+	
+	void to_string( String& result );
+	
+	AST*        raw();
+	operator    Code();
+	AST_Extern* operator->();
+	AST_Extern* ast;
+};
+
+struct CodeInclude
+{
+	Using_Code( CodeInclude );
+	
+	void to_string( String& result );
+	
+	AST*         raw();
+	operator     Code();
+	AST_Include* operator->();
+	AST_Include* ast;
+};
+
+struct CodeFriend
+{
+	Using_Code( CodeFriend );
+	
+	void to_string( String& result );
+	
+	AST*        raw();
+	operator    Code();
+	AST_Friend* operator->();
+	AST_Friend* ast;
+};
+
+struct CodeFn
+{
+	Using_Code( CodeFriend );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
+	
+	AST*     raw();
+	operator Code();
+	AST_Fn*  operator->();
+	AST_Fn*  ast;
+};
+
+struct CodeModule
+{
+	Using_Code( CodeModule );
+	
+	void to_string( String& result );
+	
+	AST*        raw();
+	operator    Code();
+	AST_Module* operator->();
+	AST_Module* ast;
+};
+
+struct CodeNS
+{
+	Using_Code( CodeNS );
+	
+	void to_string( String& result );
+	
+	AST*     raw();
+	operator Code();
+	AST_NS*  operator->();
+	AST_NS*  ast;
+};
+
+struct CodeOperator
+{
+	Using_Code( CodeOperator );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
+	
+	AST*          raw();
+	operator      Code();
+	AST_Operator* operator->();
+	AST_Operator* ast;
+};
+
+struct CodeOpCast
+{
+	Using_Code( CodeOpCast );
+	
+	void to_string_def( String& result );
+	void to_string_fwd( String& result );
+	
+	AST*        raw();
+	operator    Code();
+	AST_OpCast* operator->();
+	AST_OpCast* ast;
+};
+
+struct CodePragma
+{
+	Using_Code( CodePragma );
+	
+	void to_string( String& result );
+	
+	AST*        raw();
+	operator    Code();
+	AST_Pragma* operator->();
+	AST_Pragma* ast;
+};
+
+struct CodePreprocessCond
+{
+	Using_Code( CodePreprocessCond );
+	
+	void to_string_if( String& result );
+	void to_string_ifdef( String& result );
+	void to_string_ifndef( String& result );
+	void to_string_elif( String& result );
+	void to_string_else( String& result );
+	void to_string_endif( String& result );
+	
+	AST*                raw();
+	operator            Code();
+	AST_PreprocessCond* operator->();
+	AST_PreprocessCond* ast;
+};
+
+struct CodeTemplate
+{
+	Using_Code( CodeTemplate );
+	
+	void to_string( String& result );
+	
+	AST*          raw();
+	operator      Code();
+	AST_Template* operator->();
+	AST_Template* ast;
+};
+
+struct CodeType
+{
+	Using_Code( CodeType );
+	
+	void to_string( String& result );
+	
+	AST*      raw();
+	operator  Code();
+	AST_Type* operator->();
+	AST_Type* ast;
+};
+
+struct CodeTypedef
+{
+	Using_Code( CodeTypedef );
+	
+	void to_string( String& result );
+	
+	AST*         raw();
+	operator     Code();
+	AST_Typedef* operator->();
+	AST_Typedef* ast;
+};
+
+struct CodeUnion
+{
+	Using_Code( CodeUnion );
+	
+	void to_string( String& result );
+	
+	AST*         raw();
+	operator     Code();
+	AST_Union* operator->();
+	AST_Union* ast;
+};
+
+struct CodeUsing
+{
+	Using_Code( CodeUsing );
+	
+	void to_string( String& result );
+	void to_string_ns( String& result );
+	
+	AST*       raw();
+	operator   Code();
+	AST_Using* operator->();
+	AST_Using* ast;
+};
+
+struct CodeVar
+{
+	Using_Code( CodeVar );
+	
+	void to_string( String& result );
+	
+	AST*     raw();
+	operator Code();
+	AST_Var* operator->();
+	AST_Var* ast;
+};
 
 #undef Define_CodeType
 #undef Using_Code

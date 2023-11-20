@@ -372,12 +372,16 @@ AST* AST::duplicate()
 
 String AST::to_string()
 {
+	String result = String::make( GlobalAllocator, "" );
+	to_string( result );
+	return result;
+}
+
+void AST::to_string( String& result )
+{
 	local_persist thread_local
 	char SerializationLevel = 0;
-
-	// TODO : Need to refactor so that intermeidate strings are freed conviently.
-	String result = String::make( GlobalAllocator, "" );
-
+	
 	switch ( Type )
 	{
 		using namespace ECode;
@@ -406,994 +410,171 @@ String AST::to_string()
 		case Access_Public:
 			result.append( Name );
 		break;
-
+		
 		case Class:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			result.append( "class " );
-
-			if ( Attributes )
-			{
-				result.append_fmt( "%S ", Attributes->to_string() );
-			}
-
-			if ( ParentType )
-			{
-				char const* access_level = to_str( ParentAccess );
-
-				result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
-
-				CodeType interface = ParentType->Next->cast< CodeType >();
-				if ( interface )
-					result.append( "\n" );
-
-				while ( interface )
-				{
-					result.append_fmt( ", %S", interface.to_string() );
-					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
-				}
-			}
-			else if ( Name )
-			{
-				result.append( Name );
-			}
-
-			if ( InlineCmt )
-			{
-				result.append_fmt( " // %S", InlineCmt->Content );
-			}
-
-			result.append_fmt( "\n{\n%S\n}", Body->to_string() );
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
-		}
+			cast<CodeClass>().to_string_def( result );
 		break;
 
 		case Class_Fwd:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes )
-				result.append_fmt( "class %S %S", Attributes->to_string(), Name );
-
-			else result.append_fmt( "class %S", Name );
-
-			// Check if it can have an end-statement
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-			{
-				if ( InlineCmt )
-					result.append_fmt( "; // %S\n", InlineCmt->Content );
-				else
-					result.append(";\n");
-			}
-		}
+			cast<CodeClass>().to_string_fwd( result );
 		break;
 
 		case Constructor:
-		{
-			result.append( Parent->Name );
-
-			if ( Params )
-				result.append_fmt( "( %S )", Params->to_string() );
-			else
-				result.append( "(void)" );
-
-			if ( InitializerList )
-				result.append_fmt( " : %S", InitializerList->to_string() );
-
-			if ( InlineCmt )
-				result.append_fmt( " // %S", InlineCmt->Content );
-
-			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
-		}
+			cast<CodeConstructor>().to_string_def( result );
 		break;
 
 		case Constructor_Fwd:
-		{
-			result.append( Parent->Name );
-
-			if ( Params )
-				result.append_fmt( "( %S )", Params->to_string() );
-			else
-			{
-				if ( InlineCmt )
-					result.append_fmt( "(void); // %S\n", InlineCmt->Content );
-				else
-					result.append( "(void);\n" );
-			}
-		}
+			cast<CodeConstructor>().to_string_fwd( result );
 		break;
 
 		case Destructor:
-		{
-			if ( Specs )
-			{
-				CodeSpecifiers specs = Specs->cast<CodeSpecifiers>();
-
-				if ( specs.has( ESpecifier::Virtual ) )
-					result.append_fmt( "virtual ~%S()", Parent->Name );
-				else
-					result.append_fmt( "~%S()", Parent->Name );
-			}
-			else
-				result.append_fmt( "~%S()", Parent->Name );
-
-			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
-		}
+			cast<CodeDestructor>().to_string_def( result );
 		break;
 
 		case Destructor_Fwd:
-		{
-			if ( Specs )
-			{
-				CodeSpecifiers specs = Specs->cast<CodeSpecifiers>();
-
-				if ( specs.has( ESpecifier::Virtual ) )
-					result.append_fmt( "virtual ~%S();\n", Parent->Name );
-				else
-					result.append_fmt( "~%S()", Parent->Name );
-
-				if ( specs.has( ESpecifier::Pure ) )
-					result.append( " = 0;" );
-			}
-			else
-				result.append_fmt( "~%S();", Parent->Name );
-
-			if ( InlineCmt )
-				result.append_fmt( "  %S", InlineCmt->Content );
-			else
-				result.append("\n");
-		}
+			cast<CodeDestructor>().to_string_fwd( result );
 		break;
 
 		case Enum:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes || UnderlyingType )
-			{
-				result.append( "enum " );
-
-				if ( Attributes )
-					result.append_fmt( "%S ", Attributes->to_string() );
-
-				if ( UnderlyingType )
-					result.append_fmt( "%S : %S\n{\n%S\n}"
-						, Name
-						, UnderlyingType->to_string()
-						, Body->to_string()
-					);
-
-				else result.append_fmt( "%S\n{\n%S\n}", Name, Body->to_string() );
-			}
-			else result.append_fmt( "enum %S\n{\n%S\n}", Name, Body->to_string() );
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
-		}
+			cast<CodeEnum>().to_string_def( result );
 		break;
 
 		case Enum_Fwd:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			result.append_fmt( "enum %S : %S", Name, UnderlyingType->to_string() );
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-			{
-				if ( InlineCmt )
-					result.append_fmt(";  %S", InlineCmt->Content );
-				else
-					result.append(";\n");
-			}
-		}
+			cast<CodeEnum>().to_string_fwd( result );
 		break;
 
 		case Enum_Class:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes || UnderlyingType )
-			{
-				result.append( "enum class " );
-
-				if ( Attributes )
-				{
-					result.append_fmt( "%S ", Attributes->to_string() );
-				}
-
-				if ( UnderlyingType )
-				{
-					result.append_fmt( "%S : %S\n{\n%S\n}", Name, UnderlyingType->to_string(), Body->to_string() );
-				}
-				else
-				{
-					result.append_fmt( "%S\n{\n%S\n}", Name, Body->to_string() );
-				}
-			}
-			else
-			{
-				result.append_fmt( "enum class %S\n{\n%S\n}", Body->to_string() );
-			}
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
-		}
+			cast<CodeEnum>().to_string_class_def( result );
 		break;
 
 		case Enum_Class_Fwd:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			result.append( "enum class " );
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			result.append_fmt( "%S : %S", Name, UnderlyingType->to_string() );
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-			{
-				if ( InlineCmt )
-					result.append_fmt(";  %S", InlineCmt->Content );
-				else
-					result.append(";\n");
-			}
-		}
+			cast<CodeEnum>().to_string_class_fwd( result );
 		break;
 
 		case Export_Body:
-		{
-			result.append_fmt( "export\n{\n" );
-
-			Code curr = { this };
-			s32  left = NumEntries;
-			while ( left-- )
-			{
-				result.append_fmt( "%S", curr.to_string() );
-				++curr;
-			}
-
-			result.append_fmt( "};\n" );
-		}
+			cast<CodeBody>().to_string_export( result );
 		break;
 
 		case Extern_Linkage:
-			result.append_fmt( "extern \"%S\"\n{\n%S\n}\n", Name, Body->to_string() );
+			cast<CodeExtern>().to_string( result );
 		break;
 
 		case Friend:
-			result.append_fmt( "friend %S", Declaration->to_string() );
-
-			if ( result[ result.length() -1 ] != ';' )
-			{
-				result.append( ";" );
-			}
-
-			if ( InlineCmt )
-				result.append_fmt("  %S", InlineCmt->Content );
-			else
-				result.append("\n");
+			cast<CodeFriend>().to_string( result );
 		break;
 
 		case Function:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export" );
-
-			if ( Attributes )
-				result.append_fmt( " %S ", Attributes->to_string() );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ! ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			if ( Attributes || Specs )
-				result.append( "\n" );
-
-			if ( ReturnType )
-				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
-
-			else
-				result.append_fmt( "%S(", Name );
-
-			if ( Params )
-				result.append_fmt( "%S)", Params->to_string() );
-
-			else
-				result.append( ")" );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
-		}
+			cast<CodeFn>().to_string_def( result );
 		break;
 
 		case Function_Fwd:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ! ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			if ( Attributes || Specs )
-			{
-				result.append("\n" );
-			}
-
-			if ( ReturnType )
-				result.append_fmt( "%S %S(", ReturnType->to_string(), Name );
-
-			else
-				result.append_fmt( "%S(", Name );
-
-			if ( Params )
-				result.append_fmt( "%S)", Params->to_string() );
-
-			else
-				result.append( ")" );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			if ( InlineCmt )
-				result.append_fmt( ";  %S", InlineCmt->Content );
-			else
-				result.append( ";\n" );
-		}
+			cast<CodeFn>().to_string_fwd( result );
 		break;
 
 		case Module:
-			if (((u32(ModuleFlag::Export) & u32(ModuleFlags)) == u32(ModuleFlag::Export)))
-				result.append("export ");
-
-			if (((u32(ModuleFlag::Import) & u32(ModuleFlags)) == u32(ModuleFlag::Import)))
-				result.append("import ");
-
-			result.append_fmt( "%S;\n", Name );
-			break;
+			cast<CodeModule>().to_string( result );
+		break;
 
 		case Namespace:
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			result.append_fmt( "namespace %S\n{\n%S\n}\n", Name , Body->to_string() );
+			cast<CodeNS>().to_string( result );
 		break;
 
 		case Operator:
 		case Operator_Member:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ! ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			if ( Attributes || Specs )
-			{
-				result.append("\n" );
-			}
-
-			if ( ReturnType )
-				result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
-
-			if ( Params )
-				result.append_fmt( "%S)", Params->to_string() );
-
-			else
-				result.append( ")" );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			result.append_fmt( "\n{\n%S\n}\n"
-				, Body->to_string()
-			);
-		}
+			cast<CodeOperator>().to_string_def( result );
 		break;
 
 		case Operator_Fwd:
 		case Operator_Member_Fwd:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes )
-				result.append_fmt( "%S\n", Attributes->to_string() );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ! ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			if ( Attributes || Specs )
-			{
-				result.append("\n" );
-			}
-
-			result.append_fmt( "%S %S (", ReturnType->to_string(), Name );
-
-			if ( Params )
-				result.append_fmt( "%S)", Params->to_string() );
-
-			else
-				result.append_fmt( ")" );
-
-			if ( Specs )
-			{
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-			}
-
-			if ( InlineCmt )
-				result.append_fmt( ";  %S", InlineCmt->Content );
-			else
-				result.append( ";\n" );
-		}
+			cast<CodeOperator>().to_string_fwd( result );
 		break;
 
 		case Operator_Cast:
-		{
-			if ( Specs )
-			{
-				// TODO : Add support for specifies before the operator keyword
-
-				if ( Name && Name.length() )
-					result.append_fmt( "%Soperator %S()", Name, ValueType->to_string() );
-				else
-					result.append_fmt( "operator %S()", ValueType->to_string() );
-
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-
-				result.append_fmt( "\n{\n%S\n}\n", Body->to_string() );
-				break;
-			}
-
-			if ( Name && Name.length() )
-				result.append_fmt("%Soperator %S()\n{\n%S\n}\n", Name, ValueType->to_string(), Body->to_string() );
-			else
-				result.append_fmt("operator %S()\n{\n%S\n}\n", ValueType->to_string(), Body->to_string() );
-		}
+			cast<CodeOpCast>().to_string_def( result );
 		break;
 
 		case Operator_Cast_Fwd:
-			if ( Specs )
-			{
-				// TODO : Add support for specifies before the operator keyword
-
-				result.append_fmt( "operator %S()", ValueType->to_string() );
-
-				for ( SpecifierT spec : Specs->cast<CodeSpecifiers>() )
-				{
-					if ( ESpecifier::is_trailing( spec ) )
-					{
-						StrC spec_str = ESpecifier::to_str( spec );
-						result.append_fmt( " %*s", spec_str.Len, spec_str.Ptr );
-					}
-				}
-
-				if ( InlineCmt )
-					result.append_fmt( ";  %S", InlineCmt->Content );
-				else
-					result.append( ";\n" );
-				break;
-			}
-
-			if ( InlineCmt )
-				result.append_fmt("operator %S();  %S", ValueType->to_string() );
-			else
-				result.append_fmt("operator %S();\n", ValueType->to_string() );
+			cast<CodeOpCast>().to_string_fwd( result );
 		break;
 
 		case Parameters:
-		{
-			if ( ValueType == nullptr )
-			{
-				result.append_fmt( "%S", Name );
-				break;
-			}
-
-			if ( Name )
-				result.append_fmt( "%S %S", ValueType->to_string(), Name );
-
-			else
-				result.append_fmt( "%S", ValueType->to_string() );
-
-			if ( Value )
-				result.append_fmt( "= %S", Value->to_string() );
-
-			if ( NumEntries - 1 > 0)
-			{
-				for ( CodeParam param :  CodeParam { (AST_Param*) Next } )
-				{
-					result.append_fmt( ", %S", param.to_string() );
-				}
-			}
-		}
+			cast<CodeParam>().to_string( result );
 		break;
+		
 		case Preprocess_Define:
-			result.append_fmt( "#define %S %S\n", Name, Content );
+			cast<CodeDefine>().to_string( result );
 		break;
 
 		case Preprocess_If:
-			result.append_fmt( "#if %S\n", Content );
+			cast<CodePreprocessCond>().to_string_if( result );
 		break;
 
 		case Preprocess_IfDef:
-			result.append_fmt( "#ifdef %S\n", Content );
+			cast<CodePreprocessCond>().to_string_ifdef( result );
 		break;
 
 		case Preprocess_IfNotDef:
-			result.append_fmt( "#ifndef %S\n", Content );
+			cast<CodePreprocessCond>().to_string_ifndef( result );
 		break;
 
 		case Preprocess_Include:
-			result.append_fmt( "#include %S\n", Content );
+			cast<CodeInclude>().to_string( result );
 		break;
 
 		case Preprocess_ElIf:
-			result.append_fmt( "#elif %S\n", Content );
+			cast<CodePreprocessCond>().to_string_elif( result );
 		break;
 
 		case Preprocess_Else:
-			result.append_fmt( "#else\n" );
+			cast<CodePreprocessCond>().to_string_else( result );
 		break;
 
 		case Preprocess_EndIf:
-			result.append_fmt( "#endif\n" );
+			cast<CodePreprocessCond>().to_string_endif( result );
 		break;
 
 		case Preprocess_Pragma:
-			result.append_fmt( "#pragma %S\n", Content );
+			cast<CodePragma>().to_string( result );
 		break;
 
 		case Specifiers:
-		{
-			s32 idx  = 0;
-			s32 left = NumEntries;
-			while ( left-- )
-			{
-				StrC spec = ESpecifier::to_str( ArrSpecs[idx] );
-				result.append_fmt( "%.*s ", spec.Len, spec.Ptr );
-				idx++;
-			}
-		}
+			cast<CodeSpecifiers>().to_string( result );
 		break;
 
 		case Struct:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			result.append( "struct " );
-
-			if ( Attributes )
-			{
-				result.append_fmt( "%S ", Attributes->to_string() );
-			}
-
-			if ( ParentType )
-			{
-				char const* access_level = to_str( ParentAccess );
-
-				result.append_fmt( "%S : %s %S", Name, access_level, ParentType );
-
-				CodeType interface = ParentType->Next->cast< CodeType >();
-				if ( interface )
-					result.append( "\n" );
-
-				while ( interface )
-				{
-					result.append_fmt( ", %S", interface.to_string() );
-					interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
-				}
-			}
-			else if ( Name )
-			{
-				result.append( Name );
-			}
-
-			if ( InlineCmt )
-			{
-				result.append_fmt( " // %S", InlineCmt->Content );
-			}
-
-			result.append_fmt( "\n{\n%S\n}", Body->to_string() );
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
-		}
+			cast<CodeStruct>().to_string_def( result );
 		break;
 
 		case Struct_Fwd:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes )
-				result.append_fmt( "struct %S %S", Attributes->to_string(), Name );
-
-			else result.append_fmt( "struct %S", Name );
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-			{
-				if ( InlineCmt )
-					result.append_fmt(";  %S", InlineCmt->Content );
-				else
-					result.append(";\n");
-			}
-		}
+			cast<CodeStruct>().to_string_fwd( result );
 		break;
 
 		case Template:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Params )
-				result.append_fmt( "template< %S >\n%S", Params->to_string(), Declaration->to_string() );
-			else
-				result.append_fmt( "template<>\n%S", Declaration->to_string() );
-		}
+			cast<CodeTemplate>().to_string( result );
 		break;
 
 		case Typedef:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			result.append( "typedef ");
-
-			// Determines if the typedef is a function typename
-			if ( UnderlyingType->ReturnType )
-				result.append( UnderlyingType->to_string() );
-			else
-				result.append_fmt( "%S %S", UnderlyingType->to_string(), Name );
-
-			if ( UnderlyingType->Type == Typename && UnderlyingType->ArrExpr )
-			{
-				result.append_fmt( "[ %S ];", UnderlyingType->ArrExpr->to_string() );
-
-				AST* next_arr_expr = UnderlyingType->ArrExpr->Next;
-				while ( next_arr_expr )
-				{
-					result.append_fmt( "[ %S ];", next_arr_expr->to_string() );
-					next_arr_expr = next_arr_expr->Next;
-				}
-			}
-			else
-			{
-				result.append( ";" );
-			}
-
-			if ( InlineCmt )
-				result.append_fmt("  %S", InlineCmt->Content);
-			else
-				result.append("\n");
-		}
+			cast<CodeTypedef>().to_string( result );
 		break;
 
 		case Typename:
-		{
-		#if GEN_USE_NEW_TYPENAME_PARSING
-			if ( ReturnType && Params )
-			{
-				if ( Attributes )
-					result.append_fmt( "%S ", Attributes->to_string() );
-				else
-				{
-					if ( Specs )
-						result.append_fmt( "%S ( %S ) ( %S ) %S", ReturnType->to_string(), Name, Params->to_string(), Specs->to_string() );
-					else
-						result.append_fmt( "%S ( %S ) ( %S )", ReturnType->to_string(), Name, Params->to_string() );
-				}
-
-				break;
-			}
-		#else
-			if ( ReturnType && Params )
-			{
-				if ( Attributes )
-					result.append_fmt( "%S ", Attributes->to_string() );
-				else
-				{
-					if ( Specs )
-						result.append_fmt( "%S %S ( %S ) %S", ReturnType->to_string(), Name, Params->to_string(), Specs->to_string() );
-					else
-						result.append_fmt( "%S %S ( %S )", ReturnType->to_string(), Name, Params->to_string() );
-				}
-
-				break;
-			}
-		#endif
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			if ( Specs )
-				result.append_fmt( "%S %S", Name, Specs->to_string() );
-			else
-				result.append_fmt( "%S", Name );
-
-			if ( IsParamPack )
-				result.append("...");
-		}
+			cast<CodeType>().to_string( result );
 		break;
 
 		case Union:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			result.append( "union " );
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			if ( Name )
-			{
-				result.append_fmt( "%S\n{\n%S\n}"
-					, Name
-					, Body->to_string()
-				);
-			}
-			else
-			{
-				// Anonymous union
-				result.append_fmt( "\n{\n%S\n}"
-					, Body->to_string()
-				);
-			}
-
-			if ( Parent == nullptr || ( Parent->Type != ECode::Typedef && Parent->Type != ECode::Variable ) )
-				result.append(";\n");
-		}
+			cast<CodeUnion>().to_string( result );
 		break;
 
 		case Using:
-		{
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes )
-				result.append_fmt( "%S ", Attributes->to_string() );
-
-			if ( UnderlyingType )
-			{
-				result.append_fmt( "using %S = %S", Name, UnderlyingType->to_string() );
-
-				if ( UnderlyingType->ArrExpr )
-				{
-					result.append_fmt( "[ %S ]", UnderlyingType->ArrExpr->to_string() );
-
-					AST* next_arr_expr = UnderlyingType->ArrExpr->Next;
-					while ( next_arr_expr )
-					{
-						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
-						next_arr_expr = next_arr_expr->Next;
-					}
-				}
-
-				result.append( ";" );
-			}
-			else
-				result.append_fmt( "using %S;", Name );
-
-			if ( InlineCmt )
-				result.append_fmt("  %S\n", InlineCmt->Content );
-			else
-				result.append("\n");
-		}
+			cast<CodeUsing>().to_string( result );
 		break;
 
 		case Using_Namespace:
-			if ( InlineCmt )
-				result.append_fmt( "using namespace $S;  %S", Name, InlineCmt->Content );
-			else
-				result.append_fmt( "using namespace %s;\n", Name );
+			cast<CodeUsing>().to_string_ns( result );
 		break;
 
 		case Variable:
-		{
-			if ( Parent && Parent->Type == Variable )
-			{
-				// Its a comma-separated variable ( a NextVar )
-
-				if ( Specs )
-					result.append_fmt( "%S ", Specs->to_string() );
-
-				result.append( Name );
-
-				if ( ArrExpr )
-				{
-					result.append_fmt( "[ %S ]", ArrExpr->to_string() );
-
-					AST* next_arr_expr = ArrExpr->Next;
-					while ( next_arr_expr )
-					{
-						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
-						next_arr_expr = next_arr_expr->Next;
-					}
-				}
-
-				if ( Value )
-					result.append_fmt( " = %S", Value->to_string() );
-
-				// Keep the chain going...
-				if ( NextVar )
-					result.append_fmt( ", %S", NextVar->to_string() );
-
-				break;
-			}
-
-			if ( bitfield_is_equal( u32, ModuleFlags, ModuleFlag::Export ))
-				result.append( "export " );
-
-			if ( Attributes || Specs )
-			{
-				if ( Attributes )
-					result.append_fmt( "%S ", Specs->to_string() );
-
-				if ( Specs )
-					result.append_fmt( "%S\n", Specs->to_string() );
-
-				result.append_fmt( "%S %S", ValueType->to_string(), Name );
-
-				if ( ValueType->ArrExpr )
-				{
-					result.append_fmt( "[ %S ]", ValueType->ArrExpr->to_string() );
-
-					AST* next_arr_expr = ValueType->ArrExpr->Next;
-					while ( next_arr_expr )
-					{
-						result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
-						next_arr_expr = next_arr_expr->Next;
-					}
-				}
-
-				if ( BitfieldSize )
-					result.append_fmt( " : %S", BitfieldSize->to_string() );
-
-				if ( Value )
-					result.append_fmt( " = %S", Value->to_string() );
-
-				if ( NextVar )
-					result.append_fmt( ", %S", NextVar->to_string() );
-
-				if ( InlineCmt )
-					result.append_fmt(";  %S", InlineCmt->Content);
-				else
-					result.append( ";\n" );
-
-				break;
-			}
-
-			if ( BitfieldSize )
-				result.append_fmt( "%S %S : %S", ValueType->to_string(), Name, BitfieldSize->to_string() );
-
-			else if ( ValueType->ArrExpr )
-			{
-				result.append_fmt( "%S %S[ %S ]", ValueType->to_string(), Name, ValueType->ArrExpr->to_string() );
-
-				AST* next_arr_expr = ValueType->ArrExpr->Next;
-				while ( next_arr_expr )
-				{
-					result.append_fmt( "[ %S ]", next_arr_expr->to_string() );
-					next_arr_expr = next_arr_expr->Next;
-				}
-			}
-
-			else
-				result.append_fmt( "%S %S", ValueType->to_string(), Name );
-
-			if ( Value )
-				result.append_fmt( " = %S", Value->to_string() );
-
-			if ( NextVar )
-				result.append_fmt( ", %S", NextVar->to_string() );
-
-			result.append( ";" );
-
-			if ( InlineCmt )
-				result.append_fmt("  %S", InlineCmt->Content);
-			else
-				result.append("\n");
-		}
+			cast<CodeVar>().to_string( result );
 		break;
 
 		case Enum_Body:
@@ -1404,19 +585,9 @@ String AST::to_string()
 		case Namespace_Body:
 		case Struct_Body:
 		case Union_Body:
-		{
-			Code curr = Front->cast<Code>();
-			s32  left = NumEntries;
-			while ( left -- )
-			{
-				result.append_fmt( "%S", curr.to_string() );
-				++curr;
-			}
-		}
+			cast<CodeBody>().to_string( result );
 		break;
 	}
-
-	return result;
 }
 
 bool AST::is_equal( AST* other )
