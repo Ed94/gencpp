@@ -22,8 +22,6 @@ struct StackNode
 
 struct ParseContext
 {
-	#if 0
-
 	TokArray   Tokens;
 	StackNode* Scope;
 
@@ -3295,7 +3293,7 @@ CodeFriend parse_friend()
 		Context.pop();
 		return CodeInvalid;
 	}
-	friend <Type>
+	// friend <Type>
 
 	// Funciton declaration
 	if ( currtok.Type == TokType::Identifier )

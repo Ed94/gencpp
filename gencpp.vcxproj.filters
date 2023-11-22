@@ -42,9 +42,6 @@
     <ClCompile Include="test\test.parsing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="project\components\temp\etoktype.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="project\components\ast.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -64,9 +61,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="project\components\static_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="project\components\untyped.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="project\bootstrap.cpp">
@@ -132,6 +126,18 @@
     <ClCompile Include="project\components\gen\etoktype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="project\Example.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\lexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="project\components\code_serialization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="project\gen.hpp">
@@ -180,18 +186,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test\upfront.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\components\temp\ast_inlines.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\components\temp\ecode.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\components\temp\eoperator.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="project\components\temp\especifier.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="project\components\ast.hpp">
@@ -293,6 +287,9 @@
     <ClInclude Include="test\CURSED_TYPEDEF.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="project\components\code_types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
@@ -305,7 +302,6 @@
     <None Include="test\Readme.md" />
     <None Include="scripts\genccp.natstepfilter" />
     <None Include="scripts\gencpp.refactor" />
-    <None Include="project\components\temp\Readme.md" />
     <None Include="project\enums\AttributeTokens.csv" />
     <None Include="project\enums\ECode.csv" />
     <None Include="project\enums\EOperator.csv" />

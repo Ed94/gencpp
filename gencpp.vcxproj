@@ -262,6 +262,7 @@
     <ClInclude Include="project\auxillary\scanner.hpp" />
     <ClInclude Include="project\components\ast.hpp" />
     <ClInclude Include="project\components\ast_types.hpp" />
+    <ClInclude Include="project\components\code_types.hpp" />
     <ClInclude Include="project\components\gen\ast_inlines.hpp" />
     <ClInclude Include="project\components\gen\ecode.hpp" />
     <ClInclude Include="project\components\gen\eoperator.hpp" />
@@ -313,11 +314,14 @@
     <ClCompile Include="project\bootstrap.cpp" />
     <ClCompile Include="project\components\ast.cpp" />
     <ClCompile Include="project\components\ast_case_macros.cpp" />
+    <ClCompile Include="project\components\code_serialization.cpp" />
     <ClCompile Include="project\components\gen\etoktype.cpp" />
     <ClCompile Include="project\components\interface.cpp" />
     <ClCompile Include="project\components\interface.parsing.cpp" />
     <ClCompile Include="project\components\interface.untyped.cpp" />
     <ClCompile Include="project\components\interface.upfront.cpp" />
+    <ClCompile Include="project\components\lexer.cpp" />
+    <ClCompile Include="project\components\parser.cpp" />
     <ClCompile Include="project\components\src_start.cpp" />
     <ClCompile Include="project\components\static_data.cpp" />
     <ClCompile Include="project\dependencies\debug.cpp" />
