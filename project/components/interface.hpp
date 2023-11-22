@@ -166,16 +166,16 @@ namespace parser {
 }
 
 struct ParseInfo
-{
-	Arena file_mem;
-	Arena token_mem;
-	Arena code_mem;
 
-	FileContents         file_content;
-	Array<parser::Token> tokens;
-	Array<parser::Error> errors;
+	Arena FileMem;
+	Arena TokMem;
+	Arena CodeMem;
+
+	FileContents         FileContent;
+	Array<parser::Token> Tokens;
+	Array<parser::Error> Errors;
 	// Errors are allocated to a dedicated general arena.
-};
+;
 
 CodeBody parse_file( StrC path );
 #endif

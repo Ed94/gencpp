@@ -19,13 +19,13 @@ These are containers representing a scope body of a definition that can be of th
 Fields:
 
 ```cpp
-Code         Front;
-Code         Back;
-Token*       Token;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
-s32          NumEntries;
+Code           Front;
+Code           Back;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
+s32            NumEntries;
 ```
 
 The `Front` member represents the start of the link list and `Back` the end.
@@ -49,12 +49,13 @@ Represent standard or vendor specific C/C++ attributes.
 Fields:
 
 ```cpp
-StringCached  Content;
-Code          Prev;
-Code          Next;
-Code          Parent;
-StringCached  Name;
-CodeT         Type;
+StringCached   Content;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -131,14 +132,15 @@ You'll notice that only one parent type is supported only with parent access. Th
 Fields:
 
 ```cpp
-CodeComment InlineCmt;  // Only supported by forward declarations
-Code        InitializerList;
-CodeParam   Params;
-Code        Body;
-Code        Prev;
-Code        Next;
-Code        Parent;
-CodeT       Type;
+CodeComment    InlineCmt;  // Only supported by forward declarations
+Code           InitializerList;
+CodeParam      Params;
+Code           Body;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+CodeT          Type;
 ```
 
 Serialization:
@@ -162,12 +164,13 @@ Represents a preprocessor define
 Fields:
 
 ```cpp
-StringCached  Content;
-Code          Prev;
-Code          Next;
-Code          Parent;
-StringCached  Name;
-CodeT         Type;
+StringCached   Content;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -186,6 +189,7 @@ CodeSpecifiers Specs;
 Code           Body;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 CodeT          Type;
 ```
@@ -214,6 +218,7 @@ CodeType       UnderlyingType;
 CodeBody       Body;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -241,12 +246,13 @@ Will be obsolute when function body parsing is implemented.
 Fields:
 
 ```cpp
-StringCached Content;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
+StringCached   Content;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -260,12 +266,13 @@ Serialization:
 Fields:
 
 ```cpp
-CodeBody     Body;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
+CodeBody       Body;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -282,12 +289,13 @@ extern "<Name>"
 Fields:
 
 ```cpp
-StringCached Content;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
+StringCached   Content;
+Code           Prev;
+Code           Next;
+Code           Parent;
+parser::Token* Tok;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -303,13 +311,14 @@ This library (until its necessary become some third-party library to do otherwis
 Fields:
 
 ```cpp
-CodeComment  InlineCmt;
-Code         Declaration;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
+CodeComment    InlineCmt;
+Code           Declaration;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -330,8 +339,9 @@ CodeType       ReturnType;
 CodeParam      Params;
 CodeBody       Body;
 Code           Prev;
-Code           Parent;
 Code           Next;
+parser::Token* Tok;
+Code           Parent;
 StringCached   Name;
 CodeT          Type;
 ModuleFlag     ModuleFlags;
@@ -355,12 +365,13 @@ Serialization:
 Fields:
 
 ```cpp
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
-ModuleFlag   ModuleFlags;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
+ModuleFlag     ModuleFlags;
 ```
 
 Serialization:
@@ -374,13 +385,14 @@ Serialization:
 Fields:
 
 ```cpp
-CodeBody     Body;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
-ModuleFlag   ModuleFlags;
+CodeBody       Body;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
+ModuleFlag     ModuleFlags;
 ```
 
 Serialization:
@@ -405,6 +417,7 @@ CodeParam      Params;
 CodeBody       Body;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -436,6 +449,7 @@ CodeType       ValueType;
 CodeBody       Body;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -459,14 +473,15 @@ Serialization:
 Fields:
 
 ```cpp
-CodeType     ValueType;
-Code         Value;
-CodeParam    Last;
-CodeParam    Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
-s32          NumEntries;
+CodeType       ValueType;
+Code           Value;
+CodeParam      Last;
+CodeParam      Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
+s32            NumEntries;
 ```
 
 Serialization:
@@ -480,12 +495,13 @@ Serialization:
 Fields:
 
 ```cpp
-StringCached Content;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
+StringCached   Content;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -499,12 +515,13 @@ Serialization:
 Fields:
 
 ```cpp
-StringCached Content;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
+StringCached  Content;
+Code          Prev;
+Code          Next;
+paser::Token* Tok;
+Code          Parent;
+StringCached  Name;
+CodeT         Type;
 ```
 
 Serialization:
@@ -518,13 +535,15 @@ Serialization:
 Fields:
 
 ```cpp
-SpecifierT        ArrSpecs[ AST::ArrSpecs_Cap ];
-Code              Prev;
-Code              Next;
-Code              Parent;
-StringCached      Name;
-CodeT             Type;
-s32               NumEntries;
+SpecifierT     ArrSpecs[ AST::ArrSpecs_Cap ];
+CodeSpecifiers NextSpecs;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
+s32            NumEntries;
 ```
 
 Serialization:
@@ -538,14 +557,15 @@ Serialization:
 Fields:
 
 ```cpp
-CodeParam    Params;
-Code         Declaration;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
-ModuleFlag   ModuleFlags;
+CodeParam      Params;
+Code           Declaration;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
+ModuleFlag     ModuleFlags;
 ```
 
 Serialization:
@@ -570,6 +590,7 @@ CodeParam      Params;
 Code           ArrExpr;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -609,7 +630,8 @@ Serialization:
 <ModuleFlags> typedef <UnderlyingType> <Name>; <InlineCmt>
 
 // Functions
-<ModuleFlags> typedef <Name>; <InlineCmt>
+<ModuleFlags> typedef <ReturnType> <Name>( <Parameters> ); <InlineCmt>
+<ModuleFlags> typedef <ReturnType> ( <Expression that yeilds an Identifier signature> )( <Parameters> ); <InlineCmt>
 ```
 
 ## Union
