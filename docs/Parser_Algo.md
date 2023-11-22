@@ -106,7 +106,7 @@ internal
 }
 ```
 
-Below is an outline of the general alogirithim used for these internal procedures. The intention is provide a basic briefing to aid the user in traversing the actual code definitions. These appear in the same order as they are in the `parser.cpp` file
+Below is an outline of the general alogirithim used for these internal procedures. The intention is to provide a basic briefing to aid the user in traversing the actual code definitions. These appear in the same order as they are in the `parser.cpp` file
 
 ## `parse_array_decl`
 
@@ -127,29 +127,154 @@ Below is an outline of the general alogirithim used for these internal procedure
 
 ## `parse_class_struct`
 
-
+1. Check for export module specifier
+2. class or struct keyword
+3. `parse_attributes`
+4. If identifier : `parse_identifier`
+5. Parse inherited parent or interfaces
+6. If opening curly brace : `parse_class_struct_body`
+7. If not an inplace definition
+    1. End statement
+    2. Check for inline comment
 
 ## `parse_class_struct_body`
 
+1. Opening curly brace
+2. Parse the body (Possible options):
+    1. Newline : ast constant
+    2. Comment : `parse_comment`
+    3. Access_Public : ast constant
+    4. Access_Protected : ast constant
+    5. Access_Private : ast constant
+    6. Decl_Class : `parse_complicated_definition`
+    7. Decl_Enum : `parse_complicated_definition`
+    8. Decl_Friend : `parse_friend`
+    9. Decl_Operator : `parse_operator_cast`
+    10. Decl_Struct : `parse_complicated_definition`
+    11. Decl_Template : `parse_template`
+    12. Decl_Typedef : `parse_typedef`
+    13. Decl_Union : `parse_complicated_definition`
+    14. Decl_Using : `parse_using`
+    15. Operator == '~'
+        1. `parse_destructor`
+    16. Preprocess_Define : `parse_define`
+    17. Preprocess_Include : `parse_include`
+    18. Preprocess_Conditional (if, ifdef, ifndef, elif, else, endif) : `parse_preprocess_cond` or else/endif ast constant
+    19. Preprocess_Macro : `parse_simple_preprocess`
+    20. Preprocess_Pragma : `parse_pragma`
+    21. Preprocess_Unsupported : `parse_simple_preprocess`
+    22. StaticAssert : `parse_static_assert`
+    23. The following compound into a resolved definition or declaration:
+        1. Attributes (Standard, GNU, MSVC) : `parse_attributes`
+        2. Specifiers (consteval, constexpr, constinit, forceinline, inline, mutable, neverinline, static, volatile)
+        3. Possible Destructor : `parse_destructor`
+        4. Possible User defined operator cast : `parse_operator_cast`
+        5. Possible Constructor : `parse_constructor`
+        6. Something that has the following: (identifier, const, unsigned, signed, short, long, bool, char, int, double)
+            1. Possible Constructor `parse_constructor`
+            2. Possible Operator, Function, or varaible : `parse_operator_function_or_variable`
+    24. Something completely unknown (will just make untyped...) : `parse_untyped`
+
 ## `parse_comment`
+
+1. Just wrap the token into a cached string ( the lexer did the processing )
 
 ## `parse_compilcated_definition`
 
+This is a helper function used by the following functions to help resolve a declaration or definition:
+
+* `parse_class_struct_body`
+* `parse_global_nspace`
+* `parse_union`
+
+A portion of the code in `parse_typedef` is very similar to this as both have to resolve a similar issue.
+
+1. Look ahead to the termination token (End statement)
+2. Check to see if it fits the pattern for a forward declare
+3. If the previous token was an identifier ( `token[-1]` ):
+    1. Look back one more token : `[-2]`
+    2. If the token has a closing brace its an inplace definition
+    3. If the `token[-2]` is an identifier & `token[-3]` is the declaration type, its a variable using a namespaced type.
+    4. If the `token[-2]` is an indirection, then its a variable using a namespaced/forwarded type.
+    5. If any of the above is the case, `parse_operator_function_or_variable`
+4. If the previous token was a closing curly brace, its a definition : `parse_forward_or_definition`
+5. If the previous token was a closing square brace, its an array definition : `parse_operator_function_or_variable`
+
 ## `parse_define`
+
+1. Define directive
+2. Get identifier
+3. Get Content
 
 ## `parse_forward_or_definition`
 
+* Parse any of the following for either a forward declaration or definition:
+    1. Decl_Class : `parse_class`
+    2. Decl_Enum : `parse_enum`
+    3. Decl_Struct : `parse_struct`
+    4. Decl_Union : `parse_union`
+
 ## `parse_function_after_name`
+
+This is needed as a function defintion is not easily resolvable early on, as such this function handles resolving a function
+after its been made ceratin that the type of declaration or definition is indeed for a function signature.
+
+By the point this function is called the following are known : export module flag, attributes, specifiers, return type, & name
+
+1. `parse_parameters`
+2. parse postfix specifiers (we do not check if the specifier here is correct or not to be here... yet)
+3. If there is a body : `parse_body`
+4. Otherwise :
+     1. Statment end
+     2. Check for inline comment
 
 ## `parse_function_body`
 
+Currently there is no actual parsing of the function body. Any content with the braces is shoved into an execution AST node.
+In the future statements and expressions will be parsed.
+
+1. Open curly brace
+2. Grab all tokens between the brace and the closing brace, shove them in a execution AST node.
+3. Closing curly brace
+
 ## `parse_global_nspace`
 
-1. Make sure the type provided to the helper function is a `Namespace_Body`, `Global_Body`, `Export_Body`, `Extern_Linkage_body`.
-2. If its not a `Global_Body` eat the opening brace for the scope.
-3. `
+1. Make sure this is being called for a valid type (namespace, global body, export body, linkage body)
+2. If its not a global body, consume the opening curly brace
+3. Parse the body (Possible options):
+    1. NewLine : ast constant
+    2. Comment : `parse_comment`
+    3. Decl_Cass : `parse_complicated_definition`
+    4. Decl_Enum : `parse_complicated_definition`
+    5. Decl_Extern_Linkage : `parse_extern_link`
+    6. Decl_Namespace : `parse_namespace`
+    7. Decl_Struct : `parse_complicated_definition`
+    8. Decl_Template : `parse_template`
+    9. Decl_Typedef : `parse_typedef`
+    10. Decl_Union : `parse_complicated_definition`
+    11. Decl_Using : `parse_using`
+    12. Preprocess_Define : `parse_define`
+    13. Preprocess_Include : `parse_include`
+    14. Preprocess_If, IfDef, IfNotDef, Elif : `parse_preprocess_cond`
+    15. Preprocess_Else : ast constant
+    16. Preprocess_Endif : ast constant
+    17. Preprocess_Macro : `parse_simple_preprocess`
+    18. Preprocess_Pragma : `parse_pragma`
+    19. Preprocess_Unsupported : `parse_simple_preprocess`
+    20. StaticAssert : `parse_static_assert`
+    21. Module_Export : `parse_export_body`
+    22. Module_Import : NOT_IMPLEMENTED
+    23. The following compound into a resolved definition or declaration:
+        1. Attributes ( Standard, GNU, MSVC, Macro ) : `parse_attributes`
+        2. Specifiers ( consteval, constexpr, constinit, extern, forceinline, global, inline, internal_linkage, neverinline, static )
+        3. Is either ( identifier, const specifier, long, short, signed, unsigned, bool, char, double, int)
+            1. If its an operator cast (definition outside class) : `parse_operator_cast`
+            2. Its an operator, function, or varaible : `parse_operator_function_or_varaible`
+4. If its not a global body, consuem the closing curly brace
 
 ## `parse_identifier`
+
+
 
 ## `parse_include`
 
@@ -224,7 +349,7 @@ Below is an outline of the general alogirithim used for these internal procedure
     5. Decl_Struct
     6. Decl_Union
     7. Preprocess_Define
-    8. Preprocess_Conditional
+    8. Preprocess_Conditional (if, ifdef, ifndef, elif, else, endif)
     9. Preprocess_Macro
     10. Preprocess_Pragma
     11. Unsupported preprocess directive

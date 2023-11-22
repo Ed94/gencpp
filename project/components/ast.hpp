@@ -11,6 +11,7 @@ struct AST_Body;
 struct AST_Attributes;
 struct AST_Comment;
 struct AST_Constructor;
+// struct AST_BaseClass;
 struct AST_Class;
 struct AST_Define;
 struct AST_Destructor;
@@ -76,6 +77,7 @@ struct Code;
 struct CodeBody;
 // These are to offer ease of use and optionally strong type safety for the AST.
 struct CodeAttributes;
+// struct CodeBaseClass;
 struct CodeComment;
 struct CodeClass;
 struct CodeConstructor;
@@ -203,12 +205,14 @@ struct Code
 #ifdef GEN_ENFORCE_STRONG_CODE_TYPES
 #	define operator explicit operator
 #endif
+	operator CodeBody() const;
 	operator CodeAttributes() const;
+	// operator CodeBaseClass() const;
 	operator CodeComment() const;
-	operator CodeConstructor() const;
-	operator CodeDestructor() const;
 	operator CodeClass() const;
+	operator CodeConstructor() const;
 	operator CodeDefine() const;
+	operator CodeDestructor() const;
 	operator CodeExec() const;
 	operator CodeEnum() const;
 	operator CodeExtern() const;
@@ -230,7 +234,6 @@ struct Code
 	operator CodeUnion() const;
 	operator CodeUsing() const;
 	operator CodeVar() const;
-	operator CodeBody() const;
 	#undef operator
 };
 
@@ -273,6 +276,7 @@ struct AST
 	operator Code();
 	operator CodeBody();
 	operator CodeAttributes();
+	// operator CodeBaseClass();
 	operator CodeComment();
 	operator CodeConstructor();
 	operator CodeDestructor();

@@ -15,7 +15,7 @@ struct AST_Body
 	char              _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
 	Code              Front;
 	Code              Back;
-	parser::Token*    Token;
+	parser::Token*    Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeT             Type;
@@ -32,13 +32,30 @@ struct AST_Attributes
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Token;
+	parser::Token*    Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeT             Type;
 	char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Attributes) == sizeof(AST), "ERROR: AST_Attributes is not the same size as AST");
+
+#if 0
+struct AST_BaseClass
+{
+	union {
+		char          _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
+	};
+	Code              Prev;
+	Code              Next;
+	parser::Token*    Tok;
+	Code              Parent;
+	StringCached      Name;
+	CodeT             Type;
+	char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+};
+static_assert( sizeof(AST_BaseClass) == sizeof(AST), "ERROR: AST_BaseClass is not the same size as AST");
+#endif
 
 struct AST_Comment
 {
@@ -48,7 +65,7 @@ struct AST_Comment
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Token;
+	parser::Token*    Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeT             Type;

@@ -668,45 +668,54 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 		mflags = ModuleFlag::Export;
 		eat( TokType::Module_Export );
 	}
+	// <ModuleFlags>
 
 	eat( which );
+	// <ModuleFlags> <class/struct>
 
 	attributes = parse_attributes();
+	// <ModuleFlags> <class/struct> <Attributes>
 
 	if ( check( TokType::Identifier ) )
 	{
 		name = parse_identifier();
 		Context.Scope->Name = name;
 	}
+	// <ModuleFlags> <class/struct> <Attributes> <Name>
 
 	local_persist
 	char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeType> interfaces = Array<CodeType>::init_reserve( Arena::init_from_memory(interface_arr_mem, kilobytes(4) ), 4 );
 
+	// TODO(Ed) : Make an AST_DerivedType, we'll store any arbitary derived type into there as a linear linked list of them.
 	if ( check( TokType::Assign_Classifer ) )
 	{
 		eat( TokType::Assign_Classifer );
+		// <ModuleFlags> <class/struct> <Attributes> <Name> :
 
 		if ( currtok.is_access_specifier() )
 		{
 			access = currtok.to_access_specifier();
+			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier>
 		}
 
 		Token parent_tok = parse_identifier();
 		parent = def_type( parent_tok );
+		// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Parent/Interface Name>
 
 		while ( check(TokType::Comma) )
 		{
-			eat(TokType::Access_Public);
+			eat( TokType::Comma );
+			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>,
 
 			if ( currtok.is_access_specifier() )
 			{
 				eat(currtok.Type);
 			}
-
 			Token interface_tok = parse_identifier();
 
 			interfaces.append( def_type( interface_tok ) );
+			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ...
 		}
 	}
 
@@ -714,15 +723,18 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	{
 		body = parse_class_struct_body( which, name );
 	}
+	// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }
 
 	CodeComment inline_cmt = NoCode;
 	if ( ! inplace_def )
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
+		// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> };
 
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
+			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }; <InlineCmt>
 	}
 
 	if ( which == TokType::Decl_Class )
@@ -745,6 +757,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 	push_scope();
 
 	eat( TokType::BraceCurly_Open );
+	// {
 
 	CodeBody
 	result = (CodeBody) make_code();
@@ -783,54 +796,66 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				member = access_public;
 				eat( TokType::Access_Public );
 				eat( TokType::Assign_Classifer );
+				// public:
 			break;
 
 			case TokType::Access_Protected:
 				member = access_protected;
 				eat( TokType::Access_Protected );
 				eat( TokType::Assign_Classifer );
+				// protected:
 			break;
 
 			case TokType::Access_Private:
 				member = access_private;
 				eat( TokType::Access_Private );
 				eat( TokType::Assign_Classifer );
+				// private:
 			break;
 
 			case TokType::Decl_Class:
 				member = parse_complicated_definition( TokType::Decl_Class );
+				// class
 			break;
 
 			case TokType::Decl_Enum:
 				member = parse_complicated_definition( TokType::Decl_Enum );
+				// enum
 			break;
 
 			case TokType::Decl_Friend:
 				member = parse_friend();
+				// friend
 			break;
 
 			case TokType::Decl_Operator:
 				member = parse_operator_cast();
+				// operator <Type>()
 			break;
 
 			case TokType::Decl_Struct:
 				member = parse_complicated_definition( TokType::Decl_Struct );
+				// struct
 			break;
 
 			case TokType::Decl_Template:
 				member = parse_template();
+				// template< ... >
 			break;
 
 			case TokType::Decl_Typedef:
 				member = parse_typedef();
+				// typedef
 			break;
 
 			case TokType::Decl_Union:
 				member = parse_complicated_definition( TokType::Decl_Union );
+				// union
 			break;
 
 			case TokType::Decl_Using:
 				member = parse_using();
+				// using
 			break;
 
 			case TokType::Operator:
@@ -841,14 +866,17 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				}
 
 				member = parse_destructor();
+				// ~<Name>()
 			break;
 
 			case TokType::Preprocess_Define:
 				member = parse_define();
+				// #define
 			break;
 
 			case TokType::Preprocess_Include:
 				member = parse_include();
+				// #include
 			break;
 
 			case TokType::Preprocess_If:
@@ -856,32 +884,39 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			case TokType::Preprocess_IfNotDef:
 			case TokType::Preprocess_ElIf:
 				member = parse_preprocess_cond();
-			break;
-
-			case TokType::Preprocess_Macro:
-				member = parse_simple_preprocess( TokType::Preprocess_Macro );
-			break;
-
-			case TokType::Preprocess_Pragma:
-				member = parse_pragma();
+				// #<Condition>
 			break;
 
 			case TokType::Preprocess_Else:
 				member = preprocess_else;
 				eat( TokType::Preprocess_Else );
+				// #else
 			break;
 
 			case TokType::Preprocess_EndIf:
 				member = preprocess_endif;
 				eat( TokType::Preprocess_EndIf );
+				// #endif
+			break;
+
+			case TokType::Preprocess_Macro:
+				member = parse_simple_preprocess( TokType::Preprocess_Macro );
+				// <Macro>
+			break;
+
+			case TokType::Preprocess_Pragma:
+				member = parse_pragma();
+				// #pragma
 			break;
 
 			case TokType::Preprocess_Unsupported:
 				member = parse_simple_preprocess( TokType::Preprocess_Unsupported );
+				// #<UNKNOWN>
 			break;
 
 			case TokType::StaticAssert:
 				member = parse_static_assert();
+				// static_assert
 			break;
 
 			case TokType::Attribute_Open:
@@ -892,6 +927,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 		#undef Entry
 			{
 				attributes = parse_attributes();
+				// <Attributes>
 			}
 			//! Fallthrough intended
 			case TokType::Spec_Consteval:
@@ -942,16 +978,19 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				{
 					specifiers = def_specifiers( NumSpecifiers, specs_found );
 				}
+				// <Attributes> <Specifiers>
 
 				if ( currtok.Type == TokType::Operator && currtok.Text[0] == '~' )
 				{
 					member = parse_destructor( specifiers );
+					// <Attribute> <Specifiers> ~<Name>()
 					break;
 				}
 
 				if ( currtok.Type == TokType::Decl_Operator )
 				{
 					member = parse_operator_cast( specifiers );
+					// <Attributes> <Specifiers> operator <Type>()
 					break;
 				}
 			}
@@ -972,11 +1011,15 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 					if ( str_compare( name.Text, currtok.Text, name.Length ) == 0 )
 					{
 						member = parse_constructor();
+						// <Attributes> <Specifiers> <Name>()
 						break;
 					}
 				}
 
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
+				// <Attributes> <Specifiers> operator <Op> ...
+				// or
+				// <Attributes> <Specifiers> <Name> ...
 			}
 			break;
 
@@ -990,6 +1033,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				}
 
 				member = untyped_str( untyped_tok );
+				// Something unknown
 			break;
 		}
 
@@ -1004,6 +1048,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 	}
 
 	eat( TokType::BraceCurly_Close );
+	// { <Members> }
 	Context.pop();
 	return result;
 }
@@ -1053,6 +1098,7 @@ Code parse_complicated_definition( TokType which )
 	{
 		// Its a forward declaration only
 		Code result = parse_forward_or_definition( which, is_inplace );
+		// <class, enum, struct, or union> <Name>;
 		Context.pop();
 		return result;
 	}
@@ -1074,9 +1120,9 @@ Code parse_complicated_definition( TokType which )
 			ok_to_parse = true;
 			is_inplace  = true;
 		}
-		else if ( tok.Type == TokType::Identifier && tokens[ idx - 3 ].Type == TokType::Decl_Struct )
+		else if ( tok.Type == TokType::Identifier && tokens[ idx - 3 ].Type == which )
 		{
-			// Its a variable with type ID using struct namespace.
+			// Its a variable with type ID using <which> namespace.
 			// <which> <type_identifier> <identifier>;
 			ok_to_parse = true;
 		}
@@ -1095,22 +1141,23 @@ Code parse_complicated_definition( TokType which )
 		}
 
 		Code result = parse_operator_function_or_variable( false, { nullptr }, { nullptr } );
+		// <Attributes> <Specifiers> <ReturnType/ValueType> <operator <Op>, or Name> ...
 		Context.pop();
 		return result;
 	}
 	else if ( tok.Type == TokType::BraceCurly_Close )
 	{
 		// Its a definition
-		// <which> { ... };
 		Code result = parse_forward_or_definition( which, is_inplace );
+		// <which> { ... };
 		Context.pop();
 		return result;
 	}
 	else if ( tok.Type == TokType::BraceSquare_Close)
 	{
 		// Its an array definition
-		// <which> <type_identifier> <identifier> [ ... ];
 		Code result = parse_operator_function_or_variable( false, { nullptr }, { nullptr } );
+		// <which> <type_identifier> <identifier> [ ... ];
 		Context.pop();
 		return result;
 	}
@@ -1127,6 +1174,7 @@ CodeDefine parse_define()
 {
 	push_scope();
 	eat( TokType::Preprocess_Define );
+	// #define
 
 	CodeDefine
 	define = (CodeDefine) make_code();
@@ -1142,6 +1190,7 @@ CodeDefine parse_define()
 	Context.Scope->Name = currtok;
 	define->Name = get_cached_string( currtok );
 	eat( TokType::Identifier );
+	// #define <Name>
 
 	if ( ! check( TokType::Preprocess_Content ))
 	{
@@ -1154,6 +1203,7 @@ CodeDefine parse_define()
 	{
 		define->Content = get_cached_string( currtok );
 		eat( TokType::Preprocess_Content );
+		// #define <Name> <Content>
 
 		Context.pop();
 		return define;
@@ -1161,6 +1211,7 @@ CodeDefine parse_define()
 
 	define->Content = get_cached_string( strip_formatting( currtok, strip_formatting_dont_preserve_newlines ) );
 	eat( TokType::Preprocess_Content );
+	// #define <Name> <Content>
 
 	Context.pop();
 	return define;
@@ -1212,8 +1263,9 @@ CodeFn parse_function_after_name(
 {
 	push_scope();
 	CodeParam params = parse_params();
+	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Parameters> )
 
-	// These have to be kept separate from the return type's specifiers.
+	// TODO(Ed), Review old comment : These have to be kept separate from the return type's specifiers. 
 	while ( left && currtok.is_specifier() )
 	{
 		if ( specifiers.ast == nullptr )
@@ -1226,6 +1278,7 @@ CodeFn parse_function_after_name(
 		specifiers.append( ESpecifier::to_type(currtok) );
 		eat( currtok.Type );
 	}
+	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
 
 	CodeBody    body       = NoCode;
 	CodeComment inline_cmt = NoCode;
@@ -1237,14 +1290,17 @@ CodeFn parse_function_after_name(
 			Context.pop();
 			return CodeInvalid;
 		}
+		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> { <Body> }
 	}
 	else
 	{
 		Token stmt_end = currtok;
 		eat( TokType::Statement_End );
+		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>;
 
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
+			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>; <InlineCmt>
 	}
 
 	using namespace ECode;
@@ -1349,6 +1405,7 @@ CodeBody parse_global_nspace( CodeT which )
 
 	if ( which != Global_Body )
 		eat( TokType::BraceCurly_Open );
+		// {
 
 	CodeBody
 	result = (CodeBody) make_code();
@@ -1381,10 +1438,12 @@ CodeBody parse_global_nspace( CodeT which )
 
 			case TokType::Decl_Class:
 				member = parse_complicated_definition( TokType::Decl_Class );
+				// class
 			break;
 
 			case TokType::Decl_Enum:
 				member = parse_complicated_definition( TokType::Decl_Enum );
+				// enum
 			break;
 
 			case TokType::Decl_Extern_Linkage:
@@ -1392,38 +1451,47 @@ CodeBody parse_global_nspace( CodeT which )
 					log_failure( "Nested extern linkage\n%s", Context.to_string() );
 
 				member = parse_extern_link();
+				// extern "..." { ... }
 			break;
 
 			case TokType::Decl_Namespace:
 				member = parse_namespace();
+				// namespace <Name> { ... }
 			break;
 
 			case TokType::Decl_Struct:
 				member = parse_complicated_definition( TokType::Decl_Struct );
+				// struct ...
 			break;
 
 			case TokType::Decl_Template:
 				member = parse_template();
+				// template<...> ...
 			break;
 
 			case TokType::Decl_Typedef:
 				member = parse_typedef();
+				// typedef ...
 			break;
 
 			case TokType::Decl_Union:
 				member = parse_complicated_definition( TokType::Decl_Union );
+				// union ...
 			break;
 
 			case TokType::Decl_Using:
 				member = parse_using();
+				// using ...
 			break;
 
 			case TokType::Preprocess_Define:
 				member = parse_define();
+				// #define ...
 			break;
 
 			case TokType::Preprocess_Include:
 				member = parse_include();
+				// #include ...
 			break;
 
 			case TokType::Preprocess_If:
@@ -1431,32 +1499,39 @@ CodeBody parse_global_nspace( CodeT which )
 			case TokType::Preprocess_IfNotDef:
 			case TokType::Preprocess_ElIf:
 				member = parse_preprocess_cond();
-			break;
-
-			case TokType::Preprocess_Macro:
-				member = parse_simple_preprocess( TokType::Preprocess_Macro );
-			break;
-
-			case TokType::Preprocess_Pragma:
-				member = parse_pragma();
+				// #<Conditional> ...
 			break;
 
 			case TokType::Preprocess_Else:
 				member = preprocess_else;
 				eat( TokType::Preprocess_Else );
+				// #else
 			break;
 
 			case TokType::Preprocess_EndIf:
 				member = preprocess_endif;
 				eat( TokType::Preprocess_EndIf );
+				// #endif
+			break;
+
+			case TokType::Preprocess_Macro:
+				member = parse_simple_preprocess( TokType::Preprocess_Macro );
+				// <Macro>
+			break;
+
+			case TokType::Preprocess_Pragma:
+				member = parse_pragma();
+				// #pragma ...
 			break;
 
 			case TokType::Preprocess_Unsupported:
 				member = parse_simple_preprocess( TokType::Preprocess_Unsupported );
+				// #<UNSUPPORTED> ...
 			break;
 
 			case TokType::StaticAssert:
 				member = parse_static_assert();
+				// static_assert( <Conditional Expression>, ... );
 			break;
 
 			case TokType::Module_Export:
@@ -1464,13 +1539,16 @@ CodeBody parse_global_nspace( CodeT which )
 					log_failure( "Nested export declaration\n%s", Context.to_string() );
 
 				member = parse_export_body();
+				// export { ... }
 			break;
 
 			case TokType::Module_Import:
 			{
 				not_implemented( context );
+				// import ...
 			}
 			//! Fallthrough intentional
+			case TokType::Attribute_Open:
 			case TokType::Decl_GNU_Attribute:
 			case TokType::Decl_MSVC_Attribute:
 		#define Entry( attribute, str ) case TokType::attribute:
@@ -1478,6 +1556,7 @@ CodeBody parse_global_nspace( CodeT which )
 		#undef Entry
 			{
 				attributes = parse_attributes();
+				// <Attributes>
 			}
 			//! Fallthrough intentional
 			case TokType::Spec_Consteval:
@@ -1542,6 +1621,7 @@ CodeBody parse_global_nspace( CodeT which )
 				{
 					specifiers = def_specifiers( NumSpecifiers, specs_found );
 				}
+				// <Attributes> <Specifiers>
 			}
 			//! Fallthrough intentional
 			case TokType::Identifier:
@@ -1581,10 +1661,12 @@ CodeBody parse_global_nspace( CodeT which )
 				if ( found_operator_cast )
 				{
 					member = parse_operator_cast();
+					// <Attributes> <Specifiers> <Name>::operator <Type>() { ... }
 					break;
 				}
 
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
+				// <Attributes> <Specifiers> ...
 			}
 		}
 
@@ -1600,6 +1682,7 @@ CodeBody parse_global_nspace( CodeT which )
 
 	if ( which != Global_Body )
 		eat( TokType::BraceCurly_Close );
+		// { <Body> }
 
 	return result;
 }

@@ -72,12 +72,13 @@ Stores a comment.
 Fields:
 
 ```cpp
-StringCached  Content;
-Code          Prev;
-Code          Next;
-Code          Parent;
-StringCached  Name;
-CodeT         Type;
+StringCached   Content;
+Code           Prev;
+Code           Next;
+parser::Token* Tok;
+Code           Parent;
+StringCached   Name;
+CodeT          Type;
 ```
 
 Serialization:
@@ -102,6 +103,7 @@ CodeType       ParentType;
 CodeBody       Body;
 CodeType       Prev;       // Used to store references to interfaces
 CodeType       Next;       // Used to store references to interfaces
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;

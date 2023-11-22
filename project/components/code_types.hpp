@@ -240,6 +240,7 @@ struct CodeStruct
 	}
 
 Define_CodeType( Attributes );
+// Define_CodeType( BaseClass );
 Define_CodeType( Comment );
 
 struct CodeConstructor
