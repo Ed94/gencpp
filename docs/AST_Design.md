@@ -1,11 +1,3 @@
-# Forward
-
-Was never satisfied with how I did the wrap of the management of the AST.  
-For C++, the current design may be as good as it gets for the limitations of the langauge.
-
-I'll at least try in this issue to brainstorm something simpiler without losing ergonomics.  
-This will also be a good place to document the current design.
-
 ## Current Design
 
 `AST` is the actual managed node object for the library.  
@@ -22,10 +14,8 @@ The simpliest being just a type alias.
 using Code = AST*;
 ```
 
-This is what the genc library would have to use due to its constraints of a langauge.
-Anything else and it would either be an unergonomic mess of struct wrapping with a mess of macros & procedures to interface with it.
-
-Further, to provide intuitive filters on the AST, there are AST types (covered in [AST_Types.md](AST_Types.md)).
+This is what the genc library would have to use due to its constraints of a langauge.  
+The actual content per type of AST is covered within [AST_Types.md](AST_Types.md).
 
 These are pure PODS that just have the lay members relevant to the type of AST node they represent.  
 Each of them has a Code type alias specific to it.
@@ -35,3 +25,20 @@ Again, the simpliest case for these would be a type alias.
 ```cpp
 using struct AST_Typedef CodeTypedef;
 ```
+
+As of November 21st, 2023, the AST has had a strict layout for how its content is laid out.  
+This will be abandoned during its redesign that will occur starting with support for statments & expressions for either execution and type declarations.  
+Having a strict layout is too resctrictive vs allowing each AST type to have maximum control over the layout.
+
+The redesign will occur after the following todos are addressed:
+
+* [Improvements Lexer & Token struct#27](https://github.com/Ed94/gencpp/issues/27)
+* [Generalize AST Flags to a single 4-byte flag#42](https://github.com/Ed94/gencpp/issues/42)
+* [AST-Code Object Redesign.#38](https://github.com/Ed94/gencpp/issues/38)
+* [Code-AST Documentation#40](https://github.com/Ed94/gencpp/issues/40)
+* [AST::debug_str() improvements#33](https://github.com/Ed94/gencpp/issues/33)
+* [AST::is_equal implemented and works with singleheader-test#31](https://github.com/Ed94/gencpp/issues/31)
+* [Parser : Add ability to have a parse failure and continue with errors recorded.#35](https://github.com/Ed94/gencpp/issues/35)
+* [Scanner : Add CodeFile#29](https://github.com/Ed94/gencpp/issues/29)
+* [Auxiliary : AST visual debugger#36](https://github.com/Ed94/gencpp/issues/36)
+

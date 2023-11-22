@@ -65,7 +65,7 @@ As mentioned in root readme, the user is provided Code objects by calling the co
 The AST is managed by the library and provided to the user via its interface.  
 However, the user may specifiy memory configuration.
 
-Data layout of AST struct:
+Data layout of AST struct (Subject to heavily change with upcoming redesign):
 
 ```cpp
 union {

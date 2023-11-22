@@ -21,6 +21,7 @@ Fields:
 ```cpp
 Code         Front;
 Code         Back;
+Token*       Token;
 Code         Parent;
 StringCached Name;
 CodeT        Type;
@@ -582,20 +583,21 @@ Serialization:
 ## Typedef
 
 Behave as usual except function or macro typedefs.  
-Those don't use the underlying type field as everything was serialized under the Name field.
+Those (macros) don't use the underlying type field as everything was serialized under the Name field.
 
 Fields:
 
 ```cpp
-CodeComment  InlineCmt;
-Code         UnderlyingType;
-Code         Prev;
-Code         Next;
-Code         Parent;
-StringCached Name;
-CodeT        Type;
-ModuleFlag   ModuleFlags;
-b32          IsFunction;
+CodeComment   InlineCmt;
+Code          UnderlyingType;
+Code          Prev;
+Code          Next;
+parse::Token* Tok
+Code          Parent;
+StringCached  Name;
+CodeT         Type;
+ModuleFlag    ModuleFlags;
+b32           IsFunction;
 ```
 
 Serialization:
@@ -617,6 +619,7 @@ CodeAttributes Attributes;
 CodeBody       Body;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -642,6 +645,7 @@ CodeAttributes Attributes;
 CodeType       UnderlyingType;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -660,6 +664,8 @@ Serialization:
 
 ## Variable
 
+[Algo](./Parser_Algo.md:)
+
 Fields:
 
 ```cpp
@@ -669,8 +675,10 @@ CodeSpecifiers Specs;
 CodeType       ValueType;
 Code           BitfieldSize;
 Code           Value;
+CodeVar        NextVar;
 Code           Prev;
 Code           Next;
+parser::Token* Tok;
 Code           Parent;
 StringCached   Name;
 CodeT          Type;
@@ -681,8 +689,8 @@ Serialization:
 
 ```cpp
 // Regular
-<ModuleFlags> <Attributes> <Specs> <ValueType> <Name> = <Value>; <InlineCmt>
+<ModuleFlags> <Attributes> <Specs> <ValueType> <Name> = <Value>, NextVar ...; <InlineCmt>
 
 // Bitfield
-<ModuleFlags> <Attributes> <Specs> <ValueType> <Name> : <BitfieldSize> = <Value>; <InlineCmt>
+<ModuleFlags> <Attributes> <Specs> <ValueType> <Name> : <BitfieldSize> = <Value>, NextVar ...; <InlineCmt>
 ```

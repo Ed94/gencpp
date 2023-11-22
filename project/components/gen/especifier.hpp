@@ -34,6 +34,7 @@ namespace ESpecifier
 		NoExceptions,
 		Override,
 		Pure,
+		Volatile,
 		NumSpecifiers
 	};
 
@@ -64,13 +65,13 @@ namespace ESpecifier
 			{ sizeof( "&&" ),            "&&"           },
 			{ sizeof( "static" ),        "static"       },
 			{ sizeof( "thread_local" ),  "thread_local" },
-			{ sizeof( "volatile" ),      "volatile"     },
 			{ sizeof( "virtual" ),       "virtual"      },
 			{ sizeof( "const" ),         "const"        },
 			{ sizeof( "final" ),         "final"        },
 			{ sizeof( "noexcept" ),      "noexcept"     },
 			{ sizeof( "override" ),      "override"     },
 			{ sizeof( "= 0" ),           "= 0"          },
+			{ sizeof( "volatile" ),      "volatile"     },
 		};
 		return lookup[ type ];
 	}
