@@ -28,3 +28,4 @@ release/**
 **/Unreal/*.cpp
 ! **/Unreal/validate.unreal.cpp
 project/auxillary/vis_ast/dependencies/temp
+test/gen/original

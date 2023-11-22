@@ -671,11 +671,11 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::Parser::Token">
+	<Type Name="gen::parser::Token">
 		<DisplayString>Length:{Length} Text:{Text, [Length]s} Type:{Type}</DisplayString>
 	</Type>
 
-	<Type Name="gen::Parser::TokArray">
+	<Type Name="gen::parser::TokArray">
 		<DisplayString>Current[ { Arr[Idx] } ] Idx:{ Idx }</DisplayString>
 	</Type>
 

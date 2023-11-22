@@ -7,6 +7,7 @@
 #include "gen.builder.cpp"
 #include "sanity.cpp"
 #include "SOA.cpp"
+#include "validate.original.cpp"
 #include "validate.singleheader.cpp"
 
 int gen_main()
@@ -18,7 +19,9 @@ int gen_main()
 
 	// check_SOA();
 
-	 check_singleheader_ast();
+	validate_original_files_ast();
+	validate_singleheader_ast();
+
 	return 0;
 }
 #endif

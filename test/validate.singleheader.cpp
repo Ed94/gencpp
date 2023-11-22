@@ -11,11 +11,11 @@ using namespace gen;
 	#include <process.h>
 #endif
 
-void check_singleheader_ast()
+void validate_singleheader_ast()
 {
 	#define root_dir "../"
 	gen::init();
-	log_fmt("\ncheck_singleheader_ast:\n");
+	log_fmt("\validate_singleheader_ast:\n");
 
 	FileContents file       = file_read_contents( GlobalAllocator, true, root_dir "singleheader/gen/gen.hpp" );
 	u64          time_start = time_rel_ms();

@@ -164,9 +164,13 @@ if ( $singleheader )
 
 if ( $test )
 {
-	$path_gen       = join-path $path_test gen
-	$path_gen_build = join-path $path_gen  build
-	$path_build     = join-path $path_test build
+	$path_gen          = join-path $path_test gen
+	$path_gen_build    = join-path $path_gen  build
+	$path_build        = join-path $path_test build
+	$path_original     = join-path $path_gen  original
+	$path_components   = join-path $path_original components
+	$path_dependencies = join-path $path_original dependencies
+	$path_helpers      = join-path $path_original helpers
 
 	if ( -not(Test-Path($path_build) )) {
 		New-Item -ItemType Directory -Path $path_build
@@ -176,6 +180,18 @@ if ( $test )
 	}
 	if ( -not(Test-Path($path_gen_build) ))  {
 		New-Item -ItemType Directory -Path $path_gen_build
+	}
+	if ( -not(test-path $path_original)) {
+		new-item -ItemType Directory -Path $path_original
+	}
+	if ( -not(test-path $path_components)) {
+		new-item -ItemType Directory -Path $path_components
+	}
+	if ( -not(test-path $path_dependencies)) {
+		new-item -ItemType Directory -Path $path_dependencies
+	}
+	if ( -not(test-path $path_helpers)) {
+		new-item -ItemType Directory -Path $path_helpers
 	}
 
 	$path_bootstrap = join-path $path_project gen

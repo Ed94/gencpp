@@ -36,7 +36,8 @@
 		"mmsystem.h": "c",
 		"propidl.h": "c",
 		"android_native_app_glue.h": "c",
-		"raylib.h": "c"
+		"raylib.h": "c",
+		"*.m": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

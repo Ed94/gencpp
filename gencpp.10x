@@ -43,6 +43,7 @@
 			<Define>GEN_TIME</Define>
 			<Define>GEN_SYSTEM_WINDOWS</Define>
 			<Define>GEN_INTELLISENSE_DIRECTIVES</Define>
+			<Define>GEN_EXECUTION_EXPRESSION_SUPPORT</Define>
 		</Defines>
 		<ConfigProperties>
 			<ConfigAndPlatform>
