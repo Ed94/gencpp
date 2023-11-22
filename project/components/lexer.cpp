@@ -12,7 +12,6 @@ enum TokFlags : u32
 	TF_Assign          = bit(1),
 	TF_Preprocess      = bit(2),
 	TF_Preprocess_Cond = bit(3),
-	TF_Comment         = bit(4),
 	TF_Attribute       = bit(6),
 	TF_AccessSpecifier = bit(7),
 	TF_Specifier 	   = bit(8),
@@ -154,7 +153,9 @@ struct TokArray
 	}
 };
 
-global Array<Token> Tokens;
+global Arena_64KB      defines_map_arena;
+global HashTable<StrC> defines;
+global Array<Token>    Tokens;
 
 #define current ( * scanner )
 
@@ -534,6 +535,7 @@ void lex_found_token( StrC& content
 	Tokens.append( token );
 }
 
+
 neverinline
 TokArray lex( StrC content )
 {
@@ -553,8 +555,23 @@ TokArray lex( StrC content )
 		return { { nullptr }, 0 };
 	}
 
-	local_persist Arena_64KB defines_map_arena = Arena_64KB::init();
-	HashTable<StrC> defines = HashTable<StrC>::init( defines_map_arena );
+	for ( StringCached entry : PreprocessorDefines )
+	{
+		s32         length  = 0;
+		char const* scanner = entry.Data;
+		while ( entry.length() > length && char_is_alphanumeric( *scanner ) || *scanner == '_' )
+		{
+			scanner++;
+			length ++;
+		}
+		if ( scanner[1] == '(' )
+		{
+			length++;
+		}
+
+		u64 key = crc32( entry.Data, length );
+		defines.set( key, entry );
+	}
 
 	Tokens.clear();
 
@@ -1036,7 +1053,7 @@ TokArray lex( StrC content )
 					{
 						token.Type   = TokType::Comment;
 						token.Length = 2;
-						token.Flags  = TF_Comment;
+						token.Flags  = TF_Null;
 						move_forward();
 
 						while ( left && current != '\n' && current != '\r' )
@@ -1062,7 +1079,7 @@ TokArray lex( StrC content )
 					{
 						token.Type   = TokType::Comment;
 						token.Length = 2;
-						token.Flags  = TF_Comment;
+						token.Flags  = TF_Null;
 						move_forward();
 
 						bool star   = current    == '*';

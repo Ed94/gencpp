@@ -155,6 +155,11 @@ extern CodeType t_typename;
 
 #pragma endregion Macros
 
+// Used by the lexer to persistently treat all these identifiers as preprocessor defines.
+// Populate with strings via gen::get_cached_string.
+// Functional defines must have format: id( ;at minimum to indicate that the define is only valid with arguments.
+extern Array< StringCached > PreprocessorDefines;
+
 #ifdef GEN_EXPOSE_BACKEND
 
 	// Global allocator used for data with process lifetime.

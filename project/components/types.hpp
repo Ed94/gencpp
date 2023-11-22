@@ -44,6 +44,7 @@ char const* to_str( AccessSpec type )
 
 enum CodeFlag : u32
 {
+	None          = 0,
 	FunctionType  = bit(0),
 	ParamPack     = bit(1),
 	Module_Export = bit(2),

@@ -289,6 +289,9 @@ void init()
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
 	}
 
+	// Preprocessor Defines
+	PreprocessorDefines = Array<StringCached>::init_reserve( GlobalAllocator, kilobytes(1) );
+
 	define_constants();
 	parser::init();
 }
@@ -331,6 +334,8 @@ void deinit()
 		index++;
 	}
 	while ( left--, left );
+
+	PreprocessorDefines.free();
 
 	Global_AllocatorBuckets.free();
 	parser::deinit();
@@ -418,18 +423,18 @@ Code make_code()
 	}
 
 	Code result { rcast( AST*, alloc( * allocator, sizeof(AST) )) };
-	// mem_set( result.ast, 0, sizeof(AST) );
-	result->Type = ECode::Invalid;
+	mem_set( result.ast, 0, sizeof(AST) );
+	// result->Type = ECode::Invalid;
 
-	result->Content     = { nullptr };
-	result->Prev        = { nullptr };
-	result->Next        = { nullptr };
-	result->Token		= nullptr;
-	result->Parent      = { nullptr };
-	result->Name        = { nullptr };
-	result->Type        = ECode::Invalid;
-	result->ModuleFlags = ModuleFlag::Invalid;
-	result->NumEntries  = 0;
+	// result->Content     = { nullptr };
+	// result->Prev        = { nullptr };
+	// result->Next        = { nullptr };
+	// result->Token		= nullptr;
+	// result->Parent      = { nullptr };
+	// result->Name        = { nullptr };
+	// result->Type        = ECode::Invalid;
+	// result->ModuleFlags = ModuleFlag::Invalid;
+	// result->NumEntries  = 0;
 
 	return result;
 }
