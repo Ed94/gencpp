@@ -19,6 +19,7 @@ GEN_NS_BEGIN
 #include "components/gen/especifier.hpp"
 
 #include "components/ast.hpp"
+#include "components/code_types.hpp"
 #include "components/ast_types.hpp"
 
 #include "components/interface.hpp"

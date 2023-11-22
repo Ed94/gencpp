@@ -112,6 +112,7 @@ int gen_main()
 		Code types        = scan_file( "components/types.hpp" );
 		Code ast          = scan_file( "components/ast.hpp" );
 		Code ast_types    = scan_file( "components/ast_types.hpp" );
+		Code code_types   = scan_file( "components/code_types.hpp" );
 		Code interface    = scan_file( "components/interface.hpp" );
 		Code inlines      = scan_file( "components/inlines.hpp" );
 		Code header_end   = scan_file( "components/header_end.hpp" );
@@ -138,6 +139,7 @@ int gen_main()
 
 		header.print_fmt( "#pragma region AST\n" );
 		header.print( ast );
+		header.print( code_types );
 		header.print( ast_types );
 		header.print_fmt( "\n#pragma endregion AST\n" );
 
