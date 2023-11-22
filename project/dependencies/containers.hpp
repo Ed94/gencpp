@@ -5,10 +5,10 @@
 
 #pragma region Containers
 
-template<class TType>			struct RemoveConst						{ typedef TType Type; };
-template<class TType>			struct RemoveConst<const TType>			{ typedef TType Type; };
-template<class TType>			struct RemoveConst<const TType[]>		{ typedef TType Type[]; };
-template<class TType, uw Size>	struct RemoveConst<const TType[Size]>	{ typedef TType Type[Size]; };
+template<class TType>          struct RemoveConst                    { typedef TType Type;       };
+template<class TType>          struct RemoveConst<const TType>       { typedef TType Type;       };
+template<class TType>          struct RemoveConst<const TType[]>     { typedef TType Type[];     };
+template<class TType, uw Size> struct RemoveConst<const TType[Size]> { typedef TType Type[Size]; };
 
 template<class TType>
 using TRemoveConst = typename RemoveConst<TType>::Type;

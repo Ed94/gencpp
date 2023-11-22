@@ -336,8 +336,6 @@ GEN_IMPL_INLINE b32 file_write_at_check( FileInfo* f, void const* buffer, sw siz
 	return f->ops.write_at( f->fd, buffer, size, offset, bytes_written );
 }
 
-
-
 enum FileStreamFlags : u32
 {
 	/* Allows us to write to the buffer directly. Beware: you can not append a new data! */

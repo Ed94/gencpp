@@ -9,6 +9,7 @@
 global AllocatorInfo  GlobalAllocator;
 global Array<Arena>   Global_AllocatorBuckets;
 
+// TODO(Ed) : Make the code pool a dynamic arena
 global Array< Pool >  CodePools         = { nullptr };
 global Array< Arena > StringArenas      = { nullptr };
 

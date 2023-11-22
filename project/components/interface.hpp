@@ -29,7 +29,6 @@ StringCached get_cached_string( StrC str );
 Code make_code();
 
 // Set these before calling gen's init() procedure.
-// Data
 
 void set_allocator_data_arrays ( AllocatorInfo data_array_allocator );
 void set_allocator_code_pool   ( AllocatorInfo pool_allocator );
@@ -144,6 +143,42 @@ CodeBody       def_union_body      ( s32 num, Code* codes );
 #pragma endregion Upfront
 
 #pragma region Parsing
+
+// TODO(Ed) : Implmeent the new parser API design.
+
+#if 0
+namespace parser {
+	struct StackNode
+	{
+		StackNode* Prev;
+
+		Token Start;
+		Token Name;       // The name of the AST node (if parsed)
+		StrC  FailedProc; // The name of the procedure that failed
+	};
+	// Stack nodes are allocated the error's allocator
+
+	struct Error
+	{
+		String     message;
+		StackNode* context_stack;
+	};
+}
+
+struct ParseInfo
+{
+	Arena file_mem;
+	Arena token_mem;
+	Arena code_mem;
+
+	FileContents         file_content;
+	Array<parser::Token> tokens;
+	Array<parser::Error> errors;
+	// Errors are allocated to a dedicated general arena.
+};
+
+CodeBody parse_file( StrC path );
+#endif
 
 CodeClass       parse_class        ( StrC class_def       );
 CodeConstructor parse_constructor  ( StrC constructor_def );

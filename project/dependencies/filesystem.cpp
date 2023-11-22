@@ -292,7 +292,7 @@ FileInfo* file_get_standard( FileStandardType std )
 	if ( ! _std_file_set )
 	{
 #	define GEN__SET_STD_FILE( type, v ) \
-		_std_files[ type ].fd.p = v;     \
+		_std_files[ type ].fd.p = v;    \
 		_std_files[ type ].ops  = default_file_operations
 		GEN__SET_STD_FILE( EFileStandard_INPUT, GetStdHandle( STD_INPUT_HANDLE ) );
 		GEN__SET_STD_FILE( EFileStandard_OUTPUT, GetStdHandle( STD_OUTPUT_HANDLE ) );

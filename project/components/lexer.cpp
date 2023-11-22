@@ -537,6 +537,7 @@ void lex_found_token( StrC& content
 
 
 neverinline
+// TokArray lex( Array<Token> tokens, StrC content )
 TokArray lex( StrC content )
 {
 	s32         left    = content.Len;

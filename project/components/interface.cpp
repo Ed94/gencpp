@@ -325,6 +325,8 @@ void deinit()
 
 	LexArena.free();
 
+	PreprocessorDefines.free();
+
 	index = 0;
 	left  = Global_AllocatorBuckets.num();
 	do
@@ -334,8 +336,6 @@ void deinit()
 		index++;
 	}
 	while ( left--, left );
-
-	PreprocessorDefines.free();
 
 	Global_AllocatorBuckets.free();
 	parser::deinit();
