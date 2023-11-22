@@ -28,7 +28,6 @@ namespace ESpecifier
 		RValue,
 		Static,
 		Thread_Local,
-		Volatile,
 		Virtual,
 		Const,
 		Final,

@@ -17,10 +17,10 @@ Register,         register
 RValue,           &&
 Static,           static
 Thread_Local,     thread_local
-Volatile,         volatile
 Virtual,          virtual
 Const,            const
 Final,            final
 NoExceptions,     noexcept
 Override,         override
 Pure,             = 0
+Volatile,         volatile
