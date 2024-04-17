@@ -333,12 +333,13 @@ struct AST
 				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
+				AST*  Macro;           // Parameter
 				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
 				AST*  Params;          // Constructor, Function, Operator, Template, Typename
 			};
 			union {
 				AST*  ArrExpr;          // Typename
-				AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+				AST*  Body;             // Class, Constructr, Destructor, Enum, Friend, Function, Namespace, Struct, Union
 				AST*  Declaration;      // Friend, Template
 				AST*  Value;            // Parameter, Variable
 			};
@@ -393,12 +394,13 @@ struct AST_POD
 				AST*  ValueType;       // Parameter, Variable
 			};
 			union {
+				AST*  Macro;           // Parameter
 				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
 				AST*  Params;          // Constructor, Function, Operator, Template, Typename
 			};
 			union {
 				AST*  ArrExpr;          // Typename
-				AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
+				AST*  Body;             // Class, Constructr, Destructor, Enum, Friend, Function, Namespace, Struct, Union
 				AST*  Declaration;      // Friend, Template
 				AST*  Value;            // Parameter, Variable
 			};

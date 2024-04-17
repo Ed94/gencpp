@@ -9,7 +9,7 @@ namespace parser
 {
 	namespace ETokType
 	{
-#define GEN_DEFINE_ATTRIBUTE_TOKENS Entry( API_Export, GEN_API_Export_Code ) Entry( API_Import, GEN_API_Import_Code )
+#define GEN_DEFINE_ATTRIBUTE_TOKENS Entry( Attribute_API_Export, "GEN_API_Export_Code" ) Entry( Attribute_API_Import, "GEN_API_Import_Code" )
 
 		enum Type : u32
 		{
@@ -108,8 +108,8 @@ namespace parser
 			Type_MS_W64,
 			Varadic_Argument,
 			__Attributes_Start,
-			API_Export,
-			API_Import,
+			Attribute_API_Export,
+			Attribute_API_Import,
 			NumTokens
 		};
 
@@ -214,22 +214,22 @@ namespace parser
 				{ sizeof( "GEN_API_Export_Code" ), "GEN_API_Export_Code" },
 				{ sizeof( "GEN_API_Import_Code" ), "GEN_API_Import_Code" },
 			};
-			return lookup[ type ];
+			return lookup[type];
 		}
 
 		Type to_type( StrC str )
 		{
-			local_persist u32 keymap[ NumTokens ];
+			local_persist u32 keymap[NumTokens];
 			do_once_start for ( u32 index = 0; index < NumTokens; index++ )
 			{
-				StrC enum_str   = to_str( ( Type )index );
-				keymap[ index ] = crc32( enum_str.Ptr, enum_str.Len - 1 );
+				StrC enum_str = to_str( (Type)index );
+				keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1 );
 			}
 			do_once_end u32 hash = crc32( str.Ptr, str.Len );
 			for ( u32 index = 0; index < NumTokens; index++ )
 			{
-				if ( keymap[ index ] == hash )
-					return ( Type )index;
+				if ( keymap[index] == hash )
+					return (Type)index;
 			}
 			return Invalid;
 		}

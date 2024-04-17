@@ -13,11 +13,12 @@ enum TokFlags : u32
 	TF_Preprocess      = bit(2),
 	TF_Preprocess_Cond = bit(3),
 	TF_Attribute       = bit(6),
-	TF_AccessSpecifier = bit(7),
-	TF_Specifier 	   = bit(8),
-	TF_EndDefinition   = bit(9), // Either ; or }
-	TF_Formatting      = bit(10),
-	TF_Literal         = bit(11),
+	TF_AccessOperator  = bit( 7 ),
+	TF_AccessSpecifier = bit( 8 ),
+	TF_Specifier       = bit( 9 ),
+	TF_EndDefinition   = bit( 10 ),    // Either ; or }
+	TF_Formatting      = bit( 11 ),
+	TF_Literal         = bit( 12 ),
 
 	TF_Null = 0,
 };
@@ -39,6 +40,11 @@ struct Token
 	operator StrC()
 	{
 		return { Length, Text };
+	}
+
+	bool is_access_operator()
+	{
+		return bitfield_is_equal( u32, Flags, TF_AccessOperator );
 	}
 
 	bool is_access_specifier()
@@ -141,7 +147,7 @@ struct TokArray
 			while ( Arr[idx].Type == TokType::NewLine )
 				idx++;
 
-			return Arr[idx];
+			return Arr[idx + 1];
 		}
 
 		return Arr[idx + 1];
@@ -153,7 +159,7 @@ struct TokArray
 	}
 };
 
-global Arena_64KB      defines_map_arena;
+global Arena_128KB     defines_map_arena;
 global HashTable<StrC> defines;
 global Array<Token>    Tokens;
 
@@ -451,6 +457,16 @@ void lex_found_token( StrC& content
 
 	TokType type = ETokType::to_type( token );
 
+	if (type <= TokType::Access_Public && type >= TokType::Access_Private )
+	{
+		token.Flags |= TF_AccessSpecifier;
+	}
+
+	if ( type > TokType::__Attributes_Start )
+	{
+		token.Flags |= TF_Attribute;
+	}
+
 	if ( type == ETokType::Decl_Extern_Linkage )
 	{
 		SkipWhitespace();
@@ -565,7 +581,7 @@ TokArray lex( StrC content )
 			scanner++;
 			length ++;
 		}
-		if ( scanner[1] == '(' )
+		if ( scanner[0] == '(' )
 		{
 			length++;
 		}
@@ -634,7 +650,7 @@ TokArray lex( StrC content )
 				token.Text   = scanner;
 				token.Length = 1;
 				token.Type   = TokType::Access_MemberSymbol;
-				token.Flags  = TF_AccessSpecifier;
+				token.Flags  = TF_AccessOperator;
 
 				if (left) {
 					move_forward();
@@ -1003,7 +1019,7 @@ TokArray lex( StrC content )
 					{
 						token.Length++;
 //						token.Type = TokType::Access_PointerToMemberSymbol;
-						token.Flags |= TF_AccessSpecifier;
+						token.Flags |= TF_AccessOperator;
 						move_forward();
 
 						if ( current == '*' )

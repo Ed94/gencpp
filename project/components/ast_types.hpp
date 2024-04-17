@@ -118,7 +118,7 @@ struct AST_Constructor
 	Code              Next;
 	parser::Token*    Tok;
 	Code              Parent;
-	char              _PAD_NAME_[ sizeof(StringCached) ];
+	StringCached      Name;
 	CodeT             Type;
 	char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
@@ -158,7 +158,7 @@ struct AST_Destructor
 	Code                   Next;
 	parser::Token*         Tok;
 	Code                   Parent;
-	char                   _PAD_NAME_[ sizeof(StringCached) ];
+	StringCached           Name;
 	CodeT                  Type;
 	char                   _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
@@ -642,7 +642,7 @@ struct AST_Param
 		{
 			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 			CodeType  ValueType;
-			char 	  _PAD_PROPERTIES_[ sizeof(AST*) ];
+			Code      Macro;
 			Code      Value;
 			char 	  _PAD_PROPERTIES_3_[ sizeof(AST*) ];
 		};

@@ -250,9 +250,9 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		char const* attribute_str = attribute_strs[idx].string;
 		char const* entry_to_str  = attribute_str_strs [idx].string;
 
-		attribute_entries.append_fmt( "%s,\n", attribute_str );
+		attribute_entries.append_fmt( "Attribute_%s,\n", attribute_str );
 		to_str_attributes.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
-		attribute_define_entries.append_fmt( "Entry( %s, %s )", attribute_str, entry_to_str );
+		attribute_define_entries.append_fmt( "Entry( Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
 
 		if ( idx < attribute_strs.num() - 1 )
 			attribute_define_entries.append( " \\\n");
@@ -265,6 +265,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), attribute_define_entries  );
 #pragma pop_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 
+	// We cannot parse this enum, it has Attribute names as enums
 	CodeEnum enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, "attribute_toks", (StrC)attribute_entries, stringize(
 		enum Type : u32
 		{

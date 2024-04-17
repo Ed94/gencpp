@@ -16,9 +16,9 @@ using LogFailType = sw(*)(char const*, ...);
 enum class AccessSpec : u32
 {
 	Default,
-	Public,
-	Protected,
 	Private,
+	Protected,
+	Public,
 
 	Num_AccessSpec,
 	Invalid,
@@ -30,9 +30,9 @@ char const* to_str( AccessSpec type )
 	local_persist
 	char const* lookup[ (u32)AccessSpec::Num_AccessSpec ] = {
 		"",
-		"public",
-		"protected",
 		"private",
+		"protected",
+		"public",
 	};
 
 	if ( type > AccessSpec::Public )

@@ -151,17 +151,17 @@ SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
 SpacesBeforeTrailingComments: 4
 
-SpaceInEmptyBlock: true
+SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
-SpacesInAngles: true
-SpacesInCStyleCastParentheses: true
-SpacesInConditionalStatement: true
-SpacesInContainerLiterals: true
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
 SpacesInLineCommentPrefix:
   Minimum: 1
   Maximum: 20
 SpacesInParentheses: true
-SpacesInSquareBrackets: true
+SpacesInSquareBrackets: false
 
 Standard: c++17
 

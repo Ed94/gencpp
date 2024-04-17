@@ -159,7 +159,6 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 
 		case Unary_Plus:
 		case Unary_Minus:
-		case BNot:
 			if ( ! params_code )
 				is_member_symbol = true;
 
@@ -193,6 +192,41 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 				}
 			}
 			break;
+
+		case BNot:
+		{
+			// Some compilers let you do this...
+		#if 0
+			if ( ! ret_type.is_equal( t_bool) )
+			{
+				log_failure( "gen::def_operator: return type is not a boolean - %s", params_code.debug_str() );
+				return OpValidateResult::Fail;
+			}
+		#endif
+
+			if ( ! params_code )
+				is_member_symbol = true;
+
+			else
+			{
+				if ( params_code->Type != ECode::Parameters )
+				{
+					log_failure( "gen::def_operator: params is not of Parameters type - %s", params_code.debug_str() );
+					return OpValidateResult::Fail;
+				}
+
+				if ( params_code->NumEntries > 1 )
+				{
+					log_failure(
+					    "gen::def_operator: operator%s may not have more than one parameter - param count: %d",
+					    to_str( op ),
+					    params_code->NumEntries
+					);
+					return OpValidateResult::Fail;
+				}
+			}
+			break;
+		}
 
 		case Add:
 		case Subtract:
@@ -324,6 +358,11 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 		case FunctionCall:
 		case Comma:
 			check_params();
+			break;
+
+		case New:
+		case Delete:
+			// This library doesn't support validating new and delete yet.
 			break;
 #	undef specs
 	}
@@ -520,7 +559,7 @@ CodeClass def_class( StrC name
 		return CodeInvalid;
 	}
 
-	if ( parent && (parent->Type != Class || parent->Type != Struct || parent->Type != Typename || parent->Type != Untyped) )
+	if ( parent && ( parent->Type != Class && parent->Type != Struct && parent->Type != Typename && parent->Type != Untyped ) )
 	{
 		log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", parent.debug_str() );
 		return CodeInvalid;
@@ -546,6 +585,7 @@ CodeClass def_class( StrC name
 
 		result->Type = Class;
 		result->Body = body;
+		result->Body->Parent = result; // TODO(Ed): Review this?
 	}
 	else
 	{
@@ -578,17 +618,25 @@ CodeDefine def_define( StrC name, StrC content )
 
 	name_check( def_define, name );
 
+	// Defines can be empty definitions
+#if 0
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 	{
 		log_failure( "gen::def_define: Invalid value provided" );
 		return CodeInvalid;
 	}
+#endif
 
 	CodeDefine
 	result          = (CodeDefine) make_code();
 	result->Type    = Preprocess_Define;
 	result->Name    = get_cached_string( name );
-	result->Content = get_cached_string( content );
+	if ( content.Len <= 0 || content.Ptr == nullptr )
+	{
+		result->Content = get_cached_string( txt("") );
+	}
+	else
+		result->Content = get_cached_string( content );
 
 	return result;
 }

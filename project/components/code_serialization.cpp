@@ -96,12 +96,18 @@ String CodeConstructor::to_string()
 
 void CodeConstructor::to_string_def( String& result )
 {
-	result.append( ast->Parent->Name );
+	AST* ClassStructParent = ast->Parent->Parent;
+	if (ClassStructParent) {
+		result.append( ClassStructParent->Name );
+	}
+	else {
+		result.append( ast->Name );
+	}
 
 	if ( ast->Params )
 		result.append_fmt( "( %S )", ast->Params.to_string() );
 	else
-		result.append( "(void)" );
+		result.append( "()" );
 
 	if ( ast->InitializerList )
 		result.append_fmt( " : %S", ast->InitializerList.to_string() );
@@ -114,17 +120,26 @@ void CodeConstructor::to_string_def( String& result )
 
 void CodeConstructor::to_string_fwd( String& result )
 {
-	result.append( ast->Parent->Name );
+	AST* ClassStructParent = ast->Parent->Parent;
+	if (ClassStructParent) {
+		result.append( ClassStructParent->Name );
+	}
+	else {
+		result.append( ast->Name );
+	}
 
 	if ( ast->Params )
 		result.append_fmt( "( %S )", ast->Params.to_string() );
 	else
-	{
-		if ( ast->InlineCmt )
-			result.append_fmt( "(void); // %S\n", ast->InlineCmt->Content );
-		else
-			result.append( "(void);\n" );
-	}
+		result.append_fmt("()");
+
+	if (ast->Body)
+		result.append_fmt( " = %S", ast->Body.to_string() );
+
+	if ( ast->InlineCmt )
+		result.append_fmt( "; // %S\n", ast->InlineCmt->Content );
+	else
+		result.append( ";" );
 }
 
 String CodeClass::to_string()
@@ -159,7 +174,7 @@ void CodeClass::to_string_def( String& result )
 	{
 		char const* access_level = to_str( ast->ParentAccess );
 
-		result.append_fmt( "%S : %s %S", ast->Name, access_level, ast->ParentType );
+		result.append_fmt( "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
 
 		CodeType interface = ast->ParentType->Next->cast< CodeType >();
 		if ( interface )
@@ -235,7 +250,11 @@ String CodeDestructor::to_string()
 
 void CodeDestructor::to_string_def( String& result )
 {
-	if ( ast->Specs )
+	if ( ast->Name )
+	{
+		result.append_fmt( "%S()", ast->Name );
+	}
+	else if ( ast->Specs )
 	{
 		if ( ast->Specs.has( ESpecifier::Virtual ) )
 			result.append_fmt( "virtual ~%S()", ast->Parent->Name );
@@ -259,6 +278,8 @@ void CodeDestructor::to_string_fwd( String& result )
 
 		if ( ast->Specs.has( ESpecifier::Pure ) )
 			result.append( " = 0;" );
+		else if (ast->Body)
+			result.append_fmt( " = %S;", ast->Body.to_string() );
 	}
 	else
 		result.append_fmt( "~%S();", ast->Parent->Name );
@@ -424,7 +445,7 @@ void CodeFriend::to_string( String& result )
 {
 	result.append_fmt( "friend %S", ast->Declaration->to_string() );
 
-	if ( result[ result.length() -1 ] != ';' )
+	if ( ast->Declaration->Type != ECode::Function && result[ result.length() - 1 ] != ';' )
 	{
 		result.append( ";" );
 	}
@@ -513,7 +534,7 @@ void CodeFn::to_string_fwd( String& result )
 	{
 		for ( SpecifierT spec : ast->Specs )
 		{
-			if ( ! ESpecifier::is_trailing( spec ) )
+			if ( ESpecifier::is_trailing( spec ) && ! (spec != ESpecifier::Pure) )
 			{
 				StrC spec_str = ESpecifier::to_str( spec );
 				result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
@@ -549,6 +570,11 @@ void CodeFn::to_string_fwd( String& result )
 			}
 		}
 	}
+
+	if ( ast->Specs.has( ESpecifier::Pure ) >= 0 )
+		result.append( " = 0;" );
+	else if (ast->Body)
+		result.append_fmt( " = %S;", ast->Body.to_string() );
 
 	if ( ast->InlineCmt )
 		result.append_fmt( ";  %S", ast->InlineCmt->Content );
@@ -797,24 +823,30 @@ String CodeParam::to_string()
 
 void CodeParam::to_string( String& result )
 {
-	if ( ast->ValueType.ast == nullptr )
+	if ( ast->Macro )
 	{
-		result.append_fmt( "%S", ast->Name );
-		return;
+		// Related to parsing: ( <macro>, ... )
+		result.append( ast->Macro.ast->Content );
+		// Could also be: ( <macro> <type <name>, ... )
 	}
 
 	if ( ast->Name )
-		result.append_fmt( "%S %S", ast->ValueType.to_string(), ast->Name );
+	{
+		if ( ast->ValueType.ast == nullptr )
+			result.append_fmt( " %S", ast->Name );
+		else
+			result.append_fmt( " %S %S", ast->ValueType.to_string(), ast->Name );
 
-	else
-		result.append_fmt( "%S", ast->ValueType.to_string() );
+	}
+	else if ( ast->ValueType )
+		result.append_fmt( " %S", ast->ValueType.to_string() );
 
 	if ( ast->Value )
-		result.append_fmt( "= %S", ast->Value.to_string() );
+		result.append_fmt( " = %S", ast->Value.to_string() );
 
-	if ( ast->NumEntries - 1 > 0)
+	if ( ast->NumEntries - 1 > 0 )
 	{
-		for ( CodeParam param :  ast->Next )
+		for ( CodeParam param : ast->Next )
 		{
 			result.append_fmt( ", %S", param.to_string() );
 		}
@@ -942,7 +974,7 @@ void CodeStruct::to_string_def( String& result )
 	{
 		char const* access_level = to_str( ast->ParentAccess );
 
-		result.append_fmt( "%S : %s %S", ast->Name, access_level, ast->ParentType );
+		result.append_fmt( "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
 
 		CodeType interface = ast->ParentType->Next->cast< CodeType >();
 		if ( interface )

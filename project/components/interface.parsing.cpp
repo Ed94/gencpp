@@ -33,8 +33,54 @@ CodeConstructor parse_constructor( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
-	Context.Tokens = toks;
-	CodeConstructor result = parse_constructor();
+	// TODO(Ed): Constructors can have prefix attributes
+
+	CodeSpecifiers specifiers;
+	SpecifierT     specs_found[ 16 ] { ESpecifier::NumSpecifiers };
+	s32            NumSpecifiers = 0;
+
+	while ( left && currtok.is_specifier() )
+	{
+		SpecifierT spec = ESpecifier::to_type( currtok );
+
+		b32 ignore_spec = false;
+
+		switch ( spec )
+		{
+			case ESpecifier::Constexpr :
+			case ESpecifier::Explicit:
+			case ESpecifier::Inline :
+			case ESpecifier::ForceInline :
+			case ESpecifier::NeverInline :
+				break;
+
+			case ESpecifier::Const :
+				ignore_spec = true;
+				break;
+
+			default :
+				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), Context.to_string() );
+				Context.pop();
+				return CodeInvalid;
+		}
+
+		// Every specifier after would be considered part of the type type signature
+		if (ignore_spec)
+			break;
+
+		specs_found[ NumSpecifiers ] = spec;
+		NumSpecifiers++;
+		eat( currtok.Type );
+	}
+
+	if ( NumSpecifiers )
+	{
+		specifiers = def_specifiers( NumSpecifiers, specs_found );
+		// <specifiers> ...
+	}
+
+	Context.Tokens         = toks;
+	CodeConstructor result = parse_constructor( specifiers );
 	return result;
 }
 
@@ -47,7 +93,10 @@ CodeDestructor parse_destructor( StrC def )
 	if ( toks.Arr == nullptr )
 		return CodeInvalid;
 
-	Context.Tokens = toks;
+	// TODO(Ed): Destructors can have prefix attributes
+	// TODO(Ed): Destructors can have virtual
+
+	Context.Tokens        = toks;
 	CodeDestructor result = parse_destructor();
 	return result;
 }

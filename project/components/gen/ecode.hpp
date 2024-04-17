@@ -136,7 +136,7 @@ namespace ECode
 			{ sizeof( "Using_Namespace" ),     "Using_Namespace"     },
 			{ sizeof( "Variable" ),            "Variable"            },
 		};
-		return lookup[ type ];
+		return lookup[type];
 	}
 
 }    // namespace ECode

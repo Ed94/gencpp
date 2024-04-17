@@ -36,7 +36,7 @@ bool Code::is_equal( Code other )
 
 bool Code::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void Code::set_global()
@@ -62,12 +62,12 @@ Code& Code::operator=( Code other )
 
 bool Code::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool Code::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 Code::operator bool()
@@ -104,7 +104,7 @@ bool CodeBody::is_equal( Code other )
 
 bool CodeBody::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeBody::set_global()
@@ -130,12 +130,12 @@ CodeBody& CodeBody::operator=( Code other )
 
 bool CodeBody::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeBody::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeBody::operator bool()
@@ -172,7 +172,7 @@ bool CodeAttributes::is_equal( Code other )
 
 bool CodeAttributes::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeAttributes::set_global()
@@ -198,12 +198,12 @@ CodeAttributes& CodeAttributes::operator=( Code other )
 
 bool CodeAttributes::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeAttributes::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeAttributes::operator bool()
@@ -260,7 +260,7 @@ bool CodeComment::is_equal( Code other )
 
 bool CodeComment::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeComment::set_global()
@@ -286,12 +286,12 @@ CodeComment& CodeComment::operator=( Code other )
 
 bool CodeComment::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeComment::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeComment::operator bool()
@@ -348,7 +348,7 @@ bool CodeConstructor::is_equal( Code other )
 
 bool CodeConstructor::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeConstructor::set_global()
@@ -374,12 +374,12 @@ CodeConstructor& CodeConstructor::operator=( Code other )
 
 bool CodeConstructor::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeConstructor::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeConstructor::operator bool()
@@ -436,7 +436,7 @@ bool CodeClass::is_equal( Code other )
 
 bool CodeClass::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeClass::set_global()
@@ -462,12 +462,12 @@ CodeClass& CodeClass::operator=( Code other )
 
 bool CodeClass::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeClass::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeClass::operator bool()
@@ -504,7 +504,7 @@ bool CodeDefine::is_equal( Code other )
 
 bool CodeDefine::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeDefine::set_global()
@@ -530,12 +530,12 @@ CodeDefine& CodeDefine::operator=( Code other )
 
 bool CodeDefine::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeDefine::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeDefine::operator bool()
@@ -592,7 +592,7 @@ bool CodeDestructor::is_equal( Code other )
 
 bool CodeDestructor::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeDestructor::set_global()
@@ -618,12 +618,12 @@ CodeDestructor& CodeDestructor::operator=( Code other )
 
 bool CodeDestructor::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeDestructor::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeDestructor::operator bool()
@@ -680,7 +680,7 @@ bool CodeEnum::is_equal( Code other )
 
 bool CodeEnum::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeEnum::set_global()
@@ -706,12 +706,12 @@ CodeEnum& CodeEnum::operator=( Code other )
 
 bool CodeEnum::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeEnum::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeEnum::operator bool()
@@ -768,7 +768,7 @@ bool CodeExec::is_equal( Code other )
 
 bool CodeExec::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeExec::set_global()
@@ -794,12 +794,12 @@ CodeExec& CodeExec::operator=( Code other )
 
 bool CodeExec::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeExec::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeExec::operator bool()
@@ -856,7 +856,7 @@ bool CodeExtern::is_equal( Code other )
 
 bool CodeExtern::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeExtern::set_global()
@@ -882,12 +882,12 @@ CodeExtern& CodeExtern::operator=( Code other )
 
 bool CodeExtern::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeExtern::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeExtern::operator bool()
@@ -944,7 +944,7 @@ bool CodeFriend::is_equal( Code other )
 
 bool CodeFriend::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeFriend::set_global()
@@ -970,12 +970,12 @@ CodeFriend& CodeFriend::operator=( Code other )
 
 bool CodeFriend::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeFriend::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeFriend::operator bool()
@@ -1032,7 +1032,7 @@ bool CodeFn::is_equal( Code other )
 
 bool CodeFn::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeFn::set_global()
@@ -1058,12 +1058,12 @@ CodeFn& CodeFn::operator=( Code other )
 
 bool CodeFn::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeFn::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeFn::operator bool()
@@ -1120,7 +1120,7 @@ bool CodeInclude::is_equal( Code other )
 
 bool CodeInclude::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeInclude::set_global()
@@ -1146,12 +1146,12 @@ CodeInclude& CodeInclude::operator=( Code other )
 
 bool CodeInclude::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeInclude::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeInclude::operator bool()
@@ -1208,7 +1208,7 @@ bool CodeModule::is_equal( Code other )
 
 bool CodeModule::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeModule::set_global()
@@ -1234,12 +1234,12 @@ CodeModule& CodeModule::operator=( Code other )
 
 bool CodeModule::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeModule::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeModule::operator bool()
@@ -1296,7 +1296,7 @@ bool CodeNS::is_equal( Code other )
 
 bool CodeNS::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeNS::set_global()
@@ -1322,12 +1322,12 @@ CodeNS& CodeNS::operator=( Code other )
 
 bool CodeNS::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeNS::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeNS::operator bool()
@@ -1384,7 +1384,7 @@ bool CodeOperator::is_equal( Code other )
 
 bool CodeOperator::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeOperator::set_global()
@@ -1410,12 +1410,12 @@ CodeOperator& CodeOperator::operator=( Code other )
 
 bool CodeOperator::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeOperator::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeOperator::operator bool()
@@ -1472,7 +1472,7 @@ bool CodeOpCast::is_equal( Code other )
 
 bool CodeOpCast::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeOpCast::set_global()
@@ -1498,12 +1498,12 @@ CodeOpCast& CodeOpCast::operator=( Code other )
 
 bool CodeOpCast::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeOpCast::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeOpCast::operator bool()
@@ -1560,7 +1560,7 @@ bool CodeParam::is_equal( Code other )
 
 bool CodeParam::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeParam::set_global()
@@ -1586,12 +1586,12 @@ CodeParam& CodeParam::operator=( Code other )
 
 bool CodeParam::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeParam::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeParam::operator bool()
@@ -1628,7 +1628,7 @@ bool CodePragma::is_equal( Code other )
 
 bool CodePragma::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodePragma::set_global()
@@ -1654,12 +1654,12 @@ CodePragma& CodePragma::operator=( Code other )
 
 bool CodePragma::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodePragma::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodePragma::operator bool()
@@ -1716,7 +1716,7 @@ bool CodePreprocessCond::is_equal( Code other )
 
 bool CodePreprocessCond::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodePreprocessCond::set_global()
@@ -1742,12 +1742,12 @@ CodePreprocessCond& CodePreprocessCond::operator=( Code other )
 
 bool CodePreprocessCond::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodePreprocessCond::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodePreprocessCond::operator bool()
@@ -1804,7 +1804,7 @@ bool CodeSpecifiers::is_equal( Code other )
 
 bool CodeSpecifiers::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeSpecifiers::set_global()
@@ -1830,12 +1830,12 @@ CodeSpecifiers& CodeSpecifiers::operator=( Code other )
 
 bool CodeSpecifiers::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeSpecifiers::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeSpecifiers::operator bool()
@@ -1872,7 +1872,7 @@ bool CodeStruct::is_equal( Code other )
 
 bool CodeStruct::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeStruct::set_global()
@@ -1898,12 +1898,12 @@ CodeStruct& CodeStruct::operator=( Code other )
 
 bool CodeStruct::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeStruct::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeStruct::operator bool()
@@ -1940,7 +1940,7 @@ bool CodeTemplate::is_equal( Code other )
 
 bool CodeTemplate::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeTemplate::set_global()
@@ -1966,12 +1966,12 @@ CodeTemplate& CodeTemplate::operator=( Code other )
 
 bool CodeTemplate::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeTemplate::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeTemplate::operator bool()
@@ -2028,7 +2028,7 @@ bool CodeType::is_equal( Code other )
 
 bool CodeType::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeType::set_global()
@@ -2054,12 +2054,12 @@ CodeType& CodeType::operator=( Code other )
 
 bool CodeType::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeType::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeType::operator bool()
@@ -2116,7 +2116,7 @@ bool CodeTypedef::is_equal( Code other )
 
 bool CodeTypedef::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeTypedef::set_global()
@@ -2142,12 +2142,12 @@ CodeTypedef& CodeTypedef::operator=( Code other )
 
 bool CodeTypedef::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeTypedef::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeTypedef::operator bool()
@@ -2204,7 +2204,7 @@ bool CodeUnion::is_equal( Code other )
 
 bool CodeUnion::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeUnion::set_global()
@@ -2230,12 +2230,12 @@ CodeUnion& CodeUnion::operator=( Code other )
 
 bool CodeUnion::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeUnion::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeUnion::operator bool()
@@ -2292,7 +2292,7 @@ bool CodeUsing::is_equal( Code other )
 
 bool CodeUsing::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeUsing::set_global()
@@ -2318,12 +2318,12 @@ CodeUsing& CodeUsing::operator=( Code other )
 
 bool CodeUsing::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeUsing::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeUsing::operator bool()
@@ -2380,7 +2380,7 @@ bool CodeVar::is_equal( Code other )
 
 bool CodeVar::is_valid()
 {
-	return ( AST* )ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
+	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 void CodeVar::set_global()
@@ -2406,12 +2406,12 @@ CodeVar& CodeVar::operator=( Code other )
 
 bool CodeVar::operator==( Code other )
 {
-	return ( AST* )ast == other.ast;
+	return (AST*)ast == other.ast;
 }
 
 bool CodeVar::operator!=( Code other )
 {
-	return ( AST* )ast != other.ast;
+	return (AST*)ast != other.ast;
 }
 
 CodeVar::operator bool()
@@ -2450,7 +2450,7 @@ AST::operator CodeBody()
 
 Code::operator CodeBody() const
 {
-	return { ( AST_Body* )ast };
+	return { (AST_Body*)ast };
 }
 
 AST::operator CodeAttributes()
@@ -2460,7 +2460,7 @@ AST::operator CodeAttributes()
 
 Code::operator CodeAttributes() const
 {
-	return { ( AST_Attributes* )ast };
+	return { (AST_Attributes*)ast };
 }
 
 AST::operator CodeComment()
@@ -2470,7 +2470,7 @@ AST::operator CodeComment()
 
 Code::operator CodeComment() const
 {
-	return { ( AST_Comment* )ast };
+	return { (AST_Comment*)ast };
 }
 
 AST::operator CodeConstructor()
@@ -2480,7 +2480,7 @@ AST::operator CodeConstructor()
 
 Code::operator CodeConstructor() const
 {
-	return { ( AST_Constructor* )ast };
+	return { (AST_Constructor*)ast };
 }
 
 AST::operator CodeClass()
@@ -2490,7 +2490,7 @@ AST::operator CodeClass()
 
 Code::operator CodeClass() const
 {
-	return { ( AST_Class* )ast };
+	return { (AST_Class*)ast };
 }
 
 AST::operator CodeDefine()
@@ -2500,7 +2500,7 @@ AST::operator CodeDefine()
 
 Code::operator CodeDefine() const
 {
-	return { ( AST_Define* )ast };
+	return { (AST_Define*)ast };
 }
 
 AST::operator CodeDestructor()
@@ -2510,7 +2510,7 @@ AST::operator CodeDestructor()
 
 Code::operator CodeDestructor() const
 {
-	return { ( AST_Destructor* )ast };
+	return { (AST_Destructor*)ast };
 }
 
 AST::operator CodeEnum()
@@ -2520,7 +2520,7 @@ AST::operator CodeEnum()
 
 Code::operator CodeEnum() const
 {
-	return { ( AST_Enum* )ast };
+	return { (AST_Enum*)ast };
 }
 
 AST::operator CodeExec()
@@ -2530,7 +2530,7 @@ AST::operator CodeExec()
 
 Code::operator CodeExec() const
 {
-	return { ( AST_Exec* )ast };
+	return { (AST_Exec*)ast };
 }
 
 AST::operator CodeExtern()
@@ -2540,7 +2540,7 @@ AST::operator CodeExtern()
 
 Code::operator CodeExtern() const
 {
-	return { ( AST_Extern* )ast };
+	return { (AST_Extern*)ast };
 }
 
 AST::operator CodeFriend()
@@ -2550,7 +2550,7 @@ AST::operator CodeFriend()
 
 Code::operator CodeFriend() const
 {
-	return { ( AST_Friend* )ast };
+	return { (AST_Friend*)ast };
 }
 
 AST::operator CodeFn()
@@ -2560,7 +2560,7 @@ AST::operator CodeFn()
 
 Code::operator CodeFn() const
 {
-	return { ( AST_Fn* )ast };
+	return { (AST_Fn*)ast };
 }
 
 AST::operator CodeInclude()
@@ -2570,7 +2570,7 @@ AST::operator CodeInclude()
 
 Code::operator CodeInclude() const
 {
-	return { ( AST_Include* )ast };
+	return { (AST_Include*)ast };
 }
 
 AST::operator CodeModule()
@@ -2580,7 +2580,7 @@ AST::operator CodeModule()
 
 Code::operator CodeModule() const
 {
-	return { ( AST_Module* )ast };
+	return { (AST_Module*)ast };
 }
 
 AST::operator CodeNS()
@@ -2590,7 +2590,7 @@ AST::operator CodeNS()
 
 Code::operator CodeNS() const
 {
-	return { ( AST_NS* )ast };
+	return { (AST_NS*)ast };
 }
 
 AST::operator CodeOperator()
@@ -2600,7 +2600,7 @@ AST::operator CodeOperator()
 
 Code::operator CodeOperator() const
 {
-	return { ( AST_Operator* )ast };
+	return { (AST_Operator*)ast };
 }
 
 AST::operator CodeOpCast()
@@ -2610,7 +2610,7 @@ AST::operator CodeOpCast()
 
 Code::operator CodeOpCast() const
 {
-	return { ( AST_OpCast* )ast };
+	return { (AST_OpCast*)ast };
 }
 
 AST::operator CodeParam()
@@ -2620,7 +2620,7 @@ AST::operator CodeParam()
 
 Code::operator CodeParam() const
 {
-	return { ( AST_Param* )ast };
+	return { (AST_Param*)ast };
 }
 
 AST::operator CodePragma()
@@ -2630,7 +2630,7 @@ AST::operator CodePragma()
 
 Code::operator CodePragma() const
 {
-	return { ( AST_Pragma* )ast };
+	return { (AST_Pragma*)ast };
 }
 
 AST::operator CodePreprocessCond()
@@ -2640,7 +2640,7 @@ AST::operator CodePreprocessCond()
 
 Code::operator CodePreprocessCond() const
 {
-	return { ( AST_PreprocessCond* )ast };
+	return { (AST_PreprocessCond*)ast };
 }
 
 AST::operator CodeSpecifiers()
@@ -2650,7 +2650,7 @@ AST::operator CodeSpecifiers()
 
 Code::operator CodeSpecifiers() const
 {
-	return { ( AST_Specifiers* )ast };
+	return { (AST_Specifiers*)ast };
 }
 
 AST::operator CodeStruct()
@@ -2660,7 +2660,7 @@ AST::operator CodeStruct()
 
 Code::operator CodeStruct() const
 {
-	return { ( AST_Struct* )ast };
+	return { (AST_Struct*)ast };
 }
 
 AST::operator CodeTemplate()
@@ -2670,7 +2670,7 @@ AST::operator CodeTemplate()
 
 Code::operator CodeTemplate() const
 {
-	return { ( AST_Template* )ast };
+	return { (AST_Template*)ast };
 }
 
 AST::operator CodeType()
@@ -2680,7 +2680,7 @@ AST::operator CodeType()
 
 Code::operator CodeType() const
 {
-	return { ( AST_Type* )ast };
+	return { (AST_Type*)ast };
 }
 
 AST::operator CodeTypedef()
@@ -2690,7 +2690,7 @@ AST::operator CodeTypedef()
 
 Code::operator CodeTypedef() const
 {
-	return { ( AST_Typedef* )ast };
+	return { (AST_Typedef*)ast };
 }
 
 AST::operator CodeUnion()
@@ -2700,7 +2700,7 @@ AST::operator CodeUnion()
 
 Code::operator CodeUnion() const
 {
-	return { ( AST_Union* )ast };
+	return { (AST_Union*)ast };
 }
 
 AST::operator CodeUsing()
@@ -2710,7 +2710,7 @@ AST::operator CodeUsing()
 
 Code::operator CodeUsing() const
 {
-	return { ( AST_Using* )ast };
+	return { (AST_Using*)ast };
 }
 
 AST::operator CodeVar()
@@ -2720,7 +2720,7 @@ AST::operator CodeVar()
 
 Code::operator CodeVar() const
 {
-	return { ( AST_Var* )ast };
+	return { (AST_Var*)ast };
 }
 
 #pragma endregion generated AST / Code cast implementation
