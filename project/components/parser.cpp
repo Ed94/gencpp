@@ -555,6 +555,40 @@ Code parse_array_decl()
 }
 
 internal inline
+Code parse_assignment_expression()
+{
+	Code expr = { nullptr };
+
+	eat( TokType::Operator );
+	// <Attributes> <Specifiers> <ValueType> <Name> =
+
+	Token expr_tok = currtok;
+
+	if ( currtok.Type == TokType::Statement_End && currtok.Type != TokType::Comma )
+	{
+		log_failure( "Expected expression after assignment operator\n%s", Context.to_string() );
+		Context.pop();
+		return CodeInvalid;
+	}
+
+	s32 level = 0;
+	while ( left && currtok.Type != TokType::Statement_End && (currtok.Type != TokType::Comma || level > 0) )
+	{
+		if (currtok.Type == TokType::Capture_Start)
+			level++;
+		else if (currtok.Type == TokType::Capture_End)
+			level--;
+
+		eat( currtok.Type );
+	}
+
+	expr_tok.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )expr_tok.Text - 1;
+	expr            = untyped_str( expr_tok );
+	// = <Expression>
+	return expr;
+}
+
+internal inline
 CodeAttributes parse_attributes()
 {
 	push_scope();
@@ -1311,14 +1345,17 @@ CodeDefine parse_define()
 	eat( TokType::Identifier );
 	// #define <Name>
 
+	// Defines don't necessarily need content.
+#if 0
 	if ( ! check( TokType::Preprocess_Content ))
 	{
 		log_failure( "Error, expected content after #define %s\n%s", define->Name, Context.to_string() );
 		Context.pop();
 		return CodeInvalid;
 	}
+#endif
 
-	if ( currtok.Length == 0 )
+	if ( check(TokType::Preprocess_Content) && currtok.Length != 0 )
 	{
 		define->Content = get_cached_string( currtok );
 		eat( TokType::Preprocess_Content );
@@ -1334,40 +1371,6 @@ CodeDefine parse_define()
 
 	Context.pop();
 	return define;
-}
-
-internal inline
-Code parse_assignment_expression()
-{
-	Code expr = { nullptr };
-
-	eat( TokType::Operator );
-	// <Attributes> <Specifiers> <ValueType> <Name> =
-
-	Token expr_tok = currtok;
-
-	if ( currtok.Type == TokType::Statement_End && currtok.Type != TokType::Comma )
-	{
-		log_failure( "Expected expression after assignment operator\n%s", Context.to_string() );
-		Context.pop();
-		return CodeInvalid;
-	}
-
-	s32 level = 0;
-	while ( left && currtok.Type != TokType::Statement_End && (currtok.Type != TokType::Comma || level > 0) )
-	{
-		if (currtok.Type == TokType::Capture_Start)
-			level++;
-		else if (currtok.Type == TokType::Capture_End)
-			level--;
-
-		eat( currtok.Type );
-	}
-
-	expr_tok.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )expr_tok.Text - 1;
-	expr            = untyped_str( expr_tok );
-	// = <Expression>
-	return expr;
 }
 
 internal inline
@@ -3192,7 +3195,8 @@ CodeVar parse_variable_after_name(
 	Note(Ed): This does not support the following:
 	* Function Pointers
 */
-internal CodeVar parse_variable_declaration_list()
+internal
+CodeVar parse_variable_declaration_list()
 {
 	push_scope();
 
@@ -4328,7 +4332,8 @@ CodeTemplate parse_template()
 
 	The excess whitespace cannot be stripped however, because there is no semantic awareness within the first capture group.
 */
-internal CodeType parse_type( bool from_template, bool* typedef_is_function )
+internal
+CodeType parse_type( bool from_template, bool* typedef_is_function )
 {
 	push_scope();
 

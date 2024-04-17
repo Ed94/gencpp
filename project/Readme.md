@@ -10,8 +10,7 @@ Just like the `gen.<hpp/cpp>` they include their components: `dependencies/<depe
 
 Code not making up the core library is located in `auxiliary/<auxiliary_name>.<hpp/cpp>`. These are optional extensions or tools for the library.
 
-**TODO : Right now the library is not finished, as such the first self-hosting iteration is still WIP**  
-Both libraries use *pre-generated* (self-hosting I guess) version of the library to then generate the latest version of itself.  
+Both libraries use *pre-generated* (self-hosting I guess) version of the library to then generate the latest version of itself.
 
 The default `gen.bootstrap.cpp` located in the project folder is meant to be produce a standard segmented library, where the components of the library  
 have relatively dedicated header and source files. Dependencies included at the top of the file and each header starting with a pragma once.  
@@ -52,7 +51,7 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 The library has its code segmented into component files, use it to help create a derived version without needing to have to rewrite a generated file directly or build on top of the header via composition or inheritance.
 
-The parser is documented under `docs/Parsing.md` and `docs/Parser_Algo.md`.  
+The parser is documented under `docs/Parsing.md` and `docs/Parser_Algo.md`.
 
 ## A note on compilation and runtime generation speed
 

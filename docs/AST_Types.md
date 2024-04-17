@@ -140,6 +140,7 @@ Code           Prev;
 Code           Next;
 parser::Token* Tok;
 Code           Parent;
+StringCached   Name;
 CodeT          Type;
 ```
 
@@ -152,6 +153,12 @@ Serialization:
 // Constructor
 <Specs> <Parent->Name>( <Params> ) <InlineCmt>
     : <InitializerList>
+{
+    <Body>
+}
+
+// Constructor Source Implementation
+<Specs> <Parent>::~<Parent->Name>( <Params> ) <Specs>
 {
     <Body>
 }
@@ -191,6 +198,7 @@ Code           Prev;
 Code           Next;
 parser::Token* Tok;
 Code           Parent;
+StringCached   Name;
 CodeT          Type;
 ```
 
@@ -202,6 +210,12 @@ Serialization:
 
 // Destructor
 <Specs> ~<Parent->Name>( <Params> ) <Specs>
+{
+    <Body>
+}
+
+// Destructor Source Implementation
+<Specs> <Parent>::~<Parent->Name>( <Params> ) <Specs>
 {
     <Body>
 }
@@ -468,12 +482,13 @@ Serialization:
 }
 ```
 
-## Parameters
+## Parameters (AST_Param)
 
 Fields:
 
 ```cpp
 CodeType       ValueType;
+Code           Macro;
 Code           Value;
 CodeParam      Last;
 CodeParam      Next;
@@ -487,7 +502,9 @@ s32            NumEntries;
 Serialization:
 
 ```cpp
-<ValueType> <Name>, <Next>... <Last>
+<Macro>, <Next> ... <Last>
+
+<Macro> <ValueType> <Name>, <Next>... <Last>
 ```
 
 ## Pragma

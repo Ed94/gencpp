@@ -82,6 +82,7 @@ union {
             AST*  ValueType;       // Parameter, Variable
         };
         union {
+            AST*  Macro;           // Parameters
             AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
             AST*  Params;          // Constructor, Function, Operator, Template, Typename
         };
@@ -461,6 +462,7 @@ The AST and constructors will be able to validate that the arguments provided fo
 * If return type must match a parameter
 * If number of parameters is correct
 * If added as a member symbol to a class or struct, that operator matches the requirements for the class (types match up)
+* There is no support for validating new & delete operations (yet)
 
 The user is responsible for making sure the code types provided are correct
 and have the desired specifiers assigned to them beforehand.

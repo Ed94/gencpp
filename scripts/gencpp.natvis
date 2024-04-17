@@ -121,6 +121,20 @@
 		</Expand>
 	</Type>
 
+	<Type Name="gen::AST_Constructor">
+		<DisplayString>{Name} Type: {Type}</DisplayString>
+		<Expand>
+			<Item Name="InlineCmt">InlineCmt</Item>
+			<Item Name="Specs">Specs</Item>
+			<Item Name="InitializerList">InitializerList</Item>
+			<Item Name="Params">Params</Item>
+			<Item Name="Body">Body</Item>
+			<Item Name="Parent">Parent</Item>
+			<Item Name="Prev">Prev</Item>
+			<Item Name="Next">Next</Item>
+		</Expand>
+	</Type>
+
 	<Type Name="gen::AST_Class">
 		<DisplayString>{Name} Type: {Type}</DisplayString>
 		<Expand>

@@ -119,12 +119,20 @@ Below is an outline of the general alogirithim used for these internal procedure
 5. If adjacent opening bracket
     1. Repeat array declaration parse until no brackets remain
 
+## `parse_assignment_expression`
+
+1. Eat the assignment operator
+2. Make sure there is content or at least an end statement after.
+3. Flatten the assignment expression to an untyped Code string.
+
 ## `parse_attributes`
 
 1. Check for standard attribute
 2. Check for GNU attribute
 3. Check for MSVC attribute
 4. Check for a token registered as an attribute
+  a. Check and grab the arguments of a token registered of an attribute if it has any.
+5. Repeat for chained attributes. Flatten them to a single attribute AST node.
 
 ## `parse_class_struct`
 
@@ -142,39 +150,40 @@ Below is an outline of the general alogirithim used for these internal procedure
 
 1. Opening curly brace
 2. Parse the body (Possible options):
-    1. Newline : ast constant
-    2. Comment : `parse_comment`
-    3. Access_Public : ast constant
-    4. Access_Protected : ast constant
-    5. Access_Private : ast constant
-    6. Decl_Class : `parse_complicated_definition`
-    7. Decl_Enum : `parse_complicated_definition`
-    8. Decl_Friend : `parse_friend`
-    9. Decl_Operator : `parse_operator_cast`
-    10. Decl_Struct : `parse_complicated_definition`
-    11. Decl_Template : `parse_template`
-    12. Decl_Typedef : `parse_typedef`
-    13. Decl_Union : `parse_complicated_definition`
-    14. Decl_Using : `parse_using`
-    15. Operator == '~'
+    1. Ignore dangling end statements
+    2. Newline : ast constant
+    3. Comment : `parse_comment`
+    4. Access_Public : ast constant
+    5. Access_Protected : ast constant
+    6. Access_Private : ast constant
+    7. Decl_Class : `parse_complicated_definition`
+    8. Decl_Enum : `parse_complicated_definition`
+    9. Decl_Friend : `parse_friend`
+    10. Decl_Operator : `parse_operator_cast`
+    11. Decl_Struct : `parse_complicated_definition`
+    12. Decl_Template : `parse_template`
+    13. Decl_Typedef : `parse_typedef`
+    14. Decl_Union : `parse_complicated_definition`
+    15. Decl_Using : `parse_using`
+    16. Operator == '~'
         1. `parse_destructor`
-    16. Preprocess_Define : `parse_define`
-    17. Preprocess_Include : `parse_include`
-    18. Preprocess_Conditional (if, ifdef, ifndef, elif, else, endif) : `parse_preprocess_cond` or else/endif ast constant
-    19. Preprocess_Macro : `parse_simple_preprocess`
-    20. Preprocess_Pragma : `parse_pragma`
-    21. Preprocess_Unsupported : `parse_simple_preprocess`
-    22. StaticAssert : `parse_static_assert`
-    23. The following compound into a resolved definition or declaration:
+    17. Preprocess_Define : `parse_define`
+    18. Preprocess_Include : `parse_include`
+    19. Preprocess_Conditional (if, ifdef, ifndef, elif, else, endif) : `parse_preprocess_cond` or else/endif ast constant
+    20. Preprocess_Macro : `parse_simple_preprocess`
+    21. Preprocess_Pragma : `parse_pragma`
+    22. Preprocess_Unsupported : `parse_simple_preprocess`
+    23. StaticAssert : `parse_static_assert`
+    24. The following compound into a resolved definition or declaration:
         1. Attributes (Standard, GNU, MSVC) : `parse_attributes`
-        2. Specifiers (consteval, constexpr, constinit, forceinline, inline, mutable, neverinline, static, volatile)
+        2. Specifiers (consteval, constexpr, constinit, explicit, forceinline, inline, mutable, neverinline, static, volatile, virtual)
         3. Possible Destructor : `parse_destructor`
         4. Possible User defined operator cast : `parse_operator_cast`
         5. Possible Constructor : `parse_constructor`
         6. Something that has the following: (identifier, const, unsigned, signed, short, long, bool, char, int, double)
             1. Possible Constructor `parse_constructor`
             2. Possible Operator, Function, or varaible : `parse_operator_function_or_variable`
-    24. Something completely unknown (will just make untyped...) : `parse_untyped`
+    25. Something completely unknown (will just make untyped...) : `parse_untyped`
 
 ## `parse_comment`
 
@@ -197,15 +206,17 @@ A portion of the code in `parse_typedef` is very similar to this as both have to
     2. If the token has a closing brace its an inplace definition
     3. If the `token[-2]` is an identifier & `token[-3]` is the declaration type, its a variable using a namespaced type.
     4. If the `token[-2]` is an indirection, then its a variable using a namespaced/forwarded type.
-    5. If any of the above is the case, `parse_operator_function_or_variable`
-4. If the previous token was a closing curly brace, its a definition : `parse_forward_or_definition`
-5. If the previous token was a closing square brace, its an array definition : `parse_operator_function_or_variable`
+    5. If the `token[-2]` is an assign classifier, and the starting tokens were the which type with possible `class` token after, its an enum forward declaration.
+    6. If any of the above is the case, `parse_operator_function_or_variable`
+4. If the `token[2]` is a vendor fundamental type (builtin) then it is an enum forward declaration.
+5. If the previous token was a closing curly brace, its a definition : `parse_forward_or_definition`
+6. If the previous token was a closing square brace, its an array definition : `parse_operator_function_or_variable`
 
 ## `parse_define`
 
 1. Define directive
 2. Get identifier
-3. Get Content
+3. Get Content (Optional)
 
 ## `parse_forward_or_definition`
 
@@ -243,35 +254,46 @@ In the future statements and expressions will be parsed.
 1. Make sure this is being called for a valid type (namespace, global body, export body, linkage body)
 2. If its not a global body, consume the opening curly brace
 3. Parse the body (Possible options):
-    1. NewLine : ast constant
-    2. Comment : `parse_comment`
-    3. Decl_Cass : `parse_complicated_definition`
-    4. Decl_Enum : `parse_complicated_definition`
-    5. Decl_Extern_Linkage : `parse_extern_link`
-    6. Decl_Namespace : `parse_namespace`
-    7. Decl_Struct : `parse_complicated_definition`
-    8. Decl_Template : `parse_template`
-    9. Decl_Typedef : `parse_typedef`
-    10. Decl_Union : `parse_complicated_definition`
-    11. Decl_Using : `parse_using`
-    12. Preprocess_Define : `parse_define`
-    13. Preprocess_Include : `parse_include`
-    14. Preprocess_If, IfDef, IfNotDef, Elif : `parse_preprocess_cond`
-    15. Preprocess_Else : ast constant
-    16. Preprocess_Endif : ast constant
-    17. Preprocess_Macro : `parse_simple_preprocess`
-    18. Preprocess_Pragma : `parse_pragma`
-    19. Preprocess_Unsupported : `parse_simple_preprocess`
-    20. StaticAssert : `parse_static_assert`
-    21. Module_Export : `parse_export_body`
-    22. Module_Import : NOT_IMPLEMENTED
-    23. The following compound into a resolved definition or declaration:
+    1. Ignore dangling end statements
+    2. NewLine : ast constant
+    3. Comment : `parse_comment`
+    4. Decl_Cass : `parse_complicated_definition`
+    5. Decl_Enum : `parse_complicated_definition`
+    6. Decl_Extern_Linkage : `parse_extern_link`
+    7. Decl_Namespace : `parse_namespace`
+    8. Decl_Struct : `parse_complicated_definition`
+    9. Decl_Template : `parse_template`
+    10. Decl_Typedef : `parse_typedef`
+    11. Decl_Union : `parse_complicated_definition`
+    12. Decl_Using : `parse_using`
+    13. Preprocess_Define : `parse_define`
+    14. Preprocess_Include : `parse_include`
+    15. Preprocess_If, IfDef, IfNotDef, Elif : `parse_preprocess_cond`
+    16. Preprocess_Else : ast constant
+    17. Preprocess_Endif : ast constant
+    18. Preprocess_Macro : `parse_simple_preprocess`
+    19. Preprocess_Pragma : `parse_pragma`
+    20. Preprocess_Unsupported : `parse_simple_preprocess`
+    21. StaticAssert : `parse_static_assert`
+    22. Module_Export : `parse_export_body`
+    23. Module_Import : NOT_IMPLEMENTED
+    24. The following compound into a resolved definition or declaration:
         1. Attributes ( Standard, GNU, MSVC, Macro ) : `parse_attributes`
         2. Specifiers ( consteval, constexpr, constinit, extern, forceinline, global, inline, internal_linkage, neverinline, static )
         3. Is either ( identifier, const specifier, long, short, signed, unsigned, bool, char, double, int)
-            1. If its an operator cast (definition outside class) : `parse_operator_cast`
-            2. Its an operator, function, or varaible : `parse_operator_function_or_varaible`
+            1. Attempt to parse as constrcutor or destructor : `parse_global_nspace_constructor_destructor`
+            2. If its an operator cast (definition outside class) : `parse_operator_cast`
+            3. Its an operator, function, or varaible : `parse_operator_function_or_varaible`
 4. If its not a global body, consume the closing curly brace
+
+## `parse_global_nspace_constructor_destructor`
+
+1. Look ahead for the start of the arguments for a possible constructor/destructor
+2. Go back past the identifier
+3. Check to see if its a destructor by checking for the `~`
+4. Continue the next token should be a `::`
+5. Determine if the next valid identifier (ignoring possible template parameters) is the same as the first identifier of the function.
+6. If it is we have either a constructor or destructor so parse using their respective functions (`parse_constructor`, `parse_destructor`).
 
 ## `parse_identifier`
 
@@ -284,6 +306,7 @@ The function can parse all of them, however the AST node compresses them all int
     1. Consume `::`
     2. Consume member identifier
     3. `parse_template args` (for member identifier)
+    4. If a `~` is encounted and the scope is for a destructor's identifier, do not consume it and return with what parsed.
 
 ## `parse_include`
 
@@ -329,15 +352,17 @@ When this function is called, attribute and specifiers may have been resolved, h
 2. If the we immdiately find a closing token, consume it and finish.
 3. If we encounter a varadic argument, consume it and return a `param_varadic` ast constant
 4. `parse_type`
-5. If we have an identifier
+5. If we have a macro, parse it (Unreal has macros as tags to parameters and or as entire arguments).
+6. So long as next token isn't a comma
+  a. If we have an identifier
     1. Consume it
     2. Check for assignment:
-        1. Consume assign operator
-        2. Parse the expression
-6. While we continue to encounter commas
-    1. Consume them
-    2. Repeat steps 3 to 5.2.2
-7. Consume the closing token
+      a. Consume assign operator
+      b. Parse the expression
+7. While we continue to encounter commas
+    a. Consume them
+    b. Repeat steps 3 to 6.2.b
+8. Consume the closing token
 
 ## `parse_preprocess_cond`
 
@@ -456,6 +481,7 @@ This currently doesn't support postfix specifiers (planning to in the future)
         2. If there is an assignment operator:
             1. Consume operator
             2. Consume the expression (assigned to untyped string for now)
+            3. If a macro is encountered consume it (Unreal UMETA macro support)
         3. If there is a comma, consume it
 
 ## `parse_export_body`
@@ -476,10 +502,9 @@ This currently doesn't support postfix specifiers (planning to in the future)
 
 1. Consume `friend`
 2. `parse_type`
-3. If the currok is an identifier its a function declaration (there is no support for inline definitions yet)
-   1. `parse_identifier`
-   2. `parse_params`
-4. Consume end statement
+3. If the currok is an identifier its a function declaration or definition
+   1. `parse_function_after_name`
+4. Consume end statement so long as its not a function definion
 5. Check for inline comment, `parse_comment` if exists
 
 ## `parse_function`
@@ -540,7 +565,8 @@ Note: This currently doesn't support templated operator casts (going to need to 
    5. The following compound into a resolved definition or declaration:
        1. `parse_attributes`
        2. Parse specifiers
-       3. `parse_operator_function_or_variable`
+       3. Attempt to parse as constructor or destructor: `parse_global_nspace_constructor_destructor`
+       4. Otherwise: `parse_operator_function_or_variable`
 
 ## `parse_type`
 
@@ -553,14 +579,15 @@ Anything that is in the qualifier capture of the function typename is treated as
 
 1. `parse_attributes`
 2. Parse specifiers
-3. This is where things get ugly for each of these depend on what the next token is.
+3. If the `parse_type` was called from a template parse, check to see if class was used instead of typname and consume as name.
+4. This is where things get ugly for each of these depend on what the next token is.
     1. If its an in-place definition of a class, enum, struct, or union:
     2. If its a decltype (Not supported yet but draft impl there)
     3. If its a compound native type expression (unsigned, char, short, long, int, float, dobule, etc )
     4. Ends up being a regular type alias of an identifier
-4. Parse specifiers (postfix)
-5. We need to now look ahead to see If we're dealing with a function typename
-6. If wer're dealing with a function typename:
+5. Parse specifiers (postfix)
+6. We need to now look ahead to see If we're dealing with a function typename
+7. If wer're dealing with a function typename:
     1. Shove the specifiers, and identifier code we have so far into a return type typename's Name (untyped string)
         1. Reset the specifiers code for the top-level typeanme
     2. Check to see if the next token is an identifier:
@@ -571,7 +598,7 @@ Anything that is in the qualifier capture of the function typename is treated as
         3. Consume `)`
     4. `parse_params`
     5. Parse postfix specifiers
-7. Check for varaidic argument (param pack) token:
+8. Check for varaidic argument (param pack) token:
    1. Consume varadic argument token
 
 ### WIP - Alternative Algorithim

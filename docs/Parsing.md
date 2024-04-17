@@ -2,7 +2,7 @@
 
 The library features a naive parser tailored for only what the library needs to construct the supported syntax of C++ into its AST.
 
-This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around 5500 loc. I hope to keep it under 10k loc worst case.
+This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around ~5600 loc. I hope to keep it under 10k loc worst case.
 
 You can think of this parser of a frontend parser vs a semantic parser. Its intuitively similar to WYSIWYG. What you precerive as the syntax from the user-side before the compiler gets a hold of it, is what you get.
 
@@ -73,7 +73,7 @@ The lexing and parsing takes shortcuts from whats expected in the standard.
 * The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs.
   * *This includes the assignment of variables.*
 * Attributes ( `[[]]` (standard), `__declspec` (Microsoft), or `__attribute__` (GNU) )
-  * Assumed to *come before specifiers* (`const`, `constexpr`, `extern`, `static`, etc) for a function
+  * Assumed to *come before specifiers* (`const`, `constexpr`, `extern`, `static`, etc) for a function or right afterthe return type.
   * Or in the usual spot for class, structs, (*right after the declaration keyword*)
   * typedefs have attributes with the type (`parse_type`)
 * Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
