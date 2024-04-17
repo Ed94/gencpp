@@ -195,7 +195,7 @@ struct Array
 		return get_header()->Num;
 	}
 
-	bool pop( void )
+	void pop( void )
 	{
 		Header& header = * get_header();
 
@@ -246,7 +246,11 @@ struct Array
 			return true;
 
 		if ( new_capacity < header.Num )
+		{
+			// Already have the memory, mine as well keep it.
 			header.Num = new_capacity;
+			return true;
+		}
 
 		sw      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
 		Header* new_header = rcast( Header*, alloc( header.Allocator, size ) );
@@ -288,6 +292,8 @@ struct Array
 		return Data + get_header()->Num;
 	}
 };
+
+// TODO(Ed) : This thing needs ALOT of work.
 
 template<typename Type>
 struct HashTable

@@ -24,7 +24,16 @@ void validate_file_ast( char const* path, char const* path_gen )
 {
 	log_fmt( "\nValidating: %s", path );
 
-	FileContents file = file_read_contents( GlobalAllocator, true, path );
+	String path_temp = String::make_length( GlobalAllocator, path_gen, str_len( path_gen ) );
+
+	FileContents file  = file_read_contents( GlobalAllocator, true, path );
+	// FileError    error = file_open_mode( & path_temp, EFileMode_WRITE, path );
+	// if ( error != EFileError_NONE )
+	// {
+	// 	log_failure( "gen::File::open - Could not open file: %s", path);
+	// 	return;
+	// }
+
 	u64          time_start = time_rel_ms();
 	CodeBody     ast        = parse_global_body( { file.size, (char const*)file.data } );
 	log_fmt("\n\tAst generated. Time taken: %llu ms", time_rel_ms() - time_start);

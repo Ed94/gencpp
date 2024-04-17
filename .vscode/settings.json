@@ -49,5 +49,7 @@
 		"**/.vscode": true,
 		"**/.vs": true,
 		"**/sanity.gen.hpp": true
-	}
+	},
+	"autoHide.autoHidePanel": false,
+	"autoHide.autoHideSideBar": false
 }

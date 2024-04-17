@@ -11,7 +11,7 @@
 		<BuildCommand>pwsh ./scripts/build.ps1 msvc debug bootstrap</BuildCommand>
 		<RebuildCommand></RebuildCommand>
 		<BuildFileCommand></BuildFileCommand>
-		<CleanCommand>psh ./scripts/clean.ps1</CleanCommand>
+		<CleanCommand>pwsh ./scripts/clean.ps1</CleanCommand>
 		<BuildWorkingDirectory></BuildWorkingDirectory>
 		<CancelBuild></CancelBuild>
 		<RunCommand>./test/gen/build/gencpp.exe</RunCommand>

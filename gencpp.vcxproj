@@ -366,6 +366,9 @@
     <Content Include="scripts\helpers\target_arch.psm1" />
     <Content Include="scripts\refactor.ps1" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="singleheader\gen\" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -72,7 +72,7 @@ $path_raylib_inc = join-path $path_raylib 'include'
 $path_raylib_lib = join-path $path_raylib 'lib'
 
 $path_raylib_dll     = join-path $path_raylib_lib 'raylib.dll'
-$path_raylib_dll_bin = join-path $path_binaries 'raylib.dll'
+$path_raylib_dll_bin = join-path $path_binaries   'raylib.dll'
 
 Copy-Item $path_raylib_dll $path_raylib_dll_bin -Force
 
@@ -96,8 +96,8 @@ $lib_winmm  = 'Winmm.lib'
 $stack_size = 1024 * 1024 * 4
 
 $compiler_args = @(
-	($flag_define + 'UNICODE'),
-	($flag_define + '_UNICODE')
+	( $flag_define + 'UNICODE'),
+	( $flag_define + '_UNICODE')
 	( $flag_define + 'INTELLISENSE_DIRECTIVES=0'),
 	( $flag_define + 'RL_USE_LIBTYPE_SHARED')
 	# ($flag_set_stack_size + $stack_size)

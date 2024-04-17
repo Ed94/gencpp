@@ -5,9 +5,8 @@
 Builder Builder::open( char const* path )
 {
 	Builder result;
-
+	
 	FileError error = file_open_mode( & result.File, EFileMode_WRITE, path );
-
 	if ( error != EFileError_NONE )
 	{
 		log_failure( "gen::File::open - Could not open file: %s", path);
