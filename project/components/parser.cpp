@@ -136,8 +136,8 @@ void init()
 		, ( LexAllocator_Size - sizeof( Array<Token>::Header ) ) / sizeof(Token)
 	);
 
-	defines_map_arena = Arena_128KB::init();
-	defines           = HashTable<StrC>::init( defines_map_arena );
+	defines_map_arena = Arena_256KB::init();
+	defines           = HashTable<StrC>::init_reserve( defines_map_arena, 256 );
 }
 
 internal
@@ -481,7 +481,7 @@ Code parse_array_decl()
 
 	if ( check( TokType::Operator ) && currtok.Text[0] == '[' && currtok.Text[1] == ']' )
 	{
-		Code array_expr = untyped_str( currtok );
+		Code array_expr = untyped_str( get_cached_string(txt(" ")) );
 		eat( TokType::Operator );
 		// []
 
@@ -574,6 +574,10 @@ Code parse_assignment_expression()
 	s32 level = 0;
 	while ( left && currtok.Type != TokType::Statement_End && (currtok.Type != TokType::Comma || level > 0) )
 	{
+		if (currtok.Type == TokType::BraceCurly_Open )
+			level++;
+		if (currtok.Type == TokType::BraceCurly_Close )
+			level--;
 		if (currtok.Type == TokType::Capture_Start)
 			level++;
 		else if (currtok.Type == TokType::Capture_End)
@@ -1539,18 +1543,18 @@ Code parse_function_body()
 	result->Type = Function_Body;
 
 	// TODO : Support actual parsing of function body
-	Token start = currtok;
+	Token start = currtok_noskip;
 
 	s32 level = 0;
-	while ( left && ( currtok.Type != TokType::BraceCurly_Close || level > 0 ) )
+	while ( left && ( currtok_noskip.Type != TokType::BraceCurly_Close || level > 0 ) )
 	{
-		if ( currtok.Type == TokType::BraceCurly_Open )
+		if ( currtok_noskip.Type == TokType::BraceCurly_Open )
 			level++;
 
-		else if ( currtok.Type == TokType::BraceCurly_Close && level > 0 )
+		else if ( currtok_noskip.Type == TokType::BraceCurly_Close && level > 0 )
 			level--;
 
-		eat( currtok.Type );
+		eat( currtok_noskip.Type );
 	}
 
 	Token previous = prevtok;
@@ -1751,6 +1755,7 @@ CodeBody parse_global_nspace( CodeT which )
 			case TokType::Spec_Internal_Linkage:
 			case TokType::Spec_NeverInline:
 			case TokType::Spec_Static:
+			case TokType::Spec_ThreadLocal:
 			{
 				SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 				s32        NumSpecifiers = 0;
@@ -1774,6 +1779,7 @@ CodeBody parse_global_nspace( CodeT which )
 						case ESpecifier::NeverInline:
 						case ESpecifier::Static:
 						case ESpecifier::Volatile:
+						case ESpecifier::Thread_Local:
 						break;
 
 						case ESpecifier::Consteval:
@@ -2294,7 +2300,7 @@ CodeOperator parse_operator_after_ret_type(
 		case '<':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = LEqual;
+				op = LesserEqual;
 
 			else if ( currtok.Text[1] == '<' )
 			{
@@ -2683,7 +2689,7 @@ CodeParam parse_params( bool use_template_capture )
 
 			s32 capture_level  = 0;
 			s32 template_level = 0;
-			while ( left && (currtok.Type != TokType::Comma) && template_level >= 0 && CheckEndParams() || capture_level > 0 || template_level > 0 )
+			while ( left && (currtok.Type != TokType::Comma) && template_level >= 0 && (CheckEndParams() || capture_level > 0 || template_level > 0) )
 			{
 				if (currtok.Text[ 0 ] == '<')
 					++ template_level;
@@ -2789,8 +2795,7 @@ CodeParam parse_params( bool use_template_capture )
 				while ( left
 				&& currtok.Type != TokType::Comma
 				&& template_level >= 0
-				&& CheckEndParams()
-				|| capture_level > 0 || template_level > 0 )
+				&& (CheckEndParams() || capture_level > 0 || template_level > 0) )
 				{
 					if (currtok.Text[ 0 ] == '<')
 						++ template_level;
@@ -2867,7 +2872,7 @@ CodePreprocessCond parse_preprocess_cond()
 
 	CodePreprocessCond
 	cond       = (CodePreprocessCond) make_code();
-	cond->Type = scast(CodeT, currtok.Type - (ETokType::Preprocess_If - ECode::Preprocess_If) );
+	cond->Type = scast(CodeT, currtok.Type - (s32(ETokType::Preprocess_If) - s32(ECode::Preprocess_If)) );
 	eat( currtok.Type );
 	// #<Conditional>
 
@@ -3240,6 +3245,8 @@ CodeVar parse_variable_declaration_list()
 				}
 				break;
 			}
+
+			eat(currtok.Type);
 
 			if ( specifiers )
 				specifiers.append( spec );
@@ -3640,6 +3647,13 @@ CodeEnum parse_enum( bool inplace_def )
 					{
 						eat( TokType::Comma );
 						// <Name> = <Expression> <Macro>,
+					}
+
+					// Consume inline comments
+					if ( currtok.Type == TokType::Comment && prevtok.Line == currtok.Line )
+					{
+						eat( TokType::Comment );
+						// <Name> = <Expression> <Macro>, // <Inline Comment>
 					}
 
 					entry.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)entry.Text;
@@ -4385,10 +4399,13 @@ CodeType parse_type( bool from_template, bool* typedef_is_function )
 	else if ( currtok.Type == TokType::Decl_Class || currtok.Type == TokType::Decl_Enum || currtok.Type == TokType::Decl_Struct
 			|| currtok.Type == TokType::Decl_Union )
 	{
+		Token fwd_key = currtok;
 		eat( currtok.Type );
 		// <Attributes> <Specifiers> <class, enum, struct, union>
 
-		name = parse_identifier();
+		name           = parse_identifier();
+		fwd_key.Length = sptr(name.Text + name.Length) - sptr(fwd_key.Text);
+		name           = fwd_key;
 
 		// name.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )name.Text;
 		// eat( TokType::Identifier );

@@ -155,7 +155,7 @@ struct Array
 	{
 		Header& header = * get_header();
 
-		if ( begin < 0 || end >= header.Num )
+		if ( begin < 0 || end > header.Num )
 			return false;
 
 		for ( sw idx = begin; idx < end; idx++ )
@@ -312,14 +312,12 @@ struct HashTable
 		Type Value;
 	};
 
+	static constexpr f32 CriticalLoadScale = 0.7f;
+
 	static
 	HashTable init( AllocatorInfo allocator )
 	{
-		HashTable<Type> result = { { nullptr }, { nullptr } };
-
-		result.Hashes  = Array<sw>::init( allocator );
-		result.Entries = Array<Entry>::init( allocator );
-
+		HashTable<Type> result = init_reserve(allocator, 8);
 		return result;
 	}
 
@@ -330,19 +328,17 @@ struct HashTable
 
 		result.Hashes  = Array<sw>::init_reserve( allocator, num );
 		result.Hashes.get_header()->Num = num;
+		result.Hashes.resize( num );
+		result.Hashes.fill( 0, num, -1);
 
 		result.Entries = Array<Entry>::init_reserve( allocator, num );
-
 		return result;
 	}
 
 	void clear( void )
 	{
-		for ( sw idx = 0; idx < Hashes.num(); idx++ )
-			Hashes[ idx ] = -1;
-
-		Hashes.clear();
 		Entries.clear();
+		Hashes.fill( 0, Hashes.num(), -1);
 	}
 
 	void destroy( void )
@@ -395,32 +391,19 @@ struct HashTable
 
 	void rehash( sw new_num )
 	{
-		sw idx;
 		sw last_added_index;
 
 		HashTable<Type> new_ht = init_reserve( Hashes.get_header()->Allocator, new_num );
-
-		Array<sw>::Header* hash_header = new_ht.Hashes.get_header();
-
-		for ( idx = 0; idx < new_ht.Hashes.num(); ++idx )
-			new_ht.Hashes[ idx ] = -1;
-
-		for ( idx = 0; idx < Entries.num(); ++idx )
+		for ( sw idx = 0; idx < Entries.num(); ++idx )
 		{
-			Entry& entry = Entries[ idx ];
-
 			FindResult find_result;
 
-			if ( new_ht.Hashes.num() == 0 )
-				new_ht.grow();
-
-			entry            = Entries[ idx ];
+			Entry& entry     = Entries[ idx ];
 			find_result      = new_ht.find( entry.Key );
 			last_added_index = new_ht.add_entry( entry.Key );
 
 			if ( find_result.PrevIndex < 0 )
 				new_ht.Hashes[ find_result.HashIndex ] = last_added_index;
-
 			else
 				new_ht.Entries[ find_result.PrevIndex ].Next = last_added_index;
 
@@ -478,11 +461,10 @@ struct HashTable
 		sw idx;
 		FindResult find_result;
 
-		if ( Hashes.num() == 0 )
+		if ( full() )
 			grow();
 
 		find_result = find( key );
-
 		if ( find_result.EntryIndex >= 0 )
 		{
 			idx = find_result.EntryIndex;
@@ -555,7 +537,9 @@ protected:
 
 	b32 full()
 	{
-		return 0.75f * Hashes.num() < Entries.num();
+		uw critical_load = uw( CriticalLoadScale * f32(Hashes.num()) );
+		b32 result = Entries.num() > critical_load;
+		return result;
 	}
 };
 

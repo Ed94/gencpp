@@ -28,8 +28,7 @@ bool Code::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -96,8 +95,7 @@ bool CodeBody::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -164,8 +162,7 @@ bool CodeAttributes::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -252,8 +249,7 @@ bool CodeComment::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -340,8 +336,7 @@ bool CodeConstructor::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -428,8 +423,7 @@ bool CodeClass::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -496,8 +490,7 @@ bool CodeDefine::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -584,8 +577,7 @@ bool CodeDestructor::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -672,8 +664,7 @@ bool CodeEnum::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -760,8 +751,7 @@ bool CodeExec::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -848,8 +838,7 @@ bool CodeExtern::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -936,8 +925,7 @@ bool CodeFriend::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1024,8 +1012,7 @@ bool CodeFn::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1112,8 +1099,7 @@ bool CodeInclude::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1200,8 +1186,7 @@ bool CodeModule::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1288,8 +1273,7 @@ bool CodeNS::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1376,8 +1360,7 @@ bool CodeOperator::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1464,8 +1447,7 @@ bool CodeOpCast::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1552,8 +1534,7 @@ bool CodeParam::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1620,8 +1601,7 @@ bool CodePragma::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1708,8 +1688,7 @@ bool CodePreprocessCond::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1796,8 +1775,7 @@ bool CodeSpecifiers::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1864,8 +1842,7 @@ bool CodeStruct::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -1932,8 +1909,7 @@ bool CodeTemplate::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -2020,8 +1996,7 @@ bool CodeType::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -2108,8 +2083,7 @@ bool CodeTypedef::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -2196,8 +2170,7 @@ bool CodeUnion::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -2284,8 +2257,7 @@ bool CodeUsing::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }
@@ -2372,8 +2344,7 @@ bool CodeVar::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
 	{
-		log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return false;
+		return rcast( AST*, ast ) == other.ast;
 	}
 	return rcast( AST*, ast )->is_equal( other.ast );
 }

@@ -139,7 +139,7 @@ void CodeConstructor::to_string_fwd( String& result )
 	if ( ast->InlineCmt )
 		result.append_fmt( "; // %S\n", ast->InlineCmt->Content );
 	else
-		result.append( ";" );
+		result.append( ";\n" );
 }
 
 String CodeClass::to_string()
@@ -183,7 +183,7 @@ void CodeClass::to_string_def( String& result )
 		while ( interface )
 		{
 			result.append_fmt( ", %S", interface.to_string() );
-			interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
+			interface = interface->Next ? interface->Next->cast< CodeType >() : CodeType { nullptr };
 		}
 	}
 	else if ( ast->Name )
@@ -480,6 +480,7 @@ void CodeFn::to_string_def( String& result )
 	if ( ast->Attributes )
 		result.append_fmt( " %S ", ast->Attributes.to_string() );
 
+	b32 prefix_specs = false;
 	if ( ast->Specs )
 	{
 		for ( SpecifierT spec : ast->Specs )
@@ -488,11 +489,13 @@ void CodeFn::to_string_def( String& result )
 			{
 				StrC spec_str = ESpecifier::to_str( spec );
 				result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+
+				prefix_specs = true;
 			}
 		}
 	}
 
-	if ( ast->Attributes || ast->Specs )
+	if ( ast->Attributes || prefix_specs )
 		result.append( "\n" );
 
 	if ( ast->ReturnType )
@@ -530,19 +533,22 @@ void CodeFn::to_string_fwd( String& result )
 	if ( ast->Attributes )
 		result.append_fmt( "%S ", ast->Attributes.to_string() );
 
+	b32 prefix_specs = false;
 	if ( ast->Specs )
 	{
 		for ( SpecifierT spec : ast->Specs )
 		{
-			if ( ESpecifier::is_trailing( spec ) && ! (spec != ESpecifier::Pure) )
+			if ( ! ESpecifier::is_trailing( spec ) || ! (spec != ESpecifier::Pure) )
 			{
 				StrC spec_str = ESpecifier::to_str( spec );
 				result.append_fmt( " %.*s", spec_str.Len, spec_str.Ptr );
+
+				prefix_specs = true;
 			}
 		}
 	}
 
-	if ( ast->Attributes || ast->Specs )
+	if ( ast->Attributes || prefix_specs )
 	{
 		result.append("\n" );
 	}
@@ -571,7 +577,7 @@ void CodeFn::to_string_fwd( String& result )
 		}
 	}
 
-	if ( ast->Specs.has( ESpecifier::Pure ) >= 0 )
+	if ( ast->Specs && ast->Specs.has( ESpecifier::Pure ) >= 0 )
 		result.append( " = 0;" );
 	else if (ast->Body)
 		result.append_fmt( " = %S;", ast->Body.to_string() );
@@ -983,7 +989,7 @@ void CodeStruct::to_string_def( String& result )
 		while ( interface )
 		{
 			result.append_fmt( ", %S", interface.to_string() );
-			interface = interface->Next ? interface->Next->cast< CodeType >() : Code { nullptr };
+			interface = interface->Next ? interface->Next->cast< CodeType >() : CodeType { nullptr };
 		}
 	}
 	else if ( ast->Name )
@@ -1247,7 +1253,7 @@ void CodeVar::to_string( String& result )
 
 		result.append( ast->Name );
 
-		if ( ast->ValueType->ArrExpr )
+		if ( ast->ValueType && ast->ValueType->ArrExpr )
 		{
 			result.append_fmt( "[ %S ]", ast->ValueType->ArrExpr.to_string() );
 

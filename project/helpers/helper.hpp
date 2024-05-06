@@ -360,10 +360,9 @@ CodeBody gen_ast_inlines()
 		{
 			if ( ast == nullptr || other.ast == nullptr )
 			{
-				log_failure("Code::is_equal: Cannot compare code, AST is null!");
-				return false;
+				// Just check if they're both null.
+				return rcast(AST*, ast) == other.ast;
 			}
-
 			return rcast(AST*, ast)->is_equal( other.ast );
 		}
 		bool <typename>::is_valid()

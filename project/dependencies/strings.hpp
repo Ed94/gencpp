@@ -11,14 +11,12 @@ struct StrC
 	sw          Len;
 	char const* Ptr;
 
-	operator char const* () const
-	{
-		return Ptr;
-	}
+	operator char const* ()            const { return Ptr; }
+	char const& operator[]( sw index ) const { return Ptr[index]; }
 };
 
-#define cast_to_strc( str ) * rcast( StrC*, str - sizeof(sw) )
-#define txt( text ) StrC { sizeof( text ) - 1, text }
+#define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(sw) )
+#define txt( text ) StrC { sizeof( text ) - 1, ( text ) }
 
 StrC to_str( char const* str )
 {
@@ -94,6 +92,19 @@ struct String
 
 		for ( sw idx = 0; idx < lhs.length(); ++idx )
 			if ( lhs[ idx ] != rhs[ idx ] )
+				return false;
+
+		return true;
+	}
+
+	static
+	bool are_equal( String lhs, StrC rhs )
+	{
+		if ( lhs.length() != (rhs.Len) )
+			return false;
+
+		for ( sw idx = 0; idx < lhs.length(); ++idx )
+			if ( lhs[idx] != rhs[idx] )
 				return false;
 
 		return true;
@@ -195,6 +206,24 @@ struct String
 		header = * rcast( Header const*, Data - sizeof( Header ));
 
 		return header.Length;
+	}
+
+	b32 starts_with( StrC substring ) const
+	{
+		if (substring.Len > length())
+			return false;
+
+		b32 result = str_compare(Data, substring.Ptr, substring.Len ) == 0;
+		return result;
+	}
+
+	b32 starts_with( String substring ) const
+	{
+		if (substring.length() > length())
+			return false;
+
+		b32 result = str_compare(Data, substring, substring.length() - 1 ) == 0;
+		return result;
 	}
 
 	void skip_line()

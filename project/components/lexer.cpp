@@ -159,7 +159,7 @@ struct TokArray
 	}
 };
 
-global Arena_128KB     defines_map_arena;
+global Arena_256KB     defines_map_arena;
 global HashTable<StrC> defines;
 global Array<Token>    Tokens;
 
@@ -374,6 +374,16 @@ s32 lex_preprocessor_directive(
 		move_forward();
 		preprocess_content.Length++;
 
+		if ( current == '\r' && scanner[1] == '\n' )
+		{
+			move_forward();
+			move_forward();
+		}
+		else if ( current == '\n' )
+		{
+			move_forward();
+		}
+
 		Tokens.append( preprocess_content );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
@@ -576,7 +586,7 @@ TokArray lex( StrC content )
 	{
 		s32         length  = 0;
 		char const* scanner = entry.Data;
-		while ( entry.length() > length && char_is_alphanumeric( *scanner ) || *scanner == '_' )
+		while ( entry.length() > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
 		{
 			scanner++;
 			length ++;

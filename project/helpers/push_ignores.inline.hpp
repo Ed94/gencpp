@@ -1,6 +1,7 @@
 #if __clang__
 #	pragma clang diagnostic push
 #	pragma clang diagnostic ignored "-Wunused-const-variable"
+#	pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #	pragma clang diagnostic ignored "-Wswitch"
 #	pragma clang diagnostic ignored "-Wunused-variable"
 #   pragma clang diagnostic ignored "-Wunknown-pragmas"
