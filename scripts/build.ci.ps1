@@ -2,13 +2,14 @@
 # It will most likely need a partial rewrite to segment the build process into separate script invocations based on the OS.
 # That or just rewrite it in an sh script and call it a day.
 
-Import-Module ./helpers/target_arch.psm1
 $target_arch        = Join-Path $PSScriptRoot 'helpers/target_arch.psm1'
 $devshell           = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 $format_cpp	        = Join-Path $PSScriptRoot 'helpers/format_cpp.psm1'
 $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
+
+Import-Module $target_arch
 
 function Get-ScriptRepoRoot {
     $currentPath = $PSScriptRoot
