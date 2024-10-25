@@ -374,7 +374,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 
 	uw size_req = str_length + sizeof(String::Header) + sizeof(char*);
 
-	if ( last->TotalUsed + size_req > last->TotalSize )
+	if ( last->TotalUsed + sw(size_req) > last->TotalSize )
 	{
 		Arena new_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 

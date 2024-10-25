@@ -71,6 +71,7 @@ enum class ModuleFlag : u32
 	Invalid,
 };
 
+inline
 StrC to_str( ModuleFlag flag )
 {
 	local_persist
@@ -86,6 +87,7 @@ StrC to_str( ModuleFlag flag )
 	return lookup[ (u32)flag ];
 }
 
+inline
 ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
 {
 	return (ModuleFlag)( (u32)A | (u32)B );

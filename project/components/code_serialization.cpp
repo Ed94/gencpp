@@ -480,7 +480,7 @@ void CodeFn::to_string_def( String& result )
 	if ( ast->Attributes )
 		result.append_fmt( " %S ", ast->Attributes.to_string() );
 
-	b32 prefix_specs = false;
+	bool prefix_specs = false;
 	if ( ast->Specs )
 	{
 		for ( SpecifierT spec : ast->Specs )
@@ -847,6 +847,11 @@ void CodeParam::to_string( String& result )
 	else if ( ast->ValueType )
 		result.append_fmt( " %S", ast->ValueType.to_string() );
 
+	if ( ast->PostNameMacro )
+	{
+		result.append_fmt(" %S", ast->PostNameMacro.to_string() );
+	}
+
 	if ( ast->Value )
 		result.append_fmt( " = %S", ast->Value.to_string() );
 
@@ -1096,7 +1101,7 @@ String CodeType::to_string()
 
 void CodeType::to_string( String& result )
 {
-	#if GEN_USE_NEW_TYPENAME_PARSING
+	#if defined(GEN_USE_NEW_TYPENAME_PARSING)
 		if ( ast->ReturnType && ast->Params )
 		{
 			if ( ast->Attributes )
@@ -1253,7 +1258,7 @@ void CodeVar::to_string( String& result )
 
 		result.append( ast->Name );
 
-		if ( ast->ValueType && ast->ValueType->ArrExpr )
+		if ( ast->ValueType->ArrExpr )
 		{
 			result.append_fmt( "[ %S ]", ast->ValueType->ArrExpr.to_string() );
 
@@ -1266,11 +1271,19 @@ void CodeVar::to_string( String& result )
 		}
 
 		if ( ast->Value )
-			result.append_fmt( " = %S", ast->Value.to_string() );
+		{
+			if ( ast->VarConstructorInit )
+				result.append_fmt( "( %S ", ast->Value.to_string() );
+			else
+				result.append_fmt( " = %S", ast->Value.to_string() );
+		}
 
 		// Keep the chain going...
 		if ( ast->NextVar )
 			result.append_fmt( ", %S", ast->NextVar.to_string() );
+
+		if ( ast->VarConstructorInit )
+			result.append( " )");
 
 		return;
 	}
@@ -1304,10 +1317,18 @@ void CodeVar::to_string( String& result )
 			result.append_fmt( " : %S", ast->BitfieldSize.to_string() );
 
 		if ( ast->Value )
-			result.append_fmt( " = %S", ast->Value.to_string() );
+		{
+			if ( ast->VarConstructorInit )
+				result.append_fmt( "( %S ", ast->Value.to_string() );
+			else
+				result.append_fmt( " = %S", ast->Value.to_string() );
+		}
 
 		if ( ast->NextVar )
 			result.append_fmt( ", %S", ast->NextVar.to_string() );
+
+		if ( ast->VarConstructorInit )
+			result.append( " )");
 
 		if ( ast->InlineCmt )
 			result.append_fmt(";  %S", ast->InlineCmt->Content);
@@ -1336,10 +1357,18 @@ void CodeVar::to_string( String& result )
 		result.append_fmt( "%S %S", ast->ValueType.to_string(), ast->Name );
 
 	if ( ast->Value )
-		result.append_fmt( " = %S", ast->Value.to_string() );
+	{
+		if ( ast->VarConstructorInit )
+			result.append_fmt( "( %S ", ast->Value.to_string() );
+		else
+			result.append_fmt( " = %S", ast->Value.to_string() );
+	}
 
 	if ( ast->NextVar )
 		result.append_fmt( ", %S", ast->NextVar.to_string() );
+
+	if ( ast->VarConstructorInit )
+		result.append( " )");
 
 	result.append( ";" );
 

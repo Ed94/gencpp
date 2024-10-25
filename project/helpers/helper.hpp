@@ -35,6 +35,7 @@ CodeBody gen_ecode( char const* path )
 #pragma push_macro("local_persist")
 #undef local_persist
 	CodeFn to_str = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
+		inline
 		StrC to_str( Type type )
 		{
 			local_persist
@@ -89,6 +90,7 @@ CodeBody gen_eoperator( char const* path )
 #pragma push_macro("local_persist")
 #undef local_persist
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
+		inline
 		StrC to_str( Type op )
 		{
 			local_persist
@@ -142,6 +144,7 @@ CodeBody gen_especifier( char const* path )
 	)));
 
 	CodeFn is_trailing = parse_function(token_fmt("specifier", (StrC)to_str_entries, stringize(
+		inline
 		bool is_trailing( Type specifier )
 		{
 			return specifier > Virtual;
@@ -159,6 +162,7 @@ CodeBody gen_especifier( char const* path )
 #undef forceinline
 #undef neverinline
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
+		inline
 		StrC to_str( Type type )
 		{
 			local_persist
@@ -171,6 +175,7 @@ CodeBody gen_especifier( char const* path )
 	)));
 
 	CodeFn to_type = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
+		inline
 		Type to_type( StrC str )
 		{
 			local_persist
@@ -282,6 +287,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #undef do_once_start
 #undef do_once_end
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, "attribute_toks", (StrC)to_str_attributes, stringize(
+		inline
 		StrC to_str( Type type )
 		{
 			local_persist
@@ -295,6 +301,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	)));
 
 	CodeFn to_type = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
+		inline
 		Type to_type( StrC str )
 		{
 			local_persist
@@ -339,6 +346,7 @@ CodeBody gen_ast_inlines()
 #undef log_failure
 	char const* code_impl_tmpl = stringize(
 		\n
+		inline
 		char const* <typename>::debug_str()
 		{
 			if ( ast == nullptr )
@@ -346,6 +354,7 @@ CodeBody gen_ast_inlines()
 
 			return rcast(AST*, ast)->debug_str();
 		}
+		inline
 		Code <typename>::duplicate()
 		{
 			if ( ast == nullptr )
@@ -356,19 +365,23 @@ CodeBody gen_ast_inlines()
 
 			return { rcast(AST*, ast)->duplicate() };
 		}
+		inline
 		bool <typename>::is_equal( Code other )
 		{
 			if ( ast == nullptr || other.ast == nullptr )
 			{
 				// Just check if they're both null.
-				return rcast(AST*, ast) == other.ast;
+				log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
+				return false;
 			}
 			return rcast(AST*, ast)->is_equal( other.ast );
 		}
+		inline
 		bool <typename>::is_valid()
 		{
 			return (AST*) ast != nullptr && rcast( AST*, ast)->Type != CodeT::Invalid;
 		}
+		inline
 		void <typename>::set_global()
 		{
 			if ( ast == nullptr )
@@ -379,6 +392,7 @@ CodeBody gen_ast_inlines()
 
 			rcast(AST*, ast)->Parent = Code::Global.ast;
 		}
+		inline
 		<typename>& <typename>::operator =( Code other )
 		{
 			if ( other.ast && other->Parent )
@@ -390,14 +404,17 @@ CodeBody gen_ast_inlines()
 			ast = rcast( decltype(ast), other.ast );
 			return *this;
 		}
+		inline
 		bool <typename>::operator ==( Code other )
 		{
 			return (AST*) ast == other.ast;
 		}
+		inline
 		bool <typename>::operator !=( Code other )
 		{
 			return (AST*) ast != other.ast;
 		}
+		inline
 		<typename>::operator bool()
 		{
 			return ast != nullptr;
@@ -405,14 +422,17 @@ CodeBody gen_ast_inlines()
 	);
 
 	char const* codetype_impl_tmpl = stringize(
+		inline
 		AST* Code<typename>::raw()
 		{
 			return rcast( AST*, ast );
 		}
+		inline
 		Code<typename>::operator Code()
 		{
 			return *rcast( Code*, this );
 		}
+		inline
 		AST_<typename>* Code<typename>::operator->()
 		{
 			if ( ast == nullptr )
@@ -480,11 +500,12 @@ CodeBody gen_ast_inlines()
 	impl_code_var.     append( parse_global_body( token_fmt( "typename", StrC name(Var),            codetype_impl_tmpl )));
 
 	char const* cast_tmpl = stringize(
+		inline
 		AST::operator Code<typename>()
 		{
 			return { rcast( AST_<typename>*, this ) };
 		}
-
+		inline
 		Code::operator Code<typename>() const
 		{
 			return { (AST_<typename>*) ast };

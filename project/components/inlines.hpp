@@ -3,6 +3,7 @@
 #include "interface.hpp"
 #endif
 
+inline
 void AST::append( AST* other )
 {
 	if ( other->Parent )
@@ -27,6 +28,7 @@ void AST::append( AST* other )
 	NumEntries++;
 }
 
+inline
 Code& AST::entry( u32 idx )
 {
 	AST** current = & Front;
@@ -42,21 +44,25 @@ Code& AST::entry( u32 idx )
 	return * rcast( Code*, current);
 }
 
+inline
 bool AST::has_entries()
 {
-	return NumEntries;
+	return NumEntries > 0;
 }
 
+inline
 char const* AST::type_str()
 {
 	return ECode::to_str( Type );
 }
 
+inline
 AST::operator Code()
 {
 	return { this };
 }
 
+inline
 Code& Code::operator ++()
 {
 	if ( ast )
@@ -65,6 +71,7 @@ Code& Code::operator ++()
 	return *this;
 }
 
+inline
 void CodeClass::add_interface( CodeType type )
 {
 	CodeType possible_slot = ast->ParentType;
@@ -84,6 +91,7 @@ void CodeClass::add_interface( CodeType type )
 	possible_slot.ast = type.ast;
 }
 
+inline
 void CodeParam::append( CodeParam other )
 {
 	AST* self  = (AST*) ast;
@@ -107,6 +115,7 @@ void CodeParam::append( CodeParam other )
 	self->NumEntries++;
 }
 
+inline
 CodeParam CodeParam::get( s32 idx )
 {
 	CodeParam param = *this;
@@ -122,17 +131,20 @@ CodeParam CodeParam::get( s32 idx )
 	return { nullptr };
 }
 
+inline
 bool CodeParam::has_entries()
 {
 	return ast->NumEntries > 0;
 }
 
+inline
 CodeParam& CodeParam::operator ++()
 {
 	ast = ast->Next.ast;
 	return * this;
 }
 
+inline
 void CodeStruct::add_interface( CodeType type )
 {
 	CodeType possible_slot = ast->ParentType;
@@ -152,6 +164,7 @@ void CodeStruct::add_interface( CodeType type )
 	possible_slot.ast = type.ast;
 }
 
+inline
 CodeBody def_body( CodeT type )
 {
 	switch ( type )
@@ -179,6 +192,7 @@ CodeBody def_body( CodeT type )
 	return (CodeBody)result;
 }
 
+inline
 StrC token_fmt_impl( sw num, ... )
 {
 	local_persist thread_local

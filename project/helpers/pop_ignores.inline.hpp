@@ -1,7 +1,7 @@
-#if __clang__
+#ifdef __clang__
 #	pragma clang diagnostic pop
 #endif
 
-#if __GNUC__
+#ifdef __GNUC__
 #	pragma GCC diagnostic pop
 #endif

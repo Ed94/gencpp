@@ -445,10 +445,14 @@ struct Arena
 		return alignment_offset;
 	}
 
+// This id is defined by Unreal for asserts
+#pragma push_macro("check")
+#undef check
 	void check()
 	{
 		GEN_ASSERT( TempCount == 0 );
 	}
+#pragma pop_macro("check")
 
 	void free()
 	{

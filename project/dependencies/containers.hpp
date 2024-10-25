@@ -50,6 +50,11 @@ struct Array
 		return 2 * value + 8;
 	}
 
+	bool append( Array other )
+	{
+		return append( other, other.num() );
+	}
+
 	bool append( Type value )
 	{
 		Header* header = get_header();
@@ -158,7 +163,7 @@ struct Array
 		if ( begin < 0 || end > header.Num )
 			return false;
 
-		for ( sw idx = begin; idx < end; idx++ )
+		for ( sw idx = sw(begin); idx < sw(end); idx++ )
 		{
 			Data[ idx ] = value;
 		}
@@ -365,7 +370,7 @@ struct HashTable
 	{
 		GEN_ASSERT_NOT_NULL( map_proc );
 
-		for ( sw idx = 0; idx < Entries.num(); idx++ )
+		for ( sw idx = 0; idx < sw(Entries.num()); ++idx )
 		{
 			map_proc( Entries[ idx ].Key, Entries[ idx ].Value );
 		}
@@ -377,7 +382,7 @@ struct HashTable
 	{
 		GEN_ASSERT_NOT_NULL( map_proc );
 
-		for ( sw idx = 0; idx < Entries.num(); idx++ )
+		for ( sw idx = 0; idx < sw(Entries.num()); ++idx )
 		{
 			map_proc( Entries[ idx ].Key, & Entries[ idx ].Value );
 		}

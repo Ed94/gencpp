@@ -124,7 +124,7 @@ bool String::make_space_for( char const* str, sw add_len )
 
 		Data = rcast( char*, header + 1 );
 
-		return str;
+		return true;
 	}
 }
 #pragma endregion String

@@ -481,7 +481,7 @@ Code parse_array_decl()
 
 	if ( check( TokType::Operator ) && currtok.Text[0] == '[' && currtok.Text[1] == ']' )
 	{
-		Code array_expr = untyped_str( get_cached_string(txt(" ")) );
+		Code array_expr = untyped_str( currtok );
 		eat( TokType::Operator );
 		// []
 
@@ -552,44 +552,6 @@ Code parse_array_decl()
 
 	Context.pop();
 	return { nullptr };
-}
-
-internal inline
-Code parse_assignment_expression()
-{
-	Code expr = { nullptr };
-
-	eat( TokType::Operator );
-	// <Attributes> <Specifiers> <ValueType> <Name> =
-
-	Token expr_tok = currtok;
-
-	if ( currtok.Type == TokType::Statement_End && currtok.Type != TokType::Comma )
-	{
-		log_failure( "Expected expression after assignment operator\n%s", Context.to_string() );
-		Context.pop();
-		return CodeInvalid;
-	}
-
-	s32 level = 0;
-	while ( left && currtok.Type != TokType::Statement_End && (currtok.Type != TokType::Comma || level > 0) )
-	{
-		if (currtok.Type == TokType::BraceCurly_Open )
-			level++;
-		if (currtok.Type == TokType::BraceCurly_Close )
-			level--;
-		if (currtok.Type == TokType::Capture_Start)
-			level++;
-		else if (currtok.Type == TokType::Capture_End)
-			level--;
-
-		eat( currtok.Type );
-	}
-
-	expr_tok.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )expr_tok.Text - 1;
-	expr            = untyped_str( expr_tok );
-	// = <Expression>
-	return expr;
 }
 
 internal inline
@@ -1349,17 +1311,14 @@ CodeDefine parse_define()
 	eat( TokType::Identifier );
 	// #define <Name>
 
-	// Defines don't necessarily need content.
-#if 0
 	if ( ! check( TokType::Preprocess_Content ))
 	{
 		log_failure( "Error, expected content after #define %s\n%s", define->Name, Context.to_string() );
 		Context.pop();
 		return CodeInvalid;
 	}
-#endif
 
-	if ( check(TokType::Preprocess_Content) && currtok.Length != 0 )
+	if ( currtok.Length == 0 )
 	{
 		define->Content = get_cached_string( currtok );
 		eat( TokType::Preprocess_Content );
@@ -1375,6 +1334,44 @@ CodeDefine parse_define()
 
 	Context.pop();
 	return define;
+}
+
+internal inline
+Code parse_assignment_expression()
+{
+	Code expr = { nullptr };
+
+	eat( TokType::Operator );
+	// <Attributes> <Specifiers> <ValueType> <Name> =
+
+	Token expr_tok = currtok;
+
+	if ( currtok.Type == TokType::Statement_End && currtok.Type != TokType::Comma )
+	{
+		log_failure( "Expected expression after assignment operator\n%s", Context.to_string() );
+		Context.pop();
+		return CodeInvalid;
+	}
+
+	s32 level = 0;
+	while ( left && currtok.Type != TokType::Statement_End && (currtok.Type != TokType::Comma || level > 0) )
+	{
+		if (currtok.Type == TokType::BraceCurly_Open )
+			level++;
+		if (currtok.Type == TokType::BraceCurly_Close )
+			level--;
+		if (currtok.Type == TokType::Capture_Start)
+			level++;
+		else if (currtok.Type == TokType::Capture_End)
+			level--;
+
+		eat( currtok.Type );
+	}
+
+	expr_tok.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )expr_tok.Text - 1;
+	expr            = untyped_str( expr_tok );
+	// = <Expression>
+	return expr;
 }
 
 internal inline
@@ -1407,8 +1404,6 @@ Code parse_forward_or_definition( TokType which, bool is_inplace )
 
 			return CodeInvalid;
 	}
-
-	return CodeInvalid;
 }
 
 // Function parsing is handled in multiple places because its initial signature is shared with variable parsing
@@ -1755,7 +1750,6 @@ CodeBody parse_global_nspace( CodeT which )
 			case TokType::Spec_Internal_Linkage:
 			case TokType::Spec_NeverInline:
 			case TokType::Spec_Static:
-			case TokType::Spec_ThreadLocal:
 			{
 				SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 				s32        NumSpecifiers = 0;
@@ -1779,7 +1773,6 @@ CodeBody parse_global_nspace( CodeT which )
 						case ESpecifier::NeverInline:
 						case ESpecifier::Static:
 						case ESpecifier::Volatile:
-						case ESpecifier::Thread_Local:
 						break;
 
 						case ESpecifier::Consteval:
@@ -2300,7 +2293,7 @@ CodeOperator parse_operator_after_ret_type(
 		case '<':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = LesserEqual;
+				op = LEqual;
 
 			else if ( currtok.Text[1] == '<' )
 			{
@@ -2540,7 +2533,14 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		Token name = parse_identifier();
 		Context.Scope->Name = name;
 
-		if ( check( TokType::Capture_Start) )
+		bool detected_capture = check( TokType::Capture_Start );
+
+		// Check three tokens ahead to make sure that were not dealing with a constructor initialization...
+		//                  (         350.0f    ,         <---  Could be the scenario
+		// Example : <Capture_Start> <Value> <Comma>
+		//                 idx         +1      +2
+		bool detected_comma = Context.Tokens.Arr[ Context.Tokens.Idx + 2 ].Type == TokType::Comma;
+		if ( detected_capture && ! detected_comma )
 		{
 			// Dealing with a function
 			result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name );
@@ -2625,10 +2625,11 @@ CodeParam parse_params( bool use_template_capture )
 		return { nullptr };
 	}
 
-	Code     macro = { nullptr };
-	CodeType type  = { nullptr };
-	Code     value = { nullptr };
-	Token    name  = NullToken;
+	Code     macro           = { nullptr };
+	CodeType type            = { nullptr };
+	Code     value           = { nullptr };
+	Token    name            = NullToken;
+	Code     post_name_macro = { nullptr };
 
 	if ( check( TokType::Varadic_Argument ) )
 	{
@@ -2670,6 +2671,15 @@ CodeParam parse_params( bool use_template_capture )
 			// ( <Macro> <ValueType> <Name>
 		}
 
+		// Unreal has yet another type of macro:
+		// template<class T UE_REQUIRES(TPointerIsConvertibleFromTo<T, UInterface>::Value)>
+		// class T ... and then ^this^ UE_REQUIRES shows up
+		// So we need to consume that.
+		if ( check( TokType::Preprocess_Macro ))
+		{
+			post_name_macro = parse_simple_preprocess( ETokType::Preprocess_Macro );
+		}
+
 		// In template captures you can have a typename have direct assignment without a name
 		// typename = typename ...
 		// Which would result in a static value type from a struct expansion (traditionally)
@@ -2689,7 +2699,7 @@ CodeParam parse_params( bool use_template_capture )
 
 			s32 capture_level  = 0;
 			s32 template_level = 0;
-			while ( left && (currtok.Type != TokType::Comma) && template_level >= 0 && (CheckEndParams() || capture_level > 0 || template_level > 0) )
+			while ( left && ( currtok.Type != TokType::Comma ) && template_level >= 0 && CheckEndParams() || capture_level > 0 || template_level > 0 )
 			{
 				if (currtok.Text[ 0 ] == '<')
 					++ template_level;
@@ -2773,6 +2783,15 @@ CodeParam parse_params( bool use_template_capture )
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name>
 			}
 
+			// Unreal has yet another type of macro:
+			// template<class T UE_REQUIRES(TPointerIsConvertibleFromTo<T, UInterface>::Value)>
+			// class T ... and then ^this^ UE_REQUIRES shows up
+			// So we need to consume that.
+			if ( check( TokType::Preprocess_Macro ))
+			{
+				post_name_macro = parse_simple_preprocess( ETokType::Preprocess_Macro );
+			}
+
 			// In template captures you can have a typename have direct assignment without a name
 			// typename = typename ...
 			// Which would result in a static value type from a struct expansion (traditionally)
@@ -2795,7 +2814,7 @@ CodeParam parse_params( bool use_template_capture )
 				while ( left
 				&& currtok.Type != TokType::Comma
 				&& template_level >= 0
-				&& (CheckEndParams() || capture_level > 0 || template_level > 0) )
+				&& CheckEndParams() || capture_level > 0 || template_level > 0 )
 				{
 					if (currtok.Text[ 0 ] == '<')
 						++ template_level;
@@ -2829,7 +2848,8 @@ CodeParam parse_params( bool use_template_capture )
 		if ( name.Length > 0 )
 			param->Name = get_cached_string( name );
 
-		param->ValueType = type;
+		param->PostNameMacro = post_name_macro;
+		param->ValueType     = type;
 
 		if ( value )
 			param->Value = value;
@@ -2872,7 +2892,7 @@ CodePreprocessCond parse_preprocess_cond()
 
 	CodePreprocessCond
 	cond       = (CodePreprocessCond) make_code();
-	cond->Type = scast(CodeT, currtok.Type - (s32(ETokType::Preprocess_If) - s32(ECode::Preprocess_If)) );
+	cond->Type = scast(CodeT, currtok.Type - ( TokType::Preprocess_If - ECode::Preprocess_If ) );
 	eat( currtok.Type );
 	// #<Conditional>
 
@@ -3067,6 +3087,8 @@ CodeVar parse_variable_after_name(
 	Code expr          = { nullptr };
 	Code bitfield_expr = { nullptr };
 
+	b32 using_constructor_initializer = false;
+
 	if ( bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
 	{
 		// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>
@@ -3096,6 +3118,33 @@ CodeVar parse_variable_after_name(
 		expr_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_tok.Text;
 		expr            = untyped_str( expr_tok );
 		// <Attributes> <Specifiers> <ValueType> <Name> = { <Expression> }
+	}
+
+	if ( currtok.Type == TokType::Capture_Start )
+	{
+		eat( TokType:: Capture_Start);
+		// <Attributes> <Specifiers> <ValueType> <Name> (
+
+		Token expr_token = currtok;
+
+		using_constructor_initializer = true;
+
+		s32 level = 0;
+		while ( left && ( currtok.Type != TokType::Capture_End || level > 0 ) )
+		{
+			if ( currtok.Type == TokType::Capture_Start )
+				level++;
+
+			else if ( currtok.Type == TokType::Capture_End && level > 0 )
+				level--;
+
+			eat( currtok.Type );
+		}
+
+		expr_token.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_token.Text;
+		expr              = untyped_str( expr_token );
+		eat( TokType::Capture_End );
+		// <Attributes> <Specifiers> <ValueType> <Name> ( <Expression> )
 	}
 
 	if ( currtok.Type == TokType::Assign_Classifer )
@@ -3192,6 +3241,8 @@ CodeVar parse_variable_after_name(
 		result->NextVar->Parent = result;
 	}
 
+	result->VarConstructorInit = using_constructor_initializer;
+
 	Context.pop();
 	return result;
 }
@@ -3246,7 +3297,7 @@ CodeVar parse_variable_declaration_list()
 				break;
 			}
 
-			eat(currtok.Type);
+			// eat(currtok.Type);
 
 			if ( specifiers )
 				specifiers.append( spec );
@@ -3650,11 +3701,11 @@ CodeEnum parse_enum( bool inplace_def )
 					}
 
 					// Consume inline comments
-					if ( currtok.Type == TokType::Comment && prevtok.Line == currtok.Line )
-					{
-						eat( TokType::Comment );
+					// if ( currtok.Type == TokType::Comment && prevtok.Line == currtok.Line )
+					// {
+						// eat( TokType::Comment );
 						// <Name> = <Expression> <Macro>, // <Inline Comment>
-					}
+					// }
 
 					entry.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)entry.Text;
 
@@ -4399,13 +4450,10 @@ CodeType parse_type( bool from_template, bool* typedef_is_function )
 	else if ( currtok.Type == TokType::Decl_Class || currtok.Type == TokType::Decl_Enum || currtok.Type == TokType::Decl_Struct
 			|| currtok.Type == TokType::Decl_Union )
 	{
-		Token fwd_key = currtok;
 		eat( currtok.Type );
 		// <Attributes> <Specifiers> <class, enum, struct, union>
 
-		name           = parse_identifier();
-		fwd_key.Length = sptr(name.Text + name.Length) - sptr(fwd_key.Text);
-		name           = fwd_key;
+		name = parse_identifier();
 
 		// name.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )name.Text;
 		// eat( TokType::Identifier );

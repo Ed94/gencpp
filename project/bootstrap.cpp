@@ -283,6 +283,7 @@ int gen_main()
 	}
 
 	// gen_scanner.cpp
+	if (0)
 	{
 		Code parsing = scan_file( "dependencies/parsing.cpp" );
 		Code scanner = scan_file( "auxillary/scanner.cpp" );

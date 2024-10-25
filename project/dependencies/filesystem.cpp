@@ -594,7 +594,7 @@ internal GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 	{
 		Array<u8> arr = { d->buf };
 
-		if ( arr.get_header()->Capacity < new_cap )
+		if ( arr.get_header()->Capacity < uw(new_cap) )
 		{
 			if ( ! arr.grow( ( s64 )( new_cap ) ) )
 				return false;

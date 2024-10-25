@@ -339,13 +339,14 @@ struct AST
 			};
 			union {
 				AST*  ArrExpr;          // Typename
-				AST*  Body;             // Class, Constructr, Destructor, Enum, Friend, Function, Namespace, Struct, Union
+				AST*  Body;             // Class, Constructor, Destructor, Enum, Friend, Function, Namespace, Struct, Union
 				AST*  Declaration;      // Friend, Template
 				AST*  Value;            // Parameter, Variable
 			};
 			union {
 				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
 				AST*  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
+				AST*  PostNameMacro;     // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
@@ -375,6 +376,7 @@ struct AST
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
+		s32           VarConstructorInit; // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
 	};
 };
 
@@ -407,6 +409,7 @@ struct AST_POD
 			union {
 				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
 				AST*  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
+				AST*  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
@@ -436,6 +439,7 @@ struct AST_POD
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
+		s32           VarConstructorInit; // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
 	};
 };
 

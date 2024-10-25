@@ -5,7 +5,7 @@
 Builder Builder::open( char const* path )
 {
 	Builder result;
-	
+
 	FileError error = file_open_mode( & result.File, EFileMode_WRITE, path );
 	if ( error != EFileError_NONE )
 	{
@@ -48,7 +48,7 @@ void Builder::print_fmt( char const* fmt, ... )
 
 void Builder::write()
 {
-	bool result = file_write( & File, Buffer, Buffer.length() );
+	b32 result = file_write( & File, Buffer, Buffer.length() );
 
 	if ( result == false )
 		log_failure("gen::File::write - Failed to write to file: %s\n", file_name( & File ) );

@@ -644,7 +644,8 @@ struct AST_Param
 			CodeType  ValueType;
 			Code      Macro;
 			Code      Value;
-			char 	  _PAD_PROPERTIES_3_[ sizeof(AST*) ];
+			Code     PostNameMacro; // Thanks Unreal
+			// char     _PAD_PROPERTIES_3_[sizeof( AST* )];
 		};
 	};
 	CodeParam         Last;
@@ -1115,7 +1116,7 @@ struct AST_Var
 	StringCached           Name;
 	CodeT                  Type;
 	ModuleFlag             ModuleFlags;
-	char 			       _PAD_UNUSED_[ sizeof(u32) ];
+	s32                    VarConstructorInit;
 };
 static_assert( sizeof(AST_Var) == sizeof(AST), "ERROR: AST_Var is not the same size as AST");
 

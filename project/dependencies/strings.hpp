@@ -139,7 +139,7 @@ struct String
 
 			header.Length = curr_len + length;
 		}
-		return str;
+		return str != nullptr;
 	}
 
 	bool append( StrC str)
@@ -353,7 +353,7 @@ struct String
 
 	operator bool()
 	{
-		return Data;
+		return Data != nullptr;
 	}
 
 	operator char* ()

@@ -1,4 +1,4 @@
-#if __clang__
+#ifdef __clang__
 #	pragma clang diagnostic push
 #	pragma clang diagnostic ignored "-Wunused-const-variable"
 #	pragma clang diagnostic ignored "-Wunused-but-set-variable"
@@ -9,7 +9,7 @@
 #	pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
-#if __GNUC__
+#ifdef __GNUC__
 #	pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #	pragma GCC diagnostic ignored "-Wcomment"

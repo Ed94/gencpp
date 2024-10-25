@@ -63,7 +63,6 @@ extern CodeAttributes attrib_api_import;
 extern Code module_global_fragment;
 extern Code module_private_fragment;
 
-// Exposed, but this is really used for parsing.
 extern Code fmt_newline;
 
 extern CodePragma pragma_once;

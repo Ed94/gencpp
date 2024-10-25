@@ -13,6 +13,7 @@
 #define internal      static    // Internal linkage
 #define local_persist static    // Local Persisting variables
 
+#pragma region ForceInline_Definition
 #ifdef GEN_COMPILER_MSVC
 #	define forceinline __forceinline
 #	define neverinline __declspec( noinline )
@@ -31,18 +32,23 @@
 #	define forceinline
 #	define neverinline
 #endif
+#pragma endregion ForceInline_Definition
 
 // Bits
 
+#ifndef bit
 #define bit( Value )                             ( 1 << Value )
 #define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
+#endif
 
 // Casting
 
+#ifndef ccast
 #define ccast( Type, Value ) ( * const_cast< Type* >( & (Value) ) )
 #define pcast( Type, Value ) ( * reinterpret_cast< Type* >( & ( Value ) ) )
 #define rcast( Type, Value ) reinterpret_cast< Type >( Value )
 #define scast( Type, Value ) static_cast< Type >( Value )
+#endif
 
 // Num Arguments (Varadics)
 // #if defined(__GNUC__) || defined(__clang__)

@@ -586,7 +586,7 @@ TokArray lex( StrC content )
 	{
 		s32         length  = 0;
 		char const* scanner = entry.Data;
-		while ( entry.length() > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
+		while ( entry.length() > length && char_is_alphanumeric( *scanner ) || *scanner == '_' )
 		{
 			scanner++;
 			length ++;
@@ -1201,6 +1201,26 @@ TokArray lex( StrC content )
 				{
 					move_forward();
 					token.Length++;
+				}
+
+				// Handle number literal suffixes in a botched way
+				if (left && (
+					current == 'l' || current == 'L' ||  // long/long long
+					current == 'u' || current == 'U' ||  // unsigned
+					current == 'f' || current == 'F' ||  // float
+					current == 'i' || current == 'I' ||  // imaginary
+					current == 'z' || current == 'Z'))   // complex
+				{
+					char prev = current;
+					move_forward();
+					token.Length++;
+
+					// Handle 'll'/'LL' as a special case when we just processed an 'l'/'L'
+					if (left && (prev == 'l' || prev == 'L') && (current == 'l' || current == 'L'))
+					{
+						move_forward();
+						token.Length++;
+					}
 				}
 			}
 
