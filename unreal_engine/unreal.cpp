@@ -1,6 +1,6 @@
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
-#define GEN_EXPOSE_BACKEDN
+#define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
 
 #include "helpers/push_ignores.inline.hpp"
@@ -101,54 +101,6 @@ int gen_main()
 						}
 
 						macros.append(define);
-					}
-					break;
-
-					case Preprocess_Pragma:
-					{
-						macros.append(code);
-						continue;
-
-						local_persist bool found = false;
-						if (found)
-						{
-							macros.append(code);
-							continue;
-						}
-
-						if (code->Content.starts_with(txt("region ForceInline Definition")))
-						{
-							macros.append(code);
-							++ code;
-
-							CodeBody replacement = parse_global_body(StrC(txt(
-R"(#ifdef GEN_COMPILER_MSVC
-	#define FORCEINLINE __forceinline
-	#define neverinline __declspec( noinline )
-#elif defined( GEN_COMPILER_GCC )
-	#define FORCEINLINE inline __attribute__( ( __always_inline__ ) )
-	#define neverinline __attribute__( ( __noinline__ ) )
-#elif defined( GEN_COMPILER_CLANG )
-	#if __has_attribute( __always_inline__ )
-		#define FORCEINLINE inline __attribute__( ( __always_inline__ ) )
-		#define neverinline __attribute__( ( __noinline__ ) )
-	#else
-		#define FORCEINLINE
-		#define neverinline
-	#endif
-#else
-	#define FORCEINLINE
-	#define neverinline
-#endif)")));
-							macros.append(replacement);
-
-							while (code->Type != ECode::Preprocess_Pragma
-								|| ! code->Content.starts_with(txt("endregion ForceInline Definition")))
-								++ code;
-
-							macros.append( code );
-							found = true;
-						}
 					}
 					break;
 
