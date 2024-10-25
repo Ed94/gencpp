@@ -1,3 +1,7 @@
-// TODO(Ed): The Attribute tokens need to be expanded and regenerated on a per-project/installation of this library for a specific codebase of Unreal.
-// We can support an arbitrary set of modules or plugin apis for parsing
-// but its up to the user to define them all (This will just provide whats be used in previous usages with Unreal).
+API_Export, GEN_API_Export_Code
+API_Import, GEN_API_Import_Code
+UE_DEPRECATED, UE_DEPRECATED
+UMG_API, UMG_API
+COREUOBJECT_API, COREUOBJECT_API
+ENGINE_API, ENGINE_API
+GAMEPLAYABILITIES_API, GAMEPLAYABILITIES_API

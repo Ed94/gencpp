@@ -6,6 +6,7 @@ Import-Module ./helpers/target_arch.psm1
 $target_arch        = Join-Path $PSScriptRoot 'helpers/target_arch.psm1'
 $devshell           = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 $format_cpp	        = Join-Path $PSScriptRoot 'helpers/format_cpp.psm1'
+$refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
 
@@ -201,6 +202,8 @@ if ( $unreal )
 			write-host "`n Unreal variant generator completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
+
+	. $refactor_unreal
 }
 
 if ( $test )

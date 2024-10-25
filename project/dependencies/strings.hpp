@@ -18,6 +18,7 @@ struct StrC
 #define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(sw) )
 #define txt( text ) StrC { sizeof( text ) - 1, ( text ) }
 
+inline
 StrC to_str( char const* str )
 {
 	return { str_len( str ), str };

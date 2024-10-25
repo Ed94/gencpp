@@ -124,11 +124,11 @@ CodeParam CodeParam::get( s32 idx )
 		if ( ! ++ param )
 			return { nullptr };
 
-		return { (AST_Param*) param.raw()->Next };
+		param = { (AST_Param*) param.raw()->Next };
 	}
 	while ( --idx );
 
-	return { nullptr };
+	return param;
 }
 
 inline

@@ -44,6 +44,15 @@
 		{
 			"type": "cppvsdbg",
 			"request": "launch",
+			"name": "Debug unreal vsdbg",
+			"program": "${workspaceFolder}/unreal_engine/build/unreal.exe",
+			"args": [],
+			"cwd": "${workspaceFolder}/unreal_engine/",
+			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
+		},
+		{
+			"type": "cppvsdbg",
+			"request": "launch",
 			"name": "Debug raylib refactor vsdbg",
 			"program": "${workspaceFolder}/project/auxillary/vis_ast/dependencies/raylib/build/raylib_refactor.exe",
 			"args": [],

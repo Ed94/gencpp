@@ -2699,7 +2699,7 @@ CodeParam parse_params( bool use_template_capture )
 
 			s32 capture_level  = 0;
 			s32 template_level = 0;
-			while ( left && ( currtok.Type != TokType::Comma ) && template_level >= 0 && (CheckEndParams() || capture_level > 0 || template_level > 0) )
+			while ( (left && ( currtok.Type != TokType::Comma ) && template_level >= 0 && CheckEndParams()) || (capture_level > 0 || template_level > 0) )
 			{
 				if (currtok.Text[ 0 ] == '<')
 					++ template_level;
@@ -2811,10 +2811,10 @@ CodeParam parse_params( bool use_template_capture )
 
 				s32 capture_level  = 0;
 				s32 template_level = 0;
-				while ( left
+				while ( (left
 				&& currtok.Type != TokType::Comma
 				&& template_level >= 0
-				&& (CheckEndParams() || capture_level > 0 || template_level > 0) )
+				&& CheckEndParams()) || (capture_level > 0 || template_level > 0) )
 				{
 					if (currtok.Text[ 0 ] == '<')
 						++ template_level;

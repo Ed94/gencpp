@@ -3,20 +3,22 @@ cls
 $build = Join-Path $PSScriptRoot 'build.ci.ps1'
 
 if ( $IsWindows ) {
-	& $build release msvc bootstrap singleheader
+	& $build release msvc bootstrap singleheader unreal
 }
 else {
-	& $build release clang bootstrap singleheader
+	& $build release clang bootstrap singleheader unreal
 }
 
 $path_root             = git rev-parse --show-toplevel
-$path_docs			   = Join-Path $path_root docs
-$path_project          = Join-Path $path_root project
-$path_project_gen      = Join-Path $path_project gen
-$path_singleheader	   = Join-Path $path_root singleheader
+$path_docs			   = Join-Path $path_root         docs
+$path_project          = Join-Path $path_root         project
+$path_project_gen      = Join-Path $path_project      gen
+$path_singleheader	   = Join-Path $path_root         singleheader
 $path_singleheader_gen = Join-Path $path_singleheader gen
-$path_release          = Join-Path $path_root release
-$path_release_content  = Join-Path $path_release content
+$path_unreal           = Join-Path $path_root         unreal_engine
+$path_unreal_gen       = Join-Path $path_unreal       gen
+$path_release          = Join-Path $path_root         release
+$path_release_content  = Join-Path $path_release      content
 
 if ( -not(Test-Path $path_release) ) {
 	New-Item -ItemType Directory -Path $path_release
@@ -50,5 +52,17 @@ Remove-Item      -Path $path_release_content\gen.hpp
 # Segmented
 Copy-Item        -Path $path_project_gen\*     -Destination $path_release_content
 Compress-Archive -Path $path_release_content\* -DestinationPath $path_release\gencpp_segmented.zip -Force
+Remove-Item      -Path $path_release_content\gen.dep.hpp
+Remove-Item      -Path $path_release_content\gen.dep.cpp
+Remove-Item      -Path $path_release_content\gen.hpp
+Remove-Item      -Path $path_release_content\gen.cpp
+Remove-Item      -Path $path_release_content\gen.builder.hpp
+Remove-Item      -Path $path_release_content\gen.builder.cpp
+Remove-Item      -Path $path_release_content\gen.scanner.hpp
+Remove-Item      -Path $path_release_content\gen.scanner.cpp
+
+# Unreal
+Copy-Item        -Path $path_unreal_gen\*      -Destination $path_release_content
+Compress-Archive -Path $path_release_content\* -DestinationPath $path_release\gencpp_unreal.zip -Force
 
 Remove-Item -Path $path_release_content -Recurse

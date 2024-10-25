@@ -17,7 +17,7 @@ GEN_NS_END
 using namespace gen;
 
 constexpr char const* generation_notice =
-"// This file was generated automatially by gencpp's unreal.cpp"
+"// This file was generated automatially by gencpp's unreal.cpp "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
 constexpr StrC implementation_guard_start = txt(R"(
@@ -192,5 +192,225 @@ R"(#ifdef GEN_COMPILER_MSVC
 		header.print( fmt_newline );
 		header.print( pop_ignores );
 		header.write();
+	}
+
+	// gen_dep.cpp
+	{
+		Code src_start  = scan_file( project_dir "dependencies/src_start.cpp" );
+		Code debug      = scan_file( project_dir "dependencies/debug.cpp" );
+		Code string_ops = scan_file( project_dir "dependencies/string_ops.cpp" );
+		Code printing   = scan_file( project_dir "dependencies/printing.cpp" );
+		Code memory     = scan_file( project_dir "dependencies/memory.cpp" );
+		Code hashing    = scan_file( project_dir "dependencies/hashing.cpp" );
+		Code strings    = scan_file( project_dir "dependencies/strings.cpp" );
+		Code filesystem = scan_file( project_dir "dependencies/filesystem.cpp" );
+		Code timing     = scan_file( project_dir "dependencies/timing.cpp" );
+
+		Builder
+		src = Builder::open( "gen/gen.dep.cpp" );
+		src.print_fmt( generation_notice );
+		src.print( def_include(txt("gen.dep.hpp")));
+		src.print( fmt_newline );
+		src.print( push_ignores );
+		src.print( src_start );
+		src.print_fmt( "\nGEN_NS_BEGIN\n" );
+
+		src.print( debug );
+		src.print( string_ops );
+		src.print( printing );
+		src.print( hashing );
+		src.print( memory );
+		src.print( strings );
+		src.print( filesystem );
+		src.print( timing );
+
+		src.print_fmt( "\nGEN_NS_END\n" );
+		src.print( fmt_newline );
+		src.print( pop_ignores );
+		src.write();
+	}
+
+	// gen.hpp
+	{
+		Code header_start = scan_file(             "components/header_start.hpp" );
+		Code types        = scan_file( project_dir "components/types.hpp" );
+		Code ast          = scan_file( project_dir "components/ast.hpp" );
+		Code ast_types    = scan_file( project_dir "components/ast_types.hpp" );
+		Code code_types   = scan_file( project_dir "components/code_types.hpp" );
+		Code interface    = scan_file( project_dir "components/interface.hpp" );
+		Code inlines      = scan_file( project_dir "components/inlines.hpp" );
+		Code header_end   = scan_file( project_dir "components/header_end.hpp" );
+
+		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv" );
+		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
+		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
+		CodeBody ast_inlines = gen_ast_inlines();
+
+		Builder
+		header = Builder::open( "gen/gen.hpp" );
+		header.print_fmt( generation_notice );
+		header.print_fmt( "#pragma once\n\n" );
+		header.print( push_ignores );
+		header.print( fmt_newline );
+		header.print( header_start );
+		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+
+		header.print_fmt( "#pragma region Types\n" );
+		header.print( types );
+		header.print( ecode );
+		header.print( eoperator );
+		header.print( especifier );
+		header.print_fmt( "#pragma endregion Types\n\n" );
+
+		header.print_fmt( "#pragma region AST\n" );
+		header.print( ast );
+		header.print( code_types );
+		header.print( ast_types );
+		header.print_fmt( "\n#pragma endregion AST\n" );
+
+		header.print( interface );
+
+		header.print_fmt( "\n#pragma region Inlines\n" );
+		header.print( inlines );
+		header.print( fmt_newline );
+		header.print( ast_inlines );
+		header.print_fmt( "#pragma endregion Inlines\n" );
+
+		header.print( header_end );
+		header.print_fmt( "GEN_NS_END\n\n" );
+		header.print( pop_ignores );
+		header.write();
+	}
+
+	// gen.cpp
+	{
+		Code        src_start          = scan_file(             "components/src_start.cpp" );
+		Code        static_data 	   = scan_file( project_dir "components/static_data.cpp" );
+		Code        ast_case_macros    = scan_file( project_dir "components/ast_case_macros.cpp" );
+		Code        ast			       = scan_file( project_dir "components/ast.cpp" );
+		Code        code_serialization = scan_file( project_dir "components/code_serialization.cpp" );
+		Code        interface	       = scan_file( project_dir "components/interface.cpp" );
+		Code        upfront 	       = scan_file( project_dir "components/interface.upfront.cpp" );
+		Code        lexer              = scan_file( project_dir "components/lexer.cpp" );
+		Code        parser             = scan_file( project_dir "components/parser.cpp" );
+		Code 	    parsing_interface  = scan_file( project_dir "components/interface.parsing.cpp" );
+		Code        untyped 	       = scan_file( project_dir "components/interface.untyped.cpp" );
+
+		// Note(Ed): The Attribute tokens need to be expanded and regenerated on a per-project/installation of this library for a specific codebase of Unreal.
+		// We can support an arbitrary set of modules or plugin apis for parsing
+		// but its up to the user to define them all (This will just provide whats I've used up till now).
+		CodeBody etoktype         = gen_etoktype( project_dir "enums/ETokType.csv", "enums/AttributeTokens.csv" );
+		CodeNS   nspaced_etoktype = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
+
+		Builder
+		src = Builder::open( "gen/gen.cpp" );
+		src.print_fmt( generation_notice );
+		src.print( push_ignores );
+		src.print( fmt_newline );
+		src.print( src_start );
+		src.print( fmt_newline );
+		src.print_fmt( "GEN_NS_BEGIN\n");
+
+		src.print( static_data );
+
+		src.print_fmt( "\n#pragma region AST\n\n" );
+		src.print( ast_case_macros );
+		src.print( ast );
+		src.print( code_serialization );
+		src.print_fmt( "\n#pragma endregion AST\n" );
+
+		src.print_fmt( "\n#pragma region Interface\n" );
+		src.print( interface );
+		src.print( upfront );
+		src.print_fmt( "\n#pragma region Parsing\n\n" );
+		src.print( nspaced_etoktype );
+		src.print( lexer );
+		src.print( parser );
+		src.print( parsing_interface );
+		src.print( untyped );
+		src.print_fmt( "\n#pragma endregion Parsing\n\n" );
+		src.print_fmt( "#pragma endregion Interface\n\n" );
+
+		src.print_fmt( "GEN_NS_END\n\n");
+		src.print( pop_ignores );
+		src.write();
+	}
+
+	// gen_builder.hpp
+	{
+		Code builder = scan_file( project_dir "auxillary/builder.hpp" );
+
+		Builder
+		header = Builder::open( "gen/gen.builder.hpp" );
+		header.print_fmt( generation_notice );
+		header.print( push_ignores );
+		header.print( fmt_newline );
+		header.print_fmt( "#pragma once\n\n" );
+		header.print( def_include( txt("gen.hpp") ));
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
+		header.print( builder );
+		header.print_fmt( "GEN_NS_END\n" );
+		header.print( fmt_newline );
+		header.print( pop_ignores );
+		header.write();
+	}
+
+	// gen_builder.cpp
+	{
+		Code builder = scan_file( project_dir "auxillary/builder.cpp" );
+
+		Builder
+		src = Builder::open( "gen/gen.builder.cpp" );
+		src.print_fmt( generation_notice );
+		src.print( push_ignores );
+		src.print( fmt_newline );
+		src.print( def_include( txt("gen.builder.hpp") ) );
+		src.print_fmt( "\nGEN_NS_BEGIN\n" );
+		src.print( builder );
+		src.print_fmt( "\nGEN_NS_END\n" );
+		src.print( fmt_newline );
+		src.print( pop_ignores );
+		src.write();
+	}
+
+	// gen_scanner.hpp
+	{
+		Code parsing = scan_file( project_dir "dependencies/parsing.hpp" );
+		Code scanner = scan_file( project_dir "auxillary/scanner.hpp" );
+
+		Builder
+		header = Builder::open( "gen/gen.scanner.hpp" );
+		header.print_fmt( generation_notice );
+		header.print_fmt( "#pragma once\n\n" );
+		header.print( push_ignores );
+		header.print( fmt_newline );
+		header.print( def_include( txt("gen.hpp") ) );
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
+		header.print( parsing );
+		header.print( scanner );
+		header.print_fmt( "GEN_NS_END\n" );
+		header.print( fmt_newline );
+		header.print( pop_ignores );
+		header.write();
+	}
+
+	// gen.scanner.cpp
+	{
+		Code parsing = scan_file( project_dir "dependencies/parsing.cpp" );
+		Code scanner = scan_file( project_dir "auxillary/scanner.cpp" );
+
+		Builder
+		src = Builder::open( "gen/gen.scanner.cpp" );
+		src.print_fmt( generation_notice );
+		src.print( push_ignores );
+		src.print( fmt_newline );
+		src.print( def_include( txt("gen.scanner.hpp") ) );
+		src.print_fmt( "\nGEN_NS_BEGIN\n" );
+		src.print( parsing );
+		// src.print( scanner );
+		src.print_fmt( "GEN_NS_END\n" );
+		src.print( fmt_newline );
+		src.print( pop_ignores );
+		src.write();
 	}
 }
