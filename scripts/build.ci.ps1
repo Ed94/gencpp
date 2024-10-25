@@ -10,7 +10,27 @@ $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
 
-$path_root = git rev-parse --show-toplevel
+function Get-ScriptRepoRoot {
+    $currentPath = $PSScriptRoot
+    while ($currentPath -ne $null -and $currentPath -ne "")
+	{
+        if (Test-Path (Join-Path $currentPath ".git")) {
+            return $currentPath
+        }
+        # Also check for .git file which indicates a submodule
+        $gitFile = Join-Path $currentPath ".git"
+        if (Test-Path $gitFile -PathType Leaf)
+		{
+            $gitContent = Get-Content $gitFile
+            if ($gitContent -match "gitdir: (.+)") {
+                return $currentPath
+            }
+        }
+        $currentPath = Split-Path $currentPath -Parent
+    }
+    throw "Unable to find repository root"
+}
+$path_root = Get-ScriptRepoRoot
 
 Import-Module $target_arch
 Import-Module $format_cpp
