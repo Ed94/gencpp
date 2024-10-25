@@ -1,0 +1,25 @@
+ __VERSION 1
+
+// This is a example template to be used with the refactor program
+// Use it to refactor the naming convention of this library to your own.
+// Can be used as an aid to help use use your project's implementation if it fullfills the dependencies of this project.
+// Example: Most likely have a memory and string library already, just rename the functions and make sure the args are the same.
+// Program: https://github.com/Ed94/refactor
+
+// NOTE: Due to the current limitations of the program, not every symbol in the library can be renamed.
+// This is due to the program not actually parsing C/C++.
+
+// not       : Ignore
+// include   : #includes
+// word      : Alphanumeric or underscore
+// namespace : Prefix search and replace (c-namspaces).
+// regex     : Unavailable in __VERSION 1.
+
+// Precedence (highest to lowest):
+// word, namespace, regex
+
+// Gen Macro namespace
+// namespace GEN_, new_namespace_
+
+word forceinline,      FORCEINLINE
+word spec_forceinline, spec_FORCEINLINE

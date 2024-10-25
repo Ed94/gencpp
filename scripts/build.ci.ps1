@@ -22,6 +22,7 @@ Push-Location $path_root
 	   $verbose      = $false
 [bool] $bootstrap    = $false
 [bool] $singleheader = $false
+[bool] $unreal       = $false
 [bool] $test         = $false
 
 [array] $vendors = @( "clang", "msvc" )
@@ -36,6 +37,7 @@ if ( $args ) { $args | ForEach-Object {
 		"debug"               { $release      = $false }
 		"bootstrap"           { $bootstrap    = $true }
 		"singleheader"        { $singleheader = $true }
+		"unreal"              { $unreal       = $true }
 		"test"                { $test         = $true }
 	}
 }}
@@ -64,7 +66,7 @@ else {
 	$optimize = $true
 }
 
-if ( $bootstrap -eq $false -and $singleheader -eq $false -and $test -eq $false ) {
+if ( $bootstrap -eq $false -and $singleheader -eq $false -and $unreal -eq $false -and $test -eq $false ) {
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
 
@@ -80,6 +82,7 @@ $path_build        = Join-Path $path_root build
 $path_project      = Join-Path $path_root project
 $path_scripts      = Join-Path $path_root scripts
 $path_singleheader = Join-Path $path_root singleheader
+$path_unreal       = Join-Path $path_root unreal_engine
 $path_test         = Join-Path $path_root test
 
 if ( $bootstrap )
@@ -162,6 +165,44 @@ if ( $singleheader )
 	Pop-Location
 }
 
+if ( $unreal )
+{
+	$path_build = join-path $path_unreal build
+	$path_gen   = join-path $path_unreal gen
+
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+
+	$includes    = @( $path_project )
+	$unit       = join-path $path_unreal "unreal.cpp"
+	$executable = join-path $path_build  "unreal.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+
+	$linker_args   = @(
+		$flag_link_win_subsystem_console
+	)
+
+	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_unreal
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning unreal variant generator"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`n Unreal variant generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
 if ( $test )
 {
 	$path_gen          = join-path $path_test gen
@@ -229,7 +270,6 @@ push-location $path_scripts
 if ( $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 {
 	$path_gen      = join-path $path_project gen
-	$path_comp_gen = join-path $path_project components/gen
 	$include  = @(
 		'gen.hpp', 'gen.cpp',
 		'gen.dep.hpp', 'gen.dep.cpp',
@@ -247,6 +287,19 @@ if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp"))
 	$path_gen = join-path $path_singleheader gen
 	$include  = @(
 		'gen.hpp'
+	)
+	$exclude  = $null
+	format-cpp $path_gen $include $exclude
+}
+
+if ( $unreal -and (Test-Path( Join-Path $path_unreal "gen/gen.hpp")) )
+{
+	$path_gen = join-path $path_unreal gen
+	$include  = @(
+		'gen.hpp', 'gen.cpp',
+		'gen.dep.hpp', 'gen.dep.cpp',
+		'gen.builder.hpp', 'gen.builder.cpp'
+		'gen.scanner.hpp', 'gen.scanner.cpp'
 	)
 	$exclude  = $null
 	format-cpp $path_gen $include $exclude
