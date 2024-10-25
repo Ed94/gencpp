@@ -764,7 +764,14 @@ void CodeOpCast::to_string_def( String& result )
 {
 	if ( ast->Specs )
 	{
-		// TODO : Add support for specifies before the operator keyword
+		for ( SpecifierT spec : ast->Specs )
+		{
+			if ( ! ESpecifier::is_trailing( spec ) )
+			{
+				StrC spec_str = ESpecifier::to_str( spec );
+				result.append_fmt( "%*s ", spec_str.Len, spec_str.Ptr );
+			}
+		}
 
 		if ( ast->Name && ast->Name.length() )
 			result.append_fmt( "%Soperator %S()", ast->Name, ast->ValueType.to_string() );
@@ -794,7 +801,14 @@ void CodeOpCast::to_string_fwd( String& result )
 {
 	if ( ast->Specs )
 	{
-		// TODO : Add support for specifies before the operator keyword
+		for ( SpecifierT spec : ast->Specs )
+		{
+			if ( ! ESpecifier::is_trailing( spec ) )
+			{
+				StrC spec_str = ESpecifier::to_str( spec );
+				result.append_fmt( "%*s ", spec_str.Len, spec_str.Ptr );
+			}
+		}
 
 		result.append_fmt( "operator %S()", ast->ValueType.to_string() );
 

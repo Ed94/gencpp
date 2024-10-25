@@ -70,7 +70,7 @@ inline bool Code::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-Code::operator bool()
+inline Code::operator bool()
 {
 	return ast != nullptr;
 }
@@ -138,7 +138,7 @@ inline bool CodeBody::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeBody::operator bool()
+inline CodeBody::operator bool()
 {
 	return ast != nullptr;
 }
@@ -206,7 +206,7 @@ inline bool CodeAttributes::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeAttributes::operator bool()
+inline CodeAttributes::operator bool()
 {
 	return ast != nullptr;
 }
@@ -216,7 +216,7 @@ inline AST* CodeAttributes::raw()
 	return rcast( AST*, ast );
 }
 
-CodeAttributes::operator Code()
+inline CodeAttributes::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -294,7 +294,7 @@ inline bool CodeComment::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeComment::operator bool()
+inline CodeComment::operator bool()
 {
 	return ast != nullptr;
 }
@@ -304,7 +304,7 @@ inline AST* CodeComment::raw()
 	return rcast( AST*, ast );
 }
 
-CodeComment::operator Code()
+inline CodeComment::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -382,7 +382,7 @@ inline bool CodeConstructor::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeConstructor::operator bool()
+inline CodeConstructor::operator bool()
 {
 	return ast != nullptr;
 }
@@ -392,7 +392,7 @@ inline AST* CodeConstructor::raw()
 	return rcast( AST*, ast );
 }
 
-CodeConstructor::operator Code()
+inline CodeConstructor::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -470,7 +470,7 @@ inline bool CodeClass::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeClass::operator bool()
+inline CodeClass::operator bool()
 {
 	return ast != nullptr;
 }
@@ -538,7 +538,7 @@ inline bool CodeDefine::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeDefine::operator bool()
+inline CodeDefine::operator bool()
 {
 	return ast != nullptr;
 }
@@ -548,7 +548,7 @@ inline AST* CodeDefine::raw()
 	return rcast( AST*, ast );
 }
 
-CodeDefine::operator Code()
+inline CodeDefine::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -626,7 +626,7 @@ inline bool CodeDestructor::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeDestructor::operator bool()
+inline CodeDestructor::operator bool()
 {
 	return ast != nullptr;
 }
@@ -636,7 +636,7 @@ inline AST* CodeDestructor::raw()
 	return rcast( AST*, ast );
 }
 
-CodeDestructor::operator Code()
+inline CodeDestructor::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -714,7 +714,7 @@ inline bool CodeEnum::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeEnum::operator bool()
+inline CodeEnum::operator bool()
 {
 	return ast != nullptr;
 }
@@ -724,7 +724,7 @@ inline AST* CodeEnum::raw()
 	return rcast( AST*, ast );
 }
 
-CodeEnum::operator Code()
+inline CodeEnum::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -802,7 +802,7 @@ inline bool CodeExec::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeExec::operator bool()
+inline CodeExec::operator bool()
 {
 	return ast != nullptr;
 }
@@ -812,7 +812,7 @@ inline AST* CodeExec::raw()
 	return rcast( AST*, ast );
 }
 
-CodeExec::operator Code()
+inline CodeExec::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -890,7 +890,7 @@ inline bool CodeExtern::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeExtern::operator bool()
+inline CodeExtern::operator bool()
 {
 	return ast != nullptr;
 }
@@ -900,7 +900,7 @@ inline AST* CodeExtern::raw()
 	return rcast( AST*, ast );
 }
 
-CodeExtern::operator Code()
+inline CodeExtern::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -978,7 +978,7 @@ inline bool CodeFriend::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeFriend::operator bool()
+inline CodeFriend::operator bool()
 {
 	return ast != nullptr;
 }
@@ -988,7 +988,7 @@ inline AST* CodeFriend::raw()
 	return rcast( AST*, ast );
 }
 
-CodeFriend::operator Code()
+inline CodeFriend::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1066,7 +1066,7 @@ inline bool CodeFn::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeFn::operator bool()
+inline CodeFn::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1076,7 +1076,7 @@ inline AST* CodeFn::raw()
 	return rcast( AST*, ast );
 }
 
-CodeFn::operator Code()
+inline CodeFn::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1154,7 +1154,7 @@ inline bool CodeInclude::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeInclude::operator bool()
+inline CodeInclude::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1164,7 +1164,7 @@ inline AST* CodeInclude::raw()
 	return rcast( AST*, ast );
 }
 
-CodeInclude::operator Code()
+inline CodeInclude::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1242,7 +1242,7 @@ inline bool CodeModule::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeModule::operator bool()
+inline CodeModule::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1252,7 +1252,7 @@ inline AST* CodeModule::raw()
 	return rcast( AST*, ast );
 }
 
-CodeModule::operator Code()
+inline CodeModule::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1330,7 +1330,7 @@ inline bool CodeNS::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeNS::operator bool()
+inline CodeNS::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1340,7 +1340,7 @@ inline AST* CodeNS::raw()
 	return rcast( AST*, ast );
 }
 
-CodeNS::operator Code()
+inline CodeNS::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1418,7 +1418,7 @@ inline bool CodeOperator::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeOperator::operator bool()
+inline CodeOperator::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1428,7 +1428,7 @@ inline AST* CodeOperator::raw()
 	return rcast( AST*, ast );
 }
 
-CodeOperator::operator Code()
+inline CodeOperator::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1506,7 +1506,7 @@ inline bool CodeOpCast::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeOpCast::operator bool()
+inline CodeOpCast::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1516,7 +1516,7 @@ inline AST* CodeOpCast::raw()
 	return rcast( AST*, ast );
 }
 
-CodeOpCast::operator Code()
+inline CodeOpCast::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1594,7 +1594,7 @@ inline bool CodeParam::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeParam::operator bool()
+inline CodeParam::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1662,7 +1662,7 @@ inline bool CodePragma::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodePragma::operator bool()
+inline CodePragma::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1672,7 +1672,7 @@ inline AST* CodePragma::raw()
 	return rcast( AST*, ast );
 }
 
-CodePragma::operator Code()
+inline CodePragma::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1750,7 +1750,7 @@ inline bool CodePreprocessCond::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodePreprocessCond::operator bool()
+inline CodePreprocessCond::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1760,7 +1760,7 @@ inline AST* CodePreprocessCond::raw()
 	return rcast( AST*, ast );
 }
 
-CodePreprocessCond::operator Code()
+inline CodePreprocessCond::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -1838,7 +1838,7 @@ inline bool CodeSpecifiers::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeSpecifiers::operator bool()
+inline CodeSpecifiers::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1906,7 +1906,7 @@ inline bool CodeStruct::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeStruct::operator bool()
+inline CodeStruct::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1974,7 +1974,7 @@ inline bool CodeTemplate::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeTemplate::operator bool()
+inline CodeTemplate::operator bool()
 {
 	return ast != nullptr;
 }
@@ -1984,7 +1984,7 @@ inline AST* CodeTemplate::raw()
 	return rcast( AST*, ast );
 }
 
-CodeTemplate::operator Code()
+inline CodeTemplate::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -2062,7 +2062,7 @@ inline bool CodeType::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeType::operator bool()
+inline CodeType::operator bool()
 {
 	return ast != nullptr;
 }
@@ -2072,7 +2072,7 @@ inline AST* CodeType::raw()
 	return rcast( AST*, ast );
 }
 
-CodeType::operator Code()
+inline CodeType::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -2150,7 +2150,7 @@ inline bool CodeTypedef::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeTypedef::operator bool()
+inline CodeTypedef::operator bool()
 {
 	return ast != nullptr;
 }
@@ -2160,7 +2160,7 @@ inline AST* CodeTypedef::raw()
 	return rcast( AST*, ast );
 }
 
-CodeTypedef::operator Code()
+inline CodeTypedef::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -2238,7 +2238,7 @@ inline bool CodeUnion::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeUnion::operator bool()
+inline CodeUnion::operator bool()
 {
 	return ast != nullptr;
 }
@@ -2248,7 +2248,7 @@ inline AST* CodeUnion::raw()
 	return rcast( AST*, ast );
 }
 
-CodeUnion::operator Code()
+inline CodeUnion::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -2326,7 +2326,7 @@ inline bool CodeUsing::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeUsing::operator bool()
+inline CodeUsing::operator bool()
 {
 	return ast != nullptr;
 }
@@ -2336,7 +2336,7 @@ inline AST* CodeUsing::raw()
 	return rcast( AST*, ast );
 }
 
-CodeUsing::operator Code()
+inline CodeUsing::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -2414,7 +2414,7 @@ inline bool CodeVar::operator!=( Code other )
 	return (AST*)ast != other.ast;
 }
 
-CodeVar::operator bool()
+inline CodeVar::operator bool()
 {
 	return ast != nullptr;
 }
@@ -2424,7 +2424,7 @@ inline AST* CodeVar::raw()
 	return rcast( AST*, ast );
 }
 
-CodeVar::operator Code()
+inline CodeVar::operator Code()
 {
 	return *rcast( Code*, this );
 }
@@ -2443,282 +2443,282 @@ inline AST_Var* CodeVar::operator->()
 
 #pragma region generated AST/Code cast implementation
 
-AST::operator CodeBody()
+inline AST::operator CodeBody()
 {
 	return { rcast( AST_Body*, this ) };
 }
 
-Code::operator CodeBody() const
+inline Code::operator CodeBody() const
 {
 	return { (AST_Body*)ast };
 }
 
-AST::operator CodeAttributes()
+inline AST::operator CodeAttributes()
 {
 	return { rcast( AST_Attributes*, this ) };
 }
 
-Code::operator CodeAttributes() const
+inline Code::operator CodeAttributes() const
 {
 	return { (AST_Attributes*)ast };
 }
 
-AST::operator CodeComment()
+inline AST::operator CodeComment()
 {
 	return { rcast( AST_Comment*, this ) };
 }
 
-Code::operator CodeComment() const
+inline Code::operator CodeComment() const
 {
 	return { (AST_Comment*)ast };
 }
 
-AST::operator CodeConstructor()
+inline AST::operator CodeConstructor()
 {
 	return { rcast( AST_Constructor*, this ) };
 }
 
-Code::operator CodeConstructor() const
+inline Code::operator CodeConstructor() const
 {
 	return { (AST_Constructor*)ast };
 }
 
-AST::operator CodeClass()
+inline AST::operator CodeClass()
 {
 	return { rcast( AST_Class*, this ) };
 }
 
-Code::operator CodeClass() const
+inline Code::operator CodeClass() const
 {
 	return { (AST_Class*)ast };
 }
 
-AST::operator CodeDefine()
+inline AST::operator CodeDefine()
 {
 	return { rcast( AST_Define*, this ) };
 }
 
-Code::operator CodeDefine() const
+inline Code::operator CodeDefine() const
 {
 	return { (AST_Define*)ast };
 }
 
-AST::operator CodeDestructor()
+inline AST::operator CodeDestructor()
 {
 	return { rcast( AST_Destructor*, this ) };
 }
 
-Code::operator CodeDestructor() const
+inline Code::operator CodeDestructor() const
 {
 	return { (AST_Destructor*)ast };
 }
 
-AST::operator CodeEnum()
+inline AST::operator CodeEnum()
 {
 	return { rcast( AST_Enum*, this ) };
 }
 
-Code::operator CodeEnum() const
+inline Code::operator CodeEnum() const
 {
 	return { (AST_Enum*)ast };
 }
 
-AST::operator CodeExec()
+inline AST::operator CodeExec()
 {
 	return { rcast( AST_Exec*, this ) };
 }
 
-Code::operator CodeExec() const
+inline Code::operator CodeExec() const
 {
 	return { (AST_Exec*)ast };
 }
 
-AST::operator CodeExtern()
+inline AST::operator CodeExtern()
 {
 	return { rcast( AST_Extern*, this ) };
 }
 
-Code::operator CodeExtern() const
+inline Code::operator CodeExtern() const
 {
 	return { (AST_Extern*)ast };
 }
 
-AST::operator CodeFriend()
+inline AST::operator CodeFriend()
 {
 	return { rcast( AST_Friend*, this ) };
 }
 
-Code::operator CodeFriend() const
+inline Code::operator CodeFriend() const
 {
 	return { (AST_Friend*)ast };
 }
 
-AST::operator CodeFn()
+inline AST::operator CodeFn()
 {
 	return { rcast( AST_Fn*, this ) };
 }
 
-Code::operator CodeFn() const
+inline Code::operator CodeFn() const
 {
 	return { (AST_Fn*)ast };
 }
 
-AST::operator CodeInclude()
+inline AST::operator CodeInclude()
 {
 	return { rcast( AST_Include*, this ) };
 }
 
-Code::operator CodeInclude() const
+inline Code::operator CodeInclude() const
 {
 	return { (AST_Include*)ast };
 }
 
-AST::operator CodeModule()
+inline AST::operator CodeModule()
 {
 	return { rcast( AST_Module*, this ) };
 }
 
-Code::operator CodeModule() const
+inline Code::operator CodeModule() const
 {
 	return { (AST_Module*)ast };
 }
 
-AST::operator CodeNS()
+inline AST::operator CodeNS()
 {
 	return { rcast( AST_NS*, this ) };
 }
 
-Code::operator CodeNS() const
+inline Code::operator CodeNS() const
 {
 	return { (AST_NS*)ast };
 }
 
-AST::operator CodeOperator()
+inline AST::operator CodeOperator()
 {
 	return { rcast( AST_Operator*, this ) };
 }
 
-Code::operator CodeOperator() const
+inline Code::operator CodeOperator() const
 {
 	return { (AST_Operator*)ast };
 }
 
-AST::operator CodeOpCast()
+inline AST::operator CodeOpCast()
 {
 	return { rcast( AST_OpCast*, this ) };
 }
 
-Code::operator CodeOpCast() const
+inline Code::operator CodeOpCast() const
 {
 	return { (AST_OpCast*)ast };
 }
 
-AST::operator CodeParam()
+inline AST::operator CodeParam()
 {
 	return { rcast( AST_Param*, this ) };
 }
 
-Code::operator CodeParam() const
+inline Code::operator CodeParam() const
 {
 	return { (AST_Param*)ast };
 }
 
-AST::operator CodePragma()
+inline AST::operator CodePragma()
 {
 	return { rcast( AST_Pragma*, this ) };
 }
 
-Code::operator CodePragma() const
+inline Code::operator CodePragma() const
 {
 	return { (AST_Pragma*)ast };
 }
 
-AST::operator CodePreprocessCond()
+inline AST::operator CodePreprocessCond()
 {
 	return { rcast( AST_PreprocessCond*, this ) };
 }
 
-Code::operator CodePreprocessCond() const
+inline Code::operator CodePreprocessCond() const
 {
 	return { (AST_PreprocessCond*)ast };
 }
 
-AST::operator CodeSpecifiers()
+inline AST::operator CodeSpecifiers()
 {
 	return { rcast( AST_Specifiers*, this ) };
 }
 
-Code::operator CodeSpecifiers() const
+inline Code::operator CodeSpecifiers() const
 {
 	return { (AST_Specifiers*)ast };
 }
 
-AST::operator CodeStruct()
+inline AST::operator CodeStruct()
 {
 	return { rcast( AST_Struct*, this ) };
 }
 
-Code::operator CodeStruct() const
+inline Code::operator CodeStruct() const
 {
 	return { (AST_Struct*)ast };
 }
 
-AST::operator CodeTemplate()
+inline AST::operator CodeTemplate()
 {
 	return { rcast( AST_Template*, this ) };
 }
 
-Code::operator CodeTemplate() const
+inline Code::operator CodeTemplate() const
 {
 	return { (AST_Template*)ast };
 }
 
-AST::operator CodeType()
+inline AST::operator CodeType()
 {
 	return { rcast( AST_Type*, this ) };
 }
 
-Code::operator CodeType() const
+inline Code::operator CodeType() const
 {
 	return { (AST_Type*)ast };
 }
 
-AST::operator CodeTypedef()
+inline AST::operator CodeTypedef()
 {
 	return { rcast( AST_Typedef*, this ) };
 }
 
-Code::operator CodeTypedef() const
+inline Code::operator CodeTypedef() const
 {
 	return { (AST_Typedef*)ast };
 }
 
-AST::operator CodeUnion()
+inline AST::operator CodeUnion()
 {
 	return { rcast( AST_Union*, this ) };
 }
 
-Code::operator CodeUnion() const
+inline Code::operator CodeUnion() const
 {
 	return { (AST_Union*)ast };
 }
 
-AST::operator CodeUsing()
+inline AST::operator CodeUsing()
 {
 	return { rcast( AST_Using*, this ) };
 }
 
-Code::operator CodeUsing() const
+inline Code::operator CodeUsing() const
 {
 	return { (AST_Using*)ast };
 }
 
-AST::operator CodeVar()
+inline AST::operator CodeVar()
 {
 	return { rcast( AST_Var*, this ) };
 }
 
-Code::operator CodeVar() const
+inline Code::operator CodeVar() const
 {
 	return { (AST_Var*)ast };
 }

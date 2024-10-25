@@ -283,7 +283,7 @@ int gen_main()
 	}
 
 	// gen_scanner.cpp
-	if (0)
+	if (1)
 	{
 		Code parsing = scan_file( "dependencies/parsing.cpp" );
 		Code scanner = scan_file( "auxillary/scanner.cpp" );
@@ -294,7 +294,7 @@ int gen_main()
 		src.print( def_include( txt("gen.scanner.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n" );
 		src.print( parsing );
-		src.print( scanner );
+		// src.print( scanner );
 		src.print_fmt( "GEN_NS_END\n" );
 		src.write();
 	}

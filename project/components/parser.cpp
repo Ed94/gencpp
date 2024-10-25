@@ -1850,7 +1850,7 @@ CodeBody parse_global_nspace( CodeT which )
 
 				if ( found_operator_cast_outside_class_implmentation )
 				{
-					member = parse_operator_cast();
+					member = parse_operator_cast( specifiers );
 					// <Attributes> <Specifiers> <Name>::operator <Type>() { ... }
 					break;
 				}
@@ -4079,8 +4079,6 @@ internal
 CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 {
 	push_scope();
-
-	// TODO : Specifiers attributed to the cast
 
 	// Operator's namespace if not within same class.
 	Token name = NullToken;

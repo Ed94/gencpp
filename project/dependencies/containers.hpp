@@ -399,7 +399,7 @@ struct HashTable
 		sw last_added_index;
 
 		HashTable<Type> new_ht = init_reserve( Hashes.get_header()->Allocator, new_num );
-		for ( sw idx = 0; idx < Entries.num(); ++idx )
+		for ( sw idx = 0; idx < sw(Entries.num()); ++idx )
 		{
 			FindResult find_result;
 
@@ -424,13 +424,13 @@ struct HashTable
 	{
 		sw idx;
 
-		for ( idx = 0; idx < Entries.num(); idx++ )
+		for ( idx = 0; idx < sw(Entries.num()); idx++ )
 			Entries[ idx ].Next = -1;
 
-		for ( idx = 0; idx < Hashes.num(); idx++ )
+		for ( idx = 0; idx < sw(Hashes.num()); idx++ )
 			Hashes[ idx ] = -1;
 
-		for ( idx = 0; idx < Entries.num(); idx++ )
+		for ( idx = 0; idx < sw(Entries.num()); idx++ )
 		{
 			Entry*     entry;
 			FindResult find_result;
@@ -496,7 +496,7 @@ struct HashTable
 
 	sw slot( u64 key )
 	{
-		for ( sw idx = 0; idx < Hashes.num(); ++idx )
+		for ( sw idx = 0; idx < sw(Hashes.num()); ++idx )
 			if ( Hashes[ idx ] == key )
 				return idx;
 

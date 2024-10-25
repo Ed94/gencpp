@@ -500,13 +500,11 @@ CodeBody gen_ast_inlines()
 	impl_code_var.     append( parse_global_body( token_fmt( "typename", StrC name(Var),            codetype_impl_tmpl )));
 
 	char const* cast_tmpl = stringize(
-		inline
-		AST::operator Code<typename>()
+		inline	AST::operator Code<typename>()
 		{
 			return { rcast( AST_<typename>*, this ) };
 		}
-		inline
-		Code::operator Code<typename>() const
+		inline Code::operator Code<typename>() const
 		{
 			return { (AST_<typename>*) ast };
 		}
