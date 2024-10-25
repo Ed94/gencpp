@@ -13,7 +13,7 @@
 #define internal      static    // Internal linkage
 #define local_persist static    // Local Persisting variables
 
-#pragma region ForceInline_Definition
+#pragma region ForceInline Definition
 #ifdef GEN_COMPILER_MSVC
 #	define forceinline __forceinline
 #	define neverinline __declspec( noinline )
@@ -32,7 +32,7 @@
 #	define forceinline
 #	define neverinline
 #endif
-#pragma endregion ForceInline_Definition
+#pragma endregion ForceInline Definition
 
 // Bits
 

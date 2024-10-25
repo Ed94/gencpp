@@ -6,6 +6,7 @@
 // This is a simple file reader that reads the entire file into memory.
 // It has an extra option to skip the first few lines for undesired includes.
 // This is done so that includes can be kept in dependency and component files so that intellisense works.
+inline
 Code scan_file( char const* path )
 {
 	FileInfo file;

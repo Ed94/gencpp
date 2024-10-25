@@ -586,7 +586,7 @@ TokArray lex( StrC content )
 	{
 		s32         length  = 0;
 		char const* scanner = entry.Data;
-		while ( entry.length() > length && char_is_alphanumeric( *scanner ) || *scanner == '_' )
+		while ( entry.length() > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
 		{
 			scanner++;
 			length ++;

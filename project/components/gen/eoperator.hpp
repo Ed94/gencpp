@@ -59,7 +59,7 @@ namespace EOperator
 		NumOps
 	};
 
-	StrC to_str( Type op )
+	inline StrC to_str( Type op )
 	{
 		local_persist StrC lookup[] {
 			{ sizeof( "INVALID" ),  "INVALID"  },

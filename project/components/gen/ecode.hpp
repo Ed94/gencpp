@@ -72,7 +72,7 @@ namespace ECode
 		NumTypes
 	};
 
-	StrC to_str( Type type )
+	inline StrC to_str( Type type )
 	{
 		local_persist StrC lookup[] {
 			{ sizeof( "Invalid" ),             "Invalid"             },

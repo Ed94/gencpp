@@ -2699,7 +2699,7 @@ CodeParam parse_params( bool use_template_capture )
 
 			s32 capture_level  = 0;
 			s32 template_level = 0;
-			while ( left && ( currtok.Type != TokType::Comma ) && template_level >= 0 && CheckEndParams() || capture_level > 0 || template_level > 0 )
+			while ( left && ( currtok.Type != TokType::Comma ) && template_level >= 0 && (CheckEndParams() || capture_level > 0 || template_level > 0) )
 			{
 				if (currtok.Text[ 0 ] == '<')
 					++ template_level;
@@ -2814,7 +2814,7 @@ CodeParam parse_params( bool use_template_capture )
 				while ( left
 				&& currtok.Type != TokType::Comma
 				&& template_level >= 0
-				&& CheckEndParams() || capture_level > 0 || template_level > 0 )
+				&& (CheckEndParams() || capture_level > 0 || template_level > 0) )
 				{
 					if (currtok.Text[ 0 ] == '<')
 						++ template_level;
@@ -4510,6 +4510,18 @@ else if ( currtok.Type == TokType::DeclType )
 		name = currtok;
 		eat(TokType::Type_Typename);
 		// <typename>
+
+		if ( ! from_template )
+		{
+			name                = parse_identifier();
+			Context.Scope->Name = name;
+			if ( ! name )
+			{
+				log_failure( "Error, failed to type signature\n%s", Context.to_string() );
+				Context.pop();
+				return CodeInvalid;
+			}
+		}
 	}
 
 	// The usual Identifier type signature that may have namespace qualifiers

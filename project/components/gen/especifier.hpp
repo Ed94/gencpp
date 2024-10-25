@@ -38,12 +38,12 @@ namespace ESpecifier
 		NumSpecifiers
 	};
 
-	bool is_trailing( Type specifier )
+	inline bool is_trailing( Type specifier )
 	{
 		return specifier > Virtual;
 	}
 
-	StrC to_str( Type type )
+	inline StrC to_str( Type type )
 	{
 		local_persist StrC lookup[] {
 			{ sizeof( "INVALID" ),       "INVALID"       },
@@ -76,7 +76,7 @@ namespace ESpecifier
 		return lookup[type];
 	}
 
-	Type to_type( StrC str )
+	inline Type to_type( StrC str )
 	{
 		local_persist u32 keymap[NumSpecifiers];
 		do_once_start for ( u32 index = 0; index < NumSpecifiers; index++ )
