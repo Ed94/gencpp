@@ -209,7 +209,7 @@ int gen_main()
 		Code untyped           = scan_file( project_dir "components/interface.untyped.cpp" );
 
 		CodeBody etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
-		CodeNS   parser_nspace = def_namespace( name(Parser), def_namespace_body( args(etoktype)) );
+		CodeNS   parser_nspace = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
