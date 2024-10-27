@@ -1,8 +1,0 @@
-#include "raudio.c"
-#include "rcore.c"
-#include "rglfw.c"
-#include "rmodels.c"
-#include "rshapes.c"
-#include "rtext.c"
-#include "rtextures.c"
-#include "rutils.c"
