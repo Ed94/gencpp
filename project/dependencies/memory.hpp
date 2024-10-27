@@ -10,43 +10,51 @@
 #define gigabytes( x ) ( megabytes( x ) * ( s64 )( 1024 ) )
 #define terabytes( x ) ( gigabytes( x ) * ( s64 )( 1024 ) )
 
-#define GEN__ONES          ( zpl_cast( uw ) - 1 / GEN_U8_MAX )
+#define GEN__ONES          ( scast( GEN_NS usize, - 1) / GEN_U8_MAX )
 #define GEN__HIGHS         ( GEN__ONES * ( GEN_U8_MAX / 2 + 1 ) )
-#define GEN__HAS_ZERO( x ) ( ( ( x )-GEN__ONES ) & ~( x )&GEN__HIGHS )
+#define GEN__HAS_ZERO( x ) ( ( ( x ) - GEN__ONES ) & ~( x ) & GEN__HIGHS )
+
+template< class Type >
+void swap( Type& a, Type& b )
+{
+	Type tmp = a;
+	a = b;
+	b = tmp;
+}
 
 //! Checks if value is power of 2.
-GEN_DEF_INLINE b32 is_power_of_two( sw x );
+b32 is_power_of_two( ssize x );
 
 //! Aligns address to specified alignment.
-GEN_DEF_INLINE void* align_forward( void* ptr, sw alignment );
+void* align_forward( void* ptr, ssize alignment );
 
 //! Aligns value to a specified alignment.
-GEN_DEF_INLINE s64 align_forward_i64( s64 value, sw alignment );
+s64 align_forward_i64( s64 value, ssize alignment );
 
 //! Moves pointer forward by bytes.
-GEN_DEF_INLINE void* pointer_add( void* ptr, sw bytes );
+void* pointer_add( void* ptr, ssize bytes );
 
 //! Moves pointer forward by bytes.
-GEN_DEF_INLINE void const* pointer_add_const( void const* ptr, sw bytes );
+void const* pointer_add_const( void const* ptr, ssize bytes );
 
 //! Calculates difference between two addresses.
-GEN_DEF_INLINE sw pointer_diff( void const* begin, void const* end );
+ssize pointer_diff( void const* begin, void const* end );
 
 //! Copy non-overlapping memory from source to destination.
-void* mem_copy( void* dest, void const* source, sw size );
+void* mem_copy( void* dest, void const* source, ssize size );
 
 //! Search for a constant value within the size limit at memory location.
-void const* mem_find( void const* data, u8 byte_value, sw size );
+void const* mem_find( void const* data, u8 byte_value, ssize size );
 
 //! Copy memory from source to destination.
-GEN_DEF_INLINE void* mem_move( void* dest, void const* source, sw size );
+void* mem_move( void* dest, void const* source, ssize size );
 
 //! Set constant value at memory location with specified size.
-GEN_DEF_INLINE void* mem_set( void* data, u8 byte_value, sw size );
+void* mem_set( void* data, u8 byte_value, ssize size );
 
 //! @param ptr Memory location to clear up.
 //! @param size The size to clear up with.
-GEN_DEF_INLINE void zero_size( void* ptr, sw size );
+void zero_size( void* ptr, ssize size );
 
 //! Clears up an item.
 #define zero_item( t ) zero_size( ( t ), size_of( *( t ) ) )    // NOTE: Pass pointer of struct
@@ -63,8 +71,8 @@ enum AllocType : u8
 };
 
 using AllocatorProc = void* ( void* allocator_data, AllocType type
-	, sw size, sw alignment
-	, void* old_memory, sw old_size
+	, ssize size, ssize alignment
+	, void* old_memory, ssize old_size
 	, u64 flags );
 
 struct AllocatorInfo
@@ -87,22 +95,22 @@ enum AllocFlag
 #endif
 
 //! Allocate memory with default alignment.
-GEN_DEF_INLINE void* alloc( AllocatorInfo a, sw size );
+void* alloc( AllocatorInfo a, ssize size );
 
 //! Allocate memory with specified alignment.
-GEN_DEF_INLINE void* alloc_align( AllocatorInfo a, sw size, sw alignment );
+void* alloc_align( AllocatorInfo a, ssize size, ssize alignment );
 
 //! Free allocated memory.
-GEN_DEF_INLINE void free( AllocatorInfo a, void* ptr );
+void free( AllocatorInfo a, void* ptr );
 
 //! Free all memory allocated by an allocator.
-GEN_DEF_INLINE void free_all( AllocatorInfo a );
+void free_all( AllocatorInfo a );
 
 //! Resize an allocated memory.
-GEN_DEF_INLINE void* resize( AllocatorInfo a, void* ptr, sw old_size, sw new_size );
+void* resize( AllocatorInfo a, void* ptr, ssize old_size, ssize new_size );
 
 //! Resize an allocated memory with specified alignment.
-GEN_DEF_INLINE void* resize_align( AllocatorInfo a, void* ptr, sw old_size, sw new_size, sw alignment );
+void* resize_align( AllocatorInfo a, void* ptr, ssize old_size, ssize new_size, ssize alignment );
 
 //! Allocate memory for an item.
 #define alloc_item( allocator_, Type ) ( Type* )alloc( allocator_, size_of( Type ) )
@@ -114,17 +122,17 @@ GEN_DEF_INLINE void* resize_align( AllocatorInfo a, void* ptr, sw old_size, sw n
 /* define GEN_HEAP_ANALYSIS to enable this feature */
 /* call zpl_heap_stats_init at the beginning of the entry point */
 /* you can call zpl_heap_stats_check near the end of the execution to validate any possible leaks */
-void heap_stats_init( void );
-sw   heap_stats_used_memory( void );
-sw   heap_stats_alloc_count( void );
-void heap_stats_check( void );
+void  heap_stats_init( void );
+ssize heap_stats_used_memory( void );
+ssize heap_stats_alloc_count( void );
+void  heap_stats_check( void );
 
 //! Allocate/Resize memory using default options.
 
 //! Use this if you don't need a "fancy" resize allocation
-GEN_DEF_INLINE void* default_resize_align( AllocatorInfo a, void* ptr, sw old_size, sw new_size, sw alignment );
+void* default_resize_align( AllocatorInfo a, void* ptr, ssize old_size, ssize new_size, ssize alignment );
 
-void* heap_allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+void* heap_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 
 //! The heap allocator backed by operating system's memory manager.
 constexpr AllocatorInfo heap( void ) { return { heap_allocator_proc, nullptr }; }
@@ -135,270 +143,40 @@ constexpr AllocatorInfo heap( void ) { return { heap_allocator_proc, nullptr }; 
 //! Helper to free memory allocated by heap allocator.
 #define mfree( ptr ) free( heap(), ptr )
 
-GEN_IMPL_INLINE b32 is_power_of_two( sw x )
-{
-	if ( x <= 0 )
-		return false;
-	return ! ( x & ( x - 1 ) );
-}
-
-GEN_IMPL_INLINE void* align_forward( void* ptr, sw alignment )
-{
-	uptr p;
-
-	GEN_ASSERT( is_power_of_two( alignment ) );
-
-	p = zpl_cast( uptr ) ptr;
-	return zpl_cast( void* )( ( p + ( alignment - 1 ) ) & ~( alignment - 1 ) );
-}
-
-GEN_IMPL_INLINE s64 align_forward_i64( s64 value, sw alignment )
-{
-	return value + ( alignment - value % alignment ) % alignment;
-}
-
-GEN_IMPL_INLINE void* pointer_add( void* ptr, sw bytes )
-{
-	return zpl_cast( void* )( zpl_cast( u8* ) ptr + bytes );
-}
-
-GEN_IMPL_INLINE void const* pointer_add_const( void const* ptr, sw bytes )
-{
-	return zpl_cast( void const* )( zpl_cast( u8 const* ) ptr + bytes );
-}
-
-GEN_IMPL_INLINE sw pointer_diff( void const* begin, void const* end )
-{
-	return zpl_cast( sw )( zpl_cast( u8 const* ) end - zpl_cast( u8 const* ) begin );
-}
-
-GEN_IMPL_INLINE void* mem_move( void* dest, void const* source, sw n )
-{
-	if ( dest == NULL )
-	{
-		return NULL;
-	}
-
-	u8*       d = zpl_cast( u8* ) dest;
-	u8 const* s = zpl_cast( u8 const* ) source;
-
-	if ( d == s )
-		return d;
-	if ( s + n <= d || d + n <= s )    // NOTE: Non-overlapping
-		return mem_copy( d, s, n );
-
-	if ( d < s )
-	{
-		if ( zpl_cast( uptr ) s % size_of( sw ) == zpl_cast( uptr ) d % size_of( sw ) )
-		{
-			while ( zpl_cast( uptr ) d % size_of( sw ) )
-			{
-				if ( ! n-- )
-					return dest;
-				*d++ = *s++;
-			}
-			while ( n >= size_of( sw ) )
-			{
-				*zpl_cast( sw* ) d  = *zpl_cast( sw* ) s;
-				n                  -= size_of( sw );
-				d                  += size_of( sw );
-				s                  += size_of( sw );
-			}
-		}
-		for ( ; n; n-- )
-			*d++ = *s++;
-	}
-	else
-	{
-		if ( ( zpl_cast( uptr ) s % size_of( sw ) ) == ( zpl_cast( uptr ) d % size_of( sw ) ) )
-		{
-			while ( zpl_cast( uptr )( d + n ) % size_of( sw ) )
-			{
-				if ( ! n-- )
-					return dest;
-				d[ n ] = s[ n ];
-			}
-			while ( n >= size_of( sw ) )
-			{
-				n                         -= size_of( sw );
-				*zpl_cast( sw* )( d + n )  = *zpl_cast( sw* )( s + n );
-			}
-		}
-		while ( n )
-			n--, d[ n ] = s[ n ];
-	}
-
-	return dest;
-}
-
-GEN_IMPL_INLINE void* mem_set( void* dest, u8 c, sw n )
-{
-	if ( dest == NULL )
-	{
-		return NULL;
-	}
-
-	u8* s = zpl_cast( u8* ) dest;
-	sw  k;
-	u32 c32 = ( ( u32 )-1 ) / 255 * c;
-
-	if ( n == 0 )
-		return dest;
-	s[ 0 ] = s[ n - 1 ] = c;
-	if ( n < 3 )
-		return dest;
-	s[ 1 ] = s[ n - 2 ] = c;
-	s[ 2 ] = s[ n - 3 ] = c;
-	if ( n < 7 )
-		return dest;
-	s[ 3 ] = s[ n - 4 ] = c;
-	if ( n < 9 )
-		return dest;
-
-	k  = -zpl_cast( sptr ) s & 3;
-	s += k;
-	n -= k;
-	n &= -4;
-
-	*zpl_cast( u32* )( s + 0 )     = c32;
-	*zpl_cast( u32* )( s + n - 4 ) = c32;
-	if ( n < 9 )
-		return dest;
-	*zpl_cast( u32* )( s + 4 )      = c32;
-	*zpl_cast( u32* )( s + 8 )      = c32;
-	*zpl_cast( u32* )( s + n - 12 ) = c32;
-	*zpl_cast( u32* )( s + n - 8 )  = c32;
-	if ( n < 25 )
-		return dest;
-	*zpl_cast( u32* )( s + 12 )     = c32;
-	*zpl_cast( u32* )( s + 16 )     = c32;
-	*zpl_cast( u32* )( s + 20 )     = c32;
-	*zpl_cast( u32* )( s + 24 )     = c32;
-	*zpl_cast( u32* )( s + n - 28 ) = c32;
-	*zpl_cast( u32* )( s + n - 24 ) = c32;
-	*zpl_cast( u32* )( s + n - 20 ) = c32;
-	*zpl_cast( u32* )( s + n - 16 ) = c32;
-
-	k  = 24 + ( zpl_cast( uptr ) s & 4 );
-	s += k;
-	n -= k;
-
-	{
-		u64 c64 = ( zpl_cast( u64 ) c32 << 32 ) | c32;
-		while ( n > 31 )
-		{
-			*zpl_cast( u64* )( s + 0 )  = c64;
-			*zpl_cast( u64* )( s + 8 )  = c64;
-			*zpl_cast( u64* )( s + 16 ) = c64;
-			*zpl_cast( u64* )( s + 24 ) = c64;
-
-			n -= 32;
-			s += 32;
-		}
-	}
-
-	return dest;
-}
-
-GEN_IMPL_INLINE void* alloc_align( AllocatorInfo a, sw size, sw alignment )
-{
-	return a.Proc( a.Data, EAllocation_ALLOC, size, alignment, nullptr, 0, GEN_DEFAULT_ALLOCATOR_FLAGS );
-}
-
-GEN_IMPL_INLINE void* alloc( AllocatorInfo a, sw size )
-{
-	return alloc_align( a, size, GEN_DEFAULT_MEMORY_ALIGNMENT );
-}
-
-GEN_IMPL_INLINE void free( AllocatorInfo a, void* ptr )
-{
-	if ( ptr != nullptr )
-		a.Proc( a.Data, EAllocation_FREE, 0, 0, ptr, 0, GEN_DEFAULT_ALLOCATOR_FLAGS );
-}
-
-GEN_IMPL_INLINE void free_all( AllocatorInfo a )
-{
-	a.Proc( a.Data, EAllocation_FREE_ALL, 0, 0, nullptr, 0, GEN_DEFAULT_ALLOCATOR_FLAGS );
-}
-
-GEN_IMPL_INLINE void* resize( AllocatorInfo a, void* ptr, sw old_size, sw new_size )
-{
-	return resize_align( a, ptr, old_size, new_size, GEN_DEFAULT_MEMORY_ALIGNMENT );
-}
-
-GEN_IMPL_INLINE void* resize_align( AllocatorInfo a, void* ptr, sw old_size, sw new_size, sw alignment )
-{
-	return a.Proc( a.Data, EAllocation_RESIZE, new_size, alignment, ptr, old_size, GEN_DEFAULT_ALLOCATOR_FLAGS );
-}
-
-GEN_IMPL_INLINE void* default_resize_align( AllocatorInfo a, void* old_memory, sw old_size, sw new_size, sw alignment )
-{
-	if ( ! old_memory )
-		return alloc_align( a, new_size, alignment );
-
-	if ( new_size == 0 )
-	{
-		free( a, old_memory );
-		return nullptr;
-	}
-
-	if ( new_size < old_size )
-		new_size = old_size;
-
-	if ( old_size == new_size )
-	{
-		return old_memory;
-	}
-	else
-	{
-		void* new_memory = alloc_align( a, new_size, alignment );
-		if ( ! new_memory )
-			return nullptr;
-		mem_move( new_memory, old_memory, min( new_size, old_size ) );
-		free( a, old_memory );
-		return new_memory;
-	}
-}
-
-GEN_IMPL_INLINE void zero_size( void* ptr, sw size )
-{
-	mem_set( ptr, 0, size );
-}
-
 struct VirtualMemory
 {
 	void*  data;
-	sw size;
+	ssize size;
 };
 
 //! Initialize virtual memory from existing data.
-VirtualMemory vm_from_memory( void* data, sw size );
+VirtualMemory vm_from_memory( void* data, ssize size );
 
 //! Allocate virtual memory at address with size.
 
 //! @param addr The starting address of the region to reserve. If NULL, it lets operating system to decide where to allocate it.
 //! @param size The size to serve.
-VirtualMemory vm_alloc( void* addr, sw size );
+VirtualMemory vm_alloc( void* addr, ssize size );
 
 //! Release the virtual memory.
 b32 vm_free( VirtualMemory vm );
 
 //! Trim virtual memory.
-VirtualMemory vm_trim( VirtualMemory vm, sw lead_size, sw size );
+VirtualMemory vm_trim( VirtualMemory vm, ssize lead_size, ssize size );
 
 //! Purge virtual memory.
 b32 gen_vm_purge( VirtualMemory vm );
 
 //! Retrieve VM's page size and alignment.
-sw gen_virtual_memory_page_size( sw* alignment_out );
+ssize gen_virtual_memory_page_size( ssize* alignment_out );
 
 struct Arena
 {
 	static
-	void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+	void* allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 
 	static
-	Arena init_from_memory( void* start, sw size )
+	Arena init_from_memory( void* start, ssize size )
 	{
 		return
 		{
@@ -411,7 +189,7 @@ struct Arena
 	}
 
 	static
-	Arena init_from_allocator( AllocatorInfo backing, sw size )
+	Arena init_from_allocator( AllocatorInfo backing, ssize size )
 	{
 		Arena result =
 		{
@@ -425,18 +203,18 @@ struct Arena
 	}
 
 	static
-	Arena init_sub( Arena& parent, sw size )
+	Arena init_sub( Arena& parent, ssize size )
 	{
 		return init_from_allocator( parent.Backing, size );
 	}
 
-	sw alignment_of( sw alignment )
+	ssize alignment_of( ssize alignment )
 	{
-		sw alignment_offset, result_pointer, mask;
+		ssize alignment_offset, result_pointer, mask;
 		GEN_ASSERT( is_power_of_two( alignment ) );
 
 		alignment_offset = 0;
-		result_pointer   = (sw) PhysicalStart + TotalUsed;
+		result_pointer   = (ssize) PhysicalStart + TotalUsed;
 		mask             = alignment - 1;
 
 		if ( result_pointer & mask )
@@ -463,17 +241,17 @@ struct Arena
 		}
 	}
 
-	sw size_remaining( sw alignment )
+	ssize size_remaining( ssize alignment )
 	{
-		sw result = TotalSize - ( TotalUsed + alignment_of( alignment ) );
+		ssize result = TotalSize - ( TotalUsed + alignment_of( alignment ) );
 		return result;
 	}
 
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
-	sw            TotalSize;
-	sw            TotalUsed;
-	sw            TempCount;
+	ssize            TotalSize;
+	ssize            TotalUsed;
+	ssize            TempCount;
 
 	operator AllocatorInfo()
 	{
@@ -493,7 +271,7 @@ struct FixedArena
 		return result;
 	}
 
-	sw size_remaining( sw alignment )
+	ssize size_remaining( ssize alignment )
 	{
 		return arena.size_remaining( alignment );
 	}
@@ -523,16 +301,16 @@ using Arena_4MB   = FixedArena< megabytes( 4 ) >;
 struct Pool
 {
 	static
-	void* allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+	void* allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 
 	static
-	Pool init( AllocatorInfo backing, sw num_blocks, sw block_size )
+	Pool init( AllocatorInfo backing, ssize num_blocks, ssize block_size )
 	{
 		return init_align( backing, num_blocks, block_size, GEN_DEFAULT_MEMORY_ALIGNMENT );
 	}
 
 	static
-	Pool init_align( AllocatorInfo backing, sw num_blocks, sw block_size, sw block_align );
+	Pool init_align( AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align );
 
 	void clear();
 
@@ -547,15 +325,247 @@ struct Pool
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
 	void*         FreeList;
-	sw            BlockSize;
-	sw            BlockAlign;
-	sw            TotalSize;
-	sw            NumBlocks;
+	ssize         BlockSize;
+	ssize         BlockAlign;
+	ssize         TotalSize;
+	ssize         NumBlocks;
 
 	operator AllocatorInfo()
 	{
 		return { allocator_proc, this };
 	}
 };
+
+
+inline
+b32 is_power_of_two( ssize x ) {
+	if ( x <= 0 )
+		return false;
+	return ! ( x & ( x - 1 ) );
+}
+
+inline
+mem_ptr align_forward( void* ptr, ssize alignment )
+{
+	GEN_ASSERT( is_power_of_two( alignment ) );
+	uptr p       = to_uptr(ptr);
+	uptr forward = (p + ( alignment - 1 ) ) & ~( alignment - 1 );
+
+	return to_mem_ptr(forward);
+}
+
+inline s64 align_forward_i64( s64 value, ssize alignment ) { return value + ( alignment - value % alignment ) % alignment; }
+
+inline void*       pointer_add      ( void*       ptr, ssize bytes ) { return rcast(void*,       rcast( u8*,        ptr) + bytes ); }
+inline void const* pointer_add_const( void const* ptr, ssize bytes ) { return rcast(void const*, rcast( u8 const*,  ptr) + bytes ); }
+
+inline sptr pointer_diff( mem_ptr_const begin, mem_ptr_const end ) {
+	return scast( ssize, rcast( u8 const*, end) - rcast(u8 const*, begin) );
+}
+
+inline
+void* mem_move( void* destination, void const* source, ssize byte_count )
+{
+	if ( destination == NULL )
+	{
+		return NULL;
+	}
+
+	u8*       dest_ptr = rcast( u8*, destination);
+	u8 const* src_ptr  = rcast( u8 const*, source);
+
+	if ( dest_ptr == src_ptr )
+		return dest_ptr;
+
+	if ( src_ptr + byte_count <= dest_ptr || dest_ptr + byte_count <= src_ptr )    // NOTE: Non-overlapping
+		return mem_copy( dest_ptr, src_ptr, byte_count );
+
+	if ( dest_ptr < src_ptr )
+	{
+		if ( to_uptr(src_ptr) % size_of( ssize ) == to_uptr(dest_ptr) % size_of( ssize ) )
+		{
+			while ( pcast( uptr, dest_ptr) % size_of( ssize ) )
+			{
+				if ( ! byte_count-- )
+					return destination;
+
+				*dest_ptr++ = *src_ptr++;
+			}
+			while ( byte_count >= size_of( ssize ) )
+			{
+				* rcast(ssize*, dest_ptr)  = * rcast(ssize const*, src_ptr);
+				byte_count -= size_of( ssize );
+				dest_ptr   += size_of( ssize );
+				src_ptr    += size_of( ssize );
+			}
+		}
+		for ( ; byte_count; byte_count-- )
+			*dest_ptr++ = *src_ptr++;
+	}
+	else
+	{
+		if ( ( to_uptr(src_ptr) % size_of( ssize ) ) == ( to_uptr(dest_ptr) % size_of( ssize ) ) )
+		{
+			while ( to_uptr( dest_ptr + byte_count ) % size_of( ssize ) )
+			{
+				if ( ! byte_count-- )
+					return destination;
+
+				dest_ptr[ byte_count ] = src_ptr[ byte_count ];
+			}
+			while ( byte_count >= size_of( ssize ) )
+			{
+				byte_count                              -= size_of( ssize );
+				* rcast(ssize*, dest_ptr + byte_count )  = * rcast( ssize const*, src_ptr + byte_count );
+			}
+		}
+		while ( byte_count )
+			byte_count--, dest_ptr[ byte_count ] = src_ptr[ byte_count ];
+	}
+
+	return destination;
+}
+
+inline
+void* mem_set( void* destination, u8 fill_byte, ssize byte_count )
+{
+	if ( destination == NULL )
+	{
+		return NULL;
+	}
+
+	ssize align_offset;
+	u8*   dest_ptr  = rcast( u8*, destination);
+	u32   fill_word = ( ( u32 )-1 ) / 255 * fill_byte;
+
+	if ( byte_count == 0 )
+		return destination;
+
+	dest_ptr[ 0 ] = dest_ptr[ byte_count - 1 ] = fill_byte;
+	if ( byte_count < 3 )
+		return destination;
+
+	dest_ptr[ 1 ] = dest_ptr[ byte_count - 2 ] = fill_byte;
+	dest_ptr[ 2 ] = dest_ptr[ byte_count - 3 ] = fill_byte;
+	if ( byte_count < 7 )
+		return destination;
+
+	dest_ptr[ 3 ] = dest_ptr[ byte_count - 4 ] = fill_byte;
+	if ( byte_count < 9 )
+		return destination;
+
+	align_offset  = -to_sptr( dest_ptr ) & 3;
+	dest_ptr     += align_offset;
+	byte_count   -= align_offset;
+	byte_count   &= -4;
+
+	* rcast( u32*, ( dest_ptr + 0              ) ) = fill_word;
+	* rcast( u32*, ( dest_ptr + byte_count - 4 ) ) = fill_word;
+	if ( byte_count < 9 )
+		return destination;
+
+	* rcast( u32*, dest_ptr + 4 )               = fill_word;
+	* rcast( u32*, dest_ptr + 8 )               = fill_word;
+	* rcast( u32*, dest_ptr + byte_count - 12 ) = fill_word;
+	* rcast( u32*, dest_ptr + byte_count - 8 )  = fill_word;
+	if ( byte_count < 25 )
+		return destination;
+
+	* rcast( u32*, dest_ptr + 12 )              = fill_word;
+	* rcast( u32*, dest_ptr + 16 )              = fill_word;
+	* rcast( u32*, dest_ptr + 20 )              = fill_word;
+	* rcast( u32*, dest_ptr + 24 )              = fill_word;
+	* rcast( u32*, dest_ptr + byte_count - 28 ) = fill_word;
+	* rcast( u32*, dest_ptr + byte_count - 24 ) = fill_word;
+	* rcast( u32*, dest_ptr + byte_count - 20 ) = fill_word;
+	* rcast( u32*, dest_ptr + byte_count - 16 ) = fill_word;
+
+	align_offset  = 24 + to_uptr( dest_ptr ) & 4;
+	dest_ptr     += align_offset;
+	byte_count   -= align_offset;
+
+	{
+		u64 fill_doubleword = ( scast( u64, fill_word) << 32 ) | fill_word;
+		while ( byte_count > 31 )
+		{
+			* rcast( u64*, dest_ptr + 0 )  = fill_doubleword;
+			* rcast( u64*, dest_ptr + 8 )  = fill_doubleword;
+			* rcast( u64*, dest_ptr + 16 ) = fill_doubleword;
+			* rcast( u64*, dest_ptr + 24 ) = fill_doubleword;
+
+			byte_count -= 32;
+			dest_ptr += 32;
+		}
+	}
+
+	return destination;
+}
+
+inline
+void* alloc_align( AllocatorInfo a, ssize size, ssize alignment ) {
+	return a.Proc( a.Data, EAllocation_ALLOC, size, alignment, nullptr, 0, GEN_DEFAULT_ALLOCATOR_FLAGS );
+}
+
+inline
+void* alloc( AllocatorInfo a, ssize size ) {
+	return alloc_align( a, size, GEN_DEFAULT_MEMORY_ALIGNMENT );
+}
+
+inline
+void free( AllocatorInfo a, void* ptr ) {
+	if ( ptr != nullptr )
+		a.Proc( a.Data, EAllocation_FREE, 0, 0, ptr, 0, GEN_DEFAULT_ALLOCATOR_FLAGS );
+}
+
+inline
+void free_all( AllocatorInfo a ) {
+	a.Proc( a.Data, EAllocation_FREE_ALL, 0, 0, nullptr, 0, GEN_DEFAULT_ALLOCATOR_FLAGS );
+}
+
+inline
+void* resize( AllocatorInfo a, void* ptr, ssize old_size, ssize new_size ) {
+	return resize_align( a, ptr, old_size, new_size, GEN_DEFAULT_MEMORY_ALIGNMENT );
+}
+
+inline
+void* resize_align( AllocatorInfo a, void* ptr, ssize old_size, ssize new_size, ssize alignment ) {
+	return a.Proc( a.Data, EAllocation_RESIZE, new_size, alignment, ptr, old_size, GEN_DEFAULT_ALLOCATOR_FLAGS );
+}
+
+inline
+void* default_resize_align( AllocatorInfo a, void* old_memory, ssize old_size, ssize new_size, ssize alignment )
+{
+	if ( ! old_memory )
+		return alloc_align( a, new_size, alignment );
+
+	if ( new_size == 0 )
+	{
+		free( a, old_memory );
+		return nullptr;
+	}
+
+	if ( new_size < old_size )
+		new_size = old_size;
+
+	if ( old_size == new_size )
+	{
+		return old_memory;
+	}
+	else
+	{
+		void*  new_memory = alloc_align( a, new_size, alignment );
+		if ( ! new_memory )
+			return nullptr;
+
+		mem_move( new_memory, old_memory, min( new_size, old_size ) );
+		free( a, old_memory );
+		return new_memory;
+	}
+}
+
+inline
+void zero_size( void* ptr, ssize size ) {
+	mem_set( ptr, 0, size );
+}
 
 #pragma endregion Memory

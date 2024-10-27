@@ -48,8 +48,8 @@ union FileDescriptor
 typedef struct FileOperations FileOperations;
 
 #define GEN_FILE_OPEN_PROC( name )     FileError name( FileDescriptor* fd, FileOperations* ops, FileMode mode, char const* filename )
-#define GEN_FILE_READ_AT_PROC( name )  b32 name( FileDescriptor fd, void* buffer, sw size, s64 offset, sw* bytes_read, b32 stop_at_newline )
-#define GEN_FILE_WRITE_AT_PROC( name ) b32 name( FileDescriptor fd, void const* buffer, sw size, s64 offset, sw* bytes_written )
+#define GEN_FILE_READ_AT_PROC( name )  b32 name( FileDescriptor fd, void* buffer, ssize size, s64 offset, ssize* bytes_read, b32 stop_at_newline )
+#define GEN_FILE_WRITE_AT_PROC( name ) b32 name( FileDescriptor fd, void const* buffer, ssize size, s64 offset, ssize* bytes_written )
 #define GEN_FILE_SEEK_PROC( name )     b32 name( FileDescriptor fd, s64 offset, SeekWhenceType whence, s64* new_offset )
 #define GEN_FILE_CLOSE_PROC( name )    void name( FileDescriptor fd )
 
@@ -161,7 +161,7 @@ FileError file_open_mode( FileInfo* file, FileMode mode, char const* filename );
 	* @param  buffer Buffer to read to
 	* @param  size   Size to read
 	*/
-GEN_DEF_INLINE b32 file_read( FileInfo* file, void* buffer, sw size );
+b32 file_read( FileInfo* file, void* buffer, ssize size );
 
 /**
 	* Reads file at a specific offset
@@ -171,7 +171,7 @@ GEN_DEF_INLINE b32 file_read( FileInfo* file, void* buffer, sw size );
 	* @param  offset     Offset to read from
 	* @param  bytes_read How much data we've actually read
 	*/
-GEN_DEF_INLINE b32 file_read_at( FileInfo* file, void* buffer, sw size, s64 offset );
+b32 file_read_at( FileInfo* file, void* buffer, ssize size, s64 offset );
 
 /**
 	* Reads file safely
@@ -181,13 +181,13 @@ GEN_DEF_INLINE b32 file_read_at( FileInfo* file, void* buffer, sw size, s64 offs
 	* @param  offset     Offset to read from
 	* @param  bytes_read How much data we've actually read
 	*/
-GEN_DEF_INLINE b32 file_read_at_check( FileInfo* file, void* buffer, sw size, s64 offset, sw* bytes_read );
+b32 file_read_at_check( FileInfo* file, void* buffer, ssize size, s64 offset, ssize* bytes_read );
 
 struct FileContents
 {
 	AllocatorInfo allocator;
 	void*         data;
-	sw            size;
+	ssize            size;
 };
 
 constexpr b32 zero_terminate    = true;
@@ -214,20 +214,20 @@ s64 file_size( FileInfo* file );
 	* @param  file
 	* @param  offset Offset to seek to
 	*/
-GEN_DEF_INLINE s64 file_seek( FileInfo* file, s64 offset );
+s64 file_seek( FileInfo* file, s64 offset );
 
 /**
 	* Seeks the file cursor to the end of the file
 	* @param  file
 	*/
-GEN_DEF_INLINE s64 file_seek_to_end( FileInfo* file );
+s64 file_seek_to_end( FileInfo* file );
 
 /**
 	* Returns the length from the beginning of the file we've read so far
 	* @param  file
 	* @return      Our current position in file
 	*/
-GEN_DEF_INLINE s64 file_tell( FileInfo* file );
+s64 file_tell( FileInfo* file );
 
 /**
 	* Writes to a file
@@ -235,7 +235,7 @@ GEN_DEF_INLINE s64 file_tell( FileInfo* file );
 	* @param  buffer Buffer to read from
 	* @param  size   Size to read
 	*/
-GEN_DEF_INLINE b32 file_write( FileInfo* file, void const* buffer, sw size );
+b32 file_write( FileInfo* file, void const* buffer, ssize size );
 
 /**
 	* Writes to file at a specific offset
@@ -245,7 +245,7 @@ GEN_DEF_INLINE b32 file_write( FileInfo* file, void const* buffer, sw size );
 	* @param  offset        Offset to write to
 	* @param  bytes_written How much data we've actually written
 	*/
-GEN_DEF_INLINE b32 file_write_at( FileInfo* file, void const* buffer, sw size, s64 offset );
+b32 file_write_at( FileInfo* file, void const* buffer, ssize size, s64 offset );
 
 /**
 	* Writes to file safely
@@ -255,86 +255,7 @@ GEN_DEF_INLINE b32 file_write_at( FileInfo* file, void const* buffer, sw size, s
 	* @param  offset        Offset to write to
 	* @param  bytes_written How much data we've actually written
 	*/
-GEN_DEF_INLINE b32 file_write_at_check( FileInfo* file, void const* buffer, sw size, s64 offset, sw* bytes_written );
-
-GEN_IMPL_INLINE s64 file_seek( FileInfo* f, s64 offset )
-{
-	s64 new_offset = 0;
-
-	if ( ! f->ops.read_at )
-		f->ops = default_file_operations;
-
-	f->ops.seek( f->fd, offset, ESeekWhence_BEGIN, &new_offset );
-
-	return new_offset;
-}
-
-GEN_IMPL_INLINE s64 file_seek_to_end( FileInfo* f )
-{
-	s64 new_offset = 0;
-
-	if ( ! f->ops.read_at )
-		f->ops = default_file_operations;
-
-	f->ops.seek( f->fd, 0, ESeekWhence_END, &new_offset );
-
-	return new_offset;
-}
-
-GEN_IMPL_INLINE s64 file_tell( FileInfo* f )
-{
-	s64 new_offset = 0;
-
-	if ( ! f->ops.read_at )
-		f->ops = default_file_operations;
-
-	f->ops.seek( f->fd, 0, ESeekWhence_CURRENT, &new_offset );
-
-	return new_offset;
-}
-
-GEN_IMPL_INLINE b32 file_read( FileInfo* f, void* buffer, sw size )
-{
-	s64 cur_offset = file_tell( f );
-	b32 result     = file_read_at( f, buffer, size, file_tell( f ) );
-	file_seek( f, cur_offset + size );
-	return result;
-}
-
-GEN_IMPL_INLINE b32 file_read_at( FileInfo* f, void* buffer, sw size, s64 offset )
-{
-	return file_read_at_check( f, buffer, size, offset, NULL );
-}
-
-GEN_IMPL_INLINE b32 file_read_at_check( FileInfo* f, void* buffer, sw size, s64 offset, sw* bytes_read )
-{
-	if ( ! f->ops.read_at )
-		f->ops = default_file_operations;
-	return f->ops.read_at( f->fd, buffer, size, offset, bytes_read, false );
-}
-
-GEN_IMPL_INLINE b32 file_write( FileInfo* f, void const* buffer, sw size )
-{
-	s64 cur_offset = file_tell( f );
-	b32 result     = file_write_at( f, buffer, size, file_tell( f ) );
-
-	file_seek( f, cur_offset + size );
-
-	return result;
-}
-
-GEN_IMPL_INLINE b32 file_write_at( FileInfo* f, void const* buffer, sw size, s64 offset )
-{
-	return file_write_at_check( f, buffer, size, offset, NULL );
-}
-
-GEN_IMPL_INLINE b32 file_write_at_check( FileInfo* f, void const* buffer, sw size, s64 offset, sw* bytes_written )
-{
-	if ( ! f->ops.read_at )
-		f->ops = default_file_operations;
-
-	return f->ops.write_at( f->fd, buffer, size, offset, bytes_written );
-}
+b32 file_write_at_check( FileInfo* file, void const* buffer, ssize size, s64 offset, ssize* bytes_written );
 
 enum FileStreamFlags : u32
 {
@@ -361,15 +282,103 @@ b8 file_stream_new( FileInfo* file, AllocatorInfo allocator );
 	* @param  size     Buffer's size
 	* @param  flags
 	*/
-b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, sw size, FileStreamFlags flags );
+b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, ssize size, FileStreamFlags flags );
 
 /**
 	* Retrieves the stream's underlying buffer and buffer size.
 	* @param file memory stream
 	* @param size (Optional) buffer size
 	*/
-u8* file_stream_buf( FileInfo* file, sw* size );
+u8* file_stream_buf( FileInfo* file, ssize* size );
 
 extern FileOperations const memory_file_operations;
+
+inline
+s64 file_seek( FileInfo* f, s64 offset )
+{
+	s64 new_offset = 0;
+
+	if ( ! f->ops.read_at )
+		f->ops = default_file_operations;
+
+	f->ops.seek( f->fd, offset, ESeekWhence_BEGIN, &new_offset );
+
+	return new_offset;
+}
+
+inline
+s64 file_seek_to_end( FileInfo* f )
+{
+	s64 new_offset = 0;
+
+	if ( ! f->ops.read_at )
+		f->ops = default_file_operations;
+
+	f->ops.seek( f->fd, 0, ESeekWhence_END, &new_offset );
+
+	return new_offset;
+}
+
+inline
+s64 file_tell( FileInfo* f )
+{
+	s64 new_offset = 0;
+
+	if ( ! f->ops.read_at )
+		f->ops = default_file_operations;
+
+	f->ops.seek( f->fd, 0, ESeekWhence_CURRENT, &new_offset );
+
+	return new_offset;
+}
+
+inline
+b32 file_read( FileInfo* f, void* buffer, ssize size )
+{
+	s64 cur_offset = file_tell( f );
+	b32 result     = file_read_at( f, buffer, size, file_tell( f ) );
+	file_seek( f, cur_offset + size );
+	return result;
+}
+
+inline
+b32 file_read_at( FileInfo* f, void* buffer, ssize size, s64 offset )
+{
+	return file_read_at_check( f, buffer, size, offset, NULL );
+}
+
+inline
+b32 file_read_at_check( FileInfo* f, void* buffer, ssize size, s64 offset, ssize* bytes_read )
+{
+	if ( ! f->ops.read_at )
+		f->ops = default_file_operations;
+	return f->ops.read_at( f->fd, buffer, size, offset, bytes_read, false );
+}
+
+inline
+b32 file_write( FileInfo* f, void const* buffer, ssize size )
+{
+	s64 cur_offset = file_tell( f );
+	b32 result     = file_write_at( f, buffer, size, file_tell( f ) );
+
+	file_seek( f, cur_offset + size );
+
+	return result;
+}
+
+inline
+b32 file_write_at( FileInfo* f, void const* buffer, ssize size, s64 offset )
+{
+	return file_write_at_check( f, buffer, size, offset, NULL );
+}
+
+inline
+b32 file_write_at_check( FileInfo* f, void const* buffer, ssize size, s64 offset, ssize* bytes_written )
+{
+	if ( ! f->ops.read_at )
+		f->ops = default_file_operations;
+
+	return f->ops.write_at( f->fd, buffer, size, offset, bytes_written );
+}
 
 #pragma endregion File Handling

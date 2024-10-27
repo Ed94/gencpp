@@ -5,7 +5,7 @@
 
 #pragma region Memory
 
-void* mem_copy( void* dest, void const* source, sw n )
+void* mem_copy( void* dest, void const* source, ssize n )
 {
 	if ( dest == NULL )
 	{
@@ -15,25 +15,25 @@ void* mem_copy( void* dest, void const* source, sw n )
 	return memcpy( dest, source, n );
 }
 
-void const* mem_find( void const* data, u8 c, sw n )
+void const* mem_find( void const* data, u8 c, ssize n )
 {
-	u8 const* s = zpl_cast( u8 const* ) data;
-	while ( ( zpl_cast( uptr ) s & ( sizeof( uw ) - 1 ) ) && n && *s != c )
+	u8 const* s = rcast( u8 const*, data);
+	while ( ( rcast( uptr, s) & ( sizeof( usize ) - 1 ) ) && n && *s != c )
 	{
 		s++;
 		n--;
 	}
 	if ( n && *s != c )
 	{
-		sw const* w;
-		sw        k = GEN__ONES * c;
-		w           = zpl_cast( sw const* ) s;
-		while ( n >= size_of( sw ) && ! GEN__HAS_ZERO( *w ^ k ) )
+		ssize const* w;
+		ssize        k = GEN__ONES * c;
+		w           = rcast( ssize const*, s);
+		while ( n >= size_of( ssize ) && ! GEN__HAS_ZERO( *w ^ k ) )
 		{
 			w++;
-			n -= size_of( sw );
+			n -= size_of( ssize );
 		}
-		s = zpl_cast( u8 const* ) w;
+		s = rcast( u8 const*, w);
 		while ( n && *s != c )
 		{
 			s++;
@@ -41,7 +41,7 @@ void const* mem_find( void const* data, u8 c, sw n )
 		}
 	}
 
-	return n ? zpl_cast( void const* ) s : NULL;
+	return n ? rcast( void const*, s ) : NULL;
 }
 
 #define GEN_HEAP_STATS_MAGIC 0xDEADC0DE
@@ -49,8 +49,8 @@ void const* mem_find( void const* data, u8 c, sw n )
 struct _heap_stats
 {
 	u32 magic;
-	sw  used_memory;
-	sw  alloc_count;
+	ssize  used_memory;
+	ssize  alloc_count;
 };
 
 global _heap_stats _heap_stats_info;
@@ -61,13 +61,13 @@ void heap_stats_init( void )
 	_heap_stats_info.magic = GEN_HEAP_STATS_MAGIC;
 }
 
-sw heap_stats_used_memory( void )
+ssize heap_stats_used_memory( void )
 {
 	GEN_ASSERT_MSG( _heap_stats_info.magic == GEN_HEAP_STATS_MAGIC, "heap_stats is not initialised yet, call heap_stats_init first!" );
 	return _heap_stats_info.used_memory;
 }
 
-sw heap_stats_alloc_count( void )
+ssize heap_stats_alloc_count( void )
 {
 	GEN_ASSERT_MSG( _heap_stats_info.magic == GEN_HEAP_STATS_MAGIC, "heap_stats is not initialised yet, call heap_stats_init first!" );
 	return _heap_stats_info.alloc_count;
@@ -82,11 +82,11 @@ void heap_stats_check( void )
 
 struct _heap_alloc_info
 {
-	sw    size;
+	ssize    size;
 	void* physical_start;
 };
 
-void* heap_allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
+void* heap_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
 	void* ptr = NULL;
 	// unused( allocator_data );
@@ -95,16 +95,16 @@ void* heap_allocator_proc( void* allocator_data, AllocType type, sw size, sw ali
 		alignment = GEN_DEFAULT_MEMORY_ALIGNMENT;
 
 #ifdef GEN_HEAP_ANALYSIS
-	sw alloc_info_size      = size_of( _heap_alloc_info );
-	sw alloc_info_remainder = ( alloc_info_size % alignment );
-	sw track_size           = max( alloc_info_size, alignment ) + alloc_info_remainder;
+	ssize alloc_info_size      = size_of( _heap_alloc_info );
+	ssize alloc_info_remainder = ( alloc_info_size % alignment );
+	ssize track_size           = max( alloc_info_size, alignment ) + alloc_info_remainder;
 	switch ( type )
 	{
 		case EAllocation_FREE :
 			{
 				if ( ! old_memory )
 					break;
-				_heap_alloc_info* alloc_info  = zpl_cast( _heap_alloc_info* ) old_memory - 1;
+				_heap_alloc_info* alloc_info  = rcast( _heap_alloc_info*, old_memory) - 1;
 				_heap_stats_info.used_memory -= alloc_info->size;
 				_heap_stats_info.alloc_count--;
 				old_memory = alloc_info->physical_start;
@@ -195,11 +195,11 @@ void* heap_allocator_proc( void* allocator_data, AllocType type, sw size, sw ali
 #ifdef GEN_HEAP_ANALYSIS
 	if ( type == EAllocation_ALLOC )
 	{
-		_heap_alloc_info* alloc_info = zpl_cast( _heap_alloc_info* )( zpl_cast( char* ) ptr + alloc_info_remainder );
+		_heap_alloc_info* alloc_info = rcast( _heap_alloc_info*, rcast( char*, ptr) + alloc_info_remainder );
 		zero_item( alloc_info );
 		alloc_info->size              = size - track_size;
 		alloc_info->physical_start    = ptr;
-		ptr                           = zpl_cast( void* )( alloc_info + 1 );
+		ptr                           = rcast( void*, alloc_info + 1 );
 		_heap_stats_info.used_memory += alloc_info->size;
 		_heap_stats_info.alloc_count++;
 	}
@@ -209,7 +209,7 @@ void* heap_allocator_proc( void* allocator_data, AllocType type, sw size, sw ali
 }
 
 #pragma region VirtualMemory
-VirtualMemory vm_from_memory( void* data, sw size )
+VirtualMemory vm_from_memory( void* data, ssize size )
 {
 	VirtualMemory vm;
 	vm.data = data;
@@ -218,7 +218,7 @@ VirtualMemory vm_from_memory( void* data, sw size )
 }
 
 #if defined( GEN_SYSTEM_WINDOWS )
-VirtualMemory vm_alloc( void* addr, sw size )
+VirtualMemory vm_alloc( void* addr, ssize size )
 {
 	VirtualMemory vm;
 	GEN_ASSERT( size > 0 );
@@ -234,7 +234,7 @@ b32 vm_free( VirtualMemory vm )
 	{
 		if ( VirtualQuery( vm.data, &info, size_of( info ) ) == 0 )
 			return false;
-		if ( info.BaseAddress != vm.data || info.AllocationBase != vm.data || info.State != MEM_COMMIT || info.RegionSize > zpl_cast( uw ) vm.size )
+		if ( info.BaseAddress != vm.data || info.AllocationBase != vm.data || info.State != MEM_COMMIT || info.RegionSize > scast( usize, vm.size) )
 		{
 			return false;
 		}
@@ -246,7 +246,7 @@ b32 vm_free( VirtualMemory vm )
 	return true;
 }
 
-VirtualMemory vm_trim( VirtualMemory vm, sw lead_size, sw size )
+VirtualMemory vm_trim( VirtualMemory vm, ssize lead_size, ssize size )
 {
 	VirtualMemory new_vm = { 0 };
 	void*             ptr;
@@ -270,7 +270,7 @@ b32 vm_purge( VirtualMemory vm )
 	return true;
 }
 
-sw virtual_memory_page_size( sw* alignment_out )
+ssize virtual_memory_page_size( ssize* alignment_out )
 {
 	SYSTEM_INFO info;
 	GetSystemInfo( &info );
@@ -285,7 +285,7 @@ sw virtual_memory_page_size( sw* alignment_out )
 #	ifndef MAP_ANONYMOUS
 #		define MAP_ANONYMOUS MAP_ANON
 #	endif
-VirtualMemory vm_alloc( void* addr, sw size )
+VirtualMemory vm_alloc( void* addr, ssize size )
 {
 	VirtualMemory vm;
 	GEN_ASSERT( size > 0 );
@@ -300,10 +300,10 @@ b32 vm_free( VirtualMemory vm )
 	return true;
 }
 
-VirtualMemory vm_trim( VirtualMemory vm, sw lead_size, sw size )
+VirtualMemory vm_trim( VirtualMemory vm, ssize lead_size, ssize size )
 {
 	void*  ptr;
-	sw trail_size;
+	ssize trail_size;
 	GEN_ASSERT( vm.size >= lead_size + size );
 
 	ptr        = pointer_add( vm.data, lead_size );
@@ -322,10 +322,10 @@ b32 vm_purge( VirtualMemory vm )
 	return err != 0;
 }
 
-sw virtual_memory_page_size( sw* alignment_out )
+ssize virtual_memory_page_size( ssize* alignment_out )
 {
 	// TODO: Is this always true?
-	sw result = zpl_cast( sw ) sysconf( _SC_PAGE_SIZE );
+	ssize result = scast( ssize, sysconf( _SC_PAGE_SIZE ));
 	if ( alignment_out )
 		*alignment_out = result;
 	return result;
@@ -334,7 +334,7 @@ sw virtual_memory_page_size( sw* alignment_out )
 
 #pragma endregion VirtualMemory
 
-void* Arena::allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
+void* Arena::allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
 	Arena* arena = rcast(Arena*, allocator_data);
 	void*      ptr   = NULL;
@@ -346,10 +346,10 @@ void* Arena::allocator_proc( void* allocator_data, AllocType type, sw size, sw a
 		case EAllocation_ALLOC :
 			{
 				void* end        = pointer_add( arena->PhysicalStart, arena->TotalUsed );
-				sw    total_size = align_forward_i64( size, alignment );
+				ssize    total_size = align_forward_i64( size, alignment );
 
 				// NOTE: Out of memory
-				if ( arena->TotalUsed + total_size > (sw) arena->TotalSize )
+				if ( arena->TotalUsed + total_size > (ssize) arena->TotalSize )
 				{
 					// zpl__printf_err("%s", "Arena out of memory\n");
 					GEN_FATAL("Arena out of memory! (Possibly could not fit for the largest size Arena!!)");
@@ -384,9 +384,9 @@ void* Arena::allocator_proc( void* allocator_data, AllocType type, sw size, sw a
 	return ptr;
 }
 
-void* Pool::allocator_proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
+void* Pool::allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
-	Pool* pool = zpl_cast( Pool* ) allocator_data;
+	Pool* pool = rcast( Pool*, allocator_data);
 	void* ptr  = NULL;
 
 	// unused( old_size );
@@ -401,9 +401,9 @@ void* Pool::allocator_proc( void* allocator_data, AllocType type, sw size, sw al
 				GEN_ASSERT( alignment == pool->BlockAlign );
 				GEN_ASSERT( pool->FreeList != NULL );
 
-				next_free        = *zpl_cast( uptr* ) pool->FreeList;
+				next_free        = * rcast( uptr*, pool->FreeList);
 				ptr              = pool->FreeList;
-				pool->FreeList   = zpl_cast( void* ) next_free;
+				pool->FreeList   = rcast( void*, next_free);
 				pool->TotalSize += pool->BlockSize;
 
 				if ( flags & ALLOCATOR_FLAG_CLEAR_TO_ZERO )
@@ -417,8 +417,8 @@ void* Pool::allocator_proc( void* allocator_data, AllocType type, sw size, sw al
 				if ( old_memory == NULL )
 					return NULL;
 
-				next             = zpl_cast( uptr* ) old_memory;
-				*next            = zpl_cast( uptr ) pool->FreeList;
+				next             = rcast( uptr*, old_memory);
+				*next            = rcast( uptr, pool->FreeList);
 				pool->FreeList   = old_memory;
 				pool->TotalSize -= pool->BlockSize;
 			}
@@ -426,7 +426,7 @@ void* Pool::allocator_proc( void* allocator_data, AllocType type, sw size, sw al
 
 		case EAllocation_FREE_ALL :
 			{
-				sw    actual_block_size, block_index;
+				ssize    actual_block_size, block_index;
 				void* curr;
 				uptr* end;
 
@@ -437,13 +437,13 @@ void* Pool::allocator_proc( void* allocator_data, AllocType type, sw size, sw al
 				curr = pool->PhysicalStart;
 				for ( block_index = 0; block_index < pool->NumBlocks - 1; block_index++ )
 				{
-					uptr* next = zpl_cast( uptr* ) curr;
-					*next      = zpl_cast( uptr ) curr + actual_block_size;
+					uptr* next = rcast( uptr*, curr);
+					* next     = rcast( uptr, curr) + actual_block_size;
 					curr       = pointer_add( curr, actual_block_size );
 				}
 
-				end            = zpl_cast( uptr* ) curr;
-				*end           = zpl_cast( uptr ) NULL;
+				end            = rcast( uptr*, curr);
+				* end          = scast( uptr, NULL);
 				pool->FreeList = pool->PhysicalStart;
 			}
 			break;
@@ -457,11 +457,11 @@ void* Pool::allocator_proc( void* allocator_data, AllocType type, sw size, sw al
 	return ptr;
 }
 
-Pool Pool::init_align( AllocatorInfo backing, sw num_blocks, sw block_size, sw block_align )
+Pool Pool::init_align( AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align )
 {
 	Pool pool = {};
 
-	sw    actual_block_size, pool_size, block_index;
+	ssize    actual_block_size, pool_size, block_index;
 	void *data, *curr;
 	uptr* end;
 
@@ -497,7 +497,7 @@ Pool Pool::init_align( AllocatorInfo backing, sw num_blocks, sw block_size, sw b
 
 void Pool::clear()
 {
-	sw    actual_block_size, block_index;
+	ssize    actual_block_size, block_index;
 	void* curr;
 	uptr* end;
 

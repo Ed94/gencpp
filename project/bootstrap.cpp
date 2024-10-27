@@ -29,7 +29,7 @@ int gen_main()
 
 	// gen_dep.hpp
 	{
-		Code header_start = scan_file( "dependencies/header_start.hpp" );
+		Code platform     = scan_file( "dependencies/platform.hpp" );
 		Code macros 	  = scan_file( "dependencies/macros.hpp" );
 		Code basic_types  = scan_file( "dependencies/basic_types.hpp" );
 		Code debug        = scan_file( "dependencies/debug.hpp" );
@@ -45,8 +45,8 @@ int gen_main()
 		Builder
 		header = Builder::open("gen/gen.dep.hpp");
 		header.print_fmt( generation_notice );
-		header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n\n" );
-		header.print( header_start );
+		header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n" );
+		header.print( platform );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
 		header.print( macros );
@@ -80,7 +80,7 @@ int gen_main()
 		Builder
 		src = Builder::open( "gen/gen.dep.cpp" );
 		src.print_fmt( generation_notice );
-		src.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n\n" );
+		src.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n" );
 		src.print( src_start );
 		src.print_fmt( "\nGEN_NS_BEGIN\n" );
 
@@ -203,7 +203,7 @@ int gen_main()
 		src.print_fmt( generation_notice );
 		src.print( push_ignores );
 		src.print( src_start );
-		src.print_fmt( "GEN_NS_BEGIN\n");
+		src.print_fmt( "\nGEN_NS_BEGIN\n");
 
 		src.print( static_data );
 
@@ -278,12 +278,11 @@ int gen_main()
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 		header.print( parsing );
 		header.print( scanner );
-		header.print_fmt( "GEN_NS_END\n" );
+		header.print_fmt( "\nGEN_NS_END\n" );
 		header.write();
 	}
 
 	// gen_scanner.cpp
-	if (1)
 	{
 		Code parsing = scan_file( "dependencies/parsing.cpp" );
 		Code scanner = scan_file( "auxillary/scanner.cpp" );

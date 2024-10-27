@@ -17,7 +17,7 @@ Code scan_file( char const* path )
 		GEN_FATAL( "scan_file: Could not open: %s", path );
 	}
 
-	sw fsize = file_size( & file );
+	ssize fsize = file_size( & file );
 	if ( fsize <= 0 )
 	{
 		GEN_FATAL("scan_file: %s is empty", path );

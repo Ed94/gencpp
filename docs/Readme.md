@@ -136,7 +136,7 @@ The width dictates how much the static array can hold before it must give way to
 
 ```cpp
 constexpr static
-uw ArrSpecs_Cap =
+usize ArrSpecs_Cap =
 (
     AST_POD_Size
     - sizeof(AST*) * 3
@@ -158,7 +158,7 @@ Data Notes:
   * Most of the work is just defining the allocation procedure:
 
 ```cpp
-    void* ( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags );
+    void* ( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 ```
 
 * ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.

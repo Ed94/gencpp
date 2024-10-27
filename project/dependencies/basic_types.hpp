@@ -47,21 +47,21 @@
 #if defined( GEN_COMPILER_MSVC )
 #	if _MSC_VER < 1300
 typedef unsigned char  u8;
-typedef signed char    s8;
+typedef signed   char  s8;
 typedef unsigned short u16;
-typedef signed short   s16;
+typedef signed   short s16;
 typedef unsigned int   u32;
-typedef signed int     s32;
+typedef signed   int   s32;
 #    else
 typedef unsigned __int8  u8;
-typedef signed __int8    s8;
+typedef signed   __int8  s8;
 typedef unsigned __int16 u16;
-typedef signed __int16   s16;
+typedef signed   __int16 s16;
 typedef unsigned __int32 u32;
-typedef signed __int32   s32;
+typedef signed   __int32 s32;
 #    endif
 typedef unsigned __int64 u64;
-typedef signed __int64   s64;
+typedef signed   __int64 s64;
 #else
 #	include <stdint.h>
 
@@ -85,10 +85,10 @@ static_assert( sizeof( u16 ) == 2, "sizeof(u16) != 2" );
 static_assert( sizeof( u32 ) == 4, "sizeof(u32) != 4" );
 static_assert( sizeof( u64 ) == 8, "sizeof(u64) != 8" );
 
-typedef size_t    uw;
-typedef ptrdiff_t sw;
+typedef size_t    usize;
+typedef ptrdiff_t ssize;
 
-static_assert( sizeof( uw ) == sizeof( sw ), "sizeof(uw) != sizeof(sw)" );
+static_assert( sizeof( usize ) == sizeof( ssize ), "sizeof(usize) != sizeof(ssize)" );
 
 // NOTE: (u)zpl_intptr is only here for semantic reasons really as this library will only support 32/64 bit OSes.
 #if defined( _WIN64 )
@@ -121,5 +121,14 @@ static_assert( sizeof( f64 ) == 8, "sizeof(f64) != 8" );
 typedef s8  b8;
 typedef s16 b16;
 typedef s32 b32;
+
+using mem_ptr       = void*;
+using mem_ptr_const = void const*;
+
+template<typename Type> uptr to_uptr( Type* ptr ) { return (uptr)ptr; }
+template<typename Type> sptr to_sptr( Type* ptr ) { return (sptr)ptr; }
+
+template<typename Type> mem_ptr       to_mem_ptr      ( Type ptr ) { return (mem_ptr)      ptr; }
+template<typename Type> mem_ptr_const to_mem_ptr_const( Type ptr ) { return (mem_ptr_const)ptr; }
 
 #pragma endregion Basic Types

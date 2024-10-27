@@ -19,7 +19,7 @@ Code gen__buffer_base()
 	return def_global_body( 1, header );
 }
 
-Code gen__buffer( StrC type, sw type_size )
+Code gen__buffer( StrC type, ssize type_size )
 {
 	static CodeType t_allocator_info = def_type( name(AllocatorInfo));
 
@@ -206,7 +206,7 @@ struct GenBufferRequest
 {
 	StrC Dependency;
 	StrC Type;
-	sw   TypeSize;
+	ssize   TypeSize;
 };
 Array<GenBufferRequest> GenBufferRequests;
 
@@ -217,7 +217,7 @@ void gen__buffer_request( StrC type, StrC dep = {} )
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenBufferRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenBufferRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenBufferRequests[ idx ].Type;
 

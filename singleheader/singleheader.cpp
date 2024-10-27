@@ -69,7 +69,7 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code header_start = scan_file( project_dir "dependencies/header_start.hpp" );
+			Code platform     = scan_file( project_dir "dependencies/platform.hpp" );
 			Code macros       = scan_file( project_dir "dependencies/macros.hpp" );
 			Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
 			Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
@@ -83,7 +83,9 @@ int gen_main()
 			Code timing       = scan_file( project_dir "dependencies/timing.hpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
-			header.print( header_start );
+			header.print( fmt_newline );
+			header.print( platform );
+			header.print( fmt_newline );
 			header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
 			header.print( macros );

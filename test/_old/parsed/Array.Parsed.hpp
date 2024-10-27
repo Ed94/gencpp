@@ -15,11 +15,11 @@ Code gen__array_base()
 		struct ArrayHeader
 		{
 			AllocatorInfo Allocator;
-			uw            Capacity;
-			uw            Num;
+			usize            Capacity;
+			usize            Num;
 		};
 
-		static inline uw array_grow_formula( uw value )
+		static inline usize array_grow_formula( usize value )
 		{
 			return 2 * value * 8;
 		}
@@ -52,7 +52,7 @@ Code gen__array( StrC type )
 				}
 
 				static
-				<ArrayType> init_reserve( AllocatorInfo allocator, sw capacity )
+				<ArrayType> init_reserve( AllocatorInfo allocator, ssize capacity )
 				{
 					Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) ));
 
@@ -94,14 +94,14 @@ Code gen__array( StrC type )
 					header.Num     = 0;
 				}
 
-				bool fill( uw begin, uw end, Type value )
+				bool fill( usize begin, usize end, Type value )
 				{
 					Header& header = get_header();
 
 					if ( begin < 0 || end >= header.Num )
 						return false;
 
-					for ( sw idx = begin; idx < end; idx++ )
+					for ( ssize idx = begin; idx < end; idx++ )
 					{
 						Data[ idx ] = value;
 					}
@@ -120,10 +120,10 @@ Code gen__array( StrC type )
 					return *( reinterpret_cast< Header* >( Data ) - 1 );
 				}
 
-				bool grow( uw min_capacity )
+				bool grow( usize min_capacity )
 				{
 					Header& header       = get_header();
-					uw      new_capacity = grow_formula( header.Capacity );
+					usize      new_capacity = grow_formula( header.Capacity );
 
 					if ( new_capacity < min_capacity )
 						new_capacity = 8;
@@ -131,7 +131,7 @@ Code gen__array( StrC type )
 					return set_capacity( new_capacity );
 				}
 
-				uw num( void )
+				usize num( void )
 				{
 					return get_header().Num;
 				}
@@ -144,7 +144,7 @@ Code gen__array( StrC type )
 					header.Num--;
 				}
 
-				void remove_at( uw idx )
+				void remove_at( usize idx )
 				{
 					Header* header = &get_header();
 					GEN_ASSERT( idx < header->Num );
@@ -153,7 +153,7 @@ Code gen__array( StrC type )
 					header->Num--;
 				}
 
-				bool reserve( uw new_capacity )
+				bool reserve( usize new_capacity )
 				{
 					Header& header = get_header();
 
@@ -163,7 +163,7 @@ Code gen__array( StrC type )
 					return true;
 				}
 
-				bool resize( uw num )
+				bool resize( usize num )
 				{
 					Header& header = get_header();
 
@@ -177,7 +177,7 @@ Code gen__array( StrC type )
 					return true;
 				}
 
-				bool set_capacity( uw new_capacity )
+				bool set_capacity( usize new_capacity )
 				{
 					Header& header = get_header();
 
@@ -187,7 +187,7 @@ Code gen__array( StrC type )
 					if ( new_capacity < header.Num )
 						header.Num = new_capacity;
 
-					sw      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
+					ssize      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
 					Header* new_header = rcast( Header*, alloc( header.Allocator, size ) );
 
 					if ( new_header == nullptr )
@@ -233,7 +233,7 @@ void gen__array_request( StrC type, StrC dep = {} )
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenArrayRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenArrayRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenArrayRequests[ idx ].Type;
 

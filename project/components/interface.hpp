@@ -204,9 +204,9 @@ CodeVar         parse_variable     ( StrC var_def         );
 
 #pragma region Untyped text
 
-sw   token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va );
+ssize   token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va );
 //! Do not use directly. Use the token_fmt macro instead.
-StrC token_fmt_impl( sw, ... );
+StrC token_fmt_impl( ssize, ... );
 
 Code untyped_str      ( StrC content);
 Code untyped_fmt      ( char const* fmt, ... );

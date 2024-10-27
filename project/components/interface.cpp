@@ -9,7 +9,7 @@ internal void deinit();
 }
 
 internal
-void* Global_Allocator_Proc( void* allocator_data, AllocType type, sw size, sw alignment, void* old_memory, sw old_size, u64 flags )
+void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
 	Arena* last = & Global_AllocatorBuckets.back();
 
@@ -169,8 +169,8 @@ void define_constants()
 	def_constant_code_type( u32 );
 	def_constant_code_type( u64 );
 
-	def_constant_code_type( sw );
-	def_constant_code_type( uw );
+	def_constant_code_type( ssize );
+	def_constant_code_type( usize );
 
 	def_constant_code_type( f32 );
 	def_constant_code_type( f64 );
@@ -298,8 +298,8 @@ void init()
 
 void deinit()
 {
-	uw index = 0;
-	uw left  = CodePools.num();
+	usize index = 0;
+	usize left  = CodePools.num();
 	do
 	{
 		Pool* code_pool = & CodePools[index];
@@ -372,9 +372,9 @@ AllocatorInfo get_string_allocator( s32 str_length )
 {
 	Arena* last = & StringArenas.back();
 
-	uw size_req = str_length + sizeof(String::Header) + sizeof(char*);
+	usize size_req = str_length + sizeof(String::Header) + sizeof(char*);
 
-	if ( last->TotalUsed + sw(size_req) > last->TotalSize )
+	if ( last->TotalUsed + ssize(size_req) > last->TotalSize )
 	{
 		Arena new_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 

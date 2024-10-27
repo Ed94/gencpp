@@ -22,7 +22,7 @@ int gen_main()
 	gen_sanity_upfront();
 
 	gen_array( u8 );
-	gen_array( sw );
+	gen_array( ssize );
 
 	gen_buffer( u8 );
 

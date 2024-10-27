@@ -5,7 +5,7 @@
 
 #pragma region String
 
-String String::fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... )
+String String::fmt( AllocatorInfo allocator, char* buf, ssize buf_size, char const* fmt, ... )
 {
 	va_list va;
 	va_start( va, fmt );
@@ -15,9 +15,9 @@ String String::fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const*
 	return make( allocator, buf );
 }
 
-String String::make_length( AllocatorInfo allocator, char const* str, sw length )
+String String::make_length( AllocatorInfo allocator, char const* str, ssize length )
 {
-	constexpr sw header_size = sizeof( Header );
+	constexpr ssize header_size = sizeof( Header );
 
 	s32   alloc_size = header_size + length + 1;
 	void* allocation = alloc( allocator, alloc_size );
@@ -41,9 +41,9 @@ String String::make_length( AllocatorInfo allocator, char const* str, sw length 
 	return result;
 }
 
-String String::make_reserve( AllocatorInfo allocator, sw capacity )
+String String::make_reserve( AllocatorInfo allocator, ssize capacity )
 {
-	constexpr sw header_size = sizeof( Header );
+	constexpr ssize header_size = sizeof( Header );
 
 	s32   alloc_size = header_size + capacity + 1;
 	void* allocation = alloc( allocator, alloc_size );
@@ -78,7 +78,7 @@ String String::fmt_buf( AllocatorInfo allocator, char const* fmt, ... )
 
 bool String::append_fmt( char const* fmt, ... )
 {
-	sw   res;
+	ssize   res;
 	char buf[ GEN_PRINTF_MAXLEN ] = { 0 };
 
 	va_list va;
@@ -89,9 +89,9 @@ bool String::append_fmt( char const* fmt, ... )
 	return append( buf, res );
 }
 
-bool String::make_space_for( char const* str, sw add_len )
+bool String::make_space_for( char const* str, ssize add_len )
 {
-	sw available = avail_space();
+	ssize available = avail_space();
 
 	// NOTE: Return if there is enough space left
 	if ( available >= add_len )
@@ -100,7 +100,7 @@ bool String::make_space_for( char const* str, sw add_len )
 	}
 	else
 	{
-		sw new_len, old_size, new_size;
+		ssize new_len, old_size, new_size;
 
 		void* ptr;
 		void* new_ptr;
@@ -118,7 +118,7 @@ bool String::make_space_for( char const* str, sw add_len )
 		if ( new_ptr == nullptr )
 			return false;
 
-		header            = zpl_cast( Header* ) new_ptr;
+		header            = rcast( Header*, new_ptr);
 		header->Allocator = allocator;
 		header->Capacity  = new_len;
 

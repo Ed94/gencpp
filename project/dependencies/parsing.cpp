@@ -36,7 +36,7 @@ u8 adt_destroy_branch( ADT_Node* node )
 	GEN_ASSERT_NOT_NULL( node );
 	if ( ( node->type == EADT_TYPE_OBJECT || node->type == EADT_TYPE_ARRAY ) && node->nodes )
 	{
-		for ( sw i = 0; i < scast(sw, node->nodes.num()); ++i )
+		for ( ssize i = 0; i < scast(ssize, node->nodes.num()); ++i )
 		{
 			adt_destroy_branch( node->nodes + i );
 		}
@@ -66,7 +66,7 @@ ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search )
 		return NULL;
 	}
 
-	for ( sw i = 0; i < scast(sw, node->nodes.num()); i++ )
+	for ( ssize i = 0; i < scast(ssize, node->nodes.num()); i++ )
 	{
 		if ( ! str_compare( node->nodes[ i ].name, name ) )
 		{
@@ -76,7 +76,7 @@ ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search )
 
 	if ( deep_search )
 	{
-		for ( sw i = 0; i < scast(sw, node->nodes.num()); i++ )
+		for ( ssize i = 0; i < scast(ssize, node->nodes.num()); i++ )
 		{
 			ADT_Node* res = adt_find( node->nodes + i, name, deep_search );
 
@@ -111,7 +111,7 @@ internal ADT_Node* _adt_get_value( ADT_Node* node, char const* value )
 				file_stream_open( &tmp, heap(), ( u8* )back, size_of( back ), EFileStream_WRITABLE );
 				adt_print_number( &tmp, node );
 
-				sw  fsize = 0;
+				ssize  fsize = 0;
 				u8* buf   = file_stream_buf( &tmp, &fsize );
 
 				if ( ! str_compare( ( char const* )buf, value ) )
@@ -132,7 +132,7 @@ internal ADT_Node* _adt_get_value( ADT_Node* node, char const* value )
 
 internal ADT_Node* _adt_get_field( ADT_Node* node, char* name, char* value )
 {
-	for ( sw i = 0; i < scast(sw, node->nodes.num()); i++ )
+	for ( ssize i = 0; i < scast(ssize, node->nodes.num()); i++ )
 	{
 		if ( ! str_compare( node->nodes[ i ].name, name ) )
 		{
@@ -207,7 +207,7 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri )
 			/* run a value comparison against any child that is an object node */
 			else if ( node->type == EADT_TYPE_ARRAY )
 			{
-				for ( sw i = 0; i < scast(sw, node->nodes.num()); i++ )
+				for ( ssize i = 0; i < scast(ssize, node->nodes.num()); i++ )
 				{
 					ADT_Node* child = &node->nodes[ i ];
 					if ( child->type != EADT_TYPE_OBJECT )
@@ -225,7 +225,7 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri )
 		/* [value] */
 		else
 		{
-			for ( sw i = 0; i < scast(sw, node->nodes.num()); i++ )
+			for ( ssize i = 0; i < scast(ssize, node->nodes.num()); i++ )
 			{
 				ADT_Node* child = &node->nodes[ i ];
 				if ( _adt_get_value( child, l_b2 ) )
@@ -256,8 +256,8 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri )
 	/* handle array index lookup */
 	else
 	{
-		sw idx = ( sw )str_to_i64( buf, NULL, 10 );
-		if ( idx >= 0 && idx < scast(sw, node->nodes.num()) )
+		ssize idx = ( ssize )str_to_i64( buf, NULL, 10 );
+		if ( idx >= 0 && idx < scast(ssize, node->nodes.num()) )
 		{
 			found_node = &node->nodes[ idx ];
 
@@ -272,7 +272,7 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri )
 	return found_node;
 }
 
-ADT_Node* adt_alloc_at( ADT_Node* parent, sw index )
+ADT_Node* adt_alloc_at( ADT_Node* parent, ssize index )
 {
 	if ( ! parent || ( parent->type != EADT_TYPE_OBJECT && parent->type != EADT_TYPE_ARRAY ) )
 	{
@@ -282,7 +282,7 @@ ADT_Node* adt_alloc_at( ADT_Node* parent, sw index )
 	if ( ! parent->nodes )
 		return NULL;
 
-	if ( index < 0 || index > scast(sw, parent->nodes.num()) )
+	if ( index < 0 || index > scast(ssize, parent->nodes.num()) )
 		return NULL;
 
 	ADT_Node o = { 0 };
@@ -337,7 +337,7 @@ b8 adt_set_int( ADT_Node* obj, char const* name, s64 value )
 	return true;
 }
 
-ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, sw index )
+ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, ssize index )
 {
 	GEN_ASSERT_NOT_NULL( node );
 	GEN_ASSERT_NOT_NULL( new_parent );
@@ -366,8 +366,8 @@ void adt_swap_nodes( ADT_Node* node, ADT_Node* other_node )
 	GEN_ASSERT_NOT_NULL( other_node );
 	ADT_Node* parent                     = node->parent;
 	ADT_Node* other_parent               = other_node->parent;
-	sw        index                      = ( pointer_diff( parent->nodes, node ) / size_of( ADT_Node ) );
-	sw        index2                     = ( pointer_diff( other_parent->nodes, other_node ) / size_of( ADT_Node ) );
+	ssize        index                      = ( pointer_diff( parent->nodes, node ) / size_of( ADT_Node ) );
+	ssize        index2                     = ( pointer_diff( other_parent->nodes, other_node ) / size_of( ADT_Node ) );
 	ADT_Node  temp                       = parent->nodes[ index ];
 	temp.parent                          = other_parent;
 	other_parent->nodes[ index2 ].parent = parent;
@@ -380,7 +380,7 @@ void adt_remove_node( ADT_Node* node )
 	GEN_ASSERT_NOT_NULL( node );
 	GEN_ASSERT_NOT_NULL( node->parent );
 	ADT_Node* parent = node->parent;
-	sw        index  = ( pointer_diff( parent->nodes, node ) / size_of( ADT_Node ) );
+	ssize        index  = ( pointer_diff( parent->nodes, node ) / size_of( ADT_Node ) );
 	parent->nodes.remove_at( index );
 }
 
@@ -484,7 +484,7 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 	node_type = EADT_TYPE_INTEGER;
 	neg_zero  = false;
 
-	sw   ib        = 0;
+	ssize   ib        = 0;
 	char buf[ 48 ] = { 0 };
 
 	if ( *e == '+' )
@@ -550,7 +550,7 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 
 	f32  eb          = 10;
 	char expbuf[ 6 ] = { 0 };
-	sw   expi        = 0;
+	ssize   expi        = 0;
 
 	if ( *e && ! ! str_find( "eE", *e ) )
 	{
@@ -595,7 +595,7 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 
 #ifndef GEN_PARSER_DISABLE_ANALYSIS
 		char *q = buf, *base_string = q, *base_string2 = q;
-		base_string           = zpl_cast( char* ) str_skip( base_string, '.' );
+		base_string           = ccast( char*, str_skip( base_string, '.' ));
 		*base_string          = '\0';
 		base_string2          = base_string + 1;
 		char* base_string_off = base_string2;
@@ -816,13 +816,13 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 	char* beginChar;
 	char* endChar;
 
-	sw columnIndex       = 0;
-	sw totalColumnIndex = 0;
+	ssize columnIndex       = 0;
+	ssize totalColumnIndex = 0;
 
 	do
 	{
 		char delimiter = 0;
-		currentChar = zpl_cast( char* ) str_trim( currentChar, false );
+		currentChar = ccast( char*, str_trim( currentChar, false ));
 
 		if ( *currentChar == 0 )
 			break;
@@ -846,7 +846,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 		#endif
 			do
 			{
-				endChar = zpl_cast( char* ) str_skip( endChar, '"' );
+				endChar = ccast( char*, str_skip( endChar, '"' ));
 
 				if ( *endChar && *( endChar + 1 ) == '"' )
 				{
@@ -865,7 +865,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			}
 
 			*endChar    = 0;
-			currentChar = zpl_cast( char* ) str_trim( endChar + 1, true );
+			currentChar = ccast( char*, str_trim( endChar + 1, true ));
 			delimiter   = * currentChar;
 
 			/* unescape escaped quotes (so that unescaped text escapes :) */
@@ -902,7 +902,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 
 			if ( * endChar )
 			{
-				currentChar = zpl_cast( char* ) str_trim( endChar, true );
+				currentChar = ccast( char*, str_trim( endChar, true ));
 
 				while ( char_is_space( *( endChar - 1 ) ) )
 				{
@@ -946,7 +946,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			}
 		}
 
-		if ( columnIndex >= scast(sw, root->nodes.num()) )
+		if ( columnIndex >= scast(ssize, root->nodes.num()) )
 		{
 			adt_append_arr( root, NULL );
 		}
@@ -989,7 +989,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 	/* consider first row as a header. */
 	if ( has_header )
 	{
-		for ( sw i = 0; i < scast(sw, root->nodes.num()); i++ )
+		for ( ssize i = 0; i < scast(ssize, root->nodes.num()); i++ )
 		{
 			CSV_Object* col = root->nodes + i;
 			CSV_Object* hdr = col->nodes;
@@ -1057,11 +1057,11 @@ void csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delimiter )
 	GEN_ASSERT_NOT_NULL( file );
 	GEN_ASSERT_NOT_NULL( obj );
 	GEN_ASSERT( obj->nodes );
-	sw cols = obj->nodes.num();
+	ssize cols = obj->nodes.num();
 	if ( cols == 0 )
 		return;
 
-	sw rows = obj->nodes[ 0 ].nodes.num();
+	ssize rows = obj->nodes[ 0 ].nodes.num();
 	if ( rows == 0 )
 		return;
 
@@ -1069,7 +1069,7 @@ void csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delimiter )
 
 	if ( has_headers )
 	{
-		for ( sw i = 0; i < cols; i++ )
+		for ( ssize i = 0; i < cols; i++ )
 		{
 			_csv_write_header( file, &obj->nodes[ i ] );
 			if ( i + 1 != cols )
@@ -1080,9 +1080,9 @@ void csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delimiter )
 		str_fmt_file( file, "\n" );
 	}
 
-	for ( sw r = 0; r < rows; r++ )
+	for ( ssize r = 0; r < rows; r++ )
 	{
-		for ( sw i = 0; i < cols; i++ )
+		for ( ssize i = 0; i < cols; i++ )
 		{
 			_csv_write_record( file, &obj->nodes[ i ].nodes[ r ] );
 			if ( i + 1 != cols )
@@ -1099,7 +1099,8 @@ String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimi
 	FileInfo tmp;
 	file_stream_new( &tmp, a );
 	csv_write_delimiter( &tmp, obj, delimiter );
-	sw     fsize;
+	
+	ssize  fsize;
 	u8*    buf    = file_stream_buf( &tmp, &fsize );
 	String output = String::make_length( a, ( char* )buf, fsize );
 	file_close( &tmp );

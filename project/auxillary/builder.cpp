@@ -27,14 +27,14 @@ void Builder::pad_lines( s32 num )
 void Builder::print( Code code )
 {
 	String   str = code->to_string();
-	// const sw len = str.length();
+	// const ssize len = str.length();
 	// log_fmt( "%s - print: %.*s\n", File.filename, len > 80 ? 80 : len, str.Data );
 	Buffer.append( str );
 }
 
 void Builder::print_fmt( char const* fmt, ... )
 {
-	sw   res;
+	ssize   res;
 	char buf[ GEN_PRINTF_MAXLEN ] = { 0 };
 
 	va_list va;

@@ -7,7 +7,7 @@
 #pragma region String Ops
 
 internal
-sw _scan_zpl_i64( const char* text, s32 base, s64* value )
+ssize _scan_zpl_i64( const char* text, s32 base, s64* value )
 {
 	const char* text_begin = text;
 	s64         result     = 0;
@@ -56,7 +56,7 @@ global const char _num_to_char_table[] =
 
 s64 str_to_i64( const char* str, char** end_ptr, s32 base )
 {
-	sw  len;
+	ssize  len;
 	s64 value;
 
 	if ( ! base )
@@ -85,7 +85,7 @@ void i64_to_str( s64 value, char* string, s32 base )
 		value    = -value;
 	}
 
-	v = zpl_cast( u64 ) value;
+	v = scast( u64, value);
 	if ( v != 0 )
 	{
 		while ( v > 0 )
@@ -207,7 +207,7 @@ f64 str_to_f64( const char* str, char** end_ptr )
 	result = sign * ( frac ? ( value / scale ) : ( value * scale ) );
 
 	if ( end_ptr )
-		*end_ptr = zpl_cast( char* ) str;
+		* end_ptr = rcast( char*, ccast(char*, str) );
 
 	return result;
 }

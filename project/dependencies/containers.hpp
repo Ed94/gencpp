@@ -5,10 +5,10 @@
 
 #pragma region Containers
 
-template<class TType>          struct RemoveConst                    { typedef TType Type;       };
-template<class TType>          struct RemoveConst<const TType>       { typedef TType Type;       };
-template<class TType>          struct RemoveConst<const TType[]>     { typedef TType Type[];     };
-template<class TType, uw Size> struct RemoveConst<const TType[Size]> { typedef TType Type[Size]; };
+template<class TType>             struct RemoveConst                    { typedef TType Type;       };
+template<class TType>             struct RemoveConst<const TType>       { typedef TType Type;       };
+template<class TType>             struct RemoveConst<const TType[]>     { typedef TType Type[];     };
+template<class TType, usize Size> struct RemoveConst<const TType[Size]> { typedef TType Type[Size]; };
 
 template<class TType>
 using TRemoveConst = typename RemoveConst<TType>::Type;
@@ -19,8 +19,8 @@ struct Array
 	struct Header
 	{
 		AllocatorInfo Allocator;
-		uw            Capacity;
-		uw            Num;
+		usize            Capacity;
+		usize            Num;
 	};
 
 	static
@@ -30,7 +30,7 @@ struct Array
 	}
 
 	static
-	Array init_reserve( AllocatorInfo allocator, sw capacity )
+	Array init_reserve( AllocatorInfo allocator, ssize capacity )
 	{
 		Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) * capacity ));
 
@@ -45,7 +45,7 @@ struct Array
 	}
 
 	static
-	uw grow_formula( uw value )
+	usize grow_formula( usize value )
 	{
 		return 2 * value + 8;
 	}
@@ -73,7 +73,7 @@ struct Array
 		return true;
 	}
 
-	bool append( Type* items, uw item_num )
+	bool append( Type* items, usize item_num )
 	{
 		Header* header = get_header();
 
@@ -91,7 +91,7 @@ struct Array
 		return true;
 	}
 
-	bool append_at( Type item, uw idx )
+	bool append_at( Type item, usize idx )
 	{
 		Header* header = get_header();
 
@@ -117,7 +117,7 @@ struct Array
 		return true;
 	}
 
-	bool append_at( Type* items, uw item_num, uw idx )
+	bool append_at( Type* items, usize item_num, usize idx )
 	{
 		Header* header = get_header();
 
@@ -156,14 +156,14 @@ struct Array
 		header.Num     = 0;
 	}
 
-	bool fill( uw begin, uw end, Type value )
+	bool fill( usize begin, usize end, Type value )
 	{
 		Header& header = * get_header();
 
 		if ( begin < 0 || end > header.Num )
 			return false;
 
-		for ( sw idx = sw(begin); idx < sw(end); idx++ )
+		for ( ssize idx = ssize(begin); idx < ssize(end); idx++ )
 		{
 			Data[ idx ] = value;
 		}
@@ -184,10 +184,10 @@ struct Array
 		return rcast( Header*, const_cast<NonConstType*>(Data) ) - 1 ;
 	}
 
-	bool grow( uw min_capacity )
+	bool grow( usize min_capacity )
 	{
 		Header& header       = * get_header();
-		uw      new_capacity = grow_formula( header.Capacity );
+		usize      new_capacity = grow_formula( header.Capacity );
 
 		if ( new_capacity < min_capacity )
 			new_capacity = min_capacity;
@@ -195,7 +195,7 @@ struct Array
 		return set_capacity( new_capacity );
 	}
 
-	uw num( void )
+	usize num( void )
 	{
 		return get_header()->Num;
 	}
@@ -208,7 +208,7 @@ struct Array
 		header.Num--;
 	}
 
-	void remove_at( uw idx )
+	void remove_at( usize idx )
 	{
 		Header* header = get_header();
 		GEN_ASSERT( idx < header->Num );
@@ -217,7 +217,7 @@ struct Array
 		header->Num--;
 	}
 
-	bool reserve( uw new_capacity )
+	bool reserve( usize new_capacity )
 	{
 		Header& header = * get_header();
 
@@ -227,7 +227,7 @@ struct Array
 		return true;
 	}
 
-	bool resize( uw num )
+	bool resize( usize num )
 	{
 		Header* header = get_header();
 
@@ -243,7 +243,7 @@ struct Array
 		return true;
 	}
 
-	bool set_capacity( uw new_capacity )
+	bool set_capacity( usize new_capacity )
 	{
 		Header& header = * get_header();
 
@@ -257,7 +257,7 @@ struct Array
 			return true;
 		}
 
-		sw      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
+		ssize      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
 		Header* new_header = rcast( Header*, alloc( header.Allocator, size ) );
 
 		if ( new_header == nullptr )
@@ -305,15 +305,15 @@ struct HashTable
 {
 	struct FindResult
 	{
-		sw HashIndex;
-		sw PrevIndex;
-		sw EntryIndex;
+		ssize HashIndex;
+		ssize PrevIndex;
+		ssize EntryIndex;
 	};
 
 	struct Entry
 	{
 		u64  Key;
-		sw   Next;
+		ssize   Next;
 		Type Value;
 	};
 
@@ -327,11 +327,11 @@ struct HashTable
 	}
 
 	static
-	HashTable init_reserve( AllocatorInfo allocator, uw num )
+	HashTable init_reserve( AllocatorInfo allocator, usize num )
 	{
 		HashTable<Type> result = { { nullptr }, { nullptr } };
 
-		result.Hashes  = Array<sw>::init_reserve( allocator, num );
+		result.Hashes  = Array<ssize>::init_reserve( allocator, num );
 		result.Hashes.get_header()->Num = num;
 		result.Hashes.resize( num );
 		result.Hashes.fill( 0, num, -1);
@@ -357,7 +357,7 @@ struct HashTable
 
 	Type* get( u64 key )
 	{
-		sw idx = find( key ).EntryIndex;
+		ssize idx = find( key ).EntryIndex;
 		if ( idx >= 0 )
 			return & Entries[ idx ].Value;
 
@@ -370,7 +370,7 @@ struct HashTable
 	{
 		GEN_ASSERT_NOT_NULL( map_proc );
 
-		for ( sw idx = 0; idx < sw(Entries.num()); ++idx )
+		for ( ssize idx = 0; idx < ssize(Entries.num()); ++idx )
 		{
 			map_proc( Entries[ idx ].Key, Entries[ idx ].Value );
 		}
@@ -382,7 +382,7 @@ struct HashTable
 	{
 		GEN_ASSERT_NOT_NULL( map_proc );
 
-		for ( sw idx = 0; idx < sw(Entries.num()); ++idx )
+		for ( ssize idx = 0; idx < ssize(Entries.num()); ++idx )
 		{
 			map_proc( Entries[ idx ].Key, & Entries[ idx ].Value );
 		}
@@ -390,16 +390,16 @@ struct HashTable
 
 	void grow()
 	{
-		sw new_num = Array<Entry>::grow_formula( Entries.num() );
+		ssize new_num = Array<Entry>::grow_formula( Entries.num() );
 		rehash( new_num );
 	}
 
-	void rehash( sw new_num )
+	void rehash( ssize new_num )
 	{
-		sw last_added_index;
+		ssize last_added_index;
 
 		HashTable<Type> new_ht = init_reserve( Hashes.get_header()->Allocator, new_num );
-		for ( sw idx = 0; idx < sw(Entries.num()); ++idx )
+		for ( ssize idx = 0; idx < ssize(Entries.num()); ++idx )
 		{
 			FindResult find_result;
 
@@ -422,15 +422,15 @@ struct HashTable
 
 	void rehash_fast()
 	{
-		sw idx;
+		ssize idx;
 
-		for ( idx = 0; idx < sw(Entries.num()); idx++ )
+		for ( idx = 0; idx < ssize(Entries.num()); idx++ )
 			Entries[ idx ].Next = -1;
 
-		for ( idx = 0; idx < sw(Hashes.num()); idx++ )
+		for ( idx = 0; idx < ssize(Hashes.num()); idx++ )
 			Hashes[ idx ] = -1;
 
-		for ( idx = 0; idx < sw(Entries.num()); idx++ )
+		for ( idx = 0; idx < ssize(Entries.num()); idx++ )
 		{
 			Entry*     entry;
 			FindResult find_result;
@@ -456,14 +456,14 @@ struct HashTable
 		}
 	}
 
-	void remove_entry( sw idx )
+	void remove_entry( ssize idx )
 	{
 		Entries.remove_at( idx );
 	}
 
 	void set( u64 key, Type value )
 	{
-		sw idx;
+		ssize idx;
 		FindResult find_result;
 
 		if ( full() )
@@ -494,23 +494,23 @@ struct HashTable
 			grow();
 	}
 
-	sw slot( u64 key )
+	ssize slot( u64 key )
 	{
-		for ( sw idx = 0; idx < sw(Hashes.num()); ++idx )
+		for ( ssize idx = 0; idx < ssize(Hashes.num()); ++idx )
 			if ( Hashes[ idx ] == key )
 				return idx;
 
 		return -1;
 	}
 
-	Array< sw>    Hashes;
+	Array< ssize>    Hashes;
 	Array< Entry> Entries;
 
 protected:
 
-	sw add_entry( u64 key )
+	ssize add_entry( u64 key )
 	{
-		sw idx;
+		ssize idx;
 		Entry entry = { key, -1 };
 
 		idx = Entries.num();
@@ -542,7 +542,7 @@ protected:
 
 	b32 full()
 	{
-		uw critical_load = uw( CriticalLoadScale * f32(Hashes.num()) );
+		usize critical_load = usize( CriticalLoadScale * f32(Hashes.num()) );
 		b32 result = Entries.num() > critical_load;
 		return result;
 	}

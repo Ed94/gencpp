@@ -27,11 +27,11 @@ global u32 const _crc32_table[ 256 ] = {
 	0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
 };
 
-u32 crc32( void const* data, sw len )
+u32 crc32( void const* data, ssize len )
 {
-	sw        remaining;
-	u32       result = ~( zpl_cast( u32 ) 0 );
-	u8 const* c      = zpl_cast( u8 const* ) data;
+	ssize        remaining;
+	u32       result = ~( scast( u32, 0) );
+	u8 const* c      = rcast( u8 const*, data);
 	for ( remaining = len; remaining--; c++ )
 		result = ( result >> 8 ) ^ ( _crc32_table[ ( result ^ *c ) & 0xff ] );
 	return ~result;
@@ -77,11 +77,11 @@ global u64 const _crc64_table[ 256 ] = {
 	0xa6df411fbfb21ca3ull, 0xdc0731d78f8795daull, 0x536fa08fdfd90e51ull, 0x29b7d047efec8728ull,
 };
 
-u64 crc64( void const* data, sw len )
+u64 crc64( void const* data, ssize len )
 {
-	sw        remaining;
-	u64       result = ( zpl_cast( u64 ) 0 );
-	u8 const* c      = zpl_cast( u8 const* ) data;
+	ssize        remaining;
+	u64       result = ( scast( u64, 0) );
+	u8 const* c      = rcast( u8 const*, data);
 	for ( remaining = len; remaining--; c++ )
 		result = ( result >> 8 ) ^ ( _crc64_table[ ( result ^ *c ) & 0xff ] );
 	return result;

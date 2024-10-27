@@ -87,7 +87,7 @@ Code gen__ring( StrC type )
 			);
 
 			Code body = def_execution( code(
-				for ( sw idx = 0; idx < num; idx++ )
+				for ( ssize idx = 0; idx < num; idx++ )
 					append( values[ idx ] );
 			));
 
@@ -167,7 +167,7 @@ void gen__ring_request( StrC type, StrC dep = {} )
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenRingRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenRingRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenRingRequests[ idx ].Type;
 

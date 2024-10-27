@@ -15,9 +15,9 @@ Code gen__hashtable_base()
 	return parse_global_body( code(
 		struct HashTable_FindResult
 		{
-			sw HashIndex;
-			sw PrevIndex;
-			sw EntryIndex;
+			ssize HashIndex;
+			ssize PrevIndex;
+			ssize EntryIndex;
 		};
 	));
 }
@@ -37,7 +37,7 @@ Code gen__hashtable( StrC type )
 			struct <HashTableName>_Entry
 			{
 				u64 Key;
-				sw  Next;
+				ssize  Next;
 				<type> Value;
 			};
 		)
@@ -86,7 +86,7 @@ Code gen__hashtable( StrC type )
 
 				Type* get( u64 key )
 				{
-					sw idx = find( key ).EntryIndex;
+					ssize idx = find( key ).EntryIndex;
 
 					if ( idx > 0 )
 						return &Entries[ idx ].Value;
@@ -96,7 +96,7 @@ Code gen__hashtable( StrC type )
 
 				void grow( void )
 				{
-					sw new_num = array_grow_formula( Entries.num() );
+					ssize new_num = array_grow_formula( Entries.num() );
 
 					rehash( new_num );
 				}
@@ -105,7 +105,7 @@ Code gen__hashtable( StrC type )
 				{
 					GEN_ASSERT_NOT_NULL( map_proc );
 
-					for ( sw idx = 0; idx < Entries.num(); idx++ )
+					for ( ssize idx = 0; idx < Entries.num(); idx++ )
 					{
 						map_proc( Entries[ idx ].Key, Entries[ idx ].Value );
 					}
@@ -115,16 +115,16 @@ Code gen__hashtable( StrC type )
 				{
 					GEN_ASSERT_NOT_NULL( map_proc );
 
-					for ( sw idx = 0; idx < Entries.num(); idx++ )
+					for ( ssize idx = 0; idx < Entries.num(); idx++ )
 					{
 						map_proc( Entries[ idx ].Key, &Entries[ idx ].Value );
 					}
 				}
 
-				void rehash( sw new_num )
+				void rehash( ssize new_num )
 				{
-					sw            idx;
-					sw            last_added_index;
+					ssize            idx;
+					ssize            last_added_index;
 					HashTable_u32 new_ht = HashTable_u32::init( Hashes.get_header().Allocator );
 
 					new_ht.Hashes.resize( new_num );
@@ -163,7 +163,7 @@ Code gen__hashtable( StrC type )
 
 				void rehash_fast( void )
 				{
-					sw idx;
+					ssize idx;
 
 					for ( idx = 0; idx < Entries.num(); idx++ )
 						Entries[ idx ].Next = -1;
@@ -189,14 +189,14 @@ Code gen__hashtable( StrC type )
 					}
 				}
 
-				void remove_entry( sw idx )
+				void remove_entry( ssize idx )
 				{
 					Entries.remove_at( idx );
 				}
 
 				void set( u64 key, Type value )
 				{
-					sw         idx;
+					ssize         idx;
 					FindResult find_result;
 
 					if ( Hashes.num() == 0 )
@@ -228,9 +228,9 @@ Code gen__hashtable( StrC type )
 						grow();
 				}
 
-				sw slot( u64 key )
+				ssize slot( u64 key )
 				{
-					for ( sw idx = 0; idx < Hashes.num(); ++idx )
+					for ( ssize idx = 0; idx < Hashes.num(); ++idx )
 						if ( Hashes[ idx ] == key )
 							return idx;
 
@@ -242,9 +242,9 @@ Code gen__hashtable( StrC type )
 
 			protected:
 
-				sw add_entry( u64 key )
+				ssize add_entry( u64 key )
 				{
-					sw    idx;
+					ssize    idx;
 					Entry entry = { key, -1 };
 					idx         = Entries.num();
 					Entries.append( entry );
@@ -294,11 +294,11 @@ void gen__hashtable_request( StrC type, StrC dep = {} )
 	do_once_start
 		GenHashTableRequests = Array<GenHashTableRequest>::init( GlobalAllocator );
 
-		gen_array( sw );
+		gen_array( ssize );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenHashTableRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenHashTableRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenHashTableRequests[ idx ].Type;
 

@@ -1,7 +1,7 @@
 // This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)
 #pragma once
 
-#include "dependencies/header_start.hpp"
+#include "dependencies/platform.hpp"
 
 GEN_NS_BEGIN
 

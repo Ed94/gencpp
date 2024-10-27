@@ -97,8 +97,8 @@ global CodeType t_u16;
 global CodeType t_u32;
 global CodeType t_u64;
 
-global CodeType t_sw;
-global CodeType t_uw;
+global CodeType t_ssize;
+global CodeType t_usize;
 
 global CodeType t_f32;
 global CodeType t_f64;

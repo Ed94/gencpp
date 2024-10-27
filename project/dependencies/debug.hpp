@@ -24,7 +24,7 @@
 	{                                                                                        \
 		if ( ! ( cond ) )                                                                    \
 		{                                                                                    \
-			assert_handler( #cond, __FILE__, zpl_cast( s64 ) __LINE__, msg, ##__VA_ARGS__ ); \
+			assert_handler( #cond, __FILE__, scast( s64, __LINE__ ), msg, ##__VA_ARGS__ ); \
 			GEN_DEBUG_TRAP();                                                                \
 		}                                                                                    \
 	} while ( 0 )
@@ -33,10 +33,6 @@
 
 // NOTE: Things that shouldn't happen with a message!
 #define GEN_PANIC( msg, ... ) GEN_ASSERT_MSG( 0, msg, ##__VA_ARGS__ )
-
-void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
-s32  assert_crash( char const* condition );
-void process_exit( u32 code );
 
 #if Build_Debug
 	#define GEN_FATAL( ... )                               \
@@ -59,5 +55,9 @@ void process_exit( u32 code );
 	}                                        \
 	while (0)
 #endif
+
+void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
+s32  assert_crash( char const* condition );
+void process_exit( u32 code );
 
 #pragma endregion Debug

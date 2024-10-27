@@ -5,7 +5,7 @@
 
 #pragma region Hashing
 
-u32 crc32( void const* data, sw len );
-u64 crc64( void const* data, sw len );
+u32 crc32( void const* data, ssize len );
+u64 crc64( void const* data, ssize len );
 
 #pragma endregion Hashing

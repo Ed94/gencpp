@@ -30,7 +30,7 @@ Code gen__ring( StrC type )
 			{
 				using Type = <type>;
 
-				static <RingName> init( AllocatorInfo allocator, uw max_size )
+				static <RingName> init( AllocatorInfo allocator, usize max_size )
 				{
 					<RingName> result = { 0 };
 
@@ -52,9 +52,9 @@ Code gen__ring( StrC type )
 						Tail = ( Tail + 1 ) % Capacity;
 				}
 
-				inline void append( Type* values, sw num )
+				inline void append( Type* values, ssize num )
 				{
-					for ( sw idx = 0; idx < num; idx++ )
+					for ( ssize idx = 0; idx < num; idx++ )
 						append( values[ idx ] );
 				}
 
@@ -88,9 +88,9 @@ Code gen__ring( StrC type )
 				}
 
 				AllocatorInfo Backing;
-				uw            Capacity;
-				uw            Head;
-				uw            Tail;
+				usize            Capacity;
+				usize            Head;
+				usize            Tail;
 				<BufferName>  Buffer;
 			};
 		)
@@ -113,7 +113,7 @@ void gen__ring_request( StrC type, StrC dep = {} )
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenRingRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenRingRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenRingRequests[ idx ].Type;
 

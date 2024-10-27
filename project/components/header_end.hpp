@@ -42,7 +42,7 @@ constexpr s32 InitSize_DataArrays = 16;
 
 // NOTE: This limits the maximum size of an allocation
 // If you are generating a string larger than this, increase the size of the bucket here.
-constexpr uw  Global_BucketSize         = GEN_GLOBAL_BUCKET_SIZE;
+constexpr usize  Global_BucketSize         = GEN_GLOBAL_BUCKET_SIZE;
 constexpr s32 CodePool_NumBlocks        = GEN_CODEPOOL_NUM_BLOCKS;
 constexpr s32 SizePer_StringArena       = GEN_SIZE_PER_STRING_ARENA;
 
@@ -122,8 +122,8 @@ extern CodeType t_typename;
 	extern CodeType t_u32;
 	extern CodeType t_u64;
 
-	extern CodeType t_sw;
-	extern CodeType t_uw;
+	extern CodeType t_ssize;
+	extern CodeType t_usize;
 
 	extern CodeType t_f32;
 	extern CodeType t_f64;

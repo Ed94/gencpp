@@ -5,41 +5,42 @@
 
 #pragma region String Ops
 
-GEN_DEF_INLINE const char* char_first_occurence( const char* str, char c );
+const char* char_first_occurence( const char* str, char c );
 constexpr auto str_find = &char_first_occurence;
 
-GEN_DEF_INLINE b32   char_is_alpha( char c );
-GEN_DEF_INLINE b32   char_is_alphanumeric( char c );
-GEN_DEF_INLINE b32   char_is_digit( char c );
-GEN_DEF_INLINE b32   char_is_hex_digit( char c );
-GEN_DEF_INLINE b32   char_is_space( char c );
-GEN_DEF_INLINE char  char_to_lower( char c );
-GEN_DEF_INLINE char  char_to_upper( char c );
+b32   char_is_alpha( char c );
+b32   char_is_alphanumeric( char c );
+b32   char_is_digit( char c );
+b32   char_is_hex_digit( char c );
+b32   char_is_space( char c );
+char  char_to_lower( char c );
+char  char_to_upper( char c );
 
-GEN_DEF_INLINE s32  digit_to_int( char c );
-GEN_DEF_INLINE s32  hex_digit_to_int( char c );
+s32  digit_to_int( char c );
+s32  hex_digit_to_int( char c );
 
-GEN_DEF_INLINE s32         str_compare( const char* s1, const char* s2 );
-GEN_DEF_INLINE s32         str_compare( const char* s1, const char* s2, sw len );
-GEN_DEF_INLINE char*       str_copy( char* dest, const char* source, sw len );
-GEN_DEF_INLINE sw          str_copy_nulpad( char* dest, const char* source, sw len );
-GEN_DEF_INLINE sw          str_len( const char* str );
-GEN_DEF_INLINE sw          str_len( const char* str, sw max_len );
-GEN_DEF_INLINE char*       str_reverse( char* str );    // NOTE: ASCII only
-GEN_DEF_INLINE char const* str_skip( char const* str, char c );
-GEN_DEF_INLINE char const* str_skip_any( char const* str, char const* char_list );
-GEN_DEF_INLINE char const* str_trim( char const* str, b32 catch_newline );
+s32         str_compare( const char* s1, const char* s2 );
+s32         str_compare( const char* s1, const char* s2, ssize len );
+char*       str_copy( char* dest, const char* source, ssize len );
+ssize       str_copy_nulpad( char* dest, const char* source, ssize len );
+ssize       str_len( const char* str );
+ssize       str_len( const char* str, ssize max_len );
+char*       str_reverse( char* str );    // NOTE: ASCII only
+char const* str_skip( char const* str, char c );
+char const* str_skip_any( char const* str, char const* char_list );
+char const* str_trim( char const* str, b32 catch_newline );
 
 // NOTE: ASCII only
-GEN_DEF_INLINE void str_to_lower( char* str );
-GEN_DEF_INLINE void str_to_upper( char* str );
+void str_to_lower( char* str );
+void str_to_upper( char* str );
 
 s64  str_to_i64( const char* str, char** end_ptr, s32 base );
 void i64_to_str( s64 value, char* string, s32 base );
 void u64_to_str( u64 value, char* string, s32 base );
 f64  str_to_f64( const char* str, char** end_ptr );
 
-GEN_IMPL_INLINE const char* char_first_occurence( const char* s, char c )
+inline
+const char* char_first_occurence( const char* s, char c )
 {
 	char ch = c;
 	for ( ; *s != ch; s++ )
@@ -50,59 +51,67 @@ GEN_IMPL_INLINE const char* char_first_occurence( const char* s, char c )
 	return s;
 }
 
-GEN_IMPL_INLINE b32 char_is_alpha( char c )
+inline
+b32 char_is_alpha( char c )
 {
 	if ( ( c >= 'A' && c <= 'Z' ) || ( c >= 'a' && c <= 'z' ) )
 		return true;
 	return false;
 }
 
-GEN_IMPL_INLINE b32 char_is_alphanumeric( char c )
+inline
+b32 char_is_alphanumeric( char c )
 {
 	return char_is_alpha( c ) || char_is_digit( c );
 }
 
-GEN_IMPL_INLINE b32 char_is_digit( char c )
+inline
+b32 char_is_digit( char c )
 {
 	if ( c >= '0' && c <= '9' )
 		return true;
 	return false;
 }
 
-GEN_IMPL_INLINE b32 char_is_hex_digit( char c )
+inline
+b32 char_is_hex_digit( char c )
 {
 	if ( char_is_digit( c ) || ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' ) )
 		return true;
 	return false;
 }
 
-GEN_IMPL_INLINE b32 char_is_space( char c )
+inline
+b32 char_is_space( char c )
 {
 	if ( c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v' )
 		return true;
 	return false;
 }
 
-GEN_IMPL_INLINE char char_to_lower( char c )
+inline
+char char_to_lower( char c )
 {
 	if ( c >= 'A' && c <= 'Z' )
 		return 'a' + ( c - 'A' );
 	return c;
 }
 
-GEN_IMPL_INLINE char char_to_upper( char c )
+inline char char_to_upper( char c )
 {
 	if ( c >= 'a' && c <= 'z' )
 		return 'A' + ( c - 'a' );
 	return c;
 }
 
-GEN_IMPL_INLINE s32 digit_to_int( char c )
+inline
+s32 digit_to_int( char c )
 {
 	return char_is_digit( c ) ? c - '0' : c - 'W';
 }
 
-GEN_IMPL_INLINE s32 hex_digit_to_int( char c )
+inline
+s32 hex_digit_to_int( char c )
 {
 	if ( char_is_digit( c ) )
 		return digit_to_int( c );
@@ -113,7 +122,8 @@ GEN_IMPL_INLINE s32 hex_digit_to_int( char c )
 	return -1;
 }
 
-GEN_IMPL_INLINE s32 str_compare( const char* s1, const char* s2 )
+inline
+s32 str_compare( const char* s1, const char* s2 )
 {
 	while ( *s1 && ( *s1 == *s2 ) )
 	{
@@ -122,7 +132,8 @@ GEN_IMPL_INLINE s32 str_compare( const char* s1, const char* s2 )
 	return *( u8* )s1 - *( u8* )s2;
 }
 
-GEN_IMPL_INLINE s32 str_compare( const char* s1, const char* s2, sw len )
+inline
+s32 str_compare( const char* s1, const char* s2, ssize len )
 {
 	for ( ; len > 0; s1++, s2++, len-- )
 	{
@@ -134,7 +145,8 @@ GEN_IMPL_INLINE s32 str_compare( const char* s1, const char* s2, sw len )
 	return 0;
 }
 
-GEN_IMPL_INLINE char* str_copy( char* dest, const char* source, sw len )
+inline
+char* str_copy( char* dest, const char* source, ssize len )
 {
 	GEN_ASSERT_NOT_NULL( dest );
 	if ( source )
@@ -154,9 +166,10 @@ GEN_IMPL_INLINE char* str_copy( char* dest, const char* source, sw len )
 	return dest;
 }
 
-GEN_IMPL_INLINE sw str_copy_nulpad( char* dest, const char* source, sw len )
+inline
+ssize str_copy_nulpad( char* dest, const char* source, ssize len )
 {
-	sw result = 0;
+	ssize result = 0;
 	GEN_ASSERT_NOT_NULL( dest );
 	if ( source )
 	{
@@ -178,7 +191,8 @@ GEN_IMPL_INLINE sw str_copy_nulpad( char* dest, const char* source, sw len )
 	return result;
 }
 
-GEN_IMPL_INLINE sw str_len( const char* str )
+inline
+ssize str_len( const char* str )
 {
 	if ( str == NULL )
 	{
@@ -190,17 +204,19 @@ GEN_IMPL_INLINE sw str_len( const char* str )
 	return str - p;
 }
 
-GEN_IMPL_INLINE sw str_len( const char* str, sw max_len )
+inline
+ssize str_len( const char* str, ssize max_len )
 {
-	const char* end = zpl_cast( const char* ) mem_find( str, 0, max_len );
+	const char* end = rcast(const char*, mem_find( str, 0, max_len ));
 	if ( end )
 		return end - str;
 	return max_len;
 }
 
-GEN_IMPL_INLINE char* str_reverse( char* str )
+inline
+char* str_reverse( char* str )
 {
-	sw    len  = str_len( str );
+	ssize    len  = str_len( str );
 	char* a    = str + 0;
 	char* b    = str + len - 1;
 	len       /= 2;
@@ -212,7 +228,8 @@ GEN_IMPL_INLINE char* str_reverse( char* str )
 	return str;
 }
 
-GEN_IMPL_INLINE char const* str_skip( char const* str, char c )
+inline
+char const* str_skip( char const* str, char c )
 {
 	while ( *str && *str != c )
 	{
@@ -221,11 +238,12 @@ GEN_IMPL_INLINE char const* str_skip( char const* str, char c )
 	return str;
 }
 
-GEN_IMPL_INLINE char const* str_skip_any( char const* str, char const* char_list )
+inline
+char const* str_skip_any( char const* str, char const* char_list )
 {
-	char const* closest_ptr     = zpl_cast( char const* ) pointer_add( ( void* )str, str_len( str ) );
-	sw          char_list_count = str_len( char_list );
-	for ( sw i = 0; i < char_list_count; i++ )
+	char const* closest_ptr     = rcast( char const*, pointer_add_const( rcast(void const*, str), str_len( str ) ));
+	ssize       char_list_count = str_len( char_list );
+	for ( ssize i = 0; i < char_list_count; i++ )
 	{
 		char const* p = str_skip( str, char_list[ i ] );
 		closest_ptr   = min( closest_ptr, p );
@@ -233,7 +251,8 @@ GEN_IMPL_INLINE char const* str_skip_any( char const* str, char const* char_list
 	return closest_ptr;
 }
 
-GEN_IMPL_INLINE char const* str_trim( char const* str, b32 catch_newline )
+inline
+char const* str_trim( char const* str, b32 catch_newline )
 {
 	while ( *str && char_is_space( *str ) && ( ! catch_newline || ( catch_newline && *str != '\n' ) ) )
 	{
@@ -242,7 +261,8 @@ GEN_IMPL_INLINE char const* str_trim( char const* str, b32 catch_newline )
 	return str;
 }
 
-GEN_IMPL_INLINE void str_to_lower( char* str )
+inline
+void str_to_lower( char* str )
 {
 	if ( ! str )
 		return;
@@ -253,7 +273,8 @@ GEN_IMPL_INLINE void str_to_lower( char* str )
 	}
 }
 
-GEN_IMPL_INLINE void str_to_upper( char* str )
+inline
+void str_to_upper( char* str )
 {
 	if ( ! str )
 		return;

@@ -3,10 +3,10 @@
 #include "interface.parsing.cpp"
 #endif
 
-sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
+ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 {
 	char const* buf_begin = buf;
-	sw          remaining = buf_size;
+	ssize          remaining = buf_size;
 
 	local_persist
 	Arena tok_map_arena;
@@ -37,7 +37,7 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 
 	while ( current )
 	{
-		sw len = 0;
+		ssize len = 0;
 
 		while ( current && current != '<' && remaining )
 		{
@@ -68,7 +68,7 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 
 			if ( value )
 			{
-				sw          left = value->Len;
+				ssize          left = value->Len;
 				char const* str  = value->Ptr;
 
 				while ( left-- )
@@ -97,7 +97,7 @@ sw token_fmt_va( char* buf, uw buf_size, s32 num_tokens, va_list va )
 	tok_map.clear();
 	tok_map_arena.free();
 
-	sw result = buf_size - remaining;
+	ssize result = buf_size - remaining;
 
 	return result;
 }
@@ -138,7 +138,7 @@ Code untyped_fmt( char const* fmt, ...)
 
 	va_list va;
 	va_start(va, fmt);
-	sw length = str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
+	ssize length = str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
 	va_end(va);
 
 	Code
@@ -169,7 +169,7 @@ Code untyped_token_fmt( s32 num_tokens, ... )
 
 	va_list va;
 	va_start(va, num_tokens);
-	sw length = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num_tokens, va);
+	ssize length = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num_tokens, va);
 	va_end(va);
 
 	Code

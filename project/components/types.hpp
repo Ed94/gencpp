@@ -3,7 +3,7 @@
 #include "header_start.hpp"
 #endif
 
-using LogFailType = sw(*)(char const*, ...);
+using LogFailType = ssize(*)(char const*, ...);
 
 // By default this library will either crash or exit if an error is detected while generating codes.
 // Even if set to not use GEN_FATAL, GEN_FATAL will still be used for memory failures as the library is unusable when they occur.

@@ -67,7 +67,7 @@ Example using each construction interface:
 Validation and construction through a functional interface.
 
 ```cpp
-Code t_uw           = def_type( name(uw) );
+Code t_uw           = def_type( name(usize) );
 Code t_allocator    = def_type( name(allocator) );
 Code t_string_const = def_type( name(char), def_specifiers( args( ESpecifier::Const, ESpecifier::Ptr ) ));
 
@@ -90,8 +90,8 @@ Validation through ast construction.
 Code header = parse_struct( code(
     struct ArrayHeader
     {
-        uw        Num;
-        uw        Capacity;
+        usize        Num;
+        usize        Capacity;
         allocator Allocator;
     };
 ));
@@ -106,8 +106,8 @@ No validation, just glorified text injection.
 Code header = code_str(
     struct ArrayHeader
     {
-        uw        Num;
-        uw        Capacity;
+        usize        Num;
+        usize        Capacity;
         allocator Allocator;
     };
 );
@@ -123,8 +123,8 @@ All three constrcuton interfaces will generate the following C code:
 ```cpp
 struct ArrayHeader
 {
-    uw        Num;
-    uw        Capacity;
+    usize        Num;
+    usize        Capacity;
     allocator Allocator;
 };
 ```

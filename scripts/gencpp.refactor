@@ -43,9 +43,6 @@
 // word GEN_COMPILER_MINGW, new_name
 // word GEN_COMPILER_MSVC,  new_name
 
-    // General
-// word zpl_cast, new_name
-
 // word global,        new_name
 // word internal,      new_name
 // word local_persist, new_name
@@ -150,8 +147,8 @@
 // word u16,  new_name
 // word u32,  new_name
 // word u64,  new_name
-// word uw,   new_name
-// word sw,   new_name
+// word usize,   new_name
+// word ssize,   new_name
 // word sptr, new_name
 // word uptr, new_name
 // word f32,  new_name

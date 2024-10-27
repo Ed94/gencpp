@@ -70,7 +70,7 @@ CodeBody gen_eoperator( char const* path )
 	String enum_entries   = String::make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = String::make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for (uw idx = 0; idx < enum_strs.num(); idx++)
+	for (usize idx = 0; idx < enum_strs.num(); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
@@ -126,7 +126,7 @@ CodeBody gen_especifier( char const* path )
 	String enum_entries   = String::make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = String::make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for (uw idx = 0; idx < enum_strs.num(); idx++)
+	for (usize idx = 0; idx < enum_strs.num(); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
@@ -241,7 +241,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	String to_str_attributes        = String::make_reserve( GlobalAllocator, kilobytes(4) );
 	String attribute_define_entries = String::make_reserve( GlobalAllocator, kilobytes(4) );
 
-	for (uw idx = 0; idx < enum_strs.num(); idx++)
+	for (usize idx = 0; idx < enum_strs.num(); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = enum_str_strs [idx].string;
@@ -250,7 +250,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		to_str_entries.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
-	for ( uw idx = 0; idx < attribute_strs.num(); idx++ )
+	for ( usize idx = 0; idx < attribute_strs.num(); idx++ )
 	{
 		char const* attribute_str = attribute_strs[idx].string;
 		char const* entry_to_str  = attribute_str_strs [idx].string;

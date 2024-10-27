@@ -193,7 +193,7 @@ CodeBody def_body( CodeT type )
 }
 
 inline
-StrC token_fmt_impl( sw num, ... )
+StrC token_fmt_impl( ssize num, ... )
 {
 	local_persist thread_local
 	char buf[GEN_PRINTF_MAXLEN] = { 0 };
@@ -201,7 +201,7 @@ StrC token_fmt_impl( sw num, ... )
 
 	va_list va;
 	va_start(va, num );
-	sw result = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num, va);
+	ssize result = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num, va);
 	va_end(va);
 
 	return { result, buf };

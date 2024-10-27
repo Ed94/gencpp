@@ -15,8 +15,8 @@ Code gen__buffer_base()
 		struct BufferHeader
 		{
 			AllocatorInfo Backing;
-			uw            Capacity;
-			uw            Num;
+			usize            Capacity;
+			usize            Num;
 		};
 	));
 }
@@ -38,7 +38,7 @@ Code gen__buffer( StrC type )
 				using Header = BufferHeader;
 				using Type   = <type>;
 
-				static <BufferName> init( AllocatorInfo allocator, sw capacity )
+				static <BufferName> init( AllocatorInfo allocator, ssize capacity )
 				{
 					Header* header = rcast( Header*, alloc( allocator, sizeof( Header ) + capacity * sizeof( Type ) ) );
 
@@ -76,7 +76,7 @@ Code gen__buffer( StrC type )
 					header.Num++;
 				}
 
-				void append( Type* values, sw num )
+				void append( Type* values, ssize num )
 				{
 					Header& header = get_header();
 					GEN_ASSERT( header.Num + num <= header.Capacity);
@@ -108,7 +108,7 @@ Code gen__buffer( StrC type )
 					return *( rcast( Header*, Data ) - 1 );
 				}
 
-				sw num( void )
+				ssize num( void )
 				{
 					return get_header().Num;
 				}
@@ -147,7 +147,7 @@ void gen__buffer_request( StrC type, StrC dep = {} )
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenBufferRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenBufferRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenBufferRequests[ idx ].Type;
 

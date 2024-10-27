@@ -142,7 +142,7 @@ Code gen__array( StrC type )
 				if ( begin < 0 || end >= header.Num )
 					return false;
 
-				for ( sw idx = begin; idx < end; idx++ )
+				for ( ssize idx = begin; idx < end; idx++ )
 				{
 					Data[ idx ] = value;
 				}
@@ -170,7 +170,7 @@ Code gen__array( StrC type )
 			, def_execution( code(
 				Header& header = * get_header();
 
-				uw new_capacity = grow_formula( header.Capacity );
+				usize new_capacity = grow_formula( header.Capacity );
 
 				if ( new_capacity < min_capacity )
 					new_capacity = 8;
@@ -243,7 +243,7 @@ Code gen__array( StrC type )
 				if ( new_capacity < header.Num )
 					header.Num = new_capacity;
 
-				sw      size       = sizeof(Header) + sizeof(Type) * new_capacity;
+				ssize      size       = sizeof(Header) + sizeof(Type) * new_capacity;
 				Header* new_header = rcast( Header*, alloc( header.Allocator, size ));
 
 				if ( new_header == nullptr )
@@ -314,7 +314,7 @@ void gen__array_request( StrC type, StrC dep = {} )
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenArrayRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenArrayRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenArrayRequests[ idx ].Type;
 

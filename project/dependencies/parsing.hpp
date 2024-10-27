@@ -178,7 +178,7 @@ ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search );
 	* @param index
 	* @return zpl_adt_node * node
 	*/
-ADT_Node* adt_alloc_at( ADT_Node* parent, sw index );
+ADT_Node* adt_alloc_at( ADT_Node* parent, ssize index );
 
 /**
 	* @brief Allocate an unitialised node within a container.
@@ -196,7 +196,7 @@ ADT_Node* adt_alloc( ADT_Node* parent );
 	* @param index
 	* @return zpl_adt_node * node
 	*/
-ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, sw index );
+ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, ssize index );
 
 /**
 	* @brief Move an existing node to a new container.
@@ -400,31 +400,33 @@ enum CSV_Error : u32
 
 typedef ADT_Node CSV_Object;
 
-GEN_DEF_INLINE u8 csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header );
-u8                csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim );
-void              csv_free( CSV_Object* obj );
+u8   csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header );
+u8   csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim );
+void csv_free( CSV_Object* obj );
 
-GEN_DEF_INLINE void   csv_write( FileInfo* file, CSV_Object* obj );
-GEN_DEF_INLINE String csv_write_string( AllocatorInfo a, CSV_Object* obj );
-void                  csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delim );
-String                csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delim );
+void   csv_write( FileInfo* file, CSV_Object* obj );
+String csv_write_string( AllocatorInfo a, CSV_Object* obj );
+void   csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delim );
+String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delim );
 
 /* inline */
 
-GEN_IMPL_INLINE u8 csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header )
+inline
+u8 csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header )
 {
 	return csv_parse_delimiter( root, text, allocator, has_header, ',' );
 }
 
-GEN_IMPL_INLINE void csv_write( FileInfo* file, CSV_Object* obj )
+inline
+void csv_write( FileInfo* file, CSV_Object* obj )
 {
 	csv_write_delimiter( file, obj, ',' );
 }
 
-GEN_IMPL_INLINE String csv_write_string( AllocatorInfo a, CSV_Object* obj )
+inline
+String csv_write_string( AllocatorInfo a, CSV_Object* obj )
 {
 	return csv_write_string_delimiter( a, obj, ',' );
 }
 
 #pragma endregion CSV
-

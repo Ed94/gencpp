@@ -41,10 +41,10 @@ struct _format_info
 	s32 precision;
 };
 
-internal sw _print_string( char* text, sw max_len, _format_info* info, char const* str )
+internal ssize _print_string( char* text, ssize max_len, _format_info* info, char const* str )
 {
-	sw    res = 0, len = 0;
-	sw    remaining = max_len;
+	ssize    res = 0, len = 0;
+	ssize    remaining = max_len;
 	char* begin     = text;
 
 	if ( str == NULL && max_len >= 6 )
@@ -75,7 +75,7 @@ internal sw _print_string( char* text, sw max_len, _format_info* info, char cons
 
 		if ( info->width > res )
 		{
-			sw padding = info->width - len;
+			ssize padding = info->width - len;
 
 			char pad = ( info->flags & GEN_FMT_ZERO ) ? '0' : ' ';
 			while ( padding-- > 0 && remaining-- > 0 )
@@ -86,7 +86,7 @@ internal sw _print_string( char* text, sw max_len, _format_info* info, char cons
 	{
 		if ( info && ( info->width > res ) )
 		{
-			sw   padding = info->width - len;
+			ssize   padding = info->width - len;
 			char pad     = ( info->flags & GEN_FMT_ZERO ) ? '0' : ' ';
 			while ( padding-- > 0 && remaining-- > 0 )
 				*text++ = pad, res++;
@@ -108,16 +108,16 @@ internal sw _print_string( char* text, sw max_len, _format_info* info, char cons
 	return res;
 }
 
-internal sw _print_char( char* text, sw max_len, _format_info* info, char arg )
+internal ssize _print_char( char* text, ssize max_len, _format_info* info, char arg )
 {
 	char str[ 2 ] = "";
 	str[ 0 ]      = arg;
 	return _print_string( text, max_len, info, str );
 }
 
-internal sw _print_repeated_char( char* text, sw max_len, _format_info* info, char arg )
+internal ssize _print_repeated_char( char* text, ssize max_len, _format_info* info, char arg )
 {
-	sw  res = 0;
+	ssize  res = 0;
 	s32 rem = ( info ) ? ( info->width > 0 ) ? info->width : 1 : 1;
 	res     = rem;
 	while ( rem-- > 0 )
@@ -126,24 +126,24 @@ internal sw _print_repeated_char( char* text, sw max_len, _format_info* info, ch
 	return res;
 }
 
-internal sw _print_i64( char* text, sw max_len, _format_info* info, s64 value )
+internal ssize _print_i64( char* text, ssize max_len, _format_info* info, s64 value )
 {
 	char num[ 130 ];
 	i64_to_str( value, num, info ? info->base : 10 );
 	return _print_string( text, max_len, info, num );
 }
 
-internal sw _print_u64( char* text, sw max_len, _format_info* info, u64 value )
+internal ssize _print_u64( char* text, ssize max_len, _format_info* info, u64 value )
 {
 	char num[ 130 ];
 	u64_to_str( value, num, info ? info->base : 10 );
 	return _print_string( text, max_len, info, num );
 }
 
-internal sw _print_f64( char* text, sw max_len, _format_info* info, b32 is_hexadecimal, f64 arg )
+internal ssize _print_f64( char* text, ssize max_len, _format_info* info, b32 is_hexadecimal, f64 arg )
 {
 	// TODO: Handle exponent notation
-	sw    width, len, remaining = max_len;
+	ssize    width, len, remaining = max_len;
 	char* text_begin = text;
 
 	if ( arg )
@@ -163,7 +163,7 @@ internal sw _print_f64( char* text, sw max_len, _format_info* info, b32 is_hexad
 			text++;
 		}
 
-		value  = zpl_cast( u64 ) arg;
+		value  = scast( u64, arg);
 		len    = _print_u64( text, remaining, NULL, value );
 		text  += len;
 
@@ -184,14 +184,14 @@ internal sw _print_f64( char* text, sw max_len, _format_info* info, b32 is_hexad
 			text++;
 			while ( info->precision-- > 0 )
 			{
-				value  = zpl_cast( u64 )( arg * mult );
+				value  = scast( u64, arg * mult );
 				len    = _print_u64( text, remaining, NULL, value );
 				text  += len;
 				if ( len >= remaining )
 					remaining = min( remaining, 1 );
 				else
 					remaining -= len;
-				arg  -= zpl_cast( f64 ) value / mult;
+				arg  -= scast( f64, value / mult);
 				mult *= 10;
 			}
 		}
@@ -239,15 +239,15 @@ internal sw _print_f64( char* text, sw max_len, _format_info* info, b32 is_hexad
 	return ( text - text_begin );
 }
 
-neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
+neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_list va )
 {
 	char const* text_begin = text;
-	sw          remaining  = max_len, res;
+	ssize          remaining  = max_len, res;
 
 	while ( *fmt )
 	{
 		_format_info info = { 0 };
-		sw           len  = 0;
+		ssize           len  = 0;
 		info.precision    = -1;
 
 		while ( *fmt && *fmt != '%' && remaining )
@@ -311,7 +311,7 @@ neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
 		}
 		else
 		{
-			info.width = zpl_cast( s32 ) str_to_i64( fmt, zpl_cast( char** ) & fmt, 10 );
+			info.width = scast( s32, str_to_i64( fmt, ccast( char**, & fmt), 10 ));
 			if ( info.width != 0 )
 			{
 				info.flags |= GEN_FMT_WIDTH;
@@ -329,7 +329,7 @@ neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
 			}
 			else
 			{
-				info.precision = zpl_cast( s32 ) str_to_i64( fmt, zpl_cast( char** ) & fmt, 10 );
+				info.precision = scast( s32, str_to_i64( fmt, ccast( char**, & fmt), 10 ));
 			}
 			info.flags &= ~GEN_FMT_ZERO;
 		}
@@ -411,7 +411,7 @@ neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
 				break;
 
 			case 'c' :
-				len = _print_char( text, remaining, &info, zpl_cast( char ) va_arg( va, int ) );
+				len = _print_char( text, remaining, &info, scast( char, va_arg( va, int ) ));
 				break;
 
 			case 's' :
@@ -455,25 +455,25 @@ neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
 				switch ( info.flags & GEN_FMT_INTS )
 				{
 					case GEN_FMT_CHAR :
-						value = zpl_cast( u64 ) zpl_cast( u8 ) va_arg( va, int );
+						value = scast( u64, scast( u8, va_arg( va, int )));
 						break;
 					case GEN_FMT_SHORT :
-						value = zpl_cast( u64 ) zpl_cast( u16 ) va_arg( va, int );
+						value = scast( u64, scast( u16, va_arg( va, int )));
 						break;
-					case GEN_FMT_LONG :
-						value = zpl_cast( u64 ) va_arg( va, unsigned long );
+					case GEN_FMT_LONG:
+						value = scast( u64, va_arg( va, unsigned long ));
 						break;
 					case GEN_FMT_LLONG :
-						value = zpl_cast( u64 ) va_arg( va, unsigned long long );
+						value = scast( u64, va_arg( va, unsigned long long ));
 						break;
 					case GEN_FMT_SIZE :
-						value = zpl_cast( u64 ) va_arg( va, uw );
+						value = scast( u64, va_arg( va, usize ));
 						break;
 					case GEN_FMT_INTPTR :
-						value = zpl_cast( u64 ) va_arg( va, uptr );
+						value = scast( u64, va_arg( va, uptr ));
 						break;
 					default :
-						value = zpl_cast( u64 ) va_arg( va, unsigned int );
+						value = scast( u64, va_arg( va, unsigned int ));
 						break;
 				}
 
@@ -485,25 +485,25 @@ neverinline sw str_fmt_va( char* text, sw max_len, char const* fmt, va_list va )
 				switch ( info.flags & GEN_FMT_INTS )
 				{
 					case GEN_FMT_CHAR :
-						value = zpl_cast( s64 ) zpl_cast( s8 ) va_arg( va, int );
+						value = scast( s64, scast( s8, va_arg( va, int )));
 						break;
 					case GEN_FMT_SHORT :
-						value = zpl_cast( s64 ) zpl_cast( s16 ) va_arg( va, int );
+						value = scast( s64, scast( s16, va_arg( va, int )));
 						break;
 					case GEN_FMT_LONG :
-						value = zpl_cast( s64 ) va_arg( va, long );
+						value = scast( s64, va_arg( va, long ));
 						break;
 					case GEN_FMT_LLONG :
-						value = zpl_cast( s64 ) va_arg( va, long long );
+						value = scast( s64, va_arg( va, long long ));
 						break;
 					case GEN_FMT_SIZE :
-						value = zpl_cast( s64 ) va_arg( va, uw );
+						value = scast( s64, va_arg( va, usize ));
 						break;
 					case GEN_FMT_INTPTR :
-						value = zpl_cast( s64 ) va_arg( va, uptr );
+						value = scast( s64, va_arg( va, uptr ));
 						break;
 					default :
-						value = zpl_cast( s64 ) va_arg( va, int );
+						value = scast( s64, va_arg( va, int ));
 						break;
 				}
 
@@ -540,17 +540,17 @@ char* str_fmt_buf( char const* fmt, ... )
 	return str;
 }
 
-sw str_fmt_file_va( struct FileInfo* f, char const* fmt, va_list va )
+ssize str_fmt_file_va( struct FileInfo* f, char const* fmt, va_list va )
 {
 	local_persist thread_local char buf[ GEN_PRINTF_MAXLEN ];
-	sw                              len = str_fmt_va( buf, size_of( buf ), fmt, va );
+	ssize                              len = str_fmt_va( buf, size_of( buf ), fmt, va );
 	b32                             res = file_write( f, buf, len - 1 );    // NOTE: prevent extra whitespace
 	return res ? len : -1;
 }
 
-sw str_fmt_file( struct FileInfo* f, char const* fmt, ... )
+ssize str_fmt_file( struct FileInfo* f, char const* fmt, ... )
 {
-	sw      res;
+	ssize      res;
 	va_list va;
 	va_start( va, fmt );
 	res = str_fmt_file_va( f, fmt, va );
@@ -558,9 +558,9 @@ sw str_fmt_file( struct FileInfo* f, char const* fmt, ... )
 	return res;
 }
 
-sw str_fmt( char* str, sw n, char const* fmt, ... )
+ssize str_fmt( char* str, ssize n, char const* fmt, ... )
 {
-	sw      res;
+	ssize      res;
 	va_list va;
 	va_start( va, fmt );
 	res = str_fmt_va( str, n, fmt, va );
@@ -568,19 +568,19 @@ sw str_fmt( char* str, sw n, char const* fmt, ... )
 	return res;
 }
 
-sw str_fmt_out_va( char const* fmt, va_list va )
+ssize str_fmt_out_va( char const* fmt, va_list va )
 {
 	return str_fmt_file_va( file_get_standard( EFileStandard_OUTPUT ), fmt, va );
 }
 
-sw str_fmt_out_err_va( char const* fmt, va_list va )
+ssize str_fmt_out_err_va( char const* fmt, va_list va )
 {
 	return str_fmt_file_va( file_get_standard( EFileStandard_ERROR ), fmt, va );
 }
 
-sw str_fmt_out_err( char const* fmt, ... )
+ssize str_fmt_out_err( char const* fmt, ... )
 {
-	sw      res;
+	ssize      res;
 	va_list va;
 	va_start( va, fmt );
 	res = str_fmt_out_err_va( fmt, va );

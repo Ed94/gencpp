@@ -128,7 +128,7 @@ Code gen__hashtable( StrC type )
 
 		CodeFn get = def_function( name(get), def_param( t_u64, name(key)), t_type_ptr
 			, def_execution( code(
-				sw idx = find( key ).EntryIndex;
+				ssize idx = find( key ).EntryIndex;
 				if ( idx >= 0 )
 					return & Entries[ idx ].Value;
 
@@ -153,7 +153,7 @@ Code gen__hashtable( StrC type )
 			Code body = def_execution( code(
 				GEN_ASSERT_NOT_NULL( map_proc );
 
-				for ( sw idx = 0; idx < Entries.num(); idx++ )
+				for ( ssize idx = 0; idx < Entries.num(); idx++ )
 				{
 					map_proc( Entries[ idx ].Key, Entries[ idx ].Value );
 				}
@@ -179,7 +179,7 @@ Code gen__hashtable( StrC type )
 			Code body = def_execution( code(
 				GEN_ASSERT_NOT_NULL( map_proc );
 
-				for ( sw idx = 0; idx < Entries.num(); idx++ )
+				for ( ssize idx = 0; idx < Entries.num(); idx++ )
 				{
 					map_proc( Entries[ idx ].Key, & Entries[ idx ].Value );
 				}
@@ -190,7 +190,7 @@ Code gen__hashtable( StrC type )
 
 		CodeFn grow = def_function( name(grow), __, t_void
 			, def_execution( code(
-				sw new_num = array_grow_formula( Entries.num() );
+				ssize new_num = array_grow_formula( Entries.num() );
 				rehash( new_num );
 			))
 		);
@@ -198,8 +198,8 @@ Code gen__hashtable( StrC type )
 		CodeFn rehash;
 		{
 			char const* tmpl = stringize(
-				sw idx;
-				sw last_added_index;
+				ssize idx;
+				ssize last_added_index;
 
 				<type> new_ht = init_reserve( Hashes.get_header()->Allocator, new_num );
 
@@ -242,7 +242,7 @@ Code gen__hashtable( StrC type )
 		CodeFn rehash_fast;
 		{
 			char const* tmpl = stringize(
-				sw idx;
+				ssize idx;
 
 				for ( idx = 0; idx < Entries.num(); idx++ )
 					Entries[ idx ].Next = -1;
@@ -288,7 +288,7 @@ Code gen__hashtable( StrC type )
 			));
 
 			Code body = def_execution( code(
-				sw idx;
+				ssize idx;
 				FindResult find_result;
 
 				if ( Hashes.num() == 0 )
@@ -325,7 +325,7 @@ Code gen__hashtable( StrC type )
 
 		CodeFn slot = def_function( name(slot), def_param( t_u64, name(key)), t_sw
 			, def_execution( code(
-				for ( sw idx = 0; idx < Hashes.num(); ++idx )
+				for ( ssize idx = 0; idx < Hashes.num(); ++idx )
 					if ( Hashes[ idx ] == key )
 						return idx;
 
@@ -335,7 +335,7 @@ Code gen__hashtable( StrC type )
 
 		CodeFn add_entry = def_function( name(add_entry), def_param( t_u64, name(key)), t_sw
 			, def_execution( code(
-				sw idx;
+				ssize idx;
 				Entry entry = { key, -1 };
 
 				idx = Entries.num();
@@ -421,11 +421,11 @@ void gen__hashtable_request( StrC type, StrC dep = {} )
 	do_once_start
 		GenHashTableRequests = Array<GenHashTableRequest>::init( GlobalAllocator );
 
-		gen_array( sw );
+		gen_array( ssize );
 	do_once_end
 
 	// Make sure we don't already have a request for the type.
-	for ( sw idx = 0; idx < GenHashTableRequests.num(); ++idx )
+	for ( ssize idx = 0; idx < GenHashTableRequests.num(); ++idx )
 	{
 		StrC const reqest_type = GenHashTableRequests[ idx ].Type;
 

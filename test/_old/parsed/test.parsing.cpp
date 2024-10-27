@@ -23,14 +23,14 @@ int gen_main()
 	gen_sanity();
 
 	gen_array( u8 );
-	gen_array( sw );
+	gen_array( ssize );
 
 	gen_buffer( u8 );
 
 	gen_hashtable( u32 );
 
 	gen_ring( s16 );
-	gen_ring( uw );
+	gen_ring( usize );
 
 	gen_array_file();
 	gen_buffer_file();

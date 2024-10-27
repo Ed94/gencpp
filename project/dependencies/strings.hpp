@@ -8,15 +8,15 @@
 // Constant string with length.
 struct StrC
 {
-	sw          Len;
+	ssize          Len;
 	char const* Ptr;
 
-	operator char const* ()            const { return Ptr; }
-	char const& operator[]( sw index ) const { return Ptr[index]; }
+	operator char const* ()               const { return Ptr; }
+	char const& operator[]( ssize index ) const { return Ptr[index]; }
 };
 
-#define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(sw) )
-#define txt( text ) StrC { sizeof( text ) - 1, ( text ) }
+#define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(ssize) )
+#define txt( text )         StrC { sizeof( text ) - 1, ( text ) }
 
 inline
 StrC to_str( char const* str )
@@ -33,12 +33,12 @@ struct String
 	struct Header
 	{
 		AllocatorInfo Allocator;
-		sw            Capacity;
-		sw            Length;
+		ssize            Capacity;
+		ssize            Length;
 	};
 
 	static
-	uw grow_formula( uw value )
+	usize grow_formula( usize value )
 	{
 		// Using a very aggressive growth formula to reduce time mem_copying with recursive calls to append in this library.
 		return 4 * value + 8;
@@ -47,7 +47,7 @@ struct String
 	static
 	String make( AllocatorInfo allocator, char const* str )
 	{
-		sw length = str ? str_len( str ) : 0;
+		ssize length = str ? str_len( str ) : 0;
 		return make_length( allocator, str, length );
 	}
 
@@ -58,23 +58,23 @@ struct String
 	}
 
 	static
-	String make_reserve( AllocatorInfo allocator, sw capacity );
+	String make_reserve( AllocatorInfo allocator, ssize capacity );
 
 	static
-	String make_length( AllocatorInfo allocator, char const* str, sw length );
+	String make_length( AllocatorInfo allocator, char const* str, ssize length );
 
 	static
-	String fmt( AllocatorInfo allocator, char* buf, sw buf_size, char const* fmt, ... );
+	String fmt( AllocatorInfo allocator, char* buf, ssize buf_size, char const* fmt, ... );
 
 	static
 	String fmt_buf( AllocatorInfo allocator, char const* fmt, ... );
 
 	static
-	String join( AllocatorInfo allocator, char const** parts, sw num_parts, char const* glue )
+	String join( AllocatorInfo allocator, char const** parts, ssize num_parts, char const* glue )
 	{
 		String result = make( allocator, "" );
 
-		for ( sw idx = 0; idx < num_parts; ++idx )
+		for ( ssize idx = 0; idx < num_parts; ++idx )
 		{
 			result.append( parts[ idx ] );
 
@@ -91,7 +91,7 @@ struct String
 		if ( lhs.length() != rhs.length() )
 			return false;
 
-		for ( sw idx = 0; idx < lhs.length(); ++idx )
+		for ( ssize idx = 0; idx < lhs.length(); ++idx )
 			if ( lhs[ idx ] != rhs[ idx ] )
 				return false;
 
@@ -104,14 +104,14 @@ struct String
 		if ( lhs.length() != (rhs.Len) )
 			return false;
 
-		for ( sw idx = 0; idx < lhs.length(); ++idx )
+		for ( ssize idx = 0; idx < lhs.length(); ++idx )
 			if ( lhs[idx] != rhs[idx] )
 				return false;
 
 		return true;
 	}
 
-	bool make_space_for( char const* str, sw add_len );
+	bool make_space_for( char const* str, ssize add_len );
 
 	bool append( char c )
 	{
@@ -123,11 +123,11 @@ struct String
 		return append( str, str_len( str ) );
 	}
 
-	bool append( char const* str, sw length )
+	bool append( char const* str, ssize length )
 	{
 		if ( sptr(str) > 0 )
 		{
-			sw curr_len = this->length();
+			ssize curr_len = this->length();
 
 			if ( ! make_space_for( str, length ) )
 				return false;
@@ -155,7 +155,7 @@ struct String
 
 	bool append_fmt( char const* fmt, ... );
 
-	sw avail_space() const
+	ssize avail_space() const
 	{
 		Header const&
 		header = * rcast( Header const*, Data - sizeof( Header ));
@@ -168,7 +168,7 @@ struct String
 		return Data[ length() - 1 ];
 	}
 
-	sw capacity() const
+	ssize capacity() const
 	{
 		Header const&
 		header = * rcast( Header const*, Data - sizeof( Header ));
@@ -201,7 +201,7 @@ struct String
 		return *(Header*)(Data - sizeof(Header));
 	}
 
-	sw length() const
+	ssize length() const
 	{
 		Header const&
 		header = * rcast( Header const*, Data - sizeof( Header ));
@@ -273,7 +273,7 @@ struct String
 
 	void trim( char const* cut_set )
 	{
-		sw len = 0;
+		ssize len = 0;
 
 		char* start_pos = Data;
 		char* end_pos   = Data + length() - 1;
@@ -284,7 +284,7 @@ struct String
 		while ( end_pos > start_pos && char_first_occurence( cut_set, *end_pos ) )
 			end_pos--;
 
-		len = scast( sw, ( start_pos > end_pos ) ? 0 : ( ( end_pos - start_pos ) + 1 ) );
+		len = scast( ssize, ( start_pos > end_pos ) ? 0 : ( ( end_pos - start_pos ) + 1 ) );
 
 		if ( Data != start_pos )
 			mem_move( Data, start_pos, len );
@@ -379,19 +379,19 @@ struct String
 		if ( this == & other )
 			return *this;
 
-		String& this_ = ccast( String, *this );
+		String*
+		this_ = ccast(String*, this);
+		this_->Data = other.Data;
 
-		this_.Data = other.Data;
-
-		return this_;
+		return *this;
 	}
 
-	char& operator [] ( sw index )
+	char& operator [] ( ssize index )
 	{
 		return Data[ index ];
 	}
 
-	char const& operator [] ( sw index ) const
+	char const& operator [] ( ssize index ) const
 	{
 		return Data[ index ];
 	}

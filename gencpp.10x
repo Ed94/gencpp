@@ -6,6 +6,7 @@
 		<SyncFiles>true</SyncFiles>
 		<Recursive>true</Recursive>
 		<ShowEmptyFolders>true</ShowEmptyFolders>
+		<IncludeFilesWithoutExt>false</IncludeFilesWithoutExt>
 		<IsVirtual>false</IsVirtual>
 		<IsFolder>false</IsFolder>
 		<BuildCommand>pwsh ./scripts/build.ps1 msvc debug bootstrap</BuildCommand>
@@ -14,12 +15,13 @@
 		<CleanCommand>pwsh ./scripts/clean.ps1</CleanCommand>
 		<BuildWorkingDirectory></BuildWorkingDirectory>
 		<CancelBuild></CancelBuild>
-		<RunCommand>./test/gen/build/gencpp.exe</RunCommand>
-		<RunCommandWorkingDirectory></RunCommandWorkingDirectory>
+		<Exe>./test/gen/build/gencpp.exe</Exe>
+		<Args></Args>
+		<WorkingDirectory></WorkingDirectory>
 		<DebugCommand>pwsh ./scripts/build.ps1</DebugCommand>
-		<ExePathCommand>./test/gen/build/gencpp.exe</ExePathCommand>
 		<DebugSln></DebugSln>
 		<UseVisualStudioEnvBat>true</UseVisualStudioEnvBat>
+		<CaptureExeOutput>false</CaptureExeOutput>
 		<Configurations>
 			<Configuration>Debug</Configuration>
 			<Configuration>Release</Configuration>
@@ -44,6 +46,8 @@
 			<Define>GEN_SYSTEM_WINDOWS</Define>
 			<Define>GEN_INTELLISENSE_DIRECTIVES</Define>
 			<Define>GEN_EXECUTION_EXPRESSION_SUPPORT</Define>
+			<Define>GEN_BENCHMARK</Define>
+			<Define>GEN_COMPILER_MSVC</Define>
 		</Defines>
 		<ConfigProperties>
 			<ConfigAndPlatform>

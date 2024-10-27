@@ -64,5 +64,29 @@ Remove-Item      -Path $path_release_content\gen.scanner.cpp
 # Unreal
 Copy-Item        -Path $path_unreal_gen\*      -Destination $path_release_content
 Compress-Archive -Path $path_release_content\* -DestinationPath $path_release\gencpp_unreal.zip -Force
+Remove-Item      -Path $path_release_content\gen.dep.hpp
+Remove-Item      -Path $path_release_content\gen.dep.cpp
+Remove-Item      -Path $path_release_content\gen.hpp
+Remove-Item      -Path $path_release_content\gen.cpp
+Remove-Item      -Path $path_release_content\gen.builder.hpp
+Remove-Item      -Path $path_release_content\gen.builder.cpp
+Remove-Item      -Path $path_release_content\gen.scanner.hpp
+Remove-Item      -Path $path_release_content\gen.scanner.cpp
+
+# As Is
+
+Copy-Item        -Path $path_project\gen.hpp               -Destination $path_release_content
+Copy-Item        -Path $path_project\gen.cpp               -Destination $path_release_content
+Copy-Item        -Path $path_project\gen.dep.hpp           -Destination $path_release_content
+Copy-Item        -Path $path_project\gen.dep.cpp           -Destination $path_release_content
+Copy-Item        -Path $path_project\auxillary\builder.hpp -Destination $path_release_content
+Copy-Item        -Path $path_project\auxillary\builder.cpp -Destination $path_release_content
+Copy-Item        -Path $path_project\auxillary\scanner.hpp -Destination $path_release_content
+Copy-Item        -Path $path_project\auxillary\scanner.cpp -Destination $path_release_content
+Copy-Item        -Path $path_project\components\*          -Destination $path_release_content\components
+Copy-Item        -Path $path_project\dependencies\*        -Destination $path_release_content\dependencies
+Copy-Item        -Path $path_project\enums\*               -Destination $path_release_content\dependencies
+Copy-Item        -Path $path_project\helpers\*             -Destination $path_release_content\dependencies
+Compress-Archive -Path $path_release_content\*             -DestinationPath $path_release\gencpp_as_is.zip -Force
 
 Remove-Item -Path $path_release_content -Recurse

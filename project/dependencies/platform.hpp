@@ -1,4 +1,6 @@
-#pragma once
+#ifdef GEN_INTELLISENSE_DIRECTIVES
+#	pragma once
+#endif
 
 #pragma region Platform Detection
 
@@ -98,9 +100,6 @@
 #else
 #  define GEN_GCC_VERSION_CHECK(major,minor,patch) (0)
 #endif
-
-#define GEN_DEF_INLINE  static
-#define GEN_IMPL_INLINE static inline
 
 #pragma endregion Platform Detection
 

@@ -24,8 +24,6 @@
 #undef forceinline
 #undef neverinline
 
-#undef zpl_cast
-
 #undef global
 #undef internal
 #undef local_persist
