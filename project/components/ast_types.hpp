@@ -211,7 +211,7 @@ struct AST_Expr
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -226,7 +226,7 @@ struct AST_Expr_Assign
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -241,7 +241,7 @@ struct AST_Expr_Alignof
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -256,7 +256,7 @@ struct AST_Expr_Binary
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -271,7 +271,7 @@ struct AST_Expr_CStyleCast
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -286,7 +286,7 @@ struct AST_Expr_FunctionalCast
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -301,7 +301,7 @@ struct AST_Expr_CppCast
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -316,7 +316,7 @@ struct AST_Expr_ProcCall
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -331,7 +331,7 @@ struct AST_Expr_Decltype
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -346,7 +346,7 @@ struct AST_Expr_Comma
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -361,7 +361,7 @@ struct AST_Expr_AMS
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -376,7 +376,7 @@ struct AST_Expr_Sizeof
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -391,7 +391,7 @@ struct AST_Expr_Subscript
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -406,7 +406,7 @@ struct AST_Expr_Ternary
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -421,7 +421,7 @@ struct AST_Expr_UnaryPrefix
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -436,7 +436,7 @@ struct AST_Expr_UnaryPostfix
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -451,7 +451,7 @@ struct AST_Expr_Element
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
