@@ -35,7 +35,6 @@ constexpr StrC roll_own_dependencies_guard_start = txt(R"(
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
-
 )");
 
 constexpr StrC roll_own_dependencies_guard_end = txt(R"(
@@ -119,7 +118,6 @@ int gen_main()
 			Code timing       = scan_file( project_dir "dependencies/timing.hpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
-			header.print( fmt_newline );
 			header.print( platform );
 			header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
