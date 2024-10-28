@@ -20,6 +20,8 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gencpp's bootstrap.cpp "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
+#include <cstdlib>   // for system()
+
 void format_file( char const* path )
 {
 	String resolved_path = String::make(GlobalAllocator, to_str(path));

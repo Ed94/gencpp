@@ -14,6 +14,8 @@ GEN_NS_END
 #include "auxillary/builder.cpp"
 #include "auxillary/scanner.hpp"
 
+#include <cstdlib>   // for system()
+
 using namespace gen;
 
 constexpr char const* generation_notice =

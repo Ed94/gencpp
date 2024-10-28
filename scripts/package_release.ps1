@@ -3,10 +3,10 @@ cls
 $build = Join-Path $PSScriptRoot 'build.ci.ps1'
 
 if ( $IsWindows ) {
-	& $build release msvc bootstrap singleheader unreal
+	& $build release msvc bootstrap singleheader unreal msvc debug
 }
 else {
-	& $build release clang bootstrap singleheader unreal
+	& $build release clang bootstrap singleheader unreal msvc debug
 }
 
 $path_root             = git rev-parse --show-toplevel
@@ -24,69 +24,68 @@ if ( -not(Test-Path $path_release) ) {
 	New-Item -ItemType Directory -Path $path_release
 }
 
-if ( -not(Test-Path $path_release_content) ) {
+function prep-ReleaseContent()
+{
 	New-Item -ItemType Directory -Path $path_release_content
+
+	$license            = Join-Path $path_root LICENSE
+	$readme_root        = Join-Path $path_root Readme.md
+	$readme_docs        = Join-Path $path_docs Readme.md
+	$readme_ast_design  = Join-Path $path_docs AST_Design.md
+	$readme_ast_types   = Join-Path $path_docs AST_Types.md
+	$readme_parsing     = Join-Path $path_docs Parsing.md
+	$readme_parser_algo = Join-Path $path_docs Parser_Algo.md
+
+	Copy-Item $license		      -Destination (Join-Path $path_release_content "LICENSE")
+	Copy-Item $readme_root        -Destination (Join-Path $path_release_content "Readme.md")
+	Copy-Item $readme_docs        -Destination (Join-Path $path_release_content "Readme_Docs.md")
+	Copy-Item $readme_ast_design  -Destination (Join-Path $path_release_content "AST_Design.md")
+	Copy-Item $readme_ast_types   -Destination (Join-Path $path_release_content "AST_Types.md")
+	Copy-Item $readme_parsing     -Destination (Join-Path $path_release_content "Parsing.md")
+	Copy-Item $readme_parser_algo -Destination (Join-Path $path_release_content "Parser_Algo.md")
 }
 
-$license            = Join-Path $path_root LICENSE
-$readme_root        = Join-Path $path_root Readme.md
-$readme_docs        = Join-Path $path_docs Readme.md
-$readme_ast_design  = Join-Path $path_docs AST_Design.md
-$readme_ast_types   = Join-Path $path_docs AST_Types.md
-$readme_parsing     = Join-Path $path_docs Parsing.md
-$readme_parser_algo = Join-Path $path_docs Parser_Algo.md
-
-Copy-Item $license		      -Destination (Join-Path $path_release_content "LICENSE")
-Copy-Item $readme_root        -Destination (Join-Path $path_release_content "Readme.md")
-Copy-Item $readme_docs        -Destination (Join-Path $path_release_content "Readme_Docs.md")
-Copy-Item $readme_ast_design  -Destination (Join-Path $path_release_content "AST_Design.md")
-Copy-Item $readme_ast_types   -Destination (Join-Path $path_release_content "AST_Types.md")
-Copy-Item $readme_parsing     -Destination (Join-Path $path_release_content "Parsing.md")
-Copy-Item $readme_parser_algo -Destination (Join-Path $path_release_content "Parser_Algo.md")
-
 # Singleheader
+prep-ReleaseContent
 Copy-Item        -Path $path_singleheader_gen\gen.hpp -Destination $path_release_content\gen.hpp
 Compress-Archive -Path $path_release_content\*        -DestinationPath $path_release\gencpp_singleheader.zip -Force
-Remove-Item      -Path $path_release_content\gen.hpp
+Remove-Item -Path $path_release_content -Recurse
 
 # Segmented
+prep-ReleaseContent
 Copy-Item        -Path $path_project_gen\*     -Destination $path_release_content
 Compress-Archive -Path $path_release_content\* -DestinationPath $path_release\gencpp_segmented.zip -Force
-Remove-Item      -Path $path_release_content\gen.dep.hpp
-Remove-Item      -Path $path_release_content\gen.dep.cpp
-Remove-Item      -Path $path_release_content\gen.hpp
-Remove-Item      -Path $path_release_content\gen.cpp
-Remove-Item      -Path $path_release_content\gen.builder.hpp
-Remove-Item      -Path $path_release_content\gen.builder.cpp
-Remove-Item      -Path $path_release_content\gen.scanner.hpp
-Remove-Item      -Path $path_release_content\gen.scanner.cpp
+Remove-Item -Path $path_release_content -Recurse
 
 # Unreal
+prep-ReleaseContent
 Copy-Item        -Path $path_unreal_gen\*      -Destination $path_release_content
 Compress-Archive -Path $path_release_content\* -DestinationPath $path_release\gencpp_unreal.zip -Force
-Remove-Item      -Path $path_release_content\gen.dep.hpp
-Remove-Item      -Path $path_release_content\gen.dep.cpp
-Remove-Item      -Path $path_release_content\gen.hpp
-Remove-Item      -Path $path_release_content\gen.cpp
-Remove-Item      -Path $path_release_content\gen.builder.hpp
-Remove-Item      -Path $path_release_content\gen.builder.cpp
-Remove-Item      -Path $path_release_content\gen.scanner.hpp
-Remove-Item      -Path $path_release_content\gen.scanner.cpp
+Remove-Item -Path $path_release_content -Recurse
 
 # As Is
 
-Copy-Item        -Path $path_project\gen.hpp               -Destination $path_release_content
-Copy-Item        -Path $path_project\gen.cpp               -Destination $path_release_content
-Copy-Item        -Path $path_project\gen.dep.hpp           -Destination $path_release_content
-Copy-Item        -Path $path_project\gen.dep.cpp           -Destination $path_release_content
-Copy-Item        -Path $path_project\auxillary\builder.hpp -Destination $path_release_content
-Copy-Item        -Path $path_project\auxillary\builder.cpp -Destination $path_release_content
-Copy-Item        -Path $path_project\auxillary\scanner.hpp -Destination $path_release_content
-Copy-Item        -Path $path_project\auxillary\scanner.cpp -Destination $path_release_content
-Copy-Item        -Path $path_project\components\*          -Destination $path_release_content\components
-Copy-Item        -Path $path_project\dependencies\*        -Destination $path_release_content\dependencies
-Copy-Item        -Path $path_project\enums\*               -Destination $path_release_content\dependencies
-Copy-Item        -Path $path_project\helpers\*             -Destination $path_release_content\dependencies
-Compress-Archive -Path $path_release_content\*             -DestinationPath $path_release\gencpp_as_is.zip -Force
+prep-ReleaseContent
+Copy-Item        -Verbose -Path $path_project\gen.hpp               -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_project\gen.cpp               -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_project\gen.dep.hpp           -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_project\gen.dep.cpp           -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_project\auxillary\builder.hpp -Destination $path_release_content\auxillary
+Copy-Item        -Verbose -Path $path_project\auxillary\builder.cpp -Destination $path_release_content\auxillary
+Copy-Item        -Verbose -Path $path_project\auxillary\scanner.hpp -Destination $path_release_content\auxillary
+Copy-Item        -Verbose -Path $path_project\auxillary\scanner.cpp -Destination $path_release_content\auxillary
 
+New-Item -ItemType Directory -Force -Path "$path_release_content\components"
+New-Item -ItemType Directory -Force -Path "$path_release_content\components\gen"
+New-Item -ItemType Directory -Force -Path "$path_release_content\dependencies"
+New-Item -ItemType Directory -Force -Path "$path_release_content\enums"
+New-Item -ItemType Directory -Force -Path "$path_release_content\helpers"
+
+Get-ChildItem -Verbose -Path "$path_project\components\*"     -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\components"
+Get-ChildItem -Verbose -Path "$path_project\components\gen\*" -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\components\gen"
+Get-ChildItem -Verbose -Path "$path_project\dependencies\*"   -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\dependencies"
+Get-ChildItem -Verbose -Path "$path_project\enums\*"          -Include *.csv       | Copy-Item -Destination "$path_release_content\enums"
+Get-ChildItem -Verbose -Path "$path_project\helpers\*"        -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\helpers"
+
+Compress-Archive -Path $path_release_content\** -DestinationPath $path_release\gencpp_as_is.zip -Force
 Remove-Item -Path $path_release_content -Recurse
