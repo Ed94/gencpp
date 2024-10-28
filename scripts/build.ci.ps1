@@ -291,7 +291,7 @@ if ( $test )
 
 #region Formatting
 push-location $path_scripts
-if ( $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
+if ( $true -and $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 {
 	$path_gen      = join-path $path_project gen
 	$include  = @(
@@ -301,12 +301,12 @@ if ( $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 		'gen.scanner.hpp', 'gen.scanner.cpp'
 	)
 	$exclude  = $null
-	format-cpp $path_gen $include $exclude
+	# format-cpp $path_gen $include $exclude
 	format-cpp $path_comp_gen @( 'ast_inlines.hpp', 'ecode.hpp', 'especifier.hpp', 'eoperator.hpp', 'etoktype.cpp' ) $null
 
 }
 
-if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp")) )
+if ( $false -and $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp")) )
 {
 	$path_gen = join-path $path_singleheader gen
 	$include  = @(
@@ -316,7 +316,7 @@ if ( $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp"))
 	format-cpp $path_gen $include $exclude
 }
 
-if ( $unreal -and (Test-Path( Join-Path $path_unreal "gen/gen.hpp")) )
+if ( $false -and $unreal -and (Test-Path( Join-Path $path_unreal "gen/gen.hpp")) )
 {
 	$path_gen = join-path $path_unreal gen
 	$include  = @(

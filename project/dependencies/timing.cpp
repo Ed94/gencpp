@@ -23,7 +23,7 @@
 	{
 		u32 hi, lo;
 		__asm__ __volatile__( "rdtsc" : "=a"( lo ), "=d"( hi ) );
-		return ( scast( u64, lo ) | ( ( scast( u64, hi ) << 32 );
+		return scast( u64, lo ) | ( scast( u64, hi ) << 32 );
 	}
 	#elif defined( __powerpc__ )
 	u64 read_cpu_time_stamp_counter( void )

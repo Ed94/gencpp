@@ -48,6 +48,42 @@ global bool generate_builder = true;
 global bool generate_editor  = true;
 global bool generate_scanner = true;
 
+void format_file( char const* path )
+{
+	String resolved_path = String::make(GlobalAllocator, to_str(path));
+
+	String style_arg = String::make(GlobalAllocator, txt("-style=file:"));
+	style_arg.append("../scripts/.clang-format ");
+
+	// Need to execute clang format on the generated file to get it to match the original.
+	#define clang_format      "clang-format "
+	#define cf_format_inplace "-i "
+	#define cf_verbose        "-verbose "
+	String command = String::make( GlobalAllocator, clang_format );
+	command.append( cf_format_inplace );
+	command.append( cf_verbose );
+	command.append( style_arg );
+	command.append( resolved_path );
+		log_fmt("\tRunning clang-format on file:\n");
+		system( command );
+		log_fmt("\tclang-format finished reformatting.\n");
+	#undef cf_cmd
+	#undef cf_format_inplace
+	#undef cf_style
+	#undef cf_verbse
+}
+
+Code dump_to_scratch_and_retireve( Code code )
+{
+	Builder ecode_file_temp = Builder::open("gen/scratch.hpp");
+	ecode_file_temp.print(code);
+	ecode_file_temp.write();
+	format_file("gen/scratch.hpp");
+	Code result = scan_file( "gen/scratch.hpp" );
+	remove("gen/scratch.hpp");
+	return result;
+}
+
 int gen_main()
 {
 #define project_dir "../project/"
@@ -61,24 +97,6 @@ int gen_main()
 
 	// gen_dep.hpp
 	{
-		CodeBody header_start = def_body( CodeT::Global_Body );
-		{
-			FileContents content          = file_read_contents( GlobalAllocator, true, project_dir "dependencies/header_start.hpp" );
-			CodeBody     ori_header_start = parse_global_body( StrC { content.size, (char const*)content.data });
-
-			for (Code	code =  ori_header_start.begin();
-						code != ori_header_start.end();
-						++ code )
-			{
-				header_start.append(code);
-				if (code->Type == CodeT::Preprocess_Pragma && code->Content.starts_with(txt("once")))
-				{
-					header_start.append( fmt_newline );
-					header_start.append( push_ignores );
-				}
-			}
-		}
-
 		CodeBody macros = def_body( CodeT::Global_Body );
 		{
 			FileContents content    = file_read_contents( GlobalAllocator, true, project_dir "dependencies/macros.hpp" );
@@ -111,6 +129,7 @@ int gen_main()
 			}
 		}
 
+		Code platform     = scan_file( project_dir "dependencies/platform.hpp" );
 		Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
 		Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
 		Code memory	      = scan_file( project_dir "dependencies/memory.hpp" );
@@ -125,10 +144,13 @@ int gen_main()
 		Builder
 		header = Builder::open("gen/gen.dep.hpp");
 		header.print_fmt( generation_notice );
-		header.print( header_start );
+		header.print( pragma_once );
+		header.print( push_ignores );
+		header.print( platform );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
-		header.print( macros );
+		header.print( fmt_newline);
+		header.print( dump_to_scratch_and_retireve(macros) );
 		header.print( basic_types );
 		header.print( debug );
 		header.print( memory );
@@ -209,9 +231,13 @@ int gen_main()
 
 		header.print_fmt( "#pragma region Types\n" );
 		header.print( types );
-		header.print( ecode );
-		header.print( eoperator );
-		header.print( especifier );
+		header.print( fmt_newline );
+		header.print( dump_to_scratch_and_retireve(ecode) );
+		header.print( fmt_newline );
+		header.print( dump_to_scratch_and_retireve(eoperator) );
+		header.print( fmt_newline );
+		header.print( dump_to_scratch_and_retireve(especifier) );
+		header.print( fmt_newline );
 		header.print_fmt( "#pragma endregion Types\n\n" );
 
 		header.print_fmt( "#pragma region AST\n" );
@@ -225,7 +251,8 @@ int gen_main()
 		header.print_fmt( "\n#pragma region Inlines\n" );
 		header.print( inlines );
 		header.print( fmt_newline );
-		header.print( ast_inlines );
+		header.print( dump_to_scratch_and_retireve(ast_inlines) );
+		header.print( fmt_newline );
 		header.print_fmt( "#pragma endregion Inlines\n" );
 
 		header.print( header_end );
@@ -275,7 +302,7 @@ int gen_main()
 		src.print( interface );
 		src.print( upfront );
 		src.print_fmt( "\n#pragma region Parsing\n\n" );
-		src.print( nspaced_etoktype );
+		src.print( dump_to_scratch_and_retireve(nspaced_etoktype) );
 		src.print( lexer );
 		src.print( parser );
 		src.print( parsing_interface );
