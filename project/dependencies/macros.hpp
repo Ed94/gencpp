@@ -150,4 +150,20 @@
 #	endif
 #endif
 
+#ifndef        neverinline
+#	ifdef GEN_COMPILER_MSVC
+#		define neverinline __declspec( noinline )
+#	elif defined(GEN_COMPILER_GCC)
+#		define neverinline __attribute__( ( __noinline__ ) )
+#	elif defined(GEN_COMPILER_CLANG)
+#	if __has_attribute(__always_inline__)
+#		define neverinline __attribute__( ( __noinline__ ) )
+#	else
+#		define neverinline
+#	endif
+#	else
+#		define neverinline
+#	endif
+#endif
+
 #pragma endregion Macros

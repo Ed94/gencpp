@@ -169,6 +169,12 @@ if ( def.Ptr == nullptr )                                                      \
 #	define eat( Type_ )   Context.Tokens.__eat( Type_ )
 #	define left           ( Context.Tokens.Arr.num() - Context.Tokens.Idx )
 
+#ifdef check
+#define CHECK_WAS_DEFINED
+#pragma push_macro("check")
+#undef check
+#endif
+
 #	define check_noskip( Type_ ) ( left && currtok_noskip.Type == Type_ )
 #	define check( Type_ )        ( left && currtok.Type == Type_ )
 
@@ -5357,3 +5363,7 @@ CodeVar parse_variable()
 
 // namespace parser
 }
+
+#ifdef CHECK_WAS_DEFINED
+#pragma pop_macro("check")
+#endif
