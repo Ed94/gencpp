@@ -7,17 +7,38 @@
 #include "gen.scanner.hpp"
 using namespace gen;
 
-#ifdef GEN_SYSTEM_WINDOWS
-	#include <process.h>
-#endif
-
 void validate_singleheader_ast()
 {
 	#define root_dir "../"
 	gen::init();
-	log_fmt("\validate_singleheader_ast:\n");
+	log_fmt("\nvalidate_singleheader_ast:\n");
 
-	FileContents file       = file_read_contents( GlobalAllocator, true, root_dir "singleheader/gen/gen.hpp" );
+	FileContents file = file_read_contents( GlobalAllocator, true, root_dir "singleheader/gen/gen.hpp" );
+
+	// Duplicate and format
+	{
+		// Sleep(100);
+		FileInfo  scratch;
+		FileError error = file_open_mode( & scratch, EFileMode_WRITE, "gen/scratch.cpp" );
+		if ( error != EFileError_NONE ) {
+			log_failure( "gen::File::open - Could not open file: %s", "gen/scratch.cpp");
+			return;
+		}
+		// Sleep(100);
+		b32 result = file_write( & scratch, file.data, file.size );
+		if ( result == false ) {
+			log_failure("gen::File::write - Failed to write to file: %s\n", file_name( & scratch ) );
+			file_close( & scratch );
+			return;
+		}
+		file_close( & scratch );
+		// Sleep(100);
+		format_file( "gen/scratch.cpp" );
+		// Sleep(100);
+
+		file = file_read_contents( GlobalAllocator, true, "gen/scratch.cpp" );
+	}
+
 	u64          time_start = time_rel_ms();
 	CodeBody     ast        = parse_global_body( { file.size, (char const*)file.data } );
 	log_fmt("\nAst generated. Time taken: %llu ms\n", time_rel_ms() - time_start);

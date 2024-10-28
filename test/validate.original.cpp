@@ -8,10 +8,6 @@
 #include "gen.scanner.hpp"
 using namespace gen;
 
-#ifdef GEN_SYSTEM_WINDOWS
-	#include <process.h>
-#endif
-
 #define path_root         "../"
 #define path_project      path_root       "project/"
 #define path_scripts      path_root       "scripts/"
@@ -26,13 +22,32 @@ void validate_file_ast( char const* path, char const* path_gen )
 
 	String path_temp = String::make_length( GlobalAllocator, path_gen, str_len( path_gen ) );
 
+	// Sleep(100);
 	FileContents file  = file_read_contents( GlobalAllocator, true, path );
-	// FileError    error = file_open_mode( & path_temp, EFileMode_WRITE, path );
-	// if ( error != EFileError_NONE )
-	// {
-	// 	log_failure( "gen::File::open - Could not open file: %s", path);
-	// 	return;
-	// }
+
+	// Duplicate and format
+	{
+		// Sleep(100);
+		FileInfo  scratch;
+		FileError error = file_open_mode( & scratch, EFileMode_WRITE, "gen/scratch.cpp" );
+		if ( error != EFileError_NONE ) {
+			log_failure( "gen::File::open - Could not open file: %s", "gen/scratch.cpp");
+			return;
+		}
+		// Sleep(100);
+		b32 result = file_write( & scratch, file.data, file.size );
+		if ( result == false ) {
+			log_failure("gen::File::write - Failed to write to file: %s\n", file_name( & scratch ) );
+			file_close( & scratch );
+			return;
+		}
+		file_close( & scratch );
+		// Sleep(100);
+		format_file( "gen/scratch.cpp" );
+		// Sleep(100);
+
+		file = file_read_contents( GlobalAllocator, true, "gen/scratch.cpp" );
+	}
 
 	u64          time_start = time_rel_ms();
 	CodeBody     ast        = parse_global_body( { file.size, (char const*)file.data } );
@@ -85,8 +100,11 @@ void validate_original_files_ast()
 	gen::init();
 	log_fmt("\nvalidate_original_files_ast:\n");
 
-	PreprocessorDefines.append( get_cached_string( txt("GEN_DEF_INLINE")  ));
-	PreprocessorDefines.append( get_cached_string( txt("GEN_IMPL_INLINE") ));
+	PreprocessorDefines.append( get_cached_string( txt("GEN_FILE_SEEK_PROC(")));
+	PreprocessorDefines.append( get_cached_string( txt("GEN_FILE_READ_AT_PROC(")));
+	PreprocessorDefines.append( get_cached_string( txt("GEN_FILE_WRITE_AT_PROC(")));
+	PreprocessorDefines.append( get_cached_string( txt("GEN_FILE_CLOSE_PROC(")));
+	PreprocessorDefines.append( get_cached_string( txt("GEN_FILE_OPEN_PROC(")));
 
 	// Helpers
 	{
@@ -99,7 +117,7 @@ void validate_original_files_ast()
 	// Dependencies
 	{
 		#define validate( path ) validate_file_ast( path_dependencies path, "gen/original/dependencies/" path )
-		validate( "header_start.hpp" );
+		validate( "platform.hpp"     );
 		validate( "macros.hpp"       );
 		validate( "basic_types.hpp"  );
 		validate( "debug.hpp"        );
