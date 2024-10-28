@@ -711,7 +711,7 @@ struct AST_Stmt
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -726,7 +726,7 @@ struct AST_Stmt_Break
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -741,7 +741,7 @@ struct AST_Stmt_Case
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -756,7 +756,7 @@ struct AST_Stmt_Continue
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -771,7 +771,7 @@ struct AST_Stmt_Decl
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -786,7 +786,7 @@ struct AST_Stmt_Do
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -801,7 +801,7 @@ struct AST_Stmt_Expr
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -816,7 +816,7 @@ struct AST_Stmt_Else
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -831,7 +831,7 @@ struct AST_Stmt_If
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -846,7 +846,7 @@ struct AST_Stmt_For
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -861,7 +861,7 @@ struct AST_Stmt_Goto
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -876,7 +876,7 @@ struct AST_Stmt_Label
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -891,7 +891,7 @@ struct AST_Stmt_Switch
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
@@ -906,7 +906,7 @@ struct AST_Stmt_While
 {
 	union {
 		char _PAD_[ sizeof(SpecifierT) * AST::ArrSpecs_Cap + sizeof(AST*) ];
-	}
+	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	parser::Token* Tok;
