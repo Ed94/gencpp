@@ -170,23 +170,20 @@ b32 gen_vm_purge( VirtualMemory vm );
 //! Retrieve VM's page size and alignment.
 ssize gen_virtual_memory_page_size( ssize* alignment_out );
 
+
+struct Arena;
+void init_from_memory( Arena& arena, void* start, ssize size );
+
 struct Arena
 {
 	static
 	void* allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 
-	static
-	Arena init_from_memory( void* start, ssize size )
-	{
-		return
-		{
-			{ nullptr, nullptr },
-			start,
-			size,
-			0,
-			0
-		};
-	}
+	//forceinline static
+	//Arena init_from_memory( void* start, ssize size ) { 
+	//	Arena result; GEN_NS init_from_memory( result, start, size ); 
+	//	return result;
+	//}
 
 	static
 	Arena init_from_allocator( AllocatorInfo backing, ssize size )
@@ -249,15 +246,24 @@ struct Arena
 
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
-	ssize            TotalSize;
-	ssize            TotalUsed;
-	ssize            TempCount;
+	ssize         TotalSize;
+	ssize         TotalUsed;
+	ssize         TempCount;
 
-	operator AllocatorInfo()
-	{
-		return { allocator_proc, this };
-	}
+	operator AllocatorInfo() { return { allocator_proc, this }; }
 };
+
+void init_from_memory( Arena& arena, void* start, ssize size )
+{
+	arena =
+	{
+		{ nullptr, nullptr },
+		start,
+		size,
+		0,
+		0
+	};
+}
 
 // Just a wrapper around using an arena with memory associated with its scope instead of from an allocator.
 // Used for static segment or stack allocations.

@@ -712,7 +712,10 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 
 	local_persist
 	char interface_arr_mem[ kilobytes(4) ] {0};
-	Array<CodeType> interfaces = Array<CodeType>::init_reserve( Arena::init_from_memory(interface_arr_mem, kilobytes(4) ), 4 );
+	Array<CodeType> interfaces; {
+		Arena arena; init_from_memory(arena, interface_arr_mem, kilobytes(4) );
+		Array<CodeType>::init_reserve( arena, 4 );
+	} 
 
 	// TODO(Ed) : Make an AST_DerivedType, we'll store any arbitary derived type into there as a linear linked list of them.
 	if ( check( TokType::Assign_Classifer ) )
