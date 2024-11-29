@@ -5,7 +5,7 @@
 
 #pragma region Memory
 
-#define kilobytes( x ) ( ( x ) * ( s64 )( 1024 ) )
+#define kilobytes( x ) (          ( x ) * ( s64 )( 1024 ) )
 #define megabytes( x ) ( kilobytes( x ) * ( s64 )( 1024 ) )
 #define gigabytes( x ) ( megabytes( x ) * ( s64 )( 1024 ) )
 #define terabytes( x ) ( gigabytes( x ) * ( s64 )( 1024 ) )

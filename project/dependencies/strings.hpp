@@ -168,6 +168,44 @@ struct String
 		return Data[ length() - 1 ];
 	}
 
+	bool contains(StrC substring) const
+	{
+		Header const& header = * rcast( Header const*, Data - sizeof( Header ));
+
+		if (substring.Len > header.Length)
+			return false;
+
+		ssize main_len = header.Length;
+		ssize sub_len  = substring.Len;
+
+		for (ssize idx = 0; idx <= main_len - sub_len; ++idx)
+		{
+			if (str_compare(Data + idx, substring.Ptr, sub_len) == 0)
+				return true;
+		}
+
+		return false;
+	}
+
+	bool contains(String const& substring) const
+	{
+		Header const& header = * rcast( Header const*, Data - sizeof( Header ));
+
+		if (substring.length() > header.Length)
+			return false;
+
+		ssize main_len = header.Length;
+		ssize sub_len  = substring.length();
+
+		for (ssize idx = 0; idx <= main_len - sub_len; ++idx)
+		{
+			if (str_compare(Data + idx, substring.Data, sub_len) == 0)
+				return true;
+		}
+
+		return false;
+	}
+
 	ssize capacity() const
 	{
 		Header const&
