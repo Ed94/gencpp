@@ -372,7 +372,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 {
 	Arena* last = & StringArenas.back();
 
-	usize size_req = str_length + sizeof(String::Header) + sizeof(char*);
+	usize size_req = str_length + sizeof(StringHeader) + sizeof(char*);
 
 	if ( last->TotalUsed + ssize(size_req) > last->TotalSize )
 	{

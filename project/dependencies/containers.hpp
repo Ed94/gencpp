@@ -376,26 +376,26 @@ struct HashTable
 {
 	static constexpr f32 CriticalLoadScale = 0.7f;
 
-	Array<ssize>              Hashes;
+	Array<ssize>                Hashes;
 	Array<HashTableEntry<Type>> Entries;
 
 #if 1
 #pragma region Member Mapping
-	forceinline static HashTable init(AllocatorInfo allocator)                  { return GEN_NS hashtable_init<Type>(allocator); }
+	forceinline static HashTable init(AllocatorInfo allocator)                    { return GEN_NS hashtable_init<Type>(allocator); }
 	forceinline static HashTable init_reserve(AllocatorInfo allocator, usize num) { return GEN_NS hashtable_init_reserve<Type>(allocator, num); }
 
-	forceinline void         clear()                           { GEN_NS clear<Type>(*this); }
-	forceinline void         destroy()                         { GEN_NS destroy<Type>(*this); }
-	forceinline Type*        get(u64 key)                      { return GEN_NS get<Type>(*this, key); }
-	forceinline void         grow()                            { GEN_NS grow<Type>(*this); }
-	forceinline void         rehash(ssize new_num)             { GEN_NS rehash<Type>(*this, new_num); }
-	forceinline void         rehash_fast()                     { GEN_NS rehash_fast<Type>(*this); }
-	forceinline void         remove(u64 key)                   { GEN_NS remove<Type>(*this, key); }
-	forceinline void         remove_entry(ssize idx)           { GEN_NS remove_entry<Type>(*this, idx); }
-	forceinline void         set(u64 key, Type value)          { GEN_NS set<Type>(*this, key, value); }
-	forceinline ssize        slot(u64 key)                     { return GEN_NS slot<Type>(*this, key); }
-	forceinline void         map(void (*proc)(u64, Type))      { GEN_NS map<Type>(*this, proc); }
-	forceinline void         map_mut(void (*proc)(u64, Type*)) { GEN_NS map_mut<Type>(*this, proc); }
+	forceinline void  clear()                           { GEN_NS clear<Type>(*this); }
+	forceinline void  destroy()                         { GEN_NS destroy<Type>(*this); }
+	forceinline Type* get(u64 key)                      { return GEN_NS get<Type>(*this, key); }
+	forceinline void  grow()                            { GEN_NS grow<Type>(*this); }
+	forceinline void  rehash(ssize new_num)             { GEN_NS rehash<Type>(*this, new_num); }
+	forceinline void  rehash_fast()                     { GEN_NS rehash_fast<Type>(*this); }
+	forceinline void  remove(u64 key)                   { GEN_NS remove<Type>(*this, key); }
+	forceinline void  remove_entry(ssize idx)           { GEN_NS remove_entry<Type>(*this, idx); }
+	forceinline void  set(u64 key, Type value)          { GEN_NS set<Type>(*this, key, value); }
+	forceinline ssize slot(u64 key)                     { return GEN_NS slot<Type>(*this, key); }
+	forceinline void  map(void (*proc)(u64, Type))      { GEN_NS map<Type>(*this, proc); }
+	forceinline void  map_mut(void (*proc)(u64, Type*)) { GEN_NS map_mut<Type>(*this, proc); }
 #pragma endregion Member Mapping
 #endif
 };
