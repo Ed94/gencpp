@@ -13,290 +13,340 @@ template<class TType, usize Size> struct RemoveConst<const TType[Size]> { typede
 template<class TType>
 using TRemoveConst = typename RemoveConst<TType>::Type;
 
+#pragma region Array
+struct ArrayHeader;
+template<class Type> struct Array;
+
+template<class Type> Array<Type>  array_init(AllocatorInfo allocator);
+template<class Type> Array<Type>  array_init_reserve(AllocatorInfo allocator, ssize capacity);
+template<class Type> usize        array_grow_formula(ssize value);
+template<class Type> bool         append(Array<Type>& array, Array<Type> other);
+template<class Type> bool         append(Array<Type>& array, Type value);
+template<class Type> bool         append(Array<Type>& array, Type* items, usize item_num);
+template<class Type> bool         append_at(Array<Type>& array, Type item, usize idx);
+template<class Type> bool         append_at(Array<Type>& array, Type* items, usize item_num, usize idx);
+template<class Type> Type&        back(Array<Type>& array);
+template<class Type> void         clear(Array<Type>& array);
+template<class Type> bool         fill(Array<Type>& array, usize begin, usize end, Type value);
+template<class Type> void         free(Array<Type>& array);
+template<class Type> bool         grow(Array<Type>& array, usize min_capacity);
+template<class Type> usize        num(Array<Type>& array);
+template<class Type> void         pop(Array<Type>& array);
+template<class Type> void         remove_at(Array<Type>& array, usize idx);
+template<class Type> bool         reserve(Array<Type>& array, usize new_capacity);
+template<class Type> bool         resize(Array<Type>& array, usize num);
+template<class Type> bool         set_capacity(Array<Type>& array, usize new_capacity);
+template<class Type> ArrayHeader* get_header(Array<Type>& array);
+
+struct ArrayHeader
+{
+	AllocatorInfo Allocator;
+	usize         Capacity;
+	usize         Num;
+};
+
 template<class Type>
 struct Array
 {
-	struct Header
-	{
-		AllocatorInfo Allocator;
-		usize            Capacity;
-		usize            Num;
-	};
-
-	static
-	Array init( AllocatorInfo allocator )
-	{
-		return init_reserve( allocator, grow_formula(0) );
-	}
-
-	static
-	Array init_reserve( AllocatorInfo allocator, ssize capacity )
-	{
-		Header* header = rcast( Header*, alloc( allocator, sizeof(Header) + sizeof(Type) * capacity ));
-
-		if ( header == nullptr )
-			return { nullptr };
-
-		header->Allocator = allocator;
-		header->Capacity  = capacity;
-		header->Num       = 0;
-
-		return { rcast( Type*, header + 1) };
-	}
-
-	static
-	usize grow_formula( usize value )
-	{
-		return 2 * value + 8;
-	}
-
-	bool append( Array other )
-	{
-		return append( other, other.num() );
-	}
-
-	bool append( Type value )
-	{
-		Header* header = get_header();
-
-		if ( header->Num == header->Capacity )
-		{
-			if ( ! grow( header->Capacity ))
-				return false;
-
-			header = get_header();
-		}
-
-		Data[ header->Num ] = value;
-		header->Num++;
-
-		return true;
-	}
-
-	bool append( Type* items, usize item_num )
-	{
-		Header* header = get_header();
-
-		if ( header->Num + item_num > header->Capacity )
-		{
-			if ( ! grow( header->Capacity + item_num ))
-				return false;
-
-			header = get_header();
-		}
-
-		mem_copy( Data + header->Num, items, item_num * sizeof(Type) );
-		header->Num += item_num;
-
-		return true;
-	}
-
-	bool append_at( Type item, usize idx )
-	{
-		Header* header = get_header();
-
-		if ( idx >= header->Num )
-			idx = header->Num - 1;
-
-		if ( idx < 0 )
-			idx = 0;
-
-		if ( header->Capacity < header->Num + 1 )
-		{
-			if ( ! grow( header->Capacity + 1 ))
-				return false;
-
-			header = get_header();
-		}
-
-		Type* target = Data + idx;
-
-		mem_move( target + 1, target, (header->Num - idx) * sizeof(Type) );
-		header->Num++;
-
-		return true;
-	}
-
-	bool append_at( Type* items, usize item_num, usize idx )
-	{
-		Header* header = get_header();
-
-		if ( idx >= header->Num )
-		{
-			return append( items, item_num );
-		}
-
-		if ( item_num > header->Capacity )
-		{
-			if ( ! grow( header->Capacity + item_num ) )
-				return false;
-
-			header = get_header();
-		}
-
-		Type* target = Data + idx + item_num;
-		Type* src    = Data + idx;
-
-		mem_move( target, src, (header->Num - idx) * sizeof(Type) );
-		mem_copy( src, items, item_num * sizeof(Type) );
-		header->Num += item_num;
-
-		return true;
-	}
-
-	Type& back( void )
-	{
-		Header& header = * get_header();
-		return Data[ header.Num - 1 ];
-	}
-
-	void clear( void )
-	{
-		Header& header = * get_header();
-		header.Num     = 0;
-	}
-
-	bool fill( usize begin, usize end, Type value )
-	{
-		Header& header = * get_header();
-
-		if ( begin < 0 || end > header.Num )
-			return false;
-
-		for ( ssize idx = ssize(begin); idx < ssize(end); idx++ )
-		{
-			Data[ idx ] = value;
-		}
-
-		return true;
-	}
-
-	void free( void )
-	{
-		Header& header = * get_header();
-		gen::free( header.Allocator, &header );
-		Data = nullptr;
-	}
-
-	Header* get_header( void )
-	{
-		using NonConstType = TRemoveConst< Type >;
-		return rcast( Header*, const_cast<NonConstType*>(Data) ) - 1 ;
-	}
-
-	bool grow( usize min_capacity )
-	{
-		Header& header       = * get_header();
-		usize      new_capacity = grow_formula( header.Capacity );
-
-		if ( new_capacity < min_capacity )
-			new_capacity = min_capacity;
-
-		return set_capacity( new_capacity );
-	}
-
-	usize num( void )
-	{
-		return get_header()->Num;
-	}
-
-	void pop( void )
-	{
-		Header& header = * get_header();
-
-		GEN_ASSERT( header.Num > 0 );
-		header.Num--;
-	}
-
-	void remove_at( usize idx )
-	{
-		Header* header = get_header();
-		GEN_ASSERT( idx < header->Num );
-
-		mem_move( header + idx, header + idx + 1, sizeof( Type ) * ( header->Num - idx - 1 ) );
-		header->Num--;
-	}
-
-	bool reserve( usize new_capacity )
-	{
-		Header& header = * get_header();
-
-		if ( header.Capacity < new_capacity )
-			return set_capacity( new_capacity );
-
-		return true;
-	}
-
-	bool resize( usize num )
-	{
-		Header* header = get_header();
-
-		if ( header->Capacity < num )
-		{
-			if ( ! grow( num ) )
-				return false;
-
-			header = get_header();
-		}
-
-		header->Num = num;
-		return true;
-	}
-
-	bool set_capacity( usize new_capacity )
-	{
-		Header& header = * get_header();
-
-		if ( new_capacity == header.Capacity )
-			return true;
-
-		if ( new_capacity < header.Num )
-		{
-			// Already have the memory, mine as well keep it.
-			header.Num = new_capacity;
-			return true;
-		}
-
-		ssize      size       = sizeof( Header ) + sizeof( Type ) * new_capacity;
-		Header* new_header = rcast( Header*, alloc( header.Allocator, size ) );
-
-		if ( new_header == nullptr )
-			return false;
-
-		mem_move( new_header, &header, sizeof( Header ) + sizeof( Type ) * header.Num );
-
-		new_header->Capacity = new_capacity;
-
-		gen::free( header.Allocator, &header );
-
-		Data = rcast( Type*, new_header + 1);
-		return true;
-	}
-
-	Type* Data;
-
-	operator Type*()
-	{
-		return Data;
-	}
-
-	operator Type const*() const
-	{
-		return Data;
-	}
-
-	// For-range based support
-
-	Type* begin()
-	{
-		return Data;
-	}
-
-	Type* end()
-	{
-		return Data + get_header()->Num;
-	}
+    Type* Data;
+
+#if 1
+#pragma region Member Mapping
+    forceinline static Array  init(AllocatorInfo allocator)                         { return GEN_NS array_init<Type>(allocator); }
+    forceinline static Array  init_reserve(AllocatorInfo allocator, ssize capacity) { return GEN_NS array_init_reserve<Type>(allocator, capacity); }
+    forceinline static usize  grow_formula(ssize value)                             { return GEN_NS array_grow_formula<Type>(value); }
+
+    forceinline bool         append(Array other)                               { return GEN_NS append<Type>(*this, other); }
+    forceinline bool         append(Type value)                                { return GEN_NS append<Type>(*this, value); }
+    forceinline bool         append(Type* items, usize item_num)               { return GEN_NS append<Type>(*this, items, item_num); }
+    forceinline bool         append_at(Type item, usize idx)                   { return GEN_NS append_at<Type>(*this, item, idx); }
+    forceinline bool         append_at(Type* items, usize item_num, usize idx) { return GEN_NS append_at<Type>(*this, items, item_num, idx); }
+    forceinline Type&        back()                                            { return GEN_NS back<Type>(*this); }
+    forceinline void         clear()                                           { GEN_NS clear<Type>(*this); }
+    forceinline bool         fill(usize begin, usize end, Type value)          { return GEN_NS fill<Type>(*this, begin, end, value); }
+    forceinline void         free()                                            { GEN_NS free<Type>(*this); }
+    forceinline ArrayHeader* get_header()                                      { return GEN_NS get_header<Type>(*this); }
+    forceinline bool         grow(usize min_capacity)                          { return GEN_NS grow<Type>(*this, min_capacity); }
+    forceinline usize        num()                                             { return GEN_NS num<Type>(*this); }
+    forceinline void         pop()                                             { GEN_NS pop<Type>(*this); }
+    forceinline void         remove_at(usize idx)                              { GEN_NS remove_at<Type>(*this, idx); }
+    forceinline bool         reserve(usize new_capacity)                       { return GEN_NS reserve<Type>(*this, new_capacity); }
+    forceinline bool         resize(usize num)                                 { return GEN_NS resize<Type>(*this, num); }
+    forceinline bool         set_capacity(usize new_capacity)                  { return GEN_NS set_capacity<Type>(*this, new_capacity); }
+
+    forceinline operator Type*()             { return Data; }
+    forceinline operator Type const*() const { return Data; }
+    forceinline Type* begin()                { return Data; }
+    forceinline Type* end()                  { return Data + get_header()->Num; }
+#pragma endregion Member Mapping
+#endif
 };
+
+template<class Type> inline
+Array<Type> array_init(AllocatorInfo allocator)
+{
+    return array_init_reserve<Type>(allocator, array_grow_formula<Type>(0));
+}
+
+template<class Type> inline
+Array<Type> array_init_reserve(AllocatorInfo allocator, ssize capacity)
+{
+    ArrayHeader* header = rcast(ArrayHeader*, alloc(allocator, sizeof(ArrayHeader) + sizeof(Type) * capacity));
+
+    if (header == nullptr)
+        return {nullptr};
+
+    header->Allocator = allocator;
+    header->Capacity  = capacity;
+    header->Num       = 0;
+
+    return {rcast(Type*, header + 1)};
+}
+
+template<class Type> inline
+usize array_grow_formula(ssize value)
+{
+    return 2 * value + 8;
+}
+
+template<class Type> inline
+bool append(Array<Type>& array, Array<Type> other)
+{
+    return append(array, other, num(other));
+}
+
+template<class Type> inline
+bool append(Array<Type>& array, Type value)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (header->Num == header->Capacity)
+    {
+        if (!grow(array, header->Capacity))
+            return false;
+
+        header = get_header(array);
+    }
+
+    array.Data[header->Num] = value;
+    header->Num++;
+
+    return true;
+}
+
+template<class Type> inline
+bool append(Array<Type>& array, Type* items, usize item_num)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (header->Num + item_num > header->Capacity)
+    {
+        if (!grow(array, header->Capacity + item_num))
+            return false;
+
+        header = get_header(array);
+    }
+
+    mem_copy(array.Data + header->Num, items, item_num * sizeof(Type));
+    header->Num += item_num;
+
+    return true;
+}
+
+template<class Type> inline
+bool append_at(Array<Type>& array, Type item, usize idx)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (idx >= header->Num)
+        idx = header->Num - 1;
+
+    if (idx < 0)
+        idx = 0;
+
+    if (header->Capacity < header->Num + 1)
+    {
+        if (!grow(array, header->Capacity + 1))
+            return false;
+
+        header = get_header(array);
+    }
+
+    Type* target = array.Data + idx;
+
+    mem_move(target + 1, target, (header->Num - idx) * sizeof(Type));
+    header->Num++;
+
+    return true;
+}
+
+template<class Type> inline
+bool append_at(Array<Type>& array, Type* items, usize item_num, usize idx)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (idx >= header->Num)
+    {
+        return append(array, items, item_num);
+    }
+
+    if (item_num > header->Capacity)
+    {
+        if (!grow(array, header->Capacity + item_num))
+            return false;
+
+        header = get_header(array);
+    }
+
+    Type* target = array.Data + idx + item_num;
+    Type* src    = array.Data + idx;
+
+    mem_move(target, src, (header->Num - idx) * sizeof(Type));
+    mem_copy(src, items, item_num * sizeof(Type));
+    header->Num += item_num;
+
+    return true;
+}
+
+template<class Type> inline
+Type& back(Array<Type>& array)
+{
+    ArrayHeader* header = get_header(array);
+    return array.Data[header->Num - 1];
+}
+
+template<class Type> inline
+void clear(Array<Type>& array)
+{
+    ArrayHeader* header = get_header(array);
+    header->Num = 0;
+}
+
+template<class Type> inline
+bool fill(Array<Type>& array, usize begin, usize end, Type value)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (begin < 0 || end > header->Num)
+        return false;
+
+    for (ssize idx = ssize(begin); idx < ssize(end); idx++)
+    {
+        array.Data[idx] = value;
+    }
+
+    return true;
+}
+
+template<class Type> inline
+void free(Array<Type>& array)
+{
+    ArrayHeader* header = get_header(array);
+    gen::free(header->Allocator, header);
+    array.Data = nullptr;
+}
+
+template<class Type> inline
+ArrayHeader* get_header(Array<Type>& array)
+{
+    using NonConstType = TRemoveConst<Type>;
+    return rcast(ArrayHeader*, const_cast<NonConstType*>(array.Data)) - 1;
+}
+
+template<class Type> inline
+bool grow(Array<Type>& array, usize min_capacity)
+{
+    ArrayHeader* header = get_header(array);
+    usize new_capacity = array_grow_formula<Type>(header->Capacity);
+
+    if (new_capacity < min_capacity)
+        new_capacity = min_capacity;
+
+    return set_capacity(array, new_capacity);
+}
+
+template<class Type> inline
+usize num(Array<Type>& array)
+{
+    return get_header(array)->Num;
+}
+
+template<class Type> inline
+void pop(Array<Type>& array)
+{
+    ArrayHeader* header = get_header(array);
+    GEN_ASSERT(header->Num > 0);
+    header->Num--;
+}
+
+template<class Type> inline
+void remove_at(Array<Type>& array, usize idx)
+{
+    ArrayHeader* header = get_header(array);
+    GEN_ASSERT(idx < header->Num);
+
+    mem_move(array.Data + idx, array.Data + idx + 1, sizeof(Type) * (header->Num - idx - 1));
+    header->Num--;
+}
+
+template<class Type> inline
+bool reserve(Array<Type>& array, usize new_capacity)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (header->Capacity < new_capacity)
+        return set_capacity(array, new_capacity);
+
+    return true;
+}
+
+template<class Type> inline
+bool resize(Array<Type>& array, usize num)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (header->Capacity < num)
+    {
+        if (!grow(array, num))
+            return false;
+
+        header = get_header(array);
+    }
+
+    header->Num = num;
+    return true;
+}
+
+template<class Type> inline
+bool set_capacity(Array<Type>& array, usize new_capacity)
+{
+    ArrayHeader* header = get_header(array);
+
+    if (new_capacity == header->Capacity)
+        return true;
+
+    if (new_capacity < header->Num)
+    {
+        header->Num = new_capacity;
+        return true;
+    }
+
+    ssize size = sizeof(ArrayHeader) + sizeof(Type) * new_capacity;
+    ArrayHeader* new_header = rcast(ArrayHeader*, alloc(header->Allocator, size));
+
+    if (new_header == nullptr)
+        return false;
+
+    mem_move(new_header, header, sizeof(ArrayHeader) + sizeof(Type) * header->Num);
+
+    new_header->Capacity = new_capacity;
+
+    gen::free(header->Allocator, header);
+
+    array.Data = rcast(Type*, new_header + 1);
+    return true;
+}
+#pragma endregion Array
 
 // TODO(Ed) : This thing needs ALOT of work.
 

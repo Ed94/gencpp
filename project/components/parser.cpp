@@ -133,7 +133,7 @@ internal
 void init()
 {
 	Tokens = Array<Token>::init_reserve( LexArena
-		, ( LexAllocator_Size - sizeof( Array<Token>::Header ) ) / sizeof(Token)
+		, ( LexAllocator_Size - sizeof( ArrayHeader ) ) / sizeof(Token)
 	);
 
 	defines_map_arena = Arena_256KB::init();

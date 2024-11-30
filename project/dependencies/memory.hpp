@@ -333,7 +333,7 @@ struct FixedArena
 template<s32 Size> inline
 AllocatorInfo allocator_info( FixedArena<Size>& fixed_arena ) { return { arena_allocator_proc, & fixed_arena.arena }; }
 
-template<s32 Size>
+template<s32 Size> inline
 void fixed_arena_init(FixedArena<Size>& result) {
     zero_size(& result.memory[0], Size);
     result.arena = init_from_memory(& result.memory[0], Size);
