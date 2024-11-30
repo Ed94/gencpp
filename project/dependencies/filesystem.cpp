@@ -505,7 +505,7 @@ b8 file_stream_new( FileInfo* file, AllocatorInfo allocator )
 	d->allocator = allocator;
 	d->flags     = EFileStream_CLONE_WRITABLE;
 	d->cap       = 0;
-	d->buf       = Array<u8>::init( allocator );
+	d->buf       = array_init<u8>( allocator );
 
 	if ( ! d->buf )
 		return false;
@@ -531,7 +531,7 @@ b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, ssize 
 	d->flags     = flags;
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
-		Array<u8> arr = Array<u8>::init_reserve( allocator, size );
+		Array<u8> arr = array_init_reserve<u8>( allocator, size );
 		d->buf = arr;
 
 		if ( ! d->buf )
@@ -540,7 +540,7 @@ b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, ssize 
 		mem_copy( d->buf, buffer, size );
 		d->cap = size;
 
-		arr.get_header()->Num = size;
+		get_header(arr)->Num = size;
 	}
 	else
 	{
@@ -610,9 +610,9 @@ GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 	{
 		Array<u8> arr = { d->buf };
 
-		if ( arr.get_header()->Capacity < usize(new_cap) )
+		if ( get_header(arr)->Capacity < usize(new_cap) )
 		{
-			if ( ! arr.grow( ( s64 )( new_cap ) ) )
+			if ( ! grow( arr, ( s64 )( new_cap ) ) )
 				return false;
 			d->buf = arr;
 		}
@@ -626,7 +626,7 @@ GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 
 		mem_copy( d->buf + offset + rwlen, pointer_add_const( buffer, rwlen ), extralen );
 		d->cap = new_cap;
-		arr.get_header()->Capacity = new_cap;
+		get_header(arr)->Capacity = new_cap;
 	}
 	else
 	{
@@ -647,7 +647,7 @@ GEN_FILE_CLOSE_PROC( _memory_file_close )
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
 		Array<u8> arr = { d->buf };
-		arr.free();
+		free(arr);
 	}
 
 	free( allocator, d );

@@ -1,3 +1,5 @@
+#define GEN_SUPPORT_CPP_MEMBER_FEATURES 1
+
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #	pragma once
 #endif

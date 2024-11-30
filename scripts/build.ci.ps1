@@ -192,7 +192,40 @@ if ( $singleheader )
 
 if ( $c_library )
 {
+	$path_build = join-path $path_c_library build
+	$path_gen   = join-path $path_c_library gen
 
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+
+	$includes    = @( $path_project )
+	$unit       = join-path $path_c_library "c_library.cpp"
+	$executable = join-path $path_build     "c_library.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+
+	$linker_args   = @(
+		$flag_link_win_subsystem_console
+	)
+
+	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_singleheader
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning c_library generator"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
 }
 
 if ( $unreal )

@@ -222,7 +222,7 @@ s32 lex_preprocessor_directive(
 	, Token&           token )
 {
 	char const* hash = scanner;
-	Tokens.append( { hash, 1, TokType::Preprocess_Hash, line, column, TF_Preprocess } );
+	append(Tokens, { hash, 1, TokType::Preprocess_Hash, line, column, TF_Preprocess } );
 
 	move_forward();
 	SkipWhitespace();
@@ -298,14 +298,14 @@ s32 lex_preprocessor_directive(
 
 		token.Length = token.Length + token.Text - hash;
 		token.Text   = hash;
-		Tokens.append( token );
+		append(Tokens, token );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
 	if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
 	{
 		token.Flags |= TF_Preprocess_Cond;
-		Tokens.append( token );
+		append(Tokens, token );
 		end_line();
 		return Lex_Continue;
 	}
@@ -314,7 +314,7 @@ s32 lex_preprocessor_directive(
 		token.Flags |= TF_Preprocess_Cond;
 	}
 
-	Tokens.append( token );
+	append(Tokens, token );
 
 	SkipWhitespace();
 
@@ -338,7 +338,7 @@ s32 lex_preprocessor_directive(
 			name.Length++;
 		}
 
-		Tokens.append( name );
+		append(Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
 		defines.set( key, name );
@@ -384,7 +384,7 @@ s32 lex_preprocessor_directive(
 			move_forward();
 		}
 
-		Tokens.append( preprocess_content );
+		append(Tokens, preprocess_content );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
@@ -446,7 +446,7 @@ s32 lex_preprocessor_directive(
 		preprocess_content.Length++;
 	}
 
-	Tokens.append( preprocess_content );
+	append(Tokens, preprocess_content );
 	return Lex_Continue; // Skip found token, its all handled here.
 }
 
@@ -461,7 +461,7 @@ void lex_found_token( StrC& content
 {
 	if ( token.Type != TokType::Invalid )
 	{
-		Tokens.append( token );
+		append(Tokens, token );
 		return;
 	}
 
@@ -488,7 +488,7 @@ void lex_found_token( StrC& content
 		}
 
 		token.Type = type;
-		Tokens.append( token );
+		append(Tokens, token );
 		return;
 	}
 
@@ -498,7 +498,7 @@ void lex_found_token( StrC& content
 	{
 		token.Type   = type;
 		token.Flags |= TF_Specifier;
-		Tokens.append( token );
+		append(Tokens, token );
 		return;
 	}
 
@@ -506,7 +506,7 @@ void lex_found_token( StrC& content
 	if ( type != TokType::Invalid )
 	{
 		token.Type = type;
-		Tokens.append( token );
+		append(Tokens, token );
 		return;
 	}
 
@@ -558,7 +558,7 @@ void lex_found_token( StrC& content
 		token.Type = TokType::Identifier;
 	}
 
-	Tokens.append( token );
+	append(Tokens, token );
 }
 
 
@@ -582,7 +582,7 @@ TokArray lex( StrC content )
 		return { { nullptr }, 0 };
 	}
 
-	for ( StringCached entry : PreprocessorDefines )
+	foreach( StringCached, entry, PreprocessorDefines )
 	{
 		s32         length  = 0;
 		char const* scanner = entry.Data;
@@ -600,7 +600,7 @@ TokArray lex( StrC content )
 		defines.set( key, entry );
 	}
 
-	Tokens.clear();
+	clear(Tokens);
 
 	while (left )
 	{
@@ -630,7 +630,7 @@ TokArray lex( StrC content )
 				token.Type = TokType::NewLine;
 				token.Length++;
 
-				Tokens.append( token );
+				append(Tokens, token );
 				continue;
 			}
 		}
@@ -1099,7 +1099,7 @@ TokArray lex( StrC content )
 							move_forward();
 							token.Length++;
 						}
-						Tokens.append( token );
+						append(Tokens, token );
 						continue;
 					}
 					else if ( current == '*' )
@@ -1135,7 +1135,7 @@ TokArray lex( StrC content )
 							move_forward();
 							token.Length++;
 						}
-						Tokens.append( token );
+						append(Tokens, token );
 						// end_line();
 						continue;
 					}
@@ -1228,9 +1228,9 @@ TokArray lex( StrC content )
 		}
 		else
 		{
-			s32 start = max( 0, Tokens.num() - 100 );
+			s32 start = max( 0, num(Tokens) - 100 );
 			log_fmt("\n%d\n", start);
-			for ( s32 idx = start; idx < Tokens.num(); idx++ )
+			for ( s32 idx = start; idx < num(Tokens); idx++ )
 			{
 				log_fmt( "Token %d Type: %s : %.*s\n"
 					, idx
@@ -1253,7 +1253,7 @@ TokArray lex( StrC content )
 		lex_found_token( content, left, scanner, line, column, defines, token );
 	}
 
-	if ( Tokens.num() == 0 )
+	if ( num(Tokens) == 0 )
 	{
 		log_failure( "Failed to lex any tokens" );
 		return { { nullptr }, 0 };

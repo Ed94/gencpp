@@ -14,12 +14,26 @@ template<class TType>
 using TRemoveConst = typename RemoveConst<TType>::Type;
 
 #pragma region Array
+#if ! GEN_COMPILER_C
+#define Array(Type) Array<Type>
+
+// #define array_init(Type, ...)         array_init        <Type>(__VA_ARGS__)
+// #define array_init_reserve(Type, ...) array_init_reserve<Type>(__VA_ARGS__)
+#endif
+
 struct ArrayHeader;
+
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 template<class Type> struct Array;
+#else
+template<class Type>
+using Array = Type*;
+#endif
+
+usize array_grow_formula(ssize value);
 
 template<class Type> Array<Type>  array_init(AllocatorInfo allocator);
 template<class Type> Array<Type>  array_init_reserve(AllocatorInfo allocator, ssize capacity);
-template<class Type> usize        array_grow_formula(ssize value);
 template<class Type> bool         append(Array<Type>& array, Array<Type> other);
 template<class Type> bool         append(Array<Type>& array, Type value);
 template<class Type> bool         append(Array<Type>& array, Type* items, usize item_num);
@@ -38,18 +52,22 @@ template<class Type> bool         resize(Array<Type>& array, usize num);
 template<class Type> bool         set_capacity(Array<Type>& array, usize new_capacity);
 template<class Type> ArrayHeader* get_header(Array<Type>& array);
 
+template<class Type> forceinline Type* begin(Array<Type>& array) { return array;      }
+template<class Type> forceinline Type* end(Array<Type>& array)   { return array + get_header(array)->Num; }
+template<class Type> forceinline Type* next(Type* entry)         { return entry + 1; }
+
 struct ArrayHeader {
 	AllocatorInfo Allocator;
 	usize         Capacity;
 	usize         Num;
 };
 
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 template<class Type>
 struct Array
 {
 	Type* Data;
 
-#if 1
 #pragma region Member Mapping
 	forceinline static Array  init(AllocatorInfo allocator)                         { return GEN_NS array_init<Type>(allocator); }
 	forceinline static Array  init_reserve(AllocatorInfo allocator, ssize capacity) { return GEN_NS array_init_reserve<Type>(allocator, capacity); }
@@ -78,12 +96,12 @@ struct Array
 	forceinline Type* begin()                { return Data; }
 	forceinline Type* end()                  { return Data + get_header()->Num; }
 #pragma endregion Member Mapping
-#endif
 };
+#endif
 
 template<class Type> inline
 Array<Type> array_init(AllocatorInfo allocator) {
-	return array_init_reserve<Type>(allocator, array_grow_formula<Type>(0));
+	return array_init_reserve<Type>(allocator, array_grow_formula(0));
 }
 
 template<class Type> inline
@@ -101,7 +119,6 @@ Array<Type> array_init_reserve(AllocatorInfo allocator, ssize capacity)
 	return {rcast(Type*, header + 1)};
 }
 
-template<class Type> inline
 usize array_grow_formula(ssize value) {
 	return 2 * value + 8;
 }
@@ -123,7 +140,7 @@ bool append(Array<Type>& array, Type value)
 		header = get_header(array);
 	}
 
-	array.Data[header->Num] = value;
+	array[header->Num] = value;
 	header->Num++;
 
 	return true;
@@ -166,7 +183,7 @@ bool append_at(Array<Type>& array, Type item, usize idx)
 		header = get_header(array);
 	}
 
-	Type* target = array.Data + idx;
+	Type* target = array + idx;
 
 	mem_move(target + 1, target, (header->Num - idx) * sizeof(Type));
 	header->Num++;
@@ -205,7 +222,7 @@ bool append_at(Array<Type>& array, Type* items, usize item_num, usize idx)
 template<class Type> inline
 Type& back(Array<Type>& array) {
 	ArrayHeader* header = get_header(array);
-	return array.Data[header->Num - 1];
+	return array[header->Num - 1];
 }
 
 template<class Type> inline
@@ -224,7 +241,7 @@ bool fill(Array<Type>& array, usize begin, usize end, Type value)
 
 	for (ssize idx = ssize(begin); idx < ssize(end); idx++)
 	{
-		array.Data[idx] = value;
+		array[idx] = value;
 	}
 
 	return true;
@@ -234,20 +251,22 @@ template<class Type> inline
 void free(Array<Type>& array) {
 	ArrayHeader* header = get_header(array);
 	gen::free(header->Allocator, header);
-	array.Data = nullptr;
+	Type*& Data = rcast(Type*&, array);
+	Data = nullptr;
 }
 
 template<class Type> inline
 ArrayHeader* get_header(Array<Type>& array) {
 	using NonConstType = TRemoveConst<Type>;
-	return rcast(ArrayHeader*, const_cast<NonConstType*>(array.Data)) - 1;
+	Type* Data = array; // This should do nothing in C but in C++ gets member Data struct.
+	return rcast(ArrayHeader*, const_cast<NonConstType*>(Data)) - 1;
 }
 
 template<class Type> inline
 bool grow(Array<Type>& array, usize min_capacity)
 {
 	ArrayHeader* header = get_header(array);
-	usize new_capacity = array_grow_formula<Type>(header->Capacity);
+	usize new_capacity = array_grow_formula(header->Capacity);
 
 	if (new_capacity < min_capacity)
 	new_capacity = min_capacity;
@@ -273,7 +292,7 @@ void remove_at(Array<Type>& array, usize idx)
 	ArrayHeader* header = get_header(array);
 	GEN_ASSERT(idx < header->Num);
 
-	mem_move(array.Data + idx, array.Data + idx + 1, sizeof(Type) * (header->Num - idx - 1));
+	mem_move(array + idx, array + idx + 1, sizeof(Type) * (header->Num - idx - 1));
 	header->Num--;
 }
 
@@ -329,7 +348,8 @@ bool set_capacity(Array<Type>& array, usize new_capacity)
 
 	GEN_NS free(header->Allocator, header);
 
-	array.Data = rcast(Type*, new_header + 1);
+	Type*& Data = rcast(Type*&, array);
+	Data = rcast(Type*, new_header + 1);
 	return true;
 }
 #pragma endregion Array
@@ -371,11 +391,11 @@ template<class Type> bool                  full(HashTable<Type>& table);
 template<class Type> void                  map(HashTable<Type>& table, void (*map_proc)(u64 key, Type value));
 template<class Type> void                  map_mut(HashTable<Type>& table, void (*map_proc)(u64 key, Type* value));
 
+static constexpr f32 HashTable_CriticalLoadScale = 0.7f;
+
 template<typename Type>
 struct HashTable
 {
-	static constexpr f32 CriticalLoadScale = 0.7f;
-
 	Array<ssize>                Hashes;
 	Array<HashTableEntry<Type>> Entries;
 
@@ -411,26 +431,26 @@ HashTable<Type> hashtable_init_reserve(AllocatorInfo allocator, usize num)
 {
 	HashTable<Type> result = { { nullptr }, { nullptr } };
 
-	result.Hashes = Array<ssize>::init_reserve(allocator, num);
-	result.Hashes.get_header()->Num = num;
-	result.Hashes.resize(num);
-	result.Hashes.fill(0, num, -1);
+	result.Hashes = array_init_reserve<ssize>(allocator, num);
+	get_header(result.Hashes)->Num = num;
+	resize(result.Hashes, num);
+	fill<ssize>(result.Hashes, 0, num, -1);
 
-	result.Entries = Array<HashTableEntry<Type>>::init_reserve(allocator, num);
+	result.Entries = array_init_reserve<HashTableEntry<Type>>(allocator, num);
 	return result;
 }
 
 template<typename Type> inline
 void clear(HashTable<Type>& table) {
-	table.Entries.clear();
-	table.Hashes.fill(0, table.Hashes.num(), -1);
+	clear(table.Entries);
+	fill<ssize>(table.Hashes, 0, num(table.Hashes), -1);
 }
 
 template<typename Type> inline
 void destroy(HashTable<Type>& table) {
-	if (table.Hashes && table.Hashes.get_header()->Capacity) {
-		table.Hashes.free();
-		table.Entries.free();
+	if (table.Hashes && get_header(table.Hashes)->Capacity) {
+		free(table.Hashes);
+		free(table.Entries);
 	}
 }
 
@@ -463,7 +483,7 @@ void map_mut(HashTable<Type>& table, void (*map_proc)(u64 key, Type* value)) {
 
 template<typename Type> inline
 void grow(HashTable<Type>& table) {
-	ssize new_num = Array<HashTableEntry<Type>>::grow_formula(table.Entries.num());
+	ssize new_num = array_grow_formula(num(table.Entries));
 	rehash(table, new_num);
 }
 
@@ -471,9 +491,9 @@ template<typename Type> inline
 void rehash(HashTable<Type>& table, ssize new_num)
 {
 	ssize last_added_index;
-	HashTable<Type> new_ht = hashtable_init_reserve<Type>(table.Hashes.get_header()->Allocator, new_num);
+	HashTable<Type> new_ht = hashtable_init_reserve<Type>(get_header(table.Hashes)->Allocator, new_num);
 
-	for (ssize idx = 0; idx < ssize(table.Entries.num()); ++idx)
+	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx)
 	{
 		HashTableFindResult find_result;
 		HashTableEntry<Type>& entry = table.Entries[idx];
@@ -580,8 +600,8 @@ ssize add_entry(HashTable<Type>& table, u64 key) {
 	ssize idx;
 	HashTableEntry<Type> entry = { key, -1 };
 
-	idx = table.Entries.num();
-	table.Entries.append(entry);
+	idx = num(table.Entries);
+	append(table.Entries, entry);
 	return idx;
 }
 
@@ -590,9 +610,9 @@ HashTableFindResult find(HashTable<Type>& table, u64 key)
 {
 	HashTableFindResult result = { -1, -1, -1 };
 
-	if (table.Hashes.num() > 0)
+	if (num(table.Hashes) > 0)
 	{
-		result.HashIndex = key % table.Hashes.num();
+		result.HashIndex = key % num(table.Hashes);
 		result.EntryIndex = table.Hashes[result.HashIndex];
 
 		while (result.EntryIndex >= 0)
@@ -610,8 +630,8 @@ HashTableFindResult find(HashTable<Type>& table, u64 key)
 
 template<typename Type> inline
 bool full(HashTable<Type>& table) {
-	usize critical_load = usize(HashTable<Type>::CriticalLoadScale * f32(table.Hashes.num()));
-	b32 result = table.Entries.num() > critical_load;
+	usize critical_load = usize(HashTable_CriticalLoadScale * f32(num(table.Hashes)));
+	b32 result = num(table.Entries) > critical_load;
 	return result;
 }
 #pragma endregion HashTable

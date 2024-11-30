@@ -48,11 +48,11 @@ struct ParseContext
 		String result = String::make_reserve( GlobalAllocator, kilobytes(4) );
 
 		Token scope_start = Scope->Start;
-		Token last_valid  = Tokens.Idx >= Tokens.Arr.num() ? Tokens.Arr[Tokens.Arr.num() -1] : Tokens.current();
+		Token last_valid  = Tokens.Idx >= num(Tokens.Arr) ? Tokens.Arr[num(Tokens.Arr) -1] : Tokens.current();
 
 		sptr        length  = scope_start.Length;
 		char const* current = scope_start.Text + length;
-		while ( current <= Tokens.Arr.back().Text && *current != '\n' && length < 74 )
+		while ( current <= back(Tokens.Arr).Text && *current != '\n' && length < 74 )
 		{
 			current++;
 			length++;
@@ -96,7 +96,7 @@ global ParseContext Context;
 
 bool TokArray::__eat( TokType type )
 {
-	if ( Arr.num() - Idx <= 0 )
+	if ( num(Arr) - Idx <= 0 )
 	{
 		log_failure( "No tokens left.\n%s", Context.to_string() );
 		return false;
@@ -167,7 +167,7 @@ if ( def.Ptr == nullptr )                                                      \
 #	define prevtok        Context.Tokens.previous()
 #	define nexttok		  Context.Tokens.next()
 #	define eat( Type_ )   Context.Tokens.__eat( Type_ )
-#	define left           ( Context.Tokens.Arr.num() - Context.Tokens.Idx )
+#	define left           ( num(Context.Tokens.Arr) - Context.Tokens.Idx )
 
 #ifdef check
 #define CHECK_WAS_DEFINED
@@ -745,7 +745,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 			}
 			Token interface_tok = parse_identifier();
 
-			interfaces.append( def_type( interface_tok ) );
+			append(interfaces, def_type( interface_tok ) );
 			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ...
 		}
 	}
@@ -777,7 +777,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	interfaces.free();
+	free(interfaces);
 	return result;
 }
 
@@ -1152,7 +1152,7 @@ Code parse_complicated_definition( TokType which )
 
 	s32 idx         = tokens.Idx;
 	s32 level       = 0;
-	for ( ; idx < tokens.Arr.num(); idx++ )
+	for ( ; idx < num(tokens.Arr); idx++ )
 	{
 		if ( tokens[ idx ].Type == TokType::BraceCurly_Open )
 			level++;
@@ -1837,7 +1837,7 @@ CodeBody parse_global_nspace( CodeT which )
 				bool found_operator_cast_outside_class_implmentation = false;
 				s32  idx = Context.Tokens.Idx;
 
-				for ( ; idx < Context.Tokens.Arr.num(); idx++ )
+				for ( ; idx < num(Context.Tokens.Arr); idx++ )
 				{
 					Token tok = Context.Tokens[ idx ];
 
@@ -1909,14 +1909,14 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 
 	s32   idx = tokens.Idx;
 	Token nav = tokens[ idx ];
-	for ( ; idx < tokens.Arr.num(); idx++, nav = tokens[ idx ] )
+	for ( ; idx < num(tokens.Arr); idx++, nav = tokens[ idx ] )
 	{
 		if ( nav.Text[0] == '<' )
 		{
 			// Skip templated expressions as they mey have expressions with the () operators
 			s32 capture_level  = 0;
 			s32 template_level = 0;
-			for ( ; idx < tokens.Arr.num(); idx++, nav = tokens[idx] )
+			for ( ; idx < num(tokens.Arr); idx++, nav = tokens[idx] )
 			{
 				if (nav.Text[ 0 ] == '<')
 					++ template_level;
@@ -2511,7 +2511,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	bool found_operator = false;
 	s32  idx            = Context.Tokens.Idx;
 
-	for ( ; idx < Context.Tokens.Arr.num(); idx++ )
+	for ( ; idx < num(Context.Tokens.Arr); idx++ )
 	{
 		Token tok = Context.Tokens[ idx ];
 
@@ -4348,7 +4348,7 @@ CodeTemplate parse_template()
 			bool found_operator_cast_outside_class_implmentation = false;
 			s32  idx = Context.Tokens.Idx;
 
-			for ( ; idx < Context.Tokens.Arr.num(); idx++ )
+			for ( ; idx < num(Context.Tokens.Arr); idx++ )
 			{
 				Token tok = Context.Tokens[ idx ];
 
@@ -4896,7 +4896,7 @@ CodeTypedef parse_typedef()
 
 			s32 idx = tokens.Idx;
 			s32 level = 0;
-			for ( ; idx < tokens.Arr.num(); idx ++ )
+			for ( ; idx < num(tokens.Arr); idx ++ )
 			{
 				if ( tokens[idx].Type == TokType::BraceCurly_Open )
 					level++;
