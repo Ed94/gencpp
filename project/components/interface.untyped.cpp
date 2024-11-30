@@ -16,8 +16,8 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 		local_persist
 		char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
 
-		init_from_memory( tok_map_arena, tok_map_mem, sizeof(tok_map_mem) );
-		tok_map = HashTable<StrC>::init( tok_map_arena );
+		tok_map_arena = init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
+		tok_map       = HashTable<StrC>::init( tok_map_arena );
 
 		s32 left = num_tokens - 1;
 

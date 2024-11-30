@@ -170,126 +170,179 @@ b32 gen_vm_purge( VirtualMemory vm );
 //! Retrieve VM's page size and alignment.
 ssize gen_virtual_memory_page_size( ssize* alignment_out );
 
-
+#pragma region Arena
 struct Arena;
-void init_from_memory( Arena& arena, void* start, ssize size );
 
-struct Arena
-{
-	static
-	void* allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
+AllocatorInfo allocator_info( Arena& arena );
 
-	//forceinline static
-	//Arena init_from_memory( void* start, ssize size ) { 
-	//	Arena result; GEN_NS init_from_memory( result, start, size ); 
-	//	return result;
-	//}
+// Remove static keyword and rename allocator_proc
+void* arena_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
 
-	static
-	Arena init_from_allocator( AllocatorInfo backing, ssize size )
-	{
-		Arena result =
-		{
-		backing,
-		alloc( backing, size),
-		size,
-		0,
-		0
-		};
-		return result;
-	}
-
-	static
-	Arena init_sub( Arena& parent, ssize size )
-	{
-		return init_from_allocator( parent.Backing, size );
-	}
-
-	ssize alignment_of( ssize alignment )
-	{
-		ssize alignment_offset, result_pointer, mask;
-		GEN_ASSERT( is_power_of_two( alignment ) );
-
-		alignment_offset = 0;
-		result_pointer   = (ssize) PhysicalStart + TotalUsed;
-		mask             = alignment - 1;
-
-		if ( result_pointer & mask )
-			alignment_offset = alignment - ( result_pointer & mask );
-
-		return alignment_offset;
-	}
+// Add these declarations after the Arena struct
+Arena init_from_allocator(AllocatorInfo backing, ssize size);
+Arena init_from_memory( void* start, ssize size );
+Arena init_sub(Arena& parent, ssize size);
+ssize alignment_of(Arena& arena, ssize alignment);
 
 // This id is defined by Unreal for asserts
 #pragma push_macro("check")
 #undef check
-	void check()
-	{
-		GEN_ASSERT( TempCount == 0 );
-	}
+void   check(Arena& arena);
 #pragma pop_macro("check")
 
-	void free()
-	{
-		if ( Backing.Proc )
-		{
-			gen::free( Backing, PhysicalStart );
-			PhysicalStart = nullptr;
-		}
-	}
+void  free(Arena& arena);
+ssize size_remaining(Arena& arena, ssize alignment);
 
-	ssize size_remaining( ssize alignment )
-	{
-		ssize result = TotalSize - ( TotalUsed + alignment_of( alignment ) );
-		return result;
-	}
-
+struct Arena
+{
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
 	ssize         TotalSize;
 	ssize         TotalUsed;
 	ssize         TempCount;
 
-	operator AllocatorInfo() { return { allocator_proc, this }; }
+#if 1
+#pragma region Member Mapping
+	forceinline operator AllocatorInfo() { return GEN_NS allocator_info(* this); }
+
+	forceinline static void* allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags ) { return GEN_NS arena_allocator_proc( allocator_data, type, size, alignment, old_memory, old_size, flags ); }
+	forceinline static Arena init_from_memory( void* start, ssize size )                                                                                      { return GEN_NS init_from_memory( start, size ); }
+	forceinline static Arena init_from_allocator( AllocatorInfo backing, ssize size )                                                                         { return GEN_NS init_from_allocator( backing, size ); }
+	forceinline static Arena init_sub( Arena& parent, ssize size )                                                                                            { return GEN_NS init_from_allocator( parent.Backing, size ); }
+	forceinline        ssize alignment_of( ssize alignment )                                                                                                  { return GEN_NS alignment_of(* this, alignment); }
+	forceinline        void  free()                                                                                                                           { return GEN_NS free(* this);  }
+	forceinline        ssize size_remaining( ssize alignment )                                                                                                { return GEN_NS size_remaining(* this, alignment); }
+
+// This id is defined by Unreal for asserts
+#pragma push_macro("check")
+#undef check
+	forceinline void check() { GEN_NS check(* this); }
+#pragma pop_macro("check")
+
+#pragma endregion Member Mapping
+#endif
 };
 
-void init_from_memory( Arena& arena, void* start, ssize size )
+inline
+AllocatorInfo allocator_info( Arena& arena ) {
+	return { arena_allocator_proc, &arena };
+}
+
+inline
+Arena init_from_memory( void* start, ssize size )
 {
-	arena =
-	{
+	Arena arena = {
 		{ nullptr, nullptr },
 		start,
 		size,
 		0,
 		0
 	};
+	return arena;
 }
+
+inline
+Arena init_from_allocator(AllocatorInfo backing, ssize size)
+{
+    Arena result =
+    {
+        backing,
+        alloc(backing, size),
+        size,
+        0,
+        0
+    };
+    return result;
+}
+
+inline
+Arena init_sub(Arena& parent, ssize size)
+{
+    return init_from_allocator(parent.Backing, size);
+}
+
+inline
+ssize alignment_of(Arena& arena, ssize alignment)
+{
+    ssize alignment_offset, result_pointer, mask;
+    GEN_ASSERT(is_power_of_two(alignment));
+
+    alignment_offset = 0;
+    result_pointer  = (ssize)arena.PhysicalStart + arena.TotalUsed;
+    mask            = alignment - 1;
+
+    if (result_pointer & mask)
+        alignment_offset = alignment - (result_pointer & mask);
+
+    return alignment_offset;
+}
+
+#pragma push_macro("check")
+#undef check
+inline
+void check(Arena& arena)
+{
+    GEN_ASSERT(arena.TempCount == 0);
+}
+#pragma pop_macro("check")
+
+inline
+void free(Arena& arena)
+{
+    if (arena.Backing.Proc)
+    {
+        gen::free(arena.Backing, arena.PhysicalStart);
+        arena.PhysicalStart = nullptr;
+    }
+}
+
+inline
+ssize size_remaining(Arena& arena, ssize alignment)
+{
+    ssize result = arena.TotalSize - (arena.TotalUsed + alignment_of(arena, alignment));
+    return result;
+}
+#pragma endregion Arena
+
+#pragma region FixedArena
+template<s32 Size>
+struct FixedArena;
+
+template<s32 Size> AllocatorInfo    allocator_info( FixedArena<Size>& fixed_arena );
+template<s32 Size> FixedArena<Size> fixed_arena_init();
+template<s32 Size> ssize            size_remaining(FixedArena<Size>& fixed_arena, ssize alignment);
 
 // Just a wrapper around using an arena with memory associated with its scope instead of from an allocator.
 // Used for static segment or stack allocations.
 template< s32 Size >
 struct FixedArena
 {
-	static
-	FixedArena init()
-	{
-		FixedArena result = { Arena::init_from_memory( result.memory, Size ), {0} };
-		return result;
-	}
+    char  memory[Size];
+    Arena arena;
 
-	ssize size_remaining( ssize alignment )
-	{
-		return arena.size_remaining( alignment );
-	}
+#if 1
+#pragma region Member Mapping
+    forceinline operator AllocatorInfo() { return GEN_NS allocator_info(* this); }
 
-	operator AllocatorInfo()
-	{
-		return { Arena::allocator_proc, &arena };
-	}
-
-	Arena arena;
-	char  memory[ Size ];
+    forceinline static FixedArena init()                          { FixedArena result; GEN_NS fixed_arena_init<Size>(result); return result; }
+    forceinline ssize             size_remaining(ssize alignment) { GEN_NS size_remaining(*this, alignment); }
+#pragma endregion Member Mapping
+#endif
 };
+
+template<s32 Size> inline
+AllocatorInfo allocator_info( FixedArena<Size>& fixed_arena ) { return { arena_allocator_proc, & fixed_arena.arena }; }
+
+template<s32 Size>
+void fixed_arena_init(FixedArena<Size>& result) {
+    zero_size(& result.memory[0], Size);
+    result.arena = init_from_memory(& result.memory[0], Size);
+}
+
+template<s32 Size> inline
+ssize size_remaining(FixedArena<Size>& fixed_arena, ssize alignment) {
+    return size_remaining(fixed_arena.arena, alignment);
+}
 
 using Arena_1KB   = FixedArena< kilobytes( 1 ) >;
 using Arena_4KB   = FixedArena< kilobytes( 4 ) >;
@@ -303,6 +356,7 @@ using Arena_512KB = FixedArena< kilobytes( 512 ) >;
 using Arena_1MB   = FixedArena< megabytes( 1 ) >;
 using Arena_2MB   = FixedArena< megabytes( 2 ) >;
 using Arena_4MB   = FixedArena< megabytes( 4 ) >;
+#pragma endregion FixedArena
 
 struct Pool
 {
@@ -341,7 +395,6 @@ struct Pool
 		return { allocator_proc, this };
 	}
 };
-
 
 inline
 b32 is_power_of_two( ssize x ) {

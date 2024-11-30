@@ -713,7 +713,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	local_persist
 	char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeType> interfaces; {
-		Arena arena; init_from_memory(arena, interface_arr_mem, kilobytes(4) );
+		Arena arena = init_from_memory( interface_arr_mem, kilobytes(4) );
 		Array<CodeType>::init_reserve( arena, 4 );
 	} 
 

@@ -334,7 +334,7 @@ ssize virtual_memory_page_size( ssize* alignment_out )
 
 #pragma endregion VirtualMemory
 
-void* Arena::allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
+void* arena_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
 	Arena* arena = rcast(Arena*, allocator_data);
 	void*      ptr   = NULL;
