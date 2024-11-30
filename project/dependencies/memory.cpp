@@ -384,7 +384,7 @@ void* arena_allocator_proc( void* allocator_data, AllocType type, ssize size, ss
 	return ptr;
 }
 
-void* Pool::allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
+void* pool_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
 	Pool* pool = rcast( Pool*, allocator_data);
 	void* ptr  = NULL;
@@ -457,7 +457,7 @@ void* Pool::allocator_proc( void* allocator_data, AllocType type, ssize size, ss
 	return ptr;
 }
 
-Pool Pool::init_align( AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align )
+Pool pool_init_align( AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align )
 {
 	Pool pool = {};
 
@@ -495,16 +495,16 @@ Pool Pool::init_align( AllocatorInfo backing, ssize num_blocks, ssize block_size
 	return pool;
 }
 
-void Pool::clear()
+void clear(Pool& pool)
 {
-	ssize    actual_block_size, block_index;
+	ssize actual_block_size, block_index;
 	void* curr;
 	uptr* end;
 
-	actual_block_size = BlockSize + BlockAlign;
+	actual_block_size = pool.BlockSize + pool.BlockAlign;
 
-	curr = PhysicalStart;
-	for ( block_index = 0; block_index < NumBlocks - 1; block_index++ )
+	curr = pool.PhysicalStart;
+	for ( block_index = 0; block_index < pool.NumBlocks - 1; block_index++ )
 	{
 		uptr* next = ( uptr* ) curr;
 		*next      = ( uptr  ) curr + actual_block_size;
@@ -514,7 +514,7 @@ void Pool::clear()
 	end  =  ( uptr* ) curr;
 	*end =  ( uptr )  NULL;
 
-	FreeList = PhysicalStart;
+	pool.FreeList = pool.PhysicalStart;
 }
 
 #pragma endregion Memory

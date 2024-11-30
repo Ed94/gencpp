@@ -358,30 +358,18 @@ using Arena_2MB   = FixedArena< megabytes( 2 ) >;
 using Arena_4MB   = FixedArena< megabytes( 4 ) >;
 #pragma endregion FixedArena
 
+#pragma region Pool
+struct Pool;
+
+AllocatorInfo allocator_info(Pool& pool);
+void*         pool_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
+Pool          pool_init(AllocatorInfo backing, ssize num_blocks, ssize block_size);
+Pool          pool_init_align(AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align);
+void          clear(Pool& pool);
+void          free(Pool& pool);
+
 struct Pool
 {
-	static
-	void* allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
-
-	static
-	Pool init( AllocatorInfo backing, ssize num_blocks, ssize block_size )
-	{
-		return init_align( backing, num_blocks, block_size, GEN_DEFAULT_MEMORY_ALIGNMENT );
-	}
-
-	static
-	Pool init_align( AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align );
-
-	void clear();
-
-	void free()
-	{
-		if ( Backing.Proc )
-		{
-			gen::free( Backing, PhysicalStart );
-		}
-	}
-
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
 	void*         FreeList;
@@ -390,11 +378,34 @@ struct Pool
 	ssize         TotalSize;
 	ssize         NumBlocks;
 
-	operator AllocatorInfo()
-	{
-		return { allocator_proc, this };
-	}
+#pragma region Member Mapping
+    forceinline operator AllocatorInfo() { return GEN_NS allocator_info(* this); }
+
+    forceinline static void* allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags) { return GEN_NS pool_allocator_proc(allocator_data, type, size, alignment, old_memory, old_size, flags); }
+    forceinline static Pool  init(AllocatorInfo backing, ssize num_blocks, ssize block_size)                                                                { return GEN_NS pool_init(backing, num_blocks, block_size); }
+    forceinline static Pool  init_align(AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align)                                       { return GEN_NS pool_init_align(backing, num_blocks, block_size, block_align); }
+    forceinline        void  clear() { GEN_NS clear(* this); }
+    forceinline        void  free()  { GEN_NS free(* this); }
+#pragma endregion
 };
+
+inline
+AllocatorInfo allocator_info(Pool& pool) {
+   return { pool_allocator_proc, &pool };
+}
+
+inline
+Pool pool_init(AllocatorInfo backing, ssize num_blocks, ssize block_size) {
+   return pool_init_align(backing, num_blocks, block_size, GEN_DEFAULT_MEMORY_ALIGNMENT);
+}
+
+inline
+void free(Pool& pool) {
+   if(pool.Backing.Proc) {
+       GEN_NS free(pool.Backing, pool.PhysicalStart);
+   }
+}
+#pragma endregion Pool
 
 inline
 b32 is_power_of_two( ssize x ) {

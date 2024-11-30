@@ -37,7 +37,8 @@
 		"propidl.h": "c",
 		"android_native_app_glue.h": "c",
 		"raylib.h": "c",
-		"*.m": "cpp"
+		"*.m": "cpp",
+		"atomic": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
