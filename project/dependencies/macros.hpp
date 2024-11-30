@@ -23,17 +23,32 @@
 #define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
 #endif
 
-#ifndef ccast
-#define ccast( type, value ) ( const_cast< type >( (value) ) )
-#endif
-#ifndef pcast
-#define pcast( type, value ) ( * reinterpret_cast< type* >( & ( value ) ) )
-#endif
-#ifndef rcast
-#define rcast( type, value ) reinterpret_cast< type >( value )
-#endif
-#ifndef scast
-#define scast( type, value ) static_cast< type >( value )
+#if ! GEN_C_COMPILER
+#	ifndef ccast
+#	define ccast( type, value ) ( const_cast< type >( (value) ) )
+#	endif
+#	ifndef pcast
+#	define pcast( type, value ) ( * reinterpret_cast< type* >( & ( value ) ) )
+#	endif
+#	ifndef rcast
+#	define rcast( type, value ) reinterpret_cast< type >( value )
+#	endif
+#	ifndef scast
+#	define scast( type, value ) static_cast< type >( value )
+#	endif
+#else
+#	ifndef ccast
+#	define ccast( type, value ) ( (type)(value) )
+#	endif
+#	ifndef pcast
+#	define pcast( type, value ) ( (type)(value) )
+#	endif
+#	ifndef rcast
+#	define rcast( type, value ) ( (type)(value) )
+#	endif
+#	ifndef scast
+#	define scast( type, value ) ( (type)(value) )
+#	endif
 #endif
 
 #ifndef stringize
@@ -123,20 +138,20 @@
 #define min( a, b ) ( (a < b) ? (a) : (b) )
 #endif
 
-#if defined( _MSC_VER ) || defined( GEN_COMPILER_TINYC )
+#if GEN_COMPILER_MSVC || GEN_COMPILER_TINYC
 #	define offset_of( Type, element ) ( ( GEN_NS( ssize ) ) & ( ( ( Type* )0 )->element ) )
 #else
 #	define offset_of( Type, element ) __builtin_offsetof( Type, element )
 #endif
 
 #ifndef        forceinline
-#	ifdef GEN_COMPILER_MSVC
+#	if GEN_COMPILER_MSVC
 #		define forceinline __forceinline
 #		define neverinline __declspec( noinline )
-#	elif defined(GEN_COMPILER_GCC)
+#	elif GEN_COMPILER_GCC
 #		define forceinline inline __attribute__((__always_inline__))
 #		define neverinline __attribute__( ( __noinline__ ) )
-#	elif defined(GEN_COMPILER_CLANG)
+#	elif GEN_COMPILER_CLANG
 #	if __has_attribute(__always_inline__)
 #		define forceinline inline __attribute__((__always_inline__))
 #		define neverinline __attribute__( ( __noinline__ ) )
@@ -151,11 +166,11 @@
 #endif
 
 #ifndef        neverinline
-#	ifdef GEN_COMPILER_MSVC
+#	if GEN_COMPILER_MSVC
 #		define neverinline __declspec( noinline )
-#	elif defined(GEN_COMPILER_GCC)
+#	elif GEN_COMPILER_GCC
 #		define neverinline __attribute__( ( __noinline__ ) )
-#	elif defined(GEN_COMPILER_CLANG)
+#	elif GEN_COMPILER_CLANG
 #	if __has_attribute(__always_inline__)
 #		define neverinline __attribute__( ( __noinline__ ) )
 #	else
@@ -163,6 +178,22 @@
 #	endif
 #	else
 #		define neverinline
+#	endif
+#endif
+
+#if !defined(GEN_SUPPORT_CPP_MEMBER_FEATURES) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
+#	define GEN_SUPPORT_CPP_MEMBER_FEATURES 0
+#endif
+
+#if !defined(typeof) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
+#	if ! GEN_COMPILER_C
+#		define typeof
+#	elif defined(_MSC_VER)
+#		define typeof(x) __typeof(x)
+#	elif defined(__GNUC__) || defined(__clang__)
+#		define typeof(x) __typeof__(x)
+#	else
+#		error "Compiler not supported"
 #	endif
 #endif
 

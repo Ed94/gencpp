@@ -101,6 +101,14 @@
 #  define GEN_GCC_VERSION_CHECK(major,minor,patch) (0)
 #endif
 
+#ifndef GEN_COMPIELR_C
+#	if defined(__STDC_VERSION__)
+#		define GEN_COMPILER_C 1
+#	else
+#		define GEN_COMPILER_C 0
+#	endif
+#endif
+
 #pragma endregion Platform Detection
 
 #pragma region Mandatory Includes
@@ -114,7 +122,7 @@
 
 #pragma endregion Mandatory Includes
 
-#ifdef GEN_DONT_USE_NAMESPACE
+#if GEN_DONT_USE_NAMESPACE || GEN_COMPILER_C
 #	define GEN_NS
 #	define GEN_NS_BEGIN
 #	define GEN_NS_END

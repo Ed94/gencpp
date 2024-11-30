@@ -11,9 +11,9 @@ using namespace gen;
 CodeBody gen_ecode( char const* path )
 {
 	char  scratch_mem[kilobytes(1)];
-	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
+	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	file_read_contents( scratch, zero_terminate, path );
+	file_read_contents( allocator_info(scratch), zero_terminate, path );
 
 	CSV_Object csv_nodes;
 	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
@@ -57,9 +57,9 @@ CodeBody gen_ecode( char const* path )
 CodeBody gen_eoperator( char const* path )
 {
 	char scratch_mem[kilobytes(4)];
-	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
+	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	file_read_contents( scratch, zero_terminate, path );
+	file_read_contents( allocator_info(scratch), zero_terminate, path );
 
 	CSV_Object csv_nodes;
 	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
@@ -113,9 +113,9 @@ CodeBody gen_eoperator( char const* path )
 CodeBody gen_especifier( char const* path )
 {
 	char scratch_mem[kilobytes(4)];
-	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
+	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	file_read_contents( scratch, zero_terminate, path );
+	file_read_contents( allocator_info(scratch), zero_terminate, path );
 
 	CSV_Object csv_nodes;
 	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
@@ -218,14 +218,16 @@ CodeBody gen_especifier( char const* path )
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 {
 	char  scratch_mem[kilobytes(16)];
-	Arena scratch = Arena::init_from_memory( scratch_mem, sizeof(scratch_mem) );
+	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	FileContents enum_content = file_read_contents( scratch, zero_terminate, etok_path );
+	AllocatorInfo scratch_info = allocator_info(scratch);
+
+	FileContents enum_content = file_read_contents( scratch_info, zero_terminate, etok_path );
 
 	CSV_Object csv_enum_nodes;
 	csv_parse( &csv_enum_nodes, rcast(char*, enum_content.data), GlobalAllocator, false );
 
-	FileContents attrib_content = file_read_contents( scratch, zero_terminate, attr_path );
+	FileContents attrib_content = file_read_contents( scratch_info, zero_terminate, attr_path );
 
 	CSV_Object csv_attr_nodes;
 	csv_parse( &csv_attr_nodes, rcast(char*, attrib_content.data), GlobalAllocator, false );

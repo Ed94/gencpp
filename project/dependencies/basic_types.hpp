@@ -126,10 +126,18 @@ typedef s32 b32;
 using mem_ptr       = void*;
 using mem_ptr_const = void const*;
 
+#if ! GEN_COMPILER_C
 template<typename Type> uptr to_uptr( Type* ptr ) { return (uptr)ptr; }
 template<typename Type> sptr to_sptr( Type* ptr ) { return (sptr)ptr; }
 
 template<typename Type> mem_ptr       to_mem_ptr      ( Type ptr ) { return (mem_ptr)      ptr; }
 template<typename Type> mem_ptr_const to_mem_ptr_const( Type ptr ) { return (mem_ptr_const)ptr; }
+#else
+#define to_utpr( ptr ) ((uptr)(ptr))
+#define to_stpr( ptr ) ((sptr)(ptr))
+
+#define to_mem_ptr( ptr)       ((mem_ptr)ptr)
+#define to_mem_ptr_const( ptr) ((mem_ptr)ptr)
+#endif
 
 #pragma endregion Basic Types

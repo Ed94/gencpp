@@ -132,12 +132,12 @@ bool TokArray::__eat( TokType type )
 internal
 void init()
 {
-	Tokens = Array<Token>::init_reserve( LexArena
+	Tokens = array_init_reserve<Token>( allocator_info(LexArena)
 		, ( LexAllocator_Size - sizeof( ArrayHeader ) ) / sizeof(Token)
 	);
 
-	defines_map_arena = Arena_256KB::init();
-	defines           = HashTable<StrC>::init_reserve( defines_map_arena, 256 );
+	fixed_arena_init(defines_map_arena);
+	defines = HashTable<StrC>::init_reserve( allocator_info(defines_map_arena), 256 );
 }
 
 internal
@@ -713,8 +713,8 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	local_persist
 	char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeType> interfaces; {
-		Arena arena = init_from_memory( interface_arr_mem, kilobytes(4) );
-		Array<CodeType>::init_reserve( arena, 4 );
+		Arena arena = arena_init_from_memory( interface_arr_mem, kilobytes(4) );
+		array_init_reserve<CodeType>( allocator_info(arena), 4 );
 	} 
 
 	// TODO(Ed) : Make an AST_DerivedType, we'll store any arbitary derived type into there as a linear linked list of them.

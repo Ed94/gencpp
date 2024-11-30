@@ -19,7 +19,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 		{
 			if ( ( last->TotalUsed + size ) > last->TotalSize )
 			{
-				Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
+				Arena bucket = arena_init_from_allocator( heap(), Global_BucketSize );
 
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
@@ -30,7 +30,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				last = & Global_AllocatorBuckets.back();
 			}
 
-			return alloc_align( * last, size, alignment );
+			return alloc_align( allocator_info(* last), size, alignment );
 		}
 		case EAllocation_FREE:
 		{
@@ -46,7 +46,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 		{
 			if ( last->TotalUsed + size > last->TotalSize )
 			{
-				Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
+				Arena bucket = arena_init_from_allocator( heap(), Global_BucketSize );
 
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
@@ -240,7 +240,7 @@ void init()
 		if ( Global_AllocatorBuckets == nullptr )
 			GEN_FATAL( "Failed to reserve memory for Global_AllocatorBuckets");
 
-		Arena bucket = Arena::init_from_allocator( heap(), Global_BucketSize );
+		Arena bucket = arena_init_from_allocator( heap(), Global_BucketSize );
 
 		if ( bucket.PhysicalStart == nullptr )
 			GEN_FATAL( "Failed to create first bucket for Global_AllocatorBuckets");
@@ -264,16 +264,16 @@ void init()
 
 	// Setup the code pool and code entries arena.
 	{
-		Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
+		Pool code_pool = pool_init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
 
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the code pool" );
 
 		CodePools.append( code_pool );
 
-		LexArena = Arena::init_from_allocator( Allocator_Lexer, LexAllocator_Size );
+		LexArena = arena_init_from_allocator( Allocator_Lexer, LexAllocator_Size );
 
-		Arena string_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
+		Arena string_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
 		if ( string_arena.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the string arena" );
@@ -303,7 +303,7 @@ void deinit()
 	do
 	{
 		Pool* code_pool = & CodePools[index];
-		code_pool->free();
+		free(* code_pool);
 		index++;
 	}
 	while ( left--, left );
@@ -313,7 +313,7 @@ void deinit()
 	do
 	{
 		Arena* string_arena = & StringArenas[index];
-		string_arena->free();
+		free(* string_arena);
 		index++;
 	}
 	while ( left--, left );
@@ -323,7 +323,7 @@ void deinit()
 	CodePools.free();
 	StringArenas.free();
 
-	LexArena.free();
+	free(LexArena);
 
 	PreprocessorDefines.free();
 
@@ -332,7 +332,7 @@ void deinit()
 	do
 	{
 		Arena* bucket = & Global_AllocatorBuckets[ index ];
-		bucket->free();
+		free(* bucket);
 		index++;
 	}
 	while ( left--, left );
@@ -348,7 +348,7 @@ void reset()
 	do
 	{
 		Pool* code_pool = & CodePools[index];
-		code_pool->clear();
+		clear(* code_pool);
 		index++;
 	}
 	while ( left--, left );
@@ -376,7 +376,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 
 	if ( last->TotalUsed + ssize(size_req) > last->TotalSize )
 	{
-		Arena new_arena = Arena::init_from_allocator( Allocator_StringArena, SizePer_StringArena );
+		Arena new_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
 		if ( ! StringArenas.append( new_arena ) )
 			GEN_FATAL( "gen::get_string_allocator: Failed to allocate a new string arena" );
@@ -384,7 +384,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 		last = & StringArenas.back();
 	}
 
-	return * last;
+	return allocator_info(* last);
 }
 
 // Will either make or retrive a code string.
@@ -411,7 +411,7 @@ Code make_code()
 	Pool* allocator = & CodePools.back();
 	if ( allocator->FreeList == nullptr )
 	{
-		Pool code_pool = Pool::init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
+		Pool code_pool = pool_init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
 
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePool allcoator returned nullptr." );
@@ -422,7 +422,7 @@ Code make_code()
 		allocator = & CodePools.back();
 	}
 
-	Code result { rcast( AST*, alloc( * allocator, sizeof(AST) )) };
+	Code result { rcast( AST*, alloc( allocator_info(* allocator), sizeof(AST) )) };
 	mem_set( result.ast, 0, sizeof(AST) );
 	// result->Type = ECode::Invalid;
 
