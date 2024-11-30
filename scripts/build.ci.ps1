@@ -44,6 +44,7 @@ Push-Location $path_root
 	   $verbose      = $false
 [bool] $bootstrap    = $false
 [bool] $singleheader = $false
+[bool] $c_library    = $false
 [bool] $unreal       = $false
 [bool] $test         = $false
 
@@ -59,6 +60,7 @@ if ( $args ) { $args | ForEach-Object {
 		"debug"               { $release      = $false }
 		"bootstrap"           { $bootstrap    = $true }
 		"singleheader"        { $singleheader = $true }
+		"c_library"           { $c_library    = $true }
 		"unreal"              { $unreal       = $true }
 		"test"                { $test         = $true }
 	}
@@ -103,8 +105,9 @@ write-host "Build Type: $(if ($release) {"Release"} else {"Debug"} )"
 $path_build        = Join-Path $path_root build
 $path_project      = Join-Path $path_root project
 $path_scripts      = Join-Path $path_root scripts
-$path_singleheader = Join-Path $path_root singleheader
-$path_unreal       = Join-Path $path_root unreal_engine
+$path_c_library    = join-Path $path_root gen_c_library
+$path_singleheader = Join-Path $path_root gen_singleheader
+$path_unreal       = Join-Path $path_root gen_unreal_engine
 $path_test         = Join-Path $path_root test
 
 if ( $bootstrap )
@@ -185,6 +188,11 @@ if ( $singleheader )
 			write-host "`nSingleheader generator completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
+}
+
+if ( $c_library )
+{
+
 }
 
 if ( $unreal )
