@@ -39,7 +39,8 @@
 		"raylib.h": "c",
 		"*.m": "cpp",
 		"atomic": "cpp",
-		"gen.h": "c"
+		"gen.h": "c",
+		"string_ops.hpp": "c"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

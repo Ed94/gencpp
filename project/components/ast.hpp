@@ -376,7 +376,8 @@ struct AST
 		OperatorT     Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
-		s32           VarConstructorInit; // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
+		s32           VarConstructorInit;  // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
+		b32           EnumUnderlyingMacro; // Used by enums incase the user wants to wrap underlying type specification in a macro
 	};
 };
 

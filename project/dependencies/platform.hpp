@@ -76,13 +76,18 @@
 /* Platform compiler */
 
 #if defined( _MSC_VER )
-#	define GEN_COMPILER_MSVC 1
+#	define GEN_COMPILER_CLANG 0
+#	define GEN_COMPILER_MSVC  1
+#	define GEN_COMPILER_GCC   0
 #elif defined( __GNUC__ )
-#	define GEN_COMPILER_GCC 1
+#	define GEN_COMPILER_CLANG 0
+#	define GEN_COMPILER_MSVC  0
+#	define GEN_COMPILER_GCC   1
 #elif defined( __clang__ )
 #	define GEN_COMPILER_CLANG 1
-#elif defined( __MINGW32__ )
-#	define GEN_COMPILER_MINGW 1
+#	define GEN_COMPILER_MSVC  0
+#	define GEN_COMPILER_GCC   1
+#else
 #	error Unknown compiler
 #endif
 
@@ -122,11 +127,23 @@
 
 #pragma endregion Mandatory Includes
 
-#if GEN_DONT_USE_NAMESPACE || GEN_COMPILER_C
-#	define GEN_NS
-#	define GEN_NS_BEGIN
-#	define GEN_NS_END
+#if GEN_DONT_USE_NAMESPACE
+#	if GEN_COMPILER_C
+#		define GEN_NS_ENUM_BEGIN
+#		define GEN_NS_ENUM_END
+#		define GEN_NS
+#		define GEN_NS_BEGIN
+#		define GEN_NS_END
+#	else
+#		define GEN_NS_ENUM_BEGIN namespace gen_internal_enums {
+#		define GEN_NS_ENUM_END   }
+#		define GEN_NS       ::
+#		define GEN_NS_BEGIN
+#		define GEN_NS_END
+#	endif
 #else
+#	define GEN_NS_ENUM_BEGIN namespace gen_internal_enums {
+#	define GEN_NS_ENUM_END   }
 #	define GEN_NS       gen::
 #	define GEN_NS_BEGIN namespace gen {
 #	define GEN_NS_END   }

@@ -205,4 +205,14 @@
 #	define foreach(Type, entry_id, iterable) for ( Type entry_id : iterable )
 #endif
 
+#if GENC_COMPILERC
+#	if __STDC_VERSION__ >= 202311L
+#		define enum_underlying(type) : type
+#	else
+#		define enum_underlying(type)
+#   endif
+#else
+#	define enum_underlying(type) : type
+#endif
+
 #pragma endregion Macros

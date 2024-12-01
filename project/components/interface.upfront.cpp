@@ -719,14 +719,14 @@ CodeEnum def_enum( StrC name
 				return CodeInvalid;
 		}
 
-		result->Type = specifier == EnumClass ?
+		result->Type = specifier == EnumDecl_Class ?
 			Enum_Class : Enum;
 
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = specifier == EnumClass ?
+		result->Type = specifier == EnumDecl_Class ?
 			Enum_Class_Fwd : Enum_Fwd;
 	}
 
@@ -1145,16 +1145,16 @@ CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
 
 	switch (type)
 	{
-		case EPreprocessCond::If:
+		case PreprocessCond_If:
 			result->Type = Preprocess_If;
 		break;
-		case EPreprocessCond::IfDef:
+		case PreprocessCond_IfDef:
 			result->Type = Preprocess_IfDef;
 		break;
-		case EPreprocessCond::IfNotDef:
+		case PreprocessCond_IfNotDef:
 			result->Type = Preprocess_IfNotDef;
 		break;
-		case EPreprocessCond::ElIf:
+		case PreprocessCond_ElIf:
 			result->Type = Preprocess_ElIf;
 		break;
 	}

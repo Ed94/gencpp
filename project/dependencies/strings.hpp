@@ -85,7 +85,7 @@ struct String
 	forceinline operator bool()              { return Data != nullptr; }
 	forceinline operator char*()             { return Data; }
 	forceinline operator char const*() const { return Data; }
-	forceinline operator StrC() const        { return { length(* this), Data }; }
+	forceinline operator StrC() const        { return { GEN_NS length(* this), Data }; }
 
 	String const& operator=(String const& other) const {
 		if (this == &other)
@@ -101,7 +101,7 @@ struct String
 	forceinline char const& operator[](ssize index) const { return Data[index]; }
 
 	forceinline char* begin() const { return Data; }
-	forceinline char* end() const   { return Data + length(* this); }
+	forceinline char* end() const   { return Data + GEN_NS length(* this); }
 
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 #pragma region Member Mapping

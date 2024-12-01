@@ -160,7 +160,7 @@ String CodeClass::to_string()
 
 void CodeClass::to_string_def( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	append( result, "class " );
@@ -204,7 +204,7 @@ void CodeClass::to_string_def( String& result )
 
 void CodeClass::to_string_fwd( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes )
@@ -314,7 +314,7 @@ String CodeEnum::to_string()
 
 void CodeEnum::to_string_def( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes || ast->UnderlyingType )
@@ -330,6 +330,12 @@ void CodeEnum::to_string_def( String& result )
 				, ast->UnderlyingType.to_string()
 				, ast->Body.to_string()
 			);
+		else if ( ast->UnderlyingTypeMacro )
+			append_fmt( result, "%S : %S\n{\n%S\n}"
+				, ast->Name
+				, ast->UnderlyingTypeMacro.to_string()
+				, ast->Body.to_string()
+			);
 
 		else append_fmt( result, "%S\n{\n%S\n}", ast->Name, ast->Body.to_string() );
 	}
@@ -341,7 +347,7 @@ void CodeEnum::to_string_def( String& result )
 
 void CodeEnum::to_string_fwd( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes )
@@ -360,7 +366,7 @@ void CodeEnum::to_string_fwd( String& result )
 
 void CodeEnum::to_string_class_def( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes || ast->UnderlyingType )
@@ -392,7 +398,7 @@ void CodeEnum::to_string_class_def( String& result )
 
 void CodeEnum::to_string_class_fwd( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	append( result, "enum class " );
@@ -474,7 +480,7 @@ String CodeFn::to_string()
 
 void CodeFn::to_string_def( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export" );
 
 	if ( ast->Attributes )
@@ -527,7 +533,7 @@ void CodeFn::to_string_def( String& result )
 
 void CodeFn::to_string_fwd( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes )
@@ -597,10 +603,10 @@ String CodeModule::to_string()
 
 void CodeModule::to_string( String& result )
 {
-	if (((u32(ModuleFlag::Export) & u32(ast->ModuleFlags)) == u32(ModuleFlag::Export)))
+	if (((u32(ModuleFlag_Export) & u32(ast->ModuleFlags)) == u32(ModuleFlag_Export)))
 		append( result, "export ");
 
-	if (((u32(ModuleFlag::Import) & u32(ast->ModuleFlags)) == u32(ModuleFlag::Import)))
+	if (((u32(ModuleFlag_Import) & u32(ast->ModuleFlags)) == u32(ModuleFlag_Import)))
 		append( result, "import ");
 
 	append_fmt( result, "%S;\n", ast->Name );
@@ -615,7 +621,7 @@ String CodeNS::to_string()
 
 void CodeNS::to_string( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	append_fmt( result, "namespace %S\n{\n%S\n}\n", ast->Name , ast->Body.to_string() );
@@ -641,7 +647,7 @@ String CodeOperator::to_string()
 
 void CodeOperator::to_string_def( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes )
@@ -695,7 +701,7 @@ void CodeOperator::to_string_def( String& result )
 
 void CodeOperator::to_string_fwd( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes )
@@ -985,7 +991,7 @@ String CodeStruct::to_string()
 
 void CodeStruct::to_string_def( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	append( result, "struct " );
@@ -1029,7 +1035,7 @@ void CodeStruct::to_string_def( String& result )
 
 void CodeStruct::to_string_fwd( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes )
@@ -1055,7 +1061,7 @@ String CodeTemplate::to_string()
 
 void CodeTemplate::to_string( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Params )
@@ -1073,7 +1079,7 @@ String CodeTypedef::to_string()
 
 void CodeTypedef::to_string( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	append( result, "typedef ");
@@ -1168,7 +1174,7 @@ String CodeUnion::to_string()
 
 void CodeUnion::to_string( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	append( result, "union " );
@@ -1213,7 +1219,7 @@ String CodeUsing::to_string()
 
 void CodeUsing::to_string( String& result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes )
@@ -1302,7 +1308,7 @@ void CodeVar::to_string( String& result )
 		return;
 	}
 
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag::Export ))
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
 	if ( ast->Attributes || ast->Specs )

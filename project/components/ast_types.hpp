@@ -174,7 +174,7 @@ struct AST_Enum
 			CodeAttributes Attributes;
 			char           _PAD_SPEC_  [ sizeof(AST*) ];
 			CodeType       UnderlyingType;
-			char	       _PAD_PARAMS_[ sizeof(AST*) ];
+			Code           UnderlyingTypeMacro;
 			CodeBody       Body;
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
@@ -186,7 +186,7 @@ struct AST_Enum
 	StringCached           Name;
 	CodeT                  Type;
 	ModuleFlag             ModuleFlags;
-	char 			       _PAD_UNUSED_[ sizeof(u32) ];
+	b32                    EnumUnderlyingMacro;
 };
 static_assert( sizeof(AST_Enum) == sizeof(AST), "ERROR: AST_Enum is not the same size as AST");
 

@@ -81,19 +81,19 @@ void define_constants()
 	Code::Invalid = make_code();
 	Code::Invalid.set_global();
 
-	t_empty                      = (CodeType) make_code();
-	t_empty->Type                = ECode::Typename;
-	scast(String, t_empty->Name) = get_cached_string( txt("") );
+	t_empty       = (CodeType) make_code();
+	t_empty->Type = ECode::Typename;
+	t_empty->Name = get_cached_string( txt("") );
 	t_empty.set_global();
 
-	access_private                      = make_code();
-	access_private->Type                = ECode::Access_Private;
-	scast(String, access_private->Name) = get_cached_string( txt("private:\n") );
+	access_private       = make_code();
+	access_private->Type = ECode::Access_Private;
+	access_private->Name = get_cached_string( txt("private:\n") );
 	access_private.set_global();
 
-	access_protected                      = make_code();
-	access_protected->Type                = ECode::Access_Protected;
-	scast(String, access_protected->Name) = get_cached_string( txt("protected:\n") );
+	access_protected       = make_code();
+	access_protected->Type = ECode::Access_Protected;
+	access_protected->Name = get_cached_string( txt("protected:\n") );
 	access_protected.set_global();
 
 	access_public       = make_code();
@@ -225,6 +225,10 @@ void define_constants()
 #	pragma pop_macro("internal")
 #	pragma pop_macro("local_persist")
 #	pragma pop_macro("neverinline")
+
+#	pragma push_macro("enum_underlying")
+
+#	pragma pop_macro("enum_underlying")
 
 #	undef def_constant_spec
 }

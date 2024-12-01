@@ -682,17 +682,17 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 
 	Token name { nullptr, 0, TokType::Invalid };
 
-	AccessSpec     access     = AccessSpec::Default;
+	AccessSpec     access     = AccessSpec_Default;
 	CodeType       parent     = { nullptr };
 	CodeBody       body       = { nullptr };
 	CodeAttributes attributes = { nullptr };
-	ModuleFlag     mflags     = ModuleFlag::None;
+	ModuleFlag     mflags     = ModuleFlag_None;
 
 	CodeClass result = CodeInvalid;
 
 	if ( check(TokType::Module_Export) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <ModuleFlags>
@@ -2534,7 +2534,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	if ( found_operator )
 	{
 		// Dealing with an operator overload
-		result = parse_operator_after_ret_type( ModuleFlag::None, attributes, specifiers, type );
+		result = parse_operator_after_ret_type( ModuleFlag_None, attributes, specifiers, type );
 		// <Attributes> <Specifiers> <ReturnType> operator ...
 	}
 	else
@@ -2552,7 +2552,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		if ( detected_capture && ! detected_comma )
 		{
 			// Dealing with a function
-			result = parse_function_after_name( ModuleFlag::None, attributes, specifiers, type, name );
+			result = parse_function_after_name( ModuleFlag_None, attributes, specifiers, type, name );
 			// <Attributes> <Specifiers> <ReturnType> <Name> ( ...
 		}
 		else
@@ -2565,7 +2565,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 			}
 
 			// Dealing with a variable
-			result = parse_variable_after_name( ModuleFlag::None, attributes, specifiers, type, name );
+			result = parse_variable_after_name( ModuleFlag_None, attributes, specifiers, type, name );
 			// <Attributes> <Specifiers> <ValueType> <Name> ...
 		}
 	}
@@ -3319,7 +3319,7 @@ CodeVar parse_variable_declaration_list()
 		eat( TokType::Identifier );
 		// , <Specifiers> <Name>
 
-		CodeVar var = parse_variable_after_name( ModuleFlag::None, NoCode, specifiers, NoCode, name );
+		CodeVar var = parse_variable_after_name( ModuleFlag_None, NoCode, specifiers, NoCode, name );
 		// , <Specifiers> <Name> ...
 
 		if ( ! result )
@@ -3589,6 +3589,8 @@ CodeEnum parse_enum( bool inplace_def )
 	}
 	// enum <class> <Attributes> <Name>
 
+	b32  use_macro_underlying = false;
+	Code underlying_macro = { nullptr };
 	if ( currtok.Type == TokType::Assign_Classifer )
 	{
 		eat( TokType::Assign_Classifer );
@@ -3602,6 +3604,17 @@ CodeEnum parse_enum( bool inplace_def )
 			return CodeInvalid;
 		}
 		// enum <class> <Attributes> <Name> : <UnderlyingType>
+	}
+	else if ( currtok.Type == TokType::Preprocess_Define )
+	{
+		// We'll support the enum_underlying macro
+		StrC sig = txt("enum_underlying");
+
+		if (currtok.Length >= sig.Len && str_compare(currtok.Text, sig.Ptr, sig.Len) == 0 )
+		{
+			use_macro_underlying = true;
+			underlying_macro     = parse_simple_preprocess( ETokType::Preprocess_Macro);
+		}
 	}
 
 	CodeBody body = { nullptr };
@@ -3770,10 +3783,17 @@ CodeEnum parse_enum( bool inplace_def )
 		result->Attributes = attributes;
 
 	if ( type )
-		result->UnderlyingType = type;
+	{
+		result->EnumUnderlyingMacro = use_macro_underlying;
+		if ( use_macro_underlying )
+			result->UnderlyingTypeMacro = underlying_macro;
+		else
+			result->UnderlyingType = type;
+	}
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
+
 
 	Context.pop();
 	return result;
@@ -3860,7 +3880,7 @@ CodeFriend parse_friend()
 		Context.Scope->Name = name;
 		// friend <ReturnType> <Name>
 
-		function = parse_function_after_name( ModuleFlag::None, NoCode, NoCode, type, name );
+		function = parse_function_after_name( ModuleFlag_None, NoCode, NoCode, type, name );
 
 		// Parameter list
 		// CodeParam params = parse_params();
@@ -3914,11 +3934,11 @@ CodeFn parse_function()
 
 	CodeAttributes attributes = { nullptr };
 	CodeSpecifiers specifiers = { nullptr };
-	ModuleFlag     mflags     = ModuleFlag::None;
+	ModuleFlag     mflags     = ModuleFlag_None;
 
 	if ( check(TokType::Module_Export) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <export>
@@ -4024,14 +4044,14 @@ CodeOperator parse_operator()
 
 	CodeAttributes attributes = { nullptr };
 	CodeSpecifiers specifiers = { nullptr };
-	ModuleFlag     mflags     = ModuleFlag::None;
+	ModuleFlag     mflags     = ModuleFlag_None;
 
 	SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
 	if ( check(TokType::Module_Export) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <export>
@@ -4212,11 +4232,11 @@ CodeTemplate parse_template()
 
 	push_scope();
 
-	ModuleFlag mflags = ModuleFlag::None;
+	ModuleFlag mflags = ModuleFlag_None;
 
 	if ( check( TokType::Module_Export ) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <export> template
@@ -4855,11 +4875,11 @@ CodeTypedef parse_typedef()
 	Code  array_expr  = { nullptr };
 	Code  type        = { nullptr };
 
-	ModuleFlag mflags = ModuleFlag::None;
+	ModuleFlag mflags = ModuleFlag_None;
 
 	if ( check(TokType::Module_Export) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <ModuleFlags>
@@ -5050,11 +5070,11 @@ CodeUnion parse_union( bool inplace_def )
 {
 	push_scope();
 
-	ModuleFlag mflags = ModuleFlag::None;
+	ModuleFlag mflags = ModuleFlag_None;
 
 	if ( check(TokType::Module_Export) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <ModuleFlags>
@@ -5199,12 +5219,12 @@ CodeUsing parse_using()
 
 	bool is_namespace = false;
 
-	ModuleFlag     mflags     = ModuleFlag::None;
+	ModuleFlag     mflags     = ModuleFlag_None;
 	CodeAttributes attributes = { nullptr };
 
 	if ( check(TokType::Module_Export) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <ModuleFlags>
@@ -5293,13 +5313,13 @@ CodeVar parse_variable()
 	SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
-	ModuleFlag	   mflags     = ModuleFlag::None;
+	ModuleFlag	   mflags     = ModuleFlag_None;
 	CodeAttributes attributes = { nullptr };
 	CodeSpecifiers specifiers = { nullptr };
 
 	if ( check(TokType::Module_Export) )
 	{
-		mflags = ModuleFlag::Export;
+		mflags = ModuleFlag_Export;
 		eat( TokType::Module_Export );
 	}
 	// <ModuleFlags>
