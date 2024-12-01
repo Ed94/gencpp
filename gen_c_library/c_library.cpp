@@ -18,6 +18,8 @@ GEN_NS_END
 
 #include "components/memory.fixed_arena.hpp"
 #include "components/misc.hpp"
+#include "components/containers.array.hpp"
+#include "components/containers.hashtable.hpp"
 
 using namespace gen;
 
@@ -114,6 +116,14 @@ int gen_main()
 		Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
 		Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
 
+		header.print_fmt( roll_own_dependencies_guard_start );
+		header.print( platform );
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
+
+		header.print( macros );
+		header.print( basic_types );
+		header.print( debug );
+
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
 		CodeBody memory        = def_body(ECode::Struct_Body);
 		for ( Code entry = parsed_memory.begin(); entry != parsed_memory.end(); ++ entry )
@@ -164,7 +174,12 @@ int gen_main()
 				break;
 				case ECode::Preprocess_If:
 				{
-					ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, memory );
+					ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory );
+				}
+				break;
+				case ECode::Preprocess_IfDef:
+				{
+					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory );
 				}
 				break;
 				case ECode::Preprocess_Pragma:
@@ -179,14 +194,58 @@ int gen_main()
 			}
 		}
 
-		header.print_fmt( roll_own_dependencies_guard_start );
-		header.print( platform );
-		header.print_fmt( "\nGEN_NS_BEGIN\n" );
-
-		header.print( macros );
-		header.print( basic_types );
-		header.print( debug );
 		header.print( memory );
+
+		Code string_ops = scan_file( project_dir "dependencies/string_ops.hpp" );
+		header.print( string_ops );
+
+		CodeBody printing_parsed = parse_file( project_dir "dependencies/printing.hpp" );
+		CodeBody printing        = def_body(ECode::Struct_Body);
+		for ( Code entry = printing_parsed.begin(); entry != printing_parsed.end(); ++ entry )
+		{
+			switch (entry->Type)
+			{
+				case ECode::Preprocess_IfDef:
+				{
+					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed );
+				}
+			}
+
+			if (entry->Type == ECode::Variable &&
+				contains(entry->Name, txt("Msg_Invalid_Value")))
+			{
+				CodeDefine define = def_define(entry->Name, entry->Value->Content);
+				printing.append(define);
+				continue;
+			}
+			printing.append(entry);
+		}
+
+		header.print(printing);
+
+		CodeBody parsed_containers = parse_file( project_dir "dependencies/containers.hpp" );
+		CodeBody containers        = def_body(ECode::Struct_Body);
+		for ( Code entry = parsed_containers.begin(); entry != parsed_containers.end(); ++ entry )
+		{
+			switch ( entry->Type )
+			{
+				case ECode::Preprocess_Pragma:
+				{
+					bool found = false;
+
+					found = swap_pragma_region_implementation( txt("Array"), gen_array_base, entry, containers);
+					if (found) break;
+
+					found = swap_pragma_region_implementation( txt("Hashtable"), gen_hashtable_base, entry, containers);
+					if (found) break;
+
+					containers.append(entry);
+				}
+				break;
+			}
+		}
+
+		header.print(containers);
 	}
 
 	header.print( pop_ignores );

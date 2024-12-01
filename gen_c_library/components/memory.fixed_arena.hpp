@@ -6,6 +6,7 @@ using namespace gen;
 CodeBody gen_fixed_arenas()
 {
 	CodeBody result = def_body(ECode::Global_Body);
+	result.append(def_pragma(txt("region FixedArena")));
 
 	char const* template_struct = stringize(
 		struct FixedArena_<Name>
@@ -114,6 +115,8 @@ CodeBody gen_fixed_arenas()
 )(expr, alignment)
 )"
 	)));
+
+	result.append(def_pragma(txt("endregion FixedArena")));
 
 	return result;
 }
