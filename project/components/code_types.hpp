@@ -11,37 +11,30 @@ struct CodeBody
 
 	void append( Code other )
 	{
-		if (other.is_body())
-		{
-			append( other.cast<CodeBody>() );
+		GEN_ASSERT(other.ast != nullptr);
+
+		if (other.is_body()) {
+			append( cast(CodeBody, & other) );
 		}
-		raw()->append( other.ast );
+
+		GEN_NS append( raw(), other.ast );
 	}
 	void append( CodeBody body )
 	{
-		for ( Code entry : body )
-		{
+		for ( Code entry : body ) {
 			append( entry );
 		}
 	}
-	bool has_entries()
-	{
-		return rcast( AST*, ast )->has_entries();
-	}
+	bool has_entries() { return GEN_NS has_entries(rcast( AST*, ast )); }
+	AST* raw()         { return rcast( AST*, ast ); }
+
 	void to_string( String& result );
 	void to_string_export( String& result );
-	AST* raw()
-	{
-		return rcast( AST*, ast );
-	}
-	AST_Body* operator->()
-	{
-		return ast;
-	}
-	operator Code()
-	{
-		return * rcast( Code*, this );
-	}
+
+	AST_Body* operator->() { return ast; }
+
+	operator Code() { return * rcast( Code*, this ); }
+
 #pragma region Iterator
 	Code begin()
 	{

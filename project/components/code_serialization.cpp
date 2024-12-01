@@ -176,14 +176,14 @@ void CodeClass::to_string_def( String& result )
 
 		append_fmt( result, "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
 
-		CodeType interface = ast->ParentType->Next->cast< CodeType >();
+		CodeType interface = ast->ParentType->Next->code_cast< CodeType >();
 		if ( interface )
 			append( result, "\n" );
 
 		while ( interface )
 		{
 			append_fmt( result, ", %S", interface.to_string() );
-			interface = interface->Next ? interface->Next->cast< CodeType >() : CodeType { nullptr };
+			interface = interface->Next ? interface->Next->code_cast< CodeType >() : CodeType { nullptr };
 		}
 	}
 	else if ( ast->Name )
@@ -353,7 +353,10 @@ void CodeEnum::to_string_fwd( String& result )
 	if ( ast->Attributes )
 		append_fmt( result, "%S ", ast->Attributes.to_string() );
 
-	append_fmt( result, "enum %S : %S", ast->Name, ast->UnderlyingType.to_string() );
+	if ( ast->UnderlyingType )
+		append_fmt( result, "enum %S : %S", ast->Name, ast->UnderlyingType.to_string() );
+	else
+		append_fmt( result, "enum %S", ast->Name );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 	{
@@ -1007,14 +1010,14 @@ void CodeStruct::to_string_def( String& result )
 
 		append_fmt( result, "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
 
-		CodeType interface = ast->ParentType->Next->cast< CodeType >();
+		CodeType interface = ast->ParentType->Next->code_cast< CodeType >();
 		if ( interface )
 			append( result, "\n" );
 
 		while ( interface )
 		{
 			append_fmt( result, ", %S", interface.to_string() );
-			interface = interface->Next ? interface->Next->cast< CodeType >() : CodeType { nullptr };
+			interface = interface->Next ? interface->Next->code_cast< CodeType >() : CodeType { nullptr };
 		}
 	}
 	else if ( ast->Name )

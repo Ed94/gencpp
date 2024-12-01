@@ -579,7 +579,7 @@ TokArray lex( StrC content )
 	if ( left <= 0 )
 	{
 		log_failure( "gen::lex: no tokens found (only whitespace provided)" );
-		return { { nullptr }, 0 };
+		return { {}, 0 };
 	}
 
 	foreach( StringCached, entry, PreprocessorDefines )
@@ -652,7 +652,7 @@ TokArray lex( StrC content )
 						continue;
 
 					case Lex_ReturnNull:
-						return { { nullptr }, 0 };
+						return { {}, 0 };
 				}
 			}
 			case '.':
@@ -1256,7 +1256,7 @@ TokArray lex( StrC content )
 	if ( num(Tokens) == 0 )
 	{
 		log_failure( "Failed to lex any tokens" );
-		return { { nullptr }, 0 };
+		return { {}, 0 };
 	}
 
 	clear(defines);

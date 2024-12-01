@@ -4,56 +4,62 @@
 #endif
 
 inline
-void AST::append( AST* other )
+void append( AST* self, AST* other )
 {
+	GEN_ASSERT(self  != nullptr);
+	GEN_ASSERT(other != nullptr);
+
 	if ( other->Parent )
-		other = other->duplicate();
+		other = duplicate(other);
 
-	other->Parent = this;
+	other->Parent = self;
 
-	if ( Front == nullptr )
+	if ( self->Front == nullptr )
 	{
-		Front = other;
-		Back  = other;
+		self->Front = other;
+		self->Back  = other;
 
-		NumEntries++;
+		self->NumEntries++;
 		return;
 	}
 
 	AST*
-	Current       = Back;
+	Current       = self->Back;
 	Current->Next = other;
 	other->Prev   = Current;
-	Back          = other;
-	NumEntries++;
+	self->Back    = other;
+	self->NumEntries++;
 }
 
 inline
-Code& AST::entry( u32 idx )
+Code* entry( AST* self, u32 idx )
 {
-	AST** current = & Front;
+	GEN_ASSERT(self != nullptr);
+	AST** current = & self->Front;
 	while ( idx >= 0 && current != nullptr )
 	{
 		if ( idx == 0 )
-			return * rcast( Code*, current);
+			return rcast( Code*, current);
 
 		current = & ( * current )->Next;
 		idx--;
 	}
 
-	return * rcast( Code*, current);
+	return rcast( Code*, current);
 }
 
 inline
-bool AST::has_entries()
+bool has_entries(AST* self)
 {
-	return NumEntries > 0;
+	GEN_ASSERT(self != nullptr);
+	return self->NumEntries > 0;
 }
 
 inline
-bool AST::is_body()
+bool is_body(AST* self)
 {
-	switch (Type)
+	GEN_ASSERT(self != nullptr);
+	switch (self->Type)
 	{
 		case ECode::Enum_Body:
 		case ECode::Class_Body:
@@ -70,9 +76,10 @@ bool AST::is_body()
 }
 
 inline
-char const* AST::type_str()
+char const* type_str(AST* self)
 {
-	return ECode::to_str( Type );
+	GEN_ASSERT(self != nullptr);
+	return ECode::to_str( self->Type );
 }
 
 inline
@@ -117,7 +124,7 @@ void CodeParam::append( CodeParam other )
 	AST* entry = (AST*) other.ast;
 
 	if ( entry->Parent )
-		entry = entry->duplicate();
+		entry = GEN_NS duplicate( entry );
 
 	entry->Parent = self;
 

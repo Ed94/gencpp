@@ -11,7 +11,7 @@ inline char const* Code::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code Code::duplicate()
@@ -87,7 +87,7 @@ inline char const* CodeBody::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeBody::duplicate()
@@ -163,7 +163,7 @@ inline char const* CodeAttributes::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeAttributes::duplicate()
@@ -259,7 +259,7 @@ inline char const* CodeComment::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeComment::duplicate()
@@ -355,7 +355,7 @@ inline char const* CodeConstructor::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeConstructor::duplicate()
@@ -451,7 +451,7 @@ inline char const* CodeClass::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeClass::duplicate()
@@ -527,7 +527,7 @@ inline char const* CodeDefine::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeDefine::duplicate()
@@ -623,7 +623,7 @@ inline char const* CodeDestructor::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeDestructor::duplicate()
@@ -719,7 +719,7 @@ inline char const* CodeEnum::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeEnum::duplicate()
@@ -815,7 +815,7 @@ inline char const* CodeExec::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeExec::duplicate()
@@ -911,7 +911,7 @@ inline char const* CodeExtern::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeExtern::duplicate()
@@ -1007,7 +1007,7 @@ inline char const* CodeFriend::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeFriend::duplicate()
@@ -1103,7 +1103,7 @@ inline char const* CodeFn::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeFn::duplicate()
@@ -1199,7 +1199,7 @@ inline char const* CodeInclude::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeInclude::duplicate()
@@ -1295,7 +1295,7 @@ inline char const* CodeModule::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeModule::duplicate()
@@ -1391,7 +1391,7 @@ inline char const* CodeNS::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeNS::duplicate()
@@ -1487,7 +1487,7 @@ inline char const* CodeOperator::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeOperator::duplicate()
@@ -1583,7 +1583,7 @@ inline char const* CodeOpCast::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeOpCast::duplicate()
@@ -1679,7 +1679,7 @@ inline char const* CodeParam::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeParam::duplicate()
@@ -1755,7 +1755,7 @@ inline char const* CodePragma::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodePragma::duplicate()
@@ -1851,7 +1851,7 @@ inline char const* CodePreprocessCond::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodePreprocessCond::duplicate()
@@ -1947,7 +1947,7 @@ inline char const* CodeSpecifiers::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeSpecifiers::duplicate()
@@ -2023,7 +2023,7 @@ inline char const* CodeStruct::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeStruct::duplicate()
@@ -2099,7 +2099,7 @@ inline char const* CodeTemplate::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeTemplate::duplicate()
@@ -2195,7 +2195,7 @@ inline char const* CodeType::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeType::duplicate()
@@ -2291,7 +2291,7 @@ inline char const* CodeTypedef::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeTypedef::duplicate()
@@ -2387,7 +2387,7 @@ inline char const* CodeUnion::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeUnion::duplicate()
@@ -2483,7 +2483,7 @@ inline char const* CodeUsing::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeUsing::duplicate()
@@ -2579,7 +2579,7 @@ inline char const* CodeVar::debug_str()
 {
 	if ( ast == nullptr )
 		return "Code::debug_str: AST is null!";
-	return rcast( AST*, ast )->debug_str();
+	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeVar::duplicate()

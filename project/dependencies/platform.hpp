@@ -125,9 +125,13 @@
 #		include <intrin.h>
 #	endif
 
+#if GEN_COMPILER_C
+#include <assert.h>
+#endif
+
 #pragma endregion Mandatory Includes
 
-#if GEN_DONT_USE_NAMESPACE
+#if GEN_DONT_USE_NAMESPACE || GEN_COMPILER_C
 #	if GEN_COMPILER_C
 #		define GEN_NS_ENUM_BEGIN
 #		define GEN_NS_ENUM_END

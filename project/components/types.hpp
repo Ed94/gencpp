@@ -25,7 +25,7 @@ enum AccessSpec enum_underlying(u32)
 
 	AccessSpec_SizeDef = GEN_U32_MAX,
 };
-static_assert( size_of(AccessSpec) == size_of(u32));
+static_assert( size_of(AccessSpec) == size_of(u32), "AccessSpec not u32 size" );
 
 inline
 char const* to_str( AccessSpec type )
@@ -54,7 +54,7 @@ enum CodeFlag enum_underlying(u32)
 
 	CodeFlag_SizeDef = GEN_U32_MAX,
 };
-static_assert( size_of(CodeFlag) == size_of(u32));
+static_assert( size_of(CodeFlag) == size_of(u32), "CodeFlag not u32 size" );
 
 // Used to indicate if enum definitoin is an enum class or regular enum.
 enum EnumDecl enum_underlying(u8)
@@ -77,7 +77,7 @@ enum ModuleFlag enum_underlying(u32)
 
 	ModuleFlag_SizeDef = GEN_U32_MAX,
 };
-static_assert( size_of(ModuleFlag) == size_of(u32));
+static_assert( size_of(ModuleFlag) == size_of(u32), "ModuleFlag not u32 size" );
 
 inline
 StrC to_str( ModuleFlag flag )
@@ -110,4 +110,4 @@ enum EPreprocessCond enum_underlying(u32)
 
 	EPreprocessCond_SizeDef = GEN_U32_MAX,
 };
-static_assert( size_of(EPreprocessCond) == size_of(u32));
+static_assert( size_of(EPreprocessCond) == size_of(u32), "EPreprocessCond not u32 size" );

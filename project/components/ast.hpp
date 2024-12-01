@@ -146,6 +146,11 @@ namespace parser
 	struct Token;
 }
 
+template< class Type> forceinline Type tmpl_cast( Code* self ) { return * rcast( Type*, self ); }
+#if ! GEN_COMPILER_C && 0
+template< class Type> forceinline Type tmpl_cast( Code& self ) { return * rcast( Type*, & self ); }
+#endif
+
 /*
 	AST* wrapper
 	- Not constantly have to append the '*' as this is written often..
@@ -178,7 +183,7 @@ struct Code
 	Using_Code( Code );
 
 	template< class Type >
-	forceinline Type cast()
+	forceinline Type code_cast()
 	{
 		return * rcast( Type*, this );
 	}
@@ -248,32 +253,52 @@ static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 // Desired width of the AST data structure.
 constexpr int const AST_POD_Size = 128;
 
+void        append     ( AST* self, AST* other );
+char const* debug_str  ( AST* self );
+AST*        duplicate  ( AST* self );
+Code*       entry      ( AST* self, u32 idx );
+bool        has_entries( AST* self );
+bool        is_body    ( AST* self );
+String      to_string  ( AST* self );
+char const* type_str   ( AST* self );
+
+#if GEN_CPP_SUPPORT_REFERENCES
+void        append   ( AST& self, AST& other ) { return append(& self, & other); }
+bool        is_body  ( AST& self )             { return is_body(& self); }
+char const* debug_str( AST& self )             { return debug_str( & self ); }
+String      to_string( AST& self )             { return to_string( & self ); }
+char const* type_str ( AST& self )             { return type_str( & self ); }
+#endif
+
 /*
 	Simple AST POD with functionality to seralize into C++ syntax.
 */
 struct AST
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 #	pragma region Member Functions
-	void        append     ( AST* other );
-	char const* debug_str  ();
-	AST*        duplicate  ();
-	Code&       entry      ( u32 idx );
+	void        append     ( AST* other ) { GEN_NS append(this, other); }
+	char const* debug_str  ()             { return GEN_NS debug_str(this); }
+	AST*        duplicate  ()             { return GEN_NS duplicate(this); }
+	Code*       entry      ( u32 idx )    { return GEN_NS entry(this, idx); }
 	bool        has_entries();
 	bool        is_equal   ( AST* other );
-	bool        is_body();
-	char const* type_str();
+	bool        is_body()                  { return GEN_NS is_body(this); }
+	char const* type_str()                 { return GEN_NS type_str(this); }
 	bool        validate_body();
 
-	String to_string();
-
-	neverinline
-	void to_string( String& result );
+	String to_string(); //{ return GEN_NS to_string(this); }
 
 	template< class Type >
-	forceinline Type cast()
+	forceinline Type code_cast()
 	{
 		return * this;
 	}
+
+	neverinline
+	void to_string( String& result );
+#	pragma endregion Member Functions
+#endif
 
 	operator Code();
 	operator CodeBody();
@@ -305,7 +330,6 @@ struct AST
 	operator CodeUnion();
 	operator CodeUsing();
 	operator CodeVar();
-#	pragma endregion Member Functions
 
 	constexpr static
 	int ArrSpecs_Cap =
@@ -446,12 +470,9 @@ struct AST_POD
 	};
 };
 
-struct test {
-	SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
-	AST* NextSpecs;                         // Specifiers; If ArrSpecs is full, then NextSpecs is used.
-};
 
-constexpr int pls = sizeof(test);
+// TODO(Ed): Convert
+String      to_string  ( AST* self ) { return self->to_string(); }
 
 // Its intended for the AST to have equivalent size to its POD.
 // All extra functionality within the AST namespace should just be syntatic sugar.

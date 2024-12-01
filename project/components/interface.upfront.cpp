@@ -1925,7 +1925,7 @@ CodeBody def_global_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			case Global_Body:
-				result.append( entry.cast<CodeBody>() ) ;
+				result.append( entry.code_cast<CodeBody>() ) ;
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
@@ -1966,7 +1966,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			case Global_Body:
-				result.append( entry.cast<CodeBody>() ) ;
+				result.append( entry.code_cast<CodeBody>() ) ;
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES

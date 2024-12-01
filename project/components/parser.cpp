@@ -132,12 +132,12 @@ bool TokArray::__eat( TokType type )
 internal
 void init()
 {
-	Tokens = array_init_reserve<Token>( allocator_info(LexArena)
+	Tokens = array_init_reserve<Token>( allocator_info( & LexArena)
 		, ( LexAllocator_Size - sizeof( ArrayHeader ) ) / sizeof(Token)
 	);
 
-	fixed_arena_init(defines_map_arena);
-	defines = hashtable_init_reserve<StrC>( allocator_info(defines_map_arena), 256 );
+	fixed_arena_init(& defines_map_arena);
+	defines = hashtable_init_reserve<StrC>( allocator_info( & defines_map_arena), 256 );
 }
 
 internal
@@ -714,7 +714,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeType> interfaces; {
 		Arena arena = arena_init_from_memory( interface_arr_mem, kilobytes(4) );
-		interfaces  = array_init_reserve<CodeType>( allocator_info(arena), 4 );
+		interfaces  = array_init_reserve<CodeType>( allocator_info(& arena), 4 );
 	}
 
 	// TODO(Ed) : Make an AST_DerivedType, we'll store any arbitary derived type into there as a linear linked list of them.
@@ -4910,10 +4910,12 @@ CodeTypedef parse_typedef()
 			||	currtok.Type == TokType::Decl_Struct
 			||	currtok.Type == TokType::Decl_Union;
 
+
 		// This code is highly correlated with parse_complicated_definition
 		if ( is_complicated )
 		{
 			TokArray tokens = Context.Tokens;
+			TokType  which  = currtok.Type;
 
 			s32 idx = tokens.Idx;
 			s32 level = 0;
@@ -4929,73 +4931,80 @@ CodeTypedef parse_typedef()
 					break;
 			}
 
-			if ( (idx - 2 ) == tokens.Idx )
+			Token pre_foward_tok = currtok;
+			if ( (idx - 3 ) == tokens.Idx )
 			{
+				log_fmt("Identified forward typedef\n");
 				// Its a forward declaration only
-				type = parse_forward_or_definition( currtok.Type, from_typedef );
+				type = parse_forward_or_definition( which, from_typedef );
 				// <ModuleFalgs> typedef <UnderlyingType: Forward Decl>
 			}
-
-			Token tok = tokens[ idx - 1 ];
-			if ( tok.Type == TokType::Identifier )
+			else
 			{
-				tok = tokens[ idx - 2 ];
-
-				bool is_indirection = tok.Type == TokType::Ampersand
-				||                    tok.Type == TokType::Star;
-
-				bool ok_to_parse = false;
-
-				if ( tok.Type == TokType::BraceCurly_Close )
+				Token tok = tokens.Arr[ idx - 1 ];
+				if ( tok.Type == TokType::Identifier )
 				{
-					// Its an inplace definition
-					// typdef <which> <type_identifier> { ... } <identifier>;
-					ok_to_parse = true;
-				}
-				else if ( tok.Type == TokType::Identifier && tokens[ idx - 3 ].Type == TokType::Decl_Struct )
-				{
-					// Its a variable with type ID using struct namespace.
-					// <which> <type_identifier> <identifier>;
-					ok_to_parse = true;
-				}
-				else if ( is_indirection )
-				{
-					// Its a indirection type with type ID using struct namespace.
-					// <which> <type_identifier>* <identifier>;
-					ok_to_parse = true;
-				}
+					log_fmt("Found id\n");
+					tok = tokens.Arr[ idx - 2 ];
 
-				if ( ! ok_to_parse )
+					bool is_indirection = tok.Type == TokType::Ampersand
+					||                    tok.Type == TokType::Star;
+
+					bool ok_to_parse = false;
+
+					Token temp_3 = tokens.Arr[ idx - 3 ];
+
+					if ( tok.Type == TokType::BraceCurly_Close )
+					{
+						// Its an inplace definition
+						// typedef <which> <type_identifier> { ... } <identifier>;
+						ok_to_parse = true;
+					}
+					else if ( tok.Type == TokType::Identifier && tokens.Arr[ idx - 3 ].Type == which )
+					{
+						// Its a variable with type ID using which namespace.
+						// typedef <which> <type_identifier> <identifier>;
+						ok_to_parse = true;
+					}
+					else if ( is_indirection )
+					{
+						// Its a indirection type with type ID using struct namespace.
+						// typedef <which> <type_identifier>* <identifier>;
+						ok_to_parse = true;
+					}
+
+					if ( ! ok_to_parse )
+					{
+						log_failure( "Unsupported or bad member definition after struct declaration\n%s", Context.to_string() );
+						Context.pop();
+						return CodeInvalid;
+					}
+
+					// TODO(Ed) : I'm not sure if I have to use parse_type here, I'd rather not as that would complicate parse_type.
+					// type = parse_type();
+					type = parse_forward_or_definition( which, from_typedef );
+					// <ModuleFalgs> typedef <UnderlyingType>
+				}
+				else if ( tok.Type == TokType::BraceCurly_Close )
+				{
+					// Its a definition
+					// <which> { ... };
+					type = parse_forward_or_definition( currtok.Type, from_typedef );
+					// <ModuleFalgs> typedef <UnderlyingType>
+				}
+				else if ( tok.Type == TokType::BraceSquare_Close)
+				{
+					// Its an array definition
+					// <which> <type_identifier> <identifier> [ ... ];
+					type = parse_type();
+					// <ModuleFalgs> typedef <UnderlyingType>
+				}
+				else
 				{
 					log_failure( "Unsupported or bad member definition after struct declaration\n%s", Context.to_string() );
 					Context.pop();
 					return CodeInvalid;
 				}
-
-				// TODO(Ed) : I'm not sure if I have to use parse_type here, I'd rather not as that would complicate parse_type.
-				// type = parse_type();
-				type = parse_forward_or_definition( currtok.Type, from_typedef );
-				// <ModuleFalgs> typedef <UnderlyingType>
-			}
-			else if ( tok.Type == TokType::BraceCurly_Close )
-			{
-				// Its a definition
-				// <which> { ... };
-				type = parse_forward_or_definition( currtok.Type, from_typedef );
-				// <ModuleFalgs> typedef <UnderlyingType>
-			}
-			else if ( tok.Type == TokType::BraceSquare_Close)
-			{
-				// Its an array definition
-				// <which> <type_identifier> <identifier> [ ... ];
-				type = parse_type();
-				// <ModuleFalgs> typedef <UnderlyingType>
-			}
-			else
-			{
-				log_failure( "Unsupported or bad member definition after struct declaration\n%s", Context.to_string() );
-				Context.pop();
-				return CodeInvalid;
 			}
 		}
 		else
@@ -5057,7 +5066,7 @@ CodeTypedef parse_typedef()
 	// Type needs to be aware of its parent so that it can be serialized properly.
 
 	if ( type->Type == Typename && array_expr && array_expr->Type != Invalid )
-		type.cast<CodeType>()->ArrExpr = array_expr;
+		type.code_cast<CodeType>()->ArrExpr = array_expr;
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;

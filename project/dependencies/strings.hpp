@@ -305,7 +305,7 @@ bool are_equal(String const& lhs, StrC rhs)
 		return false;
 
 	for (ssize idx = 0; idx < length(lhs); ++idx)
-		if (lhs[idx] != rhs[idx])
+		if (lhs[idx] != rhs.Ptr[idx])
 			return false;
 
 	return true;
@@ -319,7 +319,7 @@ ssize avail_space(String const& str) {
 
 inline
 char& back(String& str) {
-	return str.Data[length(str) - 1];
+	return str[length(str) - 1];
 }
 
 inline
@@ -335,7 +335,7 @@ bool contains(String const& str, StrC substring)
 
 	for (ssize idx = 0; idx <= main_len - sub_len; ++idx)
 	{
-		if (str_compare(str.Data + idx, substring.Ptr, sub_len) == 0)
+		if (str_compare(str + idx, substring.Ptr, sub_len) == 0)
 			return true;
 	}
 
@@ -355,7 +355,7 @@ bool contains(String const& str, String const& substring)
 
 	for (ssize idx = 0; idx <= main_len - sub_len; ++idx)
 	{
-		if (str_compare(str.Data + idx, substring.Data, sub_len) == 0)
+		if (str_compare(str + idx, substring, sub_len) == 0)
 			return true;
 	}
 
@@ -380,7 +380,7 @@ String duplicate(String const& str, AllocatorInfo allocator) {
 
 inline
 void free(String& str) {
-   if (!str.Data)
+   if (! str)
    	return;
 
    StringHeader& header = get_header(str);
@@ -389,7 +389,7 @@ void free(String& str) {
 
 inline
 StringHeader& get_header(String& str) {
-   return *(StringHeader*)(str.Data - sizeof(StringHeader));
+   return *(StringHeader*)(scast(char*, str) - sizeof(StringHeader));
 }
 
 inline

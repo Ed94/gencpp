@@ -30,7 +30,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				last = & back(Global_AllocatorBuckets);
 			}
 
-			return alloc_align( allocator_info(* last), size, alignment );
+			return alloc_align( allocator_info(last), size, alignment );
 		}
 		case EAllocation_FREE:
 		{
@@ -306,7 +306,7 @@ void deinit()
 	do
 	{
 		Pool* code_pool = & CodePools[index];
-		free(* code_pool);
+		free(code_pool);
 		index++;
 	}
 	while ( left--, left );
@@ -316,7 +316,7 @@ void deinit()
 	do
 	{
 		Arena* string_arena = & StringArenas[index];
-		free(* string_arena);
+		free(string_arena);
 		index++;
 	}
 	while ( left--, left );
@@ -326,7 +326,7 @@ void deinit()
 	free(CodePools);
 	free(StringArenas);
 
-	free(LexArena);
+	free(& LexArena);
 
 	free(PreprocessorDefines);
 
@@ -335,7 +335,7 @@ void deinit()
 	do
 	{
 		Arena* bucket = & Global_AllocatorBuckets[ index ];
-		free(* bucket);
+		free(bucket);
 		index++;
 	}
 	while ( left--, left );
@@ -387,7 +387,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 		last = & back(StringArenas);
 	}
 
-	return allocator_info(* last);
+	return allocator_info(last);
 }
 
 // Will either make or retrive a code string.
@@ -425,7 +425,7 @@ Code make_code()
 		allocator = & back(CodePools);
 	}
 
-	Code result { rcast( AST*, alloc( allocator_info(* allocator), sizeof(AST) )) };
+	Code result { rcast( AST*, alloc( allocator_info(allocator), sizeof(AST) )) };
 	mem_set( result.ast, 0, sizeof(AST) );
 	// result->Type = ECode::Invalid;
 

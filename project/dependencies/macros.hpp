@@ -23,7 +23,11 @@
 #define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
 #endif
 
+
 #if ! GEN_C_COMPILER
+#	ifndef cast
+#	define cast( type, value ) (tmpl_cast<type>( value ))
+#	endif
 #	ifndef ccast
 #	define ccast( type, value ) ( const_cast< type >( (value) ) )
 #	endif
@@ -37,11 +41,14 @@
 #	define scast( type, value ) static_cast< type >( value )
 #	endif
 #else
+#	ifndef cast
+#	define cast( type, value )  ( (type)(value) )
+#	endif
 #	ifndef ccast
 #	define ccast( type, value ) ( (type)(value) )
 #	endif
 #	ifndef pcast
-#	define pcast( type, value ) ( (type)(value) )
+#	define pcast( type, value ) ( * (type*)(value) )
 #	endif
 #	ifndef rcast
 #	define rcast( type, value ) ( (type)(value) )
@@ -181,8 +188,14 @@
 #	endif
 #endif
 
-#if !defined(GEN_SUPPORT_CPP_MEMBER_FEATURES) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
-#	define GEN_SUPPORT_CPP_MEMBER_FEATURES 0
+#if !defined(GEN_SUPPORT_CPP_REFERENCES) && (GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
+#	undef    GEN_SUPPORT_CPP_REFERENCES
+#	define   GEN_SUPPORT_CPP_REFERENCES 0
+#endif
+
+#if !defined(GEN_SUPPORT_CPP_MEMBER_FEATURES) && (GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
+#	undef    GEN_SUPPORT_CPP_MEMBER_FEATURES
+#	define   GEN_SUPPORT_CPP_MEMBER_FEATURES 0
 #endif
 
 #if !defined(typeof) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
@@ -213,6 +226,12 @@
 #   endif
 #else
 #	define enum_underlying(type) : type
+#endif
+
+#if GEN_COMPILER_C
+#	ifndef nullptr
+#		define nullptr NULL
+#	endif
 #endif
 
 #pragma endregion Macros

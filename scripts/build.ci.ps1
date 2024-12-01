@@ -226,6 +226,30 @@ if ( $c_library )
 			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
+
+	$unit       = join-path $path_c_library "gen.c"
+	$executable = join-path $path_build     "gen_c_library_test.exe"
+
+	if ($vendor -eq "clang") {
+		$compiler_args += "-x"
+		$compiler_args += "c"
+	} elseif ($vendor -eq "msvc") {
+		$compiler_args += "/TC"
+	}
+
+	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_c_library
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning c_library test"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
 }
 
 if ( $unreal )
