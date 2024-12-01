@@ -106,7 +106,7 @@
 #  define GEN_GCC_VERSION_CHECK(major,minor,patch) (0)
 #endif
 
-#ifndef GEN_COMPIELR_C
+#ifndef GEN_COMPILER_C
 #	if defined(__STDC_VERSION__)
 #		define GEN_COMPILER_C 1
 #	else

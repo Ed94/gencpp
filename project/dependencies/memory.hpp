@@ -14,23 +14,13 @@
 #define GEN__HIGHS         ( GEN__ONES * ( GEN_U8_MAX / 2 + 1 ) )
 #define GEN__HAS_ZERO( x ) ( ( ( x ) - GEN__ONES ) & ~( x ) & GEN__HIGHS )
 
-#if ! GEN_COMPILER_C
-	template< class Type >
-	void swap( Type& a, Type& b )
-	{
-		Type tmp = a;
-		a = b;
-		b = tmp;
-	}
-#else
-	#define swap( a, b ) \
-	do {                 \
-		typeof(a)        \
-		temp = (a);      \
-		(a)  = (b);      \
-		(b)  = temp;     \
-	} while(0)
-#endif
+template< class Type >
+void swap( Type& a, Type& b )
+{
+	Type tmp = a;
+	a = b;
+	b = tmp;
+}
 
 //! Checks if value is power of 2.
 b32 is_power_of_two( ssize x );

@@ -4406,6 +4406,7 @@ CodeTemplate parse_template()
 	result->Params      = params;
 	result->Declaration = definition;
 	result->ModuleFlags = mflags;
+	// result->Name        = definition->Name;
 
 	Context.pop();
 	return result;

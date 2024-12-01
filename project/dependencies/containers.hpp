@@ -14,20 +14,17 @@ template<class TType>
 using TRemoveConst = typename RemoveConst<TType>::Type;
 
 #pragma region Array
-#if ! GEN_COMPILER_C
 #define Array(Type) Array<Type>
 
 // #define array_init(Type, ...)         array_init        <Type>(__VA_ARGS__)
 // #define array_init_reserve(Type, ...) array_init_reserve<Type>(__VA_ARGS__)
-#endif
 
 struct ArrayHeader;
 
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
-template<class Type> struct Array;
+	template<class Type> struct Array;
 #else
-template<class Type>
-using Array = Type*;
+	template<class Type> using Array = Type*;
 #endif
 
 usize array_grow_formula(ssize value);

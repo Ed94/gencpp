@@ -205,7 +205,7 @@
 #	define foreach(Type, entry_id, iterable) for ( Type entry_id : iterable )
 #endif
 
-#if GENC_COMPILERC
+#if GEN_COMPILER_C
 #	if __STDC_VERSION__ >= 202311L
 #		define enum_underlying(type) : type
 #	else

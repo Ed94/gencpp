@@ -90,6 +90,7 @@ CodeBody parse_file( const char* path )
 {
 	FileContents file = file_read_contents( GlobalAllocator, true, path );
 	CodeBody     code = parse_global_body( { file.size, (char const*)file.data } );
+	log_fmt("\nParsed: %s\n", path);
 	return code;
 }
 
@@ -126,7 +127,7 @@ int gen_main()
 		header.print( debug );
 
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
-		CodeBody memory        = def_body(ECode::Struct_Body);
+		CodeBody memory        = def_body(ECode::Global_Body);
 		for ( Code entry = parsed_memory.begin(); entry != parsed_memory.end(); ++ entry )
 		{
 			switch (entry->Type)
@@ -145,10 +146,30 @@ int gen_main()
 					CodeFn fn = entry.cast<CodeFn>();
 					s32 constexpr_found = fn->Specs.remove( ESpecifier::Constexpr );
 					if (constexpr_found > -1) {
-						log_fmt("Found constexpr proc\n");
+						log_fmt("Found constexpr: %S\n", entry->to_string());
 						fn->Specs.append(ESpecifier::Inline);
 					}
 					memory.append(entry);
+				}
+				break;
+				case ECode::Template:
+				{
+					CodeTemplate tmpl = entry.cast<CodeTemplate>();
+					if ( tmpl->Declaration->Name.contains(txt("swap")))
+					{
+						CodeBody macro_swap = parse_global_body( txt(R"(
+#define swap( a, b )              \
+	do                            \
+	{                             \
+		typeof( a ) temp = ( a ); \
+		( a )            = ( b ); \
+		( b )            = temp;  \
+	} while ( 0 )
+)"
+						));
+						memory.append(macro_swap);
+						log_fmt( "\nmacro swap: %S\n", macro_swap.to_string() );
+					}
 				}
 				break;
 				case ECode::Class:
@@ -175,17 +196,26 @@ int gen_main()
 				break;
 				case ECode::Preprocess_If:
 				{
-					ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory );
+					b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory );
+					if (found) break;
+
+					memory.append(entry);
 				}
 				break;
 				case ECode::Preprocess_IfDef:
 				{
-					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory );
+					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory );
+					if (found) break;
+
+					memory.append(entry);
 				}
 				break;
 				case ECode::Preprocess_Pragma:
 				{
-					swap_pragma_region_implementation( txt("FixedArena"), gen_fixed_arenas, entry, memory);
+					b32 found = swap_pragma_region_implementation( txt("FixedArena"), gen_fixed_arenas, entry, memory);
+					if (found) break;
+
+					memory.append(entry);
 				}
 				break;
 				default: {
@@ -194,69 +224,84 @@ int gen_main()
 				break;
 			}
 		}
-
-		header.print( memory );
+		header.print( dump_to_scratch_and_retireve(memory) );
 
 		Code string_ops = scan_file( project_dir "dependencies/string_ops.hpp" );
 		header.print( string_ops );
 
 		CodeBody printing_parsed = parse_file( project_dir "dependencies/printing.hpp" );
-		CodeBody printing        = def_body(ECode::Struct_Body);
+		CodeBody printing        = def_body(ECode::Global_Body);
 		for ( Code entry = printing_parsed.begin(); entry != printing_parsed.end(); ++ entry )
 		{
 			switch (entry->Type)
 			{
 				case ECode::Preprocess_IfDef:
 				{
-					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed );
+					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed );
+					if (found) break;
+
+					printing.append(entry);
 				}
-			}
-
-			if (entry->Type == ECode::Variable &&
-				contains(entry->Name, txt("Msg_Invalid_Value")))
-			{
-				CodeDefine define = def_define(entry->Name, entry->Value->Content);
-				printing.append(define);
-				continue;
-			}
-			printing.append(entry);
-		}
-
-		header.print(printing);
-
-		CodeBody parsed_containers = parse_file( project_dir "dependencies/containers.hpp" );
-		CodeBody containers        = def_body(ECode::Struct_Body);
-		for ( Code entry = parsed_containers.begin(); entry != parsed_containers.end(); ++ entry )
-		{
-			switch ( entry->Type )
-			{
-				case ECode::Preprocess_Pragma:
+				break;
+				case ECode::Variable:
 				{
-					bool found = false;
-
-					found = swap_pragma_region_implementation( txt("Array"), gen_array_base, entry, containers);
-					if (found) {
-						break;
+					if (contains(entry->Name, txt("Msg_Invalid_Value")))
+					{
+						CodeDefine define = def_define(entry->Name, entry->Value->Content);
+						printing.append(define);
+						continue;
 					}
-
-					found = swap_pragma_region_implementation( txt("HashTable"), gen_hashtable_base, entry, containers);
-					if (found) {
-						break;
-					}
-
-					containers.append(entry);
+					printing.append(entry);
 				}
+				break;
+				default:
+					printing.append(entry);
 				break;
 			}
 		}
+		header.print(dump_to_scratch_and_retireve(printing));
 
-		header.print(containers);
+		CodeBody containers = def_body(ECode::Global_Body);
+		{
+			containers.append( def_pragma(code(region Containers)));
+
+			containers.append( gen_array_base() );
+			containers.append( gen_hashtable_base() );
+
+			containers.append( def_pragma(code(endregion Containers)));
+		}
+		header.print(fmt_newline);
+		header.print(dump_to_scratch_and_retireve(containers));
+
+		Code hashing = scan_file( project_dir "dependencies/hashing.hpp" );
+		header.print( hashing );
+
+		CodeBody parsed_strings = parse_file( project_dir "dependencies/strings.hpp" );
+		CodeBody strings        = def_body(ECode::Global_Body);
+		for ( Code entry = parsed_strings.begin(); entry != parsed_strings.end(); ++ entry )
+		{
+			switch (entry->Type)
+			{
+				case ECode::Preprocess_IfDef:
+				{
+					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_strings );
+				}
+				break;
+
+				default:
+					strings.append(entry);
+				break;
+			}
+		}
+		header.print(dump_to_scratch_and_retireve(strings));
+
+		header.print_fmt( roll_own_dependencies_guard_end );
 	}
 
 	header.print( pop_ignores );
 	header.write();
 
-	format_file( "gen/gen.h" );
+	// format_file( "gen/gen.h" );
 
 	gen::deinit();
 	return 0;

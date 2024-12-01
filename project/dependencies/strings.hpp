@@ -11,8 +11,10 @@ struct StrC
 	ssize       Len;
 	char const* Ptr;
 
+#if ! GEN_COMPILER_C
 	operator char const* ()               const { return Ptr; }
 	char const& operator[]( ssize index ) const { return Ptr[index]; }
+#endif
 };
 
 #define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(ssize) )
@@ -29,12 +31,7 @@ StrC to_str( char const* str ) {
 // I kept it for simplicty of porting but its not necessary to keep it that way.
 #pragma region String
 struct StringHeader;
-
-#if GEN_COMPILER_C
-typedef char* String;
-#else
 struct String;
-#endif
 
 String        string_make(AllocatorInfo allocator, char const* str);
 String        string_make(AllocatorInfo allocator, StrC str);

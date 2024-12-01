@@ -19,7 +19,7 @@ CodeBody gen_array_base()
 	// Code grow_formula = untyped_str( txt( "#define gen_array_grow_formula( value ) ( 2 * value + 8 )\n" ));
 	Code get_header   = untyped_str( txt( "#define array_get_header( Type, self ) ( (ArrayHeader*)( self ) - 1)\n" ));
 
-	return def_global_body( args( td_header, header, get_header ) );
+	return def_global_body( args( fmt_newline, td_header, header, get_header, fmt_newline ) );
 };
 
 CodeBody gen_array( StrC type, StrC array_name )

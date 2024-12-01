@@ -7,9 +7,13 @@ using SwapContentProc = CodeBody(void);
 
 b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& body )
 {
+	b32 found = false;
 	CodePreprocessCond cond = entry_iter.cast<CodePreprocessCond>();
 	if ( cond->Content.contains(cond_sig) )
 	{
+		log_fmt("Preprocess cond found: %S\n", cond->Content);
+		found = true;
+
 		s32 depth = 1;
 		++ entry_iter; for(b32 continue_for = true; continue_for && entry_iter != body.end(); ) switch
 		(entry_iter->Type) {
@@ -34,7 +38,7 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& bod
 		}
 	}
 
-	return entry_iter != body.end();
+	return found;
 }
 
 bool swap_pragma_region_implementation( StrC region_name, SwapContentProc* swap_content, Code& entry_iter, CodeBody& body )
