@@ -1,7 +1,7 @@
-// #pragma once
-// #include "../project/gen.hpp"
+#pragma once
+#include "../project/gen.hpp"
 
-// using namespace gen;
+using namespace gen;
 
 CodeBody gen_fixed_arenas()
 {
@@ -18,13 +18,13 @@ CodeBody gen_fixed_arenas()
 	char const* template_interface = stringize(
 		inline
 		void fixed_arena_init_<Name>(FixedArena_<Name>* result) {
-			zero_size(& result.memory[0], <Size>);
-			result.arena = arena_init_from_memory(& result.memory[0], <Size>);
+			zero_size(& result->memory[0], <Size>);
+			result.arena = arena_init_from_memory(& result->memory[0], <Size>);
 		}
 
 		inline
 		ssize fixed_arena_size_remaining_<Name>(FixedArena_<Name>* fixed_arena, ssize alignment) {
-			return size_remaining(fixed_arena.arena, alignment);
+			return size_remaining(fixed_arena->arena, alignment);
 		}
 	);
 

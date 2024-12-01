@@ -16,7 +16,7 @@ GEN_NS_END
 
 #include <cstdlib>   // for system()
 
-#include "components/fixed_arena.hpp"
+#include "components/memory.fixed_arena.hpp"
 #include "components/misc.hpp"
 
 using namespace gen;
