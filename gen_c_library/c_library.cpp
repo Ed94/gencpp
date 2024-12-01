@@ -235,10 +235,14 @@ int gen_main()
 					bool found = false;
 
 					found = swap_pragma_region_implementation( txt("Array"), gen_array_base, entry, containers);
-					if (found) break;
+					if (found) {
+						break;
+					}
 
-					found = swap_pragma_region_implementation( txt("Hashtable"), gen_hashtable_base, entry, containers);
-					if (found) break;
+					found = swap_pragma_region_implementation( txt("HashTable"), gen_hashtable_base, entry, containers);
+					if (found) {
+						break;
+					}
 
 					containers.append(entry);
 				}
