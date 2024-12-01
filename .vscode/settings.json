@@ -38,7 +38,8 @@
 		"android_native_app_glue.h": "c",
 		"raylib.h": "c",
 		"*.m": "cpp",
-		"atomic": "cpp"
+		"atomic": "cpp",
+		"gen.h": "c"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

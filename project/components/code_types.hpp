@@ -165,6 +165,46 @@ struct CodeSpecifiers
 
 		return -1;
 	}
+	s32 remove( SpecifierT to_remove )
+	{
+		if ( ast == nullptr )
+		{
+			log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
+			return -1;
+		}
+
+		if ( raw()->NumEntries == AST::ArrSpecs_Cap )
+		{
+			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
+			return -1;
+		}
+
+		s32 result = -1;
+
+		s32 curr = 0;
+		s32 next = 0;
+		for(; next < raw()->NumEntries; ++ curr, ++ next)
+		{
+			SpecifierT spec = raw()->ArrSpecs[next];
+			if (spec == to_remove)
+			{
+				result = next;
+
+				next ++;
+				if (next >= raw()->NumEntries)
+					break;
+
+				spec = raw()->ArrSpecs[next];
+			}
+
+			raw()->ArrSpecs[ curr ] = spec;
+		}
+
+		if (result > -1) {
+			raw()->NumEntries --;
+		}
+		return result;
+	}
 	void to_string( String& result );
 	AST* raw()
 	{

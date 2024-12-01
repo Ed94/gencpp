@@ -133,6 +133,7 @@ extern CodeType t_typename;
 
 #pragma region Macros
 
+#ifndef token_fmt
 #	define gen_main main
 
 #	define __ NoCode
@@ -151,6 +152,7 @@ extern CodeType t_typename;
 
 	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
 #	define token_fmt( ... ) GEN_NS token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+#endif
 
 #pragma endregion Macros
 

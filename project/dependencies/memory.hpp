@@ -80,10 +80,7 @@ enum AllocType : u8
 	EAllocation_RESIZE,
 };
 
-using AllocatorProc = void* ( void* allocator_data, AllocType type
-	, ssize size, ssize alignment
-	, void* old_memory, ssize old_size
-	, u64 flags );
+typedef void*(AllocatorProc)( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 
 struct AllocatorInfo
 {

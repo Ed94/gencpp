@@ -123,8 +123,8 @@ typedef s8  b8;
 typedef s16 b16;
 typedef s32 b32;
 
-using mem_ptr       = void*;
-using mem_ptr_const = void const*;
+typedef void*       mem_ptr;
+typedef void const* mem_ptr_const ;
 
 #if ! GEN_COMPILER_C
 template<typename Type> uptr to_uptr( Type* ptr ) { return (uptr)ptr; }

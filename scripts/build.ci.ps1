@@ -90,7 +90,7 @@ else {
 	$optimize = $true
 }
 
-if ( $bootstrap -eq $false -and $singleheader -eq $false -and $unreal -eq $false -and $test -eq $false ) {
+if ( $bootstrap -eq $false -and $singleheader -eq $false -and $c_library -eq $false -and $unreal -eq $false -and $test -eq $false ) {
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
 
@@ -215,7 +215,7 @@ if ( $c_library )
 
 	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
-	Push-Location $path_singleheader
+	Push-Location $path_c_library
 		if ( Test-Path( $executable ) ) {
 			write-host "`nRunning c_library generator"
 			$time_taken = Measure-Command { & $executable

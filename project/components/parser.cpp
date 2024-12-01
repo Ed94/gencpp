@@ -714,8 +714,8 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeType> interfaces; {
 		Arena arena = arena_init_from_memory( interface_arr_mem, kilobytes(4) );
-		array_init_reserve<CodeType>( allocator_info(arena), 4 );
-	} 
+		interfaces  = array_init_reserve<CodeType>( allocator_info(arena), 4 );
+	}
 
 	// TODO(Ed) : Make an AST_DerivedType, we'll store any arbitary derived type into there as a linear linked list of them.
 	if ( check( TokType::Assign_Classifer ) )

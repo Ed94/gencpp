@@ -200,7 +200,7 @@
 // This is intended to only really be used internally or with the C-library variant
 // C++ users can just use the for-range directly.
 #if GEN_COMPILER_C
-#	define foreach(Type, entry_id, iterable) for ( Type entry_id = begin(iterable); entry_id != end(iterable); entry_id = next(entry_id) )
+#	define foreach(Type, entry_id, iterable) for ( Type entry_id = begin(iterable); entry_id != end(iterable); entry_id = next(iterable, entry_id) )
 #else
 #	define foreach(Type, entry_id, iterable) for ( Type entry_id : iterable )
 #endif

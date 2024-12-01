@@ -52,9 +52,9 @@ template<class Type> bool         resize(Array<Type>& array, usize num);
 template<class Type> bool         set_capacity(Array<Type>& array, usize new_capacity);
 template<class Type> ArrayHeader* get_header(Array<Type>& array);
 
-template<class Type> forceinline Type* begin(Array<Type>& array) { return array;      }
-template<class Type> forceinline Type* end(Array<Type>& array)   { return array + get_header(array)->Num; }
-template<class Type> forceinline Type* next(Type* entry)         { return entry + 1; }
+template<class Type> forceinline Type* begin(Array<Type>& array)             { return array;      }
+template<class Type> forceinline Type* end(Array<Type>& array)               { return array + get_header(array)->Num; }
+template<class Type> forceinline Type* next(Array<Type>& array, Type* entry) { return entry + 1; }
 
 struct ArrayHeader {
 	AllocatorInfo Allocator;
@@ -250,7 +250,7 @@ bool fill(Array<Type>& array, usize begin, usize end, Type value)
 template<class Type> inline
 void free(Array<Type>& array) {
 	ArrayHeader* header = get_header(array);
-	gen::free(header->Allocator, header);
+	GEN_NS free(header->Allocator, header);
 	Type*& Data = rcast(Type*&, array);
 	Data = nullptr;
 }

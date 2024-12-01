@@ -6,7 +6,7 @@
 	Public Address:
 	https://github.com/Ed94/gencpp
 
-	This is a single header variant of the library.
+	This is a single header C-Library variant.
 	Define GEN_IMPLEMENTATION before including this file in a single compilation unit.
 */
 #if ! defined(GEN_DONT_ENFORCE_GEN_TIME_GUARD) && ! defined(GEN_TIME)
