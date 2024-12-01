@@ -447,7 +447,7 @@ char* adt_parse_number_strict( ADT_Node* node, char* base_str )
 	while ( *e )
 		++e;
 
-	while ( *p && ( str_find( "eE.+-", *p ) || char_is_hex_digit( *p ) ) )
+	while ( *p && ( char_first_occurence( "eE.+-", *p ) || char_is_hex_digit( *p ) ) )
 	{
 		++p;
 	}
@@ -476,7 +476,7 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 	u8        node_props = 0;
 
 	/* skip false positives and special cases */
-	if ( ! ! str_find( "eE", *p ) || ( ! ! str_find( ".+-", *p ) && ! char_is_hex_digit( *( p + 1 ) ) && *( p + 1 ) != '.' ) )
+	if ( ! ! char_first_occurence( "eE", *p ) || ( ! ! char_first_occurence( ".+-", *p ) && ! char_is_hex_digit( *( p + 1 ) ) && *( p + 1 ) != '.' ) )
 	{
 		return ++base_str;
 	}
@@ -552,7 +552,7 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 	char expbuf[ 6 ] = { 0 };
 	ssize   expi        = 0;
 
-	if ( *e && ! ! str_find( "eE", *e ) )
+	if ( *e && ! ! char_first_occurence( "eE", *e ) )
 	{
 		++e;
 		if ( *e == '+' || *e == '-' || char_is_digit( *e ) )
@@ -748,7 +748,7 @@ ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_
 	{
 		p = str_skip_any( p, escaped_chars );
 		_adt_fprintf( file, "%.*s", pointer_diff( b, p ), b );
-		if ( *p && ! ! str_find( escaped_chars, *p ) )
+		if ( *p && ! ! char_first_occurence( escaped_chars, *p ) )
 		{
 			_adt_fprintf( file, "%s%c", escape_symbol, *p );
 			p++;

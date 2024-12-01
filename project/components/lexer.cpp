@@ -341,7 +341,7 @@ s32 lex_preprocessor_directive(
 		append(Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
-		defines.set( key, name );
+		set<StrC>(defines, key, name );
 	}
 
 	Token preprocess_content = { scanner, 0, TokType::Preprocess_Content, line, column, TF_Preprocess };
@@ -516,7 +516,7 @@ void lex_found_token( StrC& content
 	else
 		key = crc32( token.Text, token.Length );
 
-	StrC* define = defines.get( key );
+	StrC* define = get(defines, key );
 	if ( define )
 	{
 		token.Type = TokType::Preprocess_Macro;
@@ -597,7 +597,7 @@ TokArray lex( StrC content )
 		}
 
 		u64 key = crc32( entry.Data, length );
-		defines.set( key, entry );
+		set<StrC>(defines, key, entry );
 	}
 
 	clear(Tokens);
@@ -1259,7 +1259,7 @@ TokArray lex( StrC content )
 		return { { nullptr }, 0 };
 	}
 
-	defines.clear();
+	clear(defines);
 	// defines_map_arena.free();
 	return { Tokens, 0 };
 }

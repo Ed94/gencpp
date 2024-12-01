@@ -352,6 +352,28 @@ bool set_capacity(Array<Type>& array, usize new_capacity)
 	Data = rcast(Type*, new_header + 1);
 	return true;
 }
+
+#define array_init(Type, allocator)                            array_init<Type>(allocator)
+#define array_init(Type, allocator)                            array_init<Type>(allocator)
+#define array_init_reserve(Type, allocator, capacity)          array_init_reserve<Type>(allocator, capacity)
+#define array_append(Type, array, other)                       append<Type>(array, other)
+#define array_append_value(Type, array, value)                 append<Type>(array, value)
+#define array_append_items(Type, array, items, item_num)       append<Type>(array, items, item_num)
+#define array_append_at(Type, array, item, idx)                append_at<Type>(array, item, idx)
+#define array_append_items_at(Type, array, items, num, idx)    append_at<Type>(array, items, num, idx)
+#define array_back(Type, array)                                back<Type>(array)
+#define array_clear(Type, array)                               clear<Type>(array)
+#define array_fill(Type, array, begin, end, value)             fill<Type>(array, begin, end, value)
+#define array_free(Type, array)                                free<Type>(array)
+#define array_grow(Type, array, min_capacity)                  grow<Type>(array, min_capacity)
+#define array_num(Type, array)                                 num<Type>(array)
+#define array_pop(Type, array)                                 pop<Type>(array)
+#define array_remove_at(Type, array, idx)                      remove_at<Type>(array, idx)
+#define array_reserve(Type, array, new_capacity)               reserve<Type>(array, new_capacity)
+#define array_resize(Type, array, num)                         resize<Type>(array, num)
+#define array_set_capacity(Type, array, new_capacity)          set_capacity<Type>(array, new_capacity)
+#define array_get_header(array)                                get_header(array)
+
 #pragma endregion Array
 
 // TODO(Ed) : This thing needs ALOT of work.
@@ -372,7 +394,8 @@ struct HashTableEntry {
 	Type  Value;
 };
 
-// Forward declarations for all lifted functions
+#define HashTableEntry(Type) HashTableEntry<Type>
+
 template<class Type> HashTable<Type>       hashtable_init(AllocatorInfo allocator);
 template<class Type> HashTable<Type>       hashtable_init_reserve(AllocatorInfo allocator, usize num);
 template<class Type> void                  clear(HashTable<Type>& table);
@@ -399,7 +422,7 @@ struct HashTable
 	Array<ssize>                Hashes;
 	Array<HashTableEntry<Type>> Entries;
 
-#if 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 #pragma region Member Mapping
 	forceinline static HashTable init(AllocatorInfo allocator)                    { return GEN_NS hashtable_init<Type>(allocator); }
 	forceinline static HashTable init_reserve(AllocatorInfo allocator, usize num) { return GEN_NS hashtable_init_reserve<Type>(allocator, num); }
@@ -634,6 +657,25 @@ bool full(HashTable<Type>& table) {
 	b32 result = num(table.Entries) > critical_load;
 	return result;
 }
+
+#define hashtable_init(Type, allocator)               hashtable_init<Type>(allocator)
+#define hashtable_init_reserve(Type, allocator, num)  hashtable_init_reserve<Type>(allocator, num)
+#define hashtable_clear(Type, table)                  clear<Type>(table)
+#define hashtable_destroy(Type, table)                destroy<Type>(table)
+#define hashtable_get(Type, table, key)               get<Type>(table, key)
+#define hashtable_grow(Type, table)                   grow<Type>(table)
+#define hashtable_rehash(Type, table, new_num)        rehash<Type>(table, new_num)
+#define hashtable_rehash_fast(Type, table)            rehash_fast<Type>(table)
+#define hashtable_remove(Type, table, key)            remove<Type>(table, key)
+#define hashtable_remove_entry(Type, table, idx)      remove_entry<Type>(table, idx)
+#define hashtable_set(Type, table, key, value)        set<Type>(table, key, value)
+#define hashtable_slot(Type, table, key)              slot<Type>(table, key)
+#define hashtable_add_entry(Type, table, key)         add_entry<Type>(table, key)
+#define hashtable_find(Type, table, key)              find<Type>(table, key)
+#define hashtable_full(Type, table)                   full<Type>(table)
+#define hashtable_map(Type, table, map_proc)          map<Type>(table, map_proc)
+#define hashtable_map_mut(Type, table, map_proc)      map_mut<Type>(table, map_proc)
+
 #pragma endregion HashTable
 
 #pragma endregion Containers

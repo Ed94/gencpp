@@ -137,7 +137,7 @@ void init()
 	);
 
 	fixed_arena_init(defines_map_arena);
-	defines = HashTable<StrC>::init_reserve( allocator_info(defines_map_arena), 256 );
+	defines = hashtable_init_reserve<StrC>( allocator_info(defines_map_arena), 256 );
 }
 
 internal

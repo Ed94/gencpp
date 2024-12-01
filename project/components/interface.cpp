@@ -282,7 +282,7 @@ void init()
 
 	// Setup the hash tables
 	{
-		StringCache = StringTable::init( Allocator_StringTable );
+		StringCache = hashtable_init<StringCached>(Allocator_StringTable);
 
 		if ( StringCache.Entries == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
@@ -317,7 +317,7 @@ void deinit()
 	}
 	while ( left--, left );
 
-	StringCache.destroy();
+	destroy(StringCache);
 
 	free(CodePools);
 	free(StringArenas);
@@ -392,14 +392,14 @@ StringCached get_cached_string( StrC str )
 	s32 hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
 	u64 key         = crc32( str.Ptr, hash_length );
 	{
-		StringCached* result = StringCache.get( key );
+		StringCached* result = get(StringCache, key );
 
 		if ( result )
 			return * result;
 	}
 
 	String result = String::make( get_string_allocator( str.Len ), str );
-	StringCache.set( key, result );
+	set<StringCached>(StringCache, key, result );
 
 	return result;
 }

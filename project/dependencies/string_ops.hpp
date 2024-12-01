@@ -6,7 +6,6 @@
 #pragma region String Ops
 
 const char* char_first_occurence( const char* str, char c );
-constexpr auto str_find = &char_first_occurence;
 
 b32   char_is_alpha( char c );
 b32   char_is_alphanumeric( char c );
