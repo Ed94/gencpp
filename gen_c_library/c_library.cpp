@@ -168,7 +168,6 @@ int gen_main()
 )"
 						));
 						memory.append(macro_swap);
-						log_fmt( "\nmacro swap: %S\n", macro_swap.to_string() );
 					}
 				}
 				break;
@@ -282,9 +281,29 @@ int gen_main()
 		{
 			switch (entry->Type)
 			{
+				case ECode::Preprocess_If:
+				{
+					ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), entry, parsed_strings);
+				}
+				break;
+
 				case ECode::Preprocess_IfDef:
 				{
 					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_strings );
+				}
+				break;
+
+				case ECode::Struct_Fwd:
+				{
+					if ( entry->Name.is_equal(txt("String")) )
+					{
+						CodeTypedef c_def = parse_typedef(code( typedef Type* String; ));
+						strings.append(c_def);
+						strings.append(fmt_newline);
+						++ entry;
+						continue;
+					}
+					strings.append(entry);
 				}
 				break;
 
@@ -295,7 +314,37 @@ int gen_main()
 		}
 		header.print(dump_to_scratch_and_retireve(strings));
 
+		Code filesystem = scan_file( project_dir "dependencies/filesystem.hpp" );
+		Code timing = scan_file( project_dir "dependencies/timing.hpp" );
+		header.print( filesystem );
+		header.print( timing );
+
+		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print_fmt( roll_own_dependencies_guard_end );
+
+		Code types      = scan_file( project_dir "components/types.hpp" );
+		Code ast        = scan_file( project_dir "components/ast.hpp" );
+		Code ast_types  = scan_file( project_dir "components/ast_types.hpp" );
+		Code code_types = scan_file( project_dir "components/code_types.hpp" );
+		Code interface  = scan_file( project_dir "components/interface.hpp" );
+		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
+		Code header_end = scan_file( project_dir "components/header_end.hpp" );
+
+		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv" );
+		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
+		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
+		CodeBody ast_inlines = gen_ast_inlines();
+
+		header.print_fmt("#pragma region Types\n");
+		header.print( types );
+		header.print( fmt_newline );
+		header.print( dump_to_scratch_and_retireve( ecode ));
+		header.print( fmt_newline );
+		header.print( dump_to_scratch_and_retireve( eoperator ));
+		header.print( fmt_newline );
+		header.print( dump_to_scratch_and_retireve( especifier ));
+		header.print( fmt_newline );
+		header.print_fmt("#pragma endregion Types\n\n");
 	}
 
 	header.print( pop_ignores );
