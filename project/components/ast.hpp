@@ -165,6 +165,7 @@ struct Code
 	char const* debug_str();               \
 	Code        duplicate();			   \
 	bool        is_equal( Code other );    \
+	bool        is_body();                 \
 	bool        is_valid();                \
 	void        set_global();              \
 	String      to_string();               \
@@ -259,6 +260,7 @@ struct AST
 	Code&       entry      ( u32 idx );
 	bool        has_entries();
 	bool        is_equal   ( AST* other );
+	bool        is_body();
 	char const* type_str();
 	bool        validate_body();
 

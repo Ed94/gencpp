@@ -21,7 +21,7 @@ void AST::append( AST* other )
 	}
 
 	AST*
-		Current       = Back;
+	Current       = Back;
 	Current->Next = other;
 	other->Prev   = Current;
 	Back          = other;
@@ -48,6 +48,25 @@ inline
 bool AST::has_entries()
 {
 	return NumEntries > 0;
+}
+
+inline
+bool AST::is_body()
+{
+	switch (Type)
+	{
+		case ECode::Enum_Body:
+		case ECode::Class_Body:
+		case ECode::Union_Body:
+		case ECode::Export_Body:
+		case ECode::Global_Body:
+		case ECode::Struct_Body:
+		case ECode::Function_Body:
+		case ECode::Namespace_Body:
+		case ECode::Extern_Linkage_Body:
+			return true;
+	}
+	return false;
 }
 
 inline

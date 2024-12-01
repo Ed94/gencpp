@@ -24,6 +24,15 @@ inline Code Code::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool Code::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool Code::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -91,6 +100,15 @@ inline Code CodeBody::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeBody::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeBody::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -156,6 +174,15 @@ inline Code CodeAttributes::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeAttributes::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeAttributes::is_equal( Code other )
@@ -245,6 +272,15 @@ inline Code CodeComment::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeComment::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeComment::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -330,6 +366,15 @@ inline Code CodeConstructor::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeConstructor::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeConstructor::is_equal( Code other )
@@ -419,6 +464,15 @@ inline Code CodeClass::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeClass::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeClass::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -484,6 +538,15 @@ inline Code CodeDefine::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeDefine::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeDefine::is_equal( Code other )
@@ -573,6 +636,15 @@ inline Code CodeDestructor::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeDestructor::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeDestructor::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -658,6 +730,15 @@ inline Code CodeEnum::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeEnum::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeEnum::is_equal( Code other )
@@ -747,6 +828,15 @@ inline Code CodeExec::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeExec::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeExec::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -832,6 +922,15 @@ inline Code CodeExtern::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeExtern::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeExtern::is_equal( Code other )
@@ -921,6 +1020,15 @@ inline Code CodeFriend::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeFriend::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeFriend::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1006,6 +1114,15 @@ inline Code CodeFn::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeFn::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeFn::is_equal( Code other )
@@ -1095,6 +1212,15 @@ inline Code CodeInclude::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeInclude::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeInclude::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1180,6 +1306,15 @@ inline Code CodeModule::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeModule::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeModule::is_equal( Code other )
@@ -1269,6 +1404,15 @@ inline Code CodeNS::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeNS::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeNS::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1354,6 +1498,15 @@ inline Code CodeOperator::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeOperator::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeOperator::is_equal( Code other )
@@ -1443,6 +1596,15 @@ inline Code CodeOpCast::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeOpCast::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeOpCast::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1530,6 +1692,15 @@ inline Code CodeParam::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeParam::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeParam::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1595,6 +1766,15 @@ inline Code CodePragma::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodePragma::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodePragma::is_equal( Code other )
@@ -1684,6 +1864,15 @@ inline Code CodePreprocessCond::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodePreprocessCond::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodePreprocessCond::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1771,6 +1960,15 @@ inline Code CodeSpecifiers::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeSpecifiers::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeSpecifiers::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1838,6 +2036,15 @@ inline Code CodeStruct::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeStruct::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeStruct::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -1903,6 +2110,15 @@ inline Code CodeTemplate::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeTemplate::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeTemplate::is_equal( Code other )
@@ -1992,6 +2208,15 @@ inline Code CodeType::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeType::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeType::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -2077,6 +2302,15 @@ inline Code CodeTypedef::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeTypedef::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeTypedef::is_equal( Code other )
@@ -2166,6 +2400,15 @@ inline Code CodeUnion::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeUnion::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeUnion::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -2253,6 +2496,15 @@ inline Code CodeUsing::duplicate()
 	return { rcast( AST*, ast )->duplicate() };
 }
 
+inline bool CodeUsing::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
+}
+
 inline bool CodeUsing::is_equal( Code other )
 {
 	if ( ast == nullptr || other.ast == nullptr )
@@ -2338,6 +2590,15 @@ inline Code CodeVar::duplicate()
 		return Code::Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
+}
+
+inline bool CodeVar::is_body()
+{
+	if ( ast == nullptr )
+	{
+		return rcast( AST*, ast )->is_body();
+	}
+	return false;
 }
 
 inline bool CodeVar::is_equal( Code other )

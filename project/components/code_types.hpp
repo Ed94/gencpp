@@ -11,6 +11,10 @@ struct CodeBody
 
 	void append( Code other )
 	{
+		if (other.is_body())
+		{
+			append( other.cast<CodeBody>() );
+		}
 		raw()->append( other.ast );
 	}
 	void append( CodeBody body )

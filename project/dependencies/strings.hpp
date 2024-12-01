@@ -41,8 +41,8 @@ String        string_fmt(AllocatorInfo allocator, char* buf, ssize buf_size, cha
 String        string_fmt_buf(AllocatorInfo allocator, char const* fmt, ...);
 String        string_join(AllocatorInfo allocator, char const** parts, ssize num_parts, char const* glue);
 usize         string_grow_formula(usize value);
-bool          are_equal(String lhs, String rhs);
-bool          are_equal(String lhs, StrC rhs);
+bool          are_equal(String const& lhs, String const& rhs);
+bool          are_equal(String const& lhs, StrC rhs);
 bool          make_space_for(String& str, char const* to_append, ssize add_len);
 bool          append(String& str, char c);
 bool          append(String& str, char const* str_to_append);
@@ -108,8 +108,6 @@ struct String
 	forceinline static String make_length(AllocatorInfo a, char const* s, ssize l)          { return GEN_NS string_make_length(a, s, l); }
 	forceinline static String join(AllocatorInfo a, char const** p, ssize n, char const* g) { return GEN_NS string_join(a, p, n, g); }
 	forceinline static usize  grow_formula(usize value)                                     { return GEN_NS string_grow_formula(value); }
-	forceinline static bool   are_equal(String lhs, String rhs)                             { return GEN_NS are_equal(lhs, rhs); }
-	forceinline static bool   are_equal(String lhs, StrC rhs)                               { return GEN_NS are_equal(lhs, rhs); }
 
 	static
 	String fmt(AllocatorInfo allocator, char* buf, ssize buf_size, char const* fmt, ...) {
@@ -145,6 +143,8 @@ struct String
 	forceinline void          clear()                                        { GEN_NS clear(*this); }
 	forceinline String        duplicate(AllocatorInfo allocator) const       { return GEN_NS duplicate(*this, allocator); }
 	forceinline void          free()                                         { GEN_NS free(*this); }
+	forceinline bool          is_equal(String const& other) const            { return GEN_NS are_equal(* this, other); }
+	forceinline bool          is_equal(StrC other) const                     { return GEN_NS are_equal(* this, other); }
 	forceinline ssize         length() const                                 { return GEN_NS length(*this); }
 	forceinline b32           starts_with(StrC substring) const              { return GEN_NS starts_with(*this, substring); }
 	forceinline b32           starts_with(String substring) const            { return GEN_NS starts_with(*this, substring); }
@@ -286,7 +286,7 @@ bool append_fmt(String& str, char const* fmt, ...) {
 }
 
 inline
-bool are_equal(String lhs, String rhs)
+bool are_equal(String const& lhs, String const& rhs)
 {
 	if (length(lhs) != length(rhs))
 		return false;
@@ -299,7 +299,7 @@ bool are_equal(String lhs, String rhs)
 }
 
 inline
-bool are_equal(String lhs, StrC rhs)
+bool are_equal(String const& lhs, StrC rhs)
 {
 	if (length(lhs) != (rhs.Len))
 		return false;

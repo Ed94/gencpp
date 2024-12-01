@@ -368,6 +368,15 @@ CodeBody gen_ast_inlines()
 			return { rcast(AST*, ast)->duplicate() };
 		}
 		inline
+		bool <typename>::is_body()
+		{
+			if ( ast == nullptr )
+			{
+				return rcast(AST*, ast)->is_body();
+			}
+			return false;
+		}
+		inline
 		bool <typename>::is_equal( Code other )
 		{
 			if ( ast == nullptr || other.ast == nullptr )
