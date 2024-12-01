@@ -89,11 +89,11 @@ struct Token
 
 	String to_string()
 	{
-		String result = String::make_reserve( GlobalAllocator, kilobytes(4) );
+		String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
 
 		StrC type_str = ETokType::to_str( Type );
 
-		result.append_fmt( "Line: %d Column: %d, Type: %.*s Content: %.*s"
+		append_fmt( result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
 			, Line, Column
 			, type_str.Len, type_str.Ptr
 			, Length, Text
@@ -352,7 +352,7 @@ s32 lex_preprocessor_directive(
 
 		if ( current != '"' && current != '<' )
 		{
-			String directive_str = String::fmt_buf( GlobalAllocator, "%.*s", min( 80, left + preprocess_content.Length ), token.Text );
+			String directive_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 80, left + preprocess_content.Length ), token.Text );
 
 			log_failure( "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
 				, current
@@ -419,8 +419,8 @@ s32 lex_preprocessor_directive(
 			}
 			else
 			{
-				String directive_str = String::make_length( GlobalAllocator, token.Text, token.Length );
-				String content_str   = String::fmt_buf( GlobalAllocator, "%.*s", min( 400, left + preprocess_content.Length ), preprocess_content.Text );
+				String directive_str = string_make_length( GlobalAllocator, token.Text, token.Length );
+				String content_str   = string_fmt_buf( GlobalAllocator, "%.*s", min( 400, left + preprocess_content.Length ), preprocess_content.Text );
 
 				log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 							" in preprocessor directive '%s' (%d, %d)\n%s"
@@ -586,7 +586,7 @@ TokArray lex( StrC content )
 	{
 		s32         length  = 0;
 		char const* scanner = entry.Data;
-		while ( entry.length() > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
+		while ( GEN_NS length(entry) > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
 		{
 			scanner++;
 			length ++;
@@ -678,7 +678,7 @@ TokArray lex( StrC content )
 					}
 					else
 					{
-						String context_str = String::fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
+						String context_str = string_fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
 
 						log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", current, line, column, context_str );
 					}
@@ -1239,7 +1239,7 @@ TokArray lex( StrC content )
 				);
 			}
 
-			String context_str = String::fmt_buf( GlobalAllocator, "%.*s", min( 100, left ), scanner );
+			String context_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 100, left ), scanner );
 			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", current, line, column, context_str );
 
 			// Skip to next whitespace since we can't know if anything else is valid until then.

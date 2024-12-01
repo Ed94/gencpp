@@ -1099,10 +1099,10 @@ String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimi
 	FileInfo tmp;
 	file_stream_new( &tmp, a );
 	csv_write_delimiter( &tmp, obj, delimiter );
-	
+
 	ssize  fsize;
 	u8*    buf    = file_stream_buf( &tmp, &fsize );
-	String output = String::make_length( a, ( char* )buf, fsize );
+	String output = string_make_length( a, ( char* )buf, fsize );
 	file_close( &tmp );
 	return output;
 }

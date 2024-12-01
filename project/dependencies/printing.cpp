@@ -422,7 +422,7 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 			{
 				String gen_str = String { va_arg( va, char*) };
 
-				info.precision = gen_str.length();
+				info.precision = length(gen_str);
 				len            = _print_string( text, remaining, &info, gen_str );
 			}
 			break;

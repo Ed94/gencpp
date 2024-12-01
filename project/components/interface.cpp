@@ -74,26 +74,26 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 internal
 void define_constants()
 {
-	Code::Global          = make_code();
-	Code::Global->Name    = get_cached_string( txt("Global Code") );
-	Code::Global->Content = Code::Global->Name;
+	Code::Global                         = make_code();
+	scast(String, Code::Global->Name)    = get_cached_string( txt("Global Code") );
+	scast(String, Code::Global->Content) = Code::Global->Name;
 
 	Code::Invalid = make_code();
 	Code::Invalid.set_global();
 
-	t_empty          = (CodeType) make_code();
-	t_empty->Type    = ECode::Typename;
-	t_empty->Name    = get_cached_string( txt("") );
+	t_empty                      = (CodeType) make_code();
+	t_empty->Type                = ECode::Typename;
+	scast(String, t_empty->Name) = get_cached_string( txt("") );
 	t_empty.set_global();
 
-	access_private       = make_code();
-	access_private->Type = ECode::Access_Private;
-	access_private->Name = get_cached_string( txt("private:\n") );
+	access_private                      = make_code();
+	access_private->Type                = ECode::Access_Private;
+	scast(String, access_private->Name) = get_cached_string( txt("private:\n") );
 	access_private.set_global();
 
-	access_protected       = make_code();
-	access_protected->Type = ECode::Access_Protected;
-	access_protected->Name = get_cached_string( txt("protected:\n") );
+	access_protected                      = make_code();
+	access_protected->Type                = ECode::Access_Protected;
+	scast(String, access_protected->Name) = get_cached_string( txt("protected:\n") );
 	access_protected.set_global();
 
 	access_public       = make_code();
@@ -398,7 +398,7 @@ StringCached get_cached_string( StrC str )
 			return * result;
 	}
 
-	String result = String::make( get_string_allocator( str.Len ), str );
+	String result = string_make( get_string_allocator( str.Len ), str );
 	set<StringCached>(StringCache, key, result );
 
 	return result;

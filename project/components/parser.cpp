@@ -45,7 +45,7 @@ struct ParseContext
 
 	String to_string()
 	{
-		String result = String::make_reserve( GlobalAllocator, kilobytes(4) );
+		String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
 
 		Token scope_start = Scope->Start;
 		Token last_valid  = Tokens.Idx >= num(Tokens.Arr) ? Tokens.Arr[num(Tokens.Arr) -1] : Tokens.current();
@@ -58,18 +58,18 @@ struct ParseContext
 			length++;
 		}
 
-		String line = String::make( GlobalAllocator, { length, scope_start.Text } );
-		result.append_fmt("\tScope    : %s\n", line );
-		line.free();
+		String line = string_make( GlobalAllocator, { length, scope_start.Text } );
+		append_fmt( result, "\tScope    : %s\n", line );
+		free(line);
 
 		sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
 		sptr   length_from_err = dist;
-		String line_from_err   = String::make( GlobalAllocator, { length_from_err, last_valid.Text } );
+		String line_from_err   = string_make( GlobalAllocator, { length_from_err, last_valid.Text } );
 
 		if ( length_from_err < 100 )
-			result.append_fmt("\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
+			append_fmt(result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
 		else
-			result.append_fmt("\t(%d, %d)\n", last_valid.Line, last_valid.Column );
+			append_fmt(result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
 
 		StackNode* curr_scope = Scope;
 		s32 level = 0;
@@ -77,11 +77,11 @@ struct ParseContext
 		{
 			if ( curr_scope->Name )
 			{
-				result.append_fmt("\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
+				append_fmt(result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
 			}
 			else
 			{
-				result.append_fmt("\t%d: %s\n", level, curr_scope->ProcName.Ptr );
+				append_fmt(result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
 			}
 
 			curr_scope = curr_scope->Prev;
@@ -243,7 +243,7 @@ constexpr bool strip_formatting_dont_preserve_newlines = false;
 internal
 String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 {
-	String content = String::make_reserve( GlobalAllocator, raw_text.Len );
+	String content = string_make_reserve( GlobalAllocator, raw_text.Len );
 
 	if ( raw_text.Len == 0 )
 		return content;
@@ -290,7 +290,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if ( tokleft )
 				move_fwd();
 
-			content.append( cut_ptr, cut_length );
+			append( content, cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -312,7 +312,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if ( tokleft )
 				move_fwd();
 
-			content.append( cut_ptr, cut_length );
+			append( content, cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -326,7 +326,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			scanner += 2;
 			tokleft -= 2;
 
-			content.append( cut_ptr, cut_length );
+			append( content,  cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -345,7 +345,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if (tokleft)
 				move_fwd();
 
-			content.append( cut_ptr, cut_length );
+			append( content,  cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -354,10 +354,10 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		if (scanner[0] == '\t')
 		{
 			if (pos > last_cut)
-				content.append(cut_ptr, cut_length);
+				append( content, cut_ptr, cut_length);
 
-			if ( content.back() != ' ' )
-				content.append(' ');
+			if ( back( content ) != ' ' )
+				append( content, ' ');
 
 			move_fwd();
 			last_cut = sptr(scanner) - sptr(raw_text.Ptr);
@@ -373,17 +373,17 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 				scanner += 2;
 				tokleft -= 2;
 
-				content.append( cut_ptr, cut_length );
+				append( content,  cut_ptr, cut_length );
 				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				content.append( cut_ptr, cut_length );
+				append( content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( content.back() != ' ' )
-				content.append( ' ' );
+			if ( back( content ) != ' ' )
+				append( content,  ' ' );
 
 			scanner += 2;
 			tokleft -= 2;
@@ -400,17 +400,17 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 
 				move_fwd();
 
-				content.append( cut_ptr, cut_length );
+				append( content,  cut_ptr, cut_length );
 				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				content.append( cut_ptr, cut_length );
+				append( content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( content.back() != ' ' )
-				content.append( ' ' );
+			if ( back( content ) != ' ' )
+				append( content,  ' ' );
 
 			move_fwd();
 
@@ -421,7 +421,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Escaped newlines
 		if ( scanner[0] == '\\' )
 		{
-			content.append( cut_ptr, cut_length );
+			append( content,  cut_ptr, cut_length );
 
 			s32 amount_to_skip = 1;
 			if ( tokleft > 1 && scanner[1] == '\n' )
@@ -448,7 +448,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Consectuive spaces
 		if ( tokleft > 1 && char_is_space( scanner[0] ) && char_is_space( scanner[ 1 ] ) )
 		{
-			content.append( cut_ptr, cut_length );
+			append( content,  cut_ptr, cut_length );
 			do
 			{
 				move_fwd();
@@ -458,8 +458,8 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 
 			// Preserve only 1 space of formattting
-			if ( content.back() != ' ' )
-				content.append( ' ' );
+			if ( back( content ) != ' ' )
+				append( content,  ' ' );
 
 			continue;
 		}
@@ -469,7 +469,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 
 	if ( last_cut < raw_text.Len )
 	{
-		content.append( cut_ptr, raw_text.Len - last_cut );
+		append( content,  cut_ptr, raw_text.Len - last_cut );
 	}
 
 #undef cut_ptr
@@ -1039,8 +1039,8 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 					if ( attributes )
 					{
-						String fused = String::make_reserve( GlobalAllocator, attributes->Content.length() + more_attributes->Content.length() );
-						fused.append_fmt( "%S %S", attributes->Content, more_attributes->Content );
+						String fused = string_make_reserve( GlobalAllocator, length(attributes->Content) + length(more_attributes->Content) );
+						append_fmt( fused, "%S %S", attributes->Content, more_attributes->Content );
 
 						attributes->Name    = get_cached_string(fused);
 						attributes->Content = attributes->Name;
@@ -1484,8 +1484,8 @@ CodeFn parse_function_after_name(
 	using namespace ECode;
 
 	String
-	name_stripped = String::make( GlobalAllocator, name );
-	name_stripped.strip_space();
+	name_stripped = string_make( GlobalAllocator, name );
+	strip_space(name_stripped);
 
 	CodeFn
 	result              = (CodeFn) make_code();
@@ -4114,7 +4114,7 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 	Code type = parse_type();
 	// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>
 
-	Context.Scope->Name = { type->Name.Data, type->Name.length() };
+	Context.Scope->Name = { type->Name.Data, length(type->Name) };
 
 	eat( TokType::Capture_Start );
 	eat( TokType::Capture_End );

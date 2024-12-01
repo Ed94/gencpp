@@ -23,9 +23,9 @@ Code scan_file( char const* path )
 		GEN_FATAL("scan_file: %s is empty", path );
 	}
 
-	String str = String::make_reserve( GlobalAllocator, fsize );
+	String str = string_make_reserve( GlobalAllocator, fsize );
 		file_read( & file, str, fsize );
-		str.get_header().Length = fsize;
+		get_header(str).Length = fsize;
 
 	// Skip GEN_INTELLISENSE_DIRECTIVES preprocessor blocks
 	// Its designed so that the directive should be the first thing in the file.
@@ -97,12 +97,12 @@ Code scan_file( char const* path )
 					if ( (scanner + 2) >= ( str.Data + fsize ) )
 					{
 						mem_move( str, scanner, left );
-						str.get_header().Length = left;
+						get_header(str).Length = left;
 						break;
 					}
 
 					mem_move( str, scanner, left );
-					str.get_header().Length = left;
+					get_header(str).Length = left;
 
 					break;
 				}

@@ -458,7 +458,7 @@ CodeComment def_comment( StrC content )
 
 	static char line[ MaxCommentLineLength ];
 
-	String      cmt_formatted = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	String      cmt_formatted = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	char const* end           = content.Ptr + content.Len;
 	char const* scanner       = content.Ptr;
 	s32         curr          = 0;
@@ -474,15 +474,15 @@ CodeComment def_comment( StrC content )
 		length++;
 
 		str_copy( line, scanner, length );
-		cmt_formatted.append_fmt( "//%.*s", length, line );
+		append_fmt(cmt_formatted, "//%.*s", length, line );
 		mem_set( line, 0, MaxCommentLineLength );
 
 		scanner += length;
 	}
 	while ( scanner <= end );
 
-	if ( cmt_formatted.back() != '\n' )
-		cmt_formatted.append( "\n" );
+	if ( back(cmt_formatted) != '\n' )
+		append( cmt_formatted, "\n" );
 
 	Code
 	result          = make_code();
@@ -490,7 +490,7 @@ CodeComment def_comment( StrC content )
 	result->Name    = get_cached_string( cmt_formatted );
 	result->Content = result->Name;
 
-	cmt_formatted.free();
+	free(cmt_formatted);
 
 	return (CodeComment) result;
 }

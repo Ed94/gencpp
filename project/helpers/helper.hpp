@@ -20,14 +20,14 @@ CodeBody gen_ecode( char const* path )
 
 	Array<ADT_Node> enum_strs = csv_nodes.nodes[0].nodes;
 
-	String enum_entries   = String::make_reserve( GlobalAllocator, kilobytes(1) );
-	String to_str_entries = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
 	for ( ADT_Node node : enum_strs )
 	{
 		char const* code = node.string;
-		enum_entries.append_fmt( "%s,\n", code );
-		to_str_entries.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
+		append_fmt( enum_entries, "%s,\n", code );
+		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 	}
 
 	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", (StrC)enum_entries, "enum Type : u32 { <entries> NumTypes };"));
@@ -67,16 +67,16 @@ CodeBody gen_eoperator( char const* path )
 	Array<ADT_Node> enum_strs = csv_nodes.nodes[0].nodes;
 	Array<ADT_Node> str_strs  = csv_nodes.nodes[1].nodes;
 
-	String enum_entries   = String::make_reserve( GlobalAllocator, kilobytes(1) );
-	String to_str_entries = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
 	for (usize idx = 0; idx < num(enum_strs); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
 
-		enum_entries.append_fmt( "%s,\n", enum_str );
-		to_str_entries.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( enum_entries, "%s,\n", enum_str );
+		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
@@ -123,16 +123,16 @@ CodeBody gen_especifier( char const* path )
 	Array<ADT_Node> enum_strs = csv_nodes.nodes[0].nodes;
 	Array<ADT_Node> str_strs  = csv_nodes.nodes[1].nodes;
 
-	String enum_entries   = String::make_reserve( GlobalAllocator, kilobytes(1) );
-	String to_str_entries = String::make_reserve( GlobalAllocator, kilobytes(1) );
+	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
 	for (usize idx = 0; idx < num(enum_strs); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
 
-		enum_entries.append_fmt( "%s,\n", enum_str );
-		to_str_entries.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( enum_entries, "%s,\n", enum_str );
+		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
@@ -237,19 +237,19 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	Array<ADT_Node> attribute_strs     = csv_attr_nodes.nodes[0].nodes;
 	Array<ADT_Node> attribute_str_strs = csv_attr_nodes.nodes[1].nodes;
 
-	String enum_entries             = String::make_reserve( GlobalAllocator, kilobytes(2) );
-	String to_str_entries           = String::make_reserve( GlobalAllocator, kilobytes(4) );
-	String attribute_entries        = String::make_reserve( GlobalAllocator, kilobytes(2) );
-	String to_str_attributes        = String::make_reserve( GlobalAllocator, kilobytes(4) );
-	String attribute_define_entries = String::make_reserve( GlobalAllocator, kilobytes(4) );
+	String enum_entries             = string_make_reserve( GlobalAllocator, kilobytes(2) );
+	String to_str_entries           = string_make_reserve( GlobalAllocator, kilobytes(4) );
+	String attribute_entries        = string_make_reserve( GlobalAllocator, kilobytes(2) );
+	String to_str_attributes        = string_make_reserve( GlobalAllocator, kilobytes(4) );
+	String attribute_define_entries = string_make_reserve( GlobalAllocator, kilobytes(4) );
 
 	for (usize idx = 0; idx < num(enum_strs); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = enum_str_strs [idx].string;
 
-		enum_entries.append_fmt( "%s,\n", enum_str );
-		to_str_entries.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( enum_entries, "%s,\n", enum_str );
+		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	for ( usize idx = 0; idx < num(attribute_strs); idx++ )
@@ -257,14 +257,14 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		char const* attribute_str = attribute_strs[idx].string;
 		char const* entry_to_str  = attribute_str_strs [idx].string;
 
-		attribute_entries.append_fmt( "Attribute_%s,\n", attribute_str );
-		to_str_attributes.append_fmt( "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
-		attribute_define_entries.append_fmt( "Entry( Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
+		append_fmt( attribute_entries, "Attribute_%s,\n", attribute_str );
+		append_fmt( to_str_attributes, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( attribute_define_entries, "Entry( Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
 
 		if ( idx < num(attribute_strs) - 1 )
-			attribute_define_entries.append( " \\\n");
+			append( attribute_define_entries, " \\\n");
 		else
-			attribute_define_entries.append( "\n");
+			append( attribute_define_entries, "\n");
 	}
 
 #pragma push_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
