@@ -7,11 +7,6 @@
 
 #pragma region generated code inline implementation
 
-inline bool Code::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void Code::set_global()
 {
 	if ( ast == nullptr )
@@ -38,11 +33,6 @@ inline Code::operator bool()
 	return ast != nullptr;
 }
 
-inline bool CodeBody::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeBody::set_global()
 {
 	if ( ast == nullptr )
@@ -67,11 +57,6 @@ inline CodeBody& CodeBody::operator=( Code other )
 inline CodeBody::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodeAttributes::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeAttributes::set_global()
@@ -120,11 +105,6 @@ inline AST_Attributes* CodeAttributes::operator->()
 	return ast;
 }
 
-inline bool CodeComment::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeComment::set_global()
 {
 	if ( ast == nullptr )
@@ -169,11 +149,6 @@ inline AST_Comment* CodeComment::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeConstructor::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeConstructor::set_global()
@@ -222,11 +197,6 @@ inline AST_Constructor* CodeConstructor::operator->()
 	return ast;
 }
 
-inline bool CodeClass::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeClass::set_global()
 {
 	if ( ast == nullptr )
@@ -251,11 +221,6 @@ inline CodeClass& CodeClass::operator=( Code other )
 inline CodeClass::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodeDefine::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeDefine::set_global()
@@ -304,11 +269,6 @@ inline AST_Define* CodeDefine::operator->()
 	return ast;
 }
 
-inline bool CodeDestructor::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeDestructor::set_global()
 {
 	if ( ast == nullptr )
@@ -353,11 +313,6 @@ inline AST_Destructor* CodeDestructor::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeEnum::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeEnum::set_global()
@@ -406,11 +361,6 @@ inline AST_Enum* CodeEnum::operator->()
 	return ast;
 }
 
-inline bool CodeExec::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeExec::set_global()
 {
 	if ( ast == nullptr )
@@ -455,11 +405,6 @@ inline AST_Exec* CodeExec::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeExtern::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeExtern::set_global()
@@ -508,11 +453,6 @@ inline AST_Extern* CodeExtern::operator->()
 	return ast;
 }
 
-inline bool CodeFriend::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeFriend::set_global()
 {
 	if ( ast == nullptr )
@@ -557,11 +497,6 @@ inline AST_Friend* CodeFriend::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeFn::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeFn::set_global()
@@ -610,11 +545,6 @@ inline AST_Fn* CodeFn::operator->()
 	return ast;
 }
 
-inline bool CodeInclude::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeInclude::set_global()
 {
 	if ( ast == nullptr )
@@ -659,11 +589,6 @@ inline AST_Include* CodeInclude::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeModule::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeModule::set_global()
@@ -712,11 +637,6 @@ inline AST_Module* CodeModule::operator->()
 	return ast;
 }
 
-inline bool CodeNS::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeNS::set_global()
 {
 	if ( ast == nullptr )
@@ -761,11 +681,6 @@ inline AST_NS* CodeNS::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeOperator::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeOperator::set_global()
@@ -814,11 +729,6 @@ inline AST_Operator* CodeOperator::operator->()
 	return ast;
 }
 
-inline bool CodeOpCast::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeOpCast::set_global()
 {
 	if ( ast == nullptr )
@@ -865,11 +775,6 @@ inline AST_OpCast* CodeOpCast::operator->()
 	return ast;
 }
 
-inline bool CodeParam::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeParam::set_global()
 {
 	if ( ast == nullptr )
@@ -894,11 +799,6 @@ inline CodeParam& CodeParam::operator=( Code other )
 inline CodeParam::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodePragma::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodePragma::set_global()
@@ -947,11 +847,6 @@ inline AST_Pragma* CodePragma::operator->()
 	return ast;
 }
 
-inline bool CodePreprocessCond::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodePreprocessCond::set_global()
 {
 	if ( ast == nullptr )
@@ -998,11 +893,6 @@ inline AST_PreprocessCond* CodePreprocessCond::operator->()
 	return ast;
 }
 
-inline bool CodeSpecifiers::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeSpecifiers::set_global()
 {
 	if ( ast == nullptr )
@@ -1029,11 +919,6 @@ inline CodeSpecifiers::operator bool()
 	return ast != nullptr;
 }
 
-inline bool CodeStruct::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeStruct::set_global()
 {
 	if ( ast == nullptr )
@@ -1058,11 +943,6 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 inline CodeStruct::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodeTemplate::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeTemplate::set_global()
@@ -1111,11 +991,6 @@ inline AST_Template* CodeTemplate::operator->()
 	return ast;
 }
 
-inline bool CodeType::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeType::set_global()
 {
 	if ( ast == nullptr )
@@ -1160,11 +1035,6 @@ inline AST_Type* CodeType::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeTypedef::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeTypedef::set_global()
@@ -1213,11 +1083,6 @@ inline AST_Typedef* CodeTypedef::operator->()
 	return ast;
 }
 
-inline bool CodeUnion::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeUnion::set_global()
 {
 	if ( ast == nullptr )
@@ -1264,11 +1129,6 @@ inline AST_Union* CodeUnion::operator->()
 	return ast;
 }
 
-inline bool CodeUsing::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
-}
-
 inline void CodeUsing::set_global()
 {
 	if ( ast == nullptr )
@@ -1313,11 +1173,6 @@ inline AST_Using* CodeUsing::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeVar::is_valid()
-{
-	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
 }
 
 inline void CodeVar::set_global()

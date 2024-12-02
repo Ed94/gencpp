@@ -173,7 +173,7 @@ struct Code
 	Code        duplicate()                { return GEN_NS duplicate(* this); }	\
 	bool        is_equal( Code other )     { return GEN_NS is_equal(* this, other); } \
 	bool        is_body()                  { return GEN_NS is_body(* this); } \
-	bool        is_valid();                \
+	bool        is_valid()                 { return GEN_NS is_valid(* this); } \
 	void        set_global();              \
 	String      to_string();               \
 	Typename&   operator = ( AST* other ); \

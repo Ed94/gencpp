@@ -354,11 +354,6 @@ CodeBody gen_ast_inlines()
 	char const* code_impl_tmpl = stringize(
 		\n
 		inline
-		bool <typename>::is_valid()
-		{
-			return (AST*) ast != nullptr && rcast( AST*, ast)->Type != CodeT::Invalid;
-		}
-		inline
 		void <typename>::set_global()
 		{
 			if ( ast == nullptr )

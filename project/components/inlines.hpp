@@ -134,6 +134,12 @@ bool is_equal( Code self, Code other )
 }
 
 inline
+bool is_valid(Code self)
+{
+	return self.ast != nullptr && self.ast->Type != CodeT::Invalid;
+}
+
+inline
 Code& Code::operator ++()
 {
 	if ( ast )
