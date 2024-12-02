@@ -1159,12 +1159,12 @@ bool AST::validate_body()
 #define CheckEntries( Unallowed_Types )                                                               \
 	do                                                                                                \
 	{                                                                                                 \
-		for ( Code entry : code_cast<CodeBody>() )                                                         \
+		for ( Code entry : code_cast<CodeBody>() )                                                    \
 		{                                                                                             \
 			switch ( entry->Type )                                                                    \
 			{                                                                                         \
 				Unallowed_Types                                                                       \
-					log_failure( "AST::validate_body: Invalid entry in body %s", entry.debug_str() ); \
+					log_failure( "AST::validate_body: Invalid entry in body %s", GEN_NS debug_str(entry) );  \
 					return false;                                                                     \
 			}                                                                                         \
 		}                                                                                             \
@@ -1181,7 +1181,7 @@ bool AST::validate_body()
 			{
 				if ( entry->Type != Untyped )
 				{
-					log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %s", entry.debug_str() );
+					log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %s", GEN_NS debug_str(entry) );
 					return false;
 				}
 			}
@@ -1217,7 +1217,7 @@ bool AST::validate_body()
 					case Specifiers:
 					case Struct_Body:
 					case Typename:
-						log_failure("AST::validate_body: Invalid entry in body %s", entry.debug_str());
+						log_failure("AST::validate_body: Invalid entry in body %s", GEN_NS debug_str(entry));
 					return false;
 				}
 			}
@@ -1233,7 +1233,7 @@ bool AST::validate_body()
 			{
 				if ( entry->Type != Untyped )
 				{
-					log_failure( "AST::validate_body: Invalid entry in union body (needs to be untyped or comment) %s", entry.debug_str() );
+					log_failure( "AST::validate_body: Invalid entry in union body (needs to be untyped or comment) %s", GEN_NS debug_str(entry) );
 					return false;
 				}
 			}

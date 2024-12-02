@@ -53,7 +53,7 @@ void CodeBody::to_string( String& result )
 	s32  left = ast->NumEntries;
 	while ( left -- )
 	{
-		append_fmt( & result, "%S", curr.to_string() );
+		append_fmt( & result, "%S", GEN_NS to_string(curr) );
 		++curr;
 	}
 }
@@ -66,7 +66,7 @@ void CodeBody::to_string_export( String& result )
 	s32  left = ast->NumEntries;
 	while ( left-- )
 	{
-		append_fmt( & result, "%S", curr.to_string() );
+		append_fmt( & result, "%S", GEN_NS to_string(curr) );
 		++curr;
 	}
 
@@ -110,12 +110,12 @@ void CodeConstructor::to_string_def( String& result )
 		append( & result, "()" );
 
 	if ( ast->InitializerList )
-		append_fmt( & result, " : %S", ast->InitializerList.to_string() );
+		append_fmt( & result, " : %S", GEN_NS to_string(ast->InitializerList) );
 
 	if ( ast->InlineCmt )
 		append_fmt( & result, " // %S", ast->InlineCmt->Content );
 
-	append_fmt( & result, "\n{\n%S\n}\n", ast->Body.to_string() );
+	append_fmt( & result, "\n{\n%S\n}\n", GEN_NS to_string(ast->Body) );
 }
 
 void CodeConstructor::to_string_fwd( String& result )
@@ -134,7 +134,7 @@ void CodeConstructor::to_string_fwd( String& result )
 		append_fmt( & result, "()");
 
 	if (ast->Body)
-		append_fmt( & result, " = %S", ast->Body.to_string() );
+		append_fmt( & result, " = %S", GEN_NS to_string(ast->Body) );
 
 	if ( ast->InlineCmt )
 		append_fmt( & result, "; // %S\n", ast->InlineCmt->Content );
@@ -264,7 +264,7 @@ void CodeDestructor::to_string_def( String& result )
 	else
 		append_fmt( & result, "~%S()", ast->Parent->Name );
 
-	append_fmt( & result, "\n{\n%S\n}\n", ast->Body.to_string() );
+	append_fmt( & result, "\n{\n%S\n}\n", GEN_NS to_string(ast->Body) );
 }
 
 void CodeDestructor::to_string_fwd( String& result )
@@ -279,7 +279,7 @@ void CodeDestructor::to_string_fwd( String& result )
 		if ( ast->Specs.has( ESpecifier::Pure ) )
 			append( & result, " = 0;" );
 		else if (ast->Body)
-			append_fmt( & result, " = %S;", ast->Body.to_string() );
+			append_fmt( & result, " = %S;", GEN_NS to_string(ast->Body) );
 	}
 	else
 		append_fmt( & result, "~%S();", ast->Parent->Name );
@@ -333,7 +333,7 @@ void CodeEnum::to_string_def( String& result )
 		else if ( ast->UnderlyingTypeMacro )
 			append_fmt( & result, "%S : %S\n{\n%S\n}"
 				, ast->Name
-				, ast->UnderlyingTypeMacro.to_string()
+				, GEN_NS to_string(ast->UnderlyingTypeMacro)
 				, ast->Body.to_string()
 			);
 
@@ -872,11 +872,11 @@ void CodeParam::to_string( String& result )
 
 	if ( ast->PostNameMacro )
 	{
-		append_fmt( & result, " %S", ast->PostNameMacro.to_string() );
+		append_fmt( & result, " %S", GEN_NS to_string(ast->PostNameMacro) );
 	}
 
 	if ( ast->Value )
-		append_fmt( & result, " = %S", ast->Value.to_string() );
+		append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
 
 	if ( ast->NumEntries - 1 > 0 )
 	{
@@ -1068,9 +1068,9 @@ void CodeTemplate::to_string( String& result )
 		append( & result, "export " );
 
 	if ( ast->Params )
-		append_fmt( & result, "template< %S >\n%S", ast->Params.to_string(), ast->Declaration.to_string() );
+		append_fmt( & result, "template< %S >\n%S", GEN_NS to_string(ast->Params), GEN_NS to_string(ast->Declaration) );
 	else
-		append_fmt( & result, "template<>\n%S", ast->Declaration.to_string() );
+		append_fmt( & result, "template<>\n%S", GEN_NS to_string(ast->Declaration) );
 }
 
 String CodeTypedef::to_string()
@@ -1089,9 +1089,9 @@ void CodeTypedef::to_string( String& result )
 
 	// Determines if the typedef is a function typename
 	if ( ast->UnderlyingType->ReturnType )
-		append( & result, ast->UnderlyingType.to_string() );
+		append( & result, GEN_NS to_string(ast->UnderlyingType) );
 	else
-		append_fmt( & result, "%S %S", ast->UnderlyingType.to_string(), ast->Name );
+		append_fmt( & result, "%S %S", GEN_NS to_string(ast->UnderlyingType), ast->Name );
 
 	if ( ast->UnderlyingType->Type == ECode::Typename && ast->UnderlyingType->ArrExpr )
 	{
@@ -1234,7 +1234,7 @@ void CodeUsing::to_string( String& result )
 
 		if ( ast->UnderlyingType->ArrExpr )
 		{
-			append_fmt( & result, "[ %S ]", ast->UnderlyingType->ArrExpr.to_string() );
+			append_fmt( & result, "[ %S ]", GEN_NS to_string(ast->UnderlyingType->ArrExpr) );
 
 			AST* next_arr_expr = ast->UnderlyingType->ArrExpr->Next;
 			while ( next_arr_expr )
@@ -1283,7 +1283,7 @@ void CodeVar::to_string( String& result )
 
 		if ( ast->ValueType->ArrExpr )
 		{
-			append_fmt( & result, "[ %S ]", ast->ValueType->ArrExpr.to_string() );
+			append_fmt( & result, "[ %S ]", GEN_NS to_string(ast->ValueType->ArrExpr) );
 
 			AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
@@ -1296,9 +1296,9 @@ void CodeVar::to_string( String& result )
 		if ( ast->Value )
 		{
 			if ( ast->VarConstructorInit )
-				append_fmt( & result, "( %S ", ast->Value.to_string() );
+				append_fmt( & result, "( %S ", GEN_NS to_string(ast->Value) );
 			else
-				append_fmt( & result, " = %S", ast->Value.to_string() );
+				append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
 		}
 
 		// Keep the chain going...
@@ -1326,7 +1326,7 @@ void CodeVar::to_string( String& result )
 
 		if ( ast->ValueType->ArrExpr )
 		{
-			append_fmt( & result, "[ %S ]", ast->ValueType->ArrExpr.to_string() );
+			append_fmt( & result, "[ %S ]", GEN_NS to_string(ast->ValueType->ArrExpr) );
 
 			AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
@@ -1337,14 +1337,14 @@ void CodeVar::to_string( String& result )
 		}
 
 		if ( ast->BitfieldSize )
-			append_fmt( & result, " : %S", ast->BitfieldSize.to_string() );
+			append_fmt( & result, " : %S", GEN_NS to_string(ast->BitfieldSize) );
 
 		if ( ast->Value )
 		{
 			if ( ast->VarConstructorInit )
-				append_fmt( & result, "( %S ", ast->Value.to_string() );
+				append_fmt( & result, "( %S ", GEN_NS to_string(ast->Value) );
 			else
-				append_fmt( & result, " = %S", ast->Value.to_string() );
+				append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
 		}
 
 		if ( ast->NextVar )
@@ -1362,11 +1362,11 @@ void CodeVar::to_string( String& result )
 	}
 
 	if ( ast->BitfieldSize )
-		append_fmt( & result, "%S %S : %S", ast->ValueType.to_string(), ast->Name, ast->BitfieldSize.to_string() );
+		append_fmt( & result, "%S %S : %S", ast->ValueType.to_string(), ast->Name, GEN_NS to_string(ast->BitfieldSize) );
 
 	else if ( ast->ValueType->ArrExpr )
 	{
-		append_fmt( & result, "%S %S[ %S ]", ast->ValueType.to_string(), ast->Name, ast->ValueType->ArrExpr.to_string() );
+		append_fmt( & result, "%S %S[ %S ]", ast->ValueType.to_string(), ast->Name, GEN_NS to_string(ast->ValueType->ArrExpr) );
 
 		AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
 		while ( next_arr_expr )
@@ -1382,9 +1382,9 @@ void CodeVar::to_string( String& result )
 	if ( ast->Value )
 	{
 		if ( ast->VarConstructorInit )
-			append_fmt( & result, "( %S ", ast->Value.to_string() );
+			append_fmt( & result, "( %S ", GEN_NS to_string(ast->Value) );
 		else
-			append_fmt( & result, " = %S", ast->Value.to_string() );
+			append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
 	}
 
 	if ( ast->NextVar )

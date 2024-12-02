@@ -136,7 +136,7 @@ int gen_main()
 				case ECode::Using:
 				{
 					log_fmt("REPLACE THIS MANUALLY: %S\n", entry->Name);
-					CodeUsing   using_ver   = entry.code_cast<CodeUsing>();
+					CodeUsing   using_ver   = cast(CodeUsing, entry);
 					CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
 
 					memory.append(typedef_ver);
@@ -144,7 +144,7 @@ int gen_main()
 				break;
 				case ECode::Function_Fwd:
 				{
-					CodeFn fn = entry.code_cast<CodeFn>();
+					CodeFn fn = cast(CodeFn, entry);
 					if ( fn->Name.is_equal(txt("free")) )
 					{
 						fn->Name = get_cached_string(txt("gen_free_ptr"));
@@ -154,7 +154,7 @@ int gen_main()
 				break;
 				case ECode::Function:
 				{
-					CodeFn fn = entry.code_cast<CodeFn>();
+					CodeFn fn = cast(CodeFn, entry);
 					s32 constexpr_found = fn->Specs.remove( ESpecifier::Constexpr );
 					if (constexpr_found > -1) {
 						log_fmt("Found constexpr: %S\n", entry->to_string());
@@ -169,7 +169,7 @@ int gen_main()
 				break;
 				case ECode::Template:
 				{
-					CodeTemplate tmpl = entry.code_cast<CodeTemplate>();
+					CodeTemplate tmpl = cast(CodeTemplate, entry);
 					if ( tmpl->Declaration->Name.contains(txt("swap")))
 					{
 						CodeBody macro_swap = parse_global_body( txt(R"(

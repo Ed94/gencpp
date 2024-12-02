@@ -8,7 +8,7 @@ using SwapContentProc = CodeBody(void);
 b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& body )
 {
 	b32 found = false;
-	CodePreprocessCond cond = entry_iter.code_cast<CodePreprocessCond>();
+	CodePreprocessCond cond = cast(CodePreprocessCond, entry_iter);
 	if ( cond->Content.contains(cond_sig) )
 	{
 		log_fmt("Preprocess cond found: %S\n", cond->Content);
@@ -44,7 +44,7 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& bod
 bool swap_pragma_region_implementation( StrC region_name, SwapContentProc* swap_content, Code& entry_iter, CodeBody& body )
 {
 	bool found = false;
-	CodePragma possible_region = entry_iter.code_cast<CodePragma>();
+	CodePragma possible_region = cast(CodePragma, entry_iter);
 
 	String region_sig    = string_fmt_buf(GlobalAllocator, "region %s",    region_name.Ptr);
 	String endregion_sig = string_fmt_buf(GlobalAllocator, "endregion %s", region_name.Ptr);
@@ -58,7 +58,7 @@ bool swap_pragma_region_implementation( StrC region_name, SwapContentProc* swap_
 		(entry_iter->Type) {
 			case ECode::Preprocess_Pragma:
 			{
-				CodePragma possible_end_region = entry_iter.code_cast<CodePragma>();
+				CodePragma possible_end_region = cast(CodePragma, entry_iter);
 				if ( possible_end_region->Content.contains(endregion_sig) ) {
 					// body.append(possible_end_region);
 					continue_for = false;

@@ -527,7 +527,7 @@ CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code b
 			break;
 
 			default:
-				log_failure("gen::def_constructor: body must be either of Function_Body or Untyped type - %s", body.debug_str());
+				log_failure("gen::def_constructor: body must be either of Function_Body or Untyped type - %s", debug_str(body));
 				return InvalidCode;
 		}
 
@@ -579,7 +579,7 @@ CodeClass def_class( StrC name
 			break;
 
 			default:
-				log_failure("gen::def_class: body must be either of Class_Body or Untyped type - %s", body.debug_str());
+				log_failure("gen::def_class: body must be either of Class_Body or Untyped type - %s", debug_str(body));
 				return InvalidCode;
 		}
 
@@ -665,7 +665,7 @@ CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
 			break;
 
 			default:
-				log_failure("gen::def_destructor: body must be either of Function_Body or Untyped type - %s", body.debug_str());
+				log_failure("gen::def_destructor: body must be either of Function_Body or Untyped type - %s", debug_str(body));
 				return InvalidCode;
 		}
 
@@ -715,7 +715,7 @@ CodeEnum def_enum( StrC name
 			break;
 
 			default:
-				log_failure( "gen::def_enum: body must be of Enum_Body or Untyped type %s", body.debug_str());
+				log_failure( "gen::def_enum: body must be of Enum_Body or Untyped type %s", debug_str(body));
 				return InvalidCode;
 		}
 
@@ -944,7 +944,7 @@ CodeNS def_namespace( StrC name, Code body, ModuleFlag mflags )
 
 	if ( body->Type != Namespace_Body && body->Type != Untyped )
 	{
-		log_failure("gen::def_namespace: body is not of namespace or untyped type %s", body.debug_str());
+		log_failure("gen::def_namespace: body is not of namespace or untyped type %s", debug_str(body));
 		return InvalidCode;
 	}
 
@@ -1057,7 +1057,7 @@ CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spe
 
 		if ( body->Type != Function_Body && body->Type != Execution )
 		{
-			log_failure( "gen::def_operator_cast: body is not of function body or execution type - %s", body.debug_str() );
+			log_failure( "gen::def_operator_cast: body is not of function body or execution type - %s", debug_str(body) );
 			return InvalidCode;
 		}
 
@@ -1086,13 +1086,13 @@ CodeParam def_param( CodeType type, StrC name, Code value )
 
 	if ( type->Type != Typename )
 	{
-		log_failure( "gen::def_param: type is not a typename - %s", type.debug_str() );
+		log_failure( "gen::def_param: type is not a typename - %s", debug_str(type) );
 		return InvalidCode;
 	}
 
 	if ( value && value->Type != Untyped )
 	{
-		log_failure( "gen::def_param: value is not untyped - %s", value.debug_str() );
+		log_failure( "gen::def_param: value is not untyped - %s", debug_str(value) );
 		return InvalidCode;
 	}
 
@@ -1189,13 +1189,13 @@ CodeStruct def_struct( StrC name
 
 	if ( parent && parent->Type != Typename )
 	{
-		log_failure( "gen::def_struct: parent was not a `Struct` type - %s", parent.debug_str() );
+		log_failure( "gen::def_struct: parent was not a `Struct` type - %s", debug_str(parent) );
 		return InvalidCode;
 	}
 
 	if ( body && body->Type != Struct_Body )
 	{
-		log_failure( "gen::def_struct: body was not a Struct_Body type - %s", body.debug_str() );
+		log_failure( "gen::def_struct: body was not a Struct_Body type - %s", debug_str(body) );
 		return InvalidCode;
 	}
 
@@ -1256,7 +1256,7 @@ CodeTemplate def_template( CodeParam params, Code declaration, ModuleFlag mflags
 		break;
 
 		default:
-			log_failure( "gen::def_template: declaration is not of class, function, struct, variable, or using type - %s", declaration.debug_str() );
+			log_failure( "gen::def_template: declaration is not of class, function, struct, variable, or using type - %s", debug_str(declaration) );
 	}
 
 	CodeTemplate
@@ -1329,13 +1329,13 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 		case Typename:
 			break;
 		default:
-			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", type.debug_str() );
+			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", debug_str(type) );
 			return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", attributes.debug_str() );
+		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -1359,7 +1359,7 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 	{
 		if (type->Type != Untyped)
 		{
-			log_failure( "gen::def_typedef: name was empty and type was not untyped (indicating its a function typedef) - %s", type.debug_str() );
+			log_failure( "gen::def_typedef: name was empty and type was not untyped (indicating its a function typedef) - %s", debug_str(type) );
 			return InvalidCode;
 		}
 
@@ -1381,7 +1381,7 @@ CodeUnion def_union( StrC name, Code body, CodeAttributes attributes, ModuleFlag
 
 	if ( body->Type != ECode::Union_Body )
 	{
-		log_failure( "gen::def_union: body was not a Union_Body type - %s", body.debug_str() );
+		log_failure( "gen::def_union: body was not a Union_Body type - %s", debug_str(body) );
 		return InvalidCode;
 	}
 
@@ -1482,7 +1482,7 @@ CodeVar def_variable( CodeType type, StrC name, Code value
 
 	if ( value && value->Type != ECode::Untyped )
 	{
-		log_failure( "gen::def_variable: value was not a `Untyped` type - %s", value.debug_str() );
+		log_failure( "gen::def_variable: value was not a `Untyped` type - %s", debug_str(value) );
 		return InvalidCode;
 	}
 
@@ -1558,7 +1558,7 @@ CodeBody def_class_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
-				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1595,7 +1595,7 @@ CodeBody def_class_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
-				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1632,7 +1632,7 @@ CodeBody def_enum_body( s32 num, ... )
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
-			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() );
+			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", debug_str(entry) );
 			return InvalidCode;
 		}
 
@@ -1664,7 +1664,7 @@ CodeBody def_enum_body( s32 num, Code* codes )
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
-			log_failure("gen::def_enum_body: Entry type is not allowed: %s", entry.debug_str() );
+			log_failure("gen::def_enum_body: Entry type is not allowed: %s", debug_str(entry) );
 			return InvalidCode;
 		}
 
@@ -1699,7 +1699,7 @@ CodeBody def_export_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
-				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1736,7 +1736,7 @@ CodeBody def_export_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
-				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1774,7 +1774,7 @@ CodeBody def_extern_link_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
-				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1811,7 +1811,7 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
-				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1851,7 +1851,7 @@ CodeBody def_function_body( s32 num, ... )
 		{
 
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
-				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1888,7 +1888,7 @@ CodeBody def_function_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
-				log_failure("gen::" "def_function_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_function_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1925,11 +1925,12 @@ CodeBody def_global_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			case Global_Body:
-				result.append( entry.code_cast<CodeBody>() ) ;
+				// result.append( entry.code_cast<CodeBody>() ) ;
+				result.append( cast(CodeBody, entry) ) ;
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
-				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1966,11 +1967,11 @@ CodeBody def_global_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			case Global_Body:
-				result.append( entry.code_cast<CodeBody>() ) ;
+				result.append( cast(CodeBody, entry) );
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
-				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -2008,7 +2009,7 @@ CodeBody def_namespace_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
-				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -2045,7 +2046,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
-				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str() );
+				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", debug_str(entry) );
 				return InvalidCode;
 
 			default: break;
@@ -2217,7 +2218,7 @@ CodeBody def_struct_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
-				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str());
+				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -2254,7 +2255,7 @@ CodeBody def_struct_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
-				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str() );
+				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", debug_str(entry) );
 				return InvalidCode;
 
 			default:
@@ -2291,7 +2292,7 @@ CodeBody def_union_body( s32 num, ... )
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
-			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() );
+			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", debug_str(entry) );
 			return InvalidCode;
 		}
 
@@ -2323,7 +2324,7 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
-			log_failure("gen::def_union_body: Entry type is not allowed: %s", entry.debug_str() );
+			log_failure("gen::def_union_body: Entry type is not allowed: %s", debug_str(entry) );
 			return InvalidCode;
 		}
 

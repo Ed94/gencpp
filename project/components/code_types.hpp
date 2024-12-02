@@ -17,8 +17,8 @@ struct CodeBody
 	{
 		GEN_ASSERT(other.ast != nullptr);
 
-		if (other.is_body()) {
-			append( cast(CodeBody, & other) );
+		if (GEN_NS is_body(other)) {
+			append( cast(CodeBody, other) );
 		}
 
 		GEN_NS append( raw(), other.ast );

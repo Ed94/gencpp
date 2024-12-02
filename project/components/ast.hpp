@@ -157,9 +157,8 @@ namespace parser
 	struct Token;
 }
 
-template< class Type> forceinline Type tmpl_cast( Code* self ) { return * rcast( Type*, self ); }
-#if ! GEN_COMPILER_C && 0
-template< class Type> forceinline Type tmpl_cast( Code& self ) { return * rcast( Type*, & self ); }
+#if ! GEN_COMPILER_C
+template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( Type*, & self ); }
 #endif
 
 char const* debug_str (Code code);
@@ -195,15 +194,12 @@ struct Code
 	bool        operator !=( Code other ) { return (AST*)ast != other.ast; } \
 	operator bool();
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( Code );
 	String to_string() { return GEN_NS to_string(* this); }
 #endif
 
 	Using_CodeOps( Code );
-
-	template< class Type >
-	forceinline Type code_cast() { return * rcast( Type*, this ); }
 
 	AST* operator ->() { return ast; }
 	Code& operator ++();

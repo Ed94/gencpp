@@ -79,69 +79,69 @@ void define_constants()
 	scast(String, Code_Global->Content) = Code_Global->Name;
 
 	Code_Invalid = make_code();
-	Code_Invalid.set_global();
+	set_global(Code_Invalid);
 
 	t_empty       = (CodeType) make_code();
 	t_empty->Type = ECode::Typename;
 	t_empty->Name = get_cached_string( txt("") );
-	t_empty.set_global();
+	set_global(t_empty);
 
 	access_private       = make_code();
 	access_private->Type = ECode::Access_Private;
 	access_private->Name = get_cached_string( txt("private:\n") );
-	access_private.set_global();
+	set_global(access_private);
 
 	access_protected       = make_code();
 	access_protected->Type = ECode::Access_Protected;
 	access_protected->Name = get_cached_string( txt("protected:\n") );
-	access_protected.set_global();
+	set_global(access_protected);
 
 	access_public       = make_code();
 	access_public->Type = ECode::Access_Public;
 	access_public->Name = get_cached_string( txt("public:\n") );
-	access_public.set_global();
+	set_global(access_public);
 
 	attrib_api_export = def_attributes( code(GEN_API_Export_Code));
-	attrib_api_export.set_global();
+	set_global(attrib_api_export);
 
 	attrib_api_import = def_attributes( code(GEN_API_Import_Code));
-	attrib_api_import.set_global();
+	set_global(attrib_api_import);
 
 	module_global_fragment          = make_code();
 	module_global_fragment->Type    = ECode::Untyped;
 	module_global_fragment->Name    = get_cached_string( txt("module;") );
 	module_global_fragment->Content = module_global_fragment->Name;
-	module_global_fragment.set_global();
+	set_global(module_global_fragment);
 
 	module_private_fragment          = make_code();
 	module_private_fragment->Type    = ECode::Untyped;
 	module_private_fragment->Name    = get_cached_string( txt("module : private;") );
 	module_private_fragment->Content = module_private_fragment->Name;
-	module_private_fragment.set_global();
+	set_global(module_private_fragment);
 
 	fmt_newline = make_code();
 	fmt_newline->Type = ECode::NewLine;
-	fmt_newline.set_global();
+	set_global(fmt_newline);
 
 	pragma_once          = (CodePragma) make_code();
 	pragma_once->Type    = ECode::Preprocess_Pragma;
 	pragma_once->Name    = get_cached_string( txt("once") );
 	pragma_once->Content = pragma_once->Name;
-	pragma_once.set_global();
+	set_global(pragma_once);
 
 	param_varadic            = (CodeType) make_code();
 	param_varadic->Type      = ECode::Parameters;
 	param_varadic->Name      = get_cached_string( txt("...") );
 	param_varadic->ValueType = t_empty;
-	param_varadic.set_global();
+	set_global(param_varadic);
 
 	preprocess_else = (CodePreprocessCond) make_code();
 	preprocess_else->Type = ECode::Preprocess_Else;
-	preprocess_else.set_global();
+	set_global(preprocess_else);
 
 	preprocess_endif = (CodePreprocessCond) make_code();
 	preprocess_endif->Type = ECode::Preprocess_EndIf;
-	preprocess_endif.set_global();
+	set_global(preprocess_endif);
 
 #	define def_constant_code_type( Type_ )   \
 		t_##Type_ = def_type( name(Type_) ); \

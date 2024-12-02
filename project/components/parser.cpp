@@ -5067,7 +5067,7 @@ CodeTypedef parse_typedef()
 	// Type needs to be aware of its parent so that it can be serialized properly.
 
 	if ( type->Type == Typename && array_expr && array_expr->Type != Invalid )
-		type.code_cast<CodeType>()->ArrExpr = array_expr;
+		cast(CodeType, type)->ArrExpr = array_expr;
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
