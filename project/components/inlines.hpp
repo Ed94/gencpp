@@ -122,6 +122,18 @@ bool is_body(Code code)
 }
 
 inline
+bool is_equal( Code self, Code other )
+{
+	if ( self.ast == nullptr || other.ast == nullptr )
+	{
+		// Just check if they're both null.
+		// log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
+		return self.ast == nullptr && other.ast == nullptr;
+	}
+	return is_equal( self.ast, other.ast );
+}
+
+inline
 Code& Code::operator ++()
 {
 	if ( ast )

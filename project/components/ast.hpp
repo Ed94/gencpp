@@ -171,7 +171,7 @@ struct Code
 #	define Using_Code( Typename )          \
 	char const* debug_str()                { return GEN_NS debug_str(* this); } \
 	Code        duplicate()                { return GEN_NS duplicate(* this); }	\
-	bool        is_equal( Code other );    \
+	bool        is_equal( Code other )     { return GEN_NS is_equal(* this, other); } \
 	bool        is_body()                  { return GEN_NS is_body(* this); } \
 	bool        is_valid();                \
 	void        set_global();              \
@@ -267,12 +267,14 @@ AST*        duplicate  ( AST* self );
 Code*       entry      ( AST* self, u32 idx );
 bool        has_entries( AST* self );
 bool        is_body    ( AST* self );
+bool        is_equal   ( AST* self, AST* other );
 String      to_string  ( AST* self );
 char const* type_str   ( AST* self );
 
 #if GEN_CPP_SUPPORT_REFERENCES
 void        append   ( AST& self, AST& other ) { return append(& self, & other); }
 bool        is_body  ( AST& self )             { return is_body(& self); }
+bool        is_equal ( AST& self, AST& other ) { return is_equal(& self, & other); }
 char const* debug_str( AST& self )             { return debug_str( & self ); }
 String      to_string( AST& self )             { return to_string( & self ); }
 char const* type_str ( AST& self )             { return type_str( & self ); }
@@ -290,7 +292,7 @@ struct AST
 	AST*        duplicate  ()             { return GEN_NS duplicate(this); }
 	Code*       entry      ( u32 idx )    { return GEN_NS entry(this, idx); }
 	bool        has_entries();
-	bool        is_equal   ( AST* other );
+	bool        is_equal   ( AST* other )  { return GEN_NS is_equal(this, other); }
 	bool        is_body()                  { return GEN_NS is_body(this); }
 	char const* type_str()                 { return GEN_NS type_str(this); }
 	bool        validate_body();

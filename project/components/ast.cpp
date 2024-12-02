@@ -592,7 +592,7 @@ void AST::to_string( String& result )
 	}
 }
 
-bool AST::is_equal( AST* other )
+bool is_equal( AST* self, AST* other )
 {
 /*
 	AST values are either some u32 value, a cached string, or a pointer to another AST.
@@ -603,31 +603,31 @@ bool AST::is_equal( AST* other )
 */
 	if ( other == nullptr )
 	{
-		log_fmt( "AST::is_equal: other is null\nAST: %S", debug_str() );
+		log_fmt( "AST::is_equal: other is null\nAST: %S", debug_str(self) );
 		return false;
 	}
 
-	if ( Type != other->Type )
+	if ( self->Type != other->Type )
 	{
 		log_fmt("AST::is_equal: Type check failure with other\nAST: %S\nOther: %S"
-			, debug_str()
+			, debug_str(self)
 			, other->debug_str()
 		);
 
 		return false;
 	}
 
-	switch ( Type )
+	switch ( self->Type )
 	{
 		using namespace ECode;
 
 	#define check_member_val( val )                           \
-	if ( val != other->val )                                  \
+	if ( self->val != other->val )                            \
 	{                                                         \
 		log_fmt("\nAST::is_equal: Member - " #val " failed\n" \
 		        "AST  : %S\n"                                 \
 		        "Other: %S\n"                                 \
-		    , debug_str()                                     \
+		    , debug_str(self)                                 \
 		    , other->debug_str()                              \
 		);                                                    \
 	                                                          \
@@ -635,12 +635,12 @@ bool AST::is_equal( AST* other )
 	}
 
 	#define check_member_str( str )                                 \
-	if ( str != other->str )                                        \
+	if ( self->str != other->str )                                  \
 	{                                                               \
 		log_fmt("\nAST::is_equal: Member string - "#str " failed\n" \
 				"AST  : %S\n"                                       \
 				"Other: %S\n"                                       \
-			, debug_str()                                           \
+			, debug_str(self)                                       \
 			, other->debug_str()                                    \
 		);                                                          \
 	                                                                \
@@ -648,12 +648,12 @@ bool AST::is_equal( AST* other )
 	}
 
 	#define check_member_content( content )                               \
-	if ( content != other->content )                                      \
+	if ( self->content != other->content )                                \
 	{                                                                     \
 		log_fmt("\nAST::is_equal: Member content - "#content " failed\n"  \
 				"AST  : %S\n"                                             \
 				"Other: %S\n"                                             \
-			, debug_str()                                                 \
+			, debug_str(self)                                             \
 			, other->debug_str()                                          \
 		);                                                                \
                                                                           \
@@ -661,13 +661,13 @@ bool AST::is_equal( AST* other )
 			"so it must be verified by eye for now\n"                     \
 			"AST   Content:\n%S\n"                                        \
 			"Other Content:\n%S\n"                                        \
-			, visualize_whitespace(content)                               \
+			, visualize_whitespace(self->content)                         \
 			, visualize_whitespace(other->content)                        \
 		);                                                                \
 	}
 
 	#define check_member_ast( ast )                                                                \
-	if ( ast )                                                                                     \
+	if ( self->ast )                                                                               \
 	{                                                                                              \
 		if ( other->ast == nullptr )                                                               \
 		{                                                                                          \
@@ -675,24 +675,24 @@ bool AST::is_equal( AST* other )
 					"AST  : %s\n"                                                                  \
 					"Other: %s\n"                                                                  \
 					"For ast member: %s\n"                                                         \
-				, debug_str()                                                                      \
+				, debug_str(self)                                                                  \
 				, other->debug_str()                                                               \
-				, ast->debug_str()                                                                 \
+				, self->ast->debug_str()                                                           \
 			);                                                                                     \
                                                                                                    \
 			return false;                                                                          \
 		}                                                                                          \
                                                                                                    \
-		if ( ! ast->is_equal( other->ast ) )                                                       \
+		if ( ! self->ast->is_equal( other->ast ) )                                                 \
 		{                                                                                          \
 			log_fmt( "\nAST::is_equal: Failed for " #ast"\n"                                       \
 			         "AST  : %S\n"                                                                 \
 			         "Other: %S\n"                                                                 \
 			         "For     ast member: %S\n"                                                    \
 			         "other's ast member: %S\n"                                                    \
-				, debug_str()                                                                      \
+				, debug_str(self)                                                                  \
 				, other->debug_str()                                                               \
-				, ast->debug_str()                                                                 \
+				, self->ast->debug_str()                                                           \
 				, other->ast->debug_str()                                                          \
 			);                                                                                     \
 		                                                                                           \
@@ -907,9 +907,9 @@ bool AST::is_equal( AST* other )
 
 		case Parameters:
 		{
-			if ( NumEntries > 1 )
+			if ( self->NumEntries > 1 )
 			{
-				AST* curr       = this;
+				AST* curr       = self;
 				AST* curr_other = other;
 				while ( curr != nullptr  )
 				{
@@ -934,7 +934,7 @@ bool AST::is_equal( AST* other )
 									"Other: %S\n"
 									"For     ast member: %S\n"
 									"other's ast member: %S\n"
-								, debug_str()
+								, debug_str(self)
 								, other->debug_str()
 								, curr->debug_str()
 								, curr_other->debug_str()
@@ -949,7 +949,7 @@ bool AST::is_equal( AST* other )
 									"Other: %S\n"
 									"For     ast member: %S\n"
 									"other's ast member: %S\n"
-								, debug_str()
+								, debug_str(self)
 								, other->debug_str()
 								, curr->debug_str()
 								, curr_other->debug_str()
@@ -964,7 +964,7 @@ bool AST::is_equal( AST* other )
 									"Other: %S\n"
 									"For     ast member: %S\n"
 									"other's ast member: %S\n"
-								, debug_str()
+								, debug_str(self)
 								, other->debug_str()
 								, curr->debug_str()
 								, curr_other->debug_str()
@@ -1020,7 +1020,7 @@ bool AST::is_equal( AST* other )
 		{
 			check_member_val( NumEntries );
 			check_member_str( Name );
-			for ( s32 idx = 0; idx < NumEntries; ++idx )
+			for ( s32 idx = 0; idx < self->NumEntries; ++idx )
 			{
 				check_member_val( ArrSpecs[ idx ] );
 			}
@@ -1103,7 +1103,7 @@ bool AST::is_equal( AST* other )
 			check_member_ast( Front );
 			check_member_ast( Back );
 
-			AST* curr       = Front;
+			AST* curr       = self->Front;
 			AST* curr_other = other->Front;
 			while ( curr != nullptr )
 			{
@@ -1126,7 +1126,7 @@ bool AST::is_equal( AST* other )
 							"Other: %S\n"
 							"For     ast member: %S\n"
 							"other's ast member: %S\n"
-						, debug_str()
+						, debug_str(self)
 						, other->debug_str()
 						, curr->debug_str()
 						, curr_other->debug_str()

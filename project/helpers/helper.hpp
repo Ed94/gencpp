@@ -354,17 +354,6 @@ CodeBody gen_ast_inlines()
 	char const* code_impl_tmpl = stringize(
 		\n
 		inline
-		bool <typename>::is_equal( Code other )
-		{
-			if ( ast == nullptr || other.ast == nullptr )
-			{
-				// Just check if they're both null.
-				// log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-				return ast == nullptr && other.ast == nullptr;
-			}
-			return rcast(AST*, ast)->is_equal( other.ast );
-		}
-		inline
 		bool <typename>::is_valid()
 		{
 			return (AST*) ast != nullptr && rcast( AST*, ast)->Type != CodeT::Invalid;

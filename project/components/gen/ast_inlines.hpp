@@ -7,15 +7,6 @@
 
 #pragma region generated code inline implementation
 
-inline bool Code::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool Code::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -47,15 +38,6 @@ inline Code::operator bool()
 	return ast != nullptr;
 }
 
-inline bool CodeBody::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeBody::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -85,15 +67,6 @@ inline CodeBody& CodeBody::operator=( Code other )
 inline CodeBody::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodeAttributes::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeAttributes::is_valid()
@@ -147,15 +120,6 @@ inline AST_Attributes* CodeAttributes::operator->()
 	return ast;
 }
 
-inline bool CodeComment::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeComment::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -205,15 +169,6 @@ inline AST_Comment* CodeComment::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeConstructor::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeConstructor::is_valid()
@@ -267,15 +222,6 @@ inline AST_Constructor* CodeConstructor::operator->()
 	return ast;
 }
 
-inline bool CodeClass::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeClass::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -305,15 +251,6 @@ inline CodeClass& CodeClass::operator=( Code other )
 inline CodeClass::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodeDefine::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeDefine::is_valid()
@@ -367,15 +304,6 @@ inline AST_Define* CodeDefine::operator->()
 	return ast;
 }
 
-inline bool CodeDestructor::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeDestructor::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -425,15 +353,6 @@ inline AST_Destructor* CodeDestructor::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeEnum::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeEnum::is_valid()
@@ -487,15 +406,6 @@ inline AST_Enum* CodeEnum::operator->()
 	return ast;
 }
 
-inline bool CodeExec::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeExec::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -545,15 +455,6 @@ inline AST_Exec* CodeExec::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeExtern::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeExtern::is_valid()
@@ -607,15 +508,6 @@ inline AST_Extern* CodeExtern::operator->()
 	return ast;
 }
 
-inline bool CodeFriend::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeFriend::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -665,15 +557,6 @@ inline AST_Friend* CodeFriend::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeFn::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeFn::is_valid()
@@ -727,15 +610,6 @@ inline AST_Fn* CodeFn::operator->()
 	return ast;
 }
 
-inline bool CodeInclude::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeInclude::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -785,15 +659,6 @@ inline AST_Include* CodeInclude::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeModule::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeModule::is_valid()
@@ -847,15 +712,6 @@ inline AST_Module* CodeModule::operator->()
 	return ast;
 }
 
-inline bool CodeNS::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeNS::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -905,15 +761,6 @@ inline AST_NS* CodeNS::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeOperator::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeOperator::is_valid()
@@ -967,15 +814,6 @@ inline AST_Operator* CodeOperator::operator->()
 	return ast;
 }
 
-inline bool CodeOpCast::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeOpCast::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1027,15 +865,6 @@ inline AST_OpCast* CodeOpCast::operator->()
 	return ast;
 }
 
-inline bool CodeParam::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeParam::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1065,15 +894,6 @@ inline CodeParam& CodeParam::operator=( Code other )
 inline CodeParam::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodePragma::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodePragma::is_valid()
@@ -1127,15 +947,6 @@ inline AST_Pragma* CodePragma::operator->()
 	return ast;
 }
 
-inline bool CodePreprocessCond::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodePreprocessCond::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1187,15 +998,6 @@ inline AST_PreprocessCond* CodePreprocessCond::operator->()
 	return ast;
 }
 
-inline bool CodeSpecifiers::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeSpecifiers::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1227,15 +1029,6 @@ inline CodeSpecifiers::operator bool()
 	return ast != nullptr;
 }
 
-inline bool CodeStruct::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeStruct::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1265,15 +1058,6 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 inline CodeStruct::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline bool CodeTemplate::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeTemplate::is_valid()
@@ -1327,15 +1111,6 @@ inline AST_Template* CodeTemplate::operator->()
 	return ast;
 }
 
-inline bool CodeType::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeType::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1385,15 +1160,6 @@ inline AST_Type* CodeType::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeTypedef::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeTypedef::is_valid()
@@ -1447,15 +1213,6 @@ inline AST_Typedef* CodeTypedef::operator->()
 	return ast;
 }
 
-inline bool CodeUnion::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeUnion::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1507,15 +1264,6 @@ inline AST_Union* CodeUnion::operator->()
 	return ast;
 }
 
-inline bool CodeUsing::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
-}
-
 inline bool CodeUsing::is_valid()
 {
 	return (AST*)ast != nullptr && rcast( AST*, ast )->Type != CodeT::Invalid;
@@ -1565,15 +1313,6 @@ inline AST_Using* CodeUsing::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline bool CodeVar::is_equal( Code other )
-{
-	if ( ast == nullptr || other.ast == nullptr )
-	{
-		return ast == nullptr && other.ast == nullptr;
-	}
-	return rcast( AST*, ast )->is_equal( other.ast );
 }
 
 inline bool CodeVar::is_valid()
