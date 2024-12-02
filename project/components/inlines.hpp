@@ -140,6 +140,18 @@ bool is_valid(Code self)
 }
 
 inline
+void set_global(Code self)
+{
+	if ( self.ast == nullptr )
+	{
+		log_failure("Code::set_global: Cannot set code as global, AST is null!");
+		return;
+	}
+
+	self->Parent = Code_Global.ast;
+}
+
+inline
 Code& Code::operator ++()
 {
 	if ( ast )

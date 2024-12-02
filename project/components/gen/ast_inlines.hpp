@@ -7,16 +7,6 @@
 
 #pragma region generated code inline implementation
 
-inline void Code::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline Code& Code::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -33,16 +23,6 @@ inline Code::operator bool()
 	return ast != nullptr;
 }
 
-inline void CodeBody::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeBody& CodeBody::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -57,16 +37,6 @@ inline CodeBody& CodeBody::operator=( Code other )
 inline CodeBody::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline void CodeAttributes::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeAttributes& CodeAttributes::operator=( Code other )
@@ -105,16 +75,6 @@ inline AST_Attributes* CodeAttributes::operator->()
 	return ast;
 }
 
-inline void CodeComment::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeComment& CodeComment::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -149,16 +109,6 @@ inline AST_Comment* CodeComment::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeConstructor::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeConstructor& CodeConstructor::operator=( Code other )
@@ -197,16 +147,6 @@ inline AST_Constructor* CodeConstructor::operator->()
 	return ast;
 }
 
-inline void CodeClass::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeClass& CodeClass::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -221,16 +161,6 @@ inline CodeClass& CodeClass::operator=( Code other )
 inline CodeClass::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline void CodeDefine::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeDefine& CodeDefine::operator=( Code other )
@@ -269,16 +199,6 @@ inline AST_Define* CodeDefine::operator->()
 	return ast;
 }
 
-inline void CodeDestructor::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeDestructor& CodeDestructor::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -313,16 +233,6 @@ inline AST_Destructor* CodeDestructor::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeEnum::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeEnum& CodeEnum::operator=( Code other )
@@ -361,16 +271,6 @@ inline AST_Enum* CodeEnum::operator->()
 	return ast;
 }
 
-inline void CodeExec::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeExec& CodeExec::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -405,16 +305,6 @@ inline AST_Exec* CodeExec::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeExtern::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeExtern& CodeExtern::operator=( Code other )
@@ -453,16 +343,6 @@ inline AST_Extern* CodeExtern::operator->()
 	return ast;
 }
 
-inline void CodeFriend::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeFriend& CodeFriend::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -497,16 +377,6 @@ inline AST_Friend* CodeFriend::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeFn::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeFn& CodeFn::operator=( Code other )
@@ -545,16 +415,6 @@ inline AST_Fn* CodeFn::operator->()
 	return ast;
 }
 
-inline void CodeInclude::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeInclude& CodeInclude::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -589,16 +449,6 @@ inline AST_Include* CodeInclude::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeModule::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeModule& CodeModule::operator=( Code other )
@@ -637,16 +487,6 @@ inline AST_Module* CodeModule::operator->()
 	return ast;
 }
 
-inline void CodeNS::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeNS& CodeNS::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -681,16 +521,6 @@ inline AST_NS* CodeNS::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeOperator::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeOperator& CodeOperator::operator=( Code other )
@@ -729,16 +559,6 @@ inline AST_Operator* CodeOperator::operator->()
 	return ast;
 }
 
-inline void CodeOpCast::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeOpCast& CodeOpCast::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -775,16 +595,6 @@ inline AST_OpCast* CodeOpCast::operator->()
 	return ast;
 }
 
-inline void CodeParam::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeParam& CodeParam::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -799,16 +609,6 @@ inline CodeParam& CodeParam::operator=( Code other )
 inline CodeParam::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline void CodePragma::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodePragma& CodePragma::operator=( Code other )
@@ -847,16 +647,6 @@ inline AST_Pragma* CodePragma::operator->()
 	return ast;
 }
 
-inline void CodePreprocessCond::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodePreprocessCond& CodePreprocessCond::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -893,16 +683,6 @@ inline AST_PreprocessCond* CodePreprocessCond::operator->()
 	return ast;
 }
 
-inline void CodeSpecifiers::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeSpecifiers& CodeSpecifiers::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -919,16 +699,6 @@ inline CodeSpecifiers::operator bool()
 	return ast != nullptr;
 }
 
-inline void CodeStruct::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeStruct& CodeStruct::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -943,16 +713,6 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 inline CodeStruct::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline void CodeTemplate::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeTemplate& CodeTemplate::operator=( Code other )
@@ -991,16 +751,6 @@ inline AST_Template* CodeTemplate::operator->()
 	return ast;
 }
 
-inline void CodeType::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeType& CodeType::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1035,16 +785,6 @@ inline AST_Type* CodeType::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeTypedef::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeTypedef& CodeTypedef::operator=( Code other )
@@ -1083,16 +823,6 @@ inline AST_Typedef* CodeTypedef::operator->()
 	return ast;
 }
 
-inline void CodeUnion::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeUnion& CodeUnion::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1129,16 +859,6 @@ inline AST_Union* CodeUnion::operator->()
 	return ast;
 }
 
-inline void CodeUsing::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
-}
-
 inline CodeUsing& CodeUsing::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
@@ -1173,16 +893,6 @@ inline AST_Using* CodeUsing::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline void CodeVar::set_global()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
-		return;
-	}
-	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeVar& CodeVar::operator=( Code other )

@@ -174,7 +174,7 @@ struct Code
 	bool        is_equal( Code other )     { return GEN_NS is_equal(* this, other); } \
 	bool        is_body()                  { return GEN_NS is_body(* this); } \
 	bool        is_valid()                 { return GEN_NS is_valid(* this); } \
-	void        set_global();              \
+	void        set_global()               { return GEN_NS set_global(* this); } \
 	String      to_string();               \
 	Typename&   operator = ( AST* other ); \
 	Typename&   operator = ( Code other ); \

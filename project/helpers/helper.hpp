@@ -354,17 +354,6 @@ CodeBody gen_ast_inlines()
 	char const* code_impl_tmpl = stringize(
 		\n
 		inline
-		void <typename>::set_global()
-		{
-			if ( ast == nullptr )
-			{
-				log_failure("Code::set_global: Cannot set code as global, AST is null!");
-				return;
-			}
-
-			rcast(AST*, ast)->Parent = Code_Global.ast;
-		}
-		inline
 		<typename>& <typename>::operator =( Code other )
 		{
 			if ( other.ast && other->Parent )
