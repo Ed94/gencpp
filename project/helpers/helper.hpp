@@ -374,11 +374,6 @@ CodeBody gen_ast_inlines()
 
 	char const* codetype_impl_tmpl = stringize(
 		inline
-		AST* Code<typename>::raw()
-		{
-			return rcast( AST*, ast );
-		}
-		inline
 		Code<typename>::operator Code()
 		{
 			return *rcast( Code*, this );

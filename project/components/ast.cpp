@@ -545,11 +545,11 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Struct:
-			cast(CodeStruct, {self}).to_string_def( * result );
+			to_string_def(cast(CodeStruct, {self}), result );
 		break;
 
 		case Struct_Fwd:
-			cast(CodeStruct, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeStruct, {self}), result );
 		break;
 
 		case Template:

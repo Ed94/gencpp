@@ -13,9 +13,8 @@ String to_string(Code self)
 	return to_string( self.ast );
 }
 
-String CodeAttributes::to_string()
-{
-	return GEN_NS duplicate( ast->Content, GlobalAllocator );
+String to_string(CodeAttributes attributes) {
+	return GEN_NS duplicate( attributes->Content, GlobalAllocator );
 }
 
 String to_string(CodeBody body)
@@ -175,7 +174,7 @@ void to_string_def( CodeClass self, String* result )
 
 	if ( ast->Attributes )
 	{
-		append_fmt( result, "%S ", ast->Attributes.to_string() );
+		append_fmt( result, "%S ", GEN_NS to_string(ast->Attributes) );
 	}
 
 	if ( ast->ParentType )
@@ -219,7 +218,7 @@ void to_string_fwd( CodeClass self, String* result )
 		append( result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( result, "class %S %S", ast->Attributes.to_string(), ast->Name );
+		append_fmt( result, "class %S %S", to_string(ast->Attributes), ast->Name );
 
 	else append_fmt( result, "class %S", ast->Name );
 
@@ -333,7 +332,7 @@ void CodeEnum::to_string_def( String& result )
 		append( & result, "enum " );
 
 		if ( ast->Attributes )
-			append_fmt( & result, "%S ", ast->Attributes.to_string() );
+			append_fmt( & result, "%S ", GEN_NS to_string(ast->Attributes) );
 
 		if ( ast->UnderlyingType )
 			append_fmt( & result, "%S : %S\n{\n%S\n}"
@@ -362,7 +361,7 @@ void CodeEnum::to_string_fwd( String& result )
 		append( & result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	if ( ast->UnderlyingType )
 		append_fmt( & result, "enum %S : %S", ast->Name, ast->UnderlyingType.to_string() );
@@ -389,7 +388,7 @@ void CodeEnum::to_string_class_def( String& result )
 
 		if ( ast->Attributes )
 		{
-			append_fmt( & result, "%S ", ast->Attributes.to_string() );
+			append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 		}
 
 		if ( ast->UnderlyingType )
@@ -418,7 +417,7 @@ void CodeEnum::to_string_class_fwd( String& result )
 	append( & result, "enum class " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	append_fmt( & result, "%S : %S", ast->Name, ast->UnderlyingType.to_string() );
 
@@ -498,7 +497,7 @@ void CodeFn::to_string_def( String& result )
 		append( & result, "export" );
 
 	if ( ast->Attributes )
-		append_fmt( & result, " %S ", ast->Attributes.to_string() );
+		append_fmt( & result, " %S ",GEN_NS to_string(ast->Attributes) );
 
 	bool prefix_specs = false;
 	if ( ast->Specs )
@@ -551,7 +550,7 @@ void CodeFn::to_string_fwd( String& result )
 		append( & result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	b32 prefix_specs = false;
 	if ( ast->Specs )
@@ -665,10 +664,10 @@ void CodeOperator::to_string_def( String& result )
 		append( & result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	if ( ast->Specs )
 	{
@@ -719,7 +718,7 @@ void CodeOperator::to_string_fwd( String& result )
 		append( & result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S\n", ast->Attributes.to_string() );
+		append_fmt( & result, "%S\n",GEN_NS to_string(ast->Attributes) );
 
 	if ( ast->Specs )
 	{
@@ -990,82 +989,89 @@ void to_string( CodeSpecifiers self, String* result )
 	}
 }
 
-String CodeStruct::to_string()
+String to_string(CodeStruct self)
 {
+	GEN_ASSERT(self.ast != nullptr);
 	String result = string_make( GlobalAllocator, "" );
-	switch ( ast->Type )
+	switch ( self->Type )
 	{
 		using namespace ECode;
 		case Struct:
-			to_string_def( result );
+			to_string_def( self, & result );
 		break;
 		case Struct_Fwd:
-			to_string_fwd( result );
+			to_string_fwd( self, & result );
 		break;
 	}
 	return result;
 }
 
-void CodeStruct::to_string_def( String& result )
+void to_string_def( CodeStruct self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	GEN_ASSERT(self.ast != nullptr);
+	AST_Struct* ast = self.ast;
 
-	append( & result, "struct " );
+	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
+
+	append( result, "struct " );
 
 	if ( ast->Attributes )
 	{
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( result, "%S ",GEN_NS to_string(ast->Attributes) );
 	}
 
 	if ( ast->ParentType )
 	{
 		char const* access_level = to_str( ast->ParentAccess );
 
-		append_fmt( & result, "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
+		append_fmt( result, "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
 
 		CodeType interface = cast(CodeType, ast->ParentType->Next);
 		if ( interface )
-			append( & result, "\n" );
+			append( result, "\n" );
 
 		while ( interface )
 		{
-			append_fmt( & result, ", %S", interface.to_string() );
+			append_fmt( result, ", %S", interface.to_string() );
 			interface = interface->Next ? cast( CodeType, interface->Next) : CodeType { nullptr };
 		}
 	}
 	else if ( ast->Name )
 	{
-		append( & result, ast->Name );
+		append( result, ast->Name );
 	}
 
 	if ( ast->InlineCmt )
 	{
-		append_fmt( & result, " // %S", ast->InlineCmt->Content );
+		append_fmt( result, " // %S", ast->InlineCmt->Content );
 	}
 
-	append_fmt( & result, "\n{\n%S\n}", GEN_NS to_string(ast->Body) );
+	append_fmt( result, "\n{\n%S\n}", GEN_NS to_string(ast->Body) );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
-		append( & result, ";\n");
+		append( result, ";\n");
 }
 
-void CodeStruct::to_string_fwd( String& result )
+void to_string_fwd( CodeStruct self, String* result )
 {
+	GEN_ASSERT(self.ast != nullptr);
+	AST_Struct* ast = self.ast;
+
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+		append( result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "struct %S %S", ast->Attributes.to_string(), ast->Name );
+		append_fmt( result, "struct %S %S",GEN_NS to_string(ast->Attributes), ast->Name );
 
-	else append_fmt( & result, "struct %S", ast->Name );
+	else append_fmt( result, "struct %S", ast->Name );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
 	{
 		if ( ast->InlineCmt )
-			append_fmt( & result, ";  %S", ast->InlineCmt->Content );
+			append_fmt( result, ";  %S", ast->InlineCmt->Content );
 		else
-			append( & result, ";\n");
+			append( result, ";\n");
 	}
 }
 
@@ -1142,7 +1148,7 @@ void CodeType::to_string( String& result )
 		if ( ast->ReturnType && ast->Params )
 		{
 			if ( ast->Attributes )
-				append_fmt( result, "%S ", ast->Attributes.to_string() );
+				append_fmt( result, "%S ",GEN_NS to_string(ast->Attributes) );
 			else
 			{
 				if ( ast->Specs )
@@ -1157,7 +1163,7 @@ void CodeType::to_string( String& result )
 		if ( ast->ReturnType && ast->Params )
 		{
 			if ( ast->Attributes )
-				append_fmt( & result, "%S ", ast->Attributes.to_string() );
+				append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 			else
 			{
 				if ( ast->Specs )
@@ -1171,7 +1177,7 @@ void CodeType::to_string( String& result )
 	#endif
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	if ( ast->Specs )
 		append_fmt( & result, "%S %S", ast->Name, GEN_NS to_string(ast->Specs) );
@@ -1197,7 +1203,7 @@ void CodeUnion::to_string( String& result )
 	append( & result, "union " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	if ( ast->Name )
 	{
@@ -1240,7 +1246,7 @@ void CodeUsing::to_string( String& result )
 		append( & result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( & result, "%S ", ast->Attributes.to_string() );
+		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
 
 	if ( ast->UnderlyingType )
 	{

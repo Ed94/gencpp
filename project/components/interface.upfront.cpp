@@ -555,7 +555,7 @@ CodeClass def_class( StrC name
 
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
-		log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", attributes.debug_str() );
+		log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -697,7 +697,7 @@ CodeEnum def_enum( StrC name
 
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
-		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", attributes.debug_str() );
+		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -846,7 +846,7 @@ CodeFn def_function( StrC name
 
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
-		log_failure( "gen::def_function: attributes was not a `PlatformAttributes` type: %s", attributes.debug_str() );
+		log_failure( "gen::def_function: attributes was not a `PlatformAttributes` type: %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -967,7 +967,7 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
-		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", attributes.debug_str() );
+		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -1183,7 +1183,7 @@ CodeStruct def_struct( StrC name
 
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
-		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", attributes.debug_str() );
+		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -1229,7 +1229,7 @@ CodeStruct def_struct( StrC name
 	{
 		for (s32 idx = 0; idx < num_interfaces; idx++ )
 		{
-			result.add_interface( interfaces[idx] );
+			add_interface(result, interfaces[idx] );
 		}
 	}
 
@@ -1387,7 +1387,7 @@ CodeUnion def_union( StrC name, Code body, CodeAttributes attributes, ModuleFlag
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", attributes.debug_str() );
+		log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -1424,7 +1424,7 @@ CodeUsing def_using( StrC name, CodeType type
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", attributes.debug_str() );
+		log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -1464,7 +1464,7 @@ CodeVar def_variable( CodeType type, StrC name, Code value
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type - %s", attributes.debug_str() );
+		log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type - %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 

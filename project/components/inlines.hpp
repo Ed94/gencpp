@@ -353,13 +353,13 @@ SpecifierT* end(CodeSpecifiers self)
 
 #pragma region CodeStruct
 inline
-void CodeStruct::add_interface( CodeType type )
+void add_interface(CodeStruct self, CodeType type )
 {
-	CodeType possible_slot = ast->ParentType;
+	CodeType possible_slot = self->ParentType;
 	if ( possible_slot.ast )
 	{
 		// Were adding an interface to parent type, so we need to make sure the parent type is public.
-		ast->ParentAccess = AccessSpec_Public;
+		self->ParentAccess = AccessSpec_Public;
 		// If your planning on adding a proper parent,
 		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}

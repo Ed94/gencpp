@@ -32,8 +32,15 @@ s32    remove   (CodeSpecifiers specifiers, SpecifierT to_remove );
 String to_string(CodeSpecifiers specifiers);
 void   to_string(CodeSpecifiers specifiers, String* result);
 
-SpecifierT* begin( CodeSpecifiers specifiers );
+SpecifierT* begin(CodeSpecifiers specifiers );
 SpecifierT* end  (CodeSpecifiers specifiers);
+
+void   add_interface(CodeStruct self, CodeType interface);
+String to_string    (CodeStruct self);
+void   to_string_fwd(CodeStruct self, String* result);
+void   to_string_def(CodeStruct self, String* result);
+
+String to_string(CodeAttributes attributes);
 
 #pragma region Code Types
 // These structs are not used at all by the C vairant.
@@ -148,7 +155,7 @@ struct CodeSpecifiers
 
 struct CodeStruct
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeStruct );
 
 	void add_interface( CodeType interface );
@@ -159,14 +166,7 @@ struct CodeStruct
 #endif
 
 	Using_CodeOps( CodeStruct );
-	AST* raw()
-	{
-		return rcast( AST*, ast );
-	}
-	operator Code()
-	{
-		return * rcast( Code*, this );
-	}
+	operator Code() { return * rcast( Code*, this ); }
 	AST_Struct* operator->()
 	{
 		if ( ast == nullptr )
@@ -181,13 +181,12 @@ struct CodeStruct
 
 struct CodeAttributes
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code(CodeAttributes);
 	String to_string();
 #endif
 
 	Using_CodeOps(CodeAttributes);
-	AST *raw();
 	operator Code();
 	AST_Attributes *operator->();
 	AST_Attributes *ast;
@@ -203,7 +202,6 @@ struct CodeComment
 #endif
 
 	Using_CodeOps(CodeComment);
-	AST *raw();
 	operator Code();
 	AST_Comment *operator->();
 	AST_Comment *ast;
@@ -220,7 +218,6 @@ struct CodeConstructor
 #endif
 
 	Using_CodeOps(CodeConstructor);
-	AST*             raw();
 	operator         Code();
 	AST_Constructor* operator->();
 	AST_Constructor* ast;
@@ -236,7 +233,6 @@ struct CodeDefine
 #endif
 
 	Using_CodeOps(CodeDefine);
-	AST*        raw();
 	operator    Code();
 	AST_Define* operator->();
 	AST_Define* ast;
@@ -253,7 +249,6 @@ struct CodeDestructor
 #endif
 
 	Using_CodeOps(CodeDestructor);
-	AST*             raw();
 	operator         Code();
 	AST_Destructor* operator->();
 	AST_Destructor* ast;
@@ -272,7 +267,6 @@ struct CodeEnum
 #endif
 
 	Using_CodeOps(CodeEnum);
-	AST*      raw();
 	operator  Code();
 	AST_Enum* operator->();
 	AST_Enum* ast;
@@ -286,7 +280,6 @@ struct CodeExec
 #endif
 
 	Using_CodeOps(CodeExec);
-	AST *raw();
 	operator Code();
 	AST_Exec *operator->();
 	AST_Exec *ast;
@@ -507,7 +500,6 @@ struct CodeExtern
 #endif
 
 	Using_CodeOps(CodeExtern);
-	AST*        raw();
 	operator    Code();
 	AST_Extern* operator->();
 	AST_Extern* ast;
@@ -523,7 +515,6 @@ struct CodeInclude
 #endif
 
 	Using_CodeOps(CodeInclude);
-	AST*         raw();
 	operator     Code();
 	AST_Include* operator->();
 	AST_Include* ast;
@@ -539,7 +530,6 @@ struct CodeFriend
 #endif
 
 	Using_CodeOps(CodeFriend);
-	AST*        raw();
 	operator    Code();
 	AST_Friend* operator->();
 	AST_Friend* ast;
@@ -556,7 +546,6 @@ struct CodeFn
 #endif
 
 	Using_CodeOps(CodeFn);
-	AST*     raw();
 	operator Code();
 	AST_Fn*  operator->();
 	AST_Fn*  ast;
@@ -572,7 +561,6 @@ struct CodeModule
 #endif
 
 	Using_CodeOps(CodeModule);
-	AST*        raw();
 	operator    Code();
 	AST_Module* operator->();
 	AST_Module* ast;
@@ -588,7 +576,6 @@ struct CodeNS
 #endif
 
 	Using_CodeOps(CodeNS);
-	AST*     raw();
 	operator Code();
 	AST_NS*  operator->();
 	AST_NS*  ast;
@@ -605,7 +592,6 @@ struct CodeOperator
 #endif
 
 	Using_CodeOps(CodeOperator);
-	AST*          raw();
 	operator      Code();
 	AST_Operator* operator->();
 	AST_Operator* ast;
@@ -622,7 +608,6 @@ struct CodeOpCast
 #endif
 
 	Using_CodeOps(CodeOpCast);
-	AST*        raw();
 	operator    Code();
 	AST_OpCast* operator->();
 	AST_OpCast* ast;
@@ -638,7 +623,6 @@ struct CodePragma
 #endif
 
 	Using_CodeOps( CodePragma );
-	AST*        raw();
 	operator    Code();
 	AST_Pragma* operator->();
 	AST_Pragma* ast;
@@ -659,7 +643,6 @@ struct CodePreprocessCond
 #endif
 
 	Using_CodeOps( CodePreprocessCond );
-	AST*                raw();
 	operator            Code();
 	AST_PreprocessCond* operator->();
 	AST_PreprocessCond* ast;
@@ -859,7 +842,6 @@ struct CodeTemplate
 #endif
 
 	Using_CodeOps( CodeTemplate );
-	AST*          raw();
 	operator      Code();
 	AST_Template* operator->();
 	AST_Template* ast;
@@ -875,7 +857,6 @@ struct CodeType
 #endif
 
 	Using_CodeOps( CodeType );
-	AST*      raw();
 	operator  Code();
 	AST_Type* operator->();
 	AST_Type* ast;
@@ -891,7 +872,6 @@ struct CodeTypedef
 #endif
 
 	Using_CodeOps( CodeTypedef );
-	AST*         raw();
 	operator     Code();
 	AST_Typedef* operator->();
 	AST_Typedef* ast;
@@ -907,7 +887,6 @@ struct CodeUnion
 #endif
 
 	Using_CodeOps(CodeUnion);
-	AST*       raw();
 	operator   Code();
 	AST_Union* operator->();
 	AST_Union* ast;
@@ -924,7 +903,6 @@ struct CodeUsing
 #endif
 
 	Using_CodeOps(CodeUsing);
-	AST*       raw();
 	operator   Code();
 	AST_Using* operator->();
 	AST_Using* ast;
@@ -940,7 +918,6 @@ struct CodeVar
 #endif
 
 	Using_CodeOps(CodeVar);
-	AST*     raw();
 	operator Code();
 	AST_Var* operator->();
 	AST_Var* ast;
