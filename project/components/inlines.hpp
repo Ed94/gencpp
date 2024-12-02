@@ -88,6 +88,17 @@ AST::operator Code()
 	return { this };
 }
 
+#pragma region Code
+
+inline
+char const* debug_str( Code code )
+{
+	if ( code.ast == nullptr )
+		return "Code::debug_str: AST is null!";
+
+	return debug_str( code.ast );
+}
+
 inline
 Code& Code::operator ++()
 {
@@ -96,6 +107,8 @@ Code& Code::operator ++()
 
 	return *this;
 }
+
+#pragma endregion Code
 
 inline
 void CodeClass::add_interface( CodeType type )

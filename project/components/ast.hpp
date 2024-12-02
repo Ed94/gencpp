@@ -168,7 +168,7 @@ struct Code
 {
 
 #	define Using_Code( Typename )          \
-	char const* debug_str();               \
+	char const* debug_str()                { return GEN_NS debug_str(*this); } \
 	Code        duplicate();			   \
 	bool        is_equal( Code other );    \
 	bool        is_body();                 \

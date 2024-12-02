@@ -7,13 +7,6 @@
 
 #pragma region generated code inline implementation
 
-inline char const* Code::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code Code::duplicate()
 {
 	if ( ast == nullptr )
@@ -73,13 +66,6 @@ inline Code::operator bool()
 	return ast != nullptr;
 }
 
-inline char const* CodeBody::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeBody::duplicate()
 {
 	if ( ast == nullptr )
@@ -137,13 +123,6 @@ inline CodeBody& CodeBody::operator=( Code other )
 inline CodeBody::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline char const* CodeAttributes::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeAttributes::duplicate()
@@ -225,13 +204,6 @@ inline AST_Attributes* CodeAttributes::operator->()
 	return ast;
 }
 
-inline char const* CodeComment::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeComment::duplicate()
 {
 	if ( ast == nullptr )
@@ -309,13 +281,6 @@ inline AST_Comment* CodeComment::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeConstructor::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeConstructor::duplicate()
@@ -397,13 +362,6 @@ inline AST_Constructor* CodeConstructor::operator->()
 	return ast;
 }
 
-inline char const* CodeClass::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeClass::duplicate()
 {
 	if ( ast == nullptr )
@@ -461,13 +419,6 @@ inline CodeClass& CodeClass::operator=( Code other )
 inline CodeClass::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline char const* CodeDefine::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeDefine::duplicate()
@@ -549,13 +500,6 @@ inline AST_Define* CodeDefine::operator->()
 	return ast;
 }
 
-inline char const* CodeDestructor::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeDestructor::duplicate()
 {
 	if ( ast == nullptr )
@@ -633,13 +577,6 @@ inline AST_Destructor* CodeDestructor::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeEnum::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeEnum::duplicate()
@@ -721,13 +658,6 @@ inline AST_Enum* CodeEnum::operator->()
 	return ast;
 }
 
-inline char const* CodeExec::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeExec::duplicate()
 {
 	if ( ast == nullptr )
@@ -805,13 +735,6 @@ inline AST_Exec* CodeExec::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeExtern::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeExtern::duplicate()
@@ -893,13 +816,6 @@ inline AST_Extern* CodeExtern::operator->()
 	return ast;
 }
 
-inline char const* CodeFriend::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeFriend::duplicate()
 {
 	if ( ast == nullptr )
@@ -977,13 +893,6 @@ inline AST_Friend* CodeFriend::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeFn::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeFn::duplicate()
@@ -1065,13 +974,6 @@ inline AST_Fn* CodeFn::operator->()
 	return ast;
 }
 
-inline char const* CodeInclude::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeInclude::duplicate()
 {
 	if ( ast == nullptr )
@@ -1149,13 +1051,6 @@ inline AST_Include* CodeInclude::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeModule::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeModule::duplicate()
@@ -1237,13 +1132,6 @@ inline AST_Module* CodeModule::operator->()
 	return ast;
 }
 
-inline char const* CodeNS::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeNS::duplicate()
 {
 	if ( ast == nullptr )
@@ -1321,13 +1209,6 @@ inline AST_NS* CodeNS::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeOperator::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeOperator::duplicate()
@@ -1409,13 +1290,6 @@ inline AST_Operator* CodeOperator::operator->()
 	return ast;
 }
 
-inline char const* CodeOpCast::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeOpCast::duplicate()
 {
 	if ( ast == nullptr )
@@ -1495,13 +1369,6 @@ inline AST_OpCast* CodeOpCast::operator->()
 	return ast;
 }
 
-inline char const* CodeParam::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeParam::duplicate()
 {
 	if ( ast == nullptr )
@@ -1559,13 +1426,6 @@ inline CodeParam& CodeParam::operator=( Code other )
 inline CodeParam::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline char const* CodePragma::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodePragma::duplicate()
@@ -1647,13 +1507,6 @@ inline AST_Pragma* CodePragma::operator->()
 	return ast;
 }
 
-inline char const* CodePreprocessCond::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodePreprocessCond::duplicate()
 {
 	if ( ast == nullptr )
@@ -1733,13 +1586,6 @@ inline AST_PreprocessCond* CodePreprocessCond::operator->()
 	return ast;
 }
 
-inline char const* CodeSpecifiers::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeSpecifiers::duplicate()
 {
 	if ( ast == nullptr )
@@ -1799,13 +1645,6 @@ inline CodeSpecifiers::operator bool()
 	return ast != nullptr;
 }
 
-inline char const* CodeStruct::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeStruct::duplicate()
 {
 	if ( ast == nullptr )
@@ -1863,13 +1702,6 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 inline CodeStruct::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline char const* CodeTemplate::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeTemplate::duplicate()
@@ -1951,13 +1783,6 @@ inline AST_Template* CodeTemplate::operator->()
 	return ast;
 }
 
-inline char const* CodeType::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeType::duplicate()
 {
 	if ( ast == nullptr )
@@ -2035,13 +1860,6 @@ inline AST_Type* CodeType::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeTypedef::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeTypedef::duplicate()
@@ -2123,13 +1941,6 @@ inline AST_Typedef* CodeTypedef::operator->()
 	return ast;
 }
 
-inline char const* CodeUnion::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeUnion::duplicate()
 {
 	if ( ast == nullptr )
@@ -2209,13 +2020,6 @@ inline AST_Union* CodeUnion::operator->()
 	return ast;
 }
 
-inline char const* CodeUsing::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
-}
-
 inline Code CodeUsing::duplicate()
 {
 	if ( ast == nullptr )
@@ -2293,13 +2097,6 @@ inline AST_Using* CodeUsing::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline char const* CodeVar::debug_str()
-{
-	if ( ast == nullptr )
-		return "Code::debug_str: AST is null!";
-	return GEN_NS debug_str( rcast( AST*, ast ) );
 }
 
 inline Code CodeVar::duplicate()

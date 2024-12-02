@@ -354,14 +354,6 @@ CodeBody gen_ast_inlines()
 	char const* code_impl_tmpl = stringize(
 		\n
 		inline
-		char const* <typename>::debug_str()
-		{
-			if ( ast == nullptr )
-				return "Code::debug_str: AST is null!";
-
-			return GEN_NS debug_str( rcast(AST*, ast) );
-		}
-		inline
 		Code <typename>::duplicate()
 		{
 			if ( ast == nullptr )
