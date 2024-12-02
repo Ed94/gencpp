@@ -321,7 +321,7 @@ void deinit()
 	}
 	while ( left--, left );
 
-	destroy(StringCache);
+	destroy(& StringCache);
 
 	free( & CodePools);
 	free( & StringArenas);
@@ -403,7 +403,7 @@ StringCached get_cached_string( StrC str )
 	}
 
 	String result = string_make( get_string_allocator( str.Len ), str );
-	set<StringCached>(StringCache, key, result );
+	set<StringCached>(& StringCache, key, result );
 
 	return result;
 }

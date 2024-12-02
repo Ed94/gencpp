@@ -93,7 +93,7 @@ struct Token
 
 		StrC type_str = ETokType::to_str( Type );
 
-		append_fmt( result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
+		append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
 			, Line, Column
 			, type_str.Len, type_str.Ptr
 			, Length, Text
@@ -341,7 +341,7 @@ s32 lex_preprocessor_directive(
 		append( & Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
-		set<StrC>(defines, key, name );
+		set<StrC>(& defines, key, name );
 	}
 
 	Token preprocess_content = { scanner, 0, TokType::Preprocess_Content, line, column, TF_Preprocess };
@@ -597,7 +597,7 @@ TokArray lex( StrC content )
 		}
 
 		u64 key = crc32( entry.Data, length );
-		set<StrC>(defines, key, entry );
+		set<StrC>(& defines, key, entry );
 	}
 
 	clear(Tokens);

@@ -10,7 +10,8 @@ Code Code::Invalid;
 char const* debug_str(AST* self)
 {
 	GEN_ASSERT(self != nullptr);
-	String result = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String  result_stack = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String* result       = & result_stack;
 
 	if ( self->Parent )
 		append_fmt( result, "\n\tParent       : %S %S", self->Parent->type_str(), self->Name ? self->Name : "" );
@@ -356,7 +357,7 @@ char const* debug_str(AST* self)
 		break;
 	}
 
-	return result;
+	return * result;
 }
 
 AST* duplicate(AST* self)
@@ -391,25 +392,25 @@ void AST::to_string( String& result )
 		#ifdef GEN_DONT_ALLOW_INVALID_CODE
 			log_failure("Attempted to serialize invalid code! - %S", Parent ? Parent->debug_str() : Name );
 		#else
-			append_fmt( result, "Invalid Code!" );
+			GEN_NS append_fmt( & result, "Invalid Code!" );
 		#endif
 		break;
 
 		case NewLine:
-			GEN_NS append( result,"\n");
+			GEN_NS append( & result,"\n");
 		break;
 
 		case Untyped:
 		case Execution:
 		case Comment:
 		case PlatformAttributes:
-			GEN_NS append( result, Content );
+			GEN_NS append( & result, Content );
 		break;
 
 		case Access_Private:
 		case Access_Protected:
 		case Access_Public:
-			GEN_NS append( result, Name );
+			GEN_NS append( & result, Name );
 		break;
 
 		case Class:

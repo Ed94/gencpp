@@ -25,7 +25,7 @@ Code scan_file( char const* path )
 
 	String str = string_make_reserve( GlobalAllocator, fsize );
 		file_read( & file, str, fsize );
-		get_header(str).Length = fsize;
+		get_header(str)->Length = fsize;
 
 	// Skip GEN_INTELLISENSE_DIRECTIVES preprocessor blocks
 	// Its designed so that the directive should be the first thing in the file.
@@ -97,12 +97,12 @@ Code scan_file( char const* path )
 					if ( (scanner + 2) >= ( str.Data + fsize ) )
 					{
 						mem_move( str, scanner, left );
-						get_header(str).Length = left;
+						get_header(str)->Length = left;
 						break;
 					}
 
 					mem_move( str, scanner, left );
-					get_header(str).Length = left;
+					get_header(str)->Length = left;
 
 					break;
 				}

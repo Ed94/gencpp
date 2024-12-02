@@ -49,10 +49,6 @@ template<class Type> bool         resize            (Array(Type)* array, usize n
 template<class Type> bool         set_capacity      (Array(Type)* array, usize new_capacity);
 template<class Type> ArrayHeader* get_header        (Array(Type)  array);
 
-// template<class Type> forceinline Type* begin(Array<Type> array)             { return array;      }
-// template<class Type> forceinline Type* end(Array<Type> array)               { return array + get_header(array)->Num; }
-// template<class Type> forceinline Type* next(Array<Type> array, Type* entry) { return entry + 1; }
-
 struct ArrayHeader {
 	AllocatorInfo Allocator;
 	usize         Capacity;
@@ -114,6 +110,10 @@ template<class Type> bool         set_capacity(Array<Type>& array, usize new_cap
 template<class Type> forceinline Type* begin(Array<Type>& array)             { return array;      }
 template<class Type> forceinline Type* end(Array<Type>& array)               { return array + get_header(array)->Num; }
 template<class Type> forceinline Type* next(Array<Type>& array, Type* entry) { return entry + 1; }
+#else
+template<class Type> forceinline Type* begin(Array<Type> array)             { return array;      }
+template<class Type> forceinline Type* end(Array<Type> array)               { return array + get_header(array)->Num; }
+template<class Type> forceinline Type* next(Array<Type> array, Type* entry) { return entry + 1; }
 #endif
 
 template<class Type> inline
@@ -402,21 +402,21 @@ struct HashTableEntry {
 
 template<class Type> HashTable<Type>       hashtable_init(AllocatorInfo allocator);
 template<class Type> HashTable<Type>       hashtable_init_reserve(AllocatorInfo allocator, usize num);
-template<class Type> void                  clear(HashTable<Type>& table);
-template<class Type> void                  destroy(HashTable<Type>& table);
-template<class Type> Type*                 get(HashTable<Type>& table, u64 key);
-template<class Type> void                  grow(HashTable<Type>& table);
-template<class Type> void                  rehash(HashTable<Type>& table, ssize new_num);
-template<class Type> void                  rehash_fast(HashTable<Type>& table);
-template<class Type> void                  remove(HashTable<Type>& table, u64 key);
-template<class Type> void                  remove_entry(HashTable<Type>& table, ssize idx);
-template<class Type> void                  set(HashTable<Type>& table, u64 key, Type value);
-template<class Type> ssize                 slot(HashTable<Type>& table, u64 key);
-template<class Type> ssize                 add_entry(HashTable<Type>& table, u64 key);
-template<class Type> HashTableFindResult   find(HashTable<Type>& table, u64 key);
-template<class Type> bool                  full(HashTable<Type>& table);
-template<class Type> void                  map(HashTable<Type>& table, void (*map_proc)(u64 key, Type value));
-template<class Type> void                  map_mut(HashTable<Type>& table, void (*map_proc)(u64 key, Type* value));
+template<class Type> void                  clear        (HashTable<Type>  table);
+template<class Type> void                  destroy      (HashTable<Type>* table);
+template<class Type> Type*                 get          (HashTable<Type>  table, u64 key);
+template<class Type> void                  grow         (HashTable<Type>* table);
+template<class Type> void                  rehash       (HashTable<Type>* table, ssize new_num);
+template<class Type> void                  rehash_fast  (HashTable<Type>  table);
+template<class Type> void                  remove       (HashTable<Type>  table, u64 key);
+template<class Type> void                  remove_entry (HashTable<Type>  table, ssize idx);
+template<class Type> void                  set          (HashTable<Type>* table, u64 key, Type value);
+template<class Type> ssize                 slot         (HashTable<Type>  table, u64 key);
+template<class Type> ssize                 add_entry    (HashTable<Type>* table, u64 key);
+template<class Type> HashTableFindResult   find         (HashTable<Type>  table, u64 key);
+template<class Type> bool                  full         (HashTable<Type>  table);
+template<class Type> void                  map          (HashTable<Type>  table, void (*map_proc)(u64 key, Type value));
+template<class Type> void                  map_mut      (HashTable<Type>  table, void (*map_proc)(u64 key, Type* value));
 
 static constexpr f32 HashTable_CriticalLoadScale = 0.7f;
 
@@ -447,6 +447,14 @@ struct HashTable
 #endif
 };
 
+#if GEN_SUPPORT_CPP_REFERENCES
+template<class Type> void  destroy  (HashTable<Type>& table)                      { destroy(& table); }
+template<class Type> void  grow     (HashTable<Type>& table)                      { grow(& table); }
+template<class Type> void  rehash   (HashTable<Type>& table, ssize new_num)       { rehash(& table, new_num); }
+template<class Type> void  set      (HashTable<Type>& table, u64 key, Type value) { set(& table, key, value); }
+template<class Type> ssize add_entry(HashTable<Type>& table, u64 key)             { add_entry(& table, key); }
+#endif
+
 template<typename Type> inline
 HashTable<Type> hashtable_init(AllocatorInfo allocator) {
 	HashTable<Type> result = hashtable_init_reserve<Type>(allocator, 8);
@@ -468,65 +476,65 @@ HashTable<Type> hashtable_init_reserve(AllocatorInfo allocator, usize num)
 }
 
 template<typename Type> inline
-void clear(HashTable<Type>& table) {
+void clear(HashTable<Type> table) {
 	clear(table.Entries);
 	fill<ssize>(table.Hashes, 0, num(table.Hashes), -1);
 }
 
 template<typename Type> inline
-void destroy(HashTable<Type>& table) {
-	if (table.Hashes && get_header(table.Hashes)->Capacity) {
-		free(& table.Hashes);
-		free(& table.Entries);
+void destroy(HashTable<Type>* table) {
+	if (table->Hashes && get_header(table->Hashes)->Capacity) {
+		free(& table->Hashes);
+		free(& table->Entries);
 	}
 }
 
 template<typename Type> inline
-Type* get(HashTable<Type>& table, u64 key) {
+Type* get(HashTable<Type> table, u64 key) {
 	ssize idx = find(table, key).EntryIndex;
 	if (idx >= 0)
-		return &table.Entries[idx].Value;
+		return & table.Entries[idx].Value;
 
 	return nullptr;
 }
 
 template<typename Type> inline
-void map(HashTable<Type>& table, void (*map_proc)(u64 key, Type value)) {
+void map(HashTable<Type> table, void (*map_proc)(u64 key, Type value)) {
 	GEN_ASSERT_NOT_NULL(map_proc);
 
-	for (ssize idx = 0; idx < ssize(table.Entries.num()); ++idx) {
+	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx) {
 		map_proc(table.Entries[idx].Key, table.Entries[idx].Value);
 	}
 }
 
 template<typename Type> inline
-void map_mut(HashTable<Type>& table, void (*map_proc)(u64 key, Type* value)) {
+void map_mut(HashTable<Type> table, void (*map_proc)(u64 key, Type* value)) {
 	GEN_ASSERT_NOT_NULL(map_proc);
 
-	for (ssize idx = 0; idx < ssize(table.Entries.num()); ++idx) {
-		map_proc(table.Entries[idx].Key, &table.Entries[idx].Value);
+	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx) {
+		map_proc(table.Entries[idx].Key, & table.Entries[idx].Value);
 	}
 }
 
 template<typename Type> inline
-void grow(HashTable<Type>& table) {
-	ssize new_num = array_grow_formula(num(table.Entries));
+void grow(HashTable<Type>* table) {
+	ssize new_num = array_grow_formula(num(table->Entries));
 	rehash(table, new_num);
 }
 
 template<typename Type> inline
-void rehash(HashTable<Type>& table, ssize new_num)
+void rehash(HashTable<Type>* table, ssize new_num)
 {
 	ssize last_added_index;
-	HashTable<Type> new_ht = hashtable_init_reserve<Type>(get_header(table.Hashes)->Allocator, new_num);
+	HashTable<Type> new_ht = hashtable_init_reserve<Type>(get_header(table->Hashes)->Allocator, new_num);
 
-	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx)
+	for (ssize idx = 0; idx < ssize(num(table->Entries)); ++idx)
 	{
 		HashTableFindResult find_result;
-		HashTableEntry<Type>& entry = table.Entries[idx];
+		HashTableEntry<Type>& entry = table->Entries[idx];
 
 		find_result = find(new_ht, entry.Key);
-		last_added_index = add_entry(new_ht, entry.Key);
+		last_added_index = add_entry(& new_ht, entry.Key);
 
 		if (find_result.PrevIndex < 0)
 			new_ht.Hashes[find_result.HashIndex] = last_added_index;
@@ -538,21 +546,21 @@ void rehash(HashTable<Type>& table, ssize new_num)
 	}
 
 	destroy(table);
-	table = new_ht;
+	* table = new_ht;
 }
 
 template<typename Type> inline
-void rehash_fast(HashTable<Type>& table)
+void rehash_fast(HashTable<Type> table)
 {
 	ssize idx;
 
-	for (idx = 0; idx < ssize(table.Entries.num()); idx++)
+	for (idx = 0; idx < ssize(num(table.Entries)); idx++)
 		table.Entries[idx].Next = -1;
 
-	for (idx = 0; idx < ssize(table.Hashes.num()); idx++)
+	for (idx = 0; idx < ssize(num(table.Hashes)); idx++)
 		table.Hashes[idx] = -1;
 
-	for (idx = 0; idx < ssize(table.Entries.num()); idx++)
+	for (idx = 0; idx < ssize(num(table.Entries)); idx++)
 	{
 		HashTableEntry<Type>* entry;
 		HashTableFindResult find_result;
@@ -568,30 +576,30 @@ void rehash_fast(HashTable<Type>& table)
 }
 
 template<typename Type> inline
-void remove(HashTable<Type>& table, u64 key) {
+void remove(HashTable<Type> table, u64 key) {
 	HashTableFindResult find_result = find(table, key);
 
 	if (find_result.EntryIndex >= 0) {
-		table.Entries.remove_at(find_result.EntryIndex);
+		remove_at(table.Entries, find_result.EntryIndex);
 		rehash_fast(table);
 	}
 }
 
 template<typename Type> inline
-void remove_entry(HashTable<Type>& table, ssize idx) {
-	table.Entries.remove_at(idx);
+void remove_entry(HashTable<Type> table, ssize idx) {
+	remove_at(table.Entries, idx);
 }
 
 template<typename Type> inline
-void set(HashTable<Type>& table, u64 key, Type value)
+void set(HashTable<Type>* table, u64 key, Type value)
 {
 	ssize idx;
 	HashTableFindResult find_result;
 
-	if (full(table))
+	if (full(* table))
 		grow(table);
 
-	find_result = find(table, key);
+	find_result = find(* table, key);
 	if (find_result.EntryIndex >= 0) {
 		idx = find_result.EntryIndex;
 	}
@@ -600,22 +608,22 @@ void set(HashTable<Type>& table, u64 key, Type value)
 		idx = add_entry(table, key);
 
 		if (find_result.PrevIndex >= 0) {
-			table.Entries[find_result.PrevIndex].Next = idx;
+			table->Entries[find_result.PrevIndex].Next = idx;
 		}
 		else {
-			table.Hashes[find_result.HashIndex] = idx;
+			table->Hashes[find_result.HashIndex] = idx;
 		}
 	}
 
-	table.Entries[idx].Value = value;
+	table->Entries[idx].Value = value;
 
-	if (full(table))
+	if (full(* table))
 		grow(table);
 }
 
 template<typename Type> inline
-ssize slot(HashTable<Type>& table, u64 key) {
-	for (ssize idx = 0; idx < ssize(table.Hashes.num()); ++idx)
+ssize slot(HashTable<Type> table, u64 key) {
+	for (ssize idx = 0; idx < ssize(num(table.Hashes)); ++idx)
 		if (table.Hashes[idx] == key)
 			return idx;
 
@@ -623,17 +631,17 @@ ssize slot(HashTable<Type>& table, u64 key) {
 }
 
 template<typename Type> inline
-ssize add_entry(HashTable<Type>& table, u64 key) {
+ssize add_entry(HashTable<Type>* table, u64 key) {
 	ssize idx;
 	HashTableEntry<Type> entry = { key, -1 };
 
-	idx = num(table.Entries);
-	append( & table.Entries, entry);
+	idx = num(table->Entries);
+	append( & table->Entries, entry);
 	return idx;
 }
 
 template<typename Type> inline
-HashTableFindResult find(HashTable<Type>& table, u64 key)
+HashTableFindResult find(HashTable<Type> table, u64 key)
 {
 	HashTableFindResult result = { -1, -1, -1 };
 
@@ -656,7 +664,7 @@ HashTableFindResult find(HashTable<Type>& table, u64 key)
 }
 
 template<typename Type> inline
-bool full(HashTable<Type>& table) {
+bool full(HashTable<Type> table) {
 	usize critical_load = usize(HashTable_CriticalLoadScale * f32(num(table.Hashes)));
 	b32 result = num(table.Entries) > critical_load;
 	return result;

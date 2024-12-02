@@ -33,40 +33,41 @@ StrC to_str( char const* str ) {
 struct StringHeader;
 struct String;
 
-String        string_make(AllocatorInfo allocator, char const* str);
-String        string_make(AllocatorInfo allocator, StrC str);
-String        string_make_reserve(AllocatorInfo allocator, ssize capacity);
-String        string_make_length(AllocatorInfo allocator, char const* str, ssize length);
-String        string_fmt(AllocatorInfo allocator, char* buf, ssize buf_size, char const* fmt, ...);
-String        string_fmt_buf(AllocatorInfo allocator, char const* fmt, ...);
-String        string_join(AllocatorInfo allocator, char const** parts, ssize num_parts, char const* glue);
-usize         string_grow_formula(usize value);
-bool          are_equal(String const& lhs, String const& rhs);
-bool          are_equal(String const& lhs, StrC rhs);
-bool          make_space_for(String& str, char const* to_append, ssize add_len);
-bool          append(String& str, char c);
-bool          append(String& str, char const* str_to_append);
-bool          append(String& str, char const* str_to_append, ssize length);
-bool          append(String& str, StrC str_to_append);
-bool          append(String& str, const String other);
-bool          append_fmt(String& str, char const* fmt, ...);
-ssize         avail_space(String const& str);
-char&         back(String& str);
-bool          contains(String const& str, StrC substring);
-bool          contains(String const& str, String const& substring);
-ssize         capacity(String const& str);
-void          clear(String& str);
-String        duplicate(String const& str, AllocatorInfo allocator);
-void          free(String& str);
-StringHeader& get_header(String& str);
-ssize         length(String const& str);
-b32           starts_with(String const& str, StrC substring);
-b32           starts_with(String const& str, String substring);
-void          skip_line(String& str);
-void          strip_space(String& str);
-void          trim(String& str, char const* cut_set);
-void          trim_space(String& str);
-String        visualize_whitespace(String const& str);
+usize string_grow_formula(usize value);
+
+String        string_make         (AllocatorInfo allocator, char const*  str);
+String        string_make         (AllocatorInfo allocator, StrC         str);
+String        string_make_reserve (AllocatorInfo allocator, ssize        capacity);
+String        string_make_length  (AllocatorInfo allocator, char const*  str,   ssize length);
+String        string_fmt          (AllocatorInfo allocator, char*        buf,   ssize buf_size,  char const* fmt, ...);
+String        string_fmt_buf      (AllocatorInfo allocator, char const*  fmt, ...);
+String        string_join         (AllocatorInfo allocator, char const** parts, ssize num_parts, char const* glue);
+bool          are_equal           (String const lhs, String const rhs);
+bool          are_equal           (String const lhs, StrC rhs);
+bool          make_space_for      (String*      str, char const*  to_append, ssize add_len);
+bool          append              (String*      str, char         c);
+bool          append              (String*      str, char const*  str_to_append);
+bool          append              (String*      str, char const*  str_to_append, ssize length);
+bool          append              (String*      str, StrC         str_to_append);
+bool          append              (String*      str, String const other);
+bool          append_fmt          (String*      str, char const*  fmt, ...);
+ssize         avail_space         (String const str);
+char*         back                (String       str);
+bool          contains            (String const str, StrC         substring);
+bool          contains            (String const str, String const substring);
+ssize         capacity            (String const str);
+void          clear               (String       str);
+String        duplicate           (String const str, AllocatorInfo allocator);
+void          free                (String*      str);
+StringHeader* get_header          (String       str);
+ssize         length              (String const str);
+b32           starts_with         (String const str, StrC   substring);
+b32           starts_with         (String const str, String substring);
+void          skip_line           (String       str);
+void          strip_space         (String       str);
+void          trim                (String       str, char const* cut_set);
+void          trim_space          (String       str);
+String        visualize_whitespace(String const str);
 
 struct StringHeader {
 	AllocatorInfo Allocator;
@@ -129,31 +130,31 @@ struct String
 		return GEN_NS string_make(allocator, buf);
 	}
 
-	forceinline bool          make_space_for(char const* str, ssize add_len) { return GEN_NS make_space_for(*this, str, add_len); }
-	forceinline bool          append(char c)                                 { return GEN_NS append(*this, c); }
-	forceinline bool          append(char const* str)                        { return GEN_NS append(*this, str); }
-	forceinline bool          append(char const* str, ssize length)          { return GEN_NS append(*this, str, length); }
-	forceinline bool          append(StrC str)                               { return GEN_NS append(*this, str); }
-	forceinline bool          append(const String other)                     { return GEN_NS append(*this, other); }
-	forceinline ssize         avail_space() const                            { return GEN_NS avail_space(*this); }
-	forceinline char&         back()                                         { return GEN_NS back(*this); }
-	forceinline bool          contains(StrC substring) const                 { return GEN_NS contains(*this, substring); }
-	forceinline bool          contains(String const& substring) const        { return GEN_NS contains(*this, substring); }
-	forceinline ssize         capacity() const                               { return GEN_NS capacity(*this); }
-	forceinline void          clear()                                        { GEN_NS clear(*this); }
-	forceinline String        duplicate(AllocatorInfo allocator) const       { return GEN_NS duplicate(*this, allocator); }
-	forceinline void          free()                                         { GEN_NS free(*this); }
+	forceinline bool          make_space_for(char const* str, ssize add_len) { return GEN_NS make_space_for(this, str, add_len); }
+	forceinline bool          append(char c)                                 { return GEN_NS append(this, c); }
+	forceinline bool          append(char const* str)                        { return GEN_NS append(this, str); }
+	forceinline bool          append(char const* str, ssize length)          { return GEN_NS append(this, str, length); }
+	forceinline bool          append(StrC str)                               { return GEN_NS append(this, str); }
+	forceinline bool          append(const String other)                     { return GEN_NS append(this, other); }
+	forceinline ssize         avail_space() const                            { return GEN_NS avail_space(* this); }
+	forceinline char*         back()                                         { return GEN_NS back(* this); }
+	forceinline bool          contains(StrC substring) const                 { return GEN_NS contains(* this, substring); }
+	forceinline bool          contains(String const& substring) const        { return GEN_NS contains(* this, substring); }
+	forceinline ssize         capacity() const                               { return GEN_NS capacity(* this); }
+	forceinline void          clear()                                        { GEN_NS clear(* this); }
+	forceinline String        duplicate(AllocatorInfo allocator) const       { return GEN_NS duplicate(* this, allocator); }
+	forceinline void          free()                                         { GEN_NS free(this); }
 	forceinline bool          is_equal(String const& other) const            { return GEN_NS are_equal(* this, other); }
 	forceinline bool          is_equal(StrC other) const                     { return GEN_NS are_equal(* this, other); }
-	forceinline ssize         length() const                                 { return GEN_NS length(*this); }
-	forceinline b32           starts_with(StrC substring) const              { return GEN_NS starts_with(*this, substring); }
-	forceinline b32           starts_with(String substring) const            { return GEN_NS starts_with(*this, substring); }
-	forceinline void          skip_line()                                    { GEN_NS skip_line(*this); }
-	forceinline void          strip_space()                                  { GEN_NS strip_space(*this); }
-	forceinline void          trim(char const* cut_set)                      { GEN_NS trim(*this, cut_set); }
-	forceinline void          trim_space()                                   { GEN_NS trim_space(*this); }
-	forceinline String        visualize_whitespace() const                   { return GEN_NS visualize_whitespace(*this); }
-	forceinline StringHeader& get_header()                                   { return GEN_NS get_header(*this); }
+	forceinline ssize         length() const                                 { return GEN_NS length(* this); }
+	forceinline b32           starts_with(StrC substring) const              { return GEN_NS starts_with(* this, substring); }
+	forceinline b32           starts_with(String substring) const            { return GEN_NS starts_with(* this, substring); }
+	forceinline void          skip_line()                                    { GEN_NS skip_line(* this); }
+	forceinline void          strip_space()                                  { GEN_NS strip_space(* this); }
+	forceinline void          trim(char const* cut_set)                      { GEN_NS trim(* this, cut_set); }
+	forceinline void          trim_space()                                   { GEN_NS trim_space(* this); }
+	forceinline String        visualize_whitespace() const                   { return GEN_NS visualize_whitespace(* this); }
+	forceinline StringHeader& get_header()                                   { return * GEN_NS get_header(* this); }
 
 	bool append_fmt(char const* fmt, ...) {
 		ssize res;
@@ -164,11 +165,24 @@ struct String
 		res = str_fmt_va(buf, count_of(buf) - 1, fmt, va) - 1;
 		va_end(va);
 
-		return GEN_NS append(*this, buf, res);
+		return GEN_NS append(this, buf, res);
 	}
 #pragma endregion Member Mapping
 #endif
 };
+#endif
+
+#if GEN_SUPPORT_CPP_REFERENCES
+bool          make_space_for(String& str, char const* to_append, ssize add_len);
+bool          append(String& str, char c);
+bool          append(String& str, char const* str_to_append);
+bool          append(String& str, char const* str_to_append, ssize length);
+bool          append(String& str, StrC str_to_append);
+bool          append(String& str, const String other);
+bool          append_fmt(String& str, char const* fmt, ...);
+char&         back(String& str);
+void          clear(String& str);
+void          free(String& str);
 #endif
 
 inline char* begin(String& str) { return str; }
@@ -223,57 +237,64 @@ String string_join(AllocatorInfo allocator, char const** parts, ssize num_parts,
 
 	for (ssize idx = 0; idx < num_parts; ++idx)
 	{
-		append(result, parts[idx]);
+		append(& result, parts[idx]);
 
 		if (idx < num_parts - 1)
-			append(result, glue);
+			append(& result, glue);
 	}
 
 	return result;
 }
 
 inline
-bool append(String& str, char c) {
+bool append(String* str, char c) {
+	GEN_ASSERT(str != nullptr);
 	return append(str, &c, 1);
 }
 
 inline
-bool append(String& str, char const* str_to_append) {
+bool append(String* str, char const* str_to_append) {
+	GEN_ASSERT(str != nullptr);
 	return append(str, str_to_append, str_len(str_to_append));
 }
 
 inline
-bool append(String& str, char const* str_to_append, ssize append_length)
+bool append(String* str, char const* str_to_append, ssize append_length)
 {
+	GEN_ASSERT(str != nullptr);
 	if (sptr(str_to_append) > 0)
 	{
-		ssize curr_len = length(str);
+		ssize curr_len = length(* str);
 
-		if (!make_space_for(str, str_to_append, append_length))
+		if ( ! make_space_for(str, str_to_append, append_length))
 			return false;
 
-		StringHeader& header = get_header(str);
+		StringHeader* header = get_header(* str);
 
-		mem_copy( scast(char*, str) + curr_len, str_to_append, append_length);
+		char* Data = * str;
+		mem_copy( Data + curr_len, str_to_append, append_length);
 
-		str[curr_len + append_length] = '\0';
+		Data[curr_len + append_length] = '\0';
 
-		header.Length = curr_len + append_length;
+		header->Length = curr_len + append_length;
 	}
 	return str_to_append != nullptr;
 }
 
 inline
-bool append(String& str, StrC str_to_append) {
+bool append(String* str, StrC str_to_append) {
+	GEN_ASSERT(str != nullptr);
 	return append(str, str_to_append.Ptr, str_to_append.Len);
 }
 
 inline
-bool append(String& str, const String other) {
+bool append(String* str, const String other) {
+	GEN_ASSERT(str != nullptr);
 	return append(str, other, length(other));
 }
 
-bool append_fmt(String& str, char const* fmt, ...) {
+bool append_fmt(String* str, char const* fmt, ...) {
+	GEN_ASSERT(str != nullptr);
 	ssize res;
 	char buf[GEN_PRINTF_MAXLEN] = { 0 };
 
@@ -286,7 +307,7 @@ bool append_fmt(String& str, char const* fmt, ...) {
 }
 
 inline
-bool are_equal(String const& lhs, String const& rhs)
+bool are_equal(String const lhs, String const rhs)
 {
 	if (length(lhs) != length(rhs))
 		return false;
@@ -299,7 +320,7 @@ bool are_equal(String const& lhs, String const& rhs)
 }
 
 inline
-bool are_equal(String const& lhs, StrC rhs)
+bool are_equal(String const lhs, StrC rhs)
 {
 	if (length(lhs) != (rhs.Len))
 		return false;
@@ -312,26 +333,26 @@ bool are_equal(String const& lhs, StrC rhs)
 }
 
 inline
-ssize avail_space(String const& str) {
-	StringHeader const& header = *rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
-	return header.Capacity - header.Length;
+ssize avail_space(String const str) {
+	StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
+	return header->Capacity - header->Length;
 }
 
 inline
-char& back(String& str) {
-	return str[length(str) - 1];
+char* back(String* str) {
+	return & (*str)[length(* str) - 1];
 }
 
 inline
-bool contains(String const& str, StrC substring)
+bool contains(String const str, StrC substring)
 {
-	StringHeader const& header = *rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
+	StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
 
-	if (substring.Len > header.Length)
+	if (substring.Len > header->Length)
 		return false;
 
-	ssize main_len = header.Length;
-	ssize sub_len = substring.Len;
+	ssize main_len = header->Length;
+	ssize sub_len  = substring.Len;
 
 	for (ssize idx = 0; idx <= main_len - sub_len; ++idx)
 	{
@@ -343,15 +364,15 @@ bool contains(String const& str, StrC substring)
 }
 
 inline
-bool contains(String const& str, String const& substring)
+bool contains(String const str, String const substring)
 {
-	StringHeader const& header = *rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
+	StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
 
-	if (length(substring) > header.Length)
+	if (length(substring) > header->Length)
 		return false;
 
-	ssize main_len = header.Length;
-	ssize sub_len = length(substring);
+	ssize main_len = header->Length;
+	ssize sub_len  = length(substring);
 
 	for (ssize idx = 0; idx <= main_len - sub_len; ++idx)
 	{
@@ -363,46 +384,47 @@ bool contains(String const& str, String const& substring)
 }
 
 inline
-ssize capacity(String const& str) {
-   StringHeader const& header = *rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
-   return header.Capacity;
+ssize capacity(String const str) {
+   StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
+   return header->Capacity;
 }
 
 inline
-void clear(String& str) {
-   get_header(str).Length = 0;
+void clear(String str) {
+   get_header(str)->Length = 0;
 }
 
 inline
-String duplicate(String const& str, AllocatorInfo allocator) {
+String duplicate(String const str, AllocatorInfo allocator) {
    return string_make_length(allocator, str, length(str));
 }
 
 inline
-void free(String& str) {
-   if (! str)
-   	return;
+void free(String* str) {
+	GEN_ASSERT(str != nullptr);
+	if (! (* str))
+		return;
 
-   StringHeader& header = get_header(str);
-   GEN_NS free(header.Allocator, &header);
+	StringHeader* header = get_header(* str);
+	GEN_NS free(header->Allocator, header);
 }
 
 inline
-StringHeader& get_header(String& str) {
-   return *(StringHeader*)(scast(char*, str) - sizeof(StringHeader));
+StringHeader* get_header(String str) {
+   return (StringHeader*)(scast(char*, str) - sizeof(StringHeader));
 }
 
 inline
-ssize length(String const& str)
+ssize length(String const str)
 {
    StringHeader const& header = *rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
    return header.Length;
 }
 
 inline
-bool make_space_for(String& str, char const* to_append, ssize add_len)
+bool make_space_for(String* str, char const* to_append, ssize add_len)
 {
-	ssize available = avail_space(str);
+	ssize available = avail_space(* str);
 
 	if (available >= add_len) {
 		return true;
@@ -413,12 +435,12 @@ bool make_space_for(String& str, char const* to_append, ssize add_len)
 		void* ptr;
 		void* new_ptr;
 
-		AllocatorInfo allocator = get_header(str).Allocator;
-		StringHeader* header = nullptr;
+		AllocatorInfo allocator = get_header(* str)->Allocator;
+		StringHeader* header    = nullptr;
 
-		new_len = string_grow_formula(length(str) + add_len);
-		ptr = &get_header(str);
-		old_size = size_of(StringHeader) + length(str) + 1;
+		new_len  = string_grow_formula(length(* str) + add_len);
+		ptr      = get_header(* str);
+		old_size = size_of(StringHeader) + length(* str) + 1;
 		new_size = size_of(StringHeader) + new_len + 1;
 
 		new_ptr = resize(allocator, ptr, old_size, new_size);
@@ -428,16 +450,17 @@ bool make_space_for(String& str, char const* to_append, ssize add_len)
 
 		header = rcast(StringHeader*, new_ptr);
 		header->Allocator = allocator;
-		header->Capacity = new_len;
+		header->Capacity  = new_len;
 
-		str.Data = rcast(char*, header + 1);
+		char** Data = rcast(char**, str);
+		* Data = rcast(char*, header + 1);
 
 		return true;
 	}
 }
 
 inline
-b32 starts_with(String const& str, StrC substring) {
+b32 starts_with(String const str, StrC substring) {
 	if (substring.Len > length(str))
 	return false;
 
@@ -446,7 +469,7 @@ b32 starts_with(String const& str, StrC substring) {
 }
 
 inline
-b32 starts_with(String const& str, String substring) {
+b32 starts_with(String const str, String substring) {
 	if (length(substring) > length(str))
 		return false;
 
@@ -455,7 +478,7 @@ b32 starts_with(String const& str, String substring) {
 }
 
 inline
-void skip_line(String& str)
+void skip_line(String str)
 {
 #define current (*scanner)
 	char* scanner = str.Data;
@@ -471,23 +494,23 @@ void skip_line(String& str)
 
 	mem_move(str.Data, scanner, new_length);
 
-	StringHeader* header = &get_header(str);
+	StringHeader* header = get_header(str);
 	header->Length = new_length;
 #undef current
 }
 
 inline
-void strip_space(String& str)
+void strip_space(String str)
 {
-   char* write_pos = str.Data;
-   char* read_pos = str.Data;
+   char* write_pos = str;
+   char* read_pos  = str;
 
-   while (*read_pos)
+   while (* read_pos)
    {
-   	if (!char_is_space(*read_pos))
+   	if (! char_is_space(* read_pos))
    	{
-   		*write_pos = *read_pos;
-   		write_pos++;
+   		* write_pos = * read_pos;
+   		  write_pos++;
    	}
    	read_pos++;
    }
@@ -495,11 +518,11 @@ void strip_space(String& str)
    write_pos[0] = '\0';  // Null-terminate the modified string
 
    // Update the length if needed
-   get_header(str).Length = write_pos - str.Data;
+   get_header(str)->Length = write_pos - str.Data;
 }
 
 inline
-void trim(String& str, char const* cut_set)
+void trim(String str, char const* cut_set)
 {
    ssize len = 0;
 
@@ -519,16 +542,16 @@ void trim(String& str, char const* cut_set)
 
    str.Data[len] = '\0';
 
-   get_header(str).Length = len;
+   get_header(str)->Length = len;
 }
 
 inline
-void trim_space(String& str) {
+void trim_space(String str) {
    trim(str, " \t\r\n\v\f");
 }
 
 inline
-String visualize_whitespace(String const& str)
+String visualize_whitespace(String const str)
 {
 	StringHeader* header = (StringHeader*)(scast(char const*, str) - sizeof(StringHeader));
 	String        result = string_make_reserve(header->Allocator, length(str) * 2); // Assume worst case for space requirements.
@@ -536,25 +559,25 @@ String visualize_whitespace(String const& str)
 	for (auto c : str) switch (c)
 	{
 		case ' ':
-			append(result, txt("·"));
+			append(& result, txt("·"));
 		break;
 		case '\t':
-			append(result, txt("→"));
+			append(& result, txt("→"));
 		break;
 		case '\n':
-			append(result, txt("↵"));
+			append(& result, txt("↵"));
 		break;
 		case '\r':
-			append(result, txt("⏎"));
+			append(& result, txt("⏎"));
 		break;
 		case '\v':
-			append(result, txt("⇕"));
+			append(& result, txt("⇕"));
 		break;
 		case '\f':
-			append(result, txt("⌂"));
+			append(& result, txt("⌂"));
 		break;
 		default:
-			append(result, c);
+			append(& result, c);
 		break;
 	}
 

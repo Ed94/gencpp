@@ -27,8 +27,8 @@ CodeBody gen_ecode( char const* path )
 	{
 		char const* code = node.string;
 
-		append_fmt( enum_entries, "%s,\n", code );
-		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
+		append_fmt( & enum_entries, "%s,\n", code );
+		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 	}
 
 	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", (StrC)enum_entries, "enum Type : u32 { <entries> NumTypes };"));
@@ -76,8 +76,8 @@ CodeBody gen_eoperator( char const* path )
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
 
-		append_fmt( enum_entries, "%s,\n", enum_str );
-		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( & enum_entries, "%s,\n", enum_str );
+		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
@@ -132,8 +132,8 @@ CodeBody gen_especifier( char const* path )
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
 
-		append_fmt( enum_entries, "%s,\n", enum_str );
-		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( & enum_entries, "%s,\n", enum_str );
+		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
@@ -249,8 +249,8 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = enum_str_strs [idx].string;
 
-		append_fmt( enum_entries, "%s,\n", enum_str );
-		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( & enum_entries, "%s,\n", enum_str );
+		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	for ( usize idx = 0; idx < num(attribute_strs); idx++ )
@@ -258,14 +258,14 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		char const* attribute_str = attribute_strs[idx].string;
 		char const* entry_to_str  = attribute_str_strs [idx].string;
 
-		append_fmt( attribute_entries, "Attribute_%s,\n", attribute_str );
-		append_fmt( to_str_attributes, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
-		append_fmt( attribute_define_entries, "Entry( Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
+		append_fmt( & attribute_entries, "Attribute_%s,\n", attribute_str );
+		append_fmt( & to_str_attributes, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		append_fmt( & attribute_define_entries, "Entry( Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
 
 		if ( idx < num(attribute_strs) - 1 )
-			append( attribute_define_entries, " \\\n");
+			append( & attribute_define_entries, " \\\n");
 		else
-			append( attribute_define_entries, "\n");
+			append( & attribute_define_entries, "\n");
 	}
 
 #pragma push_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")

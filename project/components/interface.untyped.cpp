@@ -27,8 +27,7 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 			StrC        value = va_arg( va, StrC );
 
 			u32 key = crc32( token, str_len(token) );
-
-			set(tok_map, key, value );
+			set(& tok_map, key, value );
 		}
 	}
 

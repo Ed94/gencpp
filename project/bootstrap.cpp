@@ -29,17 +29,17 @@ void format_file( char const* path )
 	String resolved_path = string_make(GlobalAllocator, to_str(path));
 
 	String style_arg = string_make(GlobalAllocator, txt("-style=file:"));
-	append( style_arg, "../scripts/.clang-format ");
+	append( & style_arg, "../scripts/.clang-format ");
 
 	// Need to execute clang format on the generated file to get it to match the original.
 	#define clang_format      "clang-format "
 	#define cf_format_inplace "-i "
 	#define cf_verbose        "-verbose "
 	String command = string_make( GlobalAllocator, clang_format );
-	append( command, cf_format_inplace );
-	append( command, cf_verbose );
-	append( command, style_arg );
-	append( command, resolved_path );
+	append( & command, cf_format_inplace );
+	append( & command, cf_verbose );
+	append( & command, style_arg );
+	append( & command, resolved_path );
 		log_fmt("\tRunning clang-format on file:\n");
 		system( command );
 		log_fmt("\tclang-format finished reformatting.\n");

@@ -474,15 +474,15 @@ CodeComment def_comment( StrC content )
 		length++;
 
 		str_copy( line, scanner, length );
-		append_fmt(cmt_formatted, "//%.*s", length, line );
+		append_fmt(& cmt_formatted, "//%.*s", length, line );
 		mem_set( line, 0, MaxCommentLineLength );
 
 		scanner += length;
 	}
 	while ( scanner <= end );
 
-	if ( back(cmt_formatted) != '\n' )
-		append( cmt_formatted, "\n" );
+	if ( * back(& cmt_formatted) != '\n' )
+		append( & cmt_formatted, "\n" );
 
 	Code
 	result          = make_code();
@@ -490,7 +490,7 @@ CodeComment def_comment( StrC content )
 	result->Name    = get_cached_string( cmt_formatted );
 	result->Content = result->Name;
 
-	free(cmt_formatted);
+	free(& cmt_formatted);
 
 	return (CodeComment) result;
 }

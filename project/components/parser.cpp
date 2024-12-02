@@ -59,17 +59,17 @@ struct ParseContext
 		}
 
 		String line = string_make( GlobalAllocator, { length, scope_start.Text } );
-		append_fmt( result, "\tScope    : %s\n", line );
-		free(line);
+		append_fmt( & result, "\tScope    : %s\n", line );
+		free(& line);
 
 		sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
 		sptr   length_from_err = dist;
 		String line_from_err   = string_make( GlobalAllocator, { length_from_err, last_valid.Text } );
 
 		if ( length_from_err < 100 )
-			append_fmt(result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
+			append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
 		else
-			append_fmt(result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
+			append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
 
 		StackNode* curr_scope = Scope;
 		s32 level = 0;
@@ -77,11 +77,11 @@ struct ParseContext
 		{
 			if ( curr_scope->Name )
 			{
-				append_fmt(result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
+				append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
 			}
 			else
 			{
-				append_fmt(result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
+				append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
 			}
 
 			curr_scope = curr_scope->Prev;
@@ -290,7 +290,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if ( tokleft )
 				move_fwd();
 
-			append( content, cut_ptr, cut_length );
+			append( & content, cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -312,7 +312,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if ( tokleft )
 				move_fwd();
 
-			append( content, cut_ptr, cut_length );
+			append( & content, cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -326,7 +326,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			scanner += 2;
 			tokleft -= 2;
 
-			append( content,  cut_ptr, cut_length );
+			append( & content,  cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -345,7 +345,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if (tokleft)
 				move_fwd();
 
-			append( content,  cut_ptr, cut_length );
+			append( & content,  cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -354,10 +354,10 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		if (scanner[0] == '\t')
 		{
 			if (pos > last_cut)
-				append( content, cut_ptr, cut_length);
+				append( & content, cut_ptr, cut_length);
 
-			if ( back( content ) != ' ' )
-				append( content, ' ');
+			if ( * back( & content ) != ' ' )
+				append( & content, ' ');
 
 			move_fwd();
 			last_cut = sptr(scanner) - sptr(raw_text.Ptr);
@@ -373,17 +373,17 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 				scanner += 2;
 				tokleft -= 2;
 
-				append( content,  cut_ptr, cut_length );
+				append( & content,  cut_ptr, cut_length );
 				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				append( content,  cut_ptr, cut_length );
+				append( & content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( back( content ) != ' ' )
-				append( content,  ' ' );
+			if ( * back( & content ) != ' ' )
+				append( & content,  ' ' );
 
 			scanner += 2;
 			tokleft -= 2;
@@ -400,17 +400,17 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 
 				move_fwd();
 
-				append( content,  cut_ptr, cut_length );
+				append( & content,  cut_ptr, cut_length );
 				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				append( content,  cut_ptr, cut_length );
+				append( & content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( back( content ) != ' ' )
-				append( content,  ' ' );
+			if ( * back( & content ) != ' ' )
+				append( & content,  ' ' );
 
 			move_fwd();
 
@@ -421,7 +421,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Escaped newlines
 		if ( scanner[0] == '\\' )
 		{
-			append( content,  cut_ptr, cut_length );
+			append( & content,  cut_ptr, cut_length );
 
 			s32 amount_to_skip = 1;
 			if ( tokleft > 1 && scanner[1] == '\n' )
@@ -448,7 +448,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Consectuive spaces
 		if ( tokleft > 1 && char_is_space( scanner[0] ) && char_is_space( scanner[ 1 ] ) )
 		{
-			append( content,  cut_ptr, cut_length );
+			append( & content,  cut_ptr, cut_length );
 			do
 			{
 				move_fwd();
@@ -458,8 +458,9 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 
 			// Preserve only 1 space of formattting
-			if ( back( content ) != ' ' )
-				append( content,  ' ' );
+			char* last = back(& content);
+			if ( last == nullptr || * last != ' ' )
+				append( & content,  ' ' );
 
 			continue;
 		}
@@ -469,7 +470,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 
 	if ( last_cut < raw_text.Len )
 	{
-		append( content,  cut_ptr, raw_text.Len - last_cut );
+		append( & content,  cut_ptr, raw_text.Len - last_cut );
 	}
 
 #undef cut_ptr
@@ -1040,7 +1041,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 					if ( attributes )
 					{
 						String fused = string_make_reserve( GlobalAllocator, length(attributes->Content) + length(more_attributes->Content) );
-						append_fmt( fused, "%S %S", attributes->Content, more_attributes->Content );
+						append_fmt( & fused, "%S %S", attributes->Content, more_attributes->Content );
 
 						attributes->Name    = get_cached_string(fused);
 						attributes->Content = attributes->Name;
