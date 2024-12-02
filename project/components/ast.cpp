@@ -14,7 +14,7 @@ char const* debug_str(AST* self)
 	String* result       = & result_stack;
 
 	if ( self->Parent )
-		append_fmt( result, "\n\tParent       : %S %S", self->Parent->type_str(), self->Name ? self->Name : "" );
+		append_fmt( result, "\n\tParent       : %S %S", type_str(self->Parent), self->Name ? self->Name : "" );
 	else
 		append_fmt( result, "\n\tParent       : %S", "Null" );
 
@@ -372,19 +372,20 @@ AST* duplicate(AST* self)
 	return result;
 }
 
-String AST::to_string()
+String to_string(AST* self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	to_string( result );
+	GEN_NS to_string( self, & result );
 	return result;
 }
 
-void AST::to_string( String& result )
+void to_string( AST* self, String* result )
 {
+	GEN_ASSERT(self != nullptr);
 	local_persist thread_local
 	char SerializationLevel = 0;
 
-	switch ( Type )
+	switch ( self->Type )
 	{
 		using namespace ECode;
 
@@ -392,191 +393,191 @@ void AST::to_string( String& result )
 		#ifdef GEN_DONT_ALLOW_INVALID_CODE
 			log_failure("Attempted to serialize invalid code! - %S", Parent ? Parent->debug_str() : Name );
 		#else
-			GEN_NS append_fmt( & result, "Invalid Code!" );
+			append_fmt( result, "Invalid Code!" );
 		#endif
 		break;
 
 		case NewLine:
-			GEN_NS append( & result,"\n");
+			append( result,"\n");
 		break;
 
 		case Untyped:
 		case Execution:
 		case Comment:
 		case PlatformAttributes:
-			GEN_NS append( & result, Content );
+			append( result, self->Content );
 		break;
 
 		case Access_Private:
 		case Access_Protected:
 		case Access_Public:
-			GEN_NS append( & result, Name );
+			append( result, self->Name );
 		break;
 
 		case Class:
-			code_cast<CodeClass>().to_string_def( result );
+			cast(CodeClass, {self}).to_string_def( * result );
 		break;
 
 		case Class_Fwd:
-			code_cast<CodeClass>().to_string_fwd( result );
+			cast(CodeClass, {self}).to_string_fwd( * result );
 		break;
 
 		case Constructor:
-			code_cast<CodeConstructor>().to_string_def( result );
+			cast(CodeConstructor, {self}).to_string_def( * result );
 		break;
 
 		case Constructor_Fwd:
-			code_cast<CodeConstructor>().to_string_fwd( result );
+			cast(CodeConstructor, {self}).to_string_fwd( * result );
 		break;
 
 		case Destructor:
-			code_cast<CodeDestructor>().to_string_def( result );
+			cast(CodeDestructor, {self}).to_string_def( * result );
 		break;
 
 		case Destructor_Fwd:
-			code_cast<CodeDestructor>().to_string_fwd( result );
+			cast(CodeDestructor, {self}).to_string_fwd( * result );
 		break;
 
 		case Enum:
-			code_cast<CodeEnum>().to_string_def( result );
+			cast(CodeEnum, {self}).to_string_def( * result );
 		break;
 
 		case Enum_Fwd:
-			code_cast<CodeEnum>().to_string_fwd( result );
+			cast(CodeEnum, {self}).to_string_fwd( * result );
 		break;
 
 		case Enum_Class:
-			code_cast<CodeEnum>().to_string_class_def( result );
+			cast(CodeEnum, {self}).to_string_class_def( * result );
 		break;
 
 		case Enum_Class_Fwd:
-			code_cast<CodeEnum>().to_string_class_fwd( result );
+			cast(CodeEnum, {self}).to_string_class_fwd( * result );
 		break;
 
 		case Export_Body:
-			code_cast<CodeBody>().to_string_export( result );
+			cast(CodeBody, {self}).to_string_export( * result );
 		break;
 
 		case Extern_Linkage:
-			code_cast<CodeExtern>().to_string( result );
+			cast(CodeExtern, {self}).to_string( * result );
 		break;
 
 		case Friend:
-			code_cast<CodeFriend>().to_string( result );
+			cast(CodeFriend, {self}).to_string( * result );
 		break;
 
 		case Function:
-			code_cast<CodeFn>().to_string_def( result );
+			cast(CodeFn, {self}).to_string_def( * result );
 		break;
 
 		case Function_Fwd:
-			code_cast<CodeFn>().to_string_fwd( result );
+			cast(CodeFn, {self}).to_string_fwd( * result );
 		break;
 
 		case Module:
-			code_cast<CodeModule>().to_string( result );
+			cast(CodeModule, {self}).to_string( * result );
 		break;
 
 		case Namespace:
-			code_cast<CodeNS>().to_string( result );
+			cast(CodeNS, {self}).to_string( * result );
 		break;
 
 		case Operator:
 		case Operator_Member:
-			code_cast<CodeOperator>().to_string_def( result );
+			cast(CodeOperator, {self}).to_string_def( * result );
 		break;
 
 		case Operator_Fwd:
 		case Operator_Member_Fwd:
-			code_cast<CodeOperator>().to_string_fwd( result );
+			cast(CodeOperator, {self}).to_string_fwd( * result );
 		break;
 
 		case Operator_Cast:
-			code_cast<CodeOpCast>().to_string_def( result );
+			cast(CodeOpCast, {self}).to_string_def( * result );
 		break;
 
 		case Operator_Cast_Fwd:
-			code_cast<CodeOpCast>().to_string_fwd( result );
+			cast(CodeOpCast, {self}).to_string_fwd( * result );
 		break;
 
 		case Parameters:
-			code_cast<CodeParam>().to_string( result );
+			cast(CodeParam, {self}).to_string( * result );
 		break;
 
 		case Preprocess_Define:
-			code_cast<CodeDefine>().to_string( result );
+			cast(CodeDefine, {self}).to_string( * result );
 		break;
 
 		case Preprocess_If:
-			code_cast<CodePreprocessCond>().to_string_if( result );
+			cast(CodePreprocessCond, {self}).to_string_if( * result );
 		break;
 
 		case Preprocess_IfDef:
-			code_cast<CodePreprocessCond>().to_string_ifdef( result );
+			cast(CodePreprocessCond, {self}).to_string_ifdef( * result );
 		break;
 
 		case Preprocess_IfNotDef:
-			code_cast<CodePreprocessCond>().to_string_ifndef( result );
+			cast(CodePreprocessCond, {self}).to_string_ifndef( * result );
 		break;
 
 		case Preprocess_Include:
-			code_cast<CodeInclude>().to_string( result );
+			cast(CodeInclude, {self}).to_string( * result );
 		break;
 
 		case Preprocess_ElIf:
-			code_cast<CodePreprocessCond>().to_string_elif( result );
+			cast(CodePreprocessCond, {self}).to_string_elif( * result );
 		break;
 
 		case Preprocess_Else:
-			code_cast<CodePreprocessCond>().to_string_else( result );
+			cast(CodePreprocessCond, {self}).to_string_else( * result );
 		break;
 
 		case Preprocess_EndIf:
-			code_cast<CodePreprocessCond>().to_string_endif( result );
+			cast(CodePreprocessCond, {self}).to_string_endif( * result );
 		break;
 
 		case Preprocess_Pragma:
-			code_cast<CodePragma>().to_string( result );
+			cast(CodePragma, {self}).to_string( * result );
 		break;
 
 		case Specifiers:
-			code_cast<CodeSpecifiers>().to_string( result );
+			cast(CodeSpecifiers, {self}).to_string( * result );
 		break;
 
 		case Struct:
-			code_cast<CodeStruct>().to_string_def( result );
+			cast(CodeStruct, {self}).to_string_def( * result );
 		break;
 
 		case Struct_Fwd:
-			code_cast<CodeStruct>().to_string_fwd( result );
+			cast(CodeStruct, {self}).to_string_fwd( * result );
 		break;
 
 		case Template:
-			code_cast<CodeTemplate>().to_string( result );
+			cast(CodeTemplate, {self}).to_string( * result );
 		break;
 
 		case Typedef:
-			code_cast<CodeTypedef>().to_string( result );
+			cast(CodeTypedef, {self}).to_string( * result );
 		break;
 
 		case Typename:
-			code_cast<CodeType>().to_string( result );
+			cast(CodeType, {self}).to_string( * result );
 		break;
 
 		case Union:
-			code_cast<CodeUnion>().to_string( result );
+			cast(CodeUnion, {self}).to_string( * result );
 		break;
 
 		case Using:
-			code_cast<CodeUsing>().to_string( result );
+			cast(CodeUsing, {self}).to_string( * result );
 		break;
 
 		case Using_Namespace:
-			code_cast<CodeUsing>().to_string_ns( result );
+			cast(CodeUsing, {self}).to_string_ns( * result );
 		break;
 
 		case Variable:
-			code_cast<CodeVar>().to_string( result );
+			cast(CodeVar, {self}).to_string( * result );
 		break;
 
 		case Enum_Body:
@@ -587,7 +588,7 @@ void AST::to_string( String& result )
 		case Namespace_Body:
 		case Struct_Body:
 		case Union_Body:
-			code_cast<CodeBody>().to_string( result );
+			cast(CodeBody, {self}).to_string( * result );
 		break;
 	}
 }
@@ -611,7 +612,7 @@ bool is_equal( AST* self, AST* other )
 	{
 		log_fmt("AST::is_equal: Type check failure with other\nAST: %S\nOther: %S"
 			, debug_str(self)
-			, other->debug_str()
+			,debug_str(other)
 		);
 
 		return false;
@@ -628,7 +629,7 @@ bool is_equal( AST* self, AST* other )
 		        "AST  : %S\n"                                 \
 		        "Other: %S\n"                                 \
 		    , debug_str(self)                                 \
-		    , other->debug_str()                              \
+		    ,debug_str(other)                              \
 		);                                                    \
 	                                                          \
 		return false;                                         \
@@ -641,7 +642,7 @@ bool is_equal( AST* self, AST* other )
 				"AST  : %S\n"                                       \
 				"Other: %S\n"                                       \
 			, debug_str(self)                                       \
-			, other->debug_str()                                    \
+			,debug_str(other)                                    \
 		);                                                          \
 	                                                                \
 		return false;                                               \
@@ -654,7 +655,7 @@ bool is_equal( AST* self, AST* other )
 				"AST  : %S\n"                                             \
 				"Other: %S\n"                                             \
 			, debug_str(self)                                             \
-			, other->debug_str()                                          \
+			,debug_str(other)                                          \
 		);                                                                \
                                                                           \
 		log_fmt("Content cannot be trusted to be unique with this check " \
@@ -676,14 +677,14 @@ bool is_equal( AST* self, AST* other )
 					"Other: %s\n"                                                                  \
 					"For ast member: %s\n"                                                         \
 				, debug_str(self)                                                                  \
-				, other->debug_str()                                                               \
-				, self->ast->debug_str()                                                           \
+				, debug_str(other)                                                               \
+				, debug_str(self->ast)                                                           \
 			);                                                                                     \
                                                                                                    \
 			return false;                                                                          \
 		}                                                                                          \
                                                                                                    \
-		if ( ! self->ast->is_equal( other->ast ) )                                                 \
+		if ( ! is_equal(self->ast, other->ast ) )                                                 \
 		{                                                                                          \
 			log_fmt( "\nAST::is_equal: Failed for " #ast"\n"                                       \
 			         "AST  : %S\n"                                                                 \
@@ -691,9 +692,9 @@ bool is_equal( AST* self, AST* other )
 			         "For     ast member: %S\n"                                                    \
 			         "other's ast member: %S\n"                                                    \
 				, debug_str(self)                                                                  \
-				, other->debug_str()                                                               \
-				, self->ast->debug_str()                                                           \
-				, other->ast->debug_str()                                                          \
+				, debug_str(other)                                                               \
+				, debug_str(self->ast)                                                           \
+				, debug_str(other->ast)                                                          \
 			);                                                                                     \
 		                                                                                           \
 			return false;                                                                          \
@@ -921,7 +922,7 @@ bool is_equal( AST* self, AST* other )
 							        "AST  : %S\n"
 							        "Other: %S\n"
 							        "For ast member: %S\n"
-							    , curr->debug_str()
+							    , debug_str(curr)
 							);
 
 							return false;
@@ -935,14 +936,14 @@ bool is_equal( AST* self, AST* other )
 									"For     ast member: %S\n"
 									"other's ast member: %S\n"
 								, debug_str(self)
-								, other->debug_str()
-								, curr->debug_str()
-								, curr_other->debug_str()
+								, debug_str(other)
+								, debug_str(curr)
+								, debug_str(curr_other)
 							);
 							return false;
 						}
 
-						if ( curr->ValueType && ! curr->ValueType->is_equal(curr_other->ValueType) )
+						if ( curr->ValueType && ! is_equal(curr->ValueType, curr_other->ValueType) )
 						{
 							log_fmt( "\nAST::is_equal: Failed for parameter value type check\n"
 									"AST  : %S\n"
@@ -950,14 +951,14 @@ bool is_equal( AST* self, AST* other )
 									"For     ast member: %S\n"
 									"other's ast member: %S\n"
 								, debug_str(self)
-								, other->debug_str()
-								, curr->debug_str()
-								, curr_other->debug_str()
+								, debug_str(other)
+								, debug_str(curr)
+								, debug_str(curr_other)
 							);
 							return false;
 						}
 
-						if ( curr->Value && ! curr->Value->is_equal(curr_other->Value) )
+						if ( curr->Value && ! is_equal(curr->Value, curr_other->Value) )
 						{
 							log_fmt( "\nAST::is_equal: Failed for parameter value check\n"
 									"AST  : %S\n"
@@ -965,9 +966,9 @@ bool is_equal( AST* self, AST* other )
 									"For     ast member: %S\n"
 									"other's ast member: %S\n"
 								, debug_str(self)
-								, other->debug_str()
-								, curr->debug_str()
-								, curr_other->debug_str()
+								, debug_str(other)
+								, debug_str(curr)
+								, debug_str(curr_other)
 							);
 							return false;
 						}
@@ -1113,13 +1114,13 @@ bool is_equal( AST* self, AST* other )
 					        "AST  : %S\n"
 					        "Other: %S\n"
 					        "For ast member: %S\n"
-					    , curr->debug_str()
+					    , debug_str(curr)
 					);
 
 					return false;
 				}
 
-				if ( ! curr->is_equal( curr_other ) )
+				if ( ! is_equal( curr, curr_other ) )
 				{
 					log_fmt( "\nAST::is_equal: Failed for body\n"
 							"AST  : %S\n"
@@ -1127,9 +1128,9 @@ bool is_equal( AST* self, AST* other )
 							"For     ast member: %S\n"
 							"other's ast member: %S\n"
 						, debug_str(self)
-						, other->debug_str()
-						, curr->debug_str()
-						, curr_other->debug_str()
+						, debug_str(other)
+						, debug_str(curr)
+						, debug_str(curr_other)
 					);
 
 					return false;
@@ -1152,14 +1153,14 @@ bool is_equal( AST* self, AST* other )
 	return true;
 }
 
-bool AST::validate_body()
+bool validate_body(AST* self)
 {
 	using namespace ECode;
 
 #define CheckEntries( Unallowed_Types )                                                               \
 	do                                                                                                \
 	{                                                                                                 \
-		for ( Code entry : code_cast<CodeBody>() )                                                    \
+		for ( Code entry : cast(CodeBody, {self}) )                                                    \
 		{                                                                                             \
 			switch ( entry->Type )                                                                    \
 			{                                                                                         \
@@ -1171,13 +1172,13 @@ bool AST::validate_body()
 	}                                                                                                 \
 	while (0);
 
-	switch ( Type )
+	switch ( self->Type )
 	{
 		case Class_Body:
 			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
 		case Enum_Body:
-			for ( Code entry : code_cast<CodeBody>() )
+			for ( Code entry : cast(CodeBody, {self}) )
 			{
 				if ( entry->Type != Untyped )
 				{
@@ -1196,7 +1197,7 @@ bool AST::validate_body()
 			CheckEntries( GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES );
 		break;
 		case Global_Body:
-			for (Code entry : code_cast<CodeBody>())
+			for (Code entry : cast(CodeBody, {self}))
 			{
 				switch (entry->Type)
 				{
@@ -1229,7 +1230,7 @@ bool AST::validate_body()
 			CheckEntries( GEN_AST_BODY_STRUCT_UNALLOWED_TYPES );
 		break;
 		case Union_Body:
-			for ( Code entry : Body->code_cast<CodeBody>() )
+			for ( Code entry : cast(CodeBody, {self->Body}) )
 			{
 				if ( entry->Type != Untyped )
 				{
@@ -1240,7 +1241,7 @@ bool AST::validate_body()
 		break;
 
 		default:
-			log_failure( "AST::validate_body: Invalid this AST does not have a body %s", debug_str() );
+			log_failure( "AST::validate_body: Invalid this AST does not have a body %s", debug_str(self) );
 			return false;
 	}
 

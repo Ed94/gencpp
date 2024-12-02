@@ -270,15 +270,17 @@ static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 // Desired width of the AST data structure.
 constexpr int const AST_POD_Size = 128;
 
-void        append     ( AST* self, AST* other );
-char const* debug_str  ( AST* self );
-AST*        duplicate  ( AST* self );
-Code*       entry      ( AST* self, u32 idx );
-bool        has_entries( AST* self );
-bool        is_body    ( AST* self );
-bool        is_equal   ( AST* self, AST* other );
-String      to_string  ( AST* self );
-char const* type_str   ( AST* self );
+void        append       ( AST* self, AST* other );
+char const* debug_str    ( AST* self );
+AST*        duplicate    ( AST* self );
+Code*       entry        ( AST* self, u32 idx );
+bool        has_entries  ( AST* self );
+bool        is_body      ( AST* self );
+bool        is_equal     ( AST* self, AST* other );
+String      to_string    ( AST* self );
+void        to_string    ( AST* self, String* result );
+char const* type_str     ( AST* self );
+bool        validate_body( AST* self );
 
 #if GEN_CPP_SUPPORT_REFERENCES
 void        append   ( AST& self, AST& other ) { return append(& self, & other); }
@@ -289,33 +291,40 @@ String      to_string( AST& self )             { return to_string( & self ); }
 char const* type_str ( AST& self )             { return type_str( & self ); }
 #endif
 
+constexpr static
+int AST_ArrSpecs_Cap =
+(
+		AST_POD_Size
+		- sizeof(AST*) * 3
+		- sizeof(parser::Token*)
+		- sizeof(AST*)
+		- sizeof(StringCached)
+		- sizeof(CodeT)
+		- sizeof(ModuleFlag)
+		- sizeof(int)
+)
+/ sizeof(int) - 1; // -1 for 4 extra bytes
+
 /*
 	Simple AST POD with functionality to seralize into C++ syntax.
 */
 struct AST
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 #	pragma region Member Functions
-	void        append     ( AST* other ) { GEN_NS append(this, other); }
-	char const* debug_str  ()             { return GEN_NS debug_str(this); }
-	AST*        duplicate  ()             { return GEN_NS duplicate(this); }
-	Code*       entry      ( u32 idx )    { return GEN_NS entry(this, idx); }
-	bool        has_entries();
+	void        append     ( AST* other )  { GEN_NS append(this, other); }
+	char const* debug_str  ()              { return GEN_NS debug_str(this); }
+	AST*        duplicate  ()              { return GEN_NS duplicate(this); }
+	Code*       entry      ( u32 idx )     { return GEN_NS entry(this, idx); }
+	bool        has_entries()              { return GEN_NS has_entries(this); }
 	bool        is_equal   ( AST* other )  { return GEN_NS is_equal(this, other); }
 	bool        is_body()                  { return GEN_NS is_body(this); }
 	char const* type_str()                 { return GEN_NS type_str(this); }
-	bool        validate_body();
+	bool        validate_body()            { return GEN_NS validate_body(this); }
 
-	String to_string(); //{ return GEN_NS to_string(this); }
+	String to_string()                 { return GEN_NS to_string(this); }
+	void   to_string( String& result ) { return GEN_NS to_string(this, & result); }
 
-	template< class Type >
-	forceinline Type code_cast()
-	{
-		return * this;
-	}
-
-	neverinline
-	void to_string( String& result );
 #	pragma endregion Member Functions
 #endif
 
@@ -350,20 +359,6 @@ struct AST
 	operator CodeUsing();
 	operator CodeVar();
 
-	constexpr static
-	int ArrSpecs_Cap =
-	(
-			AST_POD_Size
-			- sizeof(AST*) * 3
-			- sizeof(parser::Token*)
-			- sizeof(AST*)
-			- sizeof(StringCached)
-			- sizeof(CodeT)
-			- sizeof(ModuleFlag)
-			- sizeof(int)
-	)
-	/ sizeof(int) - 1; // -1 for 4 extra bytes
-
 	union {
 		struct
 		{
@@ -396,7 +391,7 @@ struct AST
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
-			SpecifierT ArrSpecs[ArrSpecs_Cap]; // Specifiers
+			SpecifierT ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
 			AST*       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
@@ -460,7 +455,7 @@ struct AST_POD
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
-			SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+			SpecifierT ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
 			AST*       NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
@@ -488,10 +483,6 @@ struct AST_POD
 		s32           VarConstructorInit; // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
 	};
 };
-
-
-// TODO(Ed): Convert
-String      to_string  ( AST* self ) { return self->to_string(); }
 
 // Its intended for the AST to have equivalent size to its POD.
 // All extra functionality within the AST namespace should just be syntatic sugar.

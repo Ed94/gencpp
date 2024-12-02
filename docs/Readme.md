@@ -101,7 +101,7 @@ union {
     };
     StringCached  Content;          // Attributes, Comment, Execution, Include
     struct {
-        SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
+        SpecifierT ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
         AST*       NextSpecs;                   // Specifiers
     };
 };

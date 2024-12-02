@@ -26,7 +26,7 @@ void Builder::pad_lines( s32 num )
 
 void Builder::print( Code code )
 {
-	String   str = code->to_string();
+	String   str = to_string(code);
 	// const ssize len = str.length();
 	// log_fmt( "%s - print: %.*s\n", File.filename, len > 80 ? 80 : len, str.Data );
 	append( & Buffer, str );

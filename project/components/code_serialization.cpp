@@ -10,7 +10,7 @@ String to_string(Code self)
 		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
 		return { nullptr };
 	}
-	return rcast( AST*, self.ast )->to_string();
+	return to_string( self.ast );
 }
 
 String CodeAttributes::to_string()
@@ -176,14 +176,14 @@ void CodeClass::to_string_def( String& result )
 
 		append_fmt( & result, "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
 
-		CodeType interface = ast->ParentType->Next->code_cast< CodeType >();
+		CodeType interface = cast(CodeType, ast->ParentType->Next);
 		if ( interface )
 			append( & result, "\n" );
 
 		while ( interface )
 		{
 			append_fmt( & result, ", %S", interface.to_string() );
-			interface = interface->Next ? interface->Next->code_cast< CodeType >() : CodeType { nullptr };
+			interface = interface->Next ? cast(CodeType, interface->Next) : CodeType { nullptr };
 		}
 	}
 	else if ( ast->Name )
@@ -452,7 +452,7 @@ String CodeFriend::to_string()
 
 void CodeFriend::to_string( String& result )
 {
-	append_fmt( & result, "friend %S", ast->Declaration->to_string() );
+	append_fmt( & result, "friend %S", GEN_NS to_string(ast->Declaration) );
 
 	if ( ast->Declaration->Type != ECode::Function && result[ length(result) - 1 ] != ';' )
 	{
@@ -1010,14 +1010,14 @@ void CodeStruct::to_string_def( String& result )
 
 		append_fmt( & result, "%S : %s %S", ast->Name, access_level, ast->ParentType.to_string() );
 
-		CodeType interface = ast->ParentType->Next->code_cast< CodeType >();
+		CodeType interface = cast(CodeType, ast->ParentType->Next);
 		if ( interface )
 			append( & result, "\n" );
 
 		while ( interface )
 		{
 			append_fmt( & result, ", %S", interface.to_string() );
-			interface = interface->Next ? interface->Next->code_cast< CodeType >() : CodeType { nullptr };
+			interface = interface->Next ? cast( CodeType, interface->Next) : CodeType { nullptr };
 		}
 	}
 	else if ( ast->Name )
@@ -1095,12 +1095,12 @@ void CodeTypedef::to_string( String& result )
 
 	if ( ast->UnderlyingType->Type == ECode::Typename && ast->UnderlyingType->ArrExpr )
 	{
-		append_fmt( & result, "[ %S ];", ast->UnderlyingType->ArrExpr->to_string() );
+		append_fmt( & result, "[ %S ];", GEN_NS to_string(ast->UnderlyingType->ArrExpr) );
 
 		AST* next_arr_expr = ast->UnderlyingType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( & result, "[ %S ];", next_arr_expr->to_string() );
+			append_fmt( & result, "[ %S ];", GEN_NS to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
@@ -1239,7 +1239,7 @@ void CodeUsing::to_string( String& result )
 			AST* next_arr_expr = ast->UnderlyingType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( & result, "[ %S ]", next_arr_expr->to_string() );
+				append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1288,7 +1288,7 @@ void CodeVar::to_string( String& result )
 			AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( & result, "[ %S ]", next_arr_expr->to_string() );
+				append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1331,7 +1331,7 @@ void CodeVar::to_string( String& result )
 			AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( & result, "[ %S ]", next_arr_expr->to_string() );
+				append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1371,7 +1371,7 @@ void CodeVar::to_string( String& result )
 		AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( & result, "[ %S ]", next_arr_expr->to_string() );
+			append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}

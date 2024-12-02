@@ -772,7 +772,7 @@ CodeExtern def_extern_link( StrC name, Code body )
 
 	if ( body->Type != Extern_Linkage_Body && body->Type != Untyped )
 	{
-		log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", body->debug_str());
+		log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", debug_str(body));
 		return InvalidCode;
 	}
 
@@ -804,7 +804,7 @@ CodeFriend def_friend( Code declaration )
 		break;
 
 		default:
-			log_failure("gen::def_friend: requires declartion to have class, function, operator, or struct - %s", declaration->debug_str());
+			log_failure("gen::def_friend: requires declartion to have class, function, operator, or struct - %s", debug_str(declaration));
 			return InvalidCode;
 	}
 
@@ -866,7 +866,7 @@ CodeFn def_function( StrC name
 
 			default:
 			{
-				log_failure("gen::def_function: body must be either of Function_Body, Execution, or Untyped type. %s", body->debug_str());
+				log_failure("gen::def_function: body must be either of Function_Body, Execution, or Untyped type. %s", debug_str(body));
 				return InvalidCode;
 			}
 		}
@@ -1008,7 +1008,7 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 
 			default:
 			{
-				log_failure("gen::def_operator: body must be either of Function_Body, Execution, or Untyped type. %s", body->debug_str());
+				log_failure("gen::def_operator: body must be either of Function_Body, Execution, or Untyped type. %s", debug_str(body));
 				return InvalidCode;
 			}
 		}
@@ -1275,19 +1275,19 @@ CodeType def_type( StrC name, Code arrayexpr, CodeSpecifiers specifiers, CodeAtt
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_type: attributes is not of attributes type - %s", attributes.debug_str() );
+		log_failure( "gen::def_type: attributes is not of attributes type - %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != ECode::Specifiers )
 	{
-		log_failure( "gen::def_type: specifiers is not of specifiers type - %s", specifiers.debug_str() );
+		log_failure( "gen::def_type: specifiers is not of specifiers type - %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
 
 	if ( arrayexpr && arrayexpr->Type != ECode::Untyped )
 	{
-		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", arrayexpr->debug_str() );
+		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", debug_str(arrayexpr) );
 		return InvalidCode;
 	}
 
@@ -2141,7 +2141,7 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 		return InvalidCode;
 	}
 
-	if ( num > AST::ArrSpecs_Cap )
+	if ( num > AST_ArrSpecs_Cap )
 	{
 		log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
 		return InvalidCode;
@@ -2173,7 +2173,7 @@ CodeSpecifiers def_specifiers( s32 num, SpecifierT* specs )
 		return InvalidCode;
 	}
 
-	if ( num > AST::ArrSpecs_Cap )
+	if ( num > AST_ArrSpecs_Cap )
 	{
 		log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
 		return InvalidCode;

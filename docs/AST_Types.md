@@ -552,7 +552,7 @@ Serialization:
 Fields:
 
 ```cpp
-SpecifierT     ArrSpecs[ AST::ArrSpecs_Cap ];
+SpecifierT     ArrSpecs[ AST_ArrSpecs_Cap ];
 CodeSpecifiers NextSpecs;
 Code           Prev;
 Code           Next;

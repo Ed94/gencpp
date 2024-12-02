@@ -11,7 +11,7 @@ inline Code& Code::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -27,7 +27,7 @@ inline CodeBody& CodeBody::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -43,7 +43,7 @@ inline CodeAttributes& CodeAttributes::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -79,7 +79,7 @@ inline CodeComment& CodeComment::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -115,7 +115,7 @@ inline CodeConstructor& CodeConstructor::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -151,7 +151,7 @@ inline CodeClass& CodeClass::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -167,7 +167,7 @@ inline CodeDefine& CodeDefine::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -203,7 +203,7 @@ inline CodeDestructor& CodeDestructor::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -239,7 +239,7 @@ inline CodeEnum& CodeEnum::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -275,7 +275,7 @@ inline CodeExec& CodeExec::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -311,7 +311,7 @@ inline CodeExtern& CodeExtern::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -347,7 +347,7 @@ inline CodeFriend& CodeFriend::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -383,7 +383,7 @@ inline CodeFn& CodeFn::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -419,7 +419,7 @@ inline CodeInclude& CodeInclude::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -455,7 +455,7 @@ inline CodeModule& CodeModule::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -491,7 +491,7 @@ inline CodeNS& CodeNS::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -527,7 +527,7 @@ inline CodeOperator& CodeOperator::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -563,7 +563,7 @@ inline CodeOpCast& CodeOpCast::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -599,7 +599,7 @@ inline CodeParam& CodeParam::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -615,7 +615,7 @@ inline CodePragma& CodePragma::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -651,7 +651,7 @@ inline CodePreprocessCond& CodePreprocessCond::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -687,7 +687,7 @@ inline CodeSpecifiers& CodeSpecifiers::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -703,7 +703,7 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -719,7 +719,7 @@ inline CodeTemplate& CodeTemplate::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -755,7 +755,7 @@ inline CodeType& CodeType::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -791,7 +791,7 @@ inline CodeTypedef& CodeTypedef::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -827,7 +827,7 @@ inline CodeUnion& CodeUnion::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -863,7 +863,7 @@ inline CodeUsing& CodeUsing::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );
@@ -899,7 +899,7 @@ inline CodeVar& CodeVar::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), other.ast->duplicate() );
+		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
 		rcast( AST*, ast )->Parent = nullptr;
 	}
 	ast = rcast( decltype( ast ), other.ast );

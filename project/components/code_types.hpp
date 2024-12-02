@@ -151,9 +151,9 @@ struct CodeSpecifiers
 			return false;
 		}
 
-		if ( raw()->NumEntries == AST::ArrSpecs_Cap )
+		if ( raw()->NumEntries == AST_ArrSpecs_Cap )
 		{
-			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
+			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST_ArrSpecs_Cap );
 			return false;
 		}
 
@@ -179,9 +179,9 @@ struct CodeSpecifiers
 			return -1;
 		}
 
-		if ( raw()->NumEntries == AST::ArrSpecs_Cap )
+		if ( raw()->NumEntries == AST_ArrSpecs_Cap )
 		{
-			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST::ArrSpecs_Cap );
+			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST_ArrSpecs_Cap );
 			return -1;
 		}
 

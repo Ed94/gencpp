@@ -358,7 +358,7 @@ CodeBody gen_ast_inlines()
 		{
 			if ( other.ast && other->Parent )
 			{
-				ast = rcast( decltype(ast), other.ast->duplicate() );
+				ast = rcast( decltype(ast), GEN_NS duplicate(other.ast) );
 				rcast( AST*, ast)->Parent = nullptr;
 			}
 
