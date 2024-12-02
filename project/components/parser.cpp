@@ -52,7 +52,7 @@ struct ParseContext
 
 		sptr        length  = scope_start.Length;
 		char const* current = scope_start.Text + length;
-		while ( current <= back(Tokens.Arr).Text && *current != '\n' && length < 74 )
+		while ( current <= back( & Tokens.Arr)->Text && *current != '\n' && length < 74 )
 		{
 			current++;
 			length++;
@@ -745,7 +745,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 			}
 			Token interface_tok = parse_identifier();
 
-			append(interfaces, def_type( interface_tok ) );
+			append( & interfaces, def_type( interface_tok ) );
 			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ...
 		}
 	}
@@ -777,7 +777,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	free(interfaces);
+	free(& interfaces);
 	return result;
 }
 

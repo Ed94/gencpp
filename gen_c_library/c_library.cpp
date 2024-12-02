@@ -2,6 +2,7 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_SUPPORT_CPP_MEMBER_FEATURES 1
+#define GEN_SUPPORT_CPP_REFERENCES      1
 #include "../project/gen.cpp"
 
 #include "helpers/push_ignores.inline.hpp"
@@ -135,26 +136,40 @@ int gen_main()
 				case ECode::Using:
 				{
 					log_fmt("REPLACE THIS MANUALLY: %S\n", entry->Name);
-					CodeUsing   using_ver   = entry.cast<CodeUsing>();
+					CodeUsing   using_ver   = entry.code_cast<CodeUsing>();
 					CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
 
 					memory.append(typedef_ver);
 				}
 				break;
+				case ECode::Function_Fwd:
+				{
+					CodeFn fn = entry.code_cast<CodeFn>();
+					if ( fn->Name.is_equal(txt("free")) )
+					{
+						fn->Name = get_cached_string(txt("gen_free_ptr"));
+					}
+					memory.append(entry);
+				}
+				break;
 				case ECode::Function:
 				{
-					CodeFn fn = entry.cast<CodeFn>();
+					CodeFn fn = entry.code_cast<CodeFn>();
 					s32 constexpr_found = fn->Specs.remove( ESpecifier::Constexpr );
 					if (constexpr_found > -1) {
 						log_fmt("Found constexpr: %S\n", entry->to_string());
 						fn->Specs.append(ESpecifier::Inline);
+					}
+					if ( fn->Name.is_equal(txt("free")) )
+					{
+						fn->Name = get_cached_string(txt("gen_free_ptr"));
 					}
 					memory.append(entry);
 				}
 				break;
 				case ECode::Template:
 				{
-					CodeTemplate tmpl = entry.cast<CodeTemplate>();
+					CodeTemplate tmpl = entry.code_cast<CodeTemplate>();
 					if ( tmpl->Declaration->Name.contains(txt("swap")))
 					{
 						CodeBody macro_swap = parse_global_body( txt(R"(
@@ -297,12 +312,35 @@ int gen_main()
 				{
 					if ( entry->Name.is_equal(txt("String")) )
 					{
-						CodeTypedef c_def = parse_typedef(code( typedef Type* String; ));
+						CodeTypedef c_def = parse_typedef(code( typedef char* String; ));
 						strings.append(c_def);
 						strings.append(fmt_newline);
 						++ entry;
 						continue;
 					}
+					strings.append(entry);
+				}
+				break;
+
+				case ECode::Struct:
+				{
+					CodeBody body     = entry->Body->operator CodeBody();
+					CodeBody new_body = def_body( entry->Body->Type );
+					for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
+					(body_entry->Type) {
+						case ECode::Preprocess_If:
+						{
+							b32 found = ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), body_entry, body );
+							if (found) break;
+
+							new_body.append(body_entry);
+						}
+						break;
+						default:
+							new_body.append(body_entry);
+						break;
+					}
+					entry->Body = rcast(AST*, new_body.ast);
 					strings.append(entry);
 				}
 				break;
@@ -316,8 +354,8 @@ int gen_main()
 
 		Code filesystem = scan_file( project_dir "dependencies/filesystem.hpp" );
 		Code timing = scan_file( project_dir "dependencies/timing.hpp" );
-		header.print( filesystem );
-		header.print( timing );
+		// header.print( filesystem );
+		// header.print( timing );
 
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print_fmt( roll_own_dependencies_guard_end );
@@ -335,6 +373,7 @@ int gen_main()
 		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
 
+#if 0
 		header.print_fmt("#pragma region Types\n");
 		header.print( types );
 		header.print( fmt_newline );
@@ -345,6 +384,7 @@ int gen_main()
 		header.print( dump_to_scratch_and_retireve( especifier ));
 		header.print( fmt_newline );
 		header.print_fmt("#pragma endregion Types\n\n");
+	#endif
 	}
 
 	header.print( pop_ignores );

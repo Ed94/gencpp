@@ -20,7 +20,7 @@ CodeBody gen_fixed_arenas()
 		inline
 		void fixed_arena_init_<Name>(FixedArena_<Name>* result) {
 			zero_size(& result->memory[0], <Size>);
-			result.arena = arena_init_from_memory(& result->memory[0], <Size>);
+			result->arena = arena_init_from_memory(& result->memory[0], <Size>);
 		}
 
 		inline

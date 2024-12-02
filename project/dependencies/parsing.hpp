@@ -83,7 +83,7 @@ struct ADT_Node
 	union
 	{
 		char const*     string;
-		Array<ADT_Node> nodes;    ///< zpl_array
+		Array(ADT_Node) nodes;    ///< zpl_array
 
 		struct
 		{

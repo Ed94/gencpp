@@ -25,6 +25,8 @@ This library was written in a subset of C++ where the following are not used at 
 * Exceptions
 
 Polymorphic & Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.  
+The base library itself does not use anything but C-like features to allow for generating a derviative compatiable with C (WIP).
+
 There are only 4 template definitions in the entire library. (`Array<Type>`, `Hashtable<Type>`, `swap<Type>`, and `AST/Code::cast<Type>`)
 
 Two generic templated containers are used throughout the library:

@@ -41,7 +41,7 @@ u8 adt_destroy_branch( ADT_Node* node )
 			adt_destroy_branch( node->nodes + i );
 		}
 
-		free(node->nodes);
+		free(& node->nodes);
 	}
 	return 0;
 }
@@ -287,10 +287,11 @@ ADT_Node* adt_alloc_at( ADT_Node* parent, ssize index )
 
 	ADT_Node o = { 0 };
 	o.parent   = parent;
-	if ( ! append_at( parent->nodes, o, index ) )
+	if ( ! append_at( & parent->nodes, o, index ) )
 		return NULL;
 
-	return parent->nodes + index;
+	ADT_Node* node = & parent->nodes[index];
+	return node;
 }
 
 ADT_Node* adt_alloc( ADT_Node* parent )
@@ -402,7 +403,9 @@ ADT_Node* adt_append_arr( ADT_Node* parent, char const* name )
 	ADT_Node* o = adt_alloc( parent );
 	if ( ! o )
 		return NULL;
-	if ( adt_set_arr( o, name, get_header(parent->nodes)->Allocator ) )
+
+	ArrayHeader* node_header = get_header(parent->nodes);
+	if ( adt_set_arr( o, name, node_header->Allocator ) )
 	{
 		adt_remove_node( o );
 		return NULL;
@@ -951,7 +954,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			adt_append_arr( root, NULL );
 		}
 
-		append(root->nodes[ columnIndex ].nodes, rowItem );
+		append( & root->nodes[ columnIndex ].nodes, rowItem );
 
 		if ( delimiter == delim )
 		{

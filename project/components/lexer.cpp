@@ -222,7 +222,7 @@ s32 lex_preprocessor_directive(
 	, Token&           token )
 {
 	char const* hash = scanner;
-	append(Tokens, { hash, 1, TokType::Preprocess_Hash, line, column, TF_Preprocess } );
+	append( & Tokens, { hash, 1, TokType::Preprocess_Hash, line, column, TF_Preprocess } );
 
 	move_forward();
 	SkipWhitespace();
@@ -298,14 +298,14 @@ s32 lex_preprocessor_directive(
 
 		token.Length = token.Length + token.Text - hash;
 		token.Text   = hash;
-		append(Tokens, token );
+		append( & Tokens, token );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
 	if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
 	{
 		token.Flags |= TF_Preprocess_Cond;
-		append(Tokens, token );
+		append( & Tokens, token );
 		end_line();
 		return Lex_Continue;
 	}
@@ -314,7 +314,7 @@ s32 lex_preprocessor_directive(
 		token.Flags |= TF_Preprocess_Cond;
 	}
 
-	append(Tokens, token );
+	append( & Tokens, token );
 
 	SkipWhitespace();
 
@@ -338,7 +338,7 @@ s32 lex_preprocessor_directive(
 			name.Length++;
 		}
 
-		append(Tokens, name );
+		append( & Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
 		set<StrC>(defines, key, name );
@@ -384,7 +384,7 @@ s32 lex_preprocessor_directive(
 			move_forward();
 		}
 
-		append(Tokens, preprocess_content );
+		append( & Tokens, preprocess_content );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
@@ -446,7 +446,7 @@ s32 lex_preprocessor_directive(
 		preprocess_content.Length++;
 	}
 
-	append(Tokens, preprocess_content );
+	append( & Tokens, preprocess_content );
 	return Lex_Continue; // Skip found token, its all handled here.
 }
 
@@ -461,7 +461,7 @@ void lex_found_token( StrC& content
 {
 	if ( token.Type != TokType::Invalid )
 	{
-		append(Tokens, token );
+		append( & Tokens, token );
 		return;
 	}
 
@@ -488,7 +488,7 @@ void lex_found_token( StrC& content
 		}
 
 		token.Type = type;
-		append(Tokens, token );
+		append( & Tokens, token );
 		return;
 	}
 
@@ -498,7 +498,7 @@ void lex_found_token( StrC& content
 	{
 		token.Type   = type;
 		token.Flags |= TF_Specifier;
-		append(Tokens, token );
+		append( & Tokens, token );
 		return;
 	}
 
@@ -506,7 +506,7 @@ void lex_found_token( StrC& content
 	if ( type != TokType::Invalid )
 	{
 		token.Type = type;
-		append(Tokens, token );
+		append( & Tokens, token );
 		return;
 	}
 
@@ -558,7 +558,7 @@ void lex_found_token( StrC& content
 		token.Type = TokType::Identifier;
 	}
 
-	append(Tokens, token );
+	append( & Tokens, token );
 }
 
 
@@ -630,7 +630,7 @@ TokArray lex( StrC content )
 				token.Type = TokType::NewLine;
 				token.Length++;
 
-				append(Tokens, token );
+				append( & Tokens, token );
 				continue;
 			}
 		}
@@ -1099,7 +1099,7 @@ TokArray lex( StrC content )
 							move_forward();
 							token.Length++;
 						}
-						append(Tokens, token );
+						append( & Tokens, token );
 						continue;
 					}
 					else if ( current == '*' )
@@ -1135,7 +1135,7 @@ TokArray lex( StrC content )
 							move_forward();
 							token.Length++;
 						}
-						append(Tokens, token );
+						append( & Tokens, token );
 						// end_line();
 						continue;
 					}

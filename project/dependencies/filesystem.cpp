@@ -612,7 +612,7 @@ GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 
 		if ( get_header(arr)->Capacity < usize(new_cap) )
 		{
-			if ( ! grow( arr, ( s64 )( new_cap ) ) )
+			if ( ! grow( & arr, ( s64 )( new_cap ) ) )
 				return false;
 			d->buf = arr;
 		}
@@ -647,7 +647,7 @@ GEN_FILE_CLOSE_PROC( _memory_file_close )
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
 		Array<u8> arr = { d->buf };
-		free(arr);
+		free(& arr);
 	}
 
 	free( allocator, d );

@@ -23,9 +23,10 @@ CodeBody gen_ecode( char const* path )
 	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for ( ADT_Node node : enum_strs )
+	for ( ADT_Node& node : enum_strs )
 	{
 		char const* code = node.string;
+
 		append_fmt( enum_entries, "%s,\n", code );
 		append_fmt( to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 	}

@@ -11,7 +11,7 @@ internal void deinit();
 internal
 void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
-	Arena* last = & back(Global_AllocatorBuckets);
+	Arena* last = back(& Global_AllocatorBuckets);
 
 	switch ( type )
 	{
@@ -24,10 +24,10 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
-				if ( ! append( Global_AllocatorBuckets, bucket ) )
+				if ( ! append( & Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
-				last = & back(Global_AllocatorBuckets);
+				last = back(& Global_AllocatorBuckets);
 			}
 
 			return alloc_align( allocator_info(last), size, alignment );
@@ -51,10 +51,10 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
-				if ( ! append( Global_AllocatorBuckets, bucket ) )
+				if ( ! append( & Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
-				last = & back(Global_AllocatorBuckets);
+				last = back(& Global_AllocatorBuckets);
 			}
 
 			void* result = alloc_align( last->Backing, size, alignment );
@@ -249,7 +249,7 @@ void init()
 		if ( bucket.PhysicalStart == nullptr )
 			GEN_FATAL( "Failed to create first bucket for Global_AllocatorBuckets");
 
-		append( Global_AllocatorBuckets, bucket );
+		append( & Global_AllocatorBuckets, bucket );
 	}
 
 	// Setup the arrays
@@ -272,7 +272,7 @@ void init()
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the code pool" );
 
-		append(CodePools, code_pool );
+		append( & CodePools, code_pool );
 
 		LexArena = arena_init_from_allocator( Allocator_Lexer, LexAllocator_Size );
 
@@ -281,7 +281,7 @@ void init()
 		if ( string_arena.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the string arena" );
 
-		append(StringArenas, string_arena );
+		append( & StringArenas, string_arena );
 	}
 
 	// Setup the hash tables
@@ -323,12 +323,12 @@ void deinit()
 
 	destroy(StringCache);
 
-	free(CodePools);
-	free(StringArenas);
+	free( & CodePools);
+	free( & StringArenas);
 
 	free(& LexArena);
 
-	free(PreprocessorDefines);
+	free(& PreprocessorDefines);
 
 	index = 0;
 	left  = num(Global_AllocatorBuckets);
@@ -373,7 +373,7 @@ void reset()
 
 AllocatorInfo get_string_allocator( s32 str_length )
 {
-	Arena* last = & back(StringArenas);
+	Arena* last = back(& StringArenas);
 
 	usize size_req = str_length + sizeof(StringHeader) + sizeof(char*);
 
@@ -381,10 +381,10 @@ AllocatorInfo get_string_allocator( s32 str_length )
 	{
 		Arena new_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
-		if ( ! append(StringArenas, new_arena ) )
+		if ( ! append( & StringArenas, new_arena ) )
 			GEN_FATAL( "gen::get_string_allocator: Failed to allocate a new string arena" );
 
-		last = & back(StringArenas);
+		last = back(& StringArenas);
 	}
 
 	return allocator_info(last);
@@ -411,7 +411,7 @@ StringCached get_cached_string( StrC str )
 // Used internally to retireve a Code object form the CodePool.
 Code make_code()
 {
-	Pool* allocator = & back(CodePools);
+	Pool* allocator = back( & CodePools);
 	if ( allocator->FreeList == nullptr )
 	{
 		Pool code_pool = pool_init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
@@ -419,10 +419,10 @@ Code make_code()
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePool allcoator returned nullptr." );
 
-		if ( ! append( CodePools, code_pool ) )
+		if ( ! append( & CodePools, code_pool ) )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
 
-		allocator = & back(CodePools);
+		allocator = back( & CodePools);
 	}
 
 	Code result { rcast( AST*, alloc( allocator_info(allocator), sizeof(AST) )) };

@@ -30,6 +30,13 @@ Feature Macros:
 * `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
 * `GEN_DONT_ALLOW_INVALID_CODE` (Not implemented yet) : Will fail when an invalid code is constructed, parsed, or serialized.
 
+By default the base library implementation strictly uses a C-like interface. This is to allow for the generation of a C-variant of the library using [gen_c_library](../gen_c_library/). However, the library was written in C++ and supports some of its features:
+
+* `GEN_SUPPORT_CPP_REFERENCES` : Will enable support for reference interface on some definitions
+* `GEN_SUPPORT_CPP_MEMBER_FEATURES` : Will enable support for definitions to have their interface as members.
+
+*Note: A variant of the C++ library could be generated where those additonal support features are removed (see gen_c_library implementation for an idea of how)*
+
 ## On multi-threading
 
 Currently unsupported. I want the library to be *stable* and *correct*, with the addition of exhausting all basic single-threaded optimizations before I consider multi-threading.

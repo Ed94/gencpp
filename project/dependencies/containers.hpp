@@ -29,29 +29,29 @@ struct ArrayHeader;
 
 usize array_grow_formula(ssize value);
 
-template<class Type> Array<Type>  array_init(AllocatorInfo allocator);
-template<class Type> Array<Type>  array_init_reserve(AllocatorInfo allocator, ssize capacity);
-template<class Type> bool         append(Array<Type>& array, Array<Type> other);
-template<class Type> bool         append(Array<Type>& array, Type value);
-template<class Type> bool         append(Array<Type>& array, Type* items, usize item_num);
-template<class Type> bool         append_at(Array<Type>& array, Type item, usize idx);
-template<class Type> bool         append_at(Array<Type>& array, Type* items, usize item_num, usize idx);
-template<class Type> Type&        back(Array<Type>& array);
-template<class Type> void         clear(Array<Type>& array);
-template<class Type> bool         fill(Array<Type>& array, usize begin, usize end, Type value);
-template<class Type> void         free(Array<Type>& array);
-template<class Type> bool         grow(Array<Type>& array, usize min_capacity);
-template<class Type> usize        num(Array<Type>& array);
-template<class Type> void         pop(Array<Type>& array);
-template<class Type> void         remove_at(Array<Type>& array, usize idx);
-template<class Type> bool         reserve(Array<Type>& array, usize new_capacity);
-template<class Type> bool         resize(Array<Type>& array, usize num);
-template<class Type> bool         set_capacity(Array<Type>& array, usize new_capacity);
-template<class Type> ArrayHeader* get_header(Array<Type>& array);
+template<class Type> Array(Type)  array_init        (AllocatorInfo allocator);
+template<class Type> Array(Type)  array_init_reserve(AllocatorInfo allocator, ssize capacity);
+template<class Type> bool         append            (Array(Type)* array, Array(Type) other);
+template<class Type> bool         append            (Array(Type)* array, Type value);
+template<class Type> bool         append            (Array(Type)* array, Type* items, usize item_num);
+template<class Type> bool         append_at         (Array(Type)* array, Type item, usize idx);
+template<class Type> bool         append_at         (Array(Type)* array, Type* items, usize item_num, usize idx);
+template<class Type> Type*        back              (Array(Type)  array);
+template<class Type> void         clear             (Array(Type)  array);
+template<class Type> bool         fill              (Array(Type)  array, usize begin, usize end, Type value);
+template<class Type> void         free              (Array(Type)* array);
+template<class Type> bool         grow              (Array(Type)* array, usize min_capacity);
+template<class Type> usize        num               (Array(Type)  array);
+template<class Type> void         pop               (Array(Type)  array);
+template<class Type> void         remove_at         (Array(Type)  array, usize idx);
+template<class Type> bool         reserve           (Array(Type)* array, usize new_capacity);
+template<class Type> bool         resize            (Array(Type)* array, usize num);
+template<class Type> bool         set_capacity      (Array(Type)* array, usize new_capacity);
+template<class Type> ArrayHeader* get_header        (Array(Type)  array);
 
-template<class Type> forceinline Type* begin(Array<Type>& array)             { return array;      }
-template<class Type> forceinline Type* end(Array<Type>& array)               { return array + get_header(array)->Num; }
-template<class Type> forceinline Type* next(Array<Type>& array, Type* entry) { return entry + 1; }
+// template<class Type> forceinline Type* begin(Array<Type> array)             { return array;      }
+// template<class Type> forceinline Type* end(Array<Type> array)               { return array + get_header(array)->Num; }
+// template<class Type> forceinline Type* next(Array<Type> array, Type* entry) { return entry + 1; }
 
 struct ArrayHeader {
 	AllocatorInfo Allocator;
@@ -70,30 +70,50 @@ struct Array
 	forceinline static Array  init_reserve(AllocatorInfo allocator, ssize capacity) { return GEN_NS array_init_reserve<Type>(allocator, capacity); }
 	forceinline static usize  grow_formula(ssize value)                             { return GEN_NS array_grow_formula<Type>(value); }
 
-	forceinline bool         append(Array other)                               { return GEN_NS append<Type>(*this, other); }
-	forceinline bool         append(Type value)                                { return GEN_NS append<Type>(*this, value); }
-	forceinline bool         append(Type* items, usize item_num)               { return GEN_NS append<Type>(*this, items, item_num); }
-	forceinline bool         append_at(Type item, usize idx)                   { return GEN_NS append_at<Type>(*this, item, idx); }
-	forceinline bool         append_at(Type* items, usize item_num, usize idx) { return GEN_NS append_at<Type>(*this, items, item_num, idx); }
-	forceinline Type&        back()                                            { return GEN_NS back<Type>(*this); }
-	forceinline void         clear()                                           { GEN_NS clear<Type>(*this); }
-	forceinline bool         fill(usize begin, usize end, Type value)          { return GEN_NS fill<Type>(*this, begin, end, value); }
-	forceinline void         free()                                            { GEN_NS free<Type>(*this); }
-	forceinline ArrayHeader* get_header()                                      { return GEN_NS get_header<Type>(*this); }
-	forceinline bool         grow(usize min_capacity)                          { return GEN_NS grow<Type>(*this, min_capacity); }
+	forceinline bool         append(Array other)                               { return GEN_NS append<Type>(this, other); }
+	forceinline bool         append(Type value)                                { return GEN_NS append<Type>(this, value); }
+	forceinline bool         append(Type* items, usize item_num)               { return GEN_NS append<Type>(this, items, item_num); }
+	forceinline bool         append_at(Type item, usize idx)                   { return GEN_NS append_at<Type>(this, item, idx); }
+	forceinline bool         append_at(Type* items, usize item_num, usize idx) { return GEN_NS append_at<Type>(this, items, item_num, idx); }
+	forceinline Type*        back()                                            { return GEN_NS back<Type>(* this); }
+	forceinline void         clear()                                           { GEN_NS clear<Type>(* this); }
+	forceinline bool         fill(usize begin, usize end, Type value)          { return GEN_NS fill<Type>(* this, begin, end, value); }
+	forceinline void         free()                                            { GEN_NS free<Type>(this); }
+	forceinline ArrayHeader* get_header()                                      { return GEN_NS get_header<Type>(* this); }
+	forceinline bool         grow(usize min_capacity)                          { return GEN_NS grow<Type>(this, min_capacity); }
 	forceinline usize        num()                                             { return GEN_NS num<Type>(*this); }
-	forceinline void         pop()                                             { GEN_NS pop<Type>(*this); }
-	forceinline void         remove_at(usize idx)                              { GEN_NS remove_at<Type>(*this, idx); }
-	forceinline bool         reserve(usize new_capacity)                       { return GEN_NS reserve<Type>(*this, new_capacity); }
-	forceinline bool         resize(usize num)                                 { return GEN_NS resize<Type>(*this, num); }
-	forceinline bool         set_capacity(usize new_capacity)                  { return GEN_NS set_capacity<Type>(*this, new_capacity); }
+	forceinline void         pop()                                             { GEN_NS pop<Type>(* this); }
+	forceinline void         remove_at(usize idx)                              { GEN_NS remove_at<Type>(* this, idx); }
+	forceinline bool         reserve(usize new_capacity)                       { return GEN_NS reserve<Type>(this, new_capacity); }
+	forceinline bool         resize(usize num)                                 { return GEN_NS resize<Type>(this, num); }
+	forceinline bool         set_capacity(usize new_capacity)                  { return GEN_NS set_capacity<Type>(this, new_capacity); }
+#pragma endregion Member Mapping
 
 	forceinline operator Type*()             { return Data; }
 	forceinline operator Type const*() const { return Data; }
 	forceinline Type* begin()                { return Data; }
 	forceinline Type* end()                  { return Data + get_header()->Num; }
-#pragma endregion Member Mapping
+
+	forceinline Type&       operator[](ssize index)       { return Data[index]; }
+	forceinline Type const& operator[](ssize index) const { return Data[index]; }
 };
+#endif
+
+#if GEN_SUPPORT_CPP_REFERENCES
+template<class Type> bool         append(Array<Type>& array, Array<Type> other)                         { return GEN_NS append( & array, other ); }
+template<class Type> bool         append(Array<Type>& array, Type value)                                { return GEN_NS append( & array, value ); }
+template<class Type> bool         append(Array<Type>& array, Type* items, usize item_num)               { return GEN_NS append( & array, items, item_num ); }
+template<class Type> bool         append_at(Array<Type>& array, Type item, usize idx)                   { return GEN_NS append_at( & array, item, idx ); }
+template<class Type> bool         append_at(Array<Type>& array, Type* items, usize item_num, usize idx) { return GEN_NS append_at( & array, items, item_num, idx ); }
+template<class Type> void         free(Array<Type>& array)                                              { return GEN_NS free( & array ); }
+template<class Type> bool         grow(Array<Type>& array, usize min_capacity)                          { return GEN_NS grow( & array, min_capacity); }
+template<class Type> bool         reserve(Array<Type>& array, usize new_capacity)                       { return GEN_NS reserve( & array, new_capacity); }
+template<class Type> bool         resize(Array<Type>& array, usize num)                                 { return GEN_NS resize( & array, num); }
+template<class Type> bool         set_capacity(Array<Type>& array, usize new_capacity)                  { return GEN_NS set_capacity( & array, new_capacity); }
+
+template<class Type> forceinline Type* begin(Array<Type>& array)             { return array;      }
+template<class Type> forceinline Type* end(Array<Type>& array)               { return array + get_header(array)->Num; }
+template<class Type> forceinline Type* next(Array<Type>& array, Type* entry) { return entry + 1; }
 #endif
 
 template<class Type> inline
@@ -121,30 +141,30 @@ usize array_grow_formula(ssize value) {
 }
 
 template<class Type> inline
-bool append(Array<Type>& array, Array<Type> other) {
+bool append(Array<Type>* array, Array<Type> other) {
 	return append(array, other, num(other));
 }
 
 template<class Type> inline
-bool append(Array<Type>& array, Type value)
+bool append(Array<Type>* array, Type value)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = get_header(* array);
 
 	if (header->Num == header->Capacity)
 	{
 		if (!grow(array, header->Capacity))
 			return false;
-		header = get_header(array);
+		header = get_header(* array);
 	}
 
-	array[header->Num] = value;
+	(*array)[ header->Num] = value;
 	header->Num++;
 
 	return true;
 }
 
 template<class Type> inline
-bool append(Array<Type>& array, Type* items, usize item_num)
+bool append(Array<Type>* array, Type* items, usize item_num)
 {
 	ArrayHeader* header = get_header(array);
 
@@ -162,34 +182,37 @@ bool append(Array<Type>& array, Type* items, usize item_num)
 }
 
 template<class Type> inline
-bool append_at(Array<Type>& array, Type item, usize idx)
+bool append_at(Array<Type>* array, Type item, usize idx)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = get_header(* array);
 
-	if (idx >= header->Num)
-	 	idx = header->Num - 1;
+	ssize slot = idx;
+	if (slot >= header->Num)
+	 	slot = header->Num - 1;
 
-	if (idx < 0)
- 		idx = 0;
+	if (slot < 0)
+ 		slot = 0;
 
 	if (header->Capacity < header->Num + 1)
 	{
-		if (!grow(array, header->Capacity + 1))
+		if ( ! grow(array, header->Capacity + 1))
 			return false;
 
-		header = get_header(array);
+		header = get_header(* array);
 	}
 
-	Type* target = array + idx;
+	Type* target = array->Data + slot;
 
-	mem_move(target + 1, target, (header->Num - idx) * sizeof(Type));
+	mem_move(target + 1, target, (header->Num - slot) * sizeof(Type));
 	header->Num++;
+
+	header = get_header(* array);
 
 	return true;
 }
 
 template<class Type> inline
-bool append_at(Array<Type>& array, Type* items, usize item_num, usize idx)
+bool append_at(Array<Type>* array, Type* items, usize item_num, usize idx)
 {
 	ArrayHeader* header = get_header(array);
 
@@ -200,7 +223,7 @@ bool append_at(Array<Type>& array, Type* items, usize item_num, usize idx)
 
 	if (item_num > header->Capacity)
 	{
-		if (!grow(array, header->Capacity + item_num))
+		if (! grow(array, header->Capacity + item_num))
 			return false;
 
 		header = get_header(array);
@@ -217,19 +240,25 @@ bool append_at(Array<Type>& array, Type* items, usize item_num, usize idx)
 }
 
 template<class Type> inline
-Type& back(Array<Type>& array) {
-	ArrayHeader* header = get_header(array);
-	return array[header->Num - 1];
+Type* back(Array<Type>* array)
+{
+	GEN_ASSERT(array != nullptr);
+
+	ArrayHeader* header = get_header(* array);
+	if (header->Num <= 0)
+		return nullptr;
+
+	return & (*array)[header->Num - 1];
 }
 
 template<class Type> inline
-void clear(Array<Type>& array) {
+void clear(Array<Type> array) {
 	ArrayHeader* header = get_header(array);
 	header->Num = 0;
 }
 
 template<class Type> inline
-bool fill(Array<Type>& array, usize begin, usize end, Type value)
+bool fill(Array<Type> array, usize begin, usize end, Type value)
 {
 	ArrayHeader* header = get_header(array);
 
@@ -245,25 +274,25 @@ bool fill(Array<Type>& array, usize begin, usize end, Type value)
 }
 
 template<class Type> inline
-void free(Array<Type>& array) {
-	ArrayHeader* header = get_header(array);
+void free(Array<Type>* array) {
+	GEN_ASSERT(array != nullptr);
+	ArrayHeader* header = get_header(* array);
 	GEN_NS free(header->Allocator, header);
-	Type*& Data = rcast(Type*&, array);
-	Data = nullptr;
+	array->Data = nullptr;
 }
 
-template<class Type> inline
-ArrayHeader* get_header(Array<Type>& array) {
+template<class Type> forceinline
+ArrayHeader* get_header(Array<Type> array) {
+    Type* Data = array;
+
 	using NonConstType = TRemoveConst<Type>;
-	Type* Data = array; // This should do nothing in C but in C++ gets member Data struct.
-	return rcast(ArrayHeader*, const_cast<NonConstType*>(Data)) - 1;
+    return rcast(ArrayHeader*, const_cast<NonConstType*>(Data)) - 1;
 }
-
 template<class Type> inline
-bool grow(Array<Type>& array, usize min_capacity)
+bool grow(Array<Type>* array, usize min_capacity)
 {
-	ArrayHeader* header = get_header(array);
-	usize new_capacity = array_grow_formula(header->Capacity);
+	ArrayHeader* header       = get_header(* array);
+	usize        new_capacity = array_grow_formula(header->Capacity);
 
 	if (new_capacity < min_capacity)
 	new_capacity = min_capacity;
@@ -272,19 +301,19 @@ bool grow(Array<Type>& array, usize min_capacity)
 }
 
 template<class Type> inline
-usize num(Array<Type>& array) {
+usize num(Array<Type> array) {
 	return get_header(array)->Num;
 }
 
 template<class Type> inline
-void pop(Array<Type>& array) {
+void pop(Array<Type> array) {
 	ArrayHeader* header = get_header(array);
 	GEN_ASSERT(header->Num > 0);
 	header->Num--;
 }
 
 template<class Type> inline
-void remove_at(Array<Type>& array, usize idx)
+void remove_at(Array<Type> array, usize idx)
 {
 	ArrayHeader* header = get_header(array);
 	GEN_ASSERT(idx < header->Num);
@@ -294,7 +323,7 @@ void remove_at(Array<Type>& array, usize idx)
 }
 
 template<class Type> inline
-bool reserve(Array<Type>& array, usize new_capacity)
+bool reserve(Array<Type>* array, usize new_capacity)
 {
 	ArrayHeader* header = get_header(array);
 
@@ -305,14 +334,14 @@ bool reserve(Array<Type>& array, usize new_capacity)
 }
 
 template<class Type> inline
-bool resize(Array<Type>& array, usize num)
+bool resize(Array<Type>* array, usize num)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = get_header(* array);
 
 	if (header->Capacity < num) {
-		if (!grow(array, num))
+		if (! grow( array, num))
 			return false;
-		header = get_header(array);
+		header = get_header(* array);
 	}
 
 	header->Num = num;
@@ -320,9 +349,9 @@ bool resize(Array<Type>& array, usize num)
 }
 
 template<class Type> inline
-bool set_capacity(Array<Type>& array, usize new_capacity)
+bool set_capacity(Array<Type>* array, usize new_capacity)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = get_header(* array);
 
 	if (new_capacity == header->Capacity)
 	return true;
@@ -333,7 +362,7 @@ bool set_capacity(Array<Type>& array, usize new_capacity)
 		return true;
 	}
 
-	ssize size = sizeof(ArrayHeader) + sizeof(Type) * new_capacity;
+	ssize        size       = sizeof(ArrayHeader) + sizeof(Type) * new_capacity;
 	ArrayHeader* new_header = rcast(ArrayHeader*, alloc(header->Allocator, size));
 
 	if (new_header == nullptr)
@@ -345,31 +374,9 @@ bool set_capacity(Array<Type>& array, usize new_capacity)
 
 	GEN_NS free(header->Allocator, header);
 
-	Type*& Data = rcast(Type*&, array);
-	Data = rcast(Type*, new_header + 1);
+	array->Data = rcast(Type*, new_header + 1);
 	return true;
 }
-
-#define array_init(Type, allocator)                            array_init<Type>(allocator)
-#define array_init(Type, allocator)                            array_init<Type>(allocator)
-#define array_init_reserve(Type, allocator, capacity)          array_init_reserve<Type>(allocator, capacity)
-#define array_append(Type, array, other)                       append<Type>(array, other)
-#define array_append_value(Type, array, value)                 append<Type>(array, value)
-#define array_append_items(Type, array, items, item_num)       append<Type>(array, items, item_num)
-#define array_append_at(Type, array, item, idx)                append_at<Type>(array, item, idx)
-#define array_append_items_at(Type, array, items, num, idx)    append_at<Type>(array, items, num, idx)
-#define array_back(Type, array)                                back<Type>(array)
-#define array_clear(Type, array)                               clear<Type>(array)
-#define array_fill(Type, array, begin, end, value)             fill<Type>(array, begin, end, value)
-#define array_free(Type, array)                                free<Type>(array)
-#define array_grow(Type, array, min_capacity)                  grow<Type>(array, min_capacity)
-#define array_num(Type, array)                                 num<Type>(array)
-#define array_pop(Type, array)                                 pop<Type>(array)
-#define array_remove_at(Type, array, idx)                      remove_at<Type>(array, idx)
-#define array_reserve(Type, array, new_capacity)               reserve<Type>(array, new_capacity)
-#define array_resize(Type, array, num)                         resize<Type>(array, num)
-#define array_set_capacity(Type, array, new_capacity)          set_capacity<Type>(array, new_capacity)
-#define array_get_header(array)                                get_header(array)
 
 #pragma endregion Array
 
@@ -453,7 +460,7 @@ HashTable<Type> hashtable_init_reserve(AllocatorInfo allocator, usize num)
 
 	result.Hashes = array_init_reserve<ssize>(allocator, num);
 	get_header(result.Hashes)->Num = num;
-	resize(result.Hashes, num);
+	resize(& result.Hashes, num);
 	fill<ssize>(result.Hashes, 0, num, -1);
 
 	result.Entries = array_init_reserve<HashTableEntry<Type>>(allocator, num);
@@ -469,8 +476,8 @@ void clear(HashTable<Type>& table) {
 template<typename Type> inline
 void destroy(HashTable<Type>& table) {
 	if (table.Hashes && get_header(table.Hashes)->Capacity) {
-		free(table.Hashes);
-		free(table.Entries);
+		free(& table.Hashes);
+		free(& table.Entries);
 	}
 }
 
@@ -621,7 +628,7 @@ ssize add_entry(HashTable<Type>& table, u64 key) {
 	HashTableEntry<Type> entry = { key, -1 };
 
 	idx = num(table.Entries);
-	append(table.Entries, entry);
+	append( & table.Entries, entry);
 	return idx;
 }
 
