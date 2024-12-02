@@ -105,10 +105,25 @@ void   to_string(CodeTemplate self, String* result);
 String to_string(CodeType self);
 void   to_string(CodeType self, String* result);
 
+String to_string(CodeTypedef self);
+void   to_string(CodeTypedef self, String* result);
+
+String to_string(CodeUnion self);
+void   to_string(CodeUnion self, String* result);
+
+String to_string   (CodeUsing op_cast );
+void   to_string   (CodeUsing op_cast, String* result );
+void   to_string_ns(CodeUsing op_cast, String* result );
+
+String to_string(CodeVar self);
+void   to_string(CodeVar self, String* result);
+
 #pragma region Code Types
 // These structs are not used at all by the C vairant.
 #if ! GEN_COMPILER_C
 // stati_assert( GEN_COMPILER_C, "This should not be compiled with the C-library" );
+
+#define Verify_POD(Type) static_assert(size_of(Code##Type) == size_of(AST_##Type), "ERROR: Code##Type is not a POD")
 
 struct CodeBody
 {
@@ -897,7 +912,7 @@ struct CodeStmt_While
 
 struct CodeTemplate
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeTemplate );
 
 	String to_string()                 { return GEN_NS to_string(* this); }
@@ -927,11 +942,11 @@ struct CodeType
 
 struct CodeTypedef
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeTypedef );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps( CodeTypedef );
@@ -945,8 +960,8 @@ struct CodeUnion
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeUnion );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeUnion);
@@ -960,9 +975,9 @@ struct CodeUsing
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeUsing );
 
-	String to_string();
-	void   to_string( String& result );
-	void   to_string_ns( String& result );
+	String to_string()                    { return GEN_NS to_string(* this); }
+	void   to_string( String& result )    { return GEN_NS to_string(* this, & result); }
+	void   to_string_ns( String& result ) { return GEN_NS to_string_ns(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeUsing);
@@ -976,8 +991,8 @@ struct CodeVar
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeVar );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeVar);
@@ -993,6 +1008,8 @@ struct CodeVar
 #if GEN_SUPPORT_CPP_REFERENCES
 void to_string_export( CodeBody body, String& result ) { return to_string_export(body, & result); };
 #endif
+
+#undef Verify_POD
 
 #endif //if ! GEN_COMPILER_C
 

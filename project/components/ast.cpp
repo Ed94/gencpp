@@ -557,7 +557,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Typedef:
-			cast(CodeTypedef, {self}).to_string( * result );
+			to_string(cast(CodeTypedef, {self}), result );
 		break;
 
 		case Typename:
@@ -565,19 +565,19 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Union:
-			cast(CodeUnion, {self}).to_string( * result );
+			to_string( cast(CodeUnion, {self}), result );
 		break;
 
 		case Using:
-			cast(CodeUsing, {self}).to_string( * result );
+			to_string(cast(CodeUsing, {self}), result );
 		break;
 
 		case Using_Namespace:
-			cast(CodeUsing, {self}).to_string_ns( * result );
+			to_string_ns(cast(CodeUsing, {self}), result );
 		break;
 
 		case Variable:
-			cast(CodeVar, {self}).to_string( * result );
+			to_string(cast(CodeVar, {self}), result );
 		break;
 
 		case Enum_Body:

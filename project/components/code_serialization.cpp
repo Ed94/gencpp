@@ -1093,46 +1093,46 @@ void to_string(CodeTemplate self, String* result )
 		append_fmt( result, "template<>\n%S", GEN_NS to_string(self->Declaration) );
 }
 
-String CodeTypedef::to_string()
+String to_string(CodeTypedef self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	to_string( result );
+	to_string( self, & result );
 	return result;
 }
 
-void CodeTypedef::to_string( String& result )
+void to_string(CodeTypedef self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	append( & result, "typedef ");
+	append( result, "typedef ");
 
 	// Determines if the typedef is a function typename
-	if ( ast->UnderlyingType->ReturnType )
-		append( & result, GEN_NS to_string(ast->UnderlyingType) );
+	if ( self->UnderlyingType->ReturnType )
+		append( result, GEN_NS to_string(self->UnderlyingType) );
 	else
-		append_fmt( & result, "%S %S", GEN_NS to_string(ast->UnderlyingType), ast->Name );
+		append_fmt( result, "%S %S", GEN_NS to_string(self->UnderlyingType), self->Name );
 
-	if ( ast->UnderlyingType->Type == ECode::Typename && ast->UnderlyingType->ArrExpr )
+	if ( self->UnderlyingType->Type == ECode::Typename && self->UnderlyingType->ArrExpr )
 	{
-		append_fmt( & result, "[ %S ];", GEN_NS to_string(ast->UnderlyingType->ArrExpr) );
+		append_fmt( result, "[ %S ];", GEN_NS to_string(self->UnderlyingType->ArrExpr) );
 
-		AST* next_arr_expr = ast->UnderlyingType->ArrExpr->Next;
+		AST* next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( & result, "[ %S ];", GEN_NS to_string(next_arr_expr) );
+			append_fmt( result, "[ %S ];", GEN_NS to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
 	else
 	{
-		append( & result, ";" );
+		append( result, ";" );
 	}
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, "  %S", ast->InlineCmt->Content);
+	if ( self->InlineCmt )
+		append_fmt( result, "  %S", self->InlineCmt->Content);
 	else
-		append( & result, "\n");
+		append( result, "\n");
 }
 
 String to_string(CodeType self)
@@ -1188,235 +1188,235 @@ void to_string(CodeType self, String* result )
 		append( result, "...");
 }
 
-String CodeUnion::to_string()
+String to_string(CodeUnion self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	to_string( result );
+	to_string( self, & result );
 	return result;
 }
 
-void CodeUnion::to_string( String& result )
+void to_string(CodeUnion self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	append( & result, "union " );
+	append( result, "union " );
 
-	if ( ast->Attributes )
-		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
+	if ( self->Attributes )
+		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
 
-	if ( ast->Name )
+	if ( self->Name )
 	{
-		append_fmt( & result, "%S\n{\n%S\n}"
-			, ast->Name
-			, GEN_NS to_string(ast->Body)
+		append_fmt( result, "%S\n{\n%S\n}"
+			, self->Name
+			, GEN_NS to_string(self->Body)
 		);
 	}
 	else
 	{
 		// Anonymous union
-		append_fmt( & result, "\n{\n%S\n}"
-			, GEN_NS to_string(ast->Body)
+		append_fmt( result, "\n{\n%S\n}"
+			, GEN_NS to_string(self->Body)
 		);
 	}
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
-		append( & result, ";\n");
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+		append( result, ";\n");
 }
 
-String CodeUsing::to_string()
+String to_string(CodeUsing self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	switch ( ast->Type )
+	switch ( self->Type )
 	{
 		using namespace ECode;
 		case Using:
-			to_string( result );
+			to_string( self, & result );
 		break;
 		case Using_Namespace:
-			to_string_ns( result );
+			to_string_ns( self, & result );
 		break;
 	}
 	return result;
 }
 
-void CodeUsing::to_string( String& result )
+void to_string(CodeUsing self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	if ( ast->Attributes )
-		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
+	if ( self->Attributes )
+		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
 
-	if ( ast->UnderlyingType )
+	if ( self->UnderlyingType )
 	{
-		append_fmt( & result, "using %S = %S", ast->Name, GEN_NS to_string(ast->UnderlyingType) );
+		append_fmt( result, "using %S = %S", self->Name, GEN_NS to_string(self->UnderlyingType) );
 
-		if ( ast->UnderlyingType->ArrExpr )
+		if ( self->UnderlyingType->ArrExpr )
 		{
-			append_fmt( & result, "[ %S ]", GEN_NS to_string(ast->UnderlyingType->ArrExpr) );
+			append_fmt( result, "[ %S ]", GEN_NS to_string(self->UnderlyingType->ArrExpr) );
 
-			AST* next_arr_expr = ast->UnderlyingType->ArrExpr->Next;
+			AST* next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
 
-		append( & result, ";" );
+		append( result, ";" );
 	}
 	else
-		append_fmt( & result, "using %S;", ast->Name );
+		append_fmt( result, "using %S;", self->Name );
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, "  %S\n", ast->InlineCmt->Content );
+	if ( self->InlineCmt )
+		append_fmt( result, "  %S\n", self->InlineCmt->Content );
 	else
-		append( & result, "\n");
+		append( result, "\n");
 }
 
-void CodeUsing::to_string_ns( String& result )
+void to_string_ns(CodeUsing self, String* result )
 {
-	if ( ast->InlineCmt )
-		append_fmt( & result, "using namespace $S;  %S", ast->Name, ast->InlineCmt->Content );
+	if ( self->InlineCmt )
+		append_fmt( result, "using namespace $S;  %S", self->Name, self->InlineCmt->Content );
 	else
-		append_fmt( & result, "using namespace %s;\n", ast->Name );
+		append_fmt( result, "using namespace %s;\n", self->Name );
 }
 
-String CodeVar::to_string()
+String to_string(CodeVar self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	to_string( result );
+	to_string( self, & result );
 	return result;
 }
 
-void CodeVar::to_string( String& result )
+void to_string(CodeVar self, String* result )
 {
-	if ( ast->Parent && ast->Parent->Type == ECode::Variable )
+	if ( self->Parent && self->Parent->Type == ECode::Variable )
 	{
 		// Its a comma-separated variable ( a NextVar )
 
-		if ( ast->Specs )
-			append_fmt( & result, "%S ", GEN_NS to_string(ast->Specs) );
+		if ( self->Specs )
+			append_fmt( result, "%S ", GEN_NS to_string(self->Specs) );
 
-		append( & result, ast->Name );
+		append( result, self->Name );
 
-		if ( ast->ValueType->ArrExpr )
+		if ( self->ValueType->ArrExpr )
 		{
-			append_fmt( & result, "[ %S ]", GEN_NS to_string(ast->ValueType->ArrExpr) );
+			append_fmt( result, "[ %S ]", GEN_NS to_string(self->ValueType->ArrExpr) );
 
-			AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
+			AST* next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
 
-		if ( ast->Value )
+		if ( self->Value )
 		{
-			if ( ast->VarConstructorInit )
-				append_fmt( & result, "( %S ", GEN_NS to_string(ast->Value) );
+			if ( self->VarConstructorInit )
+				append_fmt( result, "( %S ", GEN_NS to_string(self->Value) );
 			else
-				append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
+				append_fmt( result, " = %S", GEN_NS to_string(self->Value) );
 		}
 
 		// Keep the chain going...
-		if ( ast->NextVar )
-			append_fmt( & result, ", %S", ast->NextVar.to_string() );
+		if ( self->NextVar )
+			append_fmt( result, ", %S", self->NextVar.to_string() );
 
-		if ( ast->VarConstructorInit )
-			append( & result, " )");
+		if ( self->VarConstructorInit )
+			append( result, " )");
 
 		return;
 	}
 
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	if ( ast->Attributes || ast->Specs )
+	if ( self->Attributes || self->Specs )
 	{
-		if ( ast->Attributes )
-			append_fmt( & result, "%S ", GEN_NS to_string(ast->Specs) );
+		if ( self->Attributes )
+			append_fmt( result, "%S ", GEN_NS to_string(self->Specs) );
 
-		if ( ast->Specs )
-			append_fmt( & result, "%S\n", GEN_NS to_string(ast->Specs) );
+		if ( self->Specs )
+			append_fmt( result, "%S\n", GEN_NS to_string(self->Specs) );
 
-		append_fmt( & result, "%S %S", GEN_NS to_string(ast->ValueType), ast->Name );
+		append_fmt( result, "%S %S", GEN_NS to_string(self->ValueType), self->Name );
 
-		if ( ast->ValueType->ArrExpr )
+		if ( self->ValueType->ArrExpr )
 		{
-			append_fmt( & result, "[ %S ]", GEN_NS to_string(ast->ValueType->ArrExpr) );
+			append_fmt( result, "[ %S ]", GEN_NS to_string(self->ValueType->ArrExpr) );
 
-			AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
+			AST* next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
 
-		if ( ast->BitfieldSize )
-			append_fmt( & result, " : %S", GEN_NS to_string(ast->BitfieldSize) );
+		if ( self->BitfieldSize )
+			append_fmt( result, " : %S", GEN_NS to_string(self->BitfieldSize) );
 
-		if ( ast->Value )
+		if ( self->Value )
 		{
-			if ( ast->VarConstructorInit )
-				append_fmt( & result, "( %S ", GEN_NS to_string(ast->Value) );
+			if ( self->VarConstructorInit )
+				append_fmt( result, "( %S ", GEN_NS to_string(self->Value) );
 			else
-				append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
+				append_fmt( result, " = %S", GEN_NS to_string(self->Value) );
 		}
 
-		if ( ast->NextVar )
-			append_fmt( & result, ", %S", ast->NextVar.to_string() );
+		if ( self->NextVar )
+			append_fmt( result, ", %S", self->NextVar.to_string() );
 
-		if ( ast->VarConstructorInit )
-			append( & result, " )");
+		if ( self->VarConstructorInit )
+			append( result, " )");
 
-		if ( ast->InlineCmt )
-			append_fmt( & result, ";  %S", ast->InlineCmt->Content);
+		if ( self->InlineCmt )
+			append_fmt( result, ";  %S", self->InlineCmt->Content);
 		else
-			append( & result, ";\n" );
+			append( result, ";\n" );
 
 		return;
 	}
 
-	if ( ast->BitfieldSize )
-		append_fmt( & result, "%S %S : %S", GEN_NS to_string(ast->ValueType), ast->Name, GEN_NS to_string(ast->BitfieldSize) );
+	if ( self->BitfieldSize )
+		append_fmt( result, "%S %S : %S", GEN_NS to_string(self->ValueType), self->Name, GEN_NS to_string(self->BitfieldSize) );
 
-	else if ( ast->ValueType->ArrExpr )
+	else if ( self->ValueType->ArrExpr )
 	{
-		append_fmt( & result, "%S %S[ %S ]", GEN_NS to_string(ast->ValueType), ast->Name, GEN_NS to_string(ast->ValueType->ArrExpr) );
+		append_fmt( result, "%S %S[ %S ]", GEN_NS to_string(self->ValueType), self->Name, GEN_NS to_string(self->ValueType->ArrExpr) );
 
-		AST* next_arr_expr = ast->ValueType->ArrExpr->Next;
+		AST* next_arr_expr = self->ValueType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( & result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+			append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
 
 	else
-		append_fmt( & result, "%S %S", GEN_NS to_string(ast->ValueType), ast->Name );
+		append_fmt( result, "%S %S", GEN_NS to_string(self->ValueType), self->Name );
 
-	if ( ast->Value )
+	if ( self->Value )
 	{
-		if ( ast->VarConstructorInit )
-			append_fmt( & result, "( %S ", GEN_NS to_string(ast->Value) );
+		if ( self->VarConstructorInit )
+			append_fmt( result, "( %S ", GEN_NS to_string(self->Value) );
 		else
-			append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
+			append_fmt( result, " = %S", GEN_NS to_string(self->Value) );
 	}
 
-	if ( ast->NextVar )
-		append_fmt( & result, ", %S", ast->NextVar.to_string() );
+	if ( self->NextVar )
+		append_fmt( result, ", %S", self->NextVar.to_string() );
 
-	if ( ast->VarConstructorInit )
-		append( & result, " )");
+	if ( self->VarConstructorInit )
+		append( result, " )");
 
-	append( & result, ";" );
+	append( result, ";" );
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, "  %S", ast->InlineCmt->Content);
+	if ( self->InlineCmt )
+		append_fmt( result, "  %S", self->InlineCmt->Content);
 	else
-		append( & result, "\n");
+		append( result, "\n");
 }

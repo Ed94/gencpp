@@ -264,7 +264,6 @@ struct Code_POD
 {
 	AST* ast;
 };
-
 static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 
 // Desired width of the AST data structure.
@@ -421,73 +420,9 @@ struct AST
 	};
 };
 
-struct AST_POD
-{
-	union {
-		struct
-		{
-			AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-			AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-			AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
-			union {
-				AST*  InitializerList; // Constructor
-				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
-				AST*  ReturnType;      // Function, Operator, Typename
-				AST*  UnderlyingType;  // Enum, Typedef
-				AST*  ValueType;       // Parameter, Variable
-			};
-			union {
-				AST*  Macro;           // Parameter
-				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
-				AST*  Params;          // Constructor, Function, Operator, Template, Typename
-			};
-			union {
-				AST*  ArrExpr;          // Typename
-				AST*  Body;             // Class, Constructr, Destructor, Enum, Friend, Function, Namespace, Struct, Union
-				AST*  Declaration;      // Friend, Template
-				AST*  Value;            // Parameter, Variable
-			};
-			union {
-				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-				AST*  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
-				AST*  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
-			};
-		};
-		StringCached  Content;          // Attributes, Comment, Execution, Include
-		struct {
-			SpecifierT ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
-			AST*       NextSpecs;                   // Specifiers; If ArrSpecs is full, then NextSpecs is used.
-		};
-	};
-	union {
-		AST* Prev;
-		AST* Front;
-		AST* Last;
-	};
-	union {
-		AST* Next;
-		AST* Back;
-	};
-	parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
-	AST*              Parent;
-	StringCached      Name;
-	CodeT             Type;
-	CodeFlag          CodeFlags;
-	ModuleFlag        ModuleFlags;
-	union {
-		b32           IsFunction;  // Used by typedef to not serialize the name field.
-		b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
-		OperatorT     Op;
-		AccessSpec    ParentAccess;
-		s32           NumEntries;
-		s32           VarConstructorInit; // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
-	};
-};
-
 // Its intended for the AST to have equivalent size to its POD.
 // All extra functionality within the AST namespace should just be syntatic sugar.
-static_assert( sizeof(AST)     == sizeof(AST_POD), "ERROR: AST IS NOT POD" );
-static_assert( sizeof(AST_POD) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
+static_assert( sizeof(AST) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
 
 // Used when the its desired when omission is allowed in a definition.
 #define NoCode      { nullptr }
