@@ -185,9 +185,9 @@ void          clear(String& str);
 void          free(String& str);
 #endif
 
-inline char* begin(String& str) { return str; }
-inline char* end(String& str)   { return scast(char*, str) + length(str); }
-inline char* next(String& str)  { return scast(char*, str) + 1; }
+inline char* begin(String str) { return str; }
+inline char* end(String str)   { return scast(char*, str) + length(str); }
+inline char* next(String str)  { return scast(char*, str) + 1; }
 
 inline
 usize string_grow_formula(usize value) {

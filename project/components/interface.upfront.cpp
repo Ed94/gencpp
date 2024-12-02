@@ -31,7 +31,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 	}                                                                                                     \
 	if ( params_code->Type != ECode::Parameters )                                                         \
 	{                                                                                                     \
-		log_failure("gen::def_operator: params is not of Parameters type - %s", params_code.debug_str()); \
+		log_failure("gen::def_operator: params is not of Parameters type - %s", debug_str(params_code)); \
 		return OpValidateResult::Fail;                                                                    \
 	}
 
@@ -42,7 +42,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			"param types: %s\n"                                                                     \
 			"return type: %s",                                                                      \
 			to_str(op).Ptr,                                                                         \
-			params_code.debug_str(),                                                                \
+			debug_str(params_code),                                                                \
 			ret_type.debug_str()                                                                    \
 		);                                                                                          \
 		return OpValidateResult::Fail;                                                              \
@@ -73,7 +73,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 				log_failure("gen::def_operator: "
 					"operator%s does not support non-member definition (more than one parameter provided) - %s",
 					to_str(op),
-					params_code.debug_str()
+					debug_str(params_code)
 				);
 				return OpValidateResult::Fail;
 			}
@@ -104,7 +104,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 				log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
 					, to_str(op)
 					, params_code->NumEntries
-					, params_code.debug_str()
+					, debug_str(params_code)
 				);
 				return OpValidateResult::Fail;
 			}
@@ -119,7 +119,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 				{
 					log_failure("gen::def_operator: operator%s params code provided is not of Parameters type - %s"
 						, to_str(op)
-						, params_code.debug_str()
+						, debug_str(params_code)
 					);
 					return OpValidateResult::Fail;
 				}
@@ -137,7 +137,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 					case 2:
 						check_param_eq_ret();
 
-						if ( ! params_code.get(1).is_equal( t_int ) )
+						if ( ! is_equal(get(params_code, 1), t_int ) )
 						{
 							log_failure("gen::def_operator: "
 								"operator%s requires second parameter of non-member definition to be int for post-decrement",
@@ -166,7 +166,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			{
 				if ( params_code->Type != ECode::Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", params_code.debug_str());
+					log_failure("gen::def_operator: params is not of Parameters type - %s", debug_str(params_code));
 					return OpValidateResult::Fail;
 				}
 
@@ -176,7 +176,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 						"operator%s is non-member symbol yet first paramter does not equal return type\n"
 						"param type: %s\n"
 						"return type: %s\n"
-						, params_code.debug_str()
+						, debug_str(params_code)
 						, ret_type.debug_str()
 					);
 					return OpValidateResult::Fail;
@@ -199,7 +199,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 		#if 0
 			if ( ! ret_type.is_equal( t_bool) )
 			{
-				log_failure( "gen::def_operator: return type is not a boolean - %s", params_code.debug_str() );
+				log_failure( "gen::def_operator: return type is not a boolean - %s", debug_str(params_code) );
 				return OpValidateResult::Fail;
 			}
 		#endif
@@ -211,7 +211,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			{
 				if ( params_code->Type != ECode::Parameters )
 				{
-					log_failure( "gen::def_operator: params is not of Parameters type - %s", params_code.debug_str() );
+					log_failure( "gen::def_operator: params is not of Parameters type - %s", debug_str(params_code) );
 					return OpValidateResult::Fail;
 				}
 
@@ -253,7 +253,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 							"operator%s is non-member symbol yet first paramter does not equal return type\n"
 							"param type: %s\n"
 							"return type: %s\n"
-							, params_code.debug_str()
+							, debug_str(params_code)
 							, ret_type.debug_str()
 						);
 						return OpValidateResult::Fail;
@@ -277,7 +277,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			{
 				if ( params_code->Type != ECode::Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", params_code.debug_str());
+					log_failure("gen::def_operator: params is not of Parameters type - %s", debug_str(params_code));
 					return OpValidateResult::Fail;
 				}
 
@@ -349,7 +349,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 		case PtrToMemOfPtr:
 			if ( params_code )
 			{
-				log_failure("gen::def_operator: operator%s expects no paramters - %s", to_str(op), params_code.debug_str());
+				log_failure("gen::def_operator: operator%s expects no paramters - %s", to_str(op), debug_str(params_code));
 				return OpValidateResult::Fail;
 			}
 			break;
@@ -501,7 +501,7 @@ CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code b
 
 	if ( params && params->Type != Parameters )
 	{
-		log_failure("gen::def_constructor: params must be of Parameters type - %s", params.debug_str());
+		log_failure("gen::def_constructor: params must be of Parameters type - %s", debug_str(params));
 		return InvalidCode;
 	}
 
@@ -647,7 +647,7 @@ CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
 
 	if ( specifiers && specifiers->Type != Specifiers )
 	{
-		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", specifiers.debug_str() );
+		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
 
@@ -828,19 +828,19 @@ CodeFn def_function( StrC name
 
 	if ( params && params->Type != Parameters )
 	{
-		log_failure( "gen::def_function: params was not a `Parameters` type: %s", params.debug_str() );
+		log_failure( "gen::def_function: params was not a `Parameters` type: %s", debug_str(params) );
 		return InvalidCode;
 	}
 
 	if ( ret_type && ret_type->Type != Typename )
 	{
-		log_failure( "gen::def_function: ret_type was not a Typename: %s", ret_type.debug_str() );
+		log_failure( "gen::def_function: ret_type was not a Typename: %s", debug_str(ret_type) );
 		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != Specifiers )
 	{
-		log_failure( "gen::def_function: specifiers was not a `Specifiers` type: %s", specifiers.debug_str() );
+		log_failure( "gen::def_function: specifiers was not a `Specifiers` type: %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
 
@@ -973,7 +973,7 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 
 	if ( specifiers && specifiers->Type != Specifiers )
 	{
-		log_failure( "gen::def_operator: Specifiers was provided but its not of specifiers type: %s", specifiers.debug_str() );
+		log_failure( "gen::def_operator: Specifiers was provided but its not of specifiers type: %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
 
@@ -1167,7 +1167,7 @@ CodeSpecifiers def_specifier( SpecifierT spec )
 	CodeSpecifiers
 	result       = (CodeSpecifiers) make_code();
 	result->Type = ECode::Specifiers;
-	result.append( spec );
+	append(result, spec );
 
 	return result;
 }
@@ -1242,7 +1242,7 @@ CodeTemplate def_template( CodeParam params, Code declaration, ModuleFlag mflags
 
 	if ( params && params->Type != ECode::Parameters )
 	{
-		log_failure( "gen::def_template: params is not of parameters type - %s", params.debug_str() );
+		log_failure( "gen::def_template: params is not of parameters type - %s", debug_str(params) );
 		return InvalidCode;
 	}
 
@@ -1470,7 +1470,7 @@ CodeVar def_variable( CodeType type, StrC name, Code value
 
 	if ( specifiers && specifiers->Type != ECode::Specifiers )
 	{
-		log_failure( "gen::def_variable: specifiers was not a `Specifiers` type - %s", specifiers.debug_str() );
+		log_failure( "gen::def_variable: specifiers was not a `Specifiers` type - %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
 
@@ -2077,7 +2077,7 @@ CodeParam def_params( s32 num, ... )
 		return InvalidCode;
 	}
 
-	CodeParam result = (CodeParam) param.duplicate();
+	CodeParam result = (CodeParam) duplicate(param);
 
 	while ( -- num )
 	{
@@ -2090,7 +2090,7 @@ CodeParam def_params( s32 num, ... )
 			return InvalidCode;
 		}
 
-		result.append( param );
+		append(result, param );
 	}
 	va_end(va);
 
@@ -2110,11 +2110,11 @@ CodeParam def_params( s32 num, CodeParam* codes )
 																												\
 	if (current->Type != Parameters )                                                                           \
 	{                                                                                                           \
-		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", current.debug_str() );  \
+		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", debug_str(current) );   \
 		return InvalidCode;                                                                                     \
 	}
 
-	CodeParam current = (CodeParam) codes->duplicate();
+	CodeParam current = (CodeParam)duplicate(* codes);
 	check_current();
 
 	CodeParam
@@ -2126,7 +2126,7 @@ CodeParam def_params( s32 num, CodeParam* codes )
 	while( codes++, current = * codes, num--, num > 0 )
 	{
 		check_current();
-		result.append( current );
+		append(result, current );
 	}
 #	undef check_current
 
@@ -2157,7 +2157,7 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 	{
 		SpecifierT type = (SpecifierT)va_arg(va, int);
 
-		result.append( type );
+		append(result, type );
 	}
 	while ( --num, num );
 	va_end(va);
@@ -2186,7 +2186,7 @@ CodeSpecifiers def_specifiers( s32 num, SpecifierT* specs )
 	s32 idx = 0;
 	do
 	{
-		result.append( specs[idx] );
+		append(result, specs[idx] );
 		idx++;
 	}
 	while ( --num, num );

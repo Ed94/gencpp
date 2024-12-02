@@ -89,7 +89,6 @@ AST::operator Code()
 }
 
 #pragma region Code
-
 inline
 char const* debug_str( Code code )
 {
@@ -98,7 +97,6 @@ char const* debug_str( Code code )
 
 	return debug_str( code.ast );
 }
-
 inline
 Code duplicate( Code code )
 {
@@ -110,7 +108,6 @@ Code duplicate( Code code )
 
 	return { duplicate(code.ast) };
 }
-
 inline
 bool is_body(Code code)
 {
@@ -120,7 +117,6 @@ bool is_body(Code code)
 	}
 	return false;
 }
-
 inline
 bool is_equal( Code self, Code other )
 {
@@ -132,13 +128,11 @@ bool is_equal( Code self, Code other )
 	}
 	return is_equal( self.ast, other.ast );
 }
-
 inline
 bool is_valid(Code self)
 {
 	return self.ast != nullptr && self.ast->Type != CodeT::Invalid;
 }
-
 inline
 void set_global(Code self)
 {
@@ -150,7 +144,6 @@ void set_global(Code self)
 
 	self->Parent = Code_Global.ast;
 }
-
 inline
 Code& Code::operator ++()
 {
@@ -159,9 +152,9 @@ Code& Code::operator ++()
 
 	return *this;
 }
-
 #pragma endregion Code
 
+#pragma region CodeBody
 inline
 void append( CodeBody self, Code other )
 {
@@ -174,15 +167,28 @@ void append( CodeBody self, Code other )
 
 	append( rcast(AST*, self.ast), other.ast );
 }
-
 inline
 void append( CodeBody self, CodeBody body )
 {
+	GEN_ASSERT(self.ast != nullptr);
+
 	for ( Code entry : body ) {
 		append( self, entry );
 	}
 }
+inline
+Code begin( CodeBody body) {
+	if ( body.ast )
+		return { rcast( AST*, body.ast)->Front };
+	return { nullptr };
+}
+inline
+Code end(CodeBody body ){
+	return { rcast(AST*, body.ast)->Back->Next };
+}
+#pragma endregion CodeBody
 
+#pragma region CodeClass
 inline
 void add_interface( CodeClass self, CodeType type )
 {
@@ -203,11 +209,14 @@ void add_interface( CodeClass self, CodeType type )
 
 	possible_slot.ast = type.ast;
 }
+#pragma endregion CodeClass
 
+#pragma region CodeParam
 inline
-void CodeParam::append( CodeParam other )
+void append( CodeParam appendee, CodeParam other )
 {
-	AST* self  = (AST*) ast;
+	GEN_ASSERT(appendee.ast != nullptr);
+	AST* self  = cast(Code, appendee).ast;
 	AST* entry = (AST*) other.ast;
 
 	if ( entry->Parent )
@@ -227,36 +236,122 @@ void CodeParam::append( CodeParam other )
 	self->Last       = entry;
 	self->NumEntries++;
 }
-
 inline
-CodeParam CodeParam::get( s32 idx )
+CodeParam get(CodeParam self, s32 idx )
 {
-	CodeParam param = *this;
+	GEN_ASSERT(self.ast != nullptr);
+	CodeParam param = * self;
 	do
 	{
 		if ( ! ++ param )
 			return { nullptr };
 
-		param = { (AST_Param*) param.raw()->Next };
+		param = { (AST_Param*) cast(Code, param)->Next };
 	}
 	while ( --idx );
 
 	return param;
 }
-
 inline
-bool CodeParam::has_entries()
+bool has_entries(CodeParam self)
 {
-	return ast->NumEntries > 0;
+	GEN_ASSERT(self.ast != nullptr);
+	return self->NumEntries > 0;
 }
-
 inline
 CodeParam& CodeParam::operator ++()
 {
 	ast = ast->Next.ast;
 	return * this;
 }
+#pragma endregion CodeParam
 
+#pragma region CodeSpecifiers
+inline
+bool append(CodeSpecifiers self, SpecifierT spec )
+{
+	if ( self.ast == nullptr )
+	{
+		log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
+		return false;
+	}
+	if ( self->NumEntries == AST_ArrSpecs_Cap )
+	{
+		log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST_ArrSpecs_Cap );
+		return false;
+	}
+
+	self->ArrSpecs[ self->NumEntries ] = spec;
+	self->NumEntries++;
+	return true;
+}
+inline
+s32 has(CodeSpecifiers self, SpecifierT spec)
+{
+	GEN_ASSERT(self.ast != nullptr);
+	for ( s32 idx = 0; idx < self->NumEntries; idx++ ) {
+		if ( self->ArrSpecs[ idx ] == spec )
+			return idx;
+	}
+	return -1;
+}
+inline
+s32 remove( CodeSpecifiers self, SpecifierT to_remove )
+{
+	AST_Specifiers* ast = self.ast;
+	if ( ast == nullptr )
+	{
+		log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
+		return -1;
+	}
+	if ( self->NumEntries == AST_ArrSpecs_Cap )
+	{
+		log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST_ArrSpecs_Cap );
+		return -1;
+	}
+
+	s32 result = -1;
+
+	s32 curr = 0;
+	s32 next = 0;
+	for(; next < self->NumEntries; ++ curr, ++ next)
+	{
+		SpecifierT spec = self->ArrSpecs[next];
+		if (spec == to_remove)
+		{
+			result = next;
+
+			next ++;
+			if (next >= self->NumEntries)
+				break;
+
+			spec = self->ArrSpecs[next];
+		}
+
+		self->ArrSpecs[ curr ] = spec;
+	}
+
+	if (result > -1) {
+		self->NumEntries --;
+	}
+	return result;
+}
+inline
+SpecifierT* begin(CodeSpecifiers self)
+{
+	if ( self.ast )
+		return & self->ArrSpecs[0];
+
+	return nullptr;
+}
+inline
+SpecifierT* end(CodeSpecifiers self)
+{
+	return self->ArrSpecs + self->NumEntries;
+}
+#pragma endregion CodeSpecifiers
+
+#pragma region CodeStruct
 inline
 void CodeStruct::add_interface( CodeType type )
 {
@@ -276,7 +371,9 @@ void CodeStruct::add_interface( CodeType type )
 
 	possible_slot.ast = type.ast;
 }
+#pragma endregion Code
 
+#pragma region Interface
 inline
 CodeBody def_body( CodeT type )
 {
@@ -319,3 +416,4 @@ StrC token_fmt_impl( ssize num, ... )
 
 	return { result, buf };
 }
+#pragma endregion Interface

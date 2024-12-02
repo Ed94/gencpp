@@ -110,7 +110,7 @@ void CodeConstructor::to_string_def( String& result )
 	}
 
 	if ( ast->Params )
-		append_fmt( & result, "( %S )", ast->Params.to_string() );
+		append_fmt( & result, "( %S )", GEN_NS to_string(ast->Params) );
 	else
 		append( & result, "()" );
 
@@ -134,7 +134,7 @@ void CodeConstructor::to_string_fwd( String& result )
 	}
 
 	if ( ast->Params )
-		append_fmt( & result, "( %S )", ast->Params.to_string() );
+		append_fmt( & result, "( %S )", GEN_NS to_string(ast->Params) );
 	else
 		append_fmt( & result, "()");
 
@@ -267,7 +267,7 @@ void CodeDestructor::to_string_def( String& result )
 	}
 	else if ( ast->Specs )
 	{
-		if ( ast->Specs.has( ESpecifier::Virtual ) )
+		if ( has(ast->Specs, ESpecifier::Virtual ) )
 			append_fmt( & result, "virtual ~%S()", ast->Parent->Name );
 		else
 			append_fmt( & result, "~%S()", ast->Parent->Name );
@@ -282,12 +282,12 @@ void CodeDestructor::to_string_fwd( String& result )
 {
 	if ( ast->Specs )
 	{
-		if ( ast->Specs.has( ESpecifier::Virtual ) )
+		if ( has(ast->Specs, ESpecifier::Virtual ) )
 			append_fmt( & result, "virtual ~%S();\n", ast->Parent->Name );
 		else
 			append_fmt( & result, "~%S()", ast->Parent->Name );
 
-		if ( ast->Specs.has( ESpecifier::Pure ) )
+		if ( has(ast->Specs, ESpecifier::Pure ) )
 			append( & result, " = 0;" );
 		else if (ast->Body)
 			append_fmt( & result, " = %S;", GEN_NS to_string(ast->Body) );
@@ -525,7 +525,7 @@ void CodeFn::to_string_def( String& result )
 		append_fmt( & result, "%S(", ast->Name );
 
 	if ( ast->Params )
-		append_fmt( & result, "%S)", ast->Params.to_string() );
+		append_fmt( & result, "%S)", GEN_NS to_string(ast->Params) );
 
 	else
 		append( & result, ")" );
@@ -580,7 +580,7 @@ void CodeFn::to_string_fwd( String& result )
 		append_fmt( & result, "%S(", ast->Name );
 
 	if ( ast->Params )
-		append_fmt( & result, "%S)", ast->Params.to_string() );
+		append_fmt( & result, "%S)", GEN_NS to_string(ast->Params) );
 
 	else
 		append( & result, ")" );
@@ -597,7 +597,7 @@ void CodeFn::to_string_fwd( String& result )
 		}
 	}
 
-	if ( ast->Specs && ast->Specs.has( ESpecifier::Pure ) >= 0 )
+	if ( ast->Specs && has(ast->Specs, ESpecifier::Pure ) >= 0 )
 		append( & result, " = 0;" );
 	else if (ast->Body)
 		append_fmt( & result, " = %S;", GEN_NS to_string(ast->Body) );
@@ -691,7 +691,7 @@ void CodeOperator::to_string_def( String& result )
 		append_fmt( & result, "%S %S (", ast->ReturnType.to_string(), ast->Name );
 
 	if ( ast->Params )
-		append_fmt( & result, "%S)", ast->Params.to_string() );
+		append_fmt( & result, "%S)", GEN_NS to_string(ast->Params) );
 
 	else
 		append( & result, ")" );
@@ -741,7 +741,7 @@ void CodeOperator::to_string_fwd( String& result )
 	append_fmt( & result, "%S %S (", ast->ReturnType.to_string(), ast->Name );
 
 	if ( ast->Params )
-		append_fmt( & result, "%S)", ast->Params.to_string() );
+		append_fmt( & result, "%S)", GEN_NS to_string(ast->Params) );
 
 	else
 		append_fmt( & result, ")" );
@@ -854,46 +854,47 @@ void CodeOpCast::to_string_fwd( String& result )
 		append_fmt( & result, "operator %S();\n", ast->ValueType.to_string() );
 }
 
-String CodeParam::to_string()
+String to_string(CodeParam self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	to_string( result );
+	to_string( self, & result );
 	return result;
 }
 
-void CodeParam::to_string( String& result )
+void to_string( CodeParam self, String* result )
 {
+	AST_Param* ast = self.ast;
 	if ( ast->Macro )
 	{
 		// Related to parsing: ( <macro>, ... )
-		GEN_NS append( & result, ast->Macro.ast->Content );
+		GEN_NS append( result, ast->Macro.ast->Content );
 		// Could also be: ( <macro> <type <name>, ... )
 	}
 
 	if ( ast->Name )
 	{
 		if ( ast->ValueType.ast == nullptr )
-			append_fmt( & result, " %S", ast->Name );
+			append_fmt( result, " %S", ast->Name );
 		else
-			append_fmt( & result, " %S %S", ast->ValueType.to_string(), ast->Name );
+			append_fmt( result, " %S %S", ast->ValueType.to_string(), ast->Name );
 
 	}
 	else if ( ast->ValueType )
-		append_fmt( & result, " %S", ast->ValueType.to_string() );
+		append_fmt( result, " %S", ast->ValueType.to_string() );
 
 	if ( ast->PostNameMacro )
 	{
-		append_fmt( & result, " %S", GEN_NS to_string(ast->PostNameMacro) );
+		append_fmt( result, " %S", GEN_NS to_string(ast->PostNameMacro) );
 	}
 
 	if ( ast->Value )
-		append_fmt( & result, " = %S", GEN_NS to_string(ast->Value) );
+		append_fmt( result, " = %S", GEN_NS to_string(ast->Value) );
 
 	if ( ast->NumEntries - 1 > 0 )
 	{
 		for ( CodeParam param : ast->Next )
 		{
-			append_fmt( & result, ", %S", param.to_string() );
+			append_fmt( result, ", %S", to_string(param) );
 		}
 	}
 }
@@ -968,21 +969,23 @@ void CodePragma::to_string( String& result )
 	append_fmt( & result, "#pragma %S\n", ast->Content );
 }
 
-String CodeSpecifiers::to_string()
+String to_string(CodeSpecifiers self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	to_string( result );
+	to_string( self, & result );
 	return result;
 }
 
-void CodeSpecifiers::to_string( String& result )
+void to_string( CodeSpecifiers self, String* result )
 {
+	GEN_ASSERT(self.ast != nullptr);
+	GEN_ASSERT(result   != nullptr);
 	s32 idx  = 0;
-	s32 left = ast->NumEntries;
+	s32 left = self->NumEntries;
 	while ( left-- )
 	{
-		StrC spec = ESpecifier::to_str( ast->ArrSpecs[idx] );
-		append_fmt( & result, "%.*s ", spec.Len, spec.Ptr );
+		StrC spec = ESpecifier::to_str( self->ArrSpecs[idx] );
+		append_fmt( result, "%.*s ", spec.Len, spec.Ptr );
 		idx++;
 	}
 }
@@ -1158,9 +1161,9 @@ void CodeType::to_string( String& result )
 			else
 			{
 				if ( ast->Specs )
-					append_fmt( & result, "%S %S ( %S ) %S", ast->ReturnType.to_string(), ast->Name, ast->Params.to_string(), ast->Specs.to_string() );
+					append_fmt( & result, "%S %S ( %S ) %S", ast->ReturnType.to_string(), ast->Name, GEN_NS to_string(ast->Params), GEN_NS to_string(ast->Specs) );
 				else
-					append_fmt( & result, "%S %S ( %S )", ast->ReturnType.to_string(), ast->Name, ast->Params.to_string() );
+					append_fmt( & result, "%S %S ( %S )", ast->ReturnType.to_string(), ast->Name, GEN_NS to_string(ast->Params) );
 			}
 
 			return;
@@ -1171,7 +1174,7 @@ void CodeType::to_string( String& result )
 		append_fmt( & result, "%S ", ast->Attributes.to_string() );
 
 	if ( ast->Specs )
-		append_fmt( & result, "%S %S", ast->Name, ast->Specs.to_string() );
+		append_fmt( & result, "%S %S", ast->Name, GEN_NS to_string(ast->Specs) );
 	else
 		append_fmt( & result, "%S", ast->Name );
 
@@ -1288,7 +1291,7 @@ void CodeVar::to_string( String& result )
 		// Its a comma-separated variable ( a NextVar )
 
 		if ( ast->Specs )
-			append_fmt( & result, "%S ", ast->Specs.to_string() );
+			append_fmt( & result, "%S ", GEN_NS to_string(ast->Specs) );
 
 		append( & result, ast->Name );
 
@@ -1328,10 +1331,10 @@ void CodeVar::to_string( String& result )
 	if ( ast->Attributes || ast->Specs )
 	{
 		if ( ast->Attributes )
-			append_fmt( & result, "%S ", ast->Specs.to_string() );
+			append_fmt( & result, "%S ", GEN_NS to_string(ast->Specs) );
 
 		if ( ast->Specs )
-			append_fmt( & result, "%S\n", ast->Specs.to_string() );
+			append_fmt( & result, "%S\n", GEN_NS to_string(ast->Specs) );
 
 		append_fmt( & result, "%S %S", ast->ValueType.to_string(), ast->Name );
 

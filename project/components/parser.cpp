@@ -1440,7 +1440,7 @@ CodeFn parse_function_after_name(
 			continue;
 		}
 
-		specifiers.append( ESpecifier::to_type(currtok) );
+		append(specifiers, ESpecifier::to_type(currtok) );
 		eat( currtok.Type );
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
@@ -1460,7 +1460,7 @@ CodeFn parse_function_after_name(
 	else if ( check(TokType::Operator) && currtok.Text[0] == '=' )
 	{
 		eat(TokType::Operator);
-		specifiers.append( ESpecifier::Pure );
+		append(specifiers, ESpecifier::Pure );
 
 		eat( TokType::Number);
 		Token stmt_end = currtok;
@@ -2443,7 +2443,7 @@ CodeOperator parse_operator_after_ret_type(
 			continue;
 		}
 
-		specifiers.append( ESpecifier::to_type(currtok) );
+		append(specifiers, ESpecifier::to_type(currtok) );
 		eat( currtok.Type );
 	}
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>
@@ -2760,7 +2760,7 @@ CodeParam parse_params( bool use_template_capture )
 		if ( check( TokType::Varadic_Argument ) )
 		{
 			eat( TokType::Varadic_Argument );
-			result.append( param_varadic );
+			append(result, param_varadic );
 			continue;
 			// ( <Macro> <ValueType> <Name> = <Expression>, ...
 		}
@@ -2864,7 +2864,7 @@ CodeParam parse_params( bool use_template_capture )
 		if ( value )
 			param->Value = value;
 
-		result.append( param );
+		append(result, param );
 	}
 
 	if ( ! use_template_capture )
@@ -3288,7 +3288,7 @@ CodeVar parse_variable_declaration_list()
 						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%s"
 						, Context.to_string() );
 
-						specifiers.append( spec );
+						append(specifiers, spec );
 					}
 				break;
 
@@ -3310,7 +3310,7 @@ CodeVar parse_variable_declaration_list()
 			// eat(currtok.Type);
 
 			if ( specifiers )
-				specifiers.append( spec );
+				append(specifiers, spec );
 			else
 				specifiers = def_specifier( spec );
 		}
@@ -3450,7 +3450,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	if ( check( TokType::Spec_Virtual ) )
 	{
 		if ( specifiers )
-			specifiers.append( ESpecifier::Virtual );
+			append(specifiers, ESpecifier::Virtual );
 		else
 			specifiers = def_specifier( ESpecifier::Virtual );
 		eat( TokType::Spec_Virtual );
@@ -3493,7 +3493,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 			eat( TokType::Number );
 			// <Virtual Specifier> ~<Name>() = 0
 
-			specifiers.append( ESpecifier::Pure );
+			append(specifiers, ESpecifier::Pure );
 		}
 		else if ( left && str_compare( next.Text, "default", sizeof("default") - 1 ) == 0)
 		{
@@ -4148,7 +4148,7 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 			specifiers = def_specifier( ESpecifier::Const );
 
 		else
-			specifiers.append( ESpecifier::Const );
+			append(specifiers, ESpecifier::Const );
 
 		eat( TokType::Spec_Const );
 	}

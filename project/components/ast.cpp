@@ -501,7 +501,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Parameters:
-			cast(CodeParam, {self}).to_string( * result );
+			to_string(cast(CodeParam, {self}), result );
 		break;
 
 		case Preprocess_Define:
@@ -541,7 +541,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Specifiers:
-			cast(CodeSpecifiers, {self}).to_string( * result );
+			to_string(cast(CodeSpecifiers, {self}), result );
 		break;
 
 		case Struct:

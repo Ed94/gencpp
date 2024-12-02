@@ -180,7 +180,7 @@ void define_constants()
 
 #	define def_constant_spec( Type_, ... )                                  \
 		spec_##Type_ = def_specifiers( num_args(__VA_ARGS__), __VA_ARGS__); \
-		spec_##Type_.set_global();
+		set_global(spec_##Type_);
 
 #	pragma push_macro("forceinline")
 #	pragma push_macro("global")
@@ -218,7 +218,7 @@ void define_constants()
 	def_constant_spec( volatile, 	     ESpecifier::Volatile)
 
 	spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
-	spec_local_persist.set_global();
+	set_global(spec_local_persist);
 
 #	pragma pop_macro("forceinline")
 #	pragma pop_macro("global")

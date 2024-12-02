@@ -9,10 +9,31 @@ String to_string        ( CodeBody body );
 void   to_string        ( CodeBody body, String* result );
 void   to_string_export ( CodeBody body, String* result );
 
+Code begin( CodeBody body);
+Code end  ( CodeBody body );
+
 void   add_interface( CodeClass self, CodeType interface );
 String to_string    ( CodeClass self );
 void   to_string_def( CodeClass self, String* result );
 void   to_string_fwd( CodeClass self, String* result );
+
+void      append     (CodeParam params, CodeParam param );
+CodeParam get        (CodeParam params, s32 idx);
+bool      has_entries(CodeParam params );
+String    to_string  (CodeParam params );
+void      to_string  (CodeParam params, String* result );
+
+CodeParam begin(CodeParam params);
+CodeParam end  (CodeParam params);
+
+bool   append   (CodeSpecifiers specifiers, SpecifierT spec);
+s32    has      (CodeSpecifiers specifiers, SpecifierT spec);
+s32    remove   (CodeSpecifiers specifiers, SpecifierT to_remove );
+String to_string(CodeSpecifiers specifiers);
+void   to_string(CodeSpecifiers specifiers, String* result);
+
+SpecifierT* begin( CodeSpecifiers specifiers );
+SpecifierT* end  (CodeSpecifiers specifiers);
 
 #pragma region Code Types
 // These structs are not used at all by the C vairant.
@@ -31,31 +52,21 @@ struct CodeBody
 	String to_string()                        { return GEN_NS to_string(* this); }
 	void   to_string( String& result )        { return GEN_NS to_string(* this, & result ); }
 	void   to_string_export( String& result ) { return GEN_NS to_string_export(* this, & result); }
+
+	Code begin() { return GEN_NS begin(* this); }
+	Code end()   { return GEN_NS end(* this); }
 #endif
 
 	Using_CodeOps( CodeBody );
 	operator Code() { return * rcast( Code*, this ); }
 	AST_Body* operator->() { return ast; }
 
-#pragma region Iterator
-	Code begin()
-	{
-		if ( ast )
-			return { rcast( AST*, ast)->Front };
-		return { nullptr };
-	}
-	Code end()
-	{
-		return { rcast(AST*, ast)->Back->Next };
-	}
-#pragma endregion Iterator
-
 	AST_Body* ast;
 };
 
 struct CodeClass
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 0
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeClass );
 
 	void add_interface( CodeType interface );
@@ -81,7 +92,7 @@ struct CodeClass
 
 struct CodeParam
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeParam );
 
 	void      append( CodeParam other );
@@ -92,10 +103,6 @@ struct CodeParam
 #endif
 
 	Using_CodeOps( CodeParam );
-	AST* raw()
-	{
-		return rcast( AST*, ast );
-	}
 	AST_Param* operator->()
 	{
 		if ( ast == nullptr )
@@ -105,115 +112,27 @@ struct CodeParam
 		}
 		return ast;
 	}
-	operator Code()
-	{
-		return { (AST*)ast };
-	}
-#pragma region Iterator
-	CodeParam begin()
-	{
-		if ( ast )
-			return { ast };
-
-		return { nullptr };
-	}
-	CodeParam end()
-	{
-		// return { (AST_Param*) rcast( AST*, ast)->Last };
-		return { nullptr };
-	}
+	operator Code()       { return { (AST*)ast }; }
+	CodeParam operator*() { return * this; }
 	CodeParam& operator++();
-	CodeParam operator*()
-	{
-		return * this;
-	}
-#pragma endregion Iterator
 
 	AST_Param* ast;
 };
 
 struct CodeSpecifiers
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeSpecifiers );
 
-	bool append( SpecifierT spec )
-	{
-		if ( ast == nullptr )
-		{
-			log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
-			return false;
-		}
-
-		if ( raw()->NumEntries == AST_ArrSpecs_Cap )
-		{
-			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST_ArrSpecs_Cap );
-			return false;
-		}
-
-		raw()->ArrSpecs[ raw()->NumEntries ] = spec;
-		raw()->NumEntries++;
-		return true;
-	}
-	s32 has( SpecifierT spec )
-	{
-		for ( s32 idx = 0; idx < raw()->NumEntries; idx++ )
-		{
-			if ( raw()->ArrSpecs[ idx ] == spec )
-				return idx;
-		}
-
-		return -1;
-	}
-	s32 remove( SpecifierT to_remove )
-	{
-		if ( ast == nullptr )
-		{
-			log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
-			return -1;
-		}
-
-		if ( raw()->NumEntries == AST_ArrSpecs_Cap )
-		{
-			log_failure("CodeSpecifiers: Attempted to append over %d specifiers to a specifiers AST!", AST_ArrSpecs_Cap );
-			return -1;
-		}
-
-		s32 result = -1;
-
-		s32 curr = 0;
-		s32 next = 0;
-		for(; next < raw()->NumEntries; ++ curr, ++ next)
-		{
-			SpecifierT spec = raw()->ArrSpecs[next];
-			if (spec == to_remove)
-			{
-				result = next;
-
-				next ++;
-				if (next >= raw()->NumEntries)
-					break;
-
-				spec = raw()->ArrSpecs[next];
-			}
-
-			raw()->ArrSpecs[ curr ] = spec;
-		}
-
-		if (result > -1) {
-			raw()->NumEntries --;
-		}
-		return result;
-	}
-	String to_string();
-	void   to_string( String& result );
+	bool   append( SpecifierT spec )      { return GEN_NS append(* this, spec); }
+	s32    has( SpecifierT spec )         { return GEN_NS has(* this, spec); }
+	s32    remove( SpecifierT to_remove ) { return GEN_NS remove(* this, to_remove); }
+	String to_string()                    { return GEN_NS to_string(* this ); }
+	void   to_string( String& result )    { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeSpecifiers);
-	AST* raw()
-	{
-		return rcast( AST*, ast );
-	}
+	operator Code() { return { (AST*) ast }; }
 	AST_Specifiers* operator->()
 	{
 		if ( ast == nullptr )
@@ -223,23 +142,6 @@ struct CodeSpecifiers
 		}
 		return ast;
 	}
-	operator Code()
-	{
-		return { (AST*) ast };
-	}
-#pragma region Iterator
-	SpecifierT* begin()
-	{
-		if ( ast )
-			return & raw()->ArrSpecs[0];
-
-		return nullptr;
-	}
-	SpecifierT* end()
-	{
-		return raw()->ArrSpecs + raw()->NumEntries;
-	}
-#pragma endregion Iterator
 
 	AST_Specifiers* ast;
 };
@@ -1053,4 +955,20 @@ void to_string_export( CodeBody body, String& result ) { return to_string_export
 #endif
 
 #endif //if ! GEN_COMPILER_C
+
+inline
+CodeParam begin(CodeParam params)
+{
+	if ( params.ast )
+		return { params.ast };
+
+	return { nullptr };
+}
+inline
+CodeParam end(CodeParam params)
+{
+	// return { (AST_Param*) rcast( AST*, ast)->Last };
+	return { nullptr };
+}
+
 #pragma endregion Code Types
