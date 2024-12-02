@@ -264,6 +264,20 @@ CodeParam& CodeParam::operator ++()
 	ast = ast->Next.ast;
 	return * this;
 }
+inline
+CodeParam begin(CodeParam params)
+{
+	if ( params.ast )
+		return { params.ast };
+
+	return { nullptr };
+}
+inline
+CodeParam end(CodeParam params)
+{
+	// return { (AST_Param*) rcast( AST*, ast)->Last };
+	return { nullptr };
+}
 #pragma endregion CodeParam
 
 #pragma region CodeSpecifiers

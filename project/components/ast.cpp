@@ -423,35 +423,35 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Constructor:
-			cast(CodeConstructor, {self}).to_string_def( * result );
+			to_string_def(cast(CodeConstructor, {self}), result );
 		break;
 
 		case Constructor_Fwd:
-			cast(CodeConstructor, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeConstructor, {self}), result );
 		break;
 
 		case Destructor:
-			cast(CodeDestructor, {self}).to_string_def( * result );
+			to_string_def(cast(CodeDestructor, {self}), result );
 		break;
 
 		case Destructor_Fwd:
-			cast(CodeDestructor, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeDestructor, {self}), result );
 		break;
 
 		case Enum:
-			cast(CodeEnum, {self}).to_string_def( * result );
+			to_string_def(cast(CodeEnum, {self}), result );
 		break;
 
 		case Enum_Fwd:
-			cast(CodeEnum, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeEnum, {self}), result );
 		break;
 
 		case Enum_Class:
-			cast(CodeEnum, {self}).to_string_class_def( * result );
+			to_string_class_def(cast(CodeEnum, {self}), result );
 		break;
 
 		case Enum_Class_Fwd:
-			cast(CodeEnum, {self}).to_string_class_fwd( * result );
+			to_string_class_fwd(cast(CodeEnum, {self}), result );
 		break;
 
 		case Export_Body:
@@ -459,19 +459,19 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Extern_Linkage:
-			cast(CodeExtern, {self}).to_string( * result );
+			to_string(cast(CodeExtern, {self}), result );
 		break;
 
 		case Friend:
-			cast(CodeFriend, {self}).to_string( * result );
+			to_string(cast(CodeFriend, {self}), result );
 		break;
 
 		case Function:
-			cast(CodeFn, {self}).to_string_def( * result );
+			to_string_def(cast(CodeFn, {self}), result );
 		break;
 
 		case Function_Fwd:
-			cast(CodeFn, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeFn, {self}), result );
 		break;
 
 		case Module:
@@ -505,7 +505,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Preprocess_Define:
-			cast(CodeDefine, {self}).to_string( * result );
+			to_string(cast(CodeDefine, {self}), result );
 		break;
 
 		case Preprocess_If:
@@ -521,7 +521,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Preprocess_Include:
-			cast(CodeInclude, {self}).to_string( * result );
+			to_string(cast(CodeInclude, {self}), result );
 		break;
 
 		case Preprocess_ElIf:

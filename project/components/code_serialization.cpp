@@ -77,73 +77,73 @@ void to_string_export( CodeBody body, String* result )
 	append_fmt( result, "};\n" );
 }
 
-String CodeComment::to_string()
+String to_string(CodeComment comment)
 {
-	return GEN_NS duplicate( ast->Content, GlobalAllocator );
+	return GEN_NS duplicate( comment->Content, GlobalAllocator );
 }
 
-String CodeConstructor::to_string()
+String to_string(CodeConstructor self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	switch (ast->Type)
+	switch (self->Type)
 	{
 		using namespace ECode;
 		case Constructor:
-			to_string_def( result );
+			to_string_def( self, & result );
 		break;
 		case Constructor_Fwd:
-			to_string_fwd( result );
+			to_string_fwd( self, & result );
 		break;
 	}
 	return result;
 }
 
-void CodeConstructor::to_string_def( String& result )
+void to_string_def(CodeConstructor self, String* result )
 {
-	AST* ClassStructParent = ast->Parent->Parent;
+	AST* ClassStructParent = self->Parent->Parent;
 	if (ClassStructParent) {
-		append( & result, ClassStructParent->Name );
+		append( result, ClassStructParent->Name );
 	}
 	else {
-		append( & result, ast->Name );
+		append( result, self->Name );
 	}
 
-	if ( ast->Params )
-		append_fmt( & result, "( %S )", GEN_NS to_string(ast->Params) );
+	if ( self->Params )
+		append_fmt( result, "( %S )", GEN_NS to_string(self->Params) );
 	else
-		append( & result, "()" );
+		append( result, "()" );
 
-	if ( ast->InitializerList )
-		append_fmt( & result, " : %S", GEN_NS to_string(ast->InitializerList) );
+	if ( self->InitializerList )
+		append_fmt( result, " : %S", GEN_NS to_string(self->InitializerList) );
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, " // %S", ast->InlineCmt->Content );
+	if ( self->InlineCmt )
+		append_fmt( result, " // %S", self->InlineCmt->Content );
 
-	append_fmt( & result, "\n{\n%S\n}\n", GEN_NS to_string(ast->Body) );
+	append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
 }
 
-void CodeConstructor::to_string_fwd( String& result )
+void to_string_fwd(CodeConstructor self, String* result )
 {
-	AST* ClassStructParent = ast->Parent->Parent;
+	AST* ClassStructParent = self->Parent->Parent;
 	if (ClassStructParent) {
-		append( & result, ClassStructParent->Name );
+		append( result, ClassStructParent->Name );
 	}
 	else {
-		append( & result, ast->Name );
+		append( result, self->Name );
 	}
 
-	if ( ast->Params )
-		append_fmt( & result, "( %S )", GEN_NS to_string(ast->Params) );
+	if ( self->Params )
+		append_fmt( result, "( %S )", GEN_NS to_string(self->Params) );
 	else
-		append_fmt( & result, "()");
+		append_fmt( result, "()");
 
-	if (ast->Body)
-		append_fmt( & result, " = %S", GEN_NS to_string(ast->Body) );
+	if (self->Body)
+		append_fmt( result, " = %S", GEN_NS to_string(self->Body) );
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, "; // %S\n", ast->InlineCmt->Content );
+	if ( self->InlineCmt )
+		append_fmt( result, "; // %S\n", self->InlineCmt->Content );
 	else
-		append( & result, ";\n" );
+		append( result, ";\n" );
 }
 
 String to_string( CodeClass self )
@@ -232,379 +232,379 @@ void to_string_fwd( CodeClass self, String* result )
 	}
 }
 
-String CodeDefine::to_string()
+String to_string(CodeDefine define)
 {
-	return string_fmt_buf( GlobalAllocator, "#define %S %S\n", ast->Name, ast->Content );
+	return string_fmt_buf( GlobalAllocator, "#define %S %S\n", define->Name, define->Content );
 }
 
-void CodeDefine::to_string( String& result )
+void to_string(CodeDefine define, String* result )
 {
-	append_fmt( & result, "#define %S %S\n", ast->Name, ast->Content );
+	append_fmt( result, "#define %S %S\n", define->Name, define->Content );
 }
 
-String CodeDestructor::to_string()
+String to_string(CodeDestructor self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	switch ( ast->Type )
+	switch ( self->Type )
 	{
 		using namespace ECode;
 		case Destructor:
-			to_string_def( result );
+			to_string_def( self, & result );
 		break;
 		case Destructor_Fwd:
-			to_string_fwd( result );
+			to_string_fwd( self, & result );
 		break;
 	}
 	return result;
 }
 
-void CodeDestructor::to_string_def( String& result )
+void to_string_def(CodeDestructor self, String* result )
 {
-	if ( ast->Name )
+	if ( self->Name )
 	{
-		append_fmt( & result, "%S()", ast->Name );
+		append_fmt( result, "%S()", self->Name );
 	}
-	else if ( ast->Specs )
+	else if ( self->Specs )
 	{
-		if ( has(ast->Specs, ESpecifier::Virtual ) )
-			append_fmt( & result, "virtual ~%S()", ast->Parent->Name );
+		if ( has(self->Specs, ESpecifier::Virtual ) )
+			append_fmt( result, "virtual ~%S()", self->Parent->Name );
 		else
-			append_fmt( & result, "~%S()", ast->Parent->Name );
+			append_fmt( result, "~%S()", self->Parent->Name );
 	}
 	else
-		append_fmt( & result, "~%S()", ast->Parent->Name );
+		append_fmt( result, "~%S()", self->Parent->Name );
 
-	append_fmt( & result, "\n{\n%S\n}\n", GEN_NS to_string(ast->Body) );
+	append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
 }
 
-void CodeDestructor::to_string_fwd( String& result )
+void to_string_fwd(CodeDestructor self, String* result )
 {
-	if ( ast->Specs )
+	if ( self->Specs )
 	{
-		if ( has(ast->Specs, ESpecifier::Virtual ) )
-			append_fmt( & result, "virtual ~%S();\n", ast->Parent->Name );
+		if ( has(self->Specs, ESpecifier::Virtual ) )
+			append_fmt( result, "virtual ~%S();\n", self->Parent->Name );
 		else
-			append_fmt( & result, "~%S()", ast->Parent->Name );
+			append_fmt( result, "~%S()", self->Parent->Name );
 
-		if ( has(ast->Specs, ESpecifier::Pure ) )
-			append( & result, " = 0;" );
-		else if (ast->Body)
-			append_fmt( & result, " = %S;", GEN_NS to_string(ast->Body) );
+		if ( has(self->Specs, ESpecifier::Pure ) )
+			append( result, " = 0;" );
+		else if (self->Body)
+			append_fmt( result, " = %S;", GEN_NS to_string(self->Body) );
 	}
 	else
-		append_fmt( & result, "~%S();", ast->Parent->Name );
+		append_fmt( result, "~%S();", self->Parent->Name );
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, "  %S", ast->InlineCmt->Content );
+	if ( self->InlineCmt )
+		append_fmt( result, "  %S", self->InlineCmt->Content );
 	else
-		append( & result, "\n");
+		append( result, "\n");
 }
 
-String CodeEnum::to_string()
+String to_string(CodeEnum self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	switch ( ast->Type )
+	switch ( self->Type )
 	{
 		using namespace ECode;
 		case Enum:
-			to_string_def( result );
+			to_string_def(self, & result );
 		break;
 		case Enum_Fwd:
-			to_string_fwd( result );
+			to_string_fwd(self, & result );
 		break;
 		case Enum_Class:
-			to_string_class_def( result );
+			to_string_class_def(self, & result );
 		break;
 		case Enum_Class_Fwd:
-			to_string_class_fwd( result );
+			to_string_class_fwd(self, & result );
 		break;
 	}
 	return result;
 }
 
-void CodeEnum::to_string_def( String& result )
+void to_string_def(CodeEnum self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	if ( ast->Attributes || ast->UnderlyingType )
+	if ( self->Attributes || self->UnderlyingType )
 	{
-		append( & result, "enum " );
+		append( result, "enum " );
 
-		if ( ast->Attributes )
-			append_fmt( & result, "%S ", GEN_NS to_string(ast->Attributes) );
+		if ( self->Attributes )
+			append_fmt( result, "%S ", GEN_NS to_string(self->Attributes) );
 
-		if ( ast->UnderlyingType )
-			append_fmt( & result, "%S : %S\n{\n%S\n}"
-				, ast->Name
-				, ast->UnderlyingType.to_string()
-				, GEN_NS to_string(ast->Body)
+		if ( self->UnderlyingType )
+			append_fmt( result, "%S : %S\n{\n%S\n}"
+				, self->Name
+				, self->UnderlyingType.to_string()
+				, GEN_NS to_string(self->Body)
 			);
-		else if ( ast->UnderlyingTypeMacro )
-			append_fmt( & result, "%S : %S\n{\n%S\n}"
-				, ast->Name
-				, GEN_NS to_string(ast->UnderlyingTypeMacro)
-				, GEN_NS to_string(ast->Body)
+		else if ( self->UnderlyingTypeMacro )
+			append_fmt( result, "%S : %S\n{\n%S\n}"
+				, self->Name
+				, GEN_NS to_string(self->UnderlyingTypeMacro)
+				, GEN_NS to_string(self->Body)
 			);
 
-		else append_fmt( & result, "%S\n{\n%S\n}", ast->Name, GEN_NS to_string(ast->Body) );
+		else append_fmt( result, "%S\n{\n%S\n}", self->Name, GEN_NS to_string(self->Body) );
 	}
-	else append_fmt( & result, "enum %S\n{\n%S\n}", ast->Name, GEN_NS to_string(ast->Body) );
+	else append_fmt( result, "enum %S\n{\n%S\n}", self->Name, GEN_NS to_string(self->Body) );
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
-		append( & result, ";\n");
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+		append( result, ";\n");
 }
 
-void CodeEnum::to_string_fwd( String& result )
+void to_string_fwd(CodeEnum self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	if ( ast->Attributes )
-		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
+	if ( self->Attributes )
+		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
 
-	if ( ast->UnderlyingType )
-		append_fmt( & result, "enum %S : %S", ast->Name, ast->UnderlyingType.to_string() );
+	if ( self->UnderlyingType )
+		append_fmt( result, "enum %S : %S", self->Name, self->UnderlyingType.to_string() );
 	else
-		append_fmt( & result, "enum %S", ast->Name );
+		append_fmt( result, "enum %S", self->Name );
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
 	{
-		if ( ast->InlineCmt )
-			append_fmt( & result, ";  %S", ast->InlineCmt->Content );
+		if ( self->InlineCmt )
+			append_fmt( result, ";  %S", self->InlineCmt->Content );
 		else
-			append( & result, ";\n");
+			append( result, ";\n");
 	}
 }
 
-void CodeEnum::to_string_class_def( String& result )
+void to_string_class_def(CodeEnum self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	if ( ast->Attributes || ast->UnderlyingType )
+	if ( self->Attributes || self->UnderlyingType )
 	{
-		append( & result, "enum class " );
+		append( result, "enum class " );
 
-		if ( ast->Attributes )
+		if ( self->Attributes )
 		{
-			append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
+			append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
 		}
 
-		if ( ast->UnderlyingType )
+		if ( self->UnderlyingType )
 		{
-			append_fmt( & result, "%S : %S\n{\n%S\n}", ast->Name, ast->UnderlyingType.to_string(), GEN_NS to_string(ast->Body) );
+			append_fmt( result, "%S : %S\n{\n%S\n}", self->Name, self->UnderlyingType.to_string(), GEN_NS to_string(self->Body) );
 		}
 		else
 		{
-			append_fmt( & result, "%S\n{\n%S\n}", ast->Name, GEN_NS to_string(ast->Body) );
+			append_fmt( result, "%S\n{\n%S\n}", self->Name, GEN_NS to_string(self->Body) );
 		}
 	}
 	else
 	{
-		append_fmt( & result, "enum class %S\n{\n%S\n}", GEN_NS to_string(ast->Body) );
+		append_fmt( result, "enum class %S\n{\n%S\n}", GEN_NS to_string(self->Body) );
 	}
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
-		append( & result, ";\n");
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+		append( result, ";\n");
 }
 
-void CodeEnum::to_string_class_fwd( String& result )
+void to_string_class_fwd(CodeEnum self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	append( & result, "enum class " );
+	append( result, "enum class " );
 
-	if ( ast->Attributes )
-		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
+	if ( self->Attributes )
+		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
 
-	append_fmt( & result, "%S : %S", ast->Name, ast->UnderlyingType.to_string() );
+	append_fmt( result, "%S : %S", self->Name, self->UnderlyingType.to_string() );
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
 	{
-		if ( ast->InlineCmt )
-			append_fmt( & result, ";  %S", ast->InlineCmt->Content );
+		if ( self->InlineCmt )
+			append_fmt( result, ";  %S", self->InlineCmt->Content );
 		else
-			append( & result, ";\n");
+			append( result, ";\n");
 	}
 }
 
-String CodeExec::to_string()
+String to_string(CodeExec exec)
 {
-	return GEN_NS duplicate( ast->Content, GlobalAllocator );
+	return GEN_NS duplicate( exec->Content, GlobalAllocator );
 }
 
-void CodeExtern::to_string( String& result )
+void to_string(CodeExtern self, String* result )
 {
-	if ( ast->Body )
-		append_fmt( & result, "extern \"%S\"\n{\n%S\n}\n", ast->Name, GEN_NS to_string(ast->Body) );
+	if ( self->Body )
+		append_fmt( result, "extern \"%S\"\n{\n%S\n}\n", self->Name, GEN_NS to_string(self->Body) );
 	else
-		append_fmt( & result, "extern \"%S\"\n{}\n", ast->Name );
+		append_fmt( result, "extern \"%S\"\n{}\n", self->Name );
 }
 
-String CodeInclude::to_string()
+String to_string(CodeInclude include)
 {
-	return string_fmt_buf( GlobalAllocator, "#include %S\n", ast->Content );
+	return string_fmt_buf( GlobalAllocator, "#include %S\n", include->Content );
 }
 
-void CodeInclude::to_string( String& result )
+void to_string( CodeInclude include, String* result )
 {
-	append_fmt( & result, "#include %S\n", ast->Content );
+	append_fmt( result, "#include %S\n", include->Content );
 }
 
-String CodeFriend::to_string()
+String to_string(CodeFriend self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	to_string( result );
+	to_string( self, & result );
 	return result;
 }
 
-void CodeFriend::to_string( String& result )
+void to_string(CodeFriend self, String* result )
 {
-	append_fmt( & result, "friend %S", GEN_NS to_string(ast->Declaration) );
+	append_fmt( result, "friend %S", GEN_NS to_string(self->Declaration) );
 
-	if ( ast->Declaration->Type != ECode::Function && result[ length(result) - 1 ] != ';' )
+	if ( self->Declaration->Type != ECode::Function && (* result)[ length(* result) - 1 ] != ';' )
 	{
-		append( & result, ";" );
+		append( result, ";" );
 	}
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, "  %S", ast->InlineCmt->Content );
+	if ( self->InlineCmt )
+		append_fmt( result, "  %S", self->InlineCmt->Content );
 	else
-		append( & result, "\n");
+		append( result, "\n");
 }
 
-String CodeFn::to_string()
+String to_string(CodeFn self)
 {
 	String result = string_make( GlobalAllocator, "" );
-	switch ( ast->Type )
+	switch ( self->Type )
 	{
 		using namespace ECode;
 		case Function:
-			to_string_def( result );
+			to_string_def(self, & result );
 		break;
 		case Function_Fwd:
-			to_string_fwd( result );
+			to_string_fwd(self, & result );
 		break;
 	}
 	return result;
 }
 
-void CodeFn::to_string_def( String& result )
+void to_string_def(CodeFn self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export" );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export" );
 
-	if ( ast->Attributes )
-		append_fmt( & result, " %S ",GEN_NS to_string(ast->Attributes) );
+	if ( self->Attributes )
+		append_fmt( result, " %S ",GEN_NS to_string(self->Attributes) );
 
 	bool prefix_specs = false;
-	if ( ast->Specs )
+	if ( self->Specs )
 	{
-		for ( SpecifierT spec : ast->Specs )
+		for ( SpecifierT spec : self->Specs )
 		{
 			if ( ! ESpecifier::is_trailing( spec ) )
 			{
 				StrC spec_str = ESpecifier::to_str( spec );
-				append_fmt( & result, " %.*s", spec_str.Len, spec_str.Ptr );
+				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
 			}
 		}
 	}
 
-	if ( ast->Attributes || prefix_specs )
-		append( & result, "\n" );
+	if ( self->Attributes || prefix_specs )
+		append( result, "\n" );
 
-	if ( ast->ReturnType )
-		append_fmt( & result, "%S %S(", ast->ReturnType.to_string(), ast->Name );
-
-	else
-		append_fmt( & result, "%S(", ast->Name );
-
-	if ( ast->Params )
-		append_fmt( & result, "%S)", GEN_NS to_string(ast->Params) );
+	if ( self->ReturnType )
+		append_fmt( result, "%S %S(", self->ReturnType.to_string(), self->Name );
 
 	else
-		append( & result, ")" );
+		append_fmt( result, "%S(", self->Name );
 
-	if ( ast->Specs )
+	if ( self->Params )
+		append_fmt( result, "%S)", GEN_NS to_string(self->Params) );
+
+	else
+		append( result, ")" );
+
+	if ( self->Specs )
 	{
-		for ( SpecifierT spec : ast->Specs )
+		for ( SpecifierT spec : self->Specs )
 		{
 			if ( ESpecifier::is_trailing( spec ) )
 			{
 				StrC spec_str = ESpecifier::to_str( spec );
-				append_fmt( & result, " %.*s", spec_str.Len, spec_str.Ptr );
+				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
-	append_fmt( & result, "\n{\n%S\n}\n", GEN_NS to_string(ast->Body) );
+	append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
 }
 
-void CodeFn::to_string_fwd( String& result )
+void to_string_fwd(CodeFn self, String* result )
 {
-	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( & result, "export " );
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		append( result, "export " );
 
-	if ( ast->Attributes )
-		append_fmt( & result, "%S ",GEN_NS to_string(ast->Attributes) );
+	if ( self->Attributes )
+		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
 
 	b32 prefix_specs = false;
-	if ( ast->Specs )
+	if ( self->Specs )
 	{
-		for ( SpecifierT spec : ast->Specs )
+		for ( SpecifierT spec : self->Specs )
 		{
 			if ( ! ESpecifier::is_trailing( spec ) || ! (spec != ESpecifier::Pure) )
 			{
 				StrC spec_str = ESpecifier::to_str( spec );
-				append_fmt( & result, " %.*s", spec_str.Len, spec_str.Ptr );
+				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
 			}
 		}
 	}
 
-	if ( ast->Attributes || prefix_specs )
+	if ( self->Attributes || prefix_specs )
 	{
-		append( & result, "\n" );
+		append( result, "\n" );
 	}
 
-	if ( ast->ReturnType )
-		append_fmt( & result, "%S %S(", ast->ReturnType.to_string(), ast->Name );
+	if ( self->ReturnType )
+		append_fmt( result, "%S %S(", self->ReturnType.to_string(), self->Name );
 
 	else
-		append_fmt( & result, "%S(", ast->Name );
+		append_fmt( result, "%S(", self->Name );
 
-	if ( ast->Params )
-		append_fmt( & result, "%S)", GEN_NS to_string(ast->Params) );
+	if ( self->Params )
+		append_fmt( result, "%S)", GEN_NS to_string(self->Params) );
 
 	else
-		append( & result, ")" );
+		append( result, ")" );
 
-	if ( ast->Specs )
+	if ( self->Specs )
 	{
-		for ( SpecifierT spec : ast->Specs )
+		for ( SpecifierT spec : self->Specs )
 		{
 			if ( ESpecifier::is_trailing( spec ) )
 			{
 				StrC spec_str = ESpecifier::to_str( spec );
-				append_fmt( & result, " %.*s", spec_str.Len, spec_str.Ptr );
+				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
-	if ( ast->Specs && has(ast->Specs, ESpecifier::Pure ) >= 0 )
-		append( & result, " = 0;" );
-	else if (ast->Body)
-		append_fmt( & result, " = %S;", GEN_NS to_string(ast->Body) );
+	if ( self->Specs && has(self->Specs, ESpecifier::Pure ) >= 0 )
+		append( result, " = 0;" );
+	else if (self->Body)
+		append_fmt( result, " = %S;", GEN_NS to_string(self->Body) );
 
-	if ( ast->InlineCmt )
-		append_fmt( & result, ";  %S", ast->InlineCmt->Content );
+	if ( self->InlineCmt )
+		append_fmt( result, ";  %S", self->InlineCmt->Content );
 	else
-		append( & result, ";\n" );
+		append( result, ";\n" );
 }
 
 String CodeModule::to_string()
