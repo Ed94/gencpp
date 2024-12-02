@@ -106,7 +106,7 @@ Code untyped_str( StrC content )
 	if ( content.Len == 0 )
 	{
 		log_failure( "untyped_str: empty string" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	Code
@@ -118,7 +118,7 @@ Code untyped_str( StrC content )
 	if ( result->Name == nullptr )
 	{
 		log_failure( "untyped_str: could not cache string" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	return result;
@@ -129,7 +129,7 @@ Code untyped_fmt( char const* fmt, ...)
 	if ( fmt == nullptr )
 	{
 		log_failure( "untyped_fmt: null format string" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	local_persist thread_local
@@ -149,7 +149,7 @@ Code untyped_fmt( char const* fmt, ...)
 	if ( result->Name == nullptr )
 	{
 		log_failure( "untyped_fmt: could not cache string" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	return result;
@@ -160,7 +160,7 @@ Code untyped_token_fmt( s32 num_tokens, ... )
 	if ( num_tokens == 0 )
 	{
 		log_failure( "untyped_token_fmt: zero tokens" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	local_persist thread_local
@@ -180,7 +180,7 @@ Code untyped_token_fmt( s32 num_tokens, ... )
 	if ( result->Name == nullptr )
 	{
 		log_failure( "untyped_fmt: could not cache string" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	return result;

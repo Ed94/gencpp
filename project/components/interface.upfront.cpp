@@ -381,13 +381,13 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 	if ( Name_.Len <= 0 )                                                                             \
 	{                                                                                                 \
 		log_failure( "gen::" stringize(Context_) ": Invalid name length provided - %d",  Name_.Len ); \
-		return CodeInvalid;                                                                           \
+		return InvalidCode;                                                                           \
 	}                                                                                                 \
 																									  \
 	if ( Name_.Ptr == nullptr )                                                                       \
 	{                                                                                                 \
 		log_failure( "gen::" stringize(Context_) ": name is null" );                                  \
-		return CodeInvalid;                                                                           \
+		return InvalidCode;                                                                           \
 	}                                                                                                 \
 }
 
@@ -395,7 +395,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 	if ( ! Code_ )                                                                            \
 	{                                                                                         \
 		log_failure( "gen::" stringize(Context_) ": " stringize(Code_) " provided is null" ); \
-		return CodeInvalid;                                                                   \
+		return InvalidCode;                                                                   \
 	}
 
 #define null_or_invalid_check( Context_, Code_ )                                                \
@@ -403,19 +403,19 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 	if ( ! Code_ )                                                                              \
 	{                                                                                           \
 		log_failure( "gen::" stringize(Context_) ": " stringize(Code_) " provided is null" );   \
-		return CodeInvalid;                                                                     \
+		return InvalidCode;                                                                     \
 	}                                                                                           \
 																								\
 	if ( Code_->is_invalid() )                                                                  \
 	{                                                                                           \
 		log_failure("gen::" stringize(Context_) ": " stringize(Code_) " provided is invalid" ); \
-		return CodeInvalid;                                                                     \
+		return InvalidCode;                                                                     \
 	}                                                                                           \
 }
 
 #define not_implemented( Context_ )                             \
 	log_failure( "gen::%s: This function is not implemented" ); \
-	return CodeInvalid;
+	return InvalidCode;
 #pragma endregion Helper Marcos
 
 
@@ -436,7 +436,7 @@ CodeAttributes def_attributes( StrC content )
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 	{
 		log_failure( "gen::def_attributes: Invalid attributes provided" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	Code
@@ -453,7 +453,7 @@ CodeComment def_comment( StrC content )
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 	{
 		log_failure( "gen::def_comment: Invalid comment provided:" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	static char line[ MaxCommentLineLength ];
@@ -502,7 +502,7 @@ CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code b
 	if ( params && params->Type != Parameters )
 	{
 		log_failure("gen::def_constructor: params must be of Parameters type - %s", params.debug_str());
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeConstructor
@@ -528,7 +528,7 @@ CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code b
 
 			default:
 				log_failure("gen::def_constructor: body must be either of Function_Body or Untyped type - %s", body.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 		}
 
 		result->Type = Constructor;
@@ -556,13 +556,13 @@ CodeClass def_class( StrC name
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
 		log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( parent && ( parent->Type != Class && parent->Type != Struct && parent->Type != Typename && parent->Type != Untyped ) )
 	{
 		log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", parent.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeClass
@@ -580,7 +580,7 @@ CodeClass def_class( StrC name
 
 			default:
 				log_failure("gen::def_class: body must be either of Class_Body or Untyped type - %s", body.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 		}
 
 		result->Type = Class;
@@ -623,7 +623,7 @@ CodeDefine def_define( StrC name, StrC content )
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 	{
 		log_failure( "gen::def_define: Invalid value provided" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 #endif
 
@@ -648,7 +648,7 @@ CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
 	if ( specifiers && specifiers->Type != Specifiers )
 	{
 		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", specifiers.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeDestructor result = (CodeDestructor) make_code();
@@ -666,7 +666,7 @@ CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
 
 			default:
 				log_failure("gen::def_destructor: body must be either of Function_Body or Untyped type - %s", body.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 		}
 
 		result->Type = Destructor;
@@ -692,13 +692,13 @@ CodeEnum def_enum( StrC name
 	if ( type && type->Type != Typename )
 	{
 		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", type.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
 		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeEnum
@@ -716,7 +716,7 @@ CodeEnum def_enum( StrC name
 
 			default:
 				log_failure( "gen::def_enum: body must be of Enum_Body or Untyped type %s", body.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 		}
 
 		result->Type = specifier == EnumDecl_Class ?
@@ -740,7 +740,7 @@ CodeEnum def_enum( StrC name
 	else if ( result->Type != Enum_Class_Fwd && result->Type != Enum_Fwd )
 	{
 		log_failure( "gen::def_enum: enum forward declaration must have an underlying type" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	return result;
@@ -751,7 +751,7 @@ CodeExec def_execution( StrC content )
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 	{
 		log_failure( "gen::def_execution: Invalid execution provided" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	Code
@@ -773,7 +773,7 @@ CodeExtern def_extern_link( StrC name, Code body )
 	if ( body->Type != Extern_Linkage_Body && body->Type != Untyped )
 	{
 		log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", body->debug_str());
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeExtern
@@ -805,7 +805,7 @@ CodeFriend def_friend( Code declaration )
 
 		default:
 			log_failure("gen::def_friend: requires declartion to have class, function, operator, or struct - %s", declaration->debug_str());
-			return CodeInvalid;
+			return InvalidCode;
 	}
 
 	CodeFriend
@@ -829,25 +829,25 @@ CodeFn def_function( StrC name
 	if ( params && params->Type != Parameters )
 	{
 		log_failure( "gen::def_function: params was not a `Parameters` type: %s", params.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( ret_type && ret_type->Type != Typename )
 	{
 		log_failure( "gen::def_function: ret_type was not a Typename: %s", ret_type.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != Specifiers )
 	{
 		log_failure( "gen::def_function: specifiers was not a `Specifiers` type: %s", specifiers.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
 		log_failure( "gen::def_function: attributes was not a `PlatformAttributes` type: %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeFn
@@ -867,7 +867,7 @@ CodeFn def_function( StrC name
 			default:
 			{
 				log_failure("gen::def_function: body must be either of Function_Body, Execution, or Untyped type. %s", body->debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 			}
 		}
 
@@ -905,7 +905,7 @@ CodeInclude def_include( StrC path, bool foreign )
 	if ( path.Len <= 0 || path.Ptr == nullptr )
 	{
 		log_failure( "gen::def_include: Invalid path provided - %d" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	StrC content = foreign ?
@@ -945,7 +945,7 @@ CodeNS def_namespace( StrC name, Code body, ModuleFlag mflags )
 	if ( body->Type != Namespace_Body && body->Type != Untyped )
 	{
 		log_failure("gen::def_namespace: body is not of namespace or untyped type %s", body.debug_str());
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeNS
@@ -968,20 +968,20 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
 		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != Specifiers )
 	{
 		log_failure( "gen::def_operator: Specifiers was provided but its not of specifiers type: %s", specifiers.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	OpValidateResult check_result = operator__validate( op, params_code, ret_type, specifiers );
 
 	if ( check_result == OpValidateResult::Fail )
 	{
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	char const* name = nullptr;
@@ -1009,7 +1009,7 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 			default:
 			{
 				log_failure("gen::def_operator: body must be either of Function_Body, Execution, or Untyped type. %s", body->debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 			}
 		}
 
@@ -1046,7 +1046,7 @@ CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spe
 	if ( type->Type != Typename )
 	{
 		log_failure( "gen::def_operator_cast: type is not a typename - %s", type.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeOpCast result = (CodeOpCast) make_code();
@@ -1058,7 +1058,7 @@ CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spe
 		if ( body->Type != Function_Body && body->Type != Execution )
 		{
 			log_failure( "gen::def_operator_cast: body is not of function body or execution type - %s", body.debug_str() );
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		result->Body = body;
@@ -1087,13 +1087,13 @@ CodeParam def_param( CodeType type, StrC name, Code value )
 	if ( type->Type != Typename )
 	{
 		log_failure( "gen::def_param: type is not a typename - %s", type.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( value && value->Type != Untyped )
 	{
 		log_failure( "gen::def_param: value is not untyped - %s", value.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeParam
@@ -1118,7 +1118,7 @@ CodePragma def_pragma( StrC directive )
 	if ( directive.Len <= 0 || directive.Ptr == nullptr )
 	{
 		log_failure( "gen::def_comment: Invalid comment provided:" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodePragma
@@ -1136,7 +1136,7 @@ CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
 	if ( expr.Len <= 0 || expr.Ptr == nullptr )
 	{
 		log_failure( "gen::def_comment: Invalid comment provided:" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodePreprocessCond
@@ -1184,19 +1184,19 @@ CodeStruct def_struct( StrC name
 	if ( attributes && attributes->Type != PlatformAttributes )
 	{
 		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( parent && parent->Type != Typename )
 	{
 		log_failure( "gen::def_struct: parent was not a `Struct` type - %s", parent.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( body && body->Type != Struct_Body )
 	{
 		log_failure( "gen::def_struct: body was not a Struct_Body type - %s", body.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeStruct
@@ -1243,7 +1243,7 @@ CodeTemplate def_template( CodeParam params, Code declaration, ModuleFlag mflags
 	if ( params && params->Type != ECode::Parameters )
 	{
 		log_failure( "gen::def_template: params is not of parameters type - %s", params.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	switch (declaration->Type )
@@ -1276,19 +1276,19 @@ CodeType def_type( StrC name, Code arrayexpr, CodeSpecifiers specifiers, CodeAtt
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_type: attributes is not of attributes type - %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != ECode::Specifiers )
 	{
 		log_failure( "gen::def_type: specifiers is not of specifiers type - %s", specifiers.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( arrayexpr && arrayexpr->Type != ECode::Untyped )
 	{
 		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", arrayexpr->debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeType
@@ -1330,13 +1330,13 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 			break;
 		default:
 			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", type.debug_str() );
-			return CodeInvalid;
+			return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	// Registering the type.
@@ -1345,7 +1345,7 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 	if ( ! registered_type )
 	{
 		log_failure( "gen::def_typedef: failed to register type" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeTypedef
@@ -1360,7 +1360,7 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 		if (type->Type != Untyped)
 		{
 			log_failure( "gen::def_typedef: name was empty and type was not untyped (indicating its a function typedef) - %s", type.debug_str() );
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		result->Name       = get_cached_string( type->Name );
@@ -1382,13 +1382,13 @@ CodeUnion def_union( StrC name, Code body, CodeAttributes attributes, ModuleFlag
 	if ( body->Type != ECode::Union_Body )
 	{
 		log_failure( "gen::def_union: body was not a Union_Body type - %s", body.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeUnion
@@ -1419,13 +1419,13 @@ CodeUsing def_using( StrC name, CodeType type
 	if ( ! register_type )
 	{
 		log_failure( "gen::def_using: failed to register type" );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeUsing
@@ -1465,25 +1465,25 @@ CodeVar def_variable( CodeType type, StrC name, Code value
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type - %s", attributes.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != ECode::Specifiers )
 	{
 		log_failure( "gen::def_variable: specifiers was not a `Specifiers` type - %s", specifiers.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( type->Type != ECode::Typename )
 	{
 		log_failure( "gen::def_variable: type was not a Typename - %s", type.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( value && value->Type != ECode::Untyped )
 	{
 		log_failure( "gen::def_variable: value was not a `Untyped` type - %s", value.debug_str() );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeVar
@@ -1513,7 +1513,7 @@ using namespace ECode;                                                        \
 if ( num <= 0 )                                                               \
 {                                                                             \
 	log_failure("gen::" stringize(Name_) ": num cannot be zero or negative"); \
-	return CodeInvalid;                                                       \
+	return InvalidCode;                                                       \
 }
 
 #define def_body_code_array_start( Name_ )                                     \
@@ -1522,13 +1522,13 @@ using namespace ECode;                                                         \
 if ( num <= 0 )                                                                \
 {                                                                              \
 	log_failure("gen::" stringize(Name_) ": num cannot be zero or negative");  \
-	return CodeInvalid;                                                        \
+	return InvalidCode;                                                        \
 }                                                                              \
 																			   \
 if ( codes == nullptr )                                                        \
 {                                                                              \
 	log_failure("gen::" stringize(Name_)" : Provided a null array of codes");  \
-	return CodeInvalid;                                                        \
+	return InvalidCode;                                                        \
 }
 
 #pragma endregion Helper Macros for def_**_body functions
@@ -1552,14 +1552,14 @@ CodeBody def_class_body( s32 num, ... )
 			log_failure("gen::"
 						"def_class_body"
 						": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
 				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1589,14 +1589,14 @@ CodeBody def_class_body( s32 num, Code* codes )
 		if (!entry)
 		{
 			log_failure("gen::" "def_class_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
 				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1627,13 +1627,13 @@ CodeBody def_enum_body( s32 num, ... )
 		if ( ! entry )
 		{
 			log_failure("gen::def_enum_body: Provided a null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
 			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() );
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		result.append( entry );
@@ -1659,13 +1659,13 @@ CodeBody def_enum_body( s32 num, Code* codes )
 		if ( ! entry )
 		{
 			log_failure("gen::def_enum_body: Provided a null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
 			log_failure("gen::def_enum_body: Entry type is not allowed: %s", entry.debug_str() );
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		result.append( entry );
@@ -1693,14 +1693,14 @@ CodeBody def_export_body( s32 num, ... )
 		if (!entry)
 		{
 			log_failure("gen::" "def_export_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
 				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1730,14 +1730,14 @@ CodeBody def_export_body( s32 num, Code* codes )
 		if (!entry)
 		{
 			log_failure("gen::" "def_export_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
 				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1768,14 +1768,14 @@ CodeBody def_extern_link_body( s32 num, ... )
 		if (!entry)
 		{
 			log_failure("gen::" "def_extern_linkage_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
 				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1805,14 +1805,14 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 		if (!entry)
 		{
 			log_failure("gen::" "def_extern_linkage_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
 				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1844,7 +1844,7 @@ CodeBody def_function_body( s32 num, ... )
 		if (!entry)
 		{
 			log_failure("gen::" stringize(def_function_body) ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
@@ -1852,7 +1852,7 @@ CodeBody def_function_body( s32 num, ... )
 
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
 				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1882,14 +1882,14 @@ CodeBody def_function_body( s32 num, Code* codes )
 		if (!entry)
 		{
 			log_failure("gen::" "def_function_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
 				log_failure("gen::" "def_function_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -1919,7 +1919,7 @@ CodeBody def_global_body( s32 num, ... )
 		if (!entry)
 		{
 			log_failure("gen::" "def_global_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
@@ -1930,7 +1930,7 @@ CodeBody def_global_body( s32 num, ... )
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
 				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return (*Code::Invalid.ast);
+				return InvalidCode;
 
 			default:
 			break;
@@ -1960,7 +1960,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 		if (!entry)
 		{
 			log_failure("gen::" "def_global_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
@@ -1971,7 +1971,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
 				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -2002,14 +2002,14 @@ CodeBody def_namespace_body( s32 num, ... )
 		if (!entry)
 		{
 			log_failure("gen::" "def_namespace_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
 				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -2039,14 +2039,14 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 		if (!entry)
 		{
 			log_failure("gen::" "def_namespace_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
 				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", entry.debug_str() );
-				return CodeInvalid;
+				return InvalidCode;
 
 			default: break;
 		}
@@ -2073,7 +2073,7 @@ CodeParam def_params( s32 num, ... )
 	if ( param->Type != Parameters )
 	{
 		log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeParam result = (CodeParam) param.duplicate();
@@ -2086,7 +2086,7 @@ CodeParam def_params( s32 num, ... )
 		if ( param->Type != Parameters )
 		{
 			log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		result.append( param );
@@ -2104,13 +2104,13 @@ CodeParam def_params( s32 num, CodeParam* codes )
 	if ( current.ast == nullptr )                                                                               \
 	{                                                                                                           \
 		log_failure("gen::def_params: Provide a null code in codes array");                                     \
-		return CodeInvalid;                                                                                     \
+		return InvalidCode;                                                                                     \
 	}                                                                                                           \
 																												\
 	if (current->Type != Parameters )                                                                           \
 	{                                                                                                           \
 		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", current.debug_str() );  \
-		return CodeInvalid;                                                                                     \
+		return InvalidCode;                                                                                     \
 	}
 
 	CodeParam current = (CodeParam) codes->duplicate();
@@ -2137,13 +2137,13 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 	if ( num <= 0 )
 	{
 		log_failure("gen::def_specifiers: num cannot be zero or less");
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( num > AST::ArrSpecs_Cap )
 	{
 		log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeSpecifiers
@@ -2169,13 +2169,13 @@ CodeSpecifiers def_specifiers( s32 num, SpecifierT* specs )
 	if ( num <= 0 )
 	{
 		log_failure("gen::def_specifiers: num cannot be zero or less");
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	if ( num > AST::ArrSpecs_Cap )
 	{
 		log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	CodeSpecifiers
@@ -2211,14 +2211,14 @@ CodeBody def_struct_body( s32 num, ... )
 		if (!entry)
 		{
 			log_failure("gen::" "def_struct_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
 				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str());
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -2248,14 +2248,14 @@ CodeBody def_struct_body( s32 num, Code* codes )
 		if (!entry)
 		{
 			log_failure("gen::" "def_struct_body" ": Provided an null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
 				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", entry.debug_str() );
-				return CodeInvalid;
+				return InvalidCode;
 
 			default:
 			break;
@@ -2286,13 +2286,13 @@ CodeBody def_union_body( s32 num, ... )
 		if ( ! entry )
 		{
 			log_failure("gen::def_union_body: Provided a null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
 			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", entry.debug_str() );
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		result.append( entry );
@@ -2318,13 +2318,13 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 		if ( ! entry )
 		{
 			log_failure("gen::def_union_body: Provided a null entry");
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		if ( entry->Type != Untyped && entry->Type != Comment )
 		{
 			log_failure("gen::def_union_body: Entry type is not allowed: %s", entry.debug_str() );
-			return CodeInvalid;
+			return InvalidCode;
 		}
 
 		result.append( entry );

@@ -209,7 +209,7 @@ CodeBody def_body( CodeT type )
 
 		default:
 			log_failure( "def_body: Invalid type %s", (char const*)ECode::to_str(type) );
-			return (CodeBody)Code::Invalid;
+			return (CodeBody)Code_Invalid;
 	}
 
 	Code

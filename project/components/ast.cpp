@@ -3,8 +3,8 @@
 #include "static_data.cpp"
 #endif
 
-Code Code::Global;
-Code Code::Invalid;
+global Code Code_Global;
+global Code Code_Invalid;
 
 // This serializes all the data-members in a "debug" format, where each member is printed with its associated value.
 char const* debug_str(AST* self)

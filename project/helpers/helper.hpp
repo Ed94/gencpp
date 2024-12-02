@@ -346,9 +346,11 @@ CodeBody gen_ast_inlines()
 #pragma push_macro("GEN_NS")
 #pragma push_macro("rcast")
 #pragma push_macro("log_failure")
+#pragma push_macro("CodeInvalid")
 #undef GEN_NS
 #undef rcast
 #undef log_failure
+#undef CodeInvalid
 	char const* code_impl_tmpl = stringize(
 		\n
 		inline
@@ -365,7 +367,7 @@ CodeBody gen_ast_inlines()
 			if ( ast == nullptr )
 			{
 				log_failure("Code::duplicate: Cannot duplicate code, AST is null!");
-				return Code::Invalid;
+				return Code_Invalid;
 			}
 
 			return { rcast(AST*, ast)->duplicate() };
@@ -404,7 +406,7 @@ CodeBody gen_ast_inlines()
 				return;
 			}
 
-			rcast(AST*, ast)->Parent = Code::Global.ast;
+			rcast(AST*, ast)->Parent = Code_Global.ast;
 		}
 		inline
 		<typename>& <typename>::operator =( Code other )
@@ -417,16 +419,6 @@ CodeBody gen_ast_inlines()
 
 			ast = rcast( decltype(ast), other.ast );
 			return *this;
-		}
-		inline
-		bool <typename>::operator ==( Code other )
-		{
-			return (AST*) ast == other.ast;
-		}
-		inline
-		bool <typename>::operator !=( Code other )
-		{
-			return (AST*) ast != other.ast;
 		}
 		inline
 		<typename>::operator bool()
@@ -459,6 +451,7 @@ CodeBody gen_ast_inlines()
 		\n
 	);
 #pragma pop_macro("GEN_NS")
+#pragma pop_macro("CodeInvalid")
 
 	CodeBody impl_code          = parse_global_body( token_fmt( "typename", StrC name(Code),               code_impl_tmpl ));
 	CodeBody impl_code_body     = parse_global_body( token_fmt( "typename", StrC name(CodeBody),           code_impl_tmpl ));

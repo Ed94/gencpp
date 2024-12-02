@@ -19,7 +19,7 @@ inline Code Code::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -54,7 +54,7 @@ inline void Code::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline Code& Code::operator=( Code other )
@@ -66,16 +66,6 @@ inline Code& Code::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool Code::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool Code::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline Code::operator bool()
@@ -95,7 +85,7 @@ inline Code CodeBody::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -130,7 +120,7 @@ inline void CodeBody::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeBody& CodeBody::operator=( Code other )
@@ -142,16 +132,6 @@ inline CodeBody& CodeBody::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeBody::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeBody::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeBody::operator bool()
@@ -171,7 +151,7 @@ inline Code CodeAttributes::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -206,7 +186,7 @@ inline void CodeAttributes::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeAttributes& CodeAttributes::operator=( Code other )
@@ -218,16 +198,6 @@ inline CodeAttributes& CodeAttributes::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeAttributes::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeAttributes::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeAttributes::operator bool()
@@ -267,7 +237,7 @@ inline Code CodeComment::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -302,7 +272,7 @@ inline void CodeComment::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeComment& CodeComment::operator=( Code other )
@@ -314,16 +284,6 @@ inline CodeComment& CodeComment::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeComment::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeComment::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeComment::operator bool()
@@ -363,7 +323,7 @@ inline Code CodeConstructor::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -398,7 +358,7 @@ inline void CodeConstructor::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeConstructor& CodeConstructor::operator=( Code other )
@@ -410,16 +370,6 @@ inline CodeConstructor& CodeConstructor::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeConstructor::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeConstructor::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeConstructor::operator bool()
@@ -459,7 +409,7 @@ inline Code CodeClass::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -494,7 +444,7 @@ inline void CodeClass::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeClass& CodeClass::operator=( Code other )
@@ -506,16 +456,6 @@ inline CodeClass& CodeClass::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeClass::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeClass::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeClass::operator bool()
@@ -535,7 +475,7 @@ inline Code CodeDefine::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -570,7 +510,7 @@ inline void CodeDefine::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeDefine& CodeDefine::operator=( Code other )
@@ -582,16 +522,6 @@ inline CodeDefine& CodeDefine::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeDefine::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeDefine::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeDefine::operator bool()
@@ -631,7 +561,7 @@ inline Code CodeDestructor::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -666,7 +596,7 @@ inline void CodeDestructor::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeDestructor& CodeDestructor::operator=( Code other )
@@ -678,16 +608,6 @@ inline CodeDestructor& CodeDestructor::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeDestructor::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeDestructor::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeDestructor::operator bool()
@@ -727,7 +647,7 @@ inline Code CodeEnum::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -762,7 +682,7 @@ inline void CodeEnum::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeEnum& CodeEnum::operator=( Code other )
@@ -774,16 +694,6 @@ inline CodeEnum& CodeEnum::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeEnum::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeEnum::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeEnum::operator bool()
@@ -823,7 +733,7 @@ inline Code CodeExec::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -858,7 +768,7 @@ inline void CodeExec::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeExec& CodeExec::operator=( Code other )
@@ -870,16 +780,6 @@ inline CodeExec& CodeExec::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeExec::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeExec::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeExec::operator bool()
@@ -919,7 +819,7 @@ inline Code CodeExtern::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -954,7 +854,7 @@ inline void CodeExtern::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeExtern& CodeExtern::operator=( Code other )
@@ -966,16 +866,6 @@ inline CodeExtern& CodeExtern::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeExtern::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeExtern::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeExtern::operator bool()
@@ -1015,7 +905,7 @@ inline Code CodeFriend::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1050,7 +940,7 @@ inline void CodeFriend::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeFriend& CodeFriend::operator=( Code other )
@@ -1062,16 +952,6 @@ inline CodeFriend& CodeFriend::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeFriend::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeFriend::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeFriend::operator bool()
@@ -1111,7 +991,7 @@ inline Code CodeFn::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1146,7 +1026,7 @@ inline void CodeFn::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeFn& CodeFn::operator=( Code other )
@@ -1158,16 +1038,6 @@ inline CodeFn& CodeFn::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeFn::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeFn::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeFn::operator bool()
@@ -1207,7 +1077,7 @@ inline Code CodeInclude::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1242,7 +1112,7 @@ inline void CodeInclude::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeInclude& CodeInclude::operator=( Code other )
@@ -1254,16 +1124,6 @@ inline CodeInclude& CodeInclude::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeInclude::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeInclude::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeInclude::operator bool()
@@ -1303,7 +1163,7 @@ inline Code CodeModule::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1338,7 +1198,7 @@ inline void CodeModule::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeModule& CodeModule::operator=( Code other )
@@ -1350,16 +1210,6 @@ inline CodeModule& CodeModule::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeModule::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeModule::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeModule::operator bool()
@@ -1399,7 +1249,7 @@ inline Code CodeNS::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1434,7 +1284,7 @@ inline void CodeNS::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeNS& CodeNS::operator=( Code other )
@@ -1446,16 +1296,6 @@ inline CodeNS& CodeNS::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeNS::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeNS::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeNS::operator bool()
@@ -1495,7 +1335,7 @@ inline Code CodeOperator::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1530,7 +1370,7 @@ inline void CodeOperator::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeOperator& CodeOperator::operator=( Code other )
@@ -1542,16 +1382,6 @@ inline CodeOperator& CodeOperator::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeOperator::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeOperator::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeOperator::operator bool()
@@ -1591,7 +1421,7 @@ inline Code CodeOpCast::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1626,7 +1456,7 @@ inline void CodeOpCast::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeOpCast& CodeOpCast::operator=( Code other )
@@ -1638,16 +1468,6 @@ inline CodeOpCast& CodeOpCast::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeOpCast::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeOpCast::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeOpCast::operator bool()
@@ -1687,7 +1507,7 @@ inline Code CodeParam::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1722,7 +1542,7 @@ inline void CodeParam::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeParam& CodeParam::operator=( Code other )
@@ -1734,16 +1554,6 @@ inline CodeParam& CodeParam::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeParam::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeParam::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeParam::operator bool()
@@ -1763,7 +1573,7 @@ inline Code CodePragma::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1798,7 +1608,7 @@ inline void CodePragma::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodePragma& CodePragma::operator=( Code other )
@@ -1810,16 +1620,6 @@ inline CodePragma& CodePragma::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodePragma::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodePragma::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodePragma::operator bool()
@@ -1859,7 +1659,7 @@ inline Code CodePreprocessCond::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1894,7 +1694,7 @@ inline void CodePreprocessCond::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodePreprocessCond& CodePreprocessCond::operator=( Code other )
@@ -1906,16 +1706,6 @@ inline CodePreprocessCond& CodePreprocessCond::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodePreprocessCond::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodePreprocessCond::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodePreprocessCond::operator bool()
@@ -1955,7 +1745,7 @@ inline Code CodeSpecifiers::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -1990,7 +1780,7 @@ inline void CodeSpecifiers::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeSpecifiers& CodeSpecifiers::operator=( Code other )
@@ -2002,16 +1792,6 @@ inline CodeSpecifiers& CodeSpecifiers::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeSpecifiers::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeSpecifiers::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeSpecifiers::operator bool()
@@ -2031,7 +1811,7 @@ inline Code CodeStruct::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -2066,7 +1846,7 @@ inline void CodeStruct::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeStruct& CodeStruct::operator=( Code other )
@@ -2078,16 +1858,6 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeStruct::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeStruct::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeStruct::operator bool()
@@ -2107,7 +1877,7 @@ inline Code CodeTemplate::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -2142,7 +1912,7 @@ inline void CodeTemplate::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeTemplate& CodeTemplate::operator=( Code other )
@@ -2154,16 +1924,6 @@ inline CodeTemplate& CodeTemplate::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeTemplate::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeTemplate::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeTemplate::operator bool()
@@ -2203,7 +1963,7 @@ inline Code CodeType::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -2238,7 +1998,7 @@ inline void CodeType::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeType& CodeType::operator=( Code other )
@@ -2250,16 +2010,6 @@ inline CodeType& CodeType::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeType::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeType::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeType::operator bool()
@@ -2299,7 +2049,7 @@ inline Code CodeTypedef::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -2334,7 +2084,7 @@ inline void CodeTypedef::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeTypedef& CodeTypedef::operator=( Code other )
@@ -2346,16 +2096,6 @@ inline CodeTypedef& CodeTypedef::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeTypedef::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeTypedef::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeTypedef::operator bool()
@@ -2395,7 +2135,7 @@ inline Code CodeUnion::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -2430,7 +2170,7 @@ inline void CodeUnion::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeUnion& CodeUnion::operator=( Code other )
@@ -2442,16 +2182,6 @@ inline CodeUnion& CodeUnion::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeUnion::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeUnion::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeUnion::operator bool()
@@ -2491,7 +2221,7 @@ inline Code CodeUsing::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -2526,7 +2256,7 @@ inline void CodeUsing::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeUsing& CodeUsing::operator=( Code other )
@@ -2538,16 +2268,6 @@ inline CodeUsing& CodeUsing::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeUsing::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeUsing::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeUsing::operator bool()
@@ -2587,7 +2307,7 @@ inline Code CodeVar::duplicate()
 	if ( ast == nullptr )
 	{
 		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code::Invalid;
+		return Code_Invalid;
 	}
 	return { rcast( AST*, ast )->duplicate() };
 }
@@ -2622,7 +2342,7 @@ inline void CodeVar::set_global()
 		log_failure( "Code::set_global: Cannot set code as global, AST is null!" );
 		return;
 	}
-	rcast( AST*, ast )->Parent = Code::Global.ast;
+	rcast( AST*, ast )->Parent = Code_Global.ast;
 }
 
 inline CodeVar& CodeVar::operator=( Code other )
@@ -2634,16 +2354,6 @@ inline CodeVar& CodeVar::operator=( Code other )
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
-}
-
-inline bool CodeVar::operator==( Code other )
-{
-	return (AST*)ast == other.ast;
-}
-
-inline bool CodeVar::operator!=( Code other )
-{
-	return (AST*)ast != other.ast;
 }
 
 inline CodeVar::operator bool()

@@ -74,12 +74,12 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 internal
 void define_constants()
 {
-	Code::Global                         = make_code();
-	scast(String, Code::Global->Name)    = get_cached_string( txt("Global Code") );
-	scast(String, Code::Global->Content) = Code::Global->Name;
+	Code_Global                         = make_code();
+	scast(String, Code_Global->Name)    = get_cached_string( txt("Global Code") );
+	scast(String, Code_Global->Content) = Code_Global->Name;
 
-	Code::Invalid = make_code();
-	Code::Invalid.set_global();
+	Code_Invalid = make_code();
+	Code_Invalid.set_global();
 
 	t_empty       = (CodeType) make_code();
 	t_empty->Type = ECode::Typename;

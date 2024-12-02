@@ -151,6 +151,14 @@ template< class Type> forceinline Type tmpl_cast( Code* self ) { return * rcast(
 template< class Type> forceinline Type tmpl_cast( Code& self ) { return * rcast( Type*, & self ); }
 #endif
 
+char const* debug_str (Code code);
+Code        duplicate (Code code);
+bool        is_equal  (Code code, Code other);
+bool        is_body   (Code code);
+bool        is_valid  (Code code);
+void        set_global(Code code);
+String      to_string (Code code);
+
 /*
 	AST* wrapper
 	- Not constantly have to append the '*' as this is written often..
@@ -158,13 +166,6 @@ template< class Type> forceinline Type tmpl_cast( Code& self ) { return * rcast(
 */
 struct Code
 {
-#	pragma region Statics
-	// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
-	static Code Global;
-
-	// Used to identify invalid generated code.
-	static Code Invalid;
-#	pragma endregion Statics
 
 #	define Using_Code( Typename )          \
 	char const* debug_str();               \
@@ -176,8 +177,8 @@ struct Code
 	String      to_string();               \
 	Typename&   operator = ( AST* other ); \
 	Typename&   operator = ( Code other ); \
-	bool        operator ==( Code other ); \
-	bool        operator !=( Code other ); \
+	bool        operator ==( Code other ) { return (AST*)ast == other.ast; } \
+	bool        operator !=( Code other ) { return (AST*)ast != other.ast; } \
 	operator bool();
 
 	Using_Code( Code );
@@ -242,6 +243,14 @@ struct Code
 	operator CodeVar() const;
 	#undef operator
 };
+
+#pragma region Statics
+// Used to identify ASTs that should always be duplicated. (Global constant ASTs)
+extern Code Code_Global;
+
+// Used to identify invalid generated code.
+extern Code Code_Invalid;
+#pragma endregion Statics
 
 struct Code_POD
 {
@@ -481,4 +490,4 @@ static_assert( sizeof(AST_POD) == AST_POD_Size,    "ERROR: AST POD is not size o
 
 // Used when the its desired when omission is allowed in a definition.
 #define NoCode      { nullptr }
-#define CodeInvalid (* Code::Invalid.ast) // Uses an implicitly overloaded cast from the AST to the desired code type.
+#define InvalidCode (* Code_Invalid.ast) // Uses an implicitly overloaded cast from the AST to the desired code type.

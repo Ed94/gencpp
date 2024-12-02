@@ -15,7 +15,7 @@ CodeClass parse_class( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	push_scope();
@@ -31,7 +31,7 @@ CodeConstructor parse_constructor( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	// TODO(Ed): Constructors can have prefix attributes
 
@@ -61,7 +61,7 @@ CodeConstructor parse_constructor( StrC def )
 			default :
 				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), Context.to_string() );
 				Context.pop();
-				return CodeInvalid;
+				return InvalidCode;
 		}
 
 		// Every specifier after would be considered part of the type type signature
@@ -91,7 +91,7 @@ CodeDestructor parse_destructor( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	// TODO(Ed): Destructors can have prefix attributes
 	// TODO(Ed): Destructors can have virtual
@@ -110,7 +110,7 @@ CodeEnum parse_enum( StrC def )
 	if ( toks.Arr == nullptr )
 	{
 		Context.pop();
-		return CodeInvalid;
+		return InvalidCode;
 	}
 
 	Context.Tokens = toks;
@@ -124,7 +124,7 @@ CodeBody parse_export_body( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_export_body();
@@ -137,7 +137,7 @@ CodeExtern parse_extern_link( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_extern_link();
@@ -150,7 +150,7 @@ CodeFriend parse_friend( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_friend();
@@ -163,7 +163,7 @@ CodeFn parse_function( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return (CodeFn) parse_function();
@@ -176,7 +176,7 @@ CodeBody parse_global_body( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	push_scope();
@@ -192,7 +192,7 @@ CodeNS parse_namespace( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_namespace();
@@ -205,7 +205,7 @@ CodeOperator parse_operator( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return (CodeOperator) parse_operator();
@@ -218,7 +218,7 @@ CodeOpCast parse_operator_cast( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_operator_cast();
@@ -231,7 +231,7 @@ CodeStruct parse_struct( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	push_scope();
@@ -247,7 +247,7 @@ CodeTemplate parse_template( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_template();
@@ -260,7 +260,7 @@ CodeType parse_type( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_type();
@@ -273,7 +273,7 @@ CodeTypedef parse_typedef( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_typedef();
@@ -286,7 +286,7 @@ CodeUnion parse_union( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_union();
@@ -299,7 +299,7 @@ CodeUsing parse_using( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_using();
@@ -312,7 +312,7 @@ CodeVar parse_variable( StrC def )
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
-		return CodeInvalid;
+		return InvalidCode;
 
 	Context.Tokens = toks;
 	return parse_variable();
