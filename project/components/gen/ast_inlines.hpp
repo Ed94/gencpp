@@ -7,16 +7,6 @@
 
 #pragma region generated code inline implementation
 
-inline Code Code::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool Code::is_body()
 {
 	if ( ast == nullptr )
@@ -66,16 +56,6 @@ inline Code::operator bool()
 	return ast != nullptr;
 }
 
-inline Code CodeBody::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeBody::is_body()
 {
 	if ( ast == nullptr )
@@ -123,16 +103,6 @@ inline CodeBody& CodeBody::operator=( Code other )
 inline CodeBody::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline Code CodeAttributes::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeAttributes::is_body()
@@ -204,16 +174,6 @@ inline AST_Attributes* CodeAttributes::operator->()
 	return ast;
 }
 
-inline Code CodeComment::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeComment::is_body()
 {
 	if ( ast == nullptr )
@@ -281,16 +241,6 @@ inline AST_Comment* CodeComment::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeConstructor::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeConstructor::is_body()
@@ -362,16 +312,6 @@ inline AST_Constructor* CodeConstructor::operator->()
 	return ast;
 }
 
-inline Code CodeClass::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeClass::is_body()
 {
 	if ( ast == nullptr )
@@ -419,16 +359,6 @@ inline CodeClass& CodeClass::operator=( Code other )
 inline CodeClass::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline Code CodeDefine::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeDefine::is_body()
@@ -500,16 +430,6 @@ inline AST_Define* CodeDefine::operator->()
 	return ast;
 }
 
-inline Code CodeDestructor::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeDestructor::is_body()
 {
 	if ( ast == nullptr )
@@ -577,16 +497,6 @@ inline AST_Destructor* CodeDestructor::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeEnum::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeEnum::is_body()
@@ -658,16 +568,6 @@ inline AST_Enum* CodeEnum::operator->()
 	return ast;
 }
 
-inline Code CodeExec::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeExec::is_body()
 {
 	if ( ast == nullptr )
@@ -735,16 +635,6 @@ inline AST_Exec* CodeExec::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeExtern::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeExtern::is_body()
@@ -816,16 +706,6 @@ inline AST_Extern* CodeExtern::operator->()
 	return ast;
 }
 
-inline Code CodeFriend::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeFriend::is_body()
 {
 	if ( ast == nullptr )
@@ -893,16 +773,6 @@ inline AST_Friend* CodeFriend::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeFn::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeFn::is_body()
@@ -974,16 +844,6 @@ inline AST_Fn* CodeFn::operator->()
 	return ast;
 }
 
-inline Code CodeInclude::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeInclude::is_body()
 {
 	if ( ast == nullptr )
@@ -1051,16 +911,6 @@ inline AST_Include* CodeInclude::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeModule::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeModule::is_body()
@@ -1132,16 +982,6 @@ inline AST_Module* CodeModule::operator->()
 	return ast;
 }
 
-inline Code CodeNS::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeNS::is_body()
 {
 	if ( ast == nullptr )
@@ -1209,16 +1049,6 @@ inline AST_NS* CodeNS::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeOperator::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeOperator::is_body()
@@ -1290,16 +1120,6 @@ inline AST_Operator* CodeOperator::operator->()
 	return ast;
 }
 
-inline Code CodeOpCast::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeOpCast::is_body()
 {
 	if ( ast == nullptr )
@@ -1369,16 +1189,6 @@ inline AST_OpCast* CodeOpCast::operator->()
 	return ast;
 }
 
-inline Code CodeParam::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeParam::is_body()
 {
 	if ( ast == nullptr )
@@ -1426,16 +1236,6 @@ inline CodeParam& CodeParam::operator=( Code other )
 inline CodeParam::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline Code CodePragma::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodePragma::is_body()
@@ -1507,16 +1307,6 @@ inline AST_Pragma* CodePragma::operator->()
 	return ast;
 }
 
-inline Code CodePreprocessCond::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodePreprocessCond::is_body()
 {
 	if ( ast == nullptr )
@@ -1586,16 +1376,6 @@ inline AST_PreprocessCond* CodePreprocessCond::operator->()
 	return ast;
 }
 
-inline Code CodeSpecifiers::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeSpecifiers::is_body()
 {
 	if ( ast == nullptr )
@@ -1645,16 +1425,6 @@ inline CodeSpecifiers::operator bool()
 	return ast != nullptr;
 }
 
-inline Code CodeStruct::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeStruct::is_body()
 {
 	if ( ast == nullptr )
@@ -1702,16 +1472,6 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 inline CodeStruct::operator bool()
 {
 	return ast != nullptr;
-}
-
-inline Code CodeTemplate::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeTemplate::is_body()
@@ -1783,16 +1543,6 @@ inline AST_Template* CodeTemplate::operator->()
 	return ast;
 }
 
-inline Code CodeType::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeType::is_body()
 {
 	if ( ast == nullptr )
@@ -1860,16 +1610,6 @@ inline AST_Type* CodeType::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeTypedef::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeTypedef::is_body()
@@ -1941,16 +1681,6 @@ inline AST_Typedef* CodeTypedef::operator->()
 	return ast;
 }
 
-inline Code CodeUnion::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeUnion::is_body()
 {
 	if ( ast == nullptr )
@@ -2020,16 +1750,6 @@ inline AST_Union* CodeUnion::operator->()
 	return ast;
 }
 
-inline Code CodeUsing::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
-}
-
 inline bool CodeUsing::is_body()
 {
 	if ( ast == nullptr )
@@ -2097,16 +1817,6 @@ inline AST_Using* CodeUsing::operator->()
 		return nullptr;
 	}
 	return ast;
-}
-
-inline Code CodeVar::duplicate()
-{
-	if ( ast == nullptr )
-	{
-		log_failure( "Code::duplicate: Cannot duplicate code, AST is null!" );
-		return Code_Invalid;
-	}
-	return { rcast( AST*, ast )->duplicate() };
 }
 
 inline bool CodeVar::is_body()

@@ -166,10 +166,11 @@ String      to_string (Code code);
 */
 struct Code
 {
+	AST* ast;
 
 #	define Using_Code( Typename )          \
-	char const* debug_str()                { return GEN_NS debug_str(*this); } \
-	Code        duplicate();			   \
+	char const* debug_str()                { return GEN_NS debug_str(* this); } \
+	Code        duplicate()                { return GEN_NS duplicate(* this); }	\
 	bool        is_equal( Code other );    \
 	bool        is_body();                 \
 	bool        is_valid();                \
@@ -206,8 +207,6 @@ struct Code
 
 		return *this;
 	}
-
-	AST* ast;
 
 #ifdef GEN_ENFORCE_STRONG_CODE_TYPES
 #	define operator explicit operator

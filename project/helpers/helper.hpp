@@ -354,17 +354,6 @@ CodeBody gen_ast_inlines()
 	char const* code_impl_tmpl = stringize(
 		\n
 		inline
-		Code <typename>::duplicate()
-		{
-			if ( ast == nullptr )
-			{
-				log_failure("Code::duplicate: Cannot duplicate code, AST is null!");
-				return Code_Invalid;
-			}
-
-			return { rcast(AST*, ast)->duplicate() };
-		}
-		inline
 		bool <typename>::is_body()
 		{
 			if ( ast == nullptr )

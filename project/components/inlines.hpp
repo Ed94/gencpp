@@ -100,6 +100,18 @@ char const* debug_str( Code code )
 }
 
 inline
+Code duplicate( Code code )
+{
+	if ( code.ast == nullptr )
+	{
+		log_failure("Code::duplicate: Cannot duplicate code, AST is null!");
+		return Code_Invalid;
+	}
+
+	return { duplicate(code.ast) };
+}
+
+inline
 Code& Code::operator ++()
 {
 	if ( ast )
