@@ -145,7 +145,7 @@ void define_constants()
 
 #	define def_constant_code_type( Type_ )   \
 		t_##Type_ = def_type( name(Type_) ); \
-		t_##Type_.set_global();
+		set_global(t_##Type_);
 
 	def_constant_code_type( auto );
 	def_constant_code_type( void );

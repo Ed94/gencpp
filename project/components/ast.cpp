@@ -475,29 +475,29 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Module:
-			cast(CodeModule, {self}).to_string( * result );
+			to_string(cast(CodeModule, {self}), result );
 		break;
 
 		case Namespace:
-			cast(CodeNS, {self}).to_string( * result );
+			to_string(cast(CodeNS, {self}), result );
 		break;
 
 		case Operator:
 		case Operator_Member:
-			cast(CodeOperator, {self}).to_string_def( * result );
+			to_string_def(cast(CodeOperator, {self}), result );
 		break;
 
 		case Operator_Fwd:
 		case Operator_Member_Fwd:
-			cast(CodeOperator, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeOperator, {self}), result );
 		break;
 
 		case Operator_Cast:
-			cast(CodeOpCast, {self}).to_string_def( * result );
+			to_string_def(cast(CodeOpCast, {self}), result );
 		break;
 
 		case Operator_Cast_Fwd:
-			cast(CodeOpCast, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeOpCast, {self}), result );
 		break;
 
 		case Parameters:
@@ -509,15 +509,15 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Preprocess_If:
-			cast(CodePreprocessCond, {self}).to_string_if( * result );
+			to_string_if(cast(CodePreprocessCond, {self}), result );
 		break;
 
 		case Preprocess_IfDef:
-			cast(CodePreprocessCond, {self}).to_string_ifdef( * result );
+			to_string_ifdef(cast(CodePreprocessCond, {self}), result );
 		break;
 
 		case Preprocess_IfNotDef:
-			cast(CodePreprocessCond, {self}).to_string_ifndef( * result );
+			to_string_ifndef(cast(CodePreprocessCond, {self}), result );
 		break;
 
 		case Preprocess_Include:
@@ -525,19 +525,19 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Preprocess_ElIf:
-			cast(CodePreprocessCond, {self}).to_string_elif( * result );
+			to_string_elif(cast(CodePreprocessCond, {self}), result );
 		break;
 
 		case Preprocess_Else:
-			cast(CodePreprocessCond, {self}).to_string_else( * result );
+			to_string_else(cast(CodePreprocessCond, {self}), result );
 		break;
 
 		case Preprocess_EndIf:
-			cast(CodePreprocessCond, {self}).to_string_endif( * result );
+			to_string_endif(cast(CodePreprocessCond, {self}), result );
 		break;
 
 		case Preprocess_Pragma:
-			cast(CodePragma, {self}).to_string( * result );
+			to_string(cast(CodePragma, {self}), result );
 		break;
 
 		case Specifiers:
@@ -553,7 +553,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Template:
-			cast(CodeTemplate, {self}).to_string( * result );
+			to_string(cast(CodeTemplate, {self}), result );
 		break;
 
 		case Typedef:
@@ -561,7 +561,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Typename:
-			cast(CodeType, {self}).to_string( * result );
+			to_string(cast(CodeType, {self}), result );
 		break;
 
 		case Union:

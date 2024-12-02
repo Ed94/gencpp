@@ -36,14 +36,14 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 	}
 
 #	define check_param_eq_ret()                                                                     \
-	if ( ! is_member_symbol && ! params_code->ValueType.is_equal( ret_type) )                       \
+	if ( ! is_member_symbol && ! is_equal(params_code->ValueType, ret_type) )                       \
 	{                                                                                               \
 		log_failure("gen::def_operator: operator%s requires first parameter to equal return type\n" \
 			"param types: %s\n"                                                                     \
 			"return type: %s",                                                                      \
 			to_str(op).Ptr,                                                                         \
 			debug_str(params_code),                                                                \
-			ret_type.debug_str()                                                                    \
+			debug_str(ret_type)                                                                    \
 		);                                                                                          \
 		return OpValidateResult::Fail;                                                              \
 	}
@@ -56,7 +56,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 
 	if ( ret_type->Type != ECode::Typename )
 	{
-		log_failure("gen::def_operator: ret_type is not of typename type - %s", ret_type.debug_str());
+		log_failure("gen::def_operator: ret_type is not of typename type - %s", debug_str(ret_type));
 		return OpValidateResult::Fail;
 	}
 
@@ -127,7 +127,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 				switch ( params_code->NumEntries )
 				{
 					case 1:
-						if ( params_code->ValueType.is_equal( t_int ) )
+						if ( is_equal(params_code->ValueType, t_int ) )
 							is_member_symbol = true;
 
 						else
@@ -170,14 +170,14 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 					return OpValidateResult::Fail;
 				}
 
-				if ( params_code->ValueType.is_equal( ret_type ) )
+				if ( is_equal(params_code->ValueType, ret_type ) )
 				{
 					log_failure("gen::def_operator: "
 						"operator%s is non-member symbol yet first paramter does not equal return type\n"
 						"param type: %s\n"
 						"return type: %s\n"
 						, debug_str(params_code)
-						, ret_type.debug_str()
+						, debug_str(ret_type)
 					);
 					return OpValidateResult::Fail;
 				}
@@ -247,14 +247,14 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 					break;
 
 				case 2:
-					if ( ! params_code->ValueType.is_equal( ret_type ) )
+					if ( ! is_equal(params_code->ValueType, ret_type ) )
 					{
 						log_failure("gen::def_operator: "
 							"operator%s is non-member symbol yet first paramter does not equal return type\n"
 							"param type: %s\n"
 							"return type: %s\n"
 							, debug_str(params_code)
-							, ret_type.debug_str()
+							, debug_str(ret_type)
 						);
 						return OpValidateResult::Fail;
 					}
@@ -291,11 +291,11 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 				}
 			}
 
-			if ( ! ret_type.is_equal( t_bool ))
+			if ( ! is_equal(ret_type, t_bool ))
 			{
 				log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
 					, to_str(op)
-					, ret_type.debug_str()
+					, debug_str(ret_type)
 				);
 				return OpValidateResult::Fail;
 			}
@@ -561,7 +561,7 @@ CodeClass def_class( StrC name
 
 	if ( parent && ( parent->Type != Class && parent->Type != Struct && parent->Type != Typename && parent->Type != Untyped ) )
 	{
-		log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", parent.debug_str() );
+		log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", debug_str(parent) );
 		return InvalidCode;
 	}
 
@@ -691,7 +691,7 @@ CodeEnum def_enum( StrC name
 
 	if ( type && type->Type != Typename )
 	{
-		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", type.debug_str() );
+		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", debug_str(type) );
 		return InvalidCode;
 	}
 
@@ -1045,7 +1045,7 @@ CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spe
 
 	if ( type->Type != Typename )
 	{
-		log_failure( "gen::def_operator_cast: type is not a typename - %s", type.debug_str() );
+		log_failure( "gen::def_operator_cast: type is not a typename - %s", debug_str(type) );
 		return InvalidCode;
 	}
 
@@ -1476,7 +1476,7 @@ CodeVar def_variable( CodeType type, StrC name, Code value
 
 	if ( type->Type != ECode::Typename )
 	{
-		log_failure( "gen::def_variable: type was not a Typename - %s", type.debug_str() );
+		log_failure( "gen::def_variable: type was not a Typename - %s", debug_str(type) );
 		return InvalidCode;
 	}
 

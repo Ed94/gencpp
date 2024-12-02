@@ -74,6 +74,37 @@ String to_string    (CodeFn self);
 void   to_string_def(CodeFn self, String* result);
 void   to_string_fwd(CodeFn self, String* result);
 
+String to_string(CodeModule self);
+void   to_string(CodeModule self, String* result);
+
+String to_string(CodeNS self);
+void   to_string(CodeNS self, String* result);
+
+String to_string    (CodeOperator self);
+void   to_string_fwd(CodeOperator self, String* result );
+void   to_string_def(CodeOperator self, String* result );
+
+String to_string    (CodeOpCast op_cast );
+void   to_string_def(CodeOpCast op_cast, String* result );
+void   to_string_fwd(CodeOpCast op_cast, String* result );
+
+String to_string(CodePragma self);
+void   to_string(CodePragma self, String* result);
+
+String to_string       (CodePreprocessCond cond);
+void   to_string_if    (CodePreprocessCond cond, String* result );
+void   to_string_ifdef (CodePreprocessCond cond, String* result );
+void   to_string_ifndef(CodePreprocessCond cond, String* result );
+void   to_string_elif  (CodePreprocessCond cond, String* result );
+void   to_string_else  (CodePreprocessCond cond, String* result );
+void   to_string_endif (CodePreprocessCond cond, String* result );
+
+String to_string(CodeTemplate self);
+void   to_string(CodeTemplate self, String* result);
+
+String to_string(CodeType self);
+void   to_string(CodeType self, String* result);
+
 #pragma region Code Types
 // These structs are not used at all by the C vairant.
 #if ! GEN_COMPILER_C
@@ -292,10 +323,10 @@ struct CodeEnum
 	Using_Code( CodeEnum );
 
 	String to_string()                            { return GEN_NS to_string(* this); }
-	void   to_string_def( String& result )        { return GEN_NS to_string_def(* this); }
-	void   to_string_fwd( String& result )        { return GEN_NS to_string_fwd(* this); }
-	void   to_string_class_def( String& result )  { return GEN_NS to_string_class_def(* this); }
-	void   to_string_class_fwd( String& result )  { return GEN_NS to_string_class_fwd(* this); }
+	void   to_string_def( String& result )        { return GEN_NS to_string_def(* this, & result); }
+	void   to_string_fwd( String& result )        { return GEN_NS to_string_fwd(* this, & result); }
+	void   to_string_class_def( String& result )  { return GEN_NS to_string_class_def(* this, & result); }
+	void   to_string_class_fwd( String& result )  { return GEN_NS to_string_class_fwd(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeEnum);
@@ -573,8 +604,8 @@ struct CodeFn
 	Using_Code( CodeFn );
 
 	String to_string()                     { return GEN_NS to_string(* this); }
-	void   to_string_def( String& result ) { return GEN_NS to_string_def(* this); }
-	void   to_string_fwd( String& result ) { return GEN_NS to_string_fwd(* this); }
+	void   to_string_def( String& result ) { return GEN_NS to_string_def(* this, & result); }
+	void   to_string_fwd( String& result ) { return GEN_NS to_string_fwd(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeFn);
@@ -585,11 +616,11 @@ struct CodeFn
 
 struct CodeModule
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeModule );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeModule);
@@ -600,11 +631,11 @@ struct CodeModule
 
 struct CodeNS
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeNS );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeNS);
@@ -615,12 +646,12 @@ struct CodeNS
 
 struct CodeOperator
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeOperator );
 
-	String to_string();
-	void   to_string_def( String& result );
-	void   to_string_fwd( String& result );
+	String to_string()                     { return GEN_NS to_string(* this); }
+	void   to_string_def( String& result ) { return GEN_NS to_string_def(* this, & result); }
+	void   to_string_fwd( String& result ) { return GEN_NS to_string_fwd(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeOperator);
@@ -631,12 +662,12 @@ struct CodeOperator
 
 struct CodeOpCast
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeOpCast );
 
-	String to_string();
-	void   to_string_def( String& result );
-	void   to_string_fwd( String& result );
+	String to_string()                     { return GEN_NS to_string(* this); }
+	void   to_string_def( String& result ) { return GEN_NS to_string_def(* this, & result); }
+	void   to_string_fwd( String& result ) { return GEN_NS to_string_fwd(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeOpCast);
@@ -650,8 +681,8 @@ struct CodePragma
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodePragma );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps( CodePragma );
@@ -662,16 +693,16 @@ struct CodePragma
 
 struct CodePreprocessCond
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodePreprocessCond );
 
-	String to_string();
-	void   to_string_if( String& result );
-	void   to_string_ifdef( String& result );
-	void   to_string_ifndef( String& result );
-	void   to_string_elif( String& result );
-	void   to_string_else( String& result );
-	void   to_string_endif( String& result );
+	String to_string()                        { return GEN_NS to_string(* this); }
+	void   to_string_if( String& result )     { return GEN_NS to_string_if(* this, & result); }
+	void   to_string_ifdef( String& result )  { return GEN_NS to_string_ifdef(* this, & result); }
+	void   to_string_ifndef( String& result ) { return GEN_NS to_string_ifndef(* this, & result); }
+	void   to_string_elif( String& result )   { return GEN_NS to_string_elif(* this, & result); }
+	void   to_string_else( String& result )   { return GEN_NS to_string_else(* this, & result); }
+	void   to_string_endif( String& result )  { return GEN_NS to_string_endif(* this, & result); }
 #endif
 
 	Using_CodeOps( CodePreprocessCond );
@@ -869,8 +900,8 @@ struct CodeTemplate
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeTemplate );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps( CodeTemplate );
@@ -881,11 +912,11 @@ struct CodeTemplate
 
 struct CodeType
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeType );
 
-	String to_string();
-	void   to_string( String& result );
+	String to_string()                 { return GEN_NS to_string(* this); }
+	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
 	Using_CodeOps( CodeType );
