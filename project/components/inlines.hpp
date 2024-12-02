@@ -112,6 +112,16 @@ Code duplicate( Code code )
 }
 
 inline
+bool is_body(Code code)
+{
+	if ( code.ast == nullptr )
+	{
+		return is_body(code.ast);
+	}
+	return false;
+}
+
+inline
 Code& Code::operator ++()
 {
 	if ( ast )

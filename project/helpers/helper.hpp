@@ -354,15 +354,6 @@ CodeBody gen_ast_inlines()
 	char const* code_impl_tmpl = stringize(
 		\n
 		inline
-		bool <typename>::is_body()
-		{
-			if ( ast == nullptr )
-			{
-				return rcast(AST*, ast)->is_body();
-			}
-			return false;
-		}
-		inline
 		bool <typename>::is_equal( Code other )
 		{
 			if ( ast == nullptr || other.ast == nullptr )

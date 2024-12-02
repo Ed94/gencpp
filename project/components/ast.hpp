@@ -172,7 +172,7 @@ struct Code
 	char const* debug_str()                { return GEN_NS debug_str(* this); } \
 	Code        duplicate()                { return GEN_NS duplicate(* this); }	\
 	bool        is_equal( Code other );    \
-	bool        is_body();                 \
+	bool        is_body()                  { return GEN_NS is_body(* this); } \
 	bool        is_valid();                \
 	void        set_global();              \
 	String      to_string();               \
