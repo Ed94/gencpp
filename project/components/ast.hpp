@@ -298,7 +298,7 @@ char const* type_str ( AST& self )             { return type_str( & self ); }
 */
 struct AST
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 #	pragma region Member Functions
 	void        append     ( AST* other ) { GEN_NS append(this, other); }
 	char const* debug_str  ()             { return GEN_NS debug_str(this); }

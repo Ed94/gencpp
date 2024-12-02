@@ -201,7 +201,7 @@ bool append_at(Array<Type>* array, Type item, usize idx)
 		header = get_header(* array);
 	}
 
-	Type* target = array->Data + slot;
+	Type* target = &(*array)[slot];
 
 	mem_move(target + 1, target, (header->Num - slot) * sizeof(Type));
 	header->Num++;
@@ -278,7 +278,8 @@ void free(Array<Type>* array) {
 	GEN_ASSERT(array != nullptr);
 	ArrayHeader* header = get_header(* array);
 	GEN_NS free(header->Allocator, header);
-	array->Data = nullptr;
+	Type** Data = (Type**)array;
+	*Data = nullptr;
 }
 
 template<class Type> forceinline
@@ -374,7 +375,8 @@ bool set_capacity(Array<Type>* array, usize new_capacity)
 
 	GEN_NS free(header->Allocator, header);
 
-	array->Data = rcast(Type*, new_header + 1);
+	Type** Data = (Type**)array;
+	* Data = rcast(Type*, new_header + 1);
 	return true;
 }
 
