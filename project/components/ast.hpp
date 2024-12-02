@@ -73,73 +73,84 @@ struct AST_Union;
 struct AST_Using;
 struct AST_Var;
 
-struct Code;
-struct CodeBody;
-// These are to offer ease of use and optionally strong type safety for the AST.
-struct CodeAttributes;
-// struct CodeBaseClass;
-struct CodeComment;
-struct CodeClass;
-struct CodeConstructor;
-struct CodeDefine;
-struct CodeDestructor;
-struct CodeEnum;
-struct CodeExec;
-struct CodeExtern;
-struct CodeInclude;
-struct CodeFriend;
-struct CodeFn;
-struct CodeModule;
-struct CodeNS;
-struct CodeOperator;
-struct CodeOpCast;
-struct CodeParam;
-struct CodePreprocessCond;
-struct CodePragma;
-struct CodeSpecifiers;
-
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
-struct CodeExpr;
-struct CodeExpr_Assign;
-struct CodeExpr_Alignof;
-struct CodeExpr_Binary;
-struct CodeExpr_CStyleCast;
-struct CodeExpr_FunctionalCast;
-struct CodeExpr_CppCast;
-struct CodeExpr_Element;
-struct CodeExpr_ProcCall;
-struct CodeExpr_Decltype;
-struct CodeExpr_Comma;
-struct CodeExpr_AMS; // Access Member Symbol
-struct CodeExpr_Sizeof;
-struct CodeExpr_Subscript;
-struct CodeExpr_Ternary;
-struct CodeExpr_UnaryPrefix;
-struct CodeExpr_UnaryPostfix;
-
-struct CodeStmt;
-struct CodeStmt_Break;
-struct CodeStmt_Case;
-struct CodeStmt_Continue;
-struct CodeStmt_Decl;
-struct CodeStmt_Do;
-struct CodeStmt_Expr;
-struct CodeStmt_Else;
-struct CodeStmt_If;
-struct CodeStmt_For;
-struct CodeStmt_Goto;
-struct CodeStmt_Label;
-struct CodeStmt_Switch;
-struct CodeStmt_While;
+#if GEN_COMPILER_C
+#define Define_Code(Type) typedef AST_##Type* Code##Type
+#else
+#define Define_Code(Type) struct Code##Type
 #endif
 
-struct CodeStruct;
-struct CodeTemplate;
-struct CodeType;
-struct CodeTypedef;
-struct CodeUnion;
-struct CodeUsing;
-struct CodeVar;
+#if GEN_COMPILER_C
+typedef AST* code;
+#else
+struct Code;
+#endif
+Define_Code(Body);
+// These are to offer ease of use and optionally strong type safety for the AST.
+Define_Code(Attributes);
+// struct CodeBaseClass;
+Define_Code(Comment);
+Define_Code(Class);
+Define_Code(Constructor);
+Define_Code(Define);
+Define_Code(Destructor);
+Define_Code(Enum);
+Define_Code(Exec);
+Define_Code(Extern);
+Define_Code(Include);
+Define_Code(Friend);
+Define_Code(Fn);
+Define_Code(Module);
+Define_Code(NS);
+Define_Code(Operator);
+Define_Code(OpCast);
+Define_Code(Param);
+Define_Code(PreprocessCond);
+Define_Code(Pragma);
+Define_Code(Specifiers);
+
+#if GEN_EXECUTION_EXPRESSION_SUPPORT
+Define_Code(Expr);
+Define_Code(Expr_Assign);
+Define_Code(Expr_Alignof);
+Define_Code(Expr_Binary);
+Define_Code(Expr_CStyleCast);
+Define_Code(Expr_FunctionalCast);
+Define_Code(Expr_CppCast);
+Define_Code(Expr_Element);
+Define_Code(Expr_ProcCall);
+Define_Code(Expr_Decltype);
+Define_Code(Expr_Comma);
+Define_Code(Expr_AMS); // Access Member Symbol
+Define_Code(Expr_Sizeof);
+Define_Code(Expr_Subscript);
+Define_Code(Expr_Ternary);
+Define_Code(Expr_UnaryPrefix);
+Define_Code(Expr_UnaryPostfix);
+
+Define_Code(Stmt);
+Define_Code(Stmt_Break);
+Define_Code(Stmt_Case);
+Define_Code(Stmt_Continue);
+Define_Code(Stmt_Decl);
+Define_Code(Stmt_Do);
+Define_Code(Stmt_Expr);
+Define_Code(Stmt_Else);
+Define_Code(Stmt_If);
+Define_Code(Stmt_For);
+Define_Code(Stmt_Goto);
+Define_Code(Stmt_Label);
+Define_Code(Stmt_Switch);
+Define_Code(Stmt_While);
+#endif
+
+Define_Code(Struct);
+Define_Code(Template);
+Define_Code(Type);
+Define_Code(Typedef);
+Define_Code(Union);
+Define_Code(Using);
+Define_Code(Var);
+#undef Define_Code
 
 namespace parser
 {
@@ -159,6 +170,7 @@ bool        is_valid  (Code code);
 void        set_global(Code code);
 String      to_string (Code code);
 
+#if ! GEN_COMPILER_C
 /*
 	AST* wrapper
 	- Not constantly have to append the '*' as this is written often..
@@ -168,32 +180,32 @@ struct Code
 {
 	AST* ast;
 
-#	define Using_Code( Typename )          \
-	char const* debug_str()                { return GEN_NS debug_str(* this); } \
-	Code        duplicate()                { return GEN_NS duplicate(* this); }	\
+#	define Using_Code( Typename )                                                     \
+	char const* debug_str()                { return GEN_NS debug_str(* this); }       \
+	Code        duplicate()                { return GEN_NS duplicate(* this); }	      \
 	bool        is_equal( Code other )     { return GEN_NS is_equal(* this, other); } \
-	bool        is_body()                  { return GEN_NS is_body(* this); } \
-	bool        is_valid()                 { return GEN_NS is_valid(* this); } \
-	void        set_global()               { return GEN_NS set_global(* this); } \
-	String      to_string();               \
-	Typename&   operator = ( AST* other ); \
-	Typename&   operator = ( Code other ); \
+	bool        is_body()                  { return GEN_NS is_body(* this); }         \
+	bool        is_valid()                 { return GEN_NS is_valid(* this); }        \
+	void        set_global()               { return GEN_NS set_global(* this); }
+
+#	define Using_CodeOps( Typename )                                         \
+	Typename&   operator = ( AST* other );                                   \
+	Typename&   operator = ( Code other );                                   \
 	bool        operator ==( Code other ) { return (AST*)ast == other.ast; } \
 	bool        operator !=( Code other ) { return (AST*)ast != other.ast; } \
 	operator bool();
 
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( Code );
+	String to_string() { return GEN_NS to_string(* this); }
+#endif
+
+	Using_CodeOps( Code );
 
 	template< class Type >
-	forceinline Type code_cast()
-	{
-		return * rcast( Type*, this );
-	}
+	forceinline Type code_cast() { return * rcast( Type*, this ); }
 
-	AST* operator ->()
-	{
-		return ast;
-	}
+	AST* operator ->() { return ast; }
 	Code& operator ++();
 
 	// TODO(Ed) : Remove this overload.
@@ -242,6 +254,7 @@ struct Code
 	operator CodeVar() const;
 	#undef operator
 };
+#endif
 
 #pragma region Statics
 // Used to identify ASTs that should always be duplicated. (Global constant ASTs)

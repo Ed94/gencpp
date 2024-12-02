@@ -3,14 +3,14 @@
 #include "ast.cpp"
 #endif
 
-String Code::to_string()
+String to_string(Code self)
 {
-	if ( ast == nullptr )
+	if ( self.ast == nullptr )
 	{
 		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
 		return { nullptr };
 	}
-	return rcast( AST*, ast )->to_string();
+	return rcast( AST*, self.ast )->to_string();
 }
 
 String CodeAttributes::to_string()

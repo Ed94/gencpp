@@ -4,9 +4,13 @@
 #endif
 
 #pragma region Code Types
+// These structs are not used at all by the C vairant.
+#if ! GEN_COMPILER_C
+// stati_assert( GEN_COMPILER_C, "This should not be compiled with the C-library" );
 
 struct CodeBody
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeBody );
 
 	void append( Code other )
@@ -28,19 +32,20 @@ struct CodeBody
 	bool has_entries() { return GEN_NS has_entries(rcast( AST*, ast )); }
 	AST* raw()         { return rcast( AST*, ast ); }
 
-	void to_string( String& result );
-	void to_string_export( String& result );
+	String to_string();
+	void   to_string( String& result );
+	void   to_string_export( String& result );
+#endif
 
-	AST_Body* operator->() { return ast; }
-
+	Using_CodeOps( CodeBody );
 	operator Code() { return * rcast( Code*, this ); }
+	AST_Body* operator->() { return ast; }
 
 #pragma region Iterator
 	Code begin()
 	{
 		if ( ast )
 			return { rcast( AST*, ast)->Front };
-
 		return { nullptr };
 	}
 	Code end()
@@ -54,21 +59,20 @@ struct CodeBody
 
 struct CodeClass
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeClass );
 
 	void add_interface( CodeType interface );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
+	String to_string();
+	void   to_string_def( String& result );
+	void   to_string_fwd( String& result );
 
-	AST* raw()
-	{
-		return rcast( AST*, ast );
-	}
-	operator Code()
-	{
-		return * rcast( Code*, this );
-	}
+	AST* raw() { return rcast( AST*, ast ); }
+#endif
+
+	Using_CodeOps( CodeClass );
+	operator Code() { return * rcast( Code*, this ); }
 	AST_Class* operator->()
 	{
 		if ( ast == nullptr )
@@ -83,13 +87,17 @@ struct CodeClass
 
 struct CodeParam
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeParam );
 
-	void append( CodeParam other );
-
+	void      append( CodeParam other );
 	CodeParam get( s32 idx );
-	bool has_entries();
-	void to_string( String& result );
+	bool      has_entries();
+	String    to_string();
+	void      to_string( String& result );
+#endif
+
+	Using_CodeOps( CodeParam );
 	AST* raw()
 	{
 		return rcast( AST*, ast );
@@ -132,6 +140,7 @@ struct CodeParam
 
 struct CodeSpecifiers
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeSpecifiers );
 
 	bool append( SpecifierT spec )
@@ -202,7 +211,11 @@ struct CodeSpecifiers
 		}
 		return result;
 	}
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
+
+	Using_CodeOps(CodeSpecifiers);
 	AST* raw()
 	{
 		return rcast( AST*, ast );
@@ -239,13 +252,17 @@ struct CodeSpecifiers
 
 struct CodeStruct
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeStruct );
 
 	void add_interface( CodeType interface );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
+	String to_string();
+	void   to_string_fwd( String& result );
+	void   to_string_def( String& result );
+#endif
 
+	Using_CodeOps( CodeStruct );
 	AST* raw()
 	{
 		return rcast( AST*, ast );
@@ -266,27 +283,47 @@ struct CodeStruct
 	AST_Struct* ast;
 };
 
-#define Define_CodeType( Typename )     \
-	struct Code##Typename               \
-	{                                   \
-		Using_Code( Code ## Typename ); \
-		AST*            raw();          \
-		operator        Code();         \
-		AST_##Typename* operator->();   \
-		AST_##Typename* ast;            \
-	}
+struct CodeAttributes
+{
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+	Using_Code(CodeAttributes);
+	String to_string();
+#endif
 
-Define_CodeType( Attributes );
+	Using_CodeOps(CodeAttributes);
+	AST *raw();
+	operator Code();
+	AST_Attributes *operator->();
+	AST_Attributes *ast;
+};
+
 // Define_CodeType( BaseClass );
-Define_CodeType( Comment );
+
+struct CodeComment
+{
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+	Using_Code(CodeComment);
+	String to_string();
+#endif
+
+	Using_CodeOps(CodeComment);
+	AST *raw();
+	operator Code();
+	AST_Comment *operator->();
+	AST_Comment *ast;
+};
 
 struct CodeConstructor
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeConstructor );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
+	String to_string();
+	void   to_string_def( String& result );
+	void   to_string_fwd( String& result );
+#endif
 
+	Using_CodeOps(CodeConstructor);
 	AST*             raw();
 	operator         Code();
 	AST_Constructor* operator->();
@@ -295,10 +332,14 @@ struct CodeConstructor
 
 struct CodeDefine
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeDefine );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeDefine);
 	AST*        raw();
 	operator    Code();
 	AST_Define* operator->();
@@ -307,11 +348,15 @@ struct CodeDefine
 
 struct CodeDestructor
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeDestructor );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
+	String to_string();
+	void   to_string_def( String& result );
+	void   to_string_fwd( String& result );
+#endif
 
+	Using_CodeOps(CodeDestructor);
 	AST*             raw();
 	operator         Code();
 	AST_Destructor* operator->();
@@ -320,20 +365,36 @@ struct CodeDestructor
 
 struct CodeEnum
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeEnum );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
-	void to_string_class_def( String& result );
-	void to_string_class_fwd( String& result );
+	String to_string();
+	void   to_string_def( String& result );
+	void   to_string_fwd( String& result );
+	void   to_string_class_def( String& result );
+	void   to_string_class_fwd( String& result );
+#endif
 
+	Using_CodeOps(CodeEnum);
 	AST*      raw();
 	operator  Code();
 	AST_Enum* operator->();
 	AST_Enum* ast;
 };
 
-Define_CodeType( Exec );
+struct CodeExec
+{
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+	Using_Code(CodeExec);
+	String to_string();
+#endif
+
+	Using_CodeOps(CodeExec);
+	AST *raw();
+	operator Code();
+	AST_Exec *operator->();
+	AST_Exec *ast;
+};
 
 #if GEN_EXECUTION_EXPRESSION_SUPPORT
 struct CodeExpr
@@ -543,10 +604,13 @@ struct CodeExpr_UnaryPostfix
 
 struct CodeExtern
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeExtern );
 
 	void to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeExtern);
 	AST*        raw();
 	operator    Code();
 	AST_Extern* operator->();
@@ -555,10 +619,14 @@ struct CodeExtern
 
 struct CodeInclude
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeInclude );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeInclude);
 	AST*         raw();
 	operator     Code();
 	AST_Include* operator->();
@@ -567,10 +635,14 @@ struct CodeInclude
 
 struct CodeFriend
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeFriend );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeFriend);
 	AST*        raw();
 	operator    Code();
 	AST_Friend* operator->();
@@ -579,11 +651,15 @@ struct CodeFriend
 
 struct CodeFn
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeFn );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
+	String to_string();
+	void   to_string_def( String& result );
+	void   to_string_fwd( String& result );
+#endif
 
+	Using_CodeOps(CodeFn);
 	AST*     raw();
 	operator Code();
 	AST_Fn*  operator->();
@@ -592,10 +668,14 @@ struct CodeFn
 
 struct CodeModule
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeModule );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeModule);
 	AST*        raw();
 	operator    Code();
 	AST_Module* operator->();
@@ -604,10 +684,14 @@ struct CodeModule
 
 struct CodeNS
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeNS );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeNS);
 	AST*     raw();
 	operator Code();
 	AST_NS*  operator->();
@@ -616,11 +700,15 @@ struct CodeNS
 
 struct CodeOperator
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeOperator );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
+	String to_string();
+	void   to_string_def( String& result );
+	void   to_string_fwd( String& result );
+#endif
 
+	Using_CodeOps(CodeOperator);
 	AST*          raw();
 	operator      Code();
 	AST_Operator* operator->();
@@ -629,11 +717,15 @@ struct CodeOperator
 
 struct CodeOpCast
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeOpCast );
 
-	void to_string_def( String& result );
-	void to_string_fwd( String& result );
+	String to_string();
+	void   to_string_def( String& result );
+	void   to_string_fwd( String& result );
+#endif
 
+	Using_CodeOps(CodeOpCast);
 	AST*        raw();
 	operator    Code();
 	AST_OpCast* operator->();
@@ -642,10 +734,14 @@ struct CodeOpCast
 
 struct CodePragma
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodePragma );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps( CodePragma );
 	AST*        raw();
 	operator    Code();
 	AST_Pragma* operator->();
@@ -654,15 +750,19 @@ struct CodePragma
 
 struct CodePreprocessCond
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodePreprocessCond );
 
-	void to_string_if( String& result );
-	void to_string_ifdef( String& result );
-	void to_string_ifndef( String& result );
-	void to_string_elif( String& result );
-	void to_string_else( String& result );
-	void to_string_endif( String& result );
+	String to_string();
+	void   to_string_if( String& result );
+	void   to_string_ifdef( String& result );
+	void   to_string_ifndef( String& result );
+	void   to_string_elif( String& result );
+	void   to_string_else( String& result );
+	void   to_string_endif( String& result );
+#endif
 
+	Using_CodeOps( CodePreprocessCond );
 	AST*                raw();
 	operator            Code();
 	AST_PreprocessCond* operator->();
@@ -674,7 +774,8 @@ struct CodeStmt
 {
 	Using_Code( CodeStmt );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*      raw();
 	operator  Code();
@@ -686,7 +787,8 @@ struct CodeStmt_Break
 {
 	Using_Code( CodeStmt_Break );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*            raw();
 	operator        Code();
@@ -698,7 +800,8 @@ struct CodeStmt_Case
 {
 	Using_Code( CodeStmt_Case );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*           raw();
 	operator       Code();
@@ -710,7 +813,8 @@ struct CodeStmt_Continue
 {
 	Using_Code( CodeStmt_Continue );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*               raw();
 	operator           Code();
@@ -722,7 +826,8 @@ struct CodeStmt_Decl
 {
 	Using_Code( CodeStmt_Decl );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*           raw();
 	operator       Code();
@@ -734,7 +839,8 @@ struct CodeStmt_Do
 {
 	Using_Code( CodeStmt_Do );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*         raw();
 	operator     Code();
@@ -746,7 +852,8 @@ struct CodeStmt_Expr
 {
 	Using_Code( CodeStmt_Expr );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*           raw();
 	operator       Code();
@@ -758,7 +865,8 @@ struct CodeStmt_Else
 {
 	Using_Code( CodeStmt_Else );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*           raw();
 	operator       Code();
@@ -770,7 +878,8 @@ struct CodeStmt_If
 {
 	Using_Code( CodeStmt_If );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*         raw();
 	operator     Code();
@@ -782,7 +891,8 @@ struct CodeStmt_For
 {
 	Using_Code( CodeStmt_For );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*          raw();
 	operator      Code();
@@ -794,7 +904,8 @@ struct CodeStmt_Goto
 {
 	Using_Code( CodeStmt_Goto );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*           raw();
 	operator       Code();
@@ -806,7 +917,8 @@ struct CodeStmt_Label
 {
 	Using_Code( CodeStmt_Label );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*            raw();
 	operator        Code();
@@ -818,7 +930,8 @@ struct CodeStmt_Switch
 {
 	Using_Code( CodeStmt_Switch );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*           raw();
 	operator       Code();
@@ -830,7 +943,8 @@ struct CodeStmt_While
 {
 	Using_Code( CodeStmt_While );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
 
 	AST*           raw();
 	operator       Code();
@@ -841,10 +955,14 @@ struct CodeStmt_While
 
 struct CodeTemplate
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeTemplate );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps( CodeTemplate );
 	AST*          raw();
 	operator      Code();
 	AST_Template* operator->();
@@ -853,10 +971,14 @@ struct CodeTemplate
 
 struct CodeType
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeType );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps( CodeType );
 	AST*      raw();
 	operator  Code();
 	AST_Type* operator->();
@@ -865,10 +987,14 @@ struct CodeType
 
 struct CodeTypedef
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeTypedef );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps( CodeTypedef );
 	AST*         raw();
 	operator     Code();
 	AST_Typedef* operator->();
@@ -877,10 +1003,14 @@ struct CodeTypedef
 
 struct CodeUnion
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeUnion );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeUnion);
 	AST*       raw();
 	operator   Code();
 	AST_Union* operator->();
@@ -889,11 +1019,15 @@ struct CodeUnion
 
 struct CodeUsing
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeUsing );
 
-	void to_string( String& result );
-	void to_string_ns( String& result );
+	String to_string();
+	void   to_string( String& result );
+	void   to_string_ns( String& result );
+#endif
 
+	Using_CodeOps(CodeUsing);
 	AST*       raw();
 	operator   Code();
 	AST_Using* operator->();
@@ -902,10 +1036,14 @@ struct CodeUsing
 
 struct CodeVar
 {
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
 	Using_Code( CodeVar );
 
-	void to_string( String& result );
+	String to_string();
+	void   to_string( String& result );
+#endif
 
+	Using_CodeOps(CodeVar);
 	AST*     raw();
 	operator Code();
 	AST_Var* operator->();
@@ -914,5 +1052,7 @@ struct CodeVar
 
 #undef Define_CodeType
 #undef Using_Code
+#undef Using_CodeOps
 
+#endif //if ! GEN_COMPILER_C
 #pragma endregion Code Types
