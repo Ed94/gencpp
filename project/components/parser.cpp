@@ -1115,7 +1115,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			return InvalidCode;
 		}
 
-		result.append( member );
+		append(result, member );
 	}
 
 	eat( TokType::BraceCurly_Close );
@@ -1503,7 +1503,7 @@ CodeFn parse_function_after_name(
 
 			default:
 			{
-				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", body.debug_str(), Context.to_string());
+				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", debug_str(body), Context.to_string());
 				Context.pop();
 				return InvalidCode;
 			}
@@ -1568,7 +1568,7 @@ Code parse_function_body()
 
 	if ( len > 0 )
 	{
-		result.append( def_execution( { len, start.Text } ) );
+		append( result, def_execution( { len, start.Text } ) );
 	}
 
 	eat( TokType::BraceCurly_Close );
@@ -1878,7 +1878,7 @@ CodeBody parse_global_nspace( CodeT which )
 		}
 
 		// log_fmt("Global Body Member: %s", member->debug_str());
-		result.append( member );
+		append(result, member );
 	}
 
 	if ( which != Global_Body )
@@ -3743,7 +3743,7 @@ CodeEnum parse_enum( bool inplace_def )
 				return InvalidCode;
 			}
 
-			body.append( member );
+			append(body, member );
 		}
 
 		eat( TokType::BraceCurly_Close );
@@ -5187,7 +5187,7 @@ CodeUnion parse_union( bool inplace_def )
 		}
 
 		if ( member )
-			body.append( member );
+			append(body, member );
 	}
 	// <ModuleFlags> union <Attributes> <Name> { <Body>
 

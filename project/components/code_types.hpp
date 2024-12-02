@@ -3,6 +3,17 @@
 #include "ast.hpp"
 #endif
 
+void   append           ( CodeBody body, Code     other );
+void   append           ( CodeBody body, CodeBody other );
+String to_string        ( CodeBody body );
+void   to_string        ( CodeBody body, String* result );
+void   to_string_export ( CodeBody body, String* result );
+
+void   add_interface( CodeClass self, CodeType interface );
+String to_string    ( CodeClass self );
+void   to_string_def( CodeClass self, String* result );
+void   to_string_fwd( CodeClass self, String* result );
+
 #pragma region Code Types
 // These structs are not used at all by the C vairant.
 #if ! GEN_COMPILER_C
@@ -10,31 +21,16 @@
 
 struct CodeBody
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeBody );
 
-	void append( Code other )
-	{
-		GEN_ASSERT(other.ast != nullptr);
+	void append( Code other )    { return GEN_NS append( *this, other ); }
+	void append( CodeBody body ) { return GEN_NS append(*this, body); }
+	bool has_entries()           { return GEN_NS has_entries(rcast( AST*, ast )); }
 
-		if (GEN_NS is_body(other)) {
-			append( cast(CodeBody, other) );
-		}
-
-		GEN_NS append( raw(), other.ast );
-	}
-	void append( CodeBody body )
-	{
-		for ( Code entry : body ) {
-			append( entry );
-		}
-	}
-	bool has_entries() { return GEN_NS has_entries(rcast( AST*, ast )); }
-	AST* raw()         { return rcast( AST*, ast ); }
-
-	String to_string();
-	void   to_string( String& result );
-	void   to_string_export( String& result );
+	String to_string()                        { return GEN_NS to_string(* this); }
+	void   to_string( String& result )        { return GEN_NS to_string(* this, & result ); }
+	void   to_string_export( String& result ) { return GEN_NS to_string_export(* this, & result); }
 #endif
 
 	Using_CodeOps( CodeBody );
@@ -59,7 +55,7 @@ struct CodeBody
 
 struct CodeClass
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 0
 	Using_Code( CodeClass );
 
 	void add_interface( CodeType interface );
@@ -67,8 +63,6 @@ struct CodeClass
 	String to_string();
 	void   to_string_def( String& result );
 	void   to_string_fwd( String& result );
-
-	AST* raw() { return rcast( AST*, ast ); }
 #endif
 
 	Using_CodeOps( CodeClass );
@@ -1053,6 +1047,10 @@ struct CodeVar
 #undef Define_CodeType
 #undef Using_Code
 #undef Using_CodeOps
+
+#if GEN_SUPPORT_CPP_REFERENCES
+void to_string_export( CodeBody body, String& result ) { return to_string_export(body, & result); };
+#endif
 
 #endif //if ! GEN_COMPILER_C
 #pragma endregion Code Types

@@ -605,7 +605,7 @@ CodeClass def_class( StrC name
 	{
 		for (s32 idx = 0; idx < num_interfaces; idx++ )
 		{
-			result.add_interface( interfaces[idx] );
+			add_interface(result, interfaces[idx] );
 		}
 	}
 
@@ -1565,7 +1565,7 @@ CodeBody def_class_body( s32 num, ... )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1602,7 +1602,7 @@ CodeBody def_class_body( s32 num, Code* codes )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -1636,7 +1636,7 @@ CodeBody def_enum_body( s32 num, ... )
 			return InvalidCode;
 		}
 
-		result.append( entry );
+		append(result, entry );
 	}
 	while ( num--, num > 0 );
 	va_end(va);
@@ -1668,7 +1668,7 @@ CodeBody def_enum_body( s32 num, Code* codes )
 			return InvalidCode;
 		}
 
-		result.append( entry );
+		append(result, entry );
 	}
 	while ( codes++, num--, num > 0 );
 
@@ -1706,7 +1706,7 @@ CodeBody def_export_body( s32 num, ... )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1743,7 +1743,7 @@ CodeBody def_export_body( s32 num, Code* codes )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -1781,7 +1781,7 @@ CodeBody def_extern_link_body( s32 num, ... )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1818,7 +1818,7 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 
 	}
 	while (num--, num > 0);
@@ -1858,7 +1858,7 @@ CodeBody def_function_body( s32 num, ... )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1894,7 +1894,7 @@ CodeBody def_function_body( s32 num, Code* codes )
 			default:
 			break;
 		}
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -1926,7 +1926,7 @@ CodeBody def_global_body( s32 num, ... )
 		{
 			case Global_Body:
 				// result.append( entry.code_cast<CodeBody>() ) ;
-				result.append( cast(CodeBody, entry) ) ;
+				append( result, cast(CodeBody, entry) );
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
@@ -1937,7 +1937,7 @@ CodeBody def_global_body( s32 num, ... )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1967,7 +1967,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			case Global_Body:
-				result.append( cast(CodeBody, entry) );
+				append(result, cast(CodeBody, entry) );
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
@@ -1978,7 +1978,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -2016,7 +2016,7 @@ CodeBody def_namespace_body( s32 num, ... )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -2052,7 +2052,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 			default: break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -2225,7 +2225,7 @@ CodeBody def_struct_body( s32 num, ... )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -2262,7 +2262,7 @@ CodeBody def_struct_body( s32 num, Code* codes )
 			break;
 		}
 
-		result.append(entry);
+		append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -2296,7 +2296,7 @@ CodeBody def_union_body( s32 num, ... )
 			return InvalidCode;
 		}
 
-		result.append( entry );
+		append(result, entry );
 	}
 	while ( num--, num > 0 );
 	va_end(va);
@@ -2328,7 +2328,7 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 			return InvalidCode;
 		}
 
-		result.append( entry );
+		append(result, entry );
 	}
 	while ( codes++, num--, num > 0 );
 

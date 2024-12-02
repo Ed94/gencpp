@@ -415,11 +415,11 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Class:
-			cast(CodeClass, {self}).to_string_def( * result );
+			to_string_def(cast(CodeClass, {self}), result );
 		break;
 
 		case Class_Fwd:
-			cast(CodeClass, {self}).to_string_fwd( * result );
+			to_string_fwd(cast(CodeClass, {self}), result );
 		break;
 
 		case Constructor:
@@ -455,7 +455,7 @@ void to_string( AST* self, String* result )
 		break;
 
 		case Export_Body:
-			cast(CodeBody, {self}).to_string_export( * result );
+			to_string_export(cast(CodeBody, {self}), result );
 		break;
 
 		case Extern_Linkage:
@@ -588,7 +588,7 @@ void to_string( AST* self, String* result )
 		case Namespace_Body:
 		case Struct_Body:
 		case Union_Body:
-			cast(CodeBody, {self}).to_string( * result );
+			to_string( cast(CodeBody, {self}), result );
 		break;
 	}
 }

@@ -163,13 +163,35 @@ Code& Code::operator ++()
 #pragma endregion Code
 
 inline
-void CodeClass::add_interface( CodeType type )
+void append( CodeBody self, Code other )
 {
-	CodeType possible_slot = ast->ParentType;
+	GEN_ASSERT(other.ast != nullptr);
+
+	if (is_body(other)) {
+		append( self, cast(CodeBody, other) );
+		return;
+	}
+
+	append( rcast(AST*, self.ast), other.ast );
+}
+
+inline
+void append( CodeBody self, CodeBody body )
+{
+	for ( Code entry : body ) {
+		append( self, entry );
+	}
+}
+
+inline
+void add_interface( CodeClass self, CodeType type )
+{
+	GEN_ASSERT(self.ast !=nullptr);
+	CodeType possible_slot = self->ParentType;
 	if ( possible_slot.ast )
 	{
 		// Were adding an interface to parent type, so we need to make sure the parent type is public.
-		ast->ParentAccess = AccessSpec_Public;
+		self->ParentAccess = AccessSpec_Public;
 		// If your planning on adding a proper parent,
 		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}

@@ -428,29 +428,29 @@ CodeBody gen_ast_inlines()
 	CodeBody impl_code_using    = parse_global_body( token_fmt( "typename", StrC name(CodeUsing),          code_impl_tmpl ));
 	CodeBody impl_code_var      = parse_global_body( token_fmt( "typename", StrC name(CodeVar),            code_impl_tmpl ));
 
-	impl_code_attr.    append( parse_global_body( token_fmt( "typename", StrC name(Attributes),     codetype_impl_tmpl )));
-	impl_code_cmt.     append( parse_global_body( token_fmt( "typename", StrC name(Comment),        codetype_impl_tmpl )));
-	impl_code_constr.  append( parse_global_body( token_fmt( "typename", StrC name(Constructor),    codetype_impl_tmpl )));
-	impl_code_define.  append( parse_global_body( token_fmt( "typename", StrC name(Define),         codetype_impl_tmpl )));
-	impl_code_destruct.append( parse_global_body( token_fmt( "typename", StrC name(Destructor),     codetype_impl_tmpl )));
-	impl_code_enum.    append( parse_global_body( token_fmt( "typename", StrC name(Enum),           codetype_impl_tmpl )));
-	impl_code_exec.    append( parse_global_body( token_fmt( "typename", StrC name(Exec),           codetype_impl_tmpl )));
-	impl_code_extern.  append( parse_global_body( token_fmt( "typename", StrC name(Extern),         codetype_impl_tmpl )));
-	impl_code_include. append( parse_global_body( token_fmt( "typename", StrC name(Include),        codetype_impl_tmpl )));
-	impl_code_friend.  append( parse_global_body( token_fmt( "typename", StrC name(Friend),         codetype_impl_tmpl )));
-	impl_code_fn.      append( parse_global_body( token_fmt( "typename", StrC name(Fn),             codetype_impl_tmpl )));
-	impl_code_module.  append( parse_global_body( token_fmt( "typename", StrC name(Module),         codetype_impl_tmpl )));
-	impl_code_ns.      append( parse_global_body( token_fmt( "typename", StrC name(NS),             codetype_impl_tmpl )));
-	impl_code_op.      append( parse_global_body( token_fmt( "typename", StrC name(Operator),       codetype_impl_tmpl )));
-	impl_code_opcast.  append( parse_global_body( token_fmt( "typename", StrC name(OpCast),         codetype_impl_tmpl )));
-	impl_code_pragma . append( parse_global_body( token_fmt( "typename", StrC name(Pragma),         codetype_impl_tmpl )));
-	impl_code_precond. append( parse_global_body( token_fmt( "typename", StrC name(PreprocessCond), codetype_impl_tmpl )));
-	impl_code_tmpl.    append( parse_global_body( token_fmt( "typename", StrC name(Template),       codetype_impl_tmpl )));
-	impl_code_type.    append( parse_global_body( token_fmt( "typename", StrC name(Type),           codetype_impl_tmpl )));
-	impl_code_typedef. append( parse_global_body( token_fmt( "typename", StrC name(Typedef),        codetype_impl_tmpl )));
-	impl_code_union.   append( parse_global_body( token_fmt( "typename", StrC name(Union),          codetype_impl_tmpl )));
-	impl_code_using.   append( parse_global_body( token_fmt( "typename", StrC name(Using),          codetype_impl_tmpl )));
-	impl_code_var.     append( parse_global_body( token_fmt( "typename", StrC name(Var),            codetype_impl_tmpl )));
+	append(impl_code_attr,     parse_global_body( token_fmt( "typename", StrC name(Attributes),     codetype_impl_tmpl )));
+	append(impl_code_cmt,      parse_global_body( token_fmt( "typename", StrC name(Comment),        codetype_impl_tmpl )));
+	append(impl_code_constr,   parse_global_body( token_fmt( "typename", StrC name(Constructor),    codetype_impl_tmpl )));
+	append(impl_code_define,   parse_global_body( token_fmt( "typename", StrC name(Define),         codetype_impl_tmpl )));
+	append(impl_code_destruct, parse_global_body( token_fmt( "typename", StrC name(Destructor),     codetype_impl_tmpl )));
+	append(impl_code_enum,     parse_global_body( token_fmt( "typename", StrC name(Enum),           codetype_impl_tmpl )));
+	append(impl_code_exec,     parse_global_body( token_fmt( "typename", StrC name(Exec),           codetype_impl_tmpl )));
+	append(impl_code_extern,   parse_global_body( token_fmt( "typename", StrC name(Extern),         codetype_impl_tmpl )));
+	append(impl_code_include,  parse_global_body( token_fmt( "typename", StrC name(Include),        codetype_impl_tmpl )));
+	append(impl_code_friend,   parse_global_body( token_fmt( "typename", StrC name(Friend),         codetype_impl_tmpl )));
+	append(impl_code_fn,       parse_global_body( token_fmt( "typename", StrC name(Fn),             codetype_impl_tmpl )));
+	append(impl_code_module,   parse_global_body( token_fmt( "typename", StrC name(Module),         codetype_impl_tmpl )));
+	append(impl_code_ns,       parse_global_body( token_fmt( "typename", StrC name(NS),             codetype_impl_tmpl )));
+	append(impl_code_op,       parse_global_body( token_fmt( "typename", StrC name(Operator),       codetype_impl_tmpl )));
+	append(impl_code_opcast,   parse_global_body( token_fmt( "typename", StrC name(OpCast),         codetype_impl_tmpl )));
+	append(impl_code_pragma,   parse_global_body( token_fmt( "typename", StrC name(Pragma),         codetype_impl_tmpl )));
+	append(impl_code_precond,  parse_global_body( token_fmt( "typename", StrC name(PreprocessCond), codetype_impl_tmpl )));
+	append(impl_code_tmpl,     parse_global_body( token_fmt( "typename", StrC name(Template),       codetype_impl_tmpl )));
+	append(impl_code_type,     parse_global_body( token_fmt( "typename", StrC name(Type),           codetype_impl_tmpl )));
+	append(impl_code_typedef,  parse_global_body( token_fmt( "typename", StrC name(Typedef),        codetype_impl_tmpl )));
+	append(impl_code_union,    parse_global_body( token_fmt( "typename", StrC name(Union),          codetype_impl_tmpl )));
+	append(impl_code_using,    parse_global_body( token_fmt( "typename", StrC name(Using),          codetype_impl_tmpl )));
+	append(impl_code_var,      parse_global_body( token_fmt( "typename", StrC name(Var),            codetype_impl_tmpl )));
 
 	char const* cast_tmpl = stringize(
 		inline	AST::operator Code<typename>()
