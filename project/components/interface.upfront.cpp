@@ -485,7 +485,7 @@ CodeComment def_comment( StrC content )
 	Code
 	result          = make_code();
 	result->Type    = CT_Comment;
-	result->Name    = get_cached_string( cmt_formatted );
+	result->Name    = get_cached_string( { length(cmt_formatted), cmt_formatted } );
 	result->Content = result->Name;
 
 	free(& cmt_formatted);

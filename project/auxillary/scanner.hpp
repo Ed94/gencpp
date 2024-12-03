@@ -39,7 +39,7 @@ Code scan_file( char const* path )
 		const StrC def_intellisense = txt("GEN_INTELLISENSE_DIRECTIVES" );
 
 		bool        found_directive = false;
-		char const* scanner         = str.Data;
+		char const* scanner         = (char const*)str;
 		s32         left            = fsize;
 		while ( left )
 		{
@@ -94,7 +94,7 @@ Code scan_file( char const* path )
 						move_fwd();
 
 					// sptr skip_size = fsize - left;
-					if ( (scanner + 2) >= ( str.Data + fsize ) )
+					if ( (scanner + 2) >= ( (char const*) str + fsize ) )
 					{
 						mem_move( str, scanner, left );
 						get_header(str)->Length = left;
@@ -106,7 +106,6 @@ Code scan_file( char const* path )
 
 					break;
 				}
-
 			}
 
 			move_fwd();
@@ -117,7 +116,7 @@ Code scan_file( char const* path )
 	}
 
 	file_close( & file );
-	return untyped_str( str );
+	return untyped_str( to_strc(str) );
 }
 
 #if 0

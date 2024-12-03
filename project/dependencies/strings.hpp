@@ -5,6 +5,16 @@
 
 #pragma region Strings
 
+struct StrC;
+
+bool        are_equal           (StrC lhs, StrC rhs);
+char const* back                (StrC str);
+bool        contains            (StrC str, StrC substring);
+StrC        duplicate           (StrC str, AllocatorInfo allocator);
+b32         starts_with         (StrC str, StrC substring);
+StrC        to_str              (char const* bad_string);
+StrC        visualize_whitespace(StrC str, AllocatorInfo allocator);
+
 // Constant string with length.
 struct StrC
 {
@@ -14,15 +24,71 @@ struct StrC
 #if ! GEN_COMPILER_C
 	operator char const* ()               const { return Ptr; }
 	char const& operator[]( ssize index ) const { return Ptr[index]; }
-#endif
+
+#if GEN_SUPPORT_CPP_MEMBER_FUNCTIONS
+	bool   is_equal            (StrC rhs)                { return are_equal(* this, rhs); }
+	char*  back                ()                        { return back(* this); }
+	bool   contains            (StrC substring)          { return contains(* this, substring); }
+	String duplicate           (AllocatorInfo allocator) { return duplicate(* this, allocator); }
+	b32    starts_with         (StrC substring)          { return starts_with(* this, substring); }
+	String visualize_whitespace()                        { return visualize_whitespace(* this); }
+#endif // GEN_SUPPORT_CPP_MEMBER_FUNCTIONS
+#endif // GEN_COMPILERC
 };
 
 #define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(ssize) )
 #define txt( text )         StrC { sizeof( text ) - 1, ( text ) }
 
+inline char const* begin(StrC str)                   { return str.Ptr; }
+inline char const* end  (StrC str)                   { return str.Ptr + str.Len; }
+inline char const* next (StrC str, char const* iter) { return iter + 1; }
+
 inline
-StrC to_str( char const* str ) {
-	return { str_len( str ), str };
+bool are_equal(StrC lhs, StrC rhs)
+{
+	if (lhs.Len != rhs.Len)
+		return false;
+
+	for (ssize idx = 0; idx < lhs.Len; ++idx)
+		if (lhs[idx] != rhs[idx])
+			return false;
+
+	return true;
+}
+
+inline
+char const* back(StrC str) {
+	return & str.Ptr[str.Len - 1];
+}
+
+inline
+bool contains(StrC str, StrC substring)
+{
+	if (substring.Len > str.Len)
+		return false;
+
+	ssize main_len = str.Len;
+	ssize sub_len  = substring.Len;
+	for (ssize idx = 0; idx <= main_len - sub_len; ++idx)
+	{
+		if (str_compare(str.Ptr + idx, substring.Ptr, sub_len) == 0)
+			return true;
+	}
+	return false;
+}
+
+inline
+b32 starts_with(StrC str, StrC substring) {
+	if (substring.Len > str.Len)
+		return false;
+
+	b32 result = str_compare(str.Ptr, substring.Ptr, substring.Len) == 0;
+		return result;
+}
+
+inline
+StrC to_str( char const* bad_str ) {
+	return { str_len( bad_str ), bad_str };
 }
 
 // Dynamic String
@@ -31,7 +97,12 @@ StrC to_str( char const* str ) {
 // I kept it for simplicty of porting but its not necessary to keep it that way.
 #pragma region String
 struct StringHeader;
+
+#if GEN_COMPILER_C || ! GEN_SUPPORT_CPP_MEMBER_FEATURES
+typedef char* String;
+#else
 struct String;
+#endif
 
 usize string_grow_formula(usize value);
 
@@ -65,6 +136,7 @@ b32           starts_with         (String const str, StrC   substring);
 b32           starts_with         (String const str, String substring);
 void          skip_line           (String       str);
 void          strip_space         (String       str);
+StrC          to_strc             (String       str);
 void          trim                (String       str, char const* cut_set);
 void          trim_space          (String       str);
 String        visualize_whitespace(String const str);
@@ -75,15 +147,14 @@ struct StringHeader {
 	ssize         Length;
 };
 
-#if ! GEN_COMPILER_C
+#if ! GEN_COMPILER_C && GEN_SUPPORT_CPP_MEMBER_FEATURES
 struct String
 {
 	char* Data;
 
-	forceinline operator bool()              { return Data != nullptr; }
 	forceinline operator char*()             { return Data; }
 	forceinline operator char const*() const { return Data; }
-	forceinline operator StrC() const        { return { GEN_NS length(* this), Data }; }
+	forceinline operator StrC()        const { return { GEN_NS length(* this), Data }; }
 
 	String const& operator=(String const& other) const {
 		if (this == &other)
@@ -95,13 +166,17 @@ struct String
 		return *this;
 	}
 
-	forceinline char& operator[](ssize index)             { return Data[index]; }
+	forceinline char&       operator[](ssize index)       { return Data[index]; }
 	forceinline char const& operator[](ssize index) const { return Data[index]; }
 
-	forceinline char* begin() const { return Data; }
-	forceinline char* end() const   { return Data + GEN_NS length(* this); }
+	       bool operator==(std::nullptr_t) const             { return     Data == nullptr; }
+	       bool operator!=(std::nullptr_t) const             { return     Data != nullptr; }
+	friend bool operator==(std::nullptr_t, const String str) { return str.Data == nullptr; }
+	friend bool operator!=(std::nullptr_t, const String str) { return str.Data != nullptr; }
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+	forceinline char* begin() const { return Data; }
+	forceinline char* end()   const { return Data + GEN_NS length(* this); }
+
 #pragma region Member Mapping
 	forceinline static String make(AllocatorInfo allocator, char const* str)                { return GEN_NS string_make(allocator, str); }
 	forceinline static String make(AllocatorInfo allocator, StrC str)                       { return GEN_NS string_make(allocator, str); }
@@ -151,6 +226,7 @@ struct String
 	forceinline b32           starts_with(String substring) const            { return GEN_NS starts_with(* this, substring); }
 	forceinline void          skip_line()                                    { GEN_NS skip_line(* this); }
 	forceinline void          strip_space()                                  { GEN_NS strip_space(* this); }
+	forceinline StrC          to_strc()                                      { return { length(), Data}; }
 	forceinline void          trim(char const* cut_set)                      { GEN_NS trim(* this, cut_set); }
 	forceinline void          trim_space()                                   { GEN_NS trim_space(* this); }
 	forceinline String        visualize_whitespace() const                   { return GEN_NS visualize_whitespace(* this); }
@@ -168,26 +244,25 @@ struct String
 		return GEN_NS append(this, buf, res);
 	}
 #pragma endregion Member Mapping
-#endif
 };
 #endif
 
-#if GEN_SUPPORT_CPP_REFERENCES
-bool          make_space_for(String& str, char const* to_append, ssize add_len);
-bool          append(String& str, char c);
-bool          append(String& str, char const* str_to_append);
-bool          append(String& str, char const* str_to_append, ssize length);
-bool          append(String& str, StrC str_to_append);
-bool          append(String& str, const String other);
-bool          append_fmt(String& str, char const* fmt, ...);
-char&         back(String& str);
-void          clear(String& str);
-void          free(String& str);
-#endif
+inline char* begin(String str)             { return ((char*) str); }
+inline char* end  (String str)             { return ((char*) str + length(str)); }
+inline char* next (String str, char* iter) { return ((char*) iter + 1); }
 
-inline char* begin(String str) { return str; }
-inline char* end(String str)   { return scast(char*, str) + length(str); }
-inline char* next(String str)  { return scast(char*, str) + 1; }
+#if GEN_SUPPORT_CPP_REFERENCES
+inline bool          make_space_for(String& str, char const* to_append, ssize add_len);
+inline bool          append(String& str, char c);
+inline bool          append(String& str, char const* str_to_append);
+inline bool          append(String& str, char const* str_to_append, ssize length);
+inline bool          append(String& str, StrC str_to_append);
+inline bool          append(String& str, const String other);
+inline bool          append_fmt(String& str, char const* fmt, ...);
+inline char&         back(String& str);
+inline void          clear(String& str);
+inline void          free(String& str);
+#endif
 
 inline
 usize string_grow_formula(usize value) {
@@ -249,7 +324,7 @@ String string_join(AllocatorInfo allocator, char const** parts, ssize num_parts,
 inline
 bool append(String* str, char c) {
 	GEN_ASSERT(str != nullptr);
-	return append(str, &c, 1);
+	return append( str, (char const*)& c, (ssize)1);
 }
 
 inline
@@ -288,9 +363,9 @@ bool append(String* str, StrC str_to_append) {
 }
 
 inline
-bool append(String* str, const String other) {
+bool append(String* str, String const other) {
 	GEN_ASSERT(str != nullptr);
-	return append(str, other, length(other));
+	return append(str, (char const*)other, length(other));
 }
 
 bool append_fmt(String* str, char const* fmt, ...) {
@@ -303,7 +378,7 @@ bool append_fmt(String* str, char const* fmt, ...) {
 	res = str_fmt_va(buf, count_of(buf) - 1, fmt, va) - 1;
 	va_end(va);
 
-	return append(str, buf, res);
+	return append(str, (char const*)buf, res);
 }
 
 inline
@@ -464,7 +539,7 @@ b32 starts_with(String const str, StrC substring) {
 	if (substring.Len > length(str))
 	return false;
 
-	b32 result = str_compare(str.Data, substring.Ptr, substring.Len) == 0;
+	b32 result = str_compare(str, substring.Ptr, substring.Len) == 0;
 	return result;
 }
 
@@ -473,7 +548,7 @@ b32 starts_with(String const str, String substring) {
 	if (length(substring) > length(str))
 		return false;
 
-	b32 result = str_compare(str.Data, substring.Data, length(substring) - 1) == 0;
+	b32 result = str_compare(str, substring, length(substring) - 1) == 0;
 	return result;
 }
 
@@ -481,18 +556,18 @@ inline
 void skip_line(String str)
 {
 #define current (*scanner)
-	char* scanner = str.Data;
+	char* scanner = str;
 	while (current != '\r' && current != '\n') {
  		++scanner;
 	}
 
-	s32 new_length = scanner - str.Data;
+	s32 new_length = scanner - str;
 
 	if (current == '\r') {
 		new_length += 1;
 	}
 
-	mem_move(str.Data, scanner, new_length);
+	mem_move((char*)str, scanner, new_length);
 
 	StringHeader* header = get_header(str);
 	header->Length = new_length;
@@ -518,29 +593,34 @@ void strip_space(String str)
    write_pos[0] = '\0';  // Null-terminate the modified string
 
    // Update the length if needed
-   get_header(str)->Length = write_pos - str.Data;
+   get_header(str)->Length = write_pos - str;
+}
+
+inline
+StrC to_strc(String str) {
+	return { length(str), (char const*)str };
 }
 
 inline
 void trim(String str, char const* cut_set)
 {
-   ssize len = 0;
+	ssize len = 0;
 
-   char* start_pos = str.Data;
-   char* end_pos = str.Data + length(str) - 1;
+	char* start_pos = str;
+	char* end_pos   = scast(char*, str) + length(str) - 1;
 
-   while (start_pos <= end_pos && char_first_occurence(cut_set, *start_pos))
-   	start_pos++;
+	while (start_pos <= end_pos && char_first_occurence(cut_set, *start_pos))
+	start_pos++;
 
-   while (end_pos > start_pos && char_first_occurence(cut_set, *end_pos))
-   	end_pos--;
+	while (end_pos > start_pos && char_first_occurence(cut_set, *end_pos))
+	end_pos--;
 
-   len = scast(ssize, (start_pos > end_pos) ? 0 : ((end_pos - start_pos) + 1));
+	len = scast(ssize, (start_pos > end_pos) ? 0 : ((end_pos - start_pos) + 1));
 
-   if (str.Data != start_pos)
-   	mem_move(str.Data, start_pos, len);
+	if (str != start_pos)
+		mem_move(str, start_pos, len);
 
-   str.Data[len] = '\0';
+	str[len] = '\0';
 
    get_header(str)->Length = len;
 }
@@ -556,7 +636,7 @@ String visualize_whitespace(String const str)
 	StringHeader* header = (StringHeader*)(scast(char const*, str) - sizeof(StringHeader));
 	String        result = string_make_reserve(header->Allocator, length(str) * 2); // Assume worst case for space requirements.
 
-	for (auto c : str) switch (c)
+	foreach (char*, c, str) switch ( * c )
 	{
 		case ' ':
 			append(& result, txt("·"));
@@ -590,11 +670,47 @@ struct String_POD {
 };
 static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
 
-// Implements basic string interning. Data structure is based off the ZPL Hashtable.
-typedef HashTable<String const>   StringTable;
+inline
+StrC duplicate(StrC str, AllocatorInfo allocator) {
+	String result = string_make_length(allocator, str.Ptr, str.Len);
+	return {  get_header(result)->Length, result };
+}
+
+inline
+StrC visualize_whitespace(StrC str, AllocatorInfo allocator)
+{
+	String result = string_make_reserve(allocator, str.Len * 2); // Assume worst case for space requirements.
+	foreach (char const*, c, str) switch ( * c )
+	{
+		case ' ':
+			append(& result, txt("·"));
+		break;
+		case '\t':
+			append(& result, txt("→"));
+		break;
+		case '\n':
+			append(& result, txt("↵"));
+		break;
+		case '\r':
+			append(& result, txt("⏎"));
+		break;
+		case '\v':
+			append(& result, txt("⇕"));
+		break;
+		case '\f':
+			append(& result, txt("⌂"));
+		break;
+		default:
+			append(& result, c);
+		break;
+	}
+	return to_strc(result);
+}
 
 // Represents strings cached with the string table.
 // Should never be modified, if changed string is desired, cache_string( str ) another.
-typedef String const   StringCached;
+typedef StrC StringCached;
 
+// Implements basic string interning. Data structure is based off the ZPL Hashtable.
+typedef HashTable<StringCached> StringTable;
 #pragma endregion Strings

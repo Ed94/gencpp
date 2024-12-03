@@ -5,8 +5,6 @@
 
 // This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
-typedef enum Operator_Def Operator;
-
 enum Operator_Def : u32
 {
 	Op_Invalid,
@@ -58,6 +56,7 @@ enum Operator_Def : u32
 	Op_DeleteArray,
 	NumOps
 };
+typedef enum Operator_Def Operator;
 
 inline StrC to_str( Operator op )
 {

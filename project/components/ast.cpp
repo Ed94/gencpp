@@ -621,9 +621,9 @@ bool is_equal( Code self, Code other )
 		        "AST  : %S\n"                                 \
 		        "Other: %S\n"                                 \
 		    , debug_str(self)                                 \
-		    ,debug_str(other)                              \
+		    ,debug_str(other)                                 \
 		);                                                    \
-	                                                          \
+                                                              \
 		return false;                                         \
 	}
 
@@ -634,7 +634,7 @@ bool is_equal( Code self, Code other )
 				"AST  : %S\n"                                       \
 				"Other: %S\n"                                       \
 			, debug_str(self)                                       \
-			,debug_str(other)                                    \
+			,debug_str(other)                                       \
 		);                                                          \
 	                                                                \
 		return false;                                               \
@@ -647,15 +647,15 @@ bool is_equal( Code self, Code other )
 				"AST  : %S\n"                                             \
 				"Other: %S\n"                                             \
 			, debug_str(self)                                             \
-			,debug_str(other)                                          \
+			,debug_str(other)                                             \
 		);                                                                \
                                                                           \
 		log_fmt("Content cannot be trusted to be unique with this check " \
 			"so it must be verified by eye for now\n"                     \
 			"AST   Content:\n%S\n"                                        \
 			"Other Content:\n%S\n"                                        \
-			, visualize_whitespace(self->content)                         \
-			, visualize_whitespace(other->content)                        \
+			, visualize_whitespace(self->content, GlobalAllocator)        \
+			, visualize_whitespace(other->content, GlobalAllocator)       \
 		);                                                                \
 	}
 
@@ -669,14 +669,14 @@ bool is_equal( Code self, Code other )
 					"Other: %s\n"                                                                  \
 					"For ast member: %s\n"                                                         \
 				, debug_str(self)                                                                  \
-				, debug_str(other)                                                               \
-				, debug_str(self->ast)                                                           \
+				, debug_str(other)                                                                 \
+				, debug_str(self->ast)                                                             \
 			);                                                                                     \
                                                                                                    \
 			return false;                                                                          \
 		}                                                                                          \
                                                                                                    \
-		if ( ! is_equal(self->ast, other->ast ) )                                                 \
+		if ( ! is_equal(self->ast, other->ast ) )                                                  \
 		{                                                                                          \
 			log_fmt( "\nAST::is_equal: Failed for " #ast"\n"                                       \
 			         "AST  : %S\n"                                                                 \
@@ -684,9 +684,9 @@ bool is_equal( Code self, Code other )
 			         "For     ast member: %S\n"                                                    \
 			         "other's ast member: %S\n"                                                    \
 				, debug_str(self)                                                                  \
-				, debug_str(other)                                                               \
-				, debug_str(self->ast)                                                           \
-				, debug_str(other->ast)                                                          \
+				, debug_str(other)                                                                 \
+				, debug_str(self->ast)                                                             \
+				, debug_str(other->ast)                                                            \
 			);                                                                                     \
 		                                                                                           \
 			return false;                                                                          \
@@ -711,7 +711,6 @@ bool is_equal( Code self, Code other )
 		case CT_Untyped:
 		{
 			check_member_content( Content );
-
 			return true;
 		}
 
@@ -1147,19 +1146,19 @@ bool is_equal( Code self, Code other )
 
 bool validate_body(Code self)
 {
-#define CheckEntries( Unallowed_Types )                                                               \
-	do                                                                                                \
-	{                                                                                                 \
-		for ( Code entry : cast(CodeBody, self) )                                                    \
-		{                                                                                             \
-			switch ( entry->Type )                                                                    \
-			{                                                                                         \
-				Unallowed_Types                                                                       \
-					log_failure( "AST::validate_body: Invalid entry in body %s", GEN_NS debug_str(entry) );  \
-					return false;                                                                     \
-			}                                                                                         \
-		}                                                                                             \
-	}                                                                                                 \
+#define CheckEntries( Unallowed_Types )                                                                     \
+	do                                                                                                      \
+	{                                                                                                       \
+		for ( Code entry : cast(CodeBody, self) )                                                           \
+		{                                                                                                   \
+			switch ( entry->Type )                                                                          \
+			{                                                                                               \
+				Unallowed_Types                                                                             \
+					log_failure( "AST::validate_body: Invalid entry in body %s", GEN_NS debug_str(entry) ); \
+					return false;                                                                           \
+			}                                                                                               \
+		}                                                                                                   \
+	}                                                                                                       \
 	while (0);
 
 	switch ( self->Type )

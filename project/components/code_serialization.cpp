@@ -4,7 +4,7 @@
 #endif
 
 String to_string(CodeAttributes attributes) {
-	return GEN_NS duplicate( attributes->Content, GlobalAllocator );
+	return {(char*) duplicate( attributes->Content, GlobalAllocator ).Ptr};
 }
 
 String to_string(CodeBody body)
@@ -68,7 +68,7 @@ void to_string_export( CodeBody body, String* result )
 
 String to_string(CodeComment comment)
 {
-	return GEN_NS duplicate( comment->Content, GlobalAllocator );
+	return {(char*) duplicate( comment->Content, GlobalAllocator ).Ptr};
 }
 
 String to_string(CodeConstructor self)
@@ -105,7 +105,7 @@ void to_string_def(CodeConstructor self, String* result )
 		append_fmt( result, " : %S", GEN_NS to_string(self->InitializerList) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, " // %S", self->InlineCmt->Content );
+		append_fmt( result, " // %s", self->InlineCmt->Content.Ptr );
 
 	append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
 }
@@ -129,7 +129,7 @@ void to_string_fwd(CodeConstructor self, String* result )
 		append_fmt( result, " = %S", GEN_NS to_string(self->Body) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "; // %S\n", self->InlineCmt->Content );
+		append_fmt( result, "; // %s\n", self->InlineCmt->Content.ptr );
 	else
 		append( result, ";\n" );
 }
@@ -187,7 +187,7 @@ void to_string_def( CodeClass self, String* result )
 
 	if ( ast->InlineCmt )
 	{
-		append_fmt( result, " // %S", ast->InlineCmt->Content );
+		append_fmt( result, " // %s", ast->InlineCmt->Content.Ptr );
 	}
 
 	append_fmt( result, "\n{\n%S\n}", GEN_NS to_string(ast->Body) );
@@ -417,7 +417,7 @@ void to_string_class_fwd(CodeEnum self, String* result )
 
 String to_string(CodeExec exec)
 {
-	return GEN_NS duplicate( exec->Content, GlobalAllocator );
+	return {(char*) duplicate( exec->Content, GlobalAllocator ).Ptr};
 }
 
 void to_string(CodeExtern self, String* result )
@@ -774,7 +774,7 @@ void to_string_def(CodeOpCast self, String* result )
 			}
 		}
 
-		if ( self->Name && length(self->Name) )
+		if ( self->Name && self->Name.Len )
 			append_fmt( result, "%Soperator %S()", self->Name, to_string(self->ValueType) );
 		else
 			append_fmt( result, "operator %S()", to_string(self->ValueType) );
@@ -792,7 +792,7 @@ void to_string_def(CodeOpCast self, String* result )
 		return;
 	}
 
-	if ( self->Name && length(self->Name) )
+	if ( self->Name && self->Name.Len )
 		append_fmt( result, "%Soperator %S()\n{\n%S\n}\n", self->Name, to_string(self->ValueType), GEN_NS to_string(self->Body) );
 	else
 		append_fmt( result, "operator %S()\n{\n%S\n}\n", to_string(self->ValueType), GEN_NS to_string(self->Body) );

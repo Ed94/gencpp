@@ -5,8 +5,6 @@
 
 // This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
-typedef enum CodeType_Def CodeType;
-
 enum CodeType_Def : u32
 {
 	CT_Invalid,
@@ -71,6 +69,7 @@ enum CodeType_Def : u32
 	CT_Variable,
 	CT_NumTypes
 };
+typedef enum CodeType_Def CodeType;
 
 inline StrC to_str( CodeType type )
 {

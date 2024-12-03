@@ -8,8 +8,6 @@
 GEN_NS_PARSER_BEGIN
 #define GEN_DEFINE_ATTRIBUTE_TOKENS Entry( Tok_Attribute_API_Export, "GEN_API_Export_Code" ) Entry( Tok_Attribute_API_Import, "GEN_API_Import_Code" )
 
-typedef enum TokType_Def TokType;
-
 enum TokType_Def : u32
 {
 	Tok_Invalid,
@@ -111,6 +109,7 @@ enum TokType_Def : u32
 	Tok_Attribute_API_Import,
 	Tok_NumTokens
 };
+typedef enum TokType_Def TokType;
 
 inline StrC to_str( TokType type )
 {

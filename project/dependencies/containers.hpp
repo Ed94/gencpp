@@ -152,7 +152,7 @@ bool append(Array<Type>* array, Type value)
 
 	if (header->Num == header->Capacity)
 	{
-		if (!grow(array, header->Capacity))
+		if ( ! grow(array, header->Capacity))
 			return false;
 		header = get_header(* array);
 	}
@@ -170,12 +170,12 @@ bool append(Array<Type>* array, Type* items, usize item_num)
 
 	if (header->Num + item_num > header->Capacity)
 	{
-		if (!grow(array, header->Capacity + item_num))
+		if ( ! grow(array, header->Capacity + item_num))
 			return false;
 		header = get_header(array);
 	}
 
-	mem_copy(array.Data + header->Num, items, item_num * sizeof(Type));
+	mem_copy((Type*)array + header->Num, items, item_num * sizeof(Type));
 	header->Num += item_num;
 
 	return true;
@@ -296,7 +296,7 @@ bool grow(Array<Type>* array, usize min_capacity)
 	usize        new_capacity = array_grow_formula(header->Capacity);
 
 	if (new_capacity < min_capacity)
-	new_capacity = min_capacity;
+		new_capacity = min_capacity;
 
 	return set_capacity(array, new_capacity);
 }

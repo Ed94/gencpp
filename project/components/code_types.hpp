@@ -211,9 +211,9 @@ struct CodeSpecifiers
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeSpecifiers );
 
-	bool   append( SpecifierT spec )      { return GEN_NS append(* this, spec); }
-	s32    has( SpecifierT spec )         { return GEN_NS has(* this, spec); }
-	s32    remove( SpecifierT to_remove ) { return GEN_NS remove(* this, to_remove); }
+	bool   append( Specifier spec )       { return GEN_NS append(* this, spec); }
+	s32    has( Specifier spec )          { return GEN_NS has(* this, spec); }
+	s32    remove( Specifier to_remove )  { return GEN_NS remove(* this, to_remove); }
 	String to_string()                    { return GEN_NS to_string(* this ); }
 	void   to_string( String& result )    { return GEN_NS to_string(* this, & result); }
 #endif

@@ -31,11 +31,11 @@ CodeBody gen_ecode( char const* path )
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 	}
 
-	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", (StrC)enum_entries, "enum CodeType_Def : u32 { <entries> CT_NumTypes };"));
+	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", to_strc(enum_entries), "enum CodeType_Def : u32 { <entries> CT_NumTypes };"));
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	CodeFn to_str = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
+	CodeFn to_str = parse_function( token_fmt( "entries", to_strc(to_str_entries), stringize(
 		inline
 		StrC to_str( CodeType type )
 		{
@@ -53,7 +53,7 @@ CodeBody gen_ecode( char const* path )
 	//CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
 	CodeTypedef code_t = parse_typedef(code(typedef enum CodeType_Def CodeType; ));
 
-	return def_global_body( args( code_t, enum_code, to_str, fmt_newline ) );
+	return def_global_body( args( enum_code, code_t, to_str, fmt_newline ) );
 }
 
 CodeBody gen_eoperator( char const* path )
@@ -81,7 +81,7 @@ CodeBody gen_eoperator( char const* path )
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
-	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
+	CodeEnum  enum_code = parse_enum(token_fmt("entries", to_strc(enum_entries), stringize(
 		enum Operator_Def : u32
 		{
 			<entries>
@@ -91,7 +91,7 @@ CodeBody gen_eoperator( char const* path )
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
+	CodeFn to_str = parse_function(token_fmt("entries", to_strc(to_str_entries), stringize(
 		inline
 		StrC to_str( Operator op )
 		{
@@ -109,7 +109,7 @@ CodeBody gen_eoperator( char const* path )
 	//CodeUsing operator_t = def_using( name(OperatorT), def_type( name(EOperator::Type) ) );
 	CodeTypedef operator_t = parse_typedef(code( typedef enum Operator_Def Operator; ));
 
-	return def_global_body( args( operator_t, enum_code, to_str, fmt_newline ) );
+	return def_global_body( args( enum_code, operator_t, to_str, fmt_newline ) );
 }
 
 CodeBody gen_especifier( char const* path )
@@ -137,7 +137,7 @@ CodeBody gen_especifier( char const* path )
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
-	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
+	CodeEnum  enum_code = parse_enum(token_fmt("entries", to_strc(enum_entries), stringize(
 		enum Specifier_Def : u32
 		{
 			<entries>
@@ -145,7 +145,7 @@ CodeBody gen_especifier( char const* path )
 		};
 	)));
 
-	CodeFn is_trailing = parse_function(token_fmt("specifier", (StrC)to_str_entries, stringize(
+	CodeFn is_trailing = parse_function(token_fmt("specifier", to_strc(to_str_entries), stringize(
 		inline
 		bool is_trailing( Specifier specifier )
 		{
@@ -163,7 +163,7 @@ CodeBody gen_especifier( char const* path )
 #undef do_once_end
 #undef forceinline
 #undef neverinline
-	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
+	CodeFn to_str = parse_function(token_fmt("entries", to_strc(to_str_entries), stringize(
 		inline
 		StrC to_str( Specifier type )
 		{
@@ -176,7 +176,7 @@ CodeBody gen_especifier( char const* path )
 		}
 	)));
 
-	CodeFn to_type = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
+	CodeFn to_type = parse_function( token_fmt( "entries", to_strc(to_str_entries), stringize(
 		inline
 		Specifier to_specifier( StrC str )
 		{
@@ -214,7 +214,7 @@ CodeBody gen_especifier( char const* path )
 	//CodeUsing specifier_t = def_using( name(SpecifierT), def_type( name(ESpecifier::Type) ) );
 	CodeTypedef specifier_t = parse_typedef( code(typedef enum Specifier_Def Specifier; ));
 
-	return def_global_body( args( specifier_t, enum_code, is_trailing, to_str, to_type, fmt_newline ) );
+	return def_global_body( args( enum_code, specifier_t, is_trailing, to_str, to_type, fmt_newline ) );
 }
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
@@ -271,11 +271,11 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 #pragma push_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 #undef GEN_DEFINE_ATTRIBUTE_TOKENS
-	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), attribute_define_entries  );
+	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), to_strc(attribute_define_entries)  );
 #pragma pop_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 
 	// We cannot parse this enum, it has Attribute names as enums
-	CodeEnum enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, "attribute_toks", (StrC)attribute_entries, stringize(
+	CodeEnum enum_code = parse_enum(token_fmt("entries", to_str(enum_entries), "attribute_toks", to_str(attribute_entries), stringize(
 		enum TokType_Def : u32
 		{
 			<entries>
@@ -290,7 +290,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #undef local_persist
 #undef do_once_start
 #undef do_once_end
-	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, "attribute_toks", (StrC)to_str_attributes, stringize(
+	CodeFn to_str = parse_function(token_fmt("entries", to_strc(to_str_entries), "attribute_toks", to_strc(to_str_attributes), stringize(
 		inline
 		StrC to_str( TokType type )
 		{
@@ -304,7 +304,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		}
 	)));
 
-	CodeFn to_type = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
+	CodeFn to_type = parse_function( token_fmt( "entries", to_strc(to_str_entries), stringize(
 		inline
 		TokType to_toktype( StrC str )
 		{
@@ -341,8 +341,8 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 	return def_global_body( args(
 		attribute_entires_def,
-		td_toktype,
 		enum_code,
+		td_toktype,
 		to_str,
 		to_type
 	));

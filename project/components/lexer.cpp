@@ -357,7 +357,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 				, current
 				, preprocess_content.Line
 				, preprocess_content.Column
-				, directive_str.Data
+				, (char*) directive_str
 			);
 			return Lex_ReturnNull;
 		}
@@ -578,11 +578,11 @@ TokArray lex( StrC content )
 		return { {}, 0 };
 	}
 
-	foreach( StringCached, entry, PreprocessorDefines )
+	foreach( StringCached*, entry, PreprocessorDefines )
 	{
 		s32         length  = 0;
-		char const* scanner = entry.Data;
-		while ( GEN_NS length(entry) > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
+		char const* scanner = * entry;
+		while ( entry->Len > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
 		{
 			c.scanner++;
 			length ++;
@@ -592,8 +592,8 @@ TokArray lex( StrC content )
 			length++;
 		}
 
-		u64 key = crc32( entry.Data, length );
-		set(& c.defines, key, (StrC)entry );
+		u64 key = crc32( * entry, length );
+		set(& c.defines, key, (StrC) * entry );
 	}
 
 	clear(Tokens);

@@ -74,9 +74,9 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 internal
 void define_constants()
 {
-	Code_Global                         = make_code();
-	scast(String, Code_Global->Name)    = get_cached_string( txt("Global Code") );
-	scast(String, Code_Global->Content) = Code_Global->Name;
+	Code_Global          = make_code();
+	Code_Global->Name    = get_cached_string( txt("Global Code") );
+	Code_Global->Content = Code_Global->Name;
 
 	Code_Invalid = make_code();
 	set_global(Code_Invalid);
@@ -403,9 +403,9 @@ StringCached get_cached_string( StrC str )
 	}
 
 	String result = string_make( get_string_allocator( str.Len ), str );
-	set<StringCached>(& StringCache, key, result );
+	set(& StringCache, key, { length(result), result } );
 
-	return result;
+	return { length(result), result };
 }
 
 // Used internally to retireve a Code object form the CodePool.

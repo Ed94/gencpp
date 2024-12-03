@@ -11,13 +11,13 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 	local_persist
 	Arena tok_map_arena;
 
-	HashTable<StrC> tok_map;
+	HashTable(StrC) tok_map;
 	{
 		local_persist
 		char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
 
 		tok_map_arena = arena_init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
-		tok_map       = hashtable_init<StrC>( allocator_info(& tok_map_arena) );
+		tok_map       = hashtable_init(StrC, allocator_info(& tok_map_arena) );
 
 		s32 left = num_tokens - 1;
 

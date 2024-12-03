@@ -669,7 +669,7 @@ CodeAttributes parse_attributes()
 
 		Code result     = make_code();
 		result->Type    = CT_PlatformAttributes;
-		result->Name    = get_cached_string( name_stripped );
+		result->Name    = get_cached_string( { length(name_stripped), name_stripped } );
 		result->Content = result->Name;
 		// result->Token   =
 
@@ -1047,10 +1047,10 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 					if ( attributes )
 					{
-						String fused = string_make_reserve( GlobalAllocator, length(attributes->Content) + length(more_attributes->Content) );
+						String fused = string_make_reserve( GlobalAllocator, attributes->Content.Len + more_attributes->Content.Len );
 						append_fmt( & fused, "%S %S", attributes->Content, more_attributes->Content );
 
-						attributes->Name    = get_cached_string(fused);
+						attributes->Name    = get_cached_string({ length(fused), fused });
 						attributes->Content = attributes->Name;
 						// <Attributes> <Specifiers> <Attributes>
 					}
@@ -1344,7 +1344,7 @@ CodeDefine parse_define()
 		return define;
 	}
 
-	define->Content = get_cached_string( strip_formatting( to_str(currtok), strip_formatting_dont_preserve_newlines ) );
+	define->Content = get_cached_string( to_strc( strip_formatting( to_str(currtok), strip_formatting_dont_preserve_newlines )) );
 	eat( Tok_Preprocess_Content );
 	// #define <Name> <Content>
 
@@ -1494,7 +1494,7 @@ CodeFn parse_function_after_name(
 
 	CodeFn
 	result              = (CodeFn) make_code();
-	result->Name        = get_cached_string( name_stripped );
+	result->Name        = get_cached_string( to_strc(name_stripped) );
 	result->ModuleFlags = mflags;
 
 	if ( body )
@@ -2730,7 +2730,7 @@ CodeParam parse_params( bool use_template_capture )
 				eat( currtok.Type );
 			}
 
-			value = untyped_str( strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines ) );
+			value = untyped_str( to_strc(strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines )) );
 			// ( <Macro> <ValueType> <Name> = <Expression>
 		}
 	}
@@ -2845,7 +2845,7 @@ CodeParam parse_params( bool use_template_capture )
 					eat( currtok.Type );
 				}
 
-				value = untyped_str( strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines ) );
+				value = untyped_str( to_strc(strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines )) );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>
 			}
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, ..
@@ -4132,7 +4132,7 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 	Code type = parse_type();
 	// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>
 
-	Context.Scope->Name = { type->Name.Data, length(type->Name) };
+	Context.Scope->Name = { type->Name.Ptr, type->Name.Len };
 
 	eat( Tok_Capture_Start );
 	eat( Tok_Capture_End );
@@ -4820,7 +4820,7 @@ else if ( currtok.Type == Tok_DeclType )
 	}
 #endif
 
-	result->Name = get_cached_string( name_stripped );
+	result->Name = get_cached_string( to_strc(name_stripped) );
 
 	if ( attributes )
 		result->Attributes = attributes;

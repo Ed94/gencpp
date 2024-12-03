@@ -5,8 +5,6 @@
 
 // This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
-typedef enum Specifier_Def Specifier;
-
 enum Specifier_Def : u32
 {
 	Spec_Invalid,
@@ -37,6 +35,7 @@ enum Specifier_Def : u32
 	Spec_Volatile,
 	Spec_NumSpecifiers
 };
+typedef enum Specifier_Def Specifier;
 
 inline bool is_trailing( Specifier specifier )
 {
