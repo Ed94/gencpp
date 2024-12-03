@@ -97,36 +97,36 @@ extern CodeSpecifiers spec_thread_local;
 extern CodeSpecifiers spec_virtual;
 extern CodeSpecifiers spec_volatile;
 
-extern CodeType t_empty; // Used with varaidc parameters. (Exposing just in case its useful for another circumstance)
-extern CodeType t_auto;
-extern CodeType t_void;
-extern CodeType t_int;
-extern CodeType t_bool;
-extern CodeType t_char;
-extern CodeType t_wchar_t;
-extern CodeType t_class;
-extern CodeType t_typename;
+extern CodeTypename t_empty; // Used with varaidc parameters. (Exposing just in case its useful for another circumstance)
+extern CodeTypename t_auto;
+extern CodeTypename t_void;
+extern CodeTypename t_int;
+extern CodeTypename t_bool;
+extern CodeTypename t_char;
+extern CodeTypename t_wchar_t;
+extern CodeTypename t_class;
+extern CodeTypename t_typename;
 
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 	// Predefined typename codes. Are set to readonly and are setup during gen::init()
 
-	extern CodeType t_b32;
+	extern CodeTypename t_b32;
 
-	extern CodeType t_s8;
-	extern CodeType t_s16;
-	extern CodeType t_s32;
-	extern CodeType t_s64;
+	extern CodeTypename t_s8;
+	extern CodeTypename t_s16;
+	extern CodeTypename t_s32;
+	extern CodeTypename t_s64;
 
-	extern CodeType t_u8;
-	extern CodeType t_u16;
-	extern CodeType t_u32;
-	extern CodeType t_u64;
+	extern CodeTypename t_u8;
+	extern CodeTypename t_u16;
+	extern CodeTypename t_u32;
+	extern CodeTypename t_u64;
 
-	extern CodeType t_ssize;
-	extern CodeType t_usize;
+	extern CodeTypename t_ssize;
+	extern CodeTypename t_usize;
 
-	extern CodeType t_f32;
-	extern CodeType t_f64;
+	extern CodeTypename t_f32;
+	extern CodeTypename t_f64;
 #endif
 
 #pragma endregion Constants

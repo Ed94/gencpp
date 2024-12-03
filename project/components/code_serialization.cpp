@@ -13,24 +13,23 @@ String to_string(CodeBody body)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( body.ast->Type )
 	{
-		using namespace ECode;
-		case Untyped:
-		case Execution:
+		case CT_Untyped:
+		case CT_Execution:
 			append( & result, rcast(AST*, body.ast)->Content );
 		break;
 
-		case Enum_Body:
-		case Class_Body:
-		case Extern_Linkage_Body:
-		case Function_Body:
-		case Global_Body:
-		case Namespace_Body:
-		case Struct_Body:
-		case Union_Body:
+		case CT_Enum_Body:
+		case CT_Class_Body:
+		case CT_Extern_Linkage_Body:
+		case CT_Function_Body:
+		case CT_Global_Body:
+		case CT_Namespace_Body:
+		case CT_Struct_Body:
+		case CT_Union_Body:
 			to_string( body, & result );
 		break;
 
-		case Export_Body:
+		case CT_Export_Body:
 			to_string_export( body, & result );
 		break;
 	}
@@ -77,11 +76,10 @@ String to_string(CodeConstructor self)
 	String result = string_make( GlobalAllocator, "" );
 	switch (self->Type)
 	{
-		using namespace ECode;
-		case Constructor:
+		case CT_Constructor:
 			to_string_def( self, & result );
 		break;
-		case Constructor_Fwd:
+		case CT_Constructor_Fwd:
 			to_string_fwd( self, & result );
 		break;
 	}
@@ -141,11 +139,10 @@ String to_string( CodeClass self )
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Class:
+		case CT_Class:
 			to_string_def(self, & result );
 		break;
-		case Class_Fwd:
+		case CT_Class_Fwd:
 			to_string_fwd(self, & result );
 		break;
 	}
@@ -173,14 +170,14 @@ void to_string_def( CodeClass self, String* result )
 
 		append_fmt( result, "%S : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
 
-		CodeType interface = cast(CodeType, ast->ParentType->Next);
+		CodeTypename interface = cast(CodeTypename, ast->ParentType->Next);
 		if ( interface )
 			append( result, "\n" );
 
 		while ( interface )
 		{
 			append_fmt( result, ", %S", to_string(interface) );
-			interface = interface->Next ? cast(CodeType, interface->Next) : CodeType { nullptr };
+			interface = interface->Next ? cast(CodeTypename, interface->Next) : CodeTypename { nullptr };
 		}
 	}
 	else if ( ast->Name )
@@ -195,7 +192,7 @@ void to_string_def( CodeClass self, String* result )
 
 	append_fmt( result, "\n{\n%S\n}", GEN_NS to_string(ast->Body) );
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
 }
 
@@ -213,7 +210,7 @@ void to_string_fwd( CodeClass self, String* result )
 	else append_fmt( result, "class %S", ast->Name );
 
 	// Check if it can have an end-statement
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 	{
 		if ( ast->InlineCmt )
 			append_fmt( result, "; // %S\n", ast->InlineCmt->Content );
@@ -237,11 +234,10 @@ String to_string(CodeDestructor self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Destructor:
+		case CT_Destructor:
 			to_string_def( self, & result );
 		break;
-		case Destructor_Fwd:
+		case CT_Destructor_Fwd:
 			to_string_fwd( self, & result );
 		break;
 	}
@@ -295,17 +291,16 @@ String to_string(CodeEnum self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Enum:
+		case CT_Enum:
 			to_string_def(self, & result );
 		break;
-		case Enum_Fwd:
+		case CT_Enum_Fwd:
 			to_string_fwd(self, & result );
 		break;
-		case Enum_Class:
+		case CT_Enum_Class:
 			to_string_class_def(self, & result );
 		break;
-		case Enum_Class_Fwd:
+		case CT_Enum_Class_Fwd:
 			to_string_class_fwd(self, & result );
 		break;
 	}
@@ -341,7 +336,7 @@ void to_string_def(CodeEnum self, String* result )
 	}
 	else append_fmt( result, "enum %S\n{\n%S\n}", self->Name, GEN_NS to_string(self->Body) );
 
-	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
 }
 
@@ -358,7 +353,7 @@ void to_string_fwd(CodeEnum self, String* result )
 	else
 		append_fmt( result, "enum %S", self->Name );
 
-	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 	{
 		if ( self->InlineCmt )
 			append_fmt( result, ";  %S", self->InlineCmt->Content );
@@ -395,7 +390,7 @@ void to_string_class_def(CodeEnum self, String* result )
 		append_fmt( result, "enum class %S\n{\n%S\n}", GEN_NS to_string(self->Body) );
 	}
 
-	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
 }
 
@@ -411,7 +406,7 @@ void to_string_class_fwd(CodeEnum self, String* result )
 
 	append_fmt( result, "%S : %S", self->Name, to_string(self->UnderlyingType) );
 
-	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 	{
 		if ( self->InlineCmt )
 			append_fmt( result, ";  %S", self->InlineCmt->Content );
@@ -454,7 +449,7 @@ void to_string(CodeFriend self, String* result )
 {
 	append_fmt( result, "friend %S", GEN_NS to_string(self->Declaration) );
 
-	if ( self->Declaration->Type != ECode::Function && (* result)[ length(* result) - 1 ] != ';' )
+	if ( self->Declaration->Type != CT_Function && (* result)[ length(* result) - 1 ] != ';' )
 	{
 		append( result, ";" );
 	}
@@ -470,11 +465,10 @@ String to_string(CodeFn self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Function:
+		case CT_Function:
 			to_string_def(self, & result );
 		break;
-		case Function_Fwd:
+		case CT_Function_Fwd:
 			to_string_fwd(self, & result );
 		break;
 	}
@@ -635,13 +629,12 @@ String to_string(CodeOperator self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case ECode::Operator:
-		case Operator_Member:
+		case CT_Operator:
+		case CT_Operator_Member:
 			to_string_def( self, & result );
 		break;
-		case Operator_Fwd:
-		case Operator_Member_Fwd:
+		case CT_Operator_Fwd:
+		case CT_Operator_Member_Fwd:
 			to_string_fwd( self, & result );
 		break;
 	}
@@ -758,11 +751,10 @@ String to_string(CodeOpCast self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Operator_Cast:
+		case CT_Operator_Cast:
 			to_string_def(self, & result );
 		break;
-		case Operator_Cast_Fwd:
+		case CT_Operator_Cast_Fwd:
 			to_string_fwd(self, & result );
 		break;
 	}
@@ -893,23 +885,22 @@ String to_string(CodePreprocessCond self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Preprocess_If:
+		case CT_Preprocess_If:
 			to_string_if( self, & result );
 		break;
-		case Preprocess_IfDef:
+		case CT_Preprocess_IfDef:
 			to_string_ifdef( self, & result );
 		break;
-		case Preprocess_IfNotDef:
+		case CT_Preprocess_IfNotDef:
 			to_string_ifndef( self, & result );
 		break;
-		case Preprocess_ElIf:
+		case CT_Preprocess_ElIf:
 			to_string_elif( self, & result );
 		break;
-		case Preprocess_Else:
+		case CT_Preprocess_Else:
 			to_string_else( self, & result );
 		break;
-		case Preprocess_EndIf:
+		case CT_Preprocess_EndIf:
 			to_string_endif( self, & result );
 		break;
 	}
@@ -985,11 +976,10 @@ String to_string(CodeStruct self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Struct:
+		case CT_Struct:
 			to_string_def( self, & result );
 		break;
-		case Struct_Fwd:
+		case CT_Struct_Fwd:
 			to_string_fwd( self, & result );
 		break;
 	}
@@ -1017,14 +1007,14 @@ void to_string_def( CodeStruct self, String* result )
 
 		append_fmt( result, "%S : %s %S", ast->Name, access_level, GEN_NS to_string(ast->ParentType) );
 
-		CodeType interface = cast(CodeType, ast->ParentType->Next);
+		CodeTypename interface = cast(CodeTypename, ast->ParentType->Next);
 		if ( interface )
 			append( result, "\n" );
 
 		while ( interface )
 		{
 			append_fmt( result, ", %S", GEN_NS to_string(interface) );
-			interface = interface->Next ? cast( CodeType, interface->Next) : CodeType { nullptr };
+			interface = interface->Next ? cast( CodeTypename, interface->Next) : CodeTypename { nullptr };
 		}
 	}
 	else if ( ast->Name )
@@ -1039,7 +1029,7 @@ void to_string_def( CodeStruct self, String* result )
 
 	append_fmt( result, "\n{\n%S\n}", GEN_NS to_string(ast->Body) );
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
 }
 
@@ -1056,7 +1046,7 @@ void to_string_fwd( CodeStruct self, String* result )
 
 	else append_fmt( result, "struct %S", ast->Name );
 
-	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != ECode::Typedef && ast->Parent->Type != ECode::Variable ) )
+	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 	{
 		if ( ast->InlineCmt )
 			append_fmt( result, ";  %S", ast->InlineCmt->Content );
@@ -1103,7 +1093,7 @@ void to_string(CodeTypedef self, String* result )
 	else
 		append_fmt( result, "%S %S", GEN_NS to_string(self->UnderlyingType), self->Name );
 
-	if ( self->UnderlyingType->Type == ECode::Typename && self->UnderlyingType->ArrExpr )
+	if ( self->UnderlyingType->Type == CT_Typename && self->UnderlyingType->ArrExpr )
 	{
 		append_fmt( result, "[ %S ];", GEN_NS to_string(self->UnderlyingType->ArrExpr) );
 
@@ -1125,14 +1115,14 @@ void to_string(CodeTypedef self, String* result )
 		append( result, "\n");
 }
 
-String to_string(CodeType self)
+String to_string(CodeTypename self)
 {
 	String result = string_make( GlobalAllocator, "" );
 	to_string( self, & result );
 	return result;
 }
 
-void to_string(CodeType self, String* result )
+void to_string(CodeTypename self, String* result )
 {
 	#if defined(GEN_USE_NEW_TYPENAME_PARSING)
 		if ( self->ReturnType && self->Params )
@@ -1210,7 +1200,7 @@ void to_string(CodeUnion self, String* result )
 		);
 	}
 
-	if ( self->Parent.ast == nullptr || ( self->Parent->Type != ECode::Typedef && self->Parent->Type != ECode::Variable ) )
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
 }
 
@@ -1219,11 +1209,10 @@ String to_string(CodeUsing self)
 	String result = string_make( GlobalAllocator, "" );
 	switch ( self->Type )
 	{
-		using namespace ECode;
-		case Using:
+		case CT_Using:
 			to_string( self, & result );
 		break;
-		case Using_Namespace:
+		case CT_Using_Namespace:
 			to_string_ns( self, & result );
 		break;
 	}
@@ -1282,7 +1271,7 @@ String to_string(CodeVar self)
 
 void to_string(CodeVar self, String* result )
 {
-	if ( self->Parent && self->Parent->Type == ECode::Variable )
+	if ( self->Parent && self->Parent->Type == CT_Variable )
 	{
 		// Its a comma-separated variable ( a NextVar )
 

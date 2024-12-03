@@ -72,36 +72,36 @@ global CodeSpecifiers spec_thread_local;
 global CodeSpecifiers spec_virtual;
 global CodeSpecifiers spec_volatile;
 
-global CodeType t_empty;
-global CodeType t_auto;
-global CodeType t_void;
-global CodeType t_int;
-global CodeType t_bool;
-global CodeType t_char;
-global CodeType t_wchar_t;
-global CodeType t_class;
-global CodeType t_typename;
+global CodeTypename t_empty;
+global CodeTypename t_auto;
+global CodeTypename t_void;
+global CodeTypename t_int;
+global CodeTypename t_bool;
+global CodeTypename t_char;
+global CodeTypename t_wchar_t;
+global CodeTypename t_class;
+global CodeTypename t_typename;
 
 global Array< StringCached > PreprocessorDefines;
 
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-global CodeType t_b32;
+global CodeTypename t_b32;
 
-global CodeType t_s8;
-global CodeType t_s16;
-global CodeType t_s32;
-global CodeType t_s64;
+global CodeTypename t_s8;
+global CodeTypename t_s16;
+global CodeTypename t_s32;
+global CodeTypename t_s64;
 
-global CodeType t_u8;
-global CodeType t_u16;
-global CodeType t_u32;
-global CodeType t_u64;
+global CodeTypename t_u8;
+global CodeTypename t_u16;
+global CodeTypename t_u32;
+global CodeTypename t_u64;
 
-global CodeType t_ssize;
-global CodeType t_usize;
+global CodeTypename t_ssize;
+global CodeTypename t_usize;
 
-global CodeType t_f32;
-global CodeType t_f64;
+global CodeTypename t_f32;
+global CodeTypename t_f64;
 #endif
 
 #pragma endregion Constants

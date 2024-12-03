@@ -27,17 +27,17 @@ CodeBody gen_ecode( char const* path )
 	{
 		char const* code = node.string;
 
-		append_fmt( & enum_entries, "%s,\n", code );
+		append_fmt( & enum_entries, "CT_%s,\n", code );
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 	}
 
-	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", (StrC)enum_entries, "enum Type : u32 { <entries> NumTypes };"));
+	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", (StrC)enum_entries, "enum CodeType_Def : u32 { <entries> CT_NumTypes };"));
 
 #pragma push_macro("local_persist")
 #undef local_persist
 	CodeFn to_str = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
 		inline
-		StrC to_str( Type type )
+		StrC to_str( CodeType type )
 		{
 			local_persist
 			StrC lookup[] {
@@ -49,10 +49,11 @@ CodeBody gen_ecode( char const* path )
 	)));
 #pragma pop_macro("local_persist")
 
-	CodeNS    nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
-	CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
+	//CodeNS    nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
+	//CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
+	CodeTypedef code_t = parse_typedef(code(typedef enum CodeType_Def CodeType; ));
 
-	return def_global_body( args( nspace, code_t, fmt_newline ) );
+	return def_global_body( args( code_t, enum_code, to_str, fmt_newline ) );
 }
 
 CodeBody gen_eoperator( char const* path )
@@ -423,7 +424,7 @@ CodeBody gen_ast_inlines()
 	CodeBody impl_code_specs    = parse_global_body( token_fmt( "typename", StrC name(CodeSpecifiers),     code_impl_tmpl ));
 	CodeBody impl_code_struct   = parse_global_body( token_fmt( "typename", StrC name(CodeStruct),         code_impl_tmpl ));
 	CodeBody impl_code_tmpl     = parse_global_body( token_fmt( "typename", StrC name(CodeTemplate),       code_impl_tmpl ));
-	CodeBody impl_code_type     = parse_global_body( token_fmt( "typename", StrC name(CodeType),           code_impl_tmpl ));
+	CodeBody impl_code_type     = parse_global_body( token_fmt( "typename", StrC name(CodeTypename),       code_impl_tmpl ));
 	CodeBody impl_code_typedef  = parse_global_body( token_fmt( "typename", StrC name(CodeTypedef),        code_impl_tmpl ));
 	CodeBody impl_code_union    = parse_global_body( token_fmt( "typename", StrC name(CodeUnion),          code_impl_tmpl ));
 	CodeBody impl_code_using    = parse_global_body( token_fmt( "typename", StrC name(CodeUsing),          code_impl_tmpl ));
@@ -447,7 +448,7 @@ CodeBody gen_ast_inlines()
 	append(impl_code_pragma,   parse_global_body( token_fmt( "typename", StrC name(Pragma),         codetype_impl_tmpl )));
 	append(impl_code_precond,  parse_global_body( token_fmt( "typename", StrC name(PreprocessCond), codetype_impl_tmpl )));
 	append(impl_code_tmpl,     parse_global_body( token_fmt( "typename", StrC name(Template),       codetype_impl_tmpl )));
-	append(impl_code_type,     parse_global_body( token_fmt( "typename", StrC name(Type),           codetype_impl_tmpl )));
+	append(impl_code_type,     parse_global_body( token_fmt( "typename", StrC name(Typename),       codetype_impl_tmpl )));
 	append(impl_code_typedef,  parse_global_body( token_fmt( "typename", StrC name(Typedef),        codetype_impl_tmpl )));
 	append(impl_code_union,    parse_global_body( token_fmt( "typename", StrC name(Union),          codetype_impl_tmpl )));
 	append(impl_code_using,    parse_global_body( token_fmt( "typename", StrC name(Using),          codetype_impl_tmpl )));
@@ -483,7 +484,7 @@ CodeBody gen_ast_inlines()
 	CodeBody impl_cast_specs     = parse_global_body( token_fmt( "typename", StrC name(Specifiers),     cast_tmpl ));
 	CodeBody impl_cast_struct    = parse_global_body( token_fmt( "typename", StrC name(Struct),         cast_tmpl ));
 	CodeBody impl_cast_tmpl      = parse_global_body( token_fmt( "typename", StrC name(Template),       cast_tmpl ));
-	CodeBody impl_cast_type      = parse_global_body( token_fmt( "typename", StrC name(Type),           cast_tmpl ));
+	CodeBody impl_cast_type      = parse_global_body( token_fmt( "typename", StrC name(Typename),       cast_tmpl ));
 	CodeBody impl_cast_typedef   = parse_global_body( token_fmt( "typename", StrC name(Typedef),        cast_tmpl ));
 	CodeBody impl_cast_union     = parse_global_body( token_fmt( "typename", StrC name(Union),          cast_tmpl ));
 	CodeBody impl_cast_using     = parse_global_body( token_fmt( "typename", StrC name(Using),          cast_tmpl ));

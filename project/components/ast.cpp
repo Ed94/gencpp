@@ -24,31 +24,29 @@ char const* debug_str(Code self)
 
 	switch ( self->Type )
 	{
-		using namespace ECode;
-
-		case Invalid:
-		case NewLine:
-		case Access_Private:
-		case Access_Protected:
-		case Access_Public:
+		case CT_Invalid:
+		case CT_NewLine:
+		case CT_Access_Private:
+		case CT_Access_Protected:
+		case CT_Access_Public:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
 				append_fmt( result, "\n\tNext: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 		break;
 
-		case Untyped:
-		case Execution:
-		case Comment:
-		case PlatformAttributes:
-		case Preprocess_Define:
-		case Preprocess_Include:
-		case Preprocess_Pragma:
-		case Preprocess_If:
-		case Preprocess_ElIf:
-		case Preprocess_Else:
-		case Preprocess_IfDef:
-		case Preprocess_IfNotDef:
+		case CT_Untyped:
+		case CT_Execution:
+		case CT_Comment:
+		case CT_PlatformAttributes:
+		case CT_Preprocess_Define:
+		case CT_Preprocess_Include:
+		case CT_Preprocess_Pragma:
+		case CT_Preprocess_If:
+		case CT_Preprocess_ElIf:
+		case CT_Preprocess_Else:
+		case CT_Preprocess_IfDef:
+		case CT_Preprocess_IfNotDef:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -57,8 +55,8 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tContent: %S", self->Content );
 		break;
 
-		case Class:
-		case Struct:
+		case CT_Class:
+		case CT_Struct:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -71,8 +69,8 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody        : %S", self->Body       ? debug_str(self->Body)        : "Null" );
 		break;
 
-		case Class_Fwd:
-		case Struct_Fwd:
+		case CT_Class_Fwd:
+		case CT_Struct_Fwd:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -84,7 +82,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tParentType  : %s", self->ParentType ? type_str(self->ParentType)   : "Null" );
 		break;
 
-		case Constructor:
+		case CT_Constructor:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -97,7 +95,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody           : %S", self->Body            ? debug_str(self->Body)            : "Null" );
 		break;
 
-		case Constructor_Fwd:
+		case CT_Constructor_Fwd:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -109,7 +107,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tParams         : %S", self->Params          ? to_string(self->Params)          : "Null" );
 		break;
 
-		case Destructor:
+		case CT_Destructor:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -120,11 +118,11 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody           : %S", self->Body            ? debug_str(self->Body)            : "Null" );
 		break;
 
-		case Destructor_Fwd:
+		case CT_Destructor_Fwd:
 		break;
 
-		case Enum:
-		case Enum_Class:
+		case CT_Enum:
+		case CT_Enum_Class:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -136,8 +134,8 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody            : %S", self->Body           ? debug_str(self->Body)           : "Null" );
 		break;
 
-		case Enum_Fwd:
-		case Enum_Class_Fwd:
+		case CT_Enum_Fwd:
+		case CT_Enum_Class_Fwd:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -148,8 +146,8 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tUnderlying Type : %S", self->UnderlyingType ? to_string(self->UnderlyingType) : "Null" );
 		break;
 
-		case Extern_Linkage:
-		case Namespace:
+		case CT_Extern_Linkage:
+		case CT_Namespace:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -158,7 +156,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody: %S", self->Body ? debug_str(self->Body) : "Null" );
 		break;
 
-		case Friend:
+		case CT_Friend:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -168,7 +166,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tDeclaration: %S", self->Declaration ? to_string(self->Declaration) : "Null" );
 		break;
 
-		case Function:
+		case CT_Function:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -182,7 +180,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody      : %S", self->Body       ? debug_str(self->Body)       : "Null" );
 		break;
 
-		case Function_Fwd:
+		case CT_Function_Fwd:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -195,15 +193,15 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tParams    : %S", self->Params     ? to_string(self->Params)     : "Null" );
 		break;
 
-		case Module:
+		case CT_Module:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
 				append_fmt( result, "\n\tNext: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 		break;
 
-		case ECode::Operator:
-		case Operator_Member:
+		case CT_Operator:
+		case CT_Operator_Member:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -218,8 +216,8 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tOp        : %S", to_str( self->Op ) );
 		break;
 
-		case Operator_Fwd:
-		case Operator_Member_Fwd:
+		case CT_Operator_Fwd:
+		case CT_Operator_Member_Fwd:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -233,7 +231,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tOp        : %S", to_str( self->Op ) );
 		break;
 
-		case Operator_Cast:
+		case CT_Operator_Cast:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -245,7 +243,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody      : %S", self->Body       ? debug_str(self->Body)      : "Null" );
 		break;
 
-		case Operator_Cast_Fwd:
+		case CT_Operator_Cast_Fwd:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -256,7 +254,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tValueType : %S", self->ValueType  ? to_string(self->ValueType) : "Null" );
 		break;
 
-		case Parameters:
+		case CT_Parameters:
 			append_fmt( result, "\n\tNumEntries: %d", self->NumEntries );
 			append_fmt( result, "\n\tLast      : %S", self->Last->Name );
 			append_fmt( result, "\n\tNext      : %S", self->Next->Name );
@@ -264,7 +262,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tValue     : %S", self->Value     ? to_string(self->Value)     : "Null" );
 		break;
 
-		case Specifiers:
+		case CT_Specifiers:
 		{
 			append_fmt( result, "\n\tNumEntries: %d", self->NumEntries );
 			GEN_NS append( result, "\n\tArrSpecs: " );
@@ -281,7 +279,7 @@ char const* debug_str(Code self)
 		}
 		break;
 
-		case Template:
+		case CT_Template:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -291,7 +289,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tDeclaration: %S", self->Declaration ? to_string(self->Declaration) : "Null" );
 		break;
 
-		case Typedef:
+		case CT_Typedef:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -301,7 +299,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tUnderlyingType: %S", self->UnderlyingType ? to_string(self->UnderlyingType) : "Null" );
 		break;
 
-		case Typename:
+		case CT_Typename:
 			append_fmt( result, "\n\tAttributes     : %S", self->Attributes ? to_string(self->Attributes) : "Null" );
 			append_fmt( result, "\n\tSpecs          : %S", self->Specs      ? to_string(self->Specs)      : "Null" );
 			append_fmt( result, "\n\tReturnType     : %S", self->ReturnType ? to_string(self->ReturnType) : "Null" );
@@ -309,7 +307,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tArrExpr        : %S", self->ArrExpr    ? to_string(self->ArrExpr)    : "Null" );
 		break;
 
-		case Union:
+		case CT_Union:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -319,7 +317,7 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tBody      : %S", self->Body       ? debug_str(self->Body)       : "Null" );
 		break;
 
-		case Using:
+		case CT_Using:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 			if ( self->Next )
@@ -330,9 +328,9 @@ char const* debug_str(Code self)
 			append_fmt( result, "\n\tUnderlyingType: %S", self->UnderlyingType ? to_string(self->UnderlyingType) : "Null" );
 		break;
 
-		case Variable:
+		case CT_Variable:
 
-			if ( self->Parent && self->Parent->Type == Variable )
+			if ( self->Parent && self->Parent->Type == CT_Variable )
 			{
 				// Its a NextVar
 				append_fmt( result, "\n\tSpecs       : %S", self->Specs        ? to_string(self->Specs)        : "Null" );
@@ -362,8 +360,6 @@ char const* debug_str(Code self)
 
 Code duplicate(Code self)
 {
-	using namespace ECode;
-
 	Code result = make_code();
 
 	mem_copy( result.ast, self.ast, sizeof( AST ) );
@@ -387,9 +383,7 @@ void to_string( Code self, String* result )
 
 	switch ( self->Type )
 	{
-		using namespace ECode;
-
-		case Invalid:
+		case CT_Invalid:
 		#ifdef GEN_DONT_ALLOW_INVALID_CODE
 			log_failure("Attempted to serialize invalid code! - %S", Parent ? Parent->debug_str() : Name );
 		#else
@@ -397,197 +391,197 @@ void to_string( Code self, String* result )
 		#endif
 		break;
 
-		case NewLine:
+		case CT_NewLine:
 			append( result,"\n");
 		break;
 
-		case Untyped:
-		case Execution:
-		case Comment:
-		case PlatformAttributes:
+		case CT_Untyped:
+		case CT_Execution:
+		case CT_Comment:
+		case CT_PlatformAttributes:
 			append( result, self->Content );
 		break;
 
-		case Access_Private:
-		case Access_Protected:
-		case Access_Public:
+		case CT_Access_Private:
+		case CT_Access_Protected:
+		case CT_Access_Public:
 			append( result, self->Name );
 		break;
 
-		case Class:
+		case CT_Class:
 			to_string_def(cast(CodeClass, self), result );
 		break;
 
-		case Class_Fwd:
+		case CT_Class_Fwd:
 			to_string_fwd(cast(CodeClass, self), result );
 		break;
 
-		case Constructor:
+		case CT_Constructor:
 			to_string_def(cast(CodeConstructor, self), result );
 		break;
 
-		case Constructor_Fwd:
+		case CT_Constructor_Fwd:
 			to_string_fwd(cast(CodeConstructor, self), result );
 		break;
 
-		case Destructor:
+		case CT_Destructor:
 			to_string_def(cast(CodeDestructor, self), result );
 		break;
 
-		case Destructor_Fwd:
+		case CT_Destructor_Fwd:
 			to_string_fwd(cast(CodeDestructor, self), result );
 		break;
 
-		case Enum:
+		case CT_Enum:
 			to_string_def(cast(CodeEnum, self), result );
 		break;
 
-		case Enum_Fwd:
+		case CT_Enum_Fwd:
 			to_string_fwd(cast(CodeEnum, self), result );
 		break;
 
-		case Enum_Class:
+		case CT_Enum_Class:
 			to_string_class_def(cast(CodeEnum, self), result );
 		break;
 
-		case Enum_Class_Fwd:
+		case CT_Enum_Class_Fwd:
 			to_string_class_fwd(cast(CodeEnum, self), result );
 		break;
 
-		case Export_Body:
+		case CT_Export_Body:
 			to_string_export(cast(CodeBody, self), result );
 		break;
 
-		case Extern_Linkage:
+		case CT_Extern_Linkage:
 			to_string(cast(CodeExtern, self), result );
 		break;
 
-		case Friend:
+		case CT_Friend:
 			to_string(cast(CodeFriend, self), result );
 		break;
 
-		case Function:
+		case CT_Function:
 			to_string_def(cast(CodeFn, self), result );
 		break;
 
-		case Function_Fwd:
+		case CT_Function_Fwd:
 			to_string_fwd(cast(CodeFn, self), result );
 		break;
 
-		case Module:
+		case CT_Module:
 			to_string(cast(CodeModule, self), result );
 		break;
 
-		case Namespace:
+		case CT_Namespace:
 			to_string(cast(CodeNS, self), result );
 		break;
 
-		case ECode::Operator:
-		case Operator_Member:
+		case CT_Operator:
+		case CT_Operator_Member:
 			to_string_def(cast(CodeOperator, self), result );
 		break;
 
-		case Operator_Fwd:
-		case Operator_Member_Fwd:
+		case CT_Operator_Fwd:
+		case CT_Operator_Member_Fwd:
 			to_string_fwd(cast(CodeOperator, self), result );
 		break;
 
-		case Operator_Cast:
+		case CT_Operator_Cast:
 			to_string_def(cast(CodeOpCast, self), result );
 		break;
 
-		case Operator_Cast_Fwd:
+		case CT_Operator_Cast_Fwd:
 			to_string_fwd(cast(CodeOpCast, self), result );
 		break;
 
-		case Parameters:
+		case CT_Parameters:
 			to_string(cast(CodeParam, self), result );
 		break;
 
-		case Preprocess_Define:
+		case CT_Preprocess_Define:
 			to_string(cast(CodeDefine, self), result );
 		break;
 
-		case Preprocess_If:
+		case CT_Preprocess_If:
 			to_string_if(cast(CodePreprocessCond, self), result );
 		break;
 
-		case Preprocess_IfDef:
+		case CT_Preprocess_IfDef:
 			to_string_ifdef(cast(CodePreprocessCond, self), result );
 		break;
 
-		case Preprocess_IfNotDef:
+		case CT_Preprocess_IfNotDef:
 			to_string_ifndef(cast(CodePreprocessCond, self), result );
 		break;
 
-		case Preprocess_Include:
+		case CT_Preprocess_Include:
 			to_string(cast(CodeInclude, self), result );
 		break;
 
-		case Preprocess_ElIf:
+		case CT_Preprocess_ElIf:
 			to_string_elif(cast(CodePreprocessCond, self), result );
 		break;
 
-		case Preprocess_Else:
+		case CT_Preprocess_Else:
 			to_string_else(cast(CodePreprocessCond, self), result );
 		break;
 
-		case Preprocess_EndIf:
+		case CT_Preprocess_EndIf:
 			to_string_endif(cast(CodePreprocessCond, self), result );
 		break;
 
-		case Preprocess_Pragma:
+		case CT_Preprocess_Pragma:
 			to_string(cast(CodePragma, self), result );
 		break;
 
-		case Specifiers:
+		case CT_Specifiers:
 			to_string(cast(CodeSpecifiers, self), result );
 		break;
 
-		case Struct:
+		case CT_Struct:
 			to_string_def(cast(CodeStruct, self), result );
 		break;
 
-		case Struct_Fwd:
+		case CT_Struct_Fwd:
 			to_string_fwd(cast(CodeStruct, self), result );
 		break;
 
-		case Template:
+		case CT_Template:
 			to_string(cast(CodeTemplate, self), result );
 		break;
 
-		case Typedef:
+		case CT_Typedef:
 			to_string(cast(CodeTypedef, self), result );
 		break;
 
-		case Typename:
-			to_string(cast(CodeType, self), result );
+		case CT_Typename:
+			to_string(cast(CodeTypename, self), result );
 		break;
 
-		case Union:
+		case CT_Union:
 			to_string( cast(CodeUnion, self), result );
 		break;
 
-		case Using:
+		case CT_Using:
 			to_string(cast(CodeUsing, self), result );
 		break;
 
-		case Using_Namespace:
+		case CT_Using_Namespace:
 			to_string_ns(cast(CodeUsing, self), result );
 		break;
 
-		case Variable:
+		case CT_Variable:
 			to_string(cast(CodeVar, self), result );
 		break;
 
-		case Enum_Body:
-		case Class_Body:
-		case Extern_Linkage_Body:
-		case Function_Body:
-		case Global_Body:
-		case Namespace_Body:
-		case Struct_Body:
-		case Union_Body:
+		case CT_Enum_Body:
+		case CT_Class_Body:
+		case CT_Extern_Linkage_Body:
+		case CT_Function_Body:
+		case CT_Global_Body:
+		case CT_Namespace_Body:
+		case CT_Struct_Body:
+		case CT_Union_Body:
 			to_string( cast(CodeBody, self), result );
 		break;
 	}
@@ -620,8 +614,6 @@ bool is_equal( Code self, Code other )
 
 	switch ( self->Type )
 	{
-		using namespace ECode;
-
 	#define check_member_val( val )                           \
 	if ( self->val != other->val )                            \
 	{                                                         \
@@ -701,30 +693,30 @@ bool is_equal( Code self, Code other )
 		}                                                                                          \
 	}
 
-		case NewLine:
-		case Access_Public:
-		case Access_Protected:
-		case Access_Private:
-		case Preprocess_Else:
-		case Preprocess_EndIf:
+		case CT_NewLine:
+		case CT_Access_Public:
+		case CT_Access_Protected:
+		case CT_Access_Private:
+		case CT_Preprocess_Else:
+		case CT_Preprocess_EndIf:
 			return true;
 
 
 		// Comments are not validated.
-		case Comment:
+		case CT_Comment:
 			return true;
 
-		case Execution:
-		case PlatformAttributes:
-		case Untyped:
+		case CT_Execution:
+		case CT_PlatformAttributes:
+		case CT_Untyped:
 		{
 			check_member_content( Content );
 
 			return true;
 		}
 
-		case Class_Fwd:
-		case Struct_Fwd:
+		case CT_Class_Fwd:
+		case CT_Struct_Fwd:
 		{
 			check_member_str( Name );
 			check_member_ast( ParentType );
@@ -734,8 +726,8 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Class:
-		case Struct:
+		case CT_Class:
+		case CT_Struct:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -747,7 +739,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Constructor:
+		case CT_Constructor:
 		{
 			check_member_ast( InitializerList );
 			check_member_ast( Params );
@@ -756,7 +748,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Constructor_Fwd:
+		case CT_Constructor_Fwd:
 		{
 			check_member_ast( InitializerList );
 			check_member_ast( Params );
@@ -764,7 +756,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Destructor:
+		case CT_Destructor:
 		{
 			check_member_ast( Specs );
 			check_member_ast( Body );
@@ -772,15 +764,15 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Destructor_Fwd:
+		case CT_Destructor_Fwd:
 		{
 			check_member_ast( Specs );
 
 			return true;
 		}
 
-		case Enum:
-		case Enum_Class:
+		case CT_Enum:
+		case CT_Enum_Class:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -791,8 +783,8 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Enum_Fwd:
-		case Enum_Class_Fwd:
+		case CT_Enum_Fwd:
+		case CT_Enum_Class_Fwd:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -802,7 +794,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Extern_Linkage:
+		case CT_Extern_Linkage:
 		{
 			check_member_str( Name );
 			check_member_ast( Body );
@@ -810,7 +802,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Friend:
+		case CT_Friend:
 		{
 			check_member_str( Name );
 			check_member_ast( Declaration );
@@ -818,7 +810,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Function:
+		case CT_Function:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -831,7 +823,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Function_Fwd:
+		case CT_Function_Fwd:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -843,7 +835,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Module:
+		case CT_Module:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -851,7 +843,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Namespace:
+		case CT_Namespace:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -860,8 +852,8 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case ECode::Operator:
-		case Operator_Member:
+		case CT_Operator:
+		case CT_Operator_Member:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -874,8 +866,8 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Operator_Fwd:
-		case Operator_Member_Fwd:
+		case CT_Operator_Fwd:
+		case CT_Operator_Member_Fwd:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -887,7 +879,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Operator_Cast:
+		case CT_Operator_Cast:
 		{
 			check_member_str( Name );
 			check_member_ast( Specs );
@@ -897,7 +889,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Operator_Cast_Fwd:
+		case CT_Operator_Cast_Fwd:
 		{
 			check_member_str( Name );
 			check_member_ast( Specs );
@@ -906,7 +898,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Parameters:
+		case CT_Parameters:
 		{
 			if ( self->NumEntries > 1 )
 			{
@@ -991,7 +983,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Preprocess_Define:
+		case CT_Preprocess_Define:
 		{
 			check_member_str( Name );
 			check_member_content( Content );
@@ -999,25 +991,25 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Preprocess_If:
-		case Preprocess_IfDef:
-		case Preprocess_IfNotDef:
-		case Preprocess_ElIf:
+		case CT_Preprocess_If:
+		case CT_Preprocess_IfDef:
+		case CT_Preprocess_IfNotDef:
+		case CT_Preprocess_ElIf:
 		{
 			check_member_content( Content );
 
 			return true;
 		}
 
-		case Preprocess_Include:
-		case Preprocess_Pragma:
+		case CT_Preprocess_Include:
+		case CT_Preprocess_Pragma:
 		{
 			check_member_content( Content );
 
 			return true;
 		}
 
-		case Specifiers:
+		case CT_Specifiers:
 		{
 			check_member_val( NumEntries );
 			check_member_str( Name );
@@ -1028,7 +1020,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Template:
+		case CT_Template:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -1038,7 +1030,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Typedef:
+		case CT_Typedef:
 		{
 			check_member_val( IsFunction );
 			check_member_val( ModuleFlags );
@@ -1048,7 +1040,7 @@ bool is_equal( Code self, Code other )
 
 			return true;
 		}
-		case Typename:
+		case CT_Typename:
 		{
 			check_member_val( IsParamPack );
 			check_member_str( Name );
@@ -1058,7 +1050,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Union:
+		case CT_Union:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -1068,8 +1060,8 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Using:
-		case Using_Namespace:
+		case CT_Using:
+		case CT_Using_Namespace:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -1079,7 +1071,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Variable:
+		case CT_Variable:
 		{
 			check_member_val( ModuleFlags );
 			check_member_str( Name );
@@ -1093,13 +1085,13 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Class_Body:
-		case Enum_Body:
-		case Export_Body:
-		case Global_Body:
-		case Namespace_Body:
-		case Struct_Body:
-		case Union_Body:
+		case CT_Class_Body:
+		case CT_Enum_Body:
+		case CT_Export_Body:
+		case CT_Global_Body:
+		case CT_Namespace_Body:
+		case CT_Struct_Body:
+		case CT_Union_Body:
 		{
 			check_member_ast( Front );
 			check_member_ast( Back );
@@ -1155,8 +1147,6 @@ bool is_equal( Code self, Code other )
 
 bool validate_body(Code self)
 {
-	using namespace ECode;
-
 #define CheckEntries( Unallowed_Types )                                                               \
 	do                                                                                                \
 	{                                                                                                 \
@@ -1174,65 +1164,65 @@ bool validate_body(Code self)
 
 	switch ( self->Type )
 	{
-		case Class_Body:
+		case CT_Class_Body:
 			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
-		case Enum_Body:
+		case CT_Enum_Body:
 			for ( Code entry : cast(CodeBody, self) )
 			{
-				if ( entry->Type != Untyped )
+				if ( entry->Type != CT_Untyped )
 				{
 					log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %s", GEN_NS debug_str(entry) );
 					return false;
 				}
 			}
 		break;
-		case Export_Body:
+		case CT_Export_Body:
 			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
-		case Extern_Linkage:
+		case CT_Extern_Linkage:
 			CheckEntries( GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES );
 		break;
-		case Function_Body:
+		case CT_Function_Body:
 			CheckEntries( GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES );
 		break;
-		case Global_Body:
+		case CT_Global_Body:
 			for (Code entry : cast(CodeBody, self))
 			{
 				switch (entry->Type)
 				{
-					case Access_Public:
-					case Access_Protected:
-					case Access_Private:
-					case PlatformAttributes:
-					case Class_Body:
-					case Enum_Body:
-					case Execution:
-					case Friend:
-					case Function_Body:
-					case Global_Body:
-					case Namespace_Body:
-					case Operator_Member:
-					case Operator_Member_Fwd:
-					case Parameters:
-					case Specifiers:
-					case Struct_Body:
-					case Typename:
+					case CT_Access_Public:
+					case CT_Access_Protected:
+					case CT_Access_Private:
+					case CT_PlatformAttributes:
+					case CT_Class_Body:
+					case CT_Enum_Body:
+					case CT_Execution:
+					case CT_Friend:
+					case CT_Function_Body:
+					case CT_Global_Body:
+					case CT_Namespace_Body:
+					case CT_Operator_Member:
+					case CT_Operator_Member_Fwd:
+					case CT_Parameters:
+					case CT_Specifiers:
+					case CT_Struct_Body:
+					case CT_Typename:
 						log_failure("AST::validate_body: Invalid entry in body %s", GEN_NS debug_str(entry));
 					return false;
 				}
 			}
 		break;
-		case Namespace_Body:
+		case CT_Namespace_Body:
 			CheckEntries( GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES );
 		break;
-		case Struct_Body:
+		case CT_Struct_Body:
 			CheckEntries( GEN_AST_BODY_STRUCT_UNALLOWED_TYPES );
 		break;
-		case Union_Body:
+		case CT_Union_Body:
 			for ( Code entry : cast(CodeBody, {self->Body}) )
 			{
-				if ( entry->Type != Untyped )
+				if ( entry->Type != CT_Untyped )
 				{
 					log_failure( "AST::validate_body: Invalid entry in union body (needs to be untyped or comment) %s", GEN_NS debug_str(entry) );
 					return false;

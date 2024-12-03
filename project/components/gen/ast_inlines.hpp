@@ -661,7 +661,7 @@ inline AST_Template* CodeTemplate::operator->()
 	return ast;
 }
 
-inline CodeType& CodeType::operator=( Code other )
+inline CodeTypename& CodeTypename::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
@@ -672,17 +672,17 @@ inline CodeType& CodeType::operator=( Code other )
 	return *this;
 }
 
-inline CodeType::operator bool()
+inline CodeTypename::operator bool()
 {
 	return ast != nullptr;
 }
 
-inline CodeType::operator Code()
+inline CodeTypename::operator Code()
 {
 	return *rcast( Code*, this );
 }
 
-inline AST_Type* CodeType::operator->()
+inline AST_Typename* CodeTypename::operator->()
 {
 	if ( ast == nullptr )
 	{
@@ -935,9 +935,9 @@ inline Code::operator CodeTemplate() const
 	return { (AST_Template*)ast };
 }
 
-inline Code::operator CodeType() const
+inline Code::operator CodeTypename() const
 {
-	return { (AST_Type*)ast };
+	return { (AST_Typename*)ast };
 }
 
 inline Code::operator CodeTypedef() const

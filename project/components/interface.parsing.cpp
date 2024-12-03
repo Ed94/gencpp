@@ -180,7 +180,7 @@ CodeBody parse_global_body( StrC def )
 
 	Context.Tokens = toks;
 	push_scope();
-	CodeBody result = parse_global_nspace( ECode::Global_Body );
+	CodeBody result = parse_global_nspace( CT_Global_Body );
 	pop(& Context);
 	return result;
 }
@@ -253,7 +253,7 @@ CodeTemplate parse_template( StrC def )
 	return parse_template();
 }
 
-CodeType parse_type( StrC def )
+CodeTypename parse_type( StrC def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );

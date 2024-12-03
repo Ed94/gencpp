@@ -44,11 +44,11 @@ CodeComment    def_comment   ( StrC content );
 
 struct Opts_def_struct {
 	Code           body;
-	CodeType       parent;
+	CodeTypename   parent;
 	AccessSpec     parent_access;
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
-	CodeType*      interfaces;
+	CodeTypename*  interfaces;
 	s32            num_interfaces;
 };
 CodeClass def_class( StrC name, Opts_def_struct otps GEN_PARAM_DEFAULT );
@@ -70,7 +70,7 @@ CodeDestructor def_destructor( Opts_def_destructor opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_enum {
 	Code           body;
-	CodeType       type;
+	CodeTypename   type;
 	EnumT          specifier;
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
@@ -83,7 +83,7 @@ CodeFriend def_friend     ( Code symbol );
 
 struct Opts_def_function {
 	CodeParam       params;
-	CodeType        ret_type;
+	CodeTypename    ret_type;
 	Code            body;
 	CodeSpecifiers  specs;
 	CodeAttributes  attrs;
@@ -100,7 +100,7 @@ CodeNS      def_namespace( StrC name, Code body, Opts_def_namespace opts GEN_PAR
 
 struct Opts_def_operator {
 	CodeParam       params;
-	CodeType        ret_type;
+	CodeTypename    ret_type;
 	Code            body;
 	CodeSpecifiers  specifiers;
 	CodeAttributes  attributes;
@@ -112,10 +112,10 @@ struct Opts_def_operator_cast {
 	Code           body;
 	CodeSpecifiers specs;
 };
-CodeOpCast def_operator_cast( CodeType type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
+CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_param { Code value; };
-CodeParam  def_param ( CodeType type, StrC name, Opts_def_param opts GEN_PARAM_DEFAULT );
+CodeParam  def_param ( CodeTypename type, StrC name, Opts_def_param opts GEN_PARAM_DEFAULT );
 CodePragma def_pragma( StrC directive );
 
 CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC content );
@@ -132,7 +132,7 @@ struct Opts_def_type {
 	CodeSpecifiers specifiers;
 	CodeAttributes attributes;
 };
-CodeType def_type( StrC name, Opts_def_type opts GEN_PARAM_DEFAULT );
+CodeTypename def_type( StrC name, Opts_def_type opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_typedef {
 	CodeAttributes attributes;
@@ -161,10 +161,10 @@ struct Opts_def_variable
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeVar def_variable( CodeType type, StrC name, Opts_def_variable opts GEN_PARAM_DEFAULT ); 
+CodeVar def_variable( CodeTypename type, StrC name, Opts_def_variable opts GEN_PARAM_DEFAULT ); 
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
-CodeBody def_body( CodeT type );
+CodeBody def_body( CodeTypename type );
 
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
@@ -246,7 +246,7 @@ CodeOperator    parse_operator     ( StrC operator_def    );
 CodeOpCast      parse_operator_cast( StrC operator_def    );
 CodeStruct      parse_struct       ( StrC struct_def      );
 CodeTemplate    parse_template     ( StrC template_def    );
-CodeType        parse_type         ( StrC type_def        );
+CodeTypename    parse_type         ( StrC type_def        );
 CodeTypedef     parse_typedef      ( StrC typedef_def     );
 CodeUnion       parse_union        ( StrC union_def       );
 CodeUsing       parse_using        ( StrC using_def       );

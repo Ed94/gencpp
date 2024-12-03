@@ -103,8 +103,8 @@ void   to_string_endif (CodePreprocessCond cond, String* result );
 String to_string(CodeTemplate self);
 void   to_string(CodeTemplate self, String* result);
 
-String to_string(CodeType self);
-void   to_string(CodeType self, String* result);
+String to_string(CodeTypename self);
+void   to_string(CodeTypename self, String* result);
 
 String to_string(CodeTypedef self);
 void   to_string(CodeTypedef self, String* result);
@@ -927,19 +927,19 @@ struct CodeTemplate
 	AST_Template* ast;
 };
 
-struct CodeType
+struct CodeTypename
 {
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
-	Using_Code( CodeType );
+	Using_Code( CodeTypename );
 
 	String to_string()                 { return GEN_NS to_string(* this); }
 	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
 #endif
 
-	Using_CodeOps( CodeType );
-	operator  Code();
-	AST_Type* operator->();
-	AST_Type* ast;
+	Using_CodeOps( CodeTypename );
+	operator      Code();
+	AST_Typename* operator->();
+	AST_Typename* ast;
 };
 
 struct CodeTypedef
@@ -1040,7 +1040,7 @@ struct InvalidCode_ImplictCaster
     operator CodeSpecifiers    () const { return cast(CodeSpecifiers,     Code_Invalid); }
     operator CodeStruct        () const { return cast(CodeStruct,         Code_Invalid); }
     operator CodeTemplate      () const { return cast(CodeTemplate,       Code_Invalid); }
-    operator CodeType          () const { return cast(CodeType,           Code_Invalid); }
+    operator CodeTypename      () const { return cast(CodeTypename,       Code_Invalid); }
     operator CodeTypedef       () const { return cast(CodeTypedef,        Code_Invalid); }
     operator CodeUnion         () const { return cast(CodeUnion,          Code_Invalid); }
     operator CodeUsing         () const { return cast(CodeUsing,          Code_Invalid); }

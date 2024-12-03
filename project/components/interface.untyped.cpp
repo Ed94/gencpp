@@ -112,7 +112,7 @@ Code untyped_str( StrC content )
 	Code
 	result          = make_code();
 	result->Name    = get_cached_string( content );
-	result->Type    = ECode::Untyped;
+	result->Type    = CT_Untyped;
 	result->Content = result->Name;
 
 	if ( result->Name == nullptr )
@@ -143,7 +143,7 @@ Code untyped_fmt( char const* fmt, ...)
 	Code
 	result          = make_code();
 	result->Name    = get_cached_string( { str_len(fmt, MaxNameLength), fmt } );
-	result->Type    = ECode::Untyped;
+	result->Type    = CT_Untyped;
 	result->Content = get_cached_string( { length, buf } );
 
 	if ( result->Name == nullptr )
@@ -174,7 +174,7 @@ Code untyped_token_fmt( s32 num_tokens, ... )
 	Code
 	result          = make_code();
 	result->Name    = get_cached_string( { length, buf } );
-	result->Type    = ECode::Untyped;
+	result->Type    = CT_Untyped;
 	result->Content = result->Name;
 
 	if ( result->Name == nullptr )

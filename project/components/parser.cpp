@@ -203,13 +203,13 @@ internal Code               parse_class_struct                 ( TokType which, 
 internal CodeDefine         parse_define                       ();
 internal Code               parse_expression                   ();
 internal Code               parse_forward_or_definition        ( TokType which, bool is_inplace );
-internal CodeFn             parse_function_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeType ret_type, Token name );
+internal CodeFn             parse_function_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type, Token name );
 internal Code               parse_function_body                ();
 internal Code               parse_global_nspace                ();
 internal Code               parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers );
 internal Token              parse_identifier                   ( bool* possible_member_function = nullptr );
 internal CodeInclude        parse_include                      ();
-internal CodeOperator       parse_operator_after_ret_type      ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeType ret_type );
+internal CodeOperator       parse_operator_after_ret_type      ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type );
 internal Code               parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers );
 internal CodePragma         parse_pragma                       ();
 internal CodeParam          parse_params                       ( bool use_template_capture = false );
@@ -217,7 +217,7 @@ internal CodePreprocessCond parse_preprocess_cond              ();
 internal Code               parse_simple_preprocess            ( TokType which );
 internal Code               parse_static_assert                ();
 internal void               parse_template_args                ( Token& token );
-internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeType type, StrC name );
+internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, StrC name );
 internal CodeVar            parse_variable_declaration_list    ();
 
 internal CodeClass       parse_class           ( bool inplace_def = false );
@@ -234,7 +234,7 @@ internal CodeOpCast      parse_operator_cast   ( CodeSpecifiers specifiers = Nul
 internal CodeStruct      parse_struct          ( bool inplace_def = false );
 internal CodeVar         parse_variable        ();
 internal CodeTemplate    parse_template        ();
-internal CodeType        parse_type            ( bool from_template = false, bool* is_function = nullptr );
+internal CodeTypename    parse_type            ( bool from_template = false, bool* is_function = nullptr );
 internal CodeTypedef     parse_typedef         ();
 internal CodeUnion       parse_union           ( bool inplace_def = false );
 internal CodeUsing       parse_using           ();
@@ -668,7 +668,7 @@ CodeAttributes parse_attributes()
 		String name_stripped = strip_formatting( attribute_txt, strip_formatting_dont_preserve_newlines );
 
 		Code result     = make_code();
-		result->Type    = ECode::PlatformAttributes;
+		result->Type    = CT_PlatformAttributes;
 		result->Name    = get_cached_string( name_stripped );
 		result->Content = result->Name;
 		// result->Token   =
@@ -692,7 +692,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	Token name { nullptr, 0, Tok_Invalid };
 
 	AccessSpec     access     = AccessSpec_Default;
-	CodeType       parent     = { nullptr };
+	CodeTypename   parent     = { nullptr };
 	CodeBody       body       = { nullptr };
 	CodeAttributes attributes = { nullptr };
 	ModuleFlag     mflags     = ModuleFlag_None;
@@ -721,9 +721,9 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 
 	local_persist
 		char interface_arr_mem[ kilobytes(4) ] {0};
-	Array<CodeType> interfaces; {
+	Array<CodeTypename> interfaces; {
 		Arena arena = arena_init_from_memory( interface_arr_mem, kilobytes(4) );
-		interfaces  = array_init_reserve<CodeType>( allocator_info(& arena), 4 );
+		interfaces  = array_init_reserve<CodeTypename>( allocator_info(& arena), 4 );
 	}
 
 	// TODO(Ed) : Make an AST_DerivedType, we'll store any arbitary derived type into there as a linear linked list of them.
@@ -781,7 +781,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 		result = def_class( to_str(name), { body, parent, access, attributes, mflags } );
 
 	else
-		result = def_struct( to_str(name), { body, (CodeType)parent, access, attributes, mflags } );
+		result = def_struct( to_str(name), { body, (CodeTypename)parent, access, attributes, mflags } );
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
@@ -793,7 +793,6 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 internal neverinline
 CodeBody parse_class_struct_body( TokType which, Token name )
 {
-	using namespace ECode;
 	push_scope();
 
 	eat( Tok_BraceCurly_Open );
@@ -803,10 +802,10 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 	result = (CodeBody) make_code();
 
 	if ( which == Tok_Decl_Class )
-		result->Type = Class_Body;
+		result->Type = CT_Class_Body;
 
 	else
-		result->Type = Struct_Body;
+		result->Type = CT_Struct_Body;
 
 	while ( left && currtok_noskip.Type != Tok_BraceCurly_Close )
 	{
@@ -1139,7 +1138,7 @@ CodeComment parse_comment()
 
 	CodeComment
 	result          = (CodeComment) make_code();
-	result->Type    = ECode::Comment;
+	result->Type    = CT_Comment;
 	result->Content = get_cached_string( to_str(currtok_noskip) );
 	result->Name    = result->Content;
 	// result->Token   = currtok_noskip;
@@ -1314,7 +1313,7 @@ CodeDefine parse_define()
 
 	CodeDefine
 	define = (CodeDefine) make_code();
-	define->Type = ECode::Preprocess_Define;
+	define->Type = CT_Preprocess_Define;
 
 	if ( ! check( Tok_Identifier ) )
 	{
@@ -1429,7 +1428,7 @@ CodeFn parse_function_after_name(
 	  ModuleFlag     mflags
 	, CodeAttributes attributes
 	, CodeSpecifiers specifiers
-	, CodeType       ret_type
+	, CodeTypename   ret_type
 	, Token          name
 )
 {
@@ -1489,8 +1488,6 @@ CodeFn parse_function_after_name(
 			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>; <InlineCmt>
 	}
 
-	using namespace ECode;
-
 	String
 	name_stripped = string_make( GlobalAllocator, to_str(name) );
 	strip_space(name_stripped);
@@ -1504,8 +1501,8 @@ CodeFn parse_function_after_name(
 	{
 		switch ( body->Type )
 		{
-			case Function_Body:
-			case Untyped:
+			case CT_Function_Body:
+			case CT_Untyped:
 				break;
 
 			default:
@@ -1516,12 +1513,12 @@ CodeFn parse_function_after_name(
 			}
 		}
 
-		result->Type = Function;
+		result->Type = CT_Function;
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = Function_Fwd;
+		result->Type = CT_Function_Fwd;
 	}
 
 	if ( attributes )
@@ -1545,14 +1542,14 @@ CodeFn parse_function_after_name(
 internal
 Code parse_function_body()
 {
-	using namespace ECode;
+	
 	push_scope();
 
 	eat( Tok_BraceCurly_Open );
 
 	CodeBody
 	result = (CodeBody) make_code();
-	result->Type = Function_Body;
+	result->Type = CT_Function_Body;
 
 	// TODO : Support actual parsing of function body
 	Token start = currtok_noskip;
@@ -1585,16 +1582,14 @@ Code parse_function_body()
 }
 
 internal neverinline
-CodeBody parse_global_nspace( CodeT which )
+CodeBody parse_global_nspace( CodeType which )
 {
-	using namespace ECode;
-
 	push_scope();
 
-	if ( which != Namespace_Body && which != Global_Body && which != Export_Body && which != Extern_Linkage_Body )
+	if ( which != CT_Namespace_Body && which != CT_Global_Body && which != CT_Export_Body && which != CT_Extern_Linkage_Body )
 		return InvalidCode;
 
-	if ( which != Global_Body )
+	if ( which != CT_Global_Body )
 		eat( Tok_BraceCurly_Open );
 		// {
 
@@ -1645,7 +1640,7 @@ CodeBody parse_global_nspace( CodeT which )
 			break;
 
 			case Tok_Decl_Extern_Linkage:
-				if ( which == Extern_Linkage_Body )
+				if ( which == CT_Extern_Linkage_Body )
 					log_failure( "Nested extern linkage\n%s", to_string(Context) );
 
 				member = parse_extern_link();
@@ -1733,7 +1728,7 @@ CodeBody parse_global_nspace( CodeT which )
 			break;
 
 			case Tok_Module_Export:
-				if ( which == Export_Body )
+				if ( which == CT_Export_Body )
 					log_failure( "Nested export declaration\n%s", to_string(Context) );
 
 				member = parse_export_body();
@@ -1888,7 +1883,7 @@ CodeBody parse_global_nspace( CodeT which )
 		append(result, member );
 	}
 
-	if ( which != Global_Body )
+	if ( which != CT_Global_Body )
 		eat( Tok_BraceCurly_Close );
 		// { <Body> }
 
@@ -2107,7 +2102,7 @@ CodeInclude parse_include()
 
 	CodeInclude
 	include       = (CodeInclude) make_code();
-	include->Type = ECode::Preprocess_Include;
+	include->Type = CT_Preprocess_Include;
 	eat( Tok_Preprocess_Include );
 	// #include
 
@@ -2132,7 +2127,7 @@ CodeOperator parse_operator_after_ret_type(
 	  ModuleFlag     mflags
 	, CodeAttributes attributes
 	, CodeSpecifiers specifiers
-	, CodeType       ret_type
+	, CodeTypename   ret_type
 )
 {
 	push_scope();
@@ -2506,7 +2501,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	}
 #endif
 
-	CodeType type = parse_type();
+	CodeTypename type = parse_type();
 	// <Attributes> <Specifiers> <ReturnType/ValueType>
 
 	if ( type == InvalidCode )
@@ -2588,7 +2583,7 @@ CodePragma parse_pragma()
 
 	CodePragma
 	pragma       = (CodePragma) make_code();
-	pragma->Type = ECode::Preprocess_Pragma;
+	pragma->Type = CT_Preprocess_Pragma;
 	eat( Tok_Preprocess_Pragma );
 	// #pragma
 
@@ -2612,7 +2607,7 @@ CodePragma parse_pragma()
 internal inline
 CodeParam parse_params( bool use_template_capture )
 {
-	using namespace ECode;
+	
 	push_scope();
 
 	if ( ! use_template_capture )
@@ -2641,11 +2636,11 @@ CodeParam parse_params( bool use_template_capture )
 		return { nullptr };
 	}
 
-	Code     macro           = { nullptr };
-	CodeType type            = { nullptr };
-	Code     value           = { nullptr };
-	Token    name            = NullToken;
-	Code     post_name_macro = { nullptr };
+	Code         macro           = { nullptr };
+	CodeTypename type            = { nullptr };
+	Code         value           = { nullptr };
+	Token        name            = NullToken;
+	Code         post_name_macro = { nullptr };
 
 	if ( check( Tok_Varadic_Argument ) )
 	{
@@ -2741,7 +2736,7 @@ CodeParam parse_params( bool use_template_capture )
 	}
 
 	CodeParam result = ( CodeParam )make_code();
-	result->Type     = Parameters;
+	result->Type     = CT_Parameters;
 
 	result->Macro = macro;
 
@@ -2857,7 +2852,7 @@ CodeParam parse_params( bool use_template_capture )
 		}
 
 		CodeParam param = ( CodeParam )make_code();
-		param->Type     = Parameters;
+		param->Type     = CT_Parameters;
 
 		param->Macro = macro;
 
@@ -2908,7 +2903,7 @@ CodePreprocessCond parse_preprocess_cond()
 
 	CodePreprocessCond
 	cond       = (CodePreprocessCond) make_code();
-	cond->Type = scast(CodeT, currtok.Type - ( Tok_Preprocess_If - ECode::Preprocess_If ) );
+	cond->Type = scast(CodeType, currtok.Type - ( Tok_Preprocess_If - CT_Preprocess_If ) );
 	eat( currtok.Type );
 	// #<Conditional>
 
@@ -3013,7 +3008,7 @@ Code parse_static_assert()
 
 	Code
 	assert       = make_code();
-	assert->Type = ECode::Untyped;
+	assert->Type = CT_Untyped;
 
 	Token content = currtok;
 
@@ -3093,7 +3088,7 @@ CodeVar parse_variable_after_name(
 	  ModuleFlag        mflags
 	, CodeAttributes    attributes
 	, CodeSpecifiers    specifiers
-	, CodeType          type
+	, CodeTypename      type
 	, StrC              name
 )
 {
@@ -3221,11 +3216,9 @@ CodeVar parse_variable_after_name(
 		}
 	}
 
-	using namespace ECode;
-
 	CodeVar
 	result              = (CodeVar) make_code();
-	result->Type        = Variable;
+	result->Type        = CT_Variable;
 	result->Name        = get_cached_string( name );
 	result->ModuleFlags = mflags;
 
@@ -3430,13 +3423,13 @@ CodeConstructor parse_constructor( CodeSpecifiers specifiers )
 	if ( initializer_list )
 		result->InitializerList = initializer_list;
 
-	if ( body && body->Type == ECode::Function_Body )
+	if ( body && body->Type == CT_Function_Body )
 	{
 		result->Body = body;
-		result->Type = ECode::Constructor;
+		result->Type = CT_Constructor;
 	}
 	else
-		result->Type = ECode::Constructor_Fwd;
+		result->Type = CT_Constructor_Fwd;
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
@@ -3540,13 +3533,13 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	if ( specifiers )
 		result->Specs = specifiers;
 
-	if ( body && body->Type == ECode::Function_Body )
+	if ( body && body->Type == CT_Function_Body )
 	{
 		result->Body = body;
-		result->Type = ECode::Destructor;
+		result->Type = CT_Destructor;
 	}
 	else
-		result->Type = ECode::Destructor_Fwd;
+		result->Type = CT_Destructor_Fwd;
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
@@ -3558,7 +3551,6 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 internal
 CodeEnum parse_enum( bool inplace_def )
 {
-	using namespace ECode;
 	push_scope();
 
 	Specifier specs_found[16] { Spec_NumSpecifiers };
@@ -3566,9 +3558,9 @@ CodeEnum parse_enum( bool inplace_def )
 
 	CodeAttributes attributes = { nullptr };
 
-	Token    name       = { nullptr, 0, Tok_Invalid };
-	Code     array_expr = { nullptr };
-	CodeType type       = { nullptr };
+	Token        name       = { nullptr, 0, Tok_Invalid };
+	Code         array_expr = { nullptr };
+	CodeTypename type       = { nullptr };
 
 	char  entries_code[ kilobytes(128) ] { 0 };
 	s32   entries_length = 0;
@@ -3629,7 +3621,7 @@ CodeEnum parse_enum( bool inplace_def )
 	if ( currtok.Type == Tok_BraceCurly_Open )
 	{
 		body       = (CodeBody) make_code();
-		body->Type = ECode::Enum_Body;
+		body->Type = CT_Enum_Body;
 
 		eat( Tok_BraceCurly_Open );
 		// enum <class> <Attributes> <Name> : <UnderlyingType> {
@@ -3771,19 +3763,17 @@ CodeEnum parse_enum( bool inplace_def )
 			// enum <class> <Attributes> <Name> : <UnderlyingType> { <Body> }; <InlineCmt>
 	}
 
-	using namespace ECode;
-
 	CodeEnum
 	result = (CodeEnum) make_code();
 
 	if ( body.ast )
 	{
-		result->Type = is_enum_class ? Enum_Class : Enum;
+		result->Type = is_enum_class ? CT_Enum_Class : CT_Enum;
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = is_enum_class ? Enum_Class_Fwd : Enum_Fwd;
+		result->Type = is_enum_class ? CT_Enum_Class_Fwd : CT_Enum_Fwd;
 	}
 
 	result->Name = get_cached_string( to_str(name) );
@@ -3812,7 +3802,7 @@ internal inline
 CodeBody parse_export_body()
 {
 	push_scope();
-	CodeBody result = parse_global_nspace( ECode::Export_Body );
+	CodeBody result = parse_global_nspace( CT_Export_Body );
 	pop(& Context);
 	return result;
 }
@@ -3821,7 +3811,7 @@ internal inline
 CodeBody parse_extern_link_body()
 {
 	push_scope();
-	CodeBody result = parse_global_nspace( ECode::Extern_Linkage_Body );
+	CodeBody result = parse_global_nspace( CT_Extern_Linkage_Body );
 	pop(& Context);
 	return result;
 }
@@ -3843,7 +3833,7 @@ CodeExtern parse_extern_link()
 
 	CodeExtern
 	result       = (CodeExtern) make_code();
-	result->Type = ECode::Extern_Linkage;
+	result->Type = CT_Extern_Linkage;
 	result->Name = get_cached_string( to_str(name) );
 
 	Code entry = parse_extern_link_body();
@@ -3864,7 +3854,6 @@ CodeExtern parse_extern_link()
 internal
 CodeFriend parse_friend()
 {
-	using namespace ECode;
 	push_scope();
 
 	eat( Tok_Decl_Friend );
@@ -3873,7 +3862,7 @@ CodeFriend parse_friend()
 	CodeFn function = { nullptr };
 
 	// Type declaration or return type
-	CodeType type = parse_type();
+	CodeTypename type = parse_type();
 	if ( type == Code_Invalid )
 	{
 		pop(& Context);
@@ -3905,7 +3894,7 @@ CodeFriend parse_friend()
 	}
 
 	CodeComment inline_cmt = NullCode;
-	if ( function && function->Type == ECode::Function_Fwd )
+	if ( function && function->Type == CT_Function_Fwd )
 	{
 		Token stmt_end = currtok;
 		eat( Tok_Statement_End );
@@ -3919,7 +3908,7 @@ CodeFriend parse_friend()
 	}
 
 	CodeFriend result = ( CodeFriend )make_code();
-	result->Type      = Friend;
+	result->Type      = CT_Friend;
 
 	if ( function )
 		result->Declaration = function;
@@ -3991,7 +3980,7 @@ CodeFn parse_function()
 	}
 	// <export> <Attributes> <Specifiers>
 
-	CodeType ret_type = parse_type();
+	CodeTypename ret_type = parse_type();
 	if ( ret_type == Code_Invalid )
 	{
 		pop(& Context);
@@ -4027,7 +4016,7 @@ CodeNS parse_namespace()
 	Context.Scope->Name = name;
 	// namespace <Name>
 
-	CodeBody body = parse_global_nspace( ECode::Namespace_Body );
+	CodeBody body = parse_global_nspace( CT_Namespace_Body );
 	if ( body == Code_Invalid )
 	{
 		pop(& Context);
@@ -4037,7 +4026,7 @@ CodeNS parse_namespace()
 
 	CodeNS
 	result       = (CodeNS) make_code();
-	result->Type = ECode::Namespace;
+	result->Type = CT_Namespace;
 	result->Name = get_cached_string( to_str(name) );
 
 	result->Body = body;
@@ -4103,7 +4092,7 @@ CodeOperator parse_operator()
 	// <export> <Attributes> <Specifiers>
 
 	// Parse Return Type
-	CodeType ret_type = parse_type();
+	CodeTypename ret_type = parse_type();
 	// <export> <Attributes> <Specifiers> <ReturnType>
 
 	CodeOperator result = parse_operator_after_ret_type( mflags, attributes, specifiers, ret_type );
@@ -4208,12 +4197,12 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 
 	if (body)
 	{
-		result->Type = ECode::Operator_Cast;
+		result->Type = CT_Operator_Cast;
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = ECode::Operator_Cast_Fwd;
+		result->Type = CT_Operator_Cast_Fwd;
 	}
 
 	if ( specifiers )
@@ -4411,7 +4400,7 @@ CodeTemplate parse_template()
 	}
 
 	CodeTemplate result = ( CodeTemplate )make_code();
-	result->Type        = ECode::Template;
+	result->Type        = CT_Template;
 	result->Params      = params;
 	result->Declaration = definition;
 	result->ModuleFlags = mflags;
@@ -4435,7 +4424,7 @@ CodeTemplate parse_template()
 	The excess whitespace cannot be stripped however, because there is no semantic awareness within the first capture group.
 */
 internal
-CodeType parse_type( bool from_template, bool* typedef_is_function )
+CodeTypename parse_type( bool from_template, bool* typedef_is_function )
 {
 	push_scope();
 
@@ -4603,8 +4592,8 @@ else if ( currtok.Type == Tok_DeclType )
 	// <Attributes> <Specifiers> <Identifier> <Specifiers>
 
 	// For function type signatures
-	CodeType  return_type = NullCode;
-	CodeParam params      = NullCode;
+	CodeTypename return_type = NullCode;
+	CodeParam    params      = NullCode;
 
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
 	CodeParam params_nested = NullCode;
@@ -4659,8 +4648,8 @@ else if ( currtok.Type == Tok_DeclType )
 		// By this point, decltype should have been taken care of for return type, along with any all its specifiers
 
 		// The previous information with exception to attributes will be considered the return type.
-		return_type       = ( CodeType )make_code();
-		return_type->Type = ECode::Typename;
+		return_type       = ( CodeTypename )make_code();
+		return_type->Type = CT_Typename;
 
 		// String
 		// name_stripped = String::make( GlobalAllocator, name );
@@ -4815,10 +4804,8 @@ else if ( currtok.Type == Tok_DeclType )
 		// <Attributes> <All kinds of nonsense> ...
 	}
 
-	using namespace ECode;
-
-	CodeType result = ( CodeType )make_code();
-	result->Type    = Typename;
+	CodeTypename result = ( CodeTypename )make_code();
+	result->Type    = CT_Typename;
 	// result->Token = Context.Scope->Start;
 
 	// Need to wait until were using the new parsing method to do this.
@@ -5049,11 +5036,9 @@ CodeTypedef parse_typedef()
 		inline_cmt = parse_comment();
 		// <ModuleFalgs> typedef <UnderlyingType> <Name> <ArrayExpr>; <InlineCmt>
 
-	using namespace ECode;
-
 	CodeTypedef
 	result              = (CodeTypedef) make_code();
-	result->Type        = Typedef;
+	result->Type        = CT_Typedef;
 	result->ModuleFlags = mflags;
 
 	if ( is_function )
@@ -5074,8 +5059,8 @@ CodeTypedef parse_typedef()
 	}
 	// Type needs to be aware of its parent so that it can be serialized properly.
 
-	if ( type->Type == Typename && array_expr && array_expr->Type != Invalid )
-		cast(CodeType, type)->ArrExpr = array_expr;
+	if ( type->Type == CT_Typename && array_expr && array_expr->Type != CT_Invalid )
+		cast(CodeTypename, type)->ArrExpr = array_expr;
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
@@ -5119,7 +5104,7 @@ CodeUnion parse_union( bool inplace_def )
 	// <ModuleFlags> union <Attributes> <Name> {
 
 	body = make_code();
-	body->Type = ECode::Union_Body;
+	body->Type = CT_Union_Body;
 
 	while ( ! check_noskip( Tok_BraceCurly_Close ) )
 	{
@@ -5208,7 +5193,7 @@ CodeUnion parse_union( bool inplace_def )
 
 	CodeUnion
 	result = (CodeUnion) make_code();
-	result->Type        = ECode::Union;
+	result->Type        = CT_Union;
 	result->ModuleFlags = mflags;
 
 	if ( name )
@@ -5232,9 +5217,9 @@ CodeUsing parse_using()
 	Specifier specs_found[16] { Spec_Invalid };
 	s32        NumSpecifiers = 0;
 
-	Token    name       = { nullptr, 0, Tok_Invalid };
-	Code     array_expr = { nullptr };
-	CodeType type       = { nullptr };
+	Token        name       = { nullptr, 0, Tok_Invalid };
+	Code         array_expr = { nullptr };
+	CodeTypename type       = { nullptr };
 
 	bool is_namespace = false;
 
@@ -5292,8 +5277,6 @@ CodeUsing parse_using()
 	}
 	// <ModuleFlags> using <namespace> <Attributes> <Name> = <UnderlyingType>; <InlineCmt>
 
-	using namespace ECode;
-
 	CodeUsing
 	result              = (CodeUsing) make_code();
 	result->Name        = get_cached_string( to_str(name) );
@@ -5301,11 +5284,11 @@ CodeUsing parse_using()
 
 	if ( is_namespace)
 	{
-		result->Type = Using_Namespace;
+		result->Type = CT_Using_Namespace;
 	}
 	else
 	{
-		result->Type = Using;
+		result->Type = CT_Using;
 
 		if ( type )
 			result->UnderlyingType = type;
@@ -5330,7 +5313,7 @@ CodeVar parse_variable()
 	push_scope();
 
 	Specifier specs_found[16] { Spec_NumSpecifiers };
-	s32        NumSpecifiers = 0;
+	s32       NumSpecifiers = 0;
 
 	ModuleFlag	   mflags     = ModuleFlag_None;
 	CodeAttributes attributes = { nullptr };
@@ -5349,8 +5332,7 @@ CodeVar parse_variable()
 	while ( left && is_specifier(currtok) )
 	{
 		Specifier spec = to_specifier( to_str(currtok) );
-
-		switch ( spec )
+		switch  ( spec )
 		{
 			case Spec_Const:
 			case Spec_Constexpr:
@@ -5386,7 +5368,7 @@ CodeVar parse_variable()
 	}
 	// <ModuleFlags> <Attributes> <Specifiers>
 
-	CodeType type = parse_type();
+	CodeTypename type = parse_type();
 	// <ModuleFlags> <Attributes> <Specifiers> <ValueType>
 
 	if ( type == Code_Invalid )

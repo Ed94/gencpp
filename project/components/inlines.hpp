@@ -37,15 +37,15 @@ bool is_body(Code self)
 	GEN_ASSERT(self != nullptr);
 	switch (self->Type)
 	{
-		case ECode::Enum_Body:
-		case ECode::Class_Body:
-		case ECode::Union_Body:
-		case ECode::Export_Body:
-		case ECode::Global_Body:
-		case ECode::Struct_Body:
-		case ECode::Function_Body:
-		case ECode::Namespace_Body:
-		case ECode::Extern_Linkage_Body:
+		case CT_Enum_Body:
+		case CT_Class_Body:
+		case CT_Union_Body:
+		case CT_Export_Body:
+		case CT_Global_Body:
+		case CT_Struct_Body:
+		case CT_Function_Body:
+		case CT_Namespace_Body:
+		case CT_Extern_Linkage_Body:
 			return true;
 	}
 	return false;
@@ -69,7 +69,7 @@ Code* entry( Code self, u32 idx )
 inline
 bool is_valid(Code self)
 {
-	return self.ast != nullptr && self.ast->Type != CodeT::Invalid;
+	return self.ast != nullptr && self.ast->Type != CT_Invalid;
 }
 inline
 bool has_entries(AST* self)
@@ -100,7 +100,7 @@ inline
 char const* type_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
-	return ECode::to_str( self->Type );
+	return to_str( self->Type );
 }
 #pragma endregion Code
 
@@ -140,10 +140,10 @@ Code end(CodeBody body ){
 
 #pragma region CodeClass
 inline
-void add_interface( CodeClass self, CodeType type )
+void add_interface( CodeClass self, CodeTypename type )
 {
 	GEN_ASSERT(self.ast !=nullptr);
-	CodeType possible_slot = self->ParentType;
+	CodeTypename possible_slot = self->ParentType;
 	if ( possible_slot.ast )
 	{
 		// Were adding an interface to parent type, so we need to make sure the parent type is public.
@@ -154,7 +154,7 @@ void add_interface( CodeClass self, CodeType type )
 
 	while ( possible_slot.ast != nullptr )
 	{
-		possible_slot.ast = (AST_Type*) possible_slot->Next.ast;
+		possible_slot.ast = (AST_Typename*) possible_slot->Next.ast;
 	}
 
 	possible_slot.ast = type.ast;
@@ -317,9 +317,9 @@ Specifier* end(CodeSpecifiers self)
 
 #pragma region CodeStruct
 inline
-void add_interface(CodeStruct self, CodeType type )
+void add_interface(CodeStruct self, CodeTypename type )
 {
-	CodeType possible_slot = self->ParentType;
+	CodeTypename possible_slot = self->ParentType;
 	if ( possible_slot.ast )
 	{
 		// Were adding an interface to parent type, so we need to make sure the parent type is public.
@@ -330,7 +330,7 @@ void add_interface(CodeStruct self, CodeType type )
 
 	while ( possible_slot.ast != nullptr )
 	{
-		possible_slot.ast = (AST_Type*) possible_slot->Next.ast;
+		possible_slot.ast = (AST_Typename*) possible_slot->Next.ast;
 	}
 
 	possible_slot.ast = type.ast;
@@ -339,24 +339,23 @@ void add_interface(CodeStruct self, CodeType type )
 
 #pragma region Interface
 inline
-CodeBody def_body( CodeT type )
+CodeBody def_body( CodeType type )
 {
 	switch ( type )
 	{
-		using namespace ECode;
-		case Class_Body:
-		case Enum_Body:
-		case Export_Body:
-		case Extern_Linkage:
-		case Function_Body:
-		case Global_Body:
-		case Namespace_Body:
-		case Struct_Body:
-		case Union_Body:
+		case CT_Class_Body:
+		case CT_Enum_Body:
+		case CT_Export_Body:
+		case CT_Extern_Linkage:
+		case CT_Function_Body:
+		case CT_Global_Body:
+		case CT_Namespace_Body:
+		case CT_Struct_Body:
+		case CT_Union_Body:
 			break;
 
 		default:
-			log_failure( "def_body: Invalid type %s", (char const*)ECode::to_str(type) );
+			log_failure( "def_body: Invalid type %s", (char const*)to_str(type) );
 			return (CodeBody)Code_Invalid;
 	}
 

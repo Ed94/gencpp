@@ -67,7 +67,7 @@ struct AST_Stmt_While;
 
 struct AST_Struct;
 struct AST_Template;
-struct AST_Type;
+struct AST_Typename;
 struct AST_Typedef;
 struct AST_Union;
 struct AST_Using;
@@ -145,7 +145,7 @@ Define_Code(Stmt_While);
 
 Define_Code(Struct);
 Define_Code(Template);
-Define_Code(Type);
+Define_Code(Typename);
 Define_Code(Typedef);
 Define_Code(Union);
 Define_Code(Using);
@@ -260,7 +260,7 @@ struct Code
 	operator CodeSpecifiers() const;
 	operator CodeStruct() const;
 	operator CodeTemplate() const;
-	operator CodeType() const;
+	operator CodeTypename() const;
 	operator CodeTypedef() const;
 	operator CodeUnion() const;
 	operator CodeUsing() const;
@@ -294,7 +294,7 @@ int AST_ArrSpecs_Cap =
 		- sizeof(parser::Token*)
 		- sizeof(AST*)
 		- sizeof(StringCached)
-		- sizeof(CodeT)
+		- sizeof(CodeType)
 		- sizeof(ModuleFlag)
 		- sizeof(int)
 )
@@ -353,7 +353,7 @@ struct AST
 	parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
 	Code              Parent;
 	StringCached      Name;
-	CodeT             Type;
+	CodeType          Type;
 //	CodeFlag          CodeFlags;
 	ModuleFlag        ModuleFlags;
 	union {
