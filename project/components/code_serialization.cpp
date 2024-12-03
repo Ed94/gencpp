@@ -636,7 +636,7 @@ String to_string(CodeOperator self)
 	switch ( self->Type )
 	{
 		using namespace ECode;
-		case Operator:
+		case ECode::Operator:
 		case Operator_Member:
 			to_string_def( self, & result );
 		break;

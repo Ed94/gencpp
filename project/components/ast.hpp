@@ -359,7 +359,7 @@ struct AST
 	union {
 		b32           IsFunction;  // Used by typedef to not serialize the name field.
 		b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
-		OperatorT     Op;
+		Operator      Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 		s32           VarConstructorInit;  // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.

@@ -202,7 +202,7 @@ char const* debug_str(Code self)
 				append_fmt( result, "\n\tNext: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
 		break;
 
-		case Operator:
+		case ECode::Operator:
 		case Operator_Member:
 			if ( self->Prev )
 				append_fmt( result, "\n\tPrev: %S %S", type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
@@ -482,7 +482,7 @@ void to_string( Code self, String* result )
 			to_string(cast(CodeNS, self), result );
 		break;
 
-		case Operator:
+		case ECode::Operator:
 		case Operator_Member:
 			to_string_def(cast(CodeOperator, self), result );
 		break;
@@ -860,7 +860,7 @@ bool is_equal( Code self, Code other )
 			return true;
 		}
 
-		case Operator:
+		case ECode::Operator:
 		case Operator_Member:
 		{
 			check_member_val( ModuleFlags );

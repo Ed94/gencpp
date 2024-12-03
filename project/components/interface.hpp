@@ -106,7 +106,7 @@ struct Opts_def_operator {
 	CodeAttributes  attributes;
 	ModuleFlag      mflags;
 };
-CodeOperator def_operator( OperatorT op, StrC nspace, Opts_def_operator opts GEN_PARAM_DEFAULT );
+CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_operator_cast {
 	Code           body;

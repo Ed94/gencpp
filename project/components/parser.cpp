@@ -2135,7 +2135,6 @@ CodeOperator parse_operator_after_ret_type(
 	, CodeType       ret_type
 )
 {
-	using namespace EOperator;
 	push_scope();
 
 	Token nspace = NullToken;
@@ -2171,19 +2170,19 @@ CodeOperator parse_operator_after_ret_type(
 
 	bool was_new_or_delete = false;
 
-	OperatorT op = Invalid;
+	Operator op = Op_Invalid;
 	switch ( currtok.Text[0] )
 	{
 		case '+':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Assign_Add;
+				op = Op_Assign_Add;
 
 			else if ( currtok.Text[1] == '+' )
-				op = Increment;
+				op = Op_Increment;
 
 			else
-				op = Add;
+				op = Op_Add;
 		}
 		break;
 		case '-':
@@ -2191,25 +2190,25 @@ CodeOperator parse_operator_after_ret_type(
 			if ( currtok.Text[1] == '>' )
 			{
 				if ( currtok.Text[2] == '*' )
-					op = MemberOfPointer;
+					op = Op_MemberOfPointer;
 
 				else
-					op = MemberOfPointer;
+					op = Op_MemberOfPointer;
 
 				break;
 			}
 
 			else if ( currtok.Text[1] == '=' )
-				op = Assign_Subtract;
+				op = Op_Assign_Subtract;
 
 			else
-				op = Subtract;
+				op = Op_Subtract;
 		}
 		break;
 		case '*':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Assign_Multiply;
+				op = Op_Assign_Multiply;
 
 			else
 			{
@@ -2218,154 +2217,154 @@ CodeOperator parse_operator_after_ret_type(
 				{
 					if ( finder.Type == Tok_Identifier)
 					{
-						op = Indirection;
+						op = Op_Indirection;
 						break;
 					}
 				}
 
-				if ( op == Invalid)
-					op = Multiply;
+				if ( op == Op_Invalid)
+					op = Op_Multiply;
 			}
 		}
 		break;
 		case '/':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Assign_Divide;
+				op = Op_Assign_Divide;
 
 			else
-				op = Divide;
+				op = Op_Divide;
 		}
 		break;
 		case '%':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Assign_Modulo;
+				op = Op_Assign_Modulo;
 
 			else
-				op = Modulo;
+				op = Op_Modulo;
 		}
 		break;
 		case '&':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Assign_BAnd;
+				op = Op_Assign_BAnd;
 
 			else if ( currtok.Text[1] == '&' )
-				op = LAnd;
+				op = Op_LAnd;
 
 			else
 			{
 
 
-				if ( op == Invalid )
-				op = BAnd;
+				if ( op == Op_Invalid )
+				op = Op_BAnd;
 			}
 		}
 		break;
 		case '|':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Assign_BOr;
+				op = Op_Assign_BOr;
 
 			else if ( currtok.Text[1] == '|' )
-				op = LOr;
+				op = Op_LOr;
 
 			else
-				op = BOr;
+				op = Op_BOr;
 		}
 		break;
 		case '^':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Assign_BXOr;
+				op = Op_Assign_BXOr;
 
 			else
-				op = BXOr;
+				op = Op_BXOr;
 		}
 		break;
 		case '~':
 		{
-			op = BNot;
+			op = Op_BNot;
 		}
 		break;
 		case '!':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = LNot;
+				op = Op_LNot;
 
 			else
-				op = UnaryNot;
+				op = Op_UnaryNot;
 		}
 		break;
 		case '=':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = LEqual;
+				op = Op_LEqual;
 
 			else
-				op = Assign;
+				op = Op_Assign;
 		}
 		break;
 		case '<':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = LEqual;
+				op = Op_LEqual;
 
 			else if ( currtok.Text[1] == '<' )
 			{
 				if ( currtok.Text[2] == '=' )
-					op = Assign_LShift;
+					op = Op_Assign_LShift;
 
 				else
-					op = LShift;
+					op = Op_LShift;
 			}
 			else
-				op = Lesser;
+				op = Op_Lesser;
 		}
 		break;
 		case '>':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = GreaterEqual;
+				op = Op_GreaterEqual;
 
 			else if ( currtok.Text[1] == '>' )
 			{
 				if ( currtok.Text[2] == '=' )
-					op = Assign_RShift;
+					op = Op_Assign_RShift;
 
 				else
-					op = RShift;
+					op = Op_RShift;
 			}
 			else
-				op = Greater;
+				op = Op_Greater;
 		}
 		break;
 		case '(':
 		{
 			if ( currtok.Text[1] == ')' )
-				op = FunctionCall;
+				op = Op_FunctionCall;
 
 			else
-				op = Invalid;
+				op = Op_Invalid;
 		}
 		break;
 		case '[':
 		{
 			if ( currtok.Text[1] == ']' )
-				op = Subscript;
+				op = Op_Subscript;
 
 			else
-				op = Invalid;
+				op = Op_Invalid;
 		}
 		break;
 		default:
 		{
-			StrC str_new    = to_str(OperatorT::New);
-			StrC str_delete = to_str(OperatorT::Delete);
+			StrC str_new    = to_str(Op_New);
+			StrC str_delete = to_str(Op_Delete);
 			if ( str_compare( currtok.Text, str_new.Ptr, max(str_new.Len - 1, currtok.Length)) == 0)
 			{
-				op = OperatorT::New;
+				op = Op_New;
 				eat( Tok_Identifier );
 				was_new_or_delete = true;
 
@@ -2378,18 +2377,18 @@ CodeOperator parse_operator_after_ret_type(
 				if ( currtok.Type == Tok_Operator && str_compare(currtok.Text, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
-					op = OperatorT::NewArray;
+					op = Op_NewArray;
 				}
 				else if ( currtok.Type == Tok_BraceSquare_Open && next.Type == Tok_BraceSquare_Close)
 				{
 					eat(Tok_BraceSquare_Open);
 					eat(Tok_BraceSquare_Close);
-					op = OperatorT::NewArray;
+					op = Op_NewArray;
 				}
 			}
 			else if ( str_compare( currtok.Text, str_delete.Ptr, max(str_delete.Len - 1, currtok.Length )) == 0)
 			{
-				op = OperatorT::Delete;
+				op = Op_Delete;
 				eat(Tok_Identifier);
 				was_new_or_delete = true;
 
@@ -2402,18 +2401,18 @@ CodeOperator parse_operator_after_ret_type(
 				if ( currtok.Type == Tok_Operator && str_compare(currtok.Text, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
-					op = OperatorT::DeleteArray;
+					op = Op_DeleteArray;
 				}
 				else if ( currtok.Type == Tok_BraceSquare_Open && next.Type == Tok_BraceSquare_Close)
 				{
 					eat(Tok_BraceSquare_Open);
 					eat(Tok_BraceSquare_Close);
-					op = OperatorT::DeleteArray;
+					op = Op_DeleteArray;
 				}
 			}
 			else
 			{
-				if ( op == Invalid )
+				if ( op == Op_Invalid )
 				{
 					log_failure( "Invalid operator '%s'\n%s", prevtok.Text, to_string(Context) );
 					pop(& Context);
@@ -2423,7 +2422,7 @@ CodeOperator parse_operator_after_ret_type(
 		}
 	}
 
-	if ( op == Invalid )
+	if ( op == Op_Invalid )
 	{
 		log_failure( "Invalid operator '%s'\n%s", currtok.Text, to_string(Context) );
 		pop(& Context);
@@ -2438,8 +2437,8 @@ CodeOperator parse_operator_after_ret_type(
 	CodeParam params = parse_params();
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> )
 
-	if ( params.ast == nullptr && op == EOperator::Multiply )
-		op = MemberOfPointer;
+	if ( params.ast == nullptr && op == Op_Multiply )
+		op = Op_MemberOfPointer;
 
 	while ( left && is_specifier(currtok) )
 	{

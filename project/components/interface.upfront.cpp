@@ -12,11 +12,9 @@ enum class OpValidateResult : u32
 	Member
 };
 
-OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeType ret_type, CodeSpecifiers specifier )
+OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeType ret_type, CodeSpecifiers specifier )
 {
-	using namespace EOperator;
-
-	if ( op == EOperator::Invalid )
+	if ( op == Op_Invalid )
 	{
 		log_failure("gen::def_operator: op cannot be invalid");
 		return OpValidateResult::Fail;
@@ -65,7 +63,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 	switch ( op )
 	{
 #	define specs( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
-		case Assign:
+		case Op_Assign:
 			check_params();
 
 			if ( params_code->NumEntries > 1 )
@@ -81,16 +79,16 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			is_member_symbol = true;
 			break;
 
-		case Assign_Add:
-		case Assign_Subtract:
-		case Assign_Multiply:
-		case Assign_Divide:
-		case Assign_Modulo:
-		case Assign_BAnd:
-		case Assign_BOr:
-		case Assign_BXOr:
-		case Assign_LShift:
-		case Assign_RShift:
+		case Op_Assign_Add:
+		case Op_Assign_Subtract:
+		case Op_Assign_Multiply:
+		case Op_Assign_Divide:
+		case Op_Assign_Modulo:
+		case Op_Assign_BAnd:
+		case Op_Assign_BOr:
+		case Op_Assign_BXOr:
+		case Op_Assign_LShift:
+		case Op_Assign_RShift:
 			check_params();
 
 			if ( params_code->NumEntries == 1 )
@@ -110,8 +108,8 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case Increment:
-		case Decrement:
+		case Op_Increment:
+		case Op_Decrement:
 			// If its not set, it just means its a prefix member op.
 			if ( params_code )
 			{
@@ -157,8 +155,8 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case Unary_Plus:
-		case Unary_Minus:
+		case Op_Unary_Plus:
+		case Op_Unary_Minus:
 			if ( ! params_code )
 				is_member_symbol = true;
 
@@ -193,7 +191,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case BNot:
+		case Op_BNot:
 		{
 			// Some compilers let you do this...
 		#if 0
@@ -228,16 +226,16 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			break;
 		}
 
-		case Add:
-		case Subtract:
-		case Multiply:
-		case Divide:
-		case Modulo:
-		case BAnd:
-		case BOr:
-		case BXOr:
-		case LShift:
-		case RShift:
+		case Op_Add:
+		case Op_Subtract:
+		case Op_Multiply:
+		case Op_Divide:
+		case Op_Modulo:
+		case Op_BAnd:
+		case Op_BOr:
+		case Op_BXOr:
+		case Op_LShift:
+		case Op_RShift:
 			check_params();
 
 			switch ( params_code->NumEntries )
@@ -269,7 +267,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case UnaryNot:
+		case Op_UnaryNot:
 			if ( ! params_code )
 				is_member_symbol = true;
 
@@ -301,14 +299,14 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case LAnd:
-		case LOr:
-		case LEqual:
-		case LNot:
-		case Lesser:
-		case Greater:
-		case LesserEqual:
-		case GreaterEqual:
+		case Op_LAnd:
+		case Op_LOr:
+		case Op_LEqual:
+		case Op_LNot:
+		case Op_Lesser:
+		case Op_Greater:
+		case Op_LesserEqual:
+		case Op_GreaterEqual:
 			check_params();
 
 			switch ( params_code->NumEntries )
@@ -329,9 +327,9 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case Indirection:
-		case AddressOf:
-		case MemberOfPointer:
+		case Op_Indirection:
+		case Op_AddressOf:
+		case Op_MemberOfPointer:
 			if ( params_code && params_code->NumEntries > 1)
 			{
 				log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
@@ -346,7 +344,7 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case PtrToMemOfPtr:
+		case Op_PtrToMemOfPtr:
 			if ( params_code )
 			{
 				log_failure("gen::def_operator: operator%s expects no paramters - %s", to_str(op), debug_str(params_code));
@@ -354,14 +352,14 @@ OpValidateResult operator__validate( OperatorT op, CodeParam params_code, CodeTy
 			}
 			break;
 
-		case Subscript:
-		case FunctionCall:
-		case Comma:
+		case Op_Subscript:
+		case Op_FunctionCall:
+		case Op_Comma:
 			check_params();
 			break;
 
-		case New:
-		case Delete:
+		case Op_New:
+		case Op_Delete:
 			// This library doesn't support validating new and delete yet.
 			break;
 #	undef specs
@@ -956,7 +954,7 @@ CodeNS def_namespace( StrC name, Code body, Opts_def_namespace p )
 	return result;
 }
 
-CodeOperator def_operator( OperatorT op, StrC nspace, Opts_def_operator p )
+CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 {
 	CodeParam       params_code = p.params;
 	CodeType        ret_type    = p.ret_type;

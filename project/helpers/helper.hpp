@@ -76,12 +76,12 @@ CodeBody gen_eoperator( char const* path )
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
 
-		append_fmt( & enum_entries, "%s,\n", enum_str );
+		append_fmt( & enum_entries, "Op_%s,\n", enum_str );
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
-		enum Type : u32
+		enum Operator_Def : u32
 		{
 			<entries>
 			NumOps
@@ -92,7 +92,7 @@ CodeBody gen_eoperator( char const* path )
 #undef local_persist
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
 		inline
-		StrC to_str( Type op )
+		StrC to_str( Operator op )
 		{
 			local_persist
 			StrC lookup[] {
@@ -104,11 +104,11 @@ CodeBody gen_eoperator( char const* path )
 	)));
 #pragma pop_macro("local_persist")
 
-	CodeNS nspace = def_namespace( name(EOperator), def_namespace_body( args( enum_code, to_str ) ) );
+	//CodeNS nspace = def_namespace( name(EOperator), def_namespace_body( args( enum_code, to_str ) ) );
+	//CodeUsing operator_t = def_using( name(OperatorT), def_type( name(EOperator::Type) ) );
+	CodeTypedef operator_t = parse_typedef(code( typedef enum Operator_Def Operator; ));
 
-	CodeUsing operator_t = def_using( name(OperatorT), def_type( name(EOperator::Type) ) );
-
-	return def_global_body( args( nspace, operator_t, fmt_newline ) );
+	return def_global_body( args( operator_t, enum_code, to_str, fmt_newline ) );
 }
 
 CodeBody gen_especifier( char const* path )

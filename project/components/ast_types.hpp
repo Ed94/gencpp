@@ -605,7 +605,7 @@ struct AST_Operator
 	StringCached   Name;
 	CodeT          Type;
 	ModuleFlag     ModuleFlags;
-	OperatorT      Op;
+	Operator       Op;
 };
 static_assert( sizeof(AST_Operator) == sizeof(AST), "ERROR: AST_Operator is not the same size as AST");
 

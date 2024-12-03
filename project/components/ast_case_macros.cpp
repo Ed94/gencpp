@@ -8,7 +8,7 @@
 	case Global_Body:                         \
 	case Namespace:                           \
 	case Namespace_Body:                      \
-	case Operator:                            \
+	case ECode::Operator:                     \
 	case Operator_Fwd:                        \
 	case Parameters:                          \
 	case Specifiers:                          \
@@ -30,7 +30,7 @@
 	case Global_Body:                            \
 	case Namespace:                              \
 	case Namespace_Body:                         \
-	case Operator:                               \
+	case ECode::Operator:                        \
 	case Operator_Fwd:                           \
 	case Operator_Member:                        \
 	case Operator_Member_Fwd:                    \
