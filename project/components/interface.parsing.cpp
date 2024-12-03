@@ -19,7 +19,7 @@ CodeClass parse_class( StrC def )
 
 	Context.Tokens = toks;
 	push_scope();
-	CodeClass result = (CodeClass) parse_class_struct( parser::TokType::Decl_Class );
+	CodeClass result = (CodeClass) parse_class_struct( Tok_Decl_Class );
 	pop(& Context);
 	return result;
 }
@@ -235,7 +235,7 @@ CodeStruct parse_struct( StrC def )
 
 	Context.Tokens = toks;
 	push_scope();
-	CodeStruct result = (CodeStruct) parse_class_struct( TokType::Decl_Struct );
+	CodeStruct result = (CodeStruct) parse_class_struct( Tok_Decl_Struct );
 	pop(& Context);
 	return result;
 }

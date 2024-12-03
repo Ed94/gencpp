@@ -249,7 +249,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = enum_str_strs [idx].string;
 
-		append_fmt( & enum_entries, "%s,\n", enum_str );
+		append_fmt( & enum_entries, "Tok_%s,\n", enum_str );
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
@@ -258,9 +258,9 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		char const* attribute_str = attribute_strs[idx].string;
 		char const* entry_to_str  = attribute_str_strs [idx].string;
 
-		append_fmt( & attribute_entries, "Attribute_%s,\n", attribute_str );
+		append_fmt( & attribute_entries, "Tok_Attribute_%s,\n", attribute_str );
 		append_fmt( & to_str_attributes, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
-		append_fmt( & attribute_define_entries, "Entry( Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
+		append_fmt( & attribute_define_entries, "Entry( Tok_Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
 
 		if ( idx < num(attribute_strs) - 1 )
 			append( & attribute_define_entries, " \\\n");
@@ -275,11 +275,11 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 	// We cannot parse this enum, it has Attribute names as enums
 	CodeEnum enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, "attribute_toks", (StrC)attribute_entries, stringize(
-		enum Type : u32
+		enum TokType_Def : u32
 		{
 			<entries>
 			<attribute_toks>
-			NumTokens
+			Tok_NumTokens
 		};
 	)));
 
@@ -291,7 +291,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #undef do_once_end
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, "attribute_toks", (StrC)to_str_attributes, stringize(
 		inline
-		StrC to_str( Type type )
+		StrC to_str( TokType type )
 		{
 			local_persist
 			StrC lookup[] {
@@ -305,14 +305,14 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 	CodeFn to_type = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
 		inline
-		Type to_type( StrC str )
+		TokType to_type( StrC str )
 		{
 			local_persist
-			u32 keymap[ NumTokens ];
+			u32 keymap[ Tok_NumTokens ];
 			do_once_start
-				for ( u32 index = 0; index < NumTokens; index++ )
+				for ( u32 index = 0; index < Tok_NumTokens; index++ )
 				{
-					StrC enum_str = to_str( (Type)index );
+					StrC enum_str = to_str( (TokType)index );
 
 					// We subtract 1 to remove the null terminator
 					// This is because the tokens lexed are not null terminated.
@@ -322,13 +322,13 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 			u32 hash = crc32( str.Ptr, str.Len );
 
-			for ( u32 index = 0; index < NumTokens; index++ )
+			for ( u32 index = 0; index < Tok_NumTokens; index++ )
 			{
 				if ( keymap[index] == hash )
-					return (Type)index;
+					return (TokType)index;
 			}
 
-			return Invalid;
+			return Tok_Invalid;
 		}
 	)));
 #pragma pop_macro("local_persist")
@@ -336,15 +336,14 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #pragma pop_macro("do_once_end")
 
 	//CodeNS    nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
-	CodeUsing td_toktype = def_using( name(TokType), def_type( name(ETokType::Type) ) );
+	CodeTypedef td_toktype = parse_typedef( code( typedef TokType_Def TokType; ));
 
 	return def_global_body( args(
-		untyped_str(txt("GEN_NS_PARSER_BEGIN\n")),
-		attribute_entires_def, 
-		enum_code, 
-		to_str, 
+		attribute_entires_def,
 		td_toktype,
-		untyped_str(txt("GEN_NS_PARSER_END\n"))
+		enum_code,
+		to_str,
+		to_type
 	));
 }
 
