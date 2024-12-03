@@ -4,7 +4,7 @@
 #include "gen/etoktype.cpp"
 #endif
 
-namespace parser {
+GEN_NS_PARSER_BEGIN
 
 enum TokFlags : u32
 {
@@ -31,137 +31,132 @@ struct Token
 	s32         Line;
 	s32         Column;
 	u32         Flags;
-
-	operator bool()
-	{
-		return Text && Length && Type != TokType::Invalid;
-	}
-
-	operator StrC()
-	{
-		return { Length, Text };
-	}
-
-	bool is_access_operator()
-	{
-		return bitfield_is_equal( u32, Flags, TF_AccessOperator );
-	}
-
-	bool is_access_specifier()
-	{
-		return bitfield_is_equal( u32, Flags, TF_AccessSpecifier );
-	}
-
-	bool is_attribute()
-	{
-		return bitfield_is_equal( u32, Flags, TF_Attribute );
-	}
-
-	bool is_operator()
-	{
-		return bitfield_is_equal( u32, Flags, TF_Operator );
-	}
-
-	bool is_preprocessor()
-	{
-		return bitfield_is_equal( u32, Flags, TF_Preprocess );
-	}
-
-	bool is_preprocess_cond()
-	{
-		return bitfield_is_equal( u32, Flags, TF_Preprocess_Cond );
-	}
-
-	bool is_specifier()
-	{
-		return bitfield_is_equal( u32, Flags, TF_Specifier );
-	}
-
-	bool is_end_definition()
-	{
-		return bitfield_is_equal( u32, Flags, TF_EndDefinition );
-	}
-
-	AccessSpec to_access_specifier()
-	{
-		return scast(AccessSpec, Type);
-	}
-
-	String to_string()
-	{
-		String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
-
-		StrC type_str = ETokType::to_str( Type );
-
-		append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
-			, Line, Column
-			, type_str.Len, type_str.Ptr
-			, Length, Text
-		);
-
-		return result;
-	}
 };
 
 constexpr Token NullToken { nullptr, 0, TokType::Invalid, false, 0, TF_Null };
 
+AccessSpec to_access_specifier(Token tok)
+{
+	return scast(AccessSpec, tok.Type);
+}
+
+StrC to_str(Token tok)
+{
+	return { tok.Length, tok.Text };
+}
+
+bool is_valid( Token tok )
+{
+	return tok.Text && tok.Length && tok.Type != TokType::Invalid;
+}
+
+bool is_access_operator(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_AccessOperator );
+}
+
+bool is_access_specifier(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_AccessSpecifier );
+}
+
+bool is_attribute(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_Attribute );
+}
+
+bool is_operator(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_Operator );
+}
+
+bool is_preprocessor(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess );
+}
+
+bool is_preprocess_cond(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess_Cond );
+}
+
+bool is_specifier(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_Specifier );
+}
+
+bool is_end_definition(Token tok)
+{
+	return bitfield_is_equal( u32, tok.Flags, TF_EndDefinition );
+}
+
+String to_string(Token tok)
+{
+	String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
+
+	StrC type_str = ETokType::to_str( tok.Type );
+
+	append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
+		, tok.Line, tok.Column
+		, type_str.Len, type_str.Ptr
+		, tok.Length, tok.Text
+	);
+
+	return result;
+}
+
 struct TokArray
 {
-	Array<Token> Arr;
+	Array(Token) Arr;
 	s32          Idx;
-
-	bool __eat( TokType type );
-
-	Token& current( bool skip_formatting = true )
-	{
-		if ( skip_formatting )
-		{
-			while ( Arr[Idx].Type == TokType::NewLine || Arr[Idx].Type == TokType::Comment  )
-				Idx++;
-		}
-
-		return Arr[Idx];
-	}
-
-	Token& previous( bool skip_formatting = false )
-	{
-		s32 idx = this->Idx;
-
-		if ( skip_formatting )
-		{
-			while ( Arr[idx].Type == TokType::NewLine )
-				idx--;
-
-			return Arr[idx];
-		}
-
-		return Arr[idx - 1];
-	}
-
-	Token& next( bool skip_formatting = false )
-	{
-		s32 idx = this->Idx;
-
-		if ( skip_formatting )
-		{
-			while ( Arr[idx].Type == TokType::NewLine )
-				idx++;
-
-			return Arr[idx + 1];
-		}
-
-		return Arr[idx + 1];
-	}
-
-	Token& operator []( s32 idx )
-	{
-		return Arr[idx];
-	}
 };
 
+bool __eat( TokType type );
+
+Token* current(TokArray* self, bool skip_formatting )
+{
+	if ( skip_formatting )
+	{
+		while ( self->Arr[self->Idx].Type == TokType::NewLine || self->Arr[self->Idx].Type == TokType::Comment  )
+			self->Idx++;
+	}
+
+	return & self->Arr[self->Idx];
+}
+
+Token* previous(TokArray self, bool skip_formatting)
+{
+	s32 idx = self.Idx;
+
+	if ( skip_formatting )
+	{
+		while ( self.Arr[idx].Type == TokType::NewLine )
+			idx --;
+
+		return & self.Arr[idx];
+	}
+
+	return & self.Arr[idx - 1];
+}
+
+Token* next(TokArray self, bool skip_formatting)
+{
+	s32 idx = self.Idx;
+
+	if ( skip_formatting )
+	{
+		while ( self.Arr[idx].Type == TokType::NewLine )
+			idx++;
+
+		return & self.Arr[idx + 1];
+	}
+
+	return & self.Arr[idx + 1];
+}
+
 global Arena_256KB     defines_map_arena;
-global HashTable<StrC> defines;
-global Array<Token>    Tokens;
+global HashTable(StrC) defines;
+global Array(Token)    Tokens;
 
 #define current ( * scanner )
 
@@ -234,7 +229,7 @@ s32 lex_preprocessor_directive(
 		token.Length++;
 	}
 
-	token.Type = ETokType::to_type( token );
+	token.Type = ETokType::to_type( to_str(token) );
 
 	bool   is_preprocessor = token.Type >= TokType::Preprocess_Define && token.Type <= TokType::Preprocess_Pragma;
 	if ( ! is_preprocessor )
@@ -341,7 +336,7 @@ s32 lex_preprocessor_directive(
 		append( & Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
-		set<StrC>(& defines, key, name );
+		set(& defines, key, to_str(name) );
 	}
 
 	Token preprocess_content = { scanner, 0, TokType::Preprocess_Content, line, column, TF_Preprocess };
@@ -465,7 +460,7 @@ void lex_found_token( StrC& content
 		return;
 	}
 
-	TokType type = ETokType::to_type( token );
+	TokType type = ETokType::to_type( to_str(token) );
 
 	if (type <= TokType::Access_Public && type >= TokType::Access_Private )
 	{
@@ -1267,5 +1262,4 @@ TokArray lex( StrC content )
 #undef move_forward
 #undef SkipWhitespace
 
-// namespace parser
-}
+GEN_NS_PARSER_END

@@ -385,6 +385,8 @@ bool set_capacity(Array<Type>* array, usize new_capacity)
 // TODO(Ed) : This thing needs ALOT of work.
 
 #pragma region HashTable
+#define HashTable(Type) HashTable<Type>
+
 template<class Type> struct HashTable;
 
 struct HashTableFindResult {

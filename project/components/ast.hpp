@@ -152,10 +152,9 @@ Define_Code(Using);
 Define_Code(Var);
 #undef Define_Code
 
-namespace parser
-{
-	struct Token;
-}
+GEN_NS_PARSER_BEGIN
+struct Token;
+GEN_NS_PARSER_END
 
 #if ! GEN_COMPILER_C
 template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( Type*, & self ); }
@@ -367,7 +366,7 @@ struct AST
 		b32           EnumUnderlyingMacro; // Used by enums incase the user wants to wrap underlying type specification in a macro
 	};
 };
-static_assert( sizeof(AST) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
+static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST POD is not size of AST_POD_Size" );
 
 #if ! GEN_COMPILER_C
 // Uses an implicitly overloaded cast from the AST to the desired code type.

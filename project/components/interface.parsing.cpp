@@ -39,9 +39,9 @@ CodeConstructor parse_constructor( StrC def )
 	SpecifierT     specs_found[ 16 ] { ESpecifier::NumSpecifiers };
 	s32            NumSpecifiers = 0;
 
-	while ( left && currtok.is_specifier() )
+	while ( left && is_specifier(currtok) )
 	{
-		SpecifierT spec = ESpecifier::to_type( currtok );
+		SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
 
 		b32 ignore_spec = false;
 
