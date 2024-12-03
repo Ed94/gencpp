@@ -120,7 +120,7 @@ CodePragma def_pragma( StrC directive );
 
 CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC content );
 
-CodeSpecifiers def_specifier( SpecifierT specifier );
+CodeSpecifiers def_specifier( Specifier specifier );
 
 CodeStruct def_struct( StrC name, Opts_def_struct opts GEN_PARAM_DEFAULT );
 
@@ -186,7 +186,7 @@ CodeBody       def_namespace_body  ( s32 num, Code* codes );
 CodeParam      def_params          ( s32 num, ... );
 CodeParam      def_params          ( s32 num, CodeParam* params );
 CodeSpecifiers def_specifiers      ( s32 num, ... );
-CodeSpecifiers def_specifiers      ( s32 num, SpecifierT* specs );
+CodeSpecifiers def_specifiers      ( s32 num, Specifier* specs );
 CodeBody       def_struct_body     ( s32 num, ... );
 CodeBody       def_struct_body     ( s32 num, Code* codes );
 CodeBody       def_union_body      ( s32 num, ... );

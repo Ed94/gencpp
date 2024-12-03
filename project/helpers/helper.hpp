@@ -132,23 +132,23 @@ CodeBody gen_especifier( char const* path )
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
 
-		append_fmt( & enum_entries, "%s,\n", enum_str );
+		append_fmt( & enum_entries, "Spec_%s,\n", enum_str );
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", (StrC)enum_entries, stringize(
-		enum Type : u32
+		enum Specifier_Def : u32
 		{
 			<entries>
-			NumSpecifiers
+			Spec_NumSpecifiers
 		};
 	)));
 
 	CodeFn is_trailing = parse_function(token_fmt("specifier", (StrC)to_str_entries, stringize(
 		inline
-		bool is_trailing( Type specifier )
+		bool is_trailing( Specifier specifier )
 		{
-			return specifier > Virtual;
+			return specifier > Spec_Virtual;
 		}
 	)));
 
@@ -164,7 +164,7 @@ CodeBody gen_especifier( char const* path )
 #undef neverinline
 	CodeFn to_str = parse_function(token_fmt("entries", (StrC)to_str_entries, stringize(
 		inline
-		StrC to_str( Type type )
+		StrC to_str( Specifier type )
 		{
 			local_persist
 			StrC lookup[] {
@@ -177,14 +177,14 @@ CodeBody gen_especifier( char const* path )
 
 	CodeFn to_type = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
 		inline
-		Type to_type( StrC str )
+		Specifier to_specifier( StrC str )
 		{
 			local_persist
-			u32 keymap[ NumSpecifiers ];
+			u32 keymap[ Spec_NumSpecifiers ];
 			do_once_start
-				for ( u32 index = 0; index < NumSpecifiers; index++ )
+				for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 				{
-					StrC enum_str = to_str( (Type)index );
+					StrC enum_str = to_str( (Specifier)index );
 
 					// We subtract 1 to remove the null terminator
 					// This is because the tokens lexed are not null terminated.
@@ -194,13 +194,13 @@ CodeBody gen_especifier( char const* path )
 
 			u32 hash = crc32( str.Ptr, str.Len );
 
-			for ( u32 index = 0; index < NumSpecifiers; index++ )
+			for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 			{
 				if ( keymap[index] == hash )
-					return (Type)index;
+					return (Specifier)index;
 			}
 
-			return Invalid;
+			return Spec_Invalid;
 		}
 	)));
 #pragma pop_macro("local_persist")
@@ -209,11 +209,11 @@ CodeBody gen_especifier( char const* path )
 #pragma pop_macro("forceinline")
 #pragma pop_macro("neverinline")
 
-	CodeNS nspace = def_namespace( name(ESpecifier), def_namespace_body( args( enum_code, is_trailing, to_str, to_type ) ) );
+	//CodeNS nspace = def_namespace( name(ESpecifier), def_namespace_body( args( enum_code, is_trailing, to_str, to_type ) ) );
+	//CodeUsing specifier_t = def_using( name(SpecifierT), def_type( name(ESpecifier::Type) ) );
+	CodeTypedef specifier_t = parse_typedef( code(typedef enum Specifier_Def Specifier; ));
 
-	CodeUsing specifier_t = def_using( name(SpecifierT), def_type( name(ESpecifier::Type) ) );
-
-	return def_global_body( args( nspace, specifier_t, fmt_newline ) );
+	return def_global_body( args( specifier_t, enum_code, is_trailing, to_str, to_type, fmt_newline ) );
 }
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
@@ -305,7 +305,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 
 	CodeFn to_type = parse_function( token_fmt( "entries", (StrC)to_str_entries, stringize(
 		inline
-		TokType to_type( StrC str )
+		TokType to_toktype( StrC str )
 		{
 			local_persist
 			u32 keymap[ Tok_NumTokens ];
@@ -336,7 +336,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #pragma pop_macro("do_once_end")
 
 	//CodeNS    nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
-	CodeTypedef td_toktype = parse_typedef( code( typedef TokType_Def TokType; ));
+	CodeTypedef td_toktype = parse_typedef( code( typedef enum TokType_Def TokType; ));
 
 	return def_global_body( args(
 		attribute_entires_def,

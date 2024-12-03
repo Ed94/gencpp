@@ -273,7 +273,7 @@ char const* debug_str(Code self)
 			s32 left = self->NumEntries;
 			while ( left-- )
 			{
-				StrC spec = ESpecifier::to_str( self->ArrSpecs[idx] );
+				StrC spec = to_str( self->ArrSpecs[idx] );
 				append_fmt( result, "%.*s, ", spec.Len, spec.Ptr );
 				idx++;
 			}

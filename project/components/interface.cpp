@@ -192,32 +192,32 @@ void define_constants()
 #	undef internal
 #	undef local_persist
 #	undef neverinline
-	def_constant_spec( const,            ESpecifier::Const );
-	def_constant_spec( consteval,        ESpecifier::Consteval );
-	def_constant_spec( constexpr,        ESpecifier::Constexpr );
-	def_constant_spec( constinit,        ESpecifier::Constinit );
-	def_constant_spec( extern_linkage,   ESpecifier::External_Linkage );
-	def_constant_spec( final, 		     ESpecifier::Final );
-	def_constant_spec( forceinline,      ESpecifier::ForceInline );
-	def_constant_spec( global,           ESpecifier::Global );
-	def_constant_spec( inline,           ESpecifier::Inline );
-	def_constant_spec( internal_linkage, ESpecifier::Internal_Linkage );
-	def_constant_spec( local_persist,    ESpecifier::Local_Persist );
-	def_constant_spec( mutable,          ESpecifier::Mutable );
-	def_constant_spec( neverinline,      ESpecifier::NeverInline );
-	def_constant_spec( noexcept,         ESpecifier::NoExceptions );
-	def_constant_spec( override,         ESpecifier::Override );
-	def_constant_spec( ptr,              ESpecifier::Ptr );
-	def_constant_spec( pure,             ESpecifier::Pure )
-	def_constant_spec( ref,              ESpecifier::Ref );
-	def_constant_spec( register,         ESpecifier::Register );
-	def_constant_spec( rvalue,           ESpecifier::RValue );
-	def_constant_spec( static_member,    ESpecifier::Static );
-	def_constant_spec( thread_local,     ESpecifier::Thread_Local );
-	def_constant_spec( virtual, 		 ESpecifier::Virtual );
-	def_constant_spec( volatile, 	     ESpecifier::Volatile)
+	def_constant_spec( const,            Spec_Const );
+	def_constant_spec( consteval,        Spec_Consteval );
+	def_constant_spec( constexpr,        Spec_Constexpr );
+	def_constant_spec( constinit,        Spec_Constinit );
+	def_constant_spec( extern_linkage,   Spec_External_Linkage );
+	def_constant_spec( final, 		     Spec_Final );
+	def_constant_spec( forceinline,      Spec_ForceInline );
+	def_constant_spec( global,           Spec_Global );
+	def_constant_spec( inline,           Spec_Inline );
+	def_constant_spec( internal_linkage, Spec_Internal_Linkage );
+	def_constant_spec( local_persist,    Spec_Local_Persist );
+	def_constant_spec( mutable,          Spec_Mutable );
+	def_constant_spec( neverinline,      Spec_NeverInline );
+	def_constant_spec( noexcept,         Spec_NoExceptions );
+	def_constant_spec( override,         Spec_Override );
+	def_constant_spec( ptr,              Spec_Ptr );
+	def_constant_spec( pure,             Spec_Pure )
+	def_constant_spec( ref,              Spec_Ref );
+	def_constant_spec( register,         Spec_Register );
+	def_constant_spec( rvalue,           Spec_RValue );
+	def_constant_spec( static_member,    Spec_Static );
+	def_constant_spec( thread_local,     Spec_Thread_Local );
+	def_constant_spec( virtual, 		 Spec_Virtual );
+	def_constant_spec( volatile, 	     Spec_Volatile)
 
-	spec_local_persist = def_specifiers( 1, ESpecifier::Local_Persist );
+	spec_local_persist = def_specifiers( 1, Spec_Local_Persist );
 	set_global(spec_local_persist);
 
 #	pragma pop_macro("forceinline")

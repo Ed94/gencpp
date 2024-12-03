@@ -989,39 +989,39 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			case Tok_Spec_Volatile:
 			case Tok_Spec_Virtual:
 			{
-				SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
+				Specifier specs_found[16] { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
 
 				while ( left && is_specifier(currtok) )
 				{
-					SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+					Specifier spec = to_specifier( to_str(currtok) );
 
 					b32 ignore_spec = false;
 
 					switch ( spec )
 					{
-						case ESpecifier::Constexpr:
-						case ESpecifier::Constinit:
-						case ESpecifier::Explicit:
-						case ESpecifier::Inline:
-						case ESpecifier::ForceInline:
-						case ESpecifier::Mutable:
-						case ESpecifier::NeverInline:
-						case ESpecifier::Static:
-						case ESpecifier::Volatile:
-						case ESpecifier::Virtual:
+						case Spec_Constexpr:
+						case Spec_Constinit:
+						case Spec_Explicit:
+						case Spec_Inline:
+						case Spec_ForceInline:
+						case Spec_Mutable:
+						case Spec_NeverInline:
+						case Spec_Static:
+						case Spec_Volatile:
+						case Spec_Virtual:
 						break;
 
-						case ESpecifier::Consteval:
+						case Spec_Consteval:
 							expects_function = true;
 						break;
 
-						case ESpecifier::Const :
+						case Spec_Const :
 							ignore_spec = true;
 						break;
 
 						default:
-							log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str(spec), to_string(Context) );
+							log_failure( "Invalid specifier %s for variable\n%s", to_str(spec), to_string(Context) );
 							pop(& Context);
 							return InvalidCode;
 					}
@@ -1182,13 +1182,13 @@ Code parse_complicated_definition( TokType which )
 	}
 
 	Token tok = tokens.Arr[ idx - 1 ];
-	if ( is_specifier(tok) && is_trailing( ESpecifier::to_type( to_str(tok))) )
+	if ( is_specifier(tok) && is_trailing( to_specifier( to_str(tok))) )
 	{
 		// <which> <type_identifier>(...) <specifier> ...;
 
 		s32   spec_idx = idx - 1;
 		Token spec     = tokens.Arr[spec_idx];
-		while ( is_specifier(spec) && is_trailing( ESpecifier::to_type( to_str(spec))) )
+		while ( is_specifier(spec) && is_trailing( to_specifier( to_str(spec))) )
 		{
 			-- spec_idx;
 			spec = tokens.Arr[spec_idx];
@@ -1442,12 +1442,12 @@ CodeFn parse_function_after_name(
 	{
 		if ( specifiers.ast == nullptr )
 		{
-			specifiers = def_specifier( ESpecifier::to_type( to_str(currtok)) );
+			specifiers = def_specifier( to_specifier( to_str(currtok)) );
 			eat( currtok.Type );
 			continue;
 		}
 
-		append(specifiers, ESpecifier::to_type( to_str(currtok)) );
+		append(specifiers, to_specifier( to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
@@ -1467,7 +1467,7 @@ CodeFn parse_function_after_name(
 	else if ( check(Tok_Operator) && currtok.Text[0] == '=' )
 	{
 		eat(Tok_Operator);
-		append(specifiers, ESpecifier::Pure );
+		append(specifiers, Spec_Pure );
 
 		eat( Tok_Number);
 		Token stmt_end = currtok;
@@ -1768,40 +1768,40 @@ CodeBody parse_global_nspace( CodeT which )
 			case Tok_Spec_NeverInline:
 			case Tok_Spec_Static:
 			{
-				SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
+				Specifier specs_found[16] { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
 
 				while ( left && is_specifier(currtok) )
 				{
-					SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+					Specifier spec = to_specifier( to_str(currtok) );
 
 					bool ignore_spec = false;
 
 					switch ( spec )
 					{
-						case ESpecifier::Constexpr:
-						case ESpecifier::Constinit:
-						case ESpecifier::ForceInline:
-						case ESpecifier::Global:
-						case ESpecifier::External_Linkage:
-						case ESpecifier::Internal_Linkage:
-						case ESpecifier::Inline:
-						case ESpecifier::Mutable:
-						case ESpecifier::NeverInline:
-						case ESpecifier::Static:
-						case ESpecifier::Volatile:
+						case Spec_Constexpr:
+						case Spec_Constinit:
+						case Spec_ForceInline:
+						case Spec_Global:
+						case Spec_External_Linkage:
+						case Spec_Internal_Linkage:
+						case Spec_Inline:
+						case Spec_Mutable:
+						case Spec_NeverInline:
+						case Spec_Static:
+						case Spec_Volatile:
 						break;
 
-						case ESpecifier::Consteval:
+						case Spec_Consteval:
 							expects_function = true;
 						break;
 
-						case ESpecifier::Const:
+						case Spec_Const:
 							ignore_spec = true;
 						break;
 
 						default:
-							StrC spec_str = ESpecifier::to_str(spec);
+							StrC spec_str = to_str(spec);
 
 							log_failure( "Invalid specifier %.*s for variable\n%s", spec_str.Len, spec_str, to_string(Context) );
 							pop(& Context);
@@ -2445,12 +2445,12 @@ CodeOperator parse_operator_after_ret_type(
 	{
 		if ( specifiers.ast == nullptr )
 		{
-			specifiers = def_specifier( ESpecifier::to_type( to_str(currtok)) );
+			specifiers = def_specifier( to_specifier( to_str(currtok)) );
 			eat( currtok.Type );
 			continue;
 		}
 
-		append(specifiers, ESpecifier::to_type( to_str(currtok)) );
+		append(specifiers, to_specifier( to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>
@@ -3284,12 +3284,12 @@ CodeVar parse_variable_declaration_list()
 
 		while ( left && is_specifier(currtok) )
 		{
-			SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+			Specifier spec = to_specifier( to_str(currtok) );
 
 			switch ( spec )
 			{
-				case ESpecifier::Const:
-					if ( specifiers->NumEntries && specifiers->ArrSpecs[ specifiers->NumEntries - 1 ] != ESpecifier::Ptr )
+				case Spec_Const:
+					if ( specifiers->NumEntries && specifiers->ArrSpecs[ specifiers->NumEntries - 1 ] != Spec_Ptr )
 					{
 						log_failure( "Error, const specifier must come after pointer specifier for variable declaration proceeding comma\n"
 						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%s"
@@ -3299,9 +3299,9 @@ CodeVar parse_variable_declaration_list()
 					}
 				break;
 
-				case ESpecifier::Ptr:
-				case ESpecifier::Ref:
-				case ESpecifier::RValue:
+				case Spec_Ptr:
+				case Spec_Ref:
+				case Spec_RValue:
 				break;
 
 				default:
@@ -3457,9 +3457,9 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	if ( check( Tok_Spec_Virtual ) )
 	{
 		if ( specifiers )
-			append(specifiers, ESpecifier::Virtual );
+			append(specifiers, Spec_Virtual );
 		else
-			specifiers = def_specifier( ESpecifier::Virtual );
+			specifiers = def_specifier( Spec_Virtual );
 		eat( Tok_Spec_Virtual );
 	}
 	// <Virtual Specifier>
@@ -3500,7 +3500,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 			eat( Tok_Number );
 			// <Virtual Specifier> ~<Name>() = 0
 
-			append(specifiers, ESpecifier::Pure );
+			append(specifiers, Spec_Pure );
 		}
 		else if ( left && str_compare( upcoming.Text, "default", sizeof("default") - 1 ) == 0)
 		{
@@ -3562,7 +3562,7 @@ CodeEnum parse_enum( bool inplace_def )
 	using namespace ECode;
 	push_scope();
 
-	SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
+	Specifier specs_found[16] { Spec_NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
 	CodeAttributes attributes = { nullptr };
@@ -3939,7 +3939,7 @@ CodeFn parse_function()
 {
 	push_scope();
 
-	SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
+	Specifier specs_found[16] { Spec_NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
 	CodeAttributes attributes = { nullptr };
@@ -3958,27 +3958,27 @@ CodeFn parse_function()
 
 	while ( left && is_specifier(currtok) )
 	{
-		SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+		Specifier spec = to_specifier( to_str(currtok) );
 
 		switch ( spec )
 		{
-			case ESpecifier::Const:
-			case ESpecifier::Consteval:
-			case ESpecifier::Constexpr:
-			case ESpecifier::External_Linkage:
-			case ESpecifier::ForceInline:
-			case ESpecifier::Inline:
-			case ESpecifier::NeverInline:
-			case ESpecifier::Static:
+			case Spec_Const:
+			case Spec_Consteval:
+			case Spec_Constexpr:
+			case Spec_External_Linkage:
+			case Spec_ForceInline:
+			case Spec_Inline:
+			case Spec_NeverInline:
+			case Spec_Static:
 			break;
 
 			default:
-				log_failure( "Invalid specifier %s for functon\n%s", ESpecifier::to_str(spec), to_string(Context) );
+				log_failure( "Invalid specifier %s for functon\n%s", to_str(spec), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}
 
-		if ( spec == ESpecifier::Const )
+		if ( spec == Spec_Const )
 			continue;
 
 		specs_found[NumSpecifiers] = spec;
@@ -4056,7 +4056,7 @@ CodeOperator parse_operator()
 	CodeSpecifiers specifiers = { nullptr };
 	ModuleFlag     mflags     = ModuleFlag_None;
 
-	SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
+	Specifier specs_found[16] { Spec_NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
 	if ( check(Tok_Module_Export) )
@@ -4071,25 +4071,25 @@ CodeOperator parse_operator()
 
 	while ( left && is_specifier(currtok) )
 	{
-		SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+		Specifier spec = to_specifier( to_str(currtok) );
 
 		switch ( spec )
 		{
-			case ESpecifier::Const:
-			case ESpecifier::Constexpr:
-			case ESpecifier::ForceInline:
-			case ESpecifier::Inline:
-			case ESpecifier::NeverInline:
-			case ESpecifier::Static:
+			case Spec_Const:
+			case Spec_Constexpr:
+			case Spec_ForceInline:
+			case Spec_Inline:
+			case Spec_NeverInline:
+			case Spec_Static:
 			break;
 
 			default:
-				log_failure( "Invalid specifier " "%s" " for operator\n%s", ESpecifier::to_str(spec), to_string(Context) );
+				log_failure( "Invalid specifier " "%s" " for operator\n%s", to_str(spec), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}
 
-		if ( spec == ESpecifier::Const )
+		if ( spec == Spec_Const )
 			continue;
 
 		specs_found[NumSpecifiers] = spec;
@@ -4154,10 +4154,10 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 	if ( check(Tok_Spec_Const))
 	{
 		if ( specifiers.ast == nullptr )
-			specifiers = def_specifier( ESpecifier::Const );
+			specifiers = def_specifier( Spec_Const );
 
 		else
-			append(specifiers, ESpecifier::Const );
+			append(specifiers, Spec_Const );
 
 		eat( Tok_Spec_Const );
 	}
@@ -4302,7 +4302,7 @@ CodeTemplate parse_template()
 
 		bool expects_function     = false;
 
-		SpecifierT specs_found[ 16 ] { ESpecifier::NumSpecifiers };
+		Specifier specs_found[ 16 ] { Spec_NumSpecifiers };
 		s32        NumSpecifiers = 0;
 
 		attributes = parse_attributes();
@@ -4312,36 +4312,36 @@ CodeTemplate parse_template()
 		{
 			while ( left && is_specifier(currtok) )
 			{
-				SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+				Specifier spec = to_specifier( to_str(currtok) );
 
 				switch ( spec )
 				{
-					case ESpecifier::Const :
-					case ESpecifier::Constexpr :
-					case ESpecifier::Constinit :
-					case ESpecifier::External_Linkage :
-					case ESpecifier::Global :
-					case ESpecifier::Inline :
-					case ESpecifier::ForceInline :
-					case ESpecifier::Local_Persist :
-					case ESpecifier::Mutable :
-					case ESpecifier::Static :
-					case ESpecifier::Thread_Local :
-					case ESpecifier::Volatile :
+					case Spec_Const :
+					case Spec_Constexpr :
+					case Spec_Constinit :
+					case Spec_External_Linkage :
+					case Spec_Global :
+					case Spec_Inline :
+					case Spec_ForceInline :
+					case Spec_Local_Persist :
+					case Spec_Mutable :
+					case Spec_Static :
+					case Spec_Thread_Local :
+					case Spec_Volatile :
 						break;
 
-					case ESpecifier::Consteval :
+					case Spec_Consteval :
 						expects_function = true;
 						break;
 
 					default :
-						log_failure( "Invalid specifier %s for variable or function\n%s", ESpecifier::to_str( spec ), to_string(Context) );
+						log_failure( "Invalid specifier %s for variable or function\n%s", to_str( spec ), to_string(Context) );
 						pop(& Context);
 						return InvalidCode;
 				}
 
 				// Ignore const it will be handled by the type
-				if ( spec == ESpecifier::Const )
+				if ( spec == Spec_Const )
 					break;
 
 				specs_found[ NumSpecifiers ] = spec;
@@ -4442,7 +4442,7 @@ CodeType parse_type( bool from_template, bool* typedef_is_function )
 
 	Token context_tok = prevtok;
 
-	SpecifierT specs_found[ 16 ] { ESpecifier::NumSpecifiers };
+	Specifier specs_found[ 16 ] { Spec_NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
 	Token name               = { nullptr, 0, Tok_Invalid };
@@ -4454,9 +4454,9 @@ CodeType parse_type( bool from_template, bool* typedef_is_function )
 	// Prefix specifiers
 	while ( left && is_specifier(currtok) )
 	{
-		SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+		Specifier spec = to_specifier( to_str(currtok) );
 
-		if ( spec != ESpecifier::Const )
+		if ( spec != Spec_Const )
 		{
 			log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
 			pop(& Context);
@@ -4580,9 +4580,9 @@ else if ( currtok.Type == Tok_DeclType )
 	// Suffix specifiers for typename.
 	while ( left && is_specifier(currtok) )
 	{
-		SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+		Specifier spec = to_specifier( to_str(currtok) );
 
-		if ( spec != ESpecifier::Const && spec != ESpecifier::Ptr && spec != ESpecifier::Ref && spec != ESpecifier::RValue )
+		if ( spec != Spec_Const && spec != Spec_Ptr && spec != Spec_Ref && spec != Spec_RValue )
 		{
 			log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
 			pop(& Context);
@@ -4677,7 +4677,7 @@ else if ( currtok.Type == Tok_DeclType )
 
 #else
 		if ( NumSpecifiers )
-			return_type->Specs = def_specifiers( NumSpecifiers, ( SpecifierT* )specs_found );
+			return_type->Specs = def_specifiers( NumSpecifiers, ( Specifier* )specs_found );
 
 		// Reset specifiers, the function itself will have its own suffix specifiers possibly.
 		NumSpecifiers = 0;
@@ -4713,9 +4713,9 @@ else if ( currtok.Type == Tok_DeclType )
 			// Binding specifiers
 			while ( left && currtok.is_specifier() )
 			{
-				SpecifierT spec = ESpecifier::to_type( currtok );
+				Specifier spec = to_type( currtok );
 
-				if ( spec != ESpecifier::Ptr && spec != ESpecifier::Ref && spec != ESpecifier::RValue )
+				if ( spec != Spec_Ptr && spec != Spec_Ref && spec != Spec_RValue )
 				{
 					log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
 					pop(& Context);
@@ -4780,12 +4780,12 @@ else if ( currtok.Type == Tok_DeclType )
 		// Look for suffix specifiers for the function
 		while ( left && is_specifier(currtok) )
 		{
-			SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+			Specifier spec = to_specifier( to_str(currtok) );
 
-			if ( spec != ESpecifier::Const
+			if ( spec != Spec_Const
 					// TODO : Add support for NoExcept, l-value, volatile, l-value, etc
-					// && spec != ESpecifier::NoExcept
-					&& spec != ESpecifier::RValue )
+					// && spec != Spec_NoExcept
+					&& spec != Spec_RValue )
 			{
 				log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
 				pop(& Context);
@@ -4852,7 +4852,7 @@ else if ( currtok.Type == Tok_DeclType )
 #else
 	if ( NumSpecifiers )
 	{
-		Code specifiers = def_specifiers( NumSpecifiers, ( SpecifierT* )specs_found );
+		Code specifiers = def_specifiers( NumSpecifiers, ( Specifier* )specs_found );
 		result->Specs   = specifiers;
 	}
 #endif
@@ -5230,7 +5230,7 @@ CodeUsing parse_using()
 {
 	push_scope();
 
-	SpecifierT specs_found[16] { ESpecifier::Invalid };
+	Specifier specs_found[16] { Spec_Invalid };
 	s32        NumSpecifiers = 0;
 
 	Token    name       = { nullptr, 0, Tok_Invalid };
@@ -5330,7 +5330,7 @@ CodeVar parse_variable()
 {
 	push_scope();
 
-	SpecifierT specs_found[16] { ESpecifier::NumSpecifiers };
+	Specifier specs_found[16] { Spec_NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
 	ModuleFlag	   mflags     = ModuleFlag_None;
@@ -5349,31 +5349,31 @@ CodeVar parse_variable()
 
 	while ( left && is_specifier(currtok) )
 	{
-		SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+		Specifier spec = to_specifier( to_str(currtok) );
 
 		switch ( spec )
 		{
-			case ESpecifier::Const:
-			case ESpecifier::Constexpr:
-			case ESpecifier::Constinit:
-			case ESpecifier::External_Linkage:
-			case ESpecifier::Global:
-			case ESpecifier::Inline:
-			case ESpecifier::Local_Persist:
-			case ESpecifier::Mutable:
-			case ESpecifier::Static:
-			case ESpecifier::Thread_Local:
-			case ESpecifier::Volatile:
+			case Spec_Const:
+			case Spec_Constexpr:
+			case Spec_Constinit:
+			case Spec_External_Linkage:
+			case Spec_Global:
+			case Spec_Inline:
+			case Spec_Local_Persist:
+			case Spec_Mutable:
+			case Spec_Static:
+			case Spec_Thread_Local:
+			case Spec_Volatile:
 			break;
 
 			default:
-				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), to_string(Context) );
+				log_failure( "Invalid specifier %s for variable\n%s", to_str( spec ), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}
 
 		// Ignore const specifiers, they're handled by the type
-		if ( spec == ESpecifier::Const )
+		if ( spec == Spec_Const )
 			break;
 
 		specs_found[NumSpecifiers] = spec;

@@ -8,7 +8,7 @@
 GEN_NS_PARSER_BEGIN
 #define GEN_DEFINE_ATTRIBUTE_TOKENS Entry( Tok_Attribute_API_Export, "GEN_API_Export_Code" ) Entry( Tok_Attribute_API_Import, "GEN_API_Import_Code" )
 
-typedef TokType_Def TokType;
+typedef enum TokType_Def TokType;
 
 enum TokType_Def : u32
 {
@@ -216,7 +216,7 @@ inline StrC to_str( TokType type )
 	return lookup[type];
 }
 
-inline TokType to_type( StrC str )
+inline TokType to_toktype( StrC str )
 {
 	local_persist u32 keymap[Tok_NumTokens];
 	do_once_start for ( u32 index = 0; index < Tok_NumTokens; index++ )

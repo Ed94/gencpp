@@ -256,7 +256,7 @@ void to_string_def(CodeDestructor self, String* result )
 	}
 	else if ( self->Specs )
 	{
-		if ( has(self->Specs, ESpecifier::Virtual ) )
+		if ( has(self->Specs, Spec_Virtual ) )
 			append_fmt( result, "virtual ~%S()", self->Parent->Name );
 		else
 			append_fmt( result, "~%S()", self->Parent->Name );
@@ -271,12 +271,12 @@ void to_string_fwd(CodeDestructor self, String* result )
 {
 	if ( self->Specs )
 	{
-		if ( has(self->Specs, ESpecifier::Virtual ) )
+		if ( has(self->Specs, Spec_Virtual ) )
 			append_fmt( result, "virtual ~%S();\n", self->Parent->Name );
 		else
 			append_fmt( result, "~%S()", self->Parent->Name );
 
-		if ( has(self->Specs, ESpecifier::Pure ) )
+		if ( has(self->Specs, Spec_Pure ) )
 			append( result, " = 0;" );
 		else if (self->Body)
 			append_fmt( result, " = %S;", GEN_NS to_string(self->Body) );
@@ -492,11 +492,11 @@ void to_string_def(CodeFn self, String* result )
 	bool prefix_specs = false;
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ! ESpecifier::is_trailing( spec ) )
+			if ( ! is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
@@ -521,11 +521,11 @@ void to_string_def(CodeFn self, String* result )
 
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ESpecifier::is_trailing( spec ) )
+			if ( is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -545,11 +545,11 @@ void to_string_fwd(CodeFn self, String* result )
 	b32 prefix_specs = false;
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ! ESpecifier::is_trailing( spec ) || ! (spec != ESpecifier::Pure) )
+			if ( ! is_trailing( spec ) || ! (spec != Spec_Pure) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
@@ -576,17 +576,17 @@ void to_string_fwd(CodeFn self, String* result )
 
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ESpecifier::is_trailing( spec ) )
+			if ( is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
-	if ( self->Specs && has(self->Specs, ESpecifier::Pure ) >= 0 )
+	if ( self->Specs && has(self->Specs, Spec_Pure ) >= 0 )
 		append( result, " = 0;" );
 	else if (self->Body)
 		append_fmt( result, " = %S;", GEN_NS to_string(self->Body) );
@@ -661,11 +661,11 @@ void to_string_def(CodeOperator self, String* result )
 
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ! ESpecifier::is_trailing( spec ) )
+			if ( ! is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -687,11 +687,11 @@ void to_string_def(CodeOperator self, String* result )
 
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ESpecifier::is_trailing( spec ) )
+			if ( is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -712,11 +712,11 @@ void to_string_fwd(CodeOperator self, String* result )
 
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ! ESpecifier::is_trailing( spec ) )
+			if ( ! is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -737,11 +737,11 @@ void to_string_fwd(CodeOperator self, String* result )
 
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ESpecifier::is_trailing( spec ) )
+			if ( is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -773,11 +773,11 @@ void to_string_def(CodeOpCast self, String* result )
 {
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ! ESpecifier::is_trailing( spec ) )
+			if ( ! is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -787,11 +787,11 @@ void to_string_def(CodeOpCast self, String* result )
 		else
 			append_fmt( result, "operator %S()", to_string(self->ValueType) );
 
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ESpecifier::is_trailing( spec ) )
+			if ( is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -810,22 +810,22 @@ void to_string_fwd(CodeOpCast self, String* result )
 {
 	if ( self->Specs )
 	{
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ! ESpecifier::is_trailing( spec ) )
+			if ( ! is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
 			}
 		}
 
 		append_fmt( result, "operator %S()", to_string(self->ValueType) );
 
-		for ( SpecifierT spec : self->Specs )
+		for ( Specifier spec : self->Specs )
 		{
-			if ( ESpecifier::is_trailing( spec ) )
+			if ( is_trailing( spec ) )
 			{
-				StrC spec_str = ESpecifier::to_str( spec );
+				StrC spec_str = to_str( spec );
 				append_fmt( result, " %*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -973,7 +973,7 @@ void to_string( CodeSpecifiers self, String* result )
 	s32 left = self->NumEntries;
 	while ( left-- )
 	{
-		StrC spec = ESpecifier::to_str( self->ArrSpecs[idx] );
+		StrC spec = to_str( self->ArrSpecs[idx] );
 		append_fmt( result, "%.*s ", spec.Len, spec.Ptr );
 		idx++;
 	}

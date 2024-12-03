@@ -36,30 +36,30 @@ CodeConstructor parse_constructor( StrC def )
 	// TODO(Ed): Constructors can have prefix attributes
 
 	CodeSpecifiers specifiers;
-	SpecifierT     specs_found[ 16 ] { ESpecifier::NumSpecifiers };
+	Specifier      specs_found[ 16 ] { Spec_NumSpecifiers };
 	s32            NumSpecifiers = 0;
 
 	while ( left && is_specifier(currtok) )
 	{
-		SpecifierT spec = ESpecifier::to_type( to_str(currtok) );
+		Specifier spec = to_specifier( to_str(currtok) );
 
 		b32 ignore_spec = false;
 
 		switch ( spec )
 		{
-			case ESpecifier::Constexpr :
-			case ESpecifier::Explicit:
-			case ESpecifier::Inline :
-			case ESpecifier::ForceInline :
-			case ESpecifier::NeverInline :
+			case Spec_Constexpr :
+			case Spec_Explicit:
+			case Spec_Inline :
+			case Spec_ForceInline :
+			case Spec_NeverInline :
 				break;
 
-			case ESpecifier::Const :
+			case Spec_Const :
 				ignore_spec = true;
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), to_string(Context) );
+				log_failure( "Invalid specifier %s for variable\n%s", to_str( spec ), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}

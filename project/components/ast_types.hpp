@@ -12,7 +12,7 @@
 
 struct AST_Body
 {
-	char              _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+	char              _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	Code              Front;
 	Code              Back;
 	parser::Token*    Tok;
@@ -27,7 +27,7 @@ static_assert( sizeof(AST_Body) == sizeof(AST), "ERROR: AST_Body is not the same
 struct AST_Attributes
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StringCached  Content;
 	};
 	Code              Prev;
@@ -44,7 +44,7 @@ static_assert( sizeof(AST_Attributes) == sizeof(AST), "ERROR: AST_Attributes is 
 struct AST_BaseClass
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	Code              Prev;
 	Code              Next;
@@ -60,7 +60,7 @@ static_assert( sizeof(AST_BaseClass) == sizeof(AST), "ERROR: AST_BaseClass is no
 struct AST_Comment
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StringCached  Content;
 	};
 	Code              Prev;
@@ -76,7 +76,7 @@ static_assert( sizeof(AST_Comment) == sizeof(AST), "ERROR: AST_Comment is not th
 struct AST_Class
 {
 	union {
-		char                _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char                _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment     InlineCmt; // Only supported by forward declarations
@@ -102,7 +102,7 @@ static_assert( sizeof(AST_Class) == sizeof(AST), "ERROR: AST_Class is not the sa
 struct AST_Constructor
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment    InlineCmt; // Only supported by forward declarations
@@ -127,7 +127,7 @@ static_assert( sizeof(AST_Constructor) == sizeof(AST), "ERROR: AST_Constructor i
 struct AST_Define
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StringCached  Content;
 	};
 	Code              Prev;
@@ -143,7 +143,7 @@ static_assert( sizeof(AST_Define) == sizeof(AST), "ERROR: AST_Define is not the 
 struct AST_Destructor
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment    InlineCmt;
@@ -167,7 +167,7 @@ static_assert( sizeof(AST_Destructor) == sizeof(AST), "ERROR: AST_Destructor is 
 struct AST_Enum
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment    InlineCmt;
@@ -193,7 +193,7 @@ static_assert( sizeof(AST_Enum) == sizeof(AST), "ERROR: AST_Enum is not the same
 struct AST_Exec
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StringCached  Content;
 	};
 	Code              Prev;
@@ -210,7 +210,7 @@ static_assert( sizeof(AST_Exec) == sizeof(AST), "ERROR: AST_Exec is not the same
 struct AST_Expr
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -225,7 +225,7 @@ static_assert( sizeof(AST_Expr) == sizeof(AST), "ERROR: AST_Expr is not the same
 struct AST_Expr_Assign
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -240,7 +240,7 @@ static_assert( sizeof(AST_Expr_Assign) == sizeof(AST), "ERROR: AST_Expr_Assign i
 struct AST_Expr_Alignof
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -255,7 +255,7 @@ static_assert( sizeof(AST_Expr_Alignof) == sizeof(AST), "ERROR: AST_Expr_Alignof
 struct AST_Expr_Binary
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -270,7 +270,7 @@ static_assert( sizeof(AST_Expr_Binary) == sizeof(AST), "ERROR: AST_Expr_Binary i
 struct AST_Expr_CStyleCast
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -285,7 +285,7 @@ static_assert( sizeof(AST_Expr_CStyleCast) == sizeof(AST), "ERROR: AST_Expr_CSty
 struct AST_Expr_FunctionalCast
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -300,7 +300,7 @@ static_assert( sizeof(AST_Expr_FunctionalCast) == sizeof(AST), "ERROR: AST_Expr_
 struct AST_Expr_CppCast
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -315,7 +315,7 @@ static_assert( sizeof(AST_Expr_CppCast) == sizeof(AST), "ERROR: AST_Expr_CppCast
 struct AST_Expr_ProcCall
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -330,7 +330,7 @@ static_assert( sizeof(AST_Expr_ProcCall) == sizeof(AST), "ERROR: AST_Expr_Identi
 struct AST_Expr_Decltype
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -345,7 +345,7 @@ static_assert( sizeof(AST_Expr_Decltype) == sizeof(AST), "ERROR: AST_Expr_Declty
 struct AST_Expr_Comma
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -360,7 +360,7 @@ static_assert( sizeof(AST_Expr_Comma) == sizeof(AST), "ERROR: AST_Expr_Comma is 
 struct AST_Expr_AMS
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -375,7 +375,7 @@ static_assert( sizeof(AST_Expr_AMS) == sizeof(AST), "ERROR: AST_Expr_AMS is not 
 struct AST_Expr_Sizeof
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -390,7 +390,7 @@ static_assert( sizeof(AST_Expr_Sizeof) == sizeof(AST), "ERROR: AST_Expr_Sizeof i
 struct AST_Expr_Subscript
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -405,7 +405,7 @@ static_assert( sizeof(AST_Expr_Subscript) == sizeof(AST), "ERROR: AST_Expr_Subsc
 struct AST_Expr_Ternary
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -420,7 +420,7 @@ static_assert( sizeof(AST_Expr_Ternary) == sizeof(AST), "ERROR: AST_Expr_Ternary
 struct AST_Expr_UnaryPrefix
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -435,7 +435,7 @@ static_assert( sizeof(AST_Expr_UnaryPrefix) == sizeof(AST), "ERROR: AST_Expr_Una
 struct AST_Expr_UnaryPostfix
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -450,7 +450,7 @@ static_assert( sizeof(AST_Expr_UnaryPostfix) == sizeof(AST), "ERROR: AST_Expr_Un
 struct AST_Expr_Element
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -466,7 +466,7 @@ static_assert( sizeof(AST_Expr_Element) == sizeof(AST), "ERROR: AST_Expr_Element
 struct AST_Extern
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			char      _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
@@ -487,7 +487,7 @@ static_assert( sizeof(AST_Extern) == sizeof(AST), "ERROR: AST_Extern is not the 
 struct AST_Include
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StringCached  Content;
 	};
 	Code              Prev;
@@ -503,7 +503,7 @@ static_assert( sizeof(AST_Include) == sizeof(AST), "ERROR: AST_Include is not th
 struct AST_Friend
 {
 	union {
-		char            _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char            _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment InlineCmt;
@@ -525,7 +525,7 @@ static_assert( sizeof(AST_Friend) == sizeof(AST), "ERROR: AST_Friend is not the 
 struct AST_Fn
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment     InlineCmt;
@@ -550,7 +550,7 @@ static_assert( sizeof(AST_Fn) == sizeof(AST), "ERROR: AST_Fn is not the same siz
 
 struct AST_Module
 {
-	char              _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+	char              _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	Code              Prev;
 	Code              Next;
 	parser::Token*    Tok;
@@ -565,7 +565,7 @@ static_assert( sizeof(AST_Module) == sizeof(AST), "ERROR: AST_Module is not the 
 struct AST_NS
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct {
 			char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
 			CodeBody  Body;
@@ -586,7 +586,7 @@ static_assert( sizeof(AST_NS) == sizeof(AST), "ERROR: AST_NS is not the same siz
 struct AST_Operator
 {
 	union {
-		char                _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char                _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment     InlineCmt;
@@ -612,7 +612,7 @@ static_assert( sizeof(AST_Operator) == sizeof(AST), "ERROR: AST_Operator is not 
 struct AST_OpCast
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment    InlineCmt;
@@ -637,7 +637,7 @@ static_assert( sizeof(AST_OpCast) == sizeof(AST), "ERROR: AST_OpCast is not the 
 struct AST_Param
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
@@ -662,7 +662,7 @@ static_assert( sizeof(AST_Param) == sizeof(AST), "ERROR: AST_Param is not the sa
 struct AST_Pragma
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StringCached  Content;
 	};
 	Code              Prev;
@@ -678,7 +678,7 @@ static_assert( sizeof(AST_Pragma) == sizeof(AST), "ERROR: AST_Pragma is not the 
 struct AST_PreprocessCond
 {
 	union {
-		char          _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StringCached  Content;
 	};
 	Code              Prev;
@@ -693,7 +693,7 @@ static_assert( sizeof(AST_PreprocessCond) == sizeof(AST), "ERROR: AST_Preprocess
 
 struct AST_Specifiers
 {
-	SpecifierT        ArrSpecs[ AST_ArrSpecs_Cap ];
+	Specifier        ArrSpecs[ AST_ArrSpecs_Cap ];
 	CodeSpecifiers    NextSpecs;
 	Code              Prev;
 	Code              Next;
@@ -710,7 +710,7 @@ static_assert( sizeof(AST_Specifiers) == sizeof(AST), "ERROR: AST_Specifier is n
 struct AST_Stmt
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -725,7 +725,7 @@ static_assert( sizeof(AST_Stmt) == sizeof(AST), "ERROR: AST_Stmt is not the same
 struct AST_Stmt_Break
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -740,7 +740,7 @@ static_assert( sizeof(AST_Stmt_Break) == sizeof(AST), "ERROR: AST_Stmt_Break is 
 struct AST_Stmt_Case
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -755,7 +755,7 @@ static_assert( sizeof(AST_Stmt_Case) == sizeof(AST), "ERROR: AST_Stmt_Case is no
 struct AST_Stmt_Continue
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -770,7 +770,7 @@ static_assert( sizeof(AST_Stmt_Continue) == sizeof(AST), "ERROR: AST_Stmt_Contin
 struct AST_Stmt_Decl
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -785,7 +785,7 @@ static_assert( sizeof(AST_Stmt_Decl) == sizeof(AST), "ERROR: AST_Stmt_Decl is no
 struct AST_Stmt_Do
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -800,7 +800,7 @@ static_assert( sizeof(AST_Stmt_Do) == sizeof(AST), "ERROR: AST_Stmt_Do is not th
 struct AST_Stmt_Expr
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -815,7 +815,7 @@ static_assert( sizeof(AST_Stmt_Expr) == sizeof(AST), "ERROR: AST_Stmt_Expr is no
 struct AST_Stmt_Else
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -830,7 +830,7 @@ static_assert( sizeof(AST_Stmt_Else) == sizeof(AST), "ERROR: AST_Stmt_Else is no
 struct AST_Stmt_If
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -845,7 +845,7 @@ static_assert( sizeof(AST_Stmt_If) == sizeof(AST), "ERROR: AST_Stmt_If is not th
 struct AST_Stmt_For
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -860,7 +860,7 @@ static_assert( sizeof(AST_Stmt_For) == sizeof(AST), "ERROR: AST_Stmt_For is not 
 struct AST_Stmt_Goto
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -875,7 +875,7 @@ static_assert( sizeof(AST_Stmt_Goto) == sizeof(AST), "ERROR: AST_Stmt_Goto is no
 struct AST_Stmt_Label
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -890,7 +890,7 @@ static_assert( sizeof(AST_Stmt_Label) == sizeof(AST), "ERROR: AST_Stmt_Label is 
 struct AST_Stmt_Switch
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -905,7 +905,7 @@ static_assert( sizeof(AST_Stmt_Switch) == sizeof(AST), "ERROR: AST_Stmt_Switch i
 struct AST_Stmt_While
 {
 	union {
-		char _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
@@ -921,7 +921,7 @@ static_assert( sizeof(AST_Stmt_While) == sizeof(AST), "ERROR: AST_Stmt_While is 
 struct AST_Struct
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment    InlineCmt;
@@ -947,7 +947,7 @@ static_assert( sizeof(AST_Struct) == sizeof(AST), "ERROR: AST_Struct is not the 
 struct AST_Template
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
@@ -972,7 +972,7 @@ static_assert( sizeof(AST_Template) == sizeof(AST), "ERROR: AST_Template is not 
 struct AST_Type
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			char           _PAD_INLINE_CMT_[ sizeof(AST*) ];
@@ -1000,7 +1000,7 @@ static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same
 struct AST_Type
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			char           _PAD_INLINE_CMT_[ sizeof(AST*) ];
@@ -1026,7 +1026,7 @@ static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same
 struct AST_Typedef
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment    InlineCmt;
@@ -1049,7 +1049,7 @@ static_assert( sizeof(AST_Typedef) == sizeof(AST), "ERROR: AST_Typedef is not th
 struct AST_Union
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			char           _PAD_INLINE_CMT_[ sizeof(AST*) ];
@@ -1073,7 +1073,7 @@ static_assert( sizeof(AST_Union) == sizeof(AST), "ERROR: AST_Union is not the sa
 struct AST_Using
 {
 	union {
-		char                _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char                _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment     InlineCmt;
@@ -1097,7 +1097,7 @@ static_assert( sizeof(AST_Using) == sizeof(AST), "ERROR: AST_Using is not the sa
 struct AST_Var
 {
 	union {
-		char               _PAD_[ sizeof(SpecifierT) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
 			CodeComment    InlineCmt;

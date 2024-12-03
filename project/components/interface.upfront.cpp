@@ -1158,7 +1158,7 @@ CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
 	return result;
 }
 
-CodeSpecifiers def_specifier( SpecifierT spec )
+CodeSpecifiers def_specifier( Specifier spec )
 {
 	CodeSpecifiers
 	result       = (CodeSpecifiers) make_code();
@@ -2149,7 +2149,7 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 	va_start(va, num);
 	do
 	{
-		SpecifierT type = (SpecifierT)va_arg(va, int);
+		Specifier type = (Specifier)va_arg(va, int);
 
 		append(result, type );
 	}
@@ -2159,7 +2159,7 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 	return result;
 }
 
-CodeSpecifiers def_specifiers( s32 num, SpecifierT* specs )
+CodeSpecifiers def_specifiers( s32 num, Specifier* specs )
 {
 	if ( num <= 0 )
 	{

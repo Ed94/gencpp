@@ -5,94 +5,90 @@
 
 // This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
-namespace ESpecifier
+typedef enum Specifier_Def Specifier;
+
+enum Specifier_Def : u32
 {
-	enum Type : u32
-	{
-		Invalid,
-		Consteval,
-		Constexpr,
-		Constinit,
-		Explicit,
-		External_Linkage,
-		ForceInline,
-		Global,
-		Inline,
-		Internal_Linkage,
-		Local_Persist,
-		Mutable,
-		NeverInline,
-		Ptr,
-		Ref,
-		Register,
-		RValue,
-		Static,
-		Thread_Local,
-		Virtual,
-		Const,
-		Final,
-		NoExceptions,
-		Override,
-		Pure,
-		Volatile,
-		NumSpecifiers
+	Spec_Invalid,
+	Spec_Consteval,
+	Spec_Constexpr,
+	Spec_Constinit,
+	Spec_Explicit,
+	Spec_External_Linkage,
+	Spec_ForceInline,
+	Spec_Global,
+	Spec_Inline,
+	Spec_Internal_Linkage,
+	Spec_Local_Persist,
+	Spec_Mutable,
+	Spec_NeverInline,
+	Spec_Ptr,
+	Spec_Ref,
+	Spec_Register,
+	Spec_RValue,
+	Spec_Static,
+	Spec_Thread_Local,
+	Spec_Virtual,
+	Spec_Const,
+	Spec_Final,
+	Spec_NoExceptions,
+	Spec_Override,
+	Spec_Pure,
+	Spec_Volatile,
+	Spec_NumSpecifiers
+};
+
+inline bool is_trailing( Specifier specifier )
+{
+	return specifier > Spec_Virtual;
+}
+
+inline StrC to_str( Specifier type )
+{
+	local_persist StrC lookup[] {
+		{ sizeof( "INVALID" ),       "INVALID"       },
+		{ sizeof( "consteval" ),     "consteval"     },
+		{ sizeof( "constexpr" ),     "constexpr"     },
+		{ sizeof( "constinit" ),     "constinit"     },
+		{ sizeof( "explicit" ),      "explicit"      },
+		{ sizeof( "extern" ),        "extern"        },
+		{ sizeof( "forceinline" ),   "forceinline"   },
+		{ sizeof( "global" ),        "global"        },
+		{ sizeof( "inline" ),        "inline"        },
+		{ sizeof( "internal" ),      "internal"      },
+		{ sizeof( "local_persist" ), "local_persist" },
+		{ sizeof( "mutable" ),       "mutable"       },
+		{ sizeof( "neverinline" ),   "neverinline"   },
+		{ sizeof( "*" ),             "*"             },
+		{ sizeof( "&" ),             "&"             },
+		{ sizeof( "register" ),      "register"      },
+		{ sizeof( "&&" ),            "&&"            },
+		{ sizeof( "static" ),        "static"        },
+		{ sizeof( "thread_local" ),  "thread_local"  },
+		{ sizeof( "virtual" ),       "virtual"       },
+		{ sizeof( "const" ),         "const"         },
+		{ sizeof( "final" ),         "final"         },
+		{ sizeof( "noexcept" ),      "noexcept"      },
+		{ sizeof( "override" ),      "override"      },
+		{ sizeof( "= 0" ),           "= 0"           },
+		{ sizeof( "volatile" ),      "volatile"      },
 	};
+	return lookup[type];
+}
 
-	inline bool is_trailing( Type specifier )
+inline Specifier to_specifier( StrC str )
+{
+	local_persist u32 keymap[Spec_NumSpecifiers];
+	do_once_start for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 	{
-		return specifier > Virtual;
+		StrC enum_str = to_str( (Specifier)index );
+		keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1 );
 	}
-
-	inline StrC to_str( Type type )
+	do_once_end u32 hash = crc32( str.Ptr, str.Len );
+	for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 	{
-		local_persist StrC lookup[] {
-			{ sizeof( "INVALID" ),       "INVALID"       },
-			{ sizeof( "consteval" ),     "consteval"     },
-			{ sizeof( "constexpr" ),     "constexpr"     },
-			{ sizeof( "constinit" ),     "constinit"     },
-			{ sizeof( "explicit" ),      "explicit"      },
-			{ sizeof( "extern" ),        "extern"        },
-			{ sizeof( "forceinline" ),   "forceinline"   },
-			{ sizeof( "global" ),        "global"        },
-			{ sizeof( "inline" ),        "inline"        },
-			{ sizeof( "internal" ),      "internal"      },
-			{ sizeof( "local_persist" ), "local_persist" },
-			{ sizeof( "mutable" ),       "mutable"       },
-			{ sizeof( "neverinline" ),   "neverinline"   },
-			{ sizeof( "*" ),             "*"             },
-			{ sizeof( "&" ),             "&"             },
-			{ sizeof( "register" ),      "register"      },
-			{ sizeof( "&&" ),            "&&"            },
-			{ sizeof( "static" ),        "static"        },
-			{ sizeof( "thread_local" ),  "thread_local"  },
-			{ sizeof( "virtual" ),       "virtual"       },
-			{ sizeof( "const" ),         "const"         },
-			{ sizeof( "final" ),         "final"         },
-			{ sizeof( "noexcept" ),      "noexcept"      },
-			{ sizeof( "override" ),      "override"      },
-			{ sizeof( "= 0" ),           "= 0"           },
-			{ sizeof( "volatile" ),      "volatile"      },
-		};
-		return lookup[type];
+		if ( keymap[index] == hash )
+			return (Specifier)index;
 	}
-
-	inline Type to_type( StrC str )
-	{
-		local_persist u32 keymap[NumSpecifiers];
-		do_once_start for ( u32 index = 0; index < NumSpecifiers; index++ )
-		{
-			StrC enum_str = to_str( (Type)index );
-			keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1 );
-		}
-		do_once_end u32 hash = crc32( str.Ptr, str.Len );
-		for ( u32 index = 0; index < NumSpecifiers; index++ )
-		{
-			if ( keymap[index] == hash )
-				return (Type)index;
-		}
-		return Invalid;
-	}
-
-}    // namespace ESpecifier
-
-using SpecifierT = ESpecifier::Type;
+	return Spec_Invalid;
+}

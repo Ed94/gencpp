@@ -337,7 +337,7 @@ struct AST
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
-			SpecifierT ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
+			Specifier  ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
 			Code       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};

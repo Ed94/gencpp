@@ -232,7 +232,7 @@ CodeParam end(CodeParam params)
 
 #pragma region CodeSpecifiers
 inline
-bool append(CodeSpecifiers self, SpecifierT spec )
+bool append(CodeSpecifiers self, Specifier spec )
 {
 	if ( self.ast == nullptr )
 	{
@@ -250,7 +250,7 @@ bool append(CodeSpecifiers self, SpecifierT spec )
 	return true;
 }
 inline
-s32 has(CodeSpecifiers self, SpecifierT spec)
+s32 has(CodeSpecifiers self, Specifier spec)
 {
 	GEN_ASSERT(self.ast != nullptr);
 	for ( s32 idx = 0; idx < self->NumEntries; idx++ ) {
@@ -260,7 +260,7 @@ s32 has(CodeSpecifiers self, SpecifierT spec)
 	return -1;
 }
 inline
-s32 remove( CodeSpecifiers self, SpecifierT to_remove )
+s32 remove( CodeSpecifiers self, Specifier to_remove )
 {
 	AST_Specifiers* ast = self.ast;
 	if ( ast == nullptr )
@@ -280,7 +280,7 @@ s32 remove( CodeSpecifiers self, SpecifierT to_remove )
 	s32 next = 0;
 	for(; next < self->NumEntries; ++ curr, ++ next)
 	{
-		SpecifierT spec = self->ArrSpecs[next];
+		Specifier spec = self->ArrSpecs[next];
 		if (spec == to_remove)
 		{
 			result = next;
@@ -301,7 +301,7 @@ s32 remove( CodeSpecifiers self, SpecifierT to_remove )
 	return result;
 }
 inline
-SpecifierT* begin(CodeSpecifiers self)
+Specifier* begin(CodeSpecifiers self)
 {
 	if ( self.ast )
 		return & self->ArrSpecs[0];
@@ -309,7 +309,7 @@ SpecifierT* begin(CodeSpecifiers self)
 	return nullptr;
 }
 inline
-SpecifierT* end(CodeSpecifiers self)
+Specifier* end(CodeSpecifiers self)
 {
 	return self->ArrSpecs + self->NumEntries;
 }

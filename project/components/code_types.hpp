@@ -27,14 +27,14 @@ void      to_string  (CodeParam params, String* result );
 CodeParam begin(CodeParam params);
 CodeParam end  (CodeParam params);
 
-bool   append   (CodeSpecifiers specifiers, SpecifierT spec);
-s32    has      (CodeSpecifiers specifiers, SpecifierT spec);
-s32    remove   (CodeSpecifiers specifiers, SpecifierT to_remove );
+bool   append   (CodeSpecifiers specifiers, Specifier spec);
+s32    has      (CodeSpecifiers specifiers, Specifier spec);
+s32    remove   (CodeSpecifiers specifiers, Specifier to_remove );
 String to_string(CodeSpecifiers specifiers);
 void   to_string(CodeSpecifiers specifiers, String* result);
 
-SpecifierT* begin(CodeSpecifiers specifiers );
-SpecifierT* end  (CodeSpecifiers specifiers);
+Specifier* begin(CodeSpecifiers specifiers );
+Specifier* end  (CodeSpecifiers specifiers);
 
 void   add_interface(CodeStruct self, CodeType interface);
 String to_string    (CodeStruct self);
