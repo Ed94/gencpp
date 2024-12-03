@@ -11,16 +11,15 @@
 CodeClass parse_class( StrC def )
 {
 	check_parse_args( def );
-	using namespace parser;
-
-	TokArray toks = lex( def );
+	
+	parser::TokArray toks = parser::lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser::Context.Tokens = toks;
 	push_scope();
-	CodeClass result = (CodeClass) parse_class_struct( TokType::Decl_Class );
-	Context.pop();
+	CodeClass result = (CodeClass) parser::parse_class_struct( parser::TokType::Decl_Class );
+	parser::Context.pop();
 	return result;
 }
 

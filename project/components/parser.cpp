@@ -166,7 +166,7 @@ if ( def.Ptr == nullptr )                                                      \
 	return InvalidCode;                                                        \
 }
 
-#	define currtok_noskip (* current( & Context.Tokens, dont_skip_formatting ))
+#	define currtok_noskip (* parser::current( & parser::Context.Tokens, parser::dont_skip_formatting ))
 #	define currtok        (* current( & Context.Tokens, skip_formatting ))
 #	define prevtok        (* previous( Context.Tokens, dont_skip_formatting))
 #	define nexttok		  (* next( Context.Tokens, skip_formatting ))
@@ -183,8 +183,8 @@ if ( def.Ptr == nullptr )                                                      \
 #	define check( Type_ )        ( left && currtok.Type        == Type_ )
 
 #	define push_scope()                                                      \
-	StackNode scope { nullptr, currtok_noskip, NullToken, txt( __func__ ) }; \
-	Context.push( & scope )
+	parser::StackNode scope { nullptr, currtok_noskip, parser::NullToken, txt( __func__ ) }; \
+	parser::Context.push( & scope )
 
 #pragma endregion Helper Macros
 

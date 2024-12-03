@@ -158,46 +158,46 @@ global Arena_256KB     defines_map_arena;
 global HashTable(StrC) defines;
 global Array(Token)    Tokens;
 
-#define current ( * scanner )
+#define current ( * ctx->scanner )
 
 #define move_forward()          \
 	{                           \
 		if ( current == '\n' )  \
 		{                       \
-			line++;             \
-			column = 1;         \
+			ctx->line++;        \
+			ctx->column = 1;    \
 		}                       \
 		else                    \
 		{                       \
-			column++;           \
+			ctx->column++;      \
 		}                       \
-		left--;                 \
-		scanner++;              \
+		ctx->left--;            \
+		ctx->scanner++;         \
 	}
 
-#define SkipWhitespace()                        \
-	while ( left && char_is_space( current ) )  \
-	{                                           \
-		move_forward();                         \
+#define SkipWhitespace()                             \
+	while ( ctx->left && char_is_space( current ) )  \
+	{                                                \
+		move_forward();                              \
 	}
 
-#define end_line()                          \
-	do                                      \
-	{                                       \
-		while ( left && current == ' ' )    \
-		{                                   \
-			move_forward();                 \
-		}                                   \
-		if ( left && current == '\r' )      \
-		{                                   \
-			move_forward();                 \
-			move_forward();                 \
-		}                                   \
-		else if ( left && current == '\n' ) \
-		{                                   \
-			move_forward();                 \
-		}                                   \
-	}                                       \
+#define end_line()                               \
+	do                                           \
+	{                                            \
+		while ( ctx->left && current == ' ' )    \
+		{                                        \
+			move_forward();                      \
+		}                                        \
+		if ( ctx->left && current == '\r' )      \
+		{                                        \
+			move_forward();                      \
+			move_forward();                      \
+		}                                        \
+		else if ( ctx->left && current == '\n' ) \
+		{                                        \
+			move_forward();                      \
+		}                                        \
+	}                                            \
 	while (0)
 
 enum
@@ -206,40 +206,44 @@ enum
 	Lex_ReturnNull,
 };
 
-forceinline
-s32 lex_preprocessor_directive(
-	  StrC&            content
-	, s32&             left
-	, char const*&     scanner
-	, s32&             line
-	, s32&             column
-	, HashTable<StrC>& defines
-	, Token&           token )
+struct LexContext
 {
-	char const* hash = scanner;
-	append( & Tokens, { hash, 1, TokType::Preprocess_Hash, line, column, TF_Preprocess } );
+	StrC            content;
+	s32             left;
+	char const*     scanner;
+	s32             line;
+	s32             column;
+	HashTable(StrC) defines;
+	Token           token;
+};
+
+forceinline
+s32 lex_preprocessor_directive( LexContext* ctx )
+{
+	char const* hash = ctx->scanner;
+	append( & Tokens, { hash, 1, TokType::Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess } );
 
 	move_forward();
 	SkipWhitespace();
 
-	token.Text = scanner;
-	while (left && ! char_is_space(current) )
+	ctx->token.Text = ctx->scanner;
+	while (ctx->left && ! char_is_space(current) )
 	{
 		move_forward();
-		token.Length++;
+		ctx->token.Length++;
 	}
 
-	token.Type = ETokType::to_type( to_str(token) );
+	ctx->token.Type = ETokType::to_type( to_str(ctx->token) );
 
-	bool   is_preprocessor = token.Type >= TokType::Preprocess_Define && token.Type <= TokType::Preprocess_Pragma;
+	bool   is_preprocessor = ctx->token.Type >= TokType::Preprocess_Define && ctx->token.Type <= TokType::Preprocess_Pragma;
 	if ( ! is_preprocessor )
 	{
-		token.Type  = TokType::Preprocess_Unsupported;
+		ctx->token.Type  = TokType::Preprocess_Unsupported;
 
 		// Its an unsupported directive, skip it
 		s32 within_string = false;
 		s32 within_char   = false;
-		while ( left )
+		while ( ctx->left )
 		{
 			if ( current == '"' && ! within_char )
 				within_string ^= true;
@@ -250,26 +254,26 @@ s32 lex_preprocessor_directive(
 			if ( current == '\\' && ! within_string && ! within_char )
 			{
 				move_forward();
-				token.Length++;
+				ctx->token.Length++;
 
 				if ( current == '\r' )
 				{
 					move_forward();
-					token.Length++;
+					ctx->token.Length++;
 				}
 
 				if ( current == '\n' )
 				{
 					move_forward();
-					token.Length++;
+					ctx->token.Length++;
 					continue;
 				}
 				else
 				{
 					log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 								" in preprocessor directive (%d, %d)\n%.100s"
-						, current, line, column
-						, token.Line, token.Column, token.Text );
+						, current, ctx->line, ctx->column
+						, ctx->token.Line, ctx->token.Column, ctx->token.Text );
 					break;
 				}
 			}
@@ -277,57 +281,57 @@ s32 lex_preprocessor_directive(
 			if ( current == '\r' )
 			{
 				move_forward();
-				token.Length++;
+				ctx->token.Length++;
 			}
 
 			if ( current == '\n' )
 			{
 				move_forward();
-				token.Length++;
+				ctx->token.Length++;
 				break;
 			}
 
 			move_forward();
-			token.Length++;
+			ctx->token.Length++;
 		}
 
-		token.Length = token.Length + token.Text - hash;
-		token.Text   = hash;
-		append( & Tokens, token );
+		ctx->token.Length = ctx->token.Length + ctx->token.Text - hash;
+		ctx->token.Text   = hash;
+		append( & Tokens, ctx->token );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
-	if ( token.Type == TokType::Preprocess_Else || token.Type == TokType::Preprocess_EndIf )
+	if ( ctx->token.Type == TokType::Preprocess_Else || ctx->token.Type == TokType::Preprocess_EndIf )
 	{
-		token.Flags |= TF_Preprocess_Cond;
-		append( & Tokens, token );
+		ctx->token.Flags |= TF_Preprocess_Cond;
+		append( & Tokens, ctx->token );
 		end_line();
 		return Lex_Continue;
 	}
-	else if ( token.Type >= TokType::Preprocess_If && token.Type <= TokType::Preprocess_ElIf  )
+	else if ( ctx->token.Type >= TokType::Preprocess_If && ctx->token.Type <= TokType::Preprocess_ElIf  )
 	{
-		token.Flags |= TF_Preprocess_Cond;
+		ctx->token.Flags |= TF_Preprocess_Cond;
 	}
 
-	append( & Tokens, token );
+	append( & Tokens, ctx->token );
 
 	SkipWhitespace();
 
-	if ( token.Type == TokType::Preprocess_Define )
+	if ( ctx->token.Type == TokType::Preprocess_Define )
 	{
-		Token name = { scanner, 0, TokType::Identifier, line, column, TF_Preprocess };
+		Token name = { ctx->scanner, 0, TokType::Identifier, ctx->line, ctx->column, TF_Preprocess };
 
-		name.Text   = scanner;
+		name.Text   = ctx->scanner;
 		name.Length = 1;
 		move_forward();
 
-		while ( left && ( char_is_alphanumeric(current) || current == '_' ) )
+		while ( ctx->left && ( char_is_alphanumeric(current) || current == '_' ) )
 		{
 			move_forward();
 			name.Length++;
 		}
 
-		if ( left && current == '(' )
+		if ( ctx->left && current == '(' )
 		{
 			move_forward();
 			name.Length++;
@@ -336,18 +340,18 @@ s32 lex_preprocessor_directive(
 		append( & Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
-		set(& defines, key, to_str(name) );
+		set(& ctx->defines, key, to_str(name) );
 	}
 
-	Token preprocess_content = { scanner, 0, TokType::Preprocess_Content, line, column, TF_Preprocess };
+	Token preprocess_content = { ctx->scanner, 0, TokType::Preprocess_Content, ctx->line, ctx->column, TF_Preprocess };
 
-	if ( token.Type == TokType::Preprocess_Include )
+	if ( ctx->token.Type == TokType::Preprocess_Include )
 	{
 		preprocess_content.Type = TokType::String;
 
 		if ( current != '"' && current != '<' )
 		{
-			String directive_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 80, left + preprocess_content.Length ), token.Text );
+			String directive_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 80, ctx->left + preprocess_content.Length ), ctx->token.Text );
 
 			log_failure( "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
 				, current
@@ -360,7 +364,7 @@ s32 lex_preprocessor_directive(
 		move_forward();
 		preprocess_content.Length++;
 
-		while ( left && current != '"' && current != '>' )
+		while ( ctx->left && current != '"' && current != '>' )
 		{
 			move_forward();
 			preprocess_content.Length++;
@@ -369,7 +373,7 @@ s32 lex_preprocessor_directive(
 		move_forward();
 		preprocess_content.Length++;
 
-		if ( current == '\r' && scanner[1] == '\n' )
+		if ( current == '\r' && ctx->scanner[1] == '\n' )
 		{
 			move_forward();
 			move_forward();
@@ -387,7 +391,7 @@ s32 lex_preprocessor_directive(
 	s32 within_char   = false;
 
 	// SkipWhitespace();
-	while ( left )
+	while ( ctx->left )
 	{
 		if ( current == '"' && ! within_char )
 			within_string ^= true;
@@ -414,12 +418,12 @@ s32 lex_preprocessor_directive(
 			}
 			else
 			{
-				String directive_str = string_make_length( GlobalAllocator, token.Text, token.Length );
-				String content_str   = string_fmt_buf( GlobalAllocator, "%.*s", min( 400, left + preprocess_content.Length ), preprocess_content.Text );
+				String directive_str = string_make_length( GlobalAllocator, ctx->token.Text, ctx->token.Length );
+				String content_str   = string_fmt_buf( GlobalAllocator, "%.*s", min( 400, ctx->left + preprocess_content.Length ), preprocess_content.Text );
 
 				log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 							" in preprocessor directive '%s' (%d, %d)\n%s"
-					, current, line, column
+					, current, ctx->line, ctx->column
 					, directive_str, preprocess_content.Line, preprocess_content.Column
 					, content_str );
 				break;
@@ -446,30 +450,24 @@ s32 lex_preprocessor_directive(
 }
 
 forceinline
-void lex_found_token( StrC& content
-	, s32&             left
-	, char const*&     scanner
-	, s32&             line
-	, s32&             column
-	, HashTable<StrC>& defines
-	, Token&           token )
+void lex_found_token( LexContext* ctx ) 
 {
-	if ( token.Type != TokType::Invalid )
+	if ( ctx->token.Type != TokType::Invalid )
 	{
-		append( & Tokens, token );
+		append( & Tokens, ctx->token );
 		return;
 	}
 
-	TokType type = ETokType::to_type( to_str(token) );
+	TokType type = ETokType::to_type( to_str(ctx->token) );
 
 	if (type <= TokType::Access_Public && type >= TokType::Access_Private )
 	{
-		token.Flags |= TF_AccessSpecifier;
+		ctx->token.Flags |= TF_AccessSpecifier;
 	}
 
 	if ( type > TokType::__Attributes_Start )
 	{
-		token.Flags |= TF_Attribute;
+		ctx->token.Flags |= TF_Attribute;
 	}
 
 	if ( type == ETokType::Decl_Extern_Linkage )
@@ -479,11 +477,11 @@ void lex_found_token( StrC& content
 		if ( current != '"' )
 		{
 			type         = ETokType::Spec_Extern;
-			token.Flags |= TF_Specifier;
+			ctx->token.Flags |= TF_Specifier;
 		}
 
-		token.Type = type;
-		append( & Tokens, token );
+		ctx->token.Type = type;
+		append( & Tokens, ctx->token );
 		return;
 	}
 
@@ -491,39 +489,39 @@ void lex_found_token( StrC& content
 			|| type == TokType::Ampersand
 			|| type == TokType::Ampersand_DBL )
 	{
-		token.Type   = type;
-		token.Flags |= TF_Specifier;
-		append( & Tokens, token );
+		ctx->token.Type   = type;
+		ctx->token.Flags |= TF_Specifier;
+		append( & Tokens, ctx->token );
 		return;
 	}
 
 
 	if ( type != TokType::Invalid )
 	{
-		token.Type = type;
-		append( & Tokens, token );
+		ctx->token.Type = type;
+		append( & Tokens, ctx->token );
 		return;
 	}
 
 	u64 key = 0;
 	if ( current == '(')
-		key = crc32( token.Text, token.Length + 1 );
+		key = crc32( ctx->token.Text, ctx->token.Length + 1 );
 	else
-		key = crc32( token.Text, token.Length );
+		key = crc32( ctx->token.Text, ctx->token.Length );
 
-	StrC* define = get(defines, key );
+	StrC* define = get(ctx->defines, key );
 	if ( define )
 	{
-		token.Type = TokType::Preprocess_Macro;
+		ctx->token.Type = TokType::Preprocess_Macro;
 
 		// Want to ignore any arguments the define may have as they can be execution expressions.
-		if ( left && current == '(' )
+		if ( ctx->left && current == '(' )
 		{
 			move_forward();
-			token.Length++;
+			ctx->token.Length++;
 
 			s32 level = 0;
-			while ( left && (current != ')' || level > 0) )
+			while ( ctx->left && (current != ')' || level > 0) )
 			{
 				if ( current == '(' )
 					level++;
@@ -532,14 +530,14 @@ void lex_found_token( StrC& content
 					level--;
 
 				move_forward();
-				token.Length++;
+				ctx->token.Length++;
 			}
 
 			move_forward();
-			token.Length++;
+			ctx->token.Length++;
 		}
 
-		if ( current == '\r' && scanner[1] == '\n' )
+		if ( current == '\r' && ctx->scanner[1] == '\n' )
 		{
 			move_forward();
 		}
@@ -550,10 +548,10 @@ void lex_found_token( StrC& content
 	}
 	else
 	{
-		token.Type = TokType::Identifier;
+		ctx->token.Type = TokType::Identifier;
 	}
 
-	append( & Tokens, token );
+	append( & Tokens, ctx->token );
 }
 
 
@@ -561,17 +559,20 @@ neverinline
 // TokArray lex( Array<Token> tokens, StrC content )
 TokArray lex( StrC content )
 {
-	s32         left    = content.Len;
-	char const* scanner = content.Ptr;
+	LexContext c; LexContext* ctx = & c;
+	c.content = content;
+	c.left    = content.Len;
+	c.scanner = content.Ptr;
+	c.defines = defines;
 
-	char const* word        = scanner;
+	char const* word        = c.scanner;
 	s32         word_length = 0;
 
-	s32 line   = 1;
-	s32 column = 1;
+	c.line   = 1;
+	c.column = 1;
 
 	SkipWhitespace();
-	if ( left <= 0 )
+	if ( c.left <= 0 )
 	{
 		log_failure( "gen::lex: no tokens found (only whitespace provided)" );
 		return { {}, 0 };
@@ -583,21 +584,21 @@ TokArray lex( StrC content )
 		char const* scanner = entry.Data;
 		while ( GEN_NS length(entry) > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
 		{
-			scanner++;
+			c.scanner++;
 			length ++;
 		}
-		if ( scanner[0] == '(' )
+		if ( c.scanner[0] == '(' )
 		{
 			length++;
 		}
 
 		u64 key = crc32( entry.Data, length );
-		set<StrC>(& defines, key, entry );
+		set(& c.defines, key, (StrC)entry );
 	}
 
 	clear(Tokens);
 
-	while (left )
+	while (c.left )
 	{
 		#if 0
 		if (Tokens.num())
@@ -606,41 +607,41 @@ TokArray lex( StrC content )
 		}
 		#endif
 
-		Token token = { scanner, 0, TokType::Invalid, line, column, TF_Null };
+		c.token = { c.scanner, 0, TokType::Invalid, c.line, c.column, TF_Null };
 
 		bool is_define = false;
 
-		if ( column == 1 )
+		if ( c.column == 1 )
 		{
 			if ( current == '\r')
 			{
 				move_forward();
-				token.Length = 1;
+				c.token.Length = 1;
 			}
 
 			if ( current == '\n' )
 			{
 				move_forward();
 
-				token.Type = TokType::NewLine;
-				token.Length++;
+				c.token.Type = TokType::NewLine;
+				c.token.Length++;
 
-				append( & Tokens, token );
+				append( & Tokens, c.token );
 				continue;
 			}
 		}
 
-		token.Length = 0;
+		c.token.Length = 0;
 
 		SkipWhitespace();
-		if ( left <= 0 )
+		if ( c.left <= 0 )
 			break;
 
 		switch ( current )
 		{
 			case '#':
 			{
-				s32 result = lex_preprocessor_directive( content, left, scanner, line, column, defines, token );
+				s32 result = lex_preprocessor_directive( ctx );
 				switch ( result )
 				{
 					case Lex_Continue:
@@ -652,12 +653,12 @@ TokArray lex( StrC content )
 			}
 			case '.':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Access_MemberSymbol;
-				token.Flags  = TF_AccessOperator;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Access_MemberSymbol;
+				c.token.Flags  = TF_AccessOperator;
 
-				if (left) {
+				if (c.left) {
 					move_forward();
 				}
 
@@ -666,16 +667,16 @@ TokArray lex( StrC content )
 					move_forward();
 					if( current == '.' )
 					{
-						token.Length = 3;
-						token.Type   = TokType::Varadic_Argument;
-						token.Flags  = TF_Null;
+						c.token.Length = 3;
+						c.token.Type   = TokType::Varadic_Argument;
+						c.token.Flags  = TF_Null;
 						move_forward();
 					}
 					else
 					{
-						String context_str = string_fmt_buf( GlobalAllocator, "%s", scanner, min( 100, left ) );
+						String context_str = string_fmt_buf( GlobalAllocator, "%s", c.scanner, min( 100, c.left ) );
 
-						log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", current, line, column, context_str );
+						log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", current, c.line, c.column, context_str );
 					}
 				}
 
@@ -683,21 +684,21 @@ TokArray lex( StrC content )
 			}
 			case '&' :
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Ampersand;
-				token.Flags |= TF_Operator;
-				token.Flags |= TF_Specifier;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Ampersand;
+				c.token.Flags |= TF_Operator;
+				c.token.Flags |= TF_Specifier;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				if ( current == '&' )	// &&
 				{
-					token.Length  = 2;
-					token.Type    = TokType::Ampersand_DBL;
+					c.token.Length  = 2;
+					c.token.Type    = TokType::Ampersand_DBL;
 
-					if (left)
+					if (c.left)
 						move_forward();
 				}
 
@@ -705,41 +706,41 @@ TokArray lex( StrC content )
 			}
 			case ':':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Assign_Classifer;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Assign_Classifer;
 				// Can be either a classifier (ParentType, Bitfield width), or ternary else
 				// token.Type   = TokType::Colon;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				if ( current == ':' )
 				{
 					move_forward();
-					token.Type  = TokType::Access_StaticSymbol;
-					token.Length++;
+					c.token.Type  = TokType::Access_StaticSymbol;
+					c.token.Length++;
 				}
 				goto FoundToken;
 			}
 			case '{':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::BraceCurly_Open;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::BraceCurly_Open;
 
-				if (left)
+				if (c.left)
 					move_forward();
 				goto FoundToken;
 			}
 			case '}':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::BraceCurly_Close;
-				token.Flags  = TF_EndDefinition;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::BraceCurly_Close;
+				c.token.Flags  = TF_EndDefinition;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				end_line();
@@ -747,17 +748,17 @@ TokArray lex( StrC content )
 			}
 			case '[':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::BraceSquare_Open;
-				if ( left )
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::BraceSquare_Open;
+				if ( c.left )
 				{
 					move_forward();
 
 					if ( current == ']' )
 					{
-						token.Length = 2;
-						token.Type   = TokType::Operator;
+						c.token.Length = 2;
+						c.token.Type   = TokType::Operator;
 						move_forward();
 					}
 				}
@@ -765,97 +766,97 @@ TokArray lex( StrC content )
 			}
 			case ']':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::BraceSquare_Close;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::BraceSquare_Close;
 
-				if (left)
+				if (c.left)
 					move_forward();
 				goto FoundToken;
 			}
 			case '(':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Capture_Start;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Capture_Start;
 
-				if (left)
+				if (c.left)
 					move_forward();
 				goto FoundToken;
 			}
 			case ')':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Capture_End;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Capture_End;
 
-				if (left)
+				if (c.left)
 					move_forward();
 				goto FoundToken;
 			}
 			case '\'':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Char;
-				token.Flags  = TF_Literal;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Char;
+				c.token.Flags  = TF_Literal;
 
 				move_forward();
 
-				if ( left && current == '\\' )
+				if ( c.left && current == '\\' )
 				{
 					move_forward();
-					token.Length++;
+					c.token.Length++;
 
 					if ( current == '\'' )
 					{
 						move_forward();
-						token.Length++;
+						c.token.Length++;
 					}
 				}
 
-				while ( left && current != '\'' )
+				while ( c.left && current != '\'' )
 				{
 					move_forward();
-					token.Length++;
+					c.token.Length++;
 				}
 
-				if ( left )
+				if ( c.left )
 				{
 					move_forward();
-					token.Length++;
+					c.token.Length++;
 				}
 				goto FoundToken;
 			}
 			case ',':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Comma;
-				token.Flags  = TF_Operator;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Comma;
+				c.token.Flags  = TF_Operator;
 
-				if (left)
+				if (c.left)
 					move_forward();
 				goto FoundToken;
 			}
 			case '*':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Star;
-				token.Flags |= TF_Specifier;
-				token.Flags |= TF_Operator;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Star;
+				c.token.Flags |= TF_Specifier;
+				c.token.Flags |= TF_Operator;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				if ( current == '=' )
 				{
-					token.Length++;
-					token.Flags |= TF_Assign;
-					// token.Type = TokType::Assign_Multiply;
+					c.token.Length++;
+					c.token.Flags |= TF_Assign;
+					// c.token.Type = TokType::Assign_Multiply;
 
-					if ( left )
+					if ( c.left )
 						move_forward();
 				}
 
@@ -863,12 +864,12 @@ TokArray lex( StrC content )
 			}
 			case ';':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Statement_End;
-				token.Flags  = TF_EndDefinition;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Statement_End;
+				c.token.Flags  = TF_EndDefinition;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				end_line();
@@ -876,13 +877,13 @@ TokArray lex( StrC content )
 			}
 			case '"':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::String;
-				token.Flags |= TF_Literal;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::String;
+				c.token.Flags |= TF_Literal;
 
 				move_forward();
-				while ( left )
+				while ( c.left )
 				{
 					if ( current == '"' )
 					{
@@ -893,52 +894,52 @@ TokArray lex( StrC content )
 					if ( current == '\\' )
 					{
 						move_forward();
-						token.Length++;
+						c.token.Length++;
 
-						if ( left )
+						if ( c.left )
 						{
 							move_forward();
-							token.Length++;
+							c.token.Length++;
 						}
 						continue;
 					}
 
 					move_forward();
-					token.Length++;
+					c.token.Length++;
 				}
 				goto FoundToken;
 			}
 			case '?':
 			{
-				token.Text     = scanner;
-				token.Length   = 1;
-				token.Type     = TokType::Operator;
-				// token.Type     = TokType::Ternary;
-				token.Flags    = TF_Operator;
+				c.token.Text     = c.scanner;
+				c.token.Length   = 1;
+				c.token.Type     = TokType::Operator;
+				// c.token.Type     = TokType::Ternary;
+				c.token.Flags    = TF_Operator;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				goto FoundToken;
 			}
 			case '=':
 			{
-				token.Text     = scanner;
-				token.Length   = 1;
-				token.Type     = TokType::Operator;
-				// token.Type     = TokType::Assign;
-				token.Flags    = TF_Operator;
-				token.Flags   |= TF_Assign;
+				c.token.Text     = c.scanner;
+				c.token.Length   = 1;
+				c.token.Type     = TokType::Operator;
+				// c.token.Type     = TokType::Assign;
+				c.token.Flags    = TF_Operator;
+				c.token.Flags   |= TF_Assign;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				if ( current == '=' )
 				{
-					token.Length++;
-					token.Flags = TF_Operator;
+					c.token.Length++;
+					c.token.Flags = TF_Operator;
 
-					if (left)
+					if (c.left)
 						move_forward();
 				}
 
@@ -946,63 +947,63 @@ TokArray lex( StrC content )
 			}
 			case '+':
 			{
-				// token.Type = TokType::Add
+				// c.token.Type = TokType::Add
 
 			}
 			case '%':
 			{
-				// token.Type = TokType::Modulo;
+				// c.token.Type = TokType::Modulo;
 
 			}
 			case '^':
 			{
-				// token.Type = TokType::B_XOr;
+				// c.token.Type = TokType::B_XOr;
 			}
 			case '~':
 			{
-				// token.Type = TokType::Unary_Not;
+				// c.token.Type = TokType::Unary_Not;
 
 			}
 			case '!':
 			{
-				// token.Type = TokType::L_Not;
+				// c.token.Type = TokType::L_Not;
 			}
 			case '<':
 			{
-				// token.Type = TokType::Lesser;
+				// c.token.Type = TokType::Lesser;
 
 			}
 			case '>':
 			{
-				// token.Type = TokType::Greater;
+				// c.token.Type = TokType::Greater;
 
 			}
 			case '|':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Operator;
-				token.Flags  = TF_Operator;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Operator;
+				c.token.Flags  = TF_Operator;
 				// token.Type   = TokType::L_Or;
 
-				if (left)
+				if (c.left)
 					move_forward();
 
 				if ( current == '=' )
 				{
-					token.Length++;
-					token.Flags |= TF_Assign;
+					c.token.Length++;
+					c.token.Flags |= TF_Assign;
 					// token.Flags |= TokFlags::Assignment;
 					// token.Type = TokType::Assign_L_Or;
 
-					if (left)
+					if (c.left)
 						move_forward();
 				}
-				else while ( left && current == *(scanner - 1) && token.Length < 3 )
+				else while ( c.left && current == *(c.scanner - 1) && c.token.Length < 3 )
 				{
-					token.Length++;
+					c.token.Length++;
 
-					if (left)
+					if (c.left)
 						move_forward();
 				}
 				goto FoundToken;
@@ -1011,43 +1012,43 @@ TokArray lex( StrC content )
 			// Dash is unfortunatlly a bit more complicated...
 			case '-':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Operator;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Operator;
 				// token.Type = TokType::Subtract;
-				token.Flags  = TF_Operator;
-				if ( left )
+				c.token.Flags  = TF_Operator;
+				if ( c.left )
 				{
 					move_forward();
 
 					if ( current == '>'  )
 					{
-						token.Length++;
+						c.token.Length++;
 //						token.Type = TokType::Access_PointerToMemberSymbol;
-						token.Flags |= TF_AccessOperator;
+						c.token.Flags |= TF_AccessOperator;
 						move_forward();
 
 						if ( current == '*' )
 						{
 //							token.Type = TokType::Access_PointerToMemberOfPointerSymbol;
-							token.Length++;
+							c.token.Length++;
 							move_forward();
 						}
 					}
 					else if ( current == '=' )
 					{
-						token.Length++;
+						c.token.Length++;
 						// token.Type = TokType::Assign_Subtract;
-						token.Flags |= TF_Assign;
+						c.token.Flags |= TF_Assign;
 
-						if (left)
+						if (c.left)
 							move_forward();
 					}
-					else while ( left && current == *(scanner - 1) && token.Length < 3 )
+					else while ( c.left && current == *(c.scanner - 1) && c.token.Length < 3 )
 					{
-						token.Length++;
+						c.token.Length++;
 
-						if (left)
+						if (c.left)
 							move_forward();
 					}
 				}
@@ -1055,82 +1056,82 @@ TokArray lex( StrC content )
 			}
 			case '/':
 			{
-				token.Text   = scanner;
-				token.Length = 1;
-				token.Type   = TokType::Operator;
+				c.token.Text   = c.scanner;
+				c.token.Length = 1;
+				c.token.Type   = TokType::Operator;
 				// token.Type   = TokType::Divide;
-				token.Flags  = TF_Operator;
+				c.token.Flags  = TF_Operator;
 				move_forward();
 
-				if ( left )
+				if ( c.left )
 				{
 					if ( current == '=' )
 					{
 						// token.Type = TokeType::Assign_Divide;
 						move_forward();
-						token.Length++;
-						token.Flags = TF_Assign;
+						c.token.Length++;
+						c.token.Flags = TF_Assign;
 					}
 					else if ( current == '/' )
 					{
-						token.Type   = TokType::Comment;
-						token.Length = 2;
-						token.Flags  = TF_Null;
+						c.token.Type   = TokType::Comment;
+						c.token.Length = 2;
+						c.token.Flags  = TF_Null;
 						move_forward();
 
-						while ( left && current != '\n' && current != '\r' )
+						while ( c.left && current != '\n' && current != '\r' )
 						{
 							move_forward();
-							token.Length++;
+							c.token.Length++;
 						}
 
 						if ( current == '\r' )
 						{
 							move_forward();
-							token.Length++;
+							c.token.Length++;
 						}
 						if ( current == '\n' )
 						{
 							move_forward();
-							token.Length++;
+							c.token.Length++;
 						}
-						append( & Tokens, token );
+						append( & Tokens, c.token );
 						continue;
 					}
 					else if ( current == '*' )
 					{
-						token.Type   = TokType::Comment;
-						token.Length = 2;
-						token.Flags  = TF_Null;
+						c.token.Type   = TokType::Comment;
+						c.token.Length = 2;
+						c.token.Flags  = TF_Null;
 						move_forward();
 
 						bool star   = current    == '*';
-						bool slash  = scanner[1] == '/';
+						bool slash  = c.scanner[1] == '/';
 						bool at_end = star && slash;
-						while ( left && ! at_end  )
+						while ( c.left && ! at_end  )
 						{
 							move_forward();
-							token.Length++;
+							c.token.Length++;
 
 							star   = current    == '*';
-							slash  = scanner[1] == '/';
+							slash  = c.scanner[1] == '/';
 							at_end = star && slash;
 						}
-						token.Length += 2;
+						c.token.Length += 2;
 						move_forward();
 						move_forward();
 
 						if ( current == '\r' )
 						{
 							move_forward();
-							token.Length++;
+							c.token.Length++;
 						}
 						if ( current == '\n' )
 						{
 							move_forward();
-							token.Length++;
+							c.token.Length++;
 						}
-						append( & Tokens, token );
+						append( & Tokens, c.token );
 						// end_line();
 						continue;
 					}
@@ -1141,14 +1142,14 @@ TokArray lex( StrC content )
 
 		if ( char_is_alpha( current ) || current == '_' )
 		{
-			token.Text   = scanner;
-			token.Length = 1;
+			c.token.Text   = c.scanner;
+			c.token.Length = 1;
 			move_forward();
 
-			while ( left && ( char_is_alphanumeric(current) || current == '_' ) )
+			while ( c.left && ( char_is_alphanumeric(current) || current == '_' ) )
 			{
 				move_forward();
-				token.Length++;
+				c.token.Length++;
 			}
 
 			goto FoundToken;
@@ -1157,49 +1158,49 @@ TokArray lex( StrC content )
 		{
 			// This is a very brute force lex, no checks are done for validity of literal.
 
-			token.Text   = scanner;
-			token.Length = 1;
-			token.Type   = TokType::Number;
-			token.Flags  = TF_Literal;
+			c.token.Text   = c.scanner;
+			c.token.Length = 1;
+			c.token.Type   = TokType::Number;
+			c.token.Flags  = TF_Literal;
 			move_forward();
 
-			if (left
+			if (c.left
 			&& (	current == 'x' || current == 'X'
 				||	current == 'b' || current == 'B'
 				||  current == 'o' || current == 'O' )
 			)
 			{
 				move_forward();
-				token.Length++;
+				c.token.Length++;
 
-				while ( left && char_is_hex_digit(current) )
+				while ( c.left && char_is_hex_digit(current) )
 				{
 					move_forward();
-					token.Length++;
+					c.token.Length++;
 				}
 
 				goto FoundToken;
 			}
 
-			while ( left && char_is_digit(current) )
+			while ( c.left && char_is_digit(current) )
 			{
 				move_forward();
-				token.Length++;
+				c.token.Length++;
 			}
 
-			if ( left && current == '.' )
+			if ( c.left && current == '.' )
 			{
 				move_forward();
-				token.Length++;
+				c.token.Length++;
 
-				while ( left && char_is_digit(current) )
+				while ( c.left && char_is_digit(current) )
 				{
 					move_forward();
-					token.Length++;
+					c.token.Length++;
 				}
 
 				// Handle number literal suffixes in a botched way
-				if (left && (
+				if (c.left && (
 					current == 'l' || current == 'L' ||  // long/long long
 					current == 'u' || current == 'U' ||  // unsigned
 					current == 'f' || current == 'F' ||  // float
@@ -1208,13 +1209,13 @@ TokArray lex( StrC content )
 				{
 					char prev = current;
 					move_forward();
-					token.Length++;
+					c.token.Length++;
 
 					// Handle 'll'/'LL' as a special case when we just processed an 'l'/'L'
-					if (left && (prev == 'l' || prev == 'L') && (current == 'l' || current == 'L'))
+					if (c.left && (prev == 'l' || prev == 'L') && (current == 'l' || current == 'L'))
 					{
 						move_forward();
-						token.Length++;
+						c.token.Length++;
 					}
 				}
 			}
@@ -1234,18 +1235,18 @@ TokArray lex( StrC content )
 				);
 			}
 
-			String context_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 100, left ), scanner );
-			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", current, line, column, context_str );
+			String context_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 100, c.left ), c.scanner );
+			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", current, c.line, c.column, context_str );
 
 			// Skip to next whitespace since we can't know if anything else is valid until then.
-			while ( left && ! char_is_space( current ) )
+			while ( c.left && ! char_is_space( current ) )
 			{
 				move_forward();
 			}
 		}
 
 	FoundToken:
-		lex_found_token( content, left, scanner, line, column, defines, token );
+		lex_found_token( ctx );
 	}
 
 	if ( num(Tokens) == 0 )
