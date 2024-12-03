@@ -716,7 +716,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	// <ModuleFlags> <class/struct> <Attributes> <Name>
 
 	local_persist
-	char interface_arr_mem[ kilobytes(4) ] {0};
+		char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeType> interfaces; {
 		Arena arena = arena_init_from_memory( interface_arr_mem, kilobytes(4) );
 		interfaces  = array_init_reserve<CodeType>( allocator_info(& arena), 4 );
@@ -770,14 +770,14 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 
 		if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
-			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }; <InlineCmt>
+		// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }; <InlineCmt>
 	}
 
 	if ( which == TokType::Decl_Class )
-		result = def_class( to_str(name), body, parent, access, attributes, mflags );
+		result = def_class( to_str(name), { body, parent, access, attributes, mflags } );
 
 	else
-		result = def_struct( to_str(name), body, (CodeType)parent, access, attributes, mflags );
+		result = def_struct( to_str(name), { body, (CodeType)parent, access, attributes, mflags } );
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
@@ -2477,7 +2477,7 @@ CodeOperator parse_operator_after_ret_type(
 	}
 
 	// OpValidateResult check_result = operator__validate( op, params, ret_type, specifiers );
-	CodeOperator result = def_operator( op, to_str(nspace), params, ret_type, body, specifiers, attributes, mflags );
+	CodeOperator result = def_operator( op, to_str(nspace), { params, ret_type, body, specifiers, attributes, mflags } );
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;

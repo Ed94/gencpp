@@ -42,74 +42,126 @@ void set_allocator_type_table  ( AllocatorInfo type_reg_allocator );
 CodeAttributes def_attributes( StrC content );
 CodeComment    def_comment   ( StrC content );
 
-CodeClass def_class( StrC name
-	, Code           body         = NullCode
-	, CodeType       parent       = NullCode, AccessSpec access = AccessSpec_Default
-	, CodeAttributes attributes   = NullCode
-	, ModuleFlag     mflags       = ModuleFlag_None
-	, CodeType*      interfaces   = nullptr, s32 num_interfaces = 0 );
+struct Opts_def_struct {
+	Code           body;
+	CodeType       parent;
+	AccessSpec     parent_access;
+	CodeAttributes attributes;
+	ModuleFlag     mflags;
+	CodeType*      interfaces;
+	s32            num_interfaces;
+};
+CodeClass def_class( StrC name, Opts_def_struct otps GEN_PARAM_DEFAULT );
 
-CodeConstructor def_constructor( CodeParam params = NullCode, Code initializer_list = NullCode, Code body = NullCode );
+struct Opts_def_constructor {
+	CodeParam params;
+	Code      initializer_list;
+	Code      body;
+};
+CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEFAULT );
 
 CodeDefine def_define( StrC name, StrC content );
 
-CodeDestructor def_destructor( Code body = NullCode, CodeSpecifiers specifiers = NullCode );
+struct Opts_def_destructor {
+	Code           body;
+	CodeSpecifiers specifiers;
+};
+CodeDestructor def_destructor( Opts_def_destructor opts GEN_PARAM_DEFAULT );
 
-CodeEnum def_enum( StrC name
-	, Code         body      = NullCode,           CodeType       type       = NullCode
-	, EnumT        specifier = EnumDecl_Regular, CodeAttributes attributes = NullCode
-	, ModuleFlag   mflags    = ModuleFlag_None );
+struct Opts_def_enum {
+	Code           body;
+	CodeType       type;
+	EnumT          specifier;
+	CodeAttributes attributes;
+	ModuleFlag     mflags;
+};
+CodeEnum def_enum( StrC name, Opts_def_enum opts GEN_PARAM_DEFAULT );
 
 CodeExec   def_execution  ( StrC content );
 CodeExtern def_extern_link( StrC name, Code body );
 CodeFriend def_friend     ( Code symbol );
 
-CodeFn def_function( StrC name
-	, CodeParam      params     = NullCode, CodeType       ret_type   = NullCode, Code body = NullCode
-	, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode
-	, ModuleFlag mflags     = ModuleFlag_None );
+struct Opts_def_function {
+	CodeParam       params;
+	CodeType        ret_type;
+	Code            body;
+	CodeSpecifiers  specs;
+	CodeAttributes  attrs;
+	ModuleFlag      mflags;
+};
+CodeFn def_function( StrC name, Opts_def_function opts GEN_PARAM_DEFAULT );
 
-CodeInclude   def_include  ( StrC content, bool foreign = false );
-CodeModule    def_module   ( StrC name,            ModuleFlag mflags = ModuleFlag_None );
-CodeNS        def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag_None );
+struct Opts_def_include   { b32        foreign; };
+struct Opts_def_module    { ModuleFlag mflags;  };
+struct Opts_def_namespace { ModuleFlag mflags;  };
+CodeInclude def_include  ( StrC content,         Opts_def_include   opts GEN_PARAM_DEFAULT );
+CodeModule  def_module   ( StrC name,            Opts_def_module    opts GEN_PARAM_DEFAULT );
+CodeNS      def_namespace( StrC name, Code body, Opts_def_namespace opts GEN_PARAM_DEFAULT );
 
-CodeOperator def_operator( OperatorT op, StrC nspace
-	, CodeParam      params     = NullCode, CodeType       ret_type   = NullCode, Code body = NullCode
-	, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode
-	, ModuleFlag     mflags     = ModuleFlag_None );
+struct Opts_def_operator {
+	CodeParam       params;
+	CodeType        ret_type;
+	Code            body;
+	CodeSpecifiers  specifiers;
+	CodeAttributes  attributes;
+	ModuleFlag      mflags;
+};
+CodeOperator def_operator( OperatorT op, StrC nspace, Opts_def_operator opts GEN_PARAM_DEFAULT );
 
-CodeOpCast def_operator_cast( CodeType type, Code body = NullCode, CodeSpecifiers specs = NullCode );
+struct Opts_def_operator_cast {
+	Code           body;
+	CodeSpecifiers specs;
+};
+CodeOpCast def_operator_cast( CodeType type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
 
-CodeParam  def_param ( CodeType type, StrC name, Code value = NullCode );
+struct Opts_def_param { Code value; };
+CodeParam  def_param ( CodeType type, StrC name, Opts_def_param opts GEN_PARAM_DEFAULT );
 CodePragma def_pragma( StrC directive );
 
 CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC content );
 
 CodeSpecifiers def_specifier( SpecifierT specifier );
 
-CodeStruct def_struct( StrC name
-	, Code           body       = NullCode
-	, CodeType       parent     = NullCode, AccessSpec access = AccessSpec_Default
-	, CodeAttributes attributes = NullCode
-	, ModuleFlag     mflags     = ModuleFlag_None
-	, CodeType*      interfaces = nullptr, s32 num_interfaces = 0 );
+CodeStruct def_struct( StrC name, Opts_def_struct opts GEN_PARAM_DEFAULT );
 
-CodeTemplate def_template( CodeParam params, Code definition, ModuleFlag mflags = ModuleFlag_None );
+struct Opts_def_template { ModuleFlag mflags; };
+CodeTemplate def_template( CodeParam params, Code definition, Opts_def_template opts GEN_PARAM_DEFAULT );
 
-CodeType    def_type   ( StrC name, Code arrayexpr = NullCode, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode );
-CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes = NullCode, ModuleFlag mflags = ModuleFlag_None );
+struct Opts_def_type {
+	Code           arrayexpr;
+	CodeSpecifiers specifiers;
+	CodeAttributes attributes;
+};
+CodeType def_type( StrC name, Opts_def_type opts GEN_PARAM_DEFAULT );
 
-CodeUnion def_union( StrC name, Code body, CodeAttributes attributes = NullCode, ModuleFlag mflags = ModuleFlag_None );
+struct Opts_def_typedef {
+	CodeAttributes attributes;
+	ModuleFlag     mflags;
+};
+CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef opts GEN_PARAM_DEFAULT );
 
-CodeUsing def_using( StrC name, CodeType type = NullCode
-	, CodeAttributes attributess = NullCode
-	, ModuleFlag     mflags      = ModuleFlag_None );
+struct Opts_def_union {
+	CodeAttributes attributes;
+	ModuleFlag     mflags;
+};
+CodeUnion def_union( StrC name, Code body, Opts_def_union opts GEN_PARAM_DEFAULT );
+
+struct Opts_def_using {
+	CodeAttributes attributes;
+	ModuleFlag     mflags;
+};
+CodeUsing def_using( StrC name, Code type, Opts_def_using opts GEN_PARAM_DEFAULT );
 
 CodeUsing def_using_namespace( StrC name );
 
-CodeVar def_variable( CodeType type, StrC name, Code value = NullCode
-	, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode
-	, ModuleFlag     mflags     = ModuleFlag_None );
+struct Opts_def_variable
+{
+	Code           value;
+	CodeSpecifiers specifiers;
+	CodeAttributes attributes;
+	ModuleFlag     mflags;
+};
+CodeVar def_variable( CodeType type, StrC name, Opts_def_variable opts GEN_PARAM_DEFAULT ); 
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
 CodeBody def_body( CodeT type );

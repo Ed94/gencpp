@@ -234,4 +234,10 @@
 #	endif
 #endif
 
+#if ! defined(GEN_PARAM_DEFAULT) && ! GEN_COMPILER_C
+#	define GEN_PARAM_DEFAULT = {}
+#else
+#	define GEN_PARAM_DEFAULT
+#endif
+
 #pragma endregion Macros

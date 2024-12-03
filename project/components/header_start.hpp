@@ -17,15 +17,3 @@
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
 #	include "gen.dep.hpp"
 #endif
-
-#ifndef GEN_NS_BEGIN
-#	ifdef GEN_DONT_USE_NAMESPACE
-#		define GEN_NS
-#		define GEN_NS_BEGIN
-#		define GEN_NS_END
-#	else
-#		define GEN_NS       gen::
-#		define GEN_NS_BEGIN namespace gen {
-#		define GEN_NS_END   }
-#	endif
-#endif

@@ -495,11 +495,13 @@ CodeComment def_comment( StrC content )
 	return (CodeComment) result;
 }
 
-CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code body )
+CodeConstructor def_constructor( Opts_def_constructor p )
 {
-	using namespace ECode;
+	CodeParam params           = p.params;
+	Code      initializer_list = p.initializer_list;
+	Code      body             = p.body;	
 
-	if ( params && params->Type != Parameters )
+	if ( params && params->Type != ECode::Parameters )
 	{
 		log_failure("gen::def_constructor: params must be of Parameters type - %s", debug_str(params));
 		return InvalidCode;
@@ -522,8 +524,8 @@ CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code b
 	{
 		switch ( body->Type )
 		{
-			case Function_Body:
-			case Untyped:
+			case ECode::Function_Body:
+			case ECode::Untyped:
 			break;
 
 			default:
@@ -531,35 +533,36 @@ CodeConstructor def_constructor( CodeParam params, Code initializer_list, Code b
 				return InvalidCode;
 		}
 
-		result->Type = Constructor;
+		result->Type = ECode::Constructor;
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = Constructor_Fwd;
+		result->Type = ECode::Constructor_Fwd;
 	}
 
 	return result;
 }
 
-CodeClass def_class( StrC name
-	, Code           body
-	, CodeType       parent, AccessSpec parent_access
-	, CodeAttributes attributes
-	, ModuleFlag     mflags
-	, CodeType*      interfaces, s32 num_interfaces	)
+CodeClass def_class( StrC name, Opts_def_struct p )
 {
-	using namespace ECode;
-
 	name_check( def_class, name );
+	
+	Code           body           = p.body;
+	CodeType       parent         = p.parent;
+	AccessSpec     parent_access  = p.parent_access;
+	CodeAttributes attributes     = p.attributes;
+	ModuleFlag     mflags         = p.mflags;
+	CodeType*      interfaces     = p.interfaces;
+	s32            num_interfaces = p.num_interfaces;
 
-	if ( attributes && attributes->Type != PlatformAttributes )
+	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
-	if ( parent && ( parent->Type != Class && parent->Type != Struct && parent->Type != Typename && parent->Type != Untyped ) )
+	if ( parent && ( parent->Type != ECode::Class && parent->Type != ECode::Struct && parent->Type != ECode::Typename && parent->Type != ECode::Untyped ) )
 	{
 		log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", debug_str(parent) );
 		return InvalidCode;
@@ -574,8 +577,8 @@ CodeClass def_class( StrC name
 	{
 		switch ( body->Type )
 		{
-			case Class_Body:
-			case Untyped:
+			case ECode::Class_Body:
+			case ECode::Untyped:
 			break;
 
 			default:
@@ -583,13 +586,13 @@ CodeClass def_class( StrC name
 				return InvalidCode;
 		}
 
-		result->Type = Class;
+		result->Type = ECode::Class;
 		result->Body = body;
 		result->Body->Parent = result; // TODO(Ed): Review this?
 	}
 	else
 	{
-		result->Type = Class_Fwd;
+		result->Type = ECode::Class_Fwd;
 	}
 
 	if ( attributes )
@@ -614,8 +617,6 @@ CodeClass def_class( StrC name
 
 CodeDefine def_define( StrC name, StrC content )
 {
-	using namespace ECode;
-
 	name_check( def_define, name );
 
 	// Defines can be empty definitions
@@ -629,7 +630,7 @@ CodeDefine def_define( StrC name, StrC content )
 
 	CodeDefine
 	result          = (CodeDefine) make_code();
-	result->Type    = Preprocess_Define;
+	result->Type    = ECode::Preprocess_Define;
 	result->Name    = get_cached_string( name );
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 	{
@@ -641,16 +642,17 @@ CodeDefine def_define( StrC name, StrC content )
 	return result;
 }
 
-CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
+CodeDestructor def_destructor( Opts_def_destructor p )
 {
-	using namespace ECode;
-
-	if ( specifiers && specifiers->Type != Specifiers )
+	Code           body       = p.body;
+	CodeSpecifiers specifiers = p.specifiers;
+	
+	if ( specifiers && specifiers->Type != ECode::Specifiers )
 	{
 		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
-
+	
 	CodeDestructor result = (CodeDestructor) make_code();
 
 	if ( specifiers )
@@ -660,8 +662,8 @@ CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
 	{
 		switch ( body->Type )
 		{
-			case Function_Body:
-			case Untyped:
+			case ECode::Function_Body:
+			case ECode::Untyped:
 			break;
 
 			default:
@@ -669,33 +671,34 @@ CodeDestructor def_destructor( Code body, CodeSpecifiers specifiers )
 				return InvalidCode;
 		}
 
-		result->Type = Destructor;
+		result->Type = ECode::Destructor;
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = Destructor_Fwd;
+		result->Type = ECode::Destructor_Fwd;
 	}
 
 	return result;
 }
 
-CodeEnum def_enum( StrC name
-	, Code       body,      CodeType       type
-	, EnumT      specifier, CodeAttributes attributes
-	, ModuleFlag mflags )
+CodeEnum def_enum( StrC name, Opts_def_enum p )
 {
-	using namespace ECode;
+	Code           body       = p.body;
+	CodeType       type       = p.type;
+	EnumT          specifier  = p.specifier;
+	CodeAttributes attributes = p.attributes;
+	ModuleFlag     mflags     = p.mflags;
 
 	name_check( def_enum, name );
 
-	if ( type && type->Type != Typename )
+	if ( type && type->Type != ECode::Typename )
 	{
 		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", debug_str(type) );
 		return InvalidCode;
 	}
 
-	if ( attributes && attributes->Type != PlatformAttributes )
+	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", debug_str(attributes) );
 		return InvalidCode;
@@ -710,8 +713,8 @@ CodeEnum def_enum( StrC name
 	{
 		switch ( body->Type )
 		{
-			case Enum_Body:
-			case Untyped:
+			case ECode::Enum_Body:
+			case ECode::Untyped:
 			break;
 
 			default:
@@ -720,14 +723,14 @@ CodeEnum def_enum( StrC name
 		}
 
 		result->Type = specifier == EnumDecl_Class ?
-			Enum_Class : Enum;
+			ECode::Enum_Class : ECode::Enum;
 
 		result->Body = body;
 	}
 	else
 	{
 		result->Type = specifier == EnumDecl_Class ?
-			Enum_Class_Fwd : Enum_Fwd;
+			ECode::Enum_Class_Fwd : ECode::Enum_Fwd;
 	}
 
 	if ( attributes )
@@ -737,7 +740,7 @@ CodeEnum def_enum( StrC name
 	{
 		result->UnderlyingType = type;
 	}
-	else if ( result->Type != Enum_Class_Fwd && result->Type != Enum_Fwd )
+	else if ( result->Type != ECode::Enum_Class_Fwd && result->Type != ECode::Enum_Fwd )
 	{
 		log_failure( "gen::def_enum: enum forward declaration must have an underlying type" );
 		return InvalidCode;
@@ -765,12 +768,10 @@ CodeExec def_execution( StrC content )
 
 CodeExtern def_extern_link( StrC name, Code body )
 {
-	using namespace ECode;
-
 	name_check( def_extern_linkage, name );
 	null_check( def_extern_linkage, body );
 
-	if ( body->Type != Extern_Linkage_Body && body->Type != Untyped )
+	if ( body->Type != ECode::Extern_Linkage_Body && body->Type != ECode::Untyped )
 	{
 		log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", debug_str(body));
 		return InvalidCode;
@@ -778,7 +779,7 @@ CodeExtern def_extern_link( StrC name, Code body )
 
 	CodeExtern
 	result        = (CodeExtern)make_code();
-	result->Type  = Extern_Linkage;
+	result->Type  = ECode::Extern_Linkage;
 	result->Name  = get_cached_string( name );
 	result->Body  = body;
 
@@ -787,20 +788,18 @@ CodeExtern def_extern_link( StrC name, Code body )
 
 CodeFriend def_friend( Code declaration )
 {
-	using namespace ECode;
-
 	null_check( def_friend, declaration );
 
 	switch ( declaration->Type )
 	{
-		case Class_Fwd:
-		case Function_Fwd:
-		case Operator_Fwd:
-		case Struct_Fwd:
-		case Class:
-		case Function:
-		case Operator:
-		case Struct:
+		case ECode::Class_Fwd:
+		case ECode::Function_Fwd:
+		case ECode::Operator_Fwd:
+		case ECode::Struct_Fwd:
+		case ECode::Class:
+		case ECode::Function:
+		case ECode::Operator:
+		case ECode::Struct:
 		break;
 
 		default:
@@ -810,41 +809,43 @@ CodeFriend def_friend( Code declaration )
 
 	CodeFriend
 	result       = (CodeFriend) make_code();
-	result->Type = Friend;
+	result->Type = ECode::Friend;
 
 	result->Declaration = declaration;
 
 	return result;
 }
 
-CodeFn def_function( StrC name
-	, CodeParam      params ,    CodeType       ret_type, Code body
-	, CodeSpecifiers specifiers, CodeAttributes attributes
-	, ModuleFlag     mflags )
+CodeFn def_function( StrC name, Opts_def_function p )
 {
-	using namespace ECode;
+	CodeParam       params     = p.params;
+	CodeType        ret_type   = p.ret_type;
+	Code            body       = p.body;
+	CodeSpecifiers  specifiers = p.specs;
+	CodeAttributes  attributes = p.attrs;
+	ModuleFlag      mflags     = p.mflags;
 
 	name_check( def_function, name );
 
-	if ( params && params->Type != Parameters )
+	if ( params && params->Type != ECode::Parameters )
 	{
 		log_failure( "gen::def_function: params was not a `Parameters` type: %s", debug_str(params) );
 		return InvalidCode;
 	}
 
-	if ( ret_type && ret_type->Type != Typename )
+	if ( ret_type && ret_type->Type != ECode::Typename )
 	{
 		log_failure( "gen::def_function: ret_type was not a Typename: %s", debug_str(ret_type) );
 		return InvalidCode;
 	}
 
-	if ( specifiers && specifiers->Type != Specifiers )
+	if ( specifiers && specifiers->Type != ECode::Specifiers )
 	{
 		log_failure( "gen::def_function: specifiers was not a `Specifiers` type: %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
 
-	if ( attributes && attributes->Type != PlatformAttributes )
+	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_function: attributes was not a `PlatformAttributes` type: %s", debug_str(attributes) );
 		return InvalidCode;
@@ -859,9 +860,9 @@ CodeFn def_function( StrC name
 	{
 		switch ( body->Type )
 		{
-			case Function_Body:
-			case Execution:
-			case Untyped:
+			case ECode::Function_Body:
+			case ECode::Execution:
+			case ECode::Untyped:
 				break;
 
 			default:
@@ -871,12 +872,12 @@ CodeFn def_function( StrC name
 			}
 		}
 
-		result->Type = Function;
+		result->Type = ECode::Function;
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = Function_Fwd;
+		result->Type = ECode::Function_Fwd;
 	}
 
 	if ( attributes )
@@ -900,7 +901,7 @@ CodeFn def_function( StrC name
 	return result;
 }
 
-CodeInclude def_include( StrC path, bool foreign )
+CodeInclude def_include( StrC path, Opts_def_include p )
 {
 	if ( path.Len <= 0 || path.Ptr == nullptr )
 	{
@@ -908,7 +909,7 @@ CodeInclude def_include( StrC path, bool foreign )
 		return InvalidCode;
 	}
 
-	StrC content = foreign ?
+	StrC content = p.foreign ?
 			to_str( str_fmt_buf( "<%.*s>", path.Len, path.Ptr ))
 		:	to_str( str_fmt_buf( "\"%.*s\"", path.Len, path.Ptr ));
 
@@ -921,7 +922,7 @@ CodeInclude def_include( StrC path, bool foreign )
 	return (CodeInclude) result;
 }
 
-CodeModule def_module( StrC name, ModuleFlag mflags )
+CodeModule def_module( StrC name, Opts_def_module p )
 {
 	name_check( def_module, name );
 
@@ -930,19 +931,17 @@ CodeModule def_module( StrC name, ModuleFlag mflags )
 	result->Type        = ECode::Module;
 	result->Name        = get_cached_string( name );
 	result->Content     = result->Name;
-	result->ModuleFlags = mflags;
+	result->ModuleFlags = p.mflags;
 
 	return (CodeModule) result;
 }
 
-CodeNS def_namespace( StrC name, Code body, ModuleFlag mflags )
+CodeNS def_namespace( StrC name, Code body, Opts_def_namespace p )
 {
-	using namespace ECode;
-
 	name_check( def_namespace, name );
-	null_check( def_namespace, body );
-
-	if ( body->Type != Namespace_Body && body->Type != Untyped )
+	null_check( def_namespace, body);
+	
+	if ( body && body->Type != ECode::Namespace_Body && body->Type != ECode::Untyped )
 	{
 		log_failure("gen::def_namespace: body is not of namespace or untyped type %s", debug_str(body));
 		return InvalidCode;
@@ -950,28 +949,29 @@ CodeNS def_namespace( StrC name, Code body, ModuleFlag mflags )
 
 	CodeNS
 	result              = (CodeNS) make_code();
-	result->Type        = Namespace;
+	result->Type        = ECode::Namespace;
 	result->Name        = get_cached_string( name );
-	result->ModuleFlags = mflags;
+	result->ModuleFlags = p.mflags;
 	result->Body        = body;
-
 	return result;
 }
 
-CodeOperator def_operator( OperatorT op, StrC nspace
-	, CodeParam      params_code, CodeType       ret_type, Code body
-	, CodeSpecifiers specifiers,  CodeAttributes attributes
-	, ModuleFlag     mflags )
+CodeOperator def_operator( OperatorT op, StrC nspace, Opts_def_operator p )
 {
-	using namespace ECode;
+	CodeParam       params_code = p.params;
+	CodeType        ret_type    = p.ret_type;
+	Code            body        = p.body;
+	CodeSpecifiers  specifiers  = p.specifiers;
+	CodeAttributes  attributes  = p.attributes;
+	ModuleFlag      mflags      = p.mflags;
 
-	if ( attributes && attributes->Type != PlatformAttributes )
+	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
-	if ( specifiers && specifiers->Type != Specifiers )
+	if ( specifiers && specifiers->Type != ECode::Specifiers )
 	{
 		log_failure( "gen::def_operator: Specifiers was provided but its not of specifiers type: %s", debug_str(specifiers) );
 		return InvalidCode;
@@ -1001,9 +1001,9 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 	{
 		switch ( body->Type )
 		{
-			case Function_Body:
-			case Execution:
-			case Untyped:
+			case ECode::Function_Body:
+			case ECode::Execution:
+			case ECode::Untyped:
 				break;
 
 			default:
@@ -1014,14 +1014,14 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 		}
 
 		result->Type = check_result == OpValidateResult::Global ?
-			Operator : Operator_Member;
+			ECode::Operator : ECode::Operator_Member;
 
 		result->Body = body;
 	}
 	else
 	{
 		result->Type = check_result == OpValidateResult::Global ?
-			Operator_Fwd : Operator_Member_Fwd;
+			ECode::Operator_Fwd : ECode::Operator_Member_Fwd;
 	}
 
 	if ( attributes )
@@ -1038,12 +1038,14 @@ CodeOperator def_operator( OperatorT op, StrC nspace
 	return result;
 }
 
-CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spec )
+CodeOpCast def_operator_cast( CodeType type, Opts_def_operator_cast p )
 {
-	using namespace ECode;
+	Code           body       = p.body;
+	CodeSpecifiers const_spec = p.specs;
+
 	null_check( def_operator_cast, type );
 
-	if ( type->Type != Typename )
+	if ( type->Type != ECode::Typename )
 	{
 		log_failure( "gen::def_operator_cast: type is not a typename - %s", debug_str(type) );
 		return InvalidCode;
@@ -1053,9 +1055,9 @@ CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spe
 
 	if (body)
 	{
-		result->Type = Operator_Cast;
+		result->Type = ECode::Operator_Cast;
 
-		if ( body->Type != Function_Body && body->Type != Execution )
+		if ( body->Type != ECode::Function_Body && body->Type != ECode::Execution )
 		{
 			log_failure( "gen::def_operator_cast: body is not of function body or execution type - %s", debug_str(body) );
 			return InvalidCode;
@@ -1065,7 +1067,7 @@ CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spe
 	}
 	else
 	{
-		result->Type = Operator_Cast_Fwd;
+		result->Type = ECode::Operator_Cast_Fwd;
 	}
 
 	if ( const_spec )
@@ -1077,34 +1079,32 @@ CodeOpCast def_operator_cast( CodeType type, Code body, CodeSpecifiers const_spe
 	return result;
 }
 
-CodeParam def_param( CodeType type, StrC name, Code value )
+CodeParam def_param( CodeType type, StrC name, Opts_def_param p )
 {
-	using namespace ECode;
-
 	name_check( def_param, name );
 	null_check( def_param, type );
 
-	if ( type->Type != Typename )
+	if ( type->Type != ECode::Typename )
 	{
 		log_failure( "gen::def_param: type is not a typename - %s", debug_str(type) );
 		return InvalidCode;
 	}
 
-	if ( value && value->Type != Untyped )
+	if ( p.value && p.value->Type != ECode::Untyped )
 	{
-		log_failure( "gen::def_param: value is not untyped - %s", debug_str(value) );
+		log_failure( "gen::def_param: value is not untyped - %s", debug_str(p.value) );
 		return InvalidCode;
 	}
 
 	CodeParam
 	result       = (CodeParam) make_code();
-	result->Type = Parameters;
+	result->Type = ECode::Parameters;
 	result->Name = get_cached_string( name );
 
 	result->ValueType = type;
 
-	if ( value )
-		result->Value = value;
+	if ( p.value )
+		result->Value = p.value;
 
 	result->NumEntries++;
 
@@ -1113,8 +1113,6 @@ CodeParam def_param( CodeType type, StrC name, Code value )
 
 CodePragma def_pragma( StrC directive )
 {
-	using namespace ECode;
-
 	if ( directive.Len <= 0 || directive.Ptr == nullptr )
 	{
 		log_failure( "gen::def_comment: Invalid comment provided:" );
@@ -1123,7 +1121,7 @@ CodePragma def_pragma( StrC directive )
 
 	CodePragma
 	result          = (CodePragma) make_code();
-	result->Type    = Preprocess_Pragma;
+	result->Type    = ECode::Preprocess_Pragma;
 	result->Content = get_cached_string( directive );
 
 	return result;
@@ -1131,8 +1129,6 @@ CodePragma def_pragma( StrC directive )
 
 CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
 {
-	using namespace ECode;
-
 	if ( expr.Len <= 0 || expr.Ptr == nullptr )
 	{
 		log_failure( "gen::def_comment: Invalid comment provided:" );
@@ -1146,16 +1142,16 @@ CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
 	switch (type)
 	{
 		case PreprocessCond_If:
-			result->Type = Preprocess_If;
+			result->Type = ECode::Preprocess_If;
 		break;
 		case PreprocessCond_IfDef:
-			result->Type = Preprocess_IfDef;
+			result->Type = ECode::Preprocess_IfDef;
 		break;
 		case PreprocessCond_IfNotDef:
-			result->Type = Preprocess_IfNotDef;
+			result->Type = ECode::Preprocess_IfNotDef;
 		break;
 		case PreprocessCond_ElIf:
-			result->Type = Preprocess_ElIf;
+			result->Type = ECode::Preprocess_ElIf;
 		break;
 	}
 
@@ -1172,28 +1168,29 @@ CodeSpecifiers def_specifier( SpecifierT spec )
 	return result;
 }
 
-CodeStruct def_struct( StrC name
-	, Code           body
-	, CodeType       parent, AccessSpec parent_access
-	, CodeAttributes attributes
-	, ModuleFlag     mflags
-	, CodeType*      interfaces, s32 num_interfaces )
+CodeStruct def_struct( StrC name, Opts_def_struct p )
 {
-	using namespace ECode;
+	Code           body           = p.body;
+	CodeType       parent         = p.parent;
+	AccessSpec     parent_access  = p.parent_access;
+	CodeAttributes attributes     = p.attributes;
+	ModuleFlag     mflags         = p.mflags;
+	CodeType*      interfaces     = p.interfaces;
+	s32            num_interfaces = p.num_interfaces;
 
-	if ( attributes && attributes->Type != PlatformAttributes )
+	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
 		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", debug_str(attributes) );
 		return InvalidCode;
 	}
 
-	if ( parent && parent->Type != Typename )
+	if ( parent && parent->Type != ECode::Typename )
 	{
 		log_failure( "gen::def_struct: parent was not a `Struct` type - %s", debug_str(parent) );
 		return InvalidCode;
 	}
 
-	if ( body && body->Type != Struct_Body )
+	if ( body && body->Type != ECode::Struct_Body )
 	{
 		log_failure( "gen::def_struct: body was not a Struct_Body type - %s", debug_str(body) );
 		return InvalidCode;
@@ -1208,12 +1205,12 @@ CodeStruct def_struct( StrC name
 
 	if ( body )
 	{
-		result->Type = Struct;
+		result->Type = ECode::Struct;
 		result->Body = body;
 	}
 	else
 	{
-		result->Type = Struct_Fwd;
+		result->Type = ECode::Struct_Fwd;
 	}
 
 	if ( attributes )
@@ -1236,7 +1233,7 @@ CodeStruct def_struct( StrC name
 	return result;
 }
 
-CodeTemplate def_template( CodeParam params, Code declaration, ModuleFlag mflags )
+CodeTemplate def_template( CodeParam params, Code declaration, Opts_def_template p )
 {
 	null_check( def_template, declaration );
 
@@ -1262,16 +1259,19 @@ CodeTemplate def_template( CodeParam params, Code declaration, ModuleFlag mflags
 	CodeTemplate
 	result              = (CodeTemplate) make_code();
 	result->Type        = ECode::Template;
-	result->ModuleFlags = mflags;
+	result->ModuleFlags = p.mflags;
 	result->Params      = params;
 	result->Declaration = declaration;
-
 	return result;
 }
 
-CodeType def_type( StrC name, Code arrayexpr, CodeSpecifiers specifiers, CodeAttributes attributes )
+CodeType def_type( StrC name, Opts_def_type p )
 {
 	name_check( def_type, name );
+	
+	Code           arrayexpr  = p.arrayexpr;
+	CodeSpecifiers specifiers = p.specifiers;
+	CodeAttributes attributes = p.attributes;
 
 	if ( attributes && attributes->Type != ECode::PlatformAttributes )
 	{
@@ -1308,34 +1308,32 @@ CodeType def_type( StrC name, Code arrayexpr, CodeSpecifiers specifiers, CodeAtt
 	return result;
 }
 
-CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, ModuleFlag mflags )
+CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
 {
-	using namespace ECode;
-
 	null_check( def_typedef, type );
 
 	switch ( type->Type )
 	{
-		case Class:
-		case Class_Fwd:
-		case Enum:
-		case Enum_Fwd:
-		case Enum_Class:
-		case Enum_Class_Fwd:
-		case Function_Fwd:
-		case Struct:
-		case Struct_Fwd:
-		case Union:
-		case Typename:
+		case ECode::Class:
+		case ECode::Class_Fwd:
+		case ECode::Enum:
+		case ECode::Enum_Fwd:
+		case ECode::Enum_Class:
+		case ECode::Enum_Class_Fwd:
+		case ECode::Function_Fwd:
+		case ECode::Struct:
+		case ECode::Struct_Fwd:
+		case ECode::Union:
+		case ECode::Typename:
 			break;
 		default:
 			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", debug_str(type) );
 			return InvalidCode;
 	}
 
-	if ( attributes && attributes->Type != ECode::PlatformAttributes )
+	if ( p.attributes && p.attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", debug_str(attributes) );
+		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
@@ -1351,13 +1349,13 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 	CodeTypedef
 	result              = (CodeTypedef) make_code();
 	result->Type        = ECode::Typedef;
-	result->ModuleFlags = mflags;
+	result->ModuleFlags = p.mflags;
 
 	result->UnderlyingType = type;
 
 	if ( name.Len <= 0  )
 	{
-		if (type->Type != Untyped)
+		if (type->Type != ECode::Untyped)
 		{
 			log_failure( "gen::def_typedef: name was empty and type was not untyped (indicating its a function typedef) - %s", debug_str(type) );
 			return InvalidCode;
@@ -1375,7 +1373,7 @@ CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes, Module
 	return result;
 }
 
-CodeUnion def_union( StrC name, Code body, CodeAttributes attributes, ModuleFlag mflags )
+CodeUnion def_union( StrC name, Code body, Opts_def_union p )
 {
 	null_check( def_union, body );
 
@@ -1385,15 +1383,15 @@ CodeUnion def_union( StrC name, Code body, CodeAttributes attributes, ModuleFlag
 		return InvalidCode;
 	}
 
-	if ( attributes && attributes->Type != ECode::PlatformAttributes )
+	if ( p.attributes && p.attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", debug_str(attributes) );
+		log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
 	CodeUnion
 	result              = (CodeUnion) make_code();
-	result->ModuleFlags = mflags;
+	result->ModuleFlags = p.mflags;
 	result->Type        = ECode::Union;
 
 	if ( name.Ptr )
@@ -1401,15 +1399,13 @@ CodeUnion def_union( StrC name, Code body, CodeAttributes attributes, ModuleFlag
 
 	result->Body = body;
 
-	if ( attributes )
-		result->Attributes = attributes;
+	if ( p.attributes )
+		result->Attributes = p.attributes;
 
 	return result;
 }
 
-CodeUsing def_using( StrC name, CodeType type
-	, CodeAttributes attributes
-	, ModuleFlag     mflags )
+CodeUsing def_using( StrC name, Code type, Opts_def_using p )
 {
 	name_check( def_using, name );
 	null_check( def_using, type );
@@ -1422,22 +1418,22 @@ CodeUsing def_using( StrC name, CodeType type
 		return InvalidCode;
 	}
 
-	if ( attributes && attributes->Type != ECode::PlatformAttributes )
+	if ( p.attributes && p.attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", debug_str(attributes) );
+		log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
 	CodeUsing
 	result              = (CodeUsing) make_code();
 	result->Name        = get_cached_string( name );
-	result->ModuleFlags = mflags;
-	result->Type = ECode::Using;
+	result->ModuleFlags = p.mflags;
+	result->Type        = ECode::Using;
 
 	result->UnderlyingType = type;
 
-	if ( attributes )
-		result->Attributes = attributes;
+	if ( p.attributes )
+		result->Attributes = p.attributes;
 
 	return result;
 }
@@ -1455,22 +1451,20 @@ CodeUsing def_using_namespace( StrC name )
 	return (CodeUsing) result;
 }
 
-CodeVar def_variable( CodeType type, StrC name, Code value
-	, CodeSpecifiers specifiers, CodeAttributes attributes
-	, ModuleFlag     mflags )
+CodeVar def_variable( CodeType type, StrC name, Code value, Opts_def_variable p )
 {
 	name_check( def_variable, name );
 	null_check( def_variable, type );
 
-	if ( attributes && attributes->Type != ECode::PlatformAttributes )
+	if ( p.attributes && p.attributes->Type != ECode::PlatformAttributes )
 	{
-		log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type - %s", debug_str(attributes) );
+		log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type - %s", debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
-	if ( specifiers && specifiers->Type != ECode::Specifiers )
+	if ( p.specifiers && p.specifiers->Type != ECode::Specifiers )
 	{
-		log_failure( "gen::def_variable: specifiers was not a `Specifiers` type - %s", debug_str(specifiers) );
+		log_failure( "gen::def_variable: specifiers was not a `Specifiers` type - %s", debug_str(p.specifiers) );
 		return InvalidCode;
 	}
 
@@ -1490,15 +1484,15 @@ CodeVar def_variable( CodeType type, StrC name, Code value
 	result              = (CodeVar) make_code();
 	result->Name        = get_cached_string( name );
 	result->Type        = ECode::Variable;
-	result->ModuleFlags = mflags;
+	result->ModuleFlags = p.mflags;
 
 	result->ValueType = type;
 
-	if ( attributes )
-		result->Attributes = attributes;
+	if ( p.attributes )
+		result->Attributes = p.attributes;
 
-	if ( specifiers )
-		result->Specs = specifiers;
+	if ( p.specifiers )
+		result->Specs = p.specifiers;
 
 	if ( value )
 		result->Value = value;

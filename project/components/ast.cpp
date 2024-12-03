@@ -415,169 +415,169 @@ void to_string( Code self, String* result )
 		break;
 
 		case Class:
-			to_string_def(cast(CodeClass, {self}), result );
+			to_string_def(cast(CodeClass, self), result );
 		break;
 
 		case Class_Fwd:
-			to_string_fwd(cast(CodeClass, {self}), result );
+			to_string_fwd(cast(CodeClass, self), result );
 		break;
 
 		case Constructor:
-			to_string_def(cast(CodeConstructor, {self}), result );
+			to_string_def(cast(CodeConstructor, self), result );
 		break;
 
 		case Constructor_Fwd:
-			to_string_fwd(cast(CodeConstructor, {self}), result );
+			to_string_fwd(cast(CodeConstructor, self), result );
 		break;
 
 		case Destructor:
-			to_string_def(cast(CodeDestructor, {self}), result );
+			to_string_def(cast(CodeDestructor, self), result );
 		break;
 
 		case Destructor_Fwd:
-			to_string_fwd(cast(CodeDestructor, {self}), result );
+			to_string_fwd(cast(CodeDestructor, self), result );
 		break;
 
 		case Enum:
-			to_string_def(cast(CodeEnum, {self}), result );
+			to_string_def(cast(CodeEnum, self), result );
 		break;
 
 		case Enum_Fwd:
-			to_string_fwd(cast(CodeEnum, {self}), result );
+			to_string_fwd(cast(CodeEnum, self), result );
 		break;
 
 		case Enum_Class:
-			to_string_class_def(cast(CodeEnum, {self}), result );
+			to_string_class_def(cast(CodeEnum, self), result );
 		break;
 
 		case Enum_Class_Fwd:
-			to_string_class_fwd(cast(CodeEnum, {self}), result );
+			to_string_class_fwd(cast(CodeEnum, self), result );
 		break;
 
 		case Export_Body:
-			to_string_export(cast(CodeBody, {self}), result );
+			to_string_export(cast(CodeBody, self), result );
 		break;
 
 		case Extern_Linkage:
-			to_string(cast(CodeExtern, {self}), result );
+			to_string(cast(CodeExtern, self), result );
 		break;
 
 		case Friend:
-			to_string(cast(CodeFriend, {self}), result );
+			to_string(cast(CodeFriend, self), result );
 		break;
 
 		case Function:
-			to_string_def(cast(CodeFn, {self}), result );
+			to_string_def(cast(CodeFn, self), result );
 		break;
 
 		case Function_Fwd:
-			to_string_fwd(cast(CodeFn, {self}), result );
+			to_string_fwd(cast(CodeFn, self), result );
 		break;
 
 		case Module:
-			to_string(cast(CodeModule, {self}), result );
+			to_string(cast(CodeModule, self), result );
 		break;
 
 		case Namespace:
-			to_string(cast(CodeNS, {self}), result );
+			to_string(cast(CodeNS, self), result );
 		break;
 
 		case Operator:
 		case Operator_Member:
-			to_string_def(cast(CodeOperator, {self}), result );
+			to_string_def(cast(CodeOperator, self), result );
 		break;
 
 		case Operator_Fwd:
 		case Operator_Member_Fwd:
-			to_string_fwd(cast(CodeOperator, {self}), result );
+			to_string_fwd(cast(CodeOperator, self), result );
 		break;
 
 		case Operator_Cast:
-			to_string_def(cast(CodeOpCast, {self}), result );
+			to_string_def(cast(CodeOpCast, self), result );
 		break;
 
 		case Operator_Cast_Fwd:
-			to_string_fwd(cast(CodeOpCast, {self}), result );
+			to_string_fwd(cast(CodeOpCast, self), result );
 		break;
 
 		case Parameters:
-			to_string(cast(CodeParam, {self}), result );
+			to_string(cast(CodeParam, self), result );
 		break;
 
 		case Preprocess_Define:
-			to_string(cast(CodeDefine, {self}), result );
+			to_string(cast(CodeDefine, self), result );
 		break;
 
 		case Preprocess_If:
-			to_string_if(cast(CodePreprocessCond, {self}), result );
+			to_string_if(cast(CodePreprocessCond, self), result );
 		break;
 
 		case Preprocess_IfDef:
-			to_string_ifdef(cast(CodePreprocessCond, {self}), result );
+			to_string_ifdef(cast(CodePreprocessCond, self), result );
 		break;
 
 		case Preprocess_IfNotDef:
-			to_string_ifndef(cast(CodePreprocessCond, {self}), result );
+			to_string_ifndef(cast(CodePreprocessCond, self), result );
 		break;
 
 		case Preprocess_Include:
-			to_string(cast(CodeInclude, {self}), result );
+			to_string(cast(CodeInclude, self), result );
 		break;
 
 		case Preprocess_ElIf:
-			to_string_elif(cast(CodePreprocessCond, {self}), result );
+			to_string_elif(cast(CodePreprocessCond, self), result );
 		break;
 
 		case Preprocess_Else:
-			to_string_else(cast(CodePreprocessCond, {self}), result );
+			to_string_else(cast(CodePreprocessCond, self), result );
 		break;
 
 		case Preprocess_EndIf:
-			to_string_endif(cast(CodePreprocessCond, {self}), result );
+			to_string_endif(cast(CodePreprocessCond, self), result );
 		break;
 
 		case Preprocess_Pragma:
-			to_string(cast(CodePragma, {self}), result );
+			to_string(cast(CodePragma, self), result );
 		break;
 
 		case Specifiers:
-			to_string(cast(CodeSpecifiers, {self}), result );
+			to_string(cast(CodeSpecifiers, self), result );
 		break;
 
 		case Struct:
-			to_string_def(cast(CodeStruct, {self}), result );
+			to_string_def(cast(CodeStruct, self), result );
 		break;
 
 		case Struct_Fwd:
-			to_string_fwd(cast(CodeStruct, {self}), result );
+			to_string_fwd(cast(CodeStruct, self), result );
 		break;
 
 		case Template:
-			to_string(cast(CodeTemplate, {self}), result );
+			to_string(cast(CodeTemplate, self), result );
 		break;
 
 		case Typedef:
-			to_string(cast(CodeTypedef, {self}), result );
+			to_string(cast(CodeTypedef, self), result );
 		break;
 
 		case Typename:
-			to_string(cast(CodeType, {self}), result );
+			to_string(cast(CodeType, self), result );
 		break;
 
 		case Union:
-			to_string( cast(CodeUnion, {self}), result );
+			to_string( cast(CodeUnion, self), result );
 		break;
 
 		case Using:
-			to_string(cast(CodeUsing, {self}), result );
+			to_string(cast(CodeUsing, self), result );
 		break;
 
 		case Using_Namespace:
-			to_string_ns(cast(CodeUsing, {self}), result );
+			to_string_ns(cast(CodeUsing, self), result );
 		break;
 
 		case Variable:
-			to_string(cast(CodeVar, {self}), result );
+			to_string(cast(CodeVar, self), result );
 		break;
 
 		case Enum_Body:
@@ -588,7 +588,7 @@ void to_string( Code self, String* result )
 		case Namespace_Body:
 		case Struct_Body:
 		case Union_Body:
-			to_string( cast(CodeBody, {self}), result );
+			to_string( cast(CodeBody, self), result );
 		break;
 	}
 }
@@ -1160,7 +1160,7 @@ bool validate_body(Code self)
 #define CheckEntries( Unallowed_Types )                                                               \
 	do                                                                                                \
 	{                                                                                                 \
-		for ( Code entry : cast(CodeBody, {self}) )                                                    \
+		for ( Code entry : cast(CodeBody, self) )                                                    \
 		{                                                                                             \
 			switch ( entry->Type )                                                                    \
 			{                                                                                         \
@@ -1178,7 +1178,7 @@ bool validate_body(Code self)
 			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
 		break;
 		case Enum_Body:
-			for ( Code entry : cast(CodeBody, {self}) )
+			for ( Code entry : cast(CodeBody, self) )
 			{
 				if ( entry->Type != Untyped )
 				{
@@ -1197,7 +1197,7 @@ bool validate_body(Code self)
 			CheckEntries( GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES );
 		break;
 		case Global_Body:
-			for (Code entry : cast(CodeBody, {self}))
+			for (Code entry : cast(CodeBody, self))
 			{
 				switch (entry->Type)
 				{
