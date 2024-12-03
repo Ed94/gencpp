@@ -25,73 +25,73 @@ struct ParseContext
 {
 	TokArray   Tokens;
 	StackNode* Scope;
-
-	void push( StackNode* node )
-	{
-		node->Prev = Scope;
-		Scope      = node;
-
-	#if 0 && Build_Debug
-		log_fmt("\tEntering Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
-	#endif
-	}
-
-	void pop()
-	{
-	#if 0 && Build_Debug
-		log_fmt("\tPopping  Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
-	#endif
-		Scope = Scope->Prev;
-	}
-
-	String to_string()
-	{
-		String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
-
-		Token scope_start = Scope->Start;
-		Token last_valid  = Tokens.Idx >= num(Tokens.Arr) ? Tokens.Arr[num(Tokens.Arr) -1] : (* current(& Tokens, true));
-
-		sptr        length  = scope_start.Length;
-		char const* current = scope_start.Text + length;
-		while ( current <= back( & Tokens.Arr)->Text && *current != '\n' && length < 74 )
-		{
-			current++;
-			length++;
-		}
-
-		String line = string_make( GlobalAllocator, { length, scope_start.Text } );
-		append_fmt( & result, "\tScope    : %s\n", line );
-		free(& line);
-
-		sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
-		sptr   length_from_err = dist;
-		String line_from_err   = string_make( GlobalAllocator, { length_from_err, last_valid.Text } );
-
-		if ( length_from_err < 100 )
-			append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
-		else
-			append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
-
-		StackNode* curr_scope = Scope;
-		s32 level = 0;
-		do
-		{
-			if ( is_valid(curr_scope->Name) )
-			{
-				append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
-			}
-			else
-			{
-				append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
-			}
-
-			curr_scope = curr_scope->Prev;
-			level++;
-		}
-		while ( curr_scope );
-		return result;
-	}
 };
+
+void push( ParseContext* ctx, StackNode* node )
+{
+	node->Prev = ctx->Scope;
+	ctx->Scope = node;
+
+#if 0 && Build_Debug
+	log_fmt("\tEntering Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
+#endif
+}
+
+void pop(ParseContext* ctx)
+{
+#if 0 && Build_Debug
+	log_fmt("\tPopping  Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
+#endif
+	ctx->Scope = ctx->Scope->Prev;
+}
+
+String to_string(ParseContext ctx)
+{
+	String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
+
+	Token scope_start = ctx.Scope->Start;
+	Token last_valid  = ctx.Tokens.Idx >= num(ctx.Tokens.Arr) ? ctx.Tokens.Arr[num(ctx.Tokens.Arr) -1] : (* current(& ctx.Tokens, true));
+
+	sptr        length  = scope_start.Length;
+	char const* current = scope_start.Text + length;
+	while ( current <= back( & ctx.Tokens.Arr)->Text && *current != '\n' && length < 74 )
+	{
+		current++;
+		length++;
+	}
+
+	String line = string_make( GlobalAllocator, { length, scope_start.Text } );
+	append_fmt( & result, "\tScope    : %s\n", line );
+	free(& line);
+
+	sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
+	sptr   length_from_err = dist;
+	String line_from_err   = string_make( GlobalAllocator, { length_from_err, last_valid.Text } );
+
+	if ( length_from_err < 100 )
+		append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
+	else
+		append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
+
+	StackNode* curr_scope = ctx.Scope;
+	s32 level = 0;
+	do
+	{
+		if ( is_valid(curr_scope->Name) )
+		{
+			append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
+		}
+		else
+		{
+			append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
+		}
+
+		curr_scope = curr_scope->Prev;
+		level++;
+	}
+	while ( curr_scope );
+	return result;
+}
 
 global ParseContext Context;
 
@@ -99,7 +99,7 @@ bool __eat(TokArray* self, TokType type )
 {
 	if ( num(self->Arr) - self->Idx <= 0 )
 	{
-		log_failure( "No tokens left.\n%s", Context.to_string() );
+		log_failure( "No tokens left.\n%s", to_string(Context) );
 		return false;
 	}
 
@@ -119,7 +119,7 @@ bool __eat(TokArray* self, TokType type )
 			, at_idx.Length, at_idx.Text
 			, tok.Line
 			, tok.Column
-			, Context.to_string()
+			, to_string(Context)
 		);
 
 		return false;
@@ -152,22 +152,26 @@ void deinit()
 
 #pragma region Helper Macros
 
-#	define check_parse_args( def )                                             \
-if ( def.Len <= 0 )                                                            \
-{                                                                              \
-	log_failure( "gen::" stringize(__func__) ": length must greater than 0" ); \
-	parser::Context.pop();                                                     \
-	return InvalidCode;                                                        \
-}                                                                              \
-if ( def.Ptr == nullptr )                                                      \
-{                                                                              \
-	log_failure( "gen::" stringize(__func__) ": def was null" );               \
-	parser::Context.pop();                                                     \
-	return InvalidCode;                                                        \
+#define check_parse_args( def ) _check_parse_args(def, stringize(_func_) )
+bool _check_parse_args( StrC def, char const* func_name )
+{
+	if ( def.Len <= 0 )
+	{
+		log_failure( str_fmt_buf("gen::%s: length must greater than 0", func_name) );
+		pop(& Context);
+		return false;
+	}
+	if ( def.Ptr == nullptr )
+	{
+		log_failure( str_fmt_buf("gen::%s: def was null", func_name) );
+		pop(& Context);
+		return false;
+	}
+	return true;
 }
 
-#	define currtok_noskip (* parser::current( & parser::Context.Tokens, parser::dont_skip_formatting ))
-#	define currtok        (* current( & Context.Tokens, skip_formatting ))
+#	define currtok_noskip (*  current( &  Context.Tokens, dont_skip_formatting ))
+#	define currtok        (*  current( & Context.Tokens, skip_formatting ))
 #	define prevtok        (* previous( Context.Tokens, dont_skip_formatting))
 #	define nexttok		  (* next( Context.Tokens, skip_formatting ))
 #	define eat( Type_ )   __eat( & Context.Tokens, Type_ )
@@ -184,7 +188,7 @@ if ( def.Ptr == nullptr )                                                      \
 
 #	define push_scope()                                                      \
 	parser::StackNode scope { nullptr, currtok_noskip, parser::NullToken, txt( __func__ ) }; \
-	parser::Context.push( & scope )
+	push( & parser::Context, & scope )
 
 #pragma endregion Helper Macros
 
@@ -496,7 +500,7 @@ Code parse_array_decl()
 		eat( TokType::Operator );
 		// []
 
-		Context.pop();
+		pop(& Context);
 		return array_expr;
 	}
 
@@ -507,15 +511,15 @@ Code parse_array_decl()
 
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of array declaration ( '[]' scope started )\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Error, unexpected end of array declaration ( '[]' scope started )\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
 		if ( currtok.Type == TokType::BraceSquare_Close )
 		{
-			log_failure( "Error, empty array expression in definition\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Error, empty array expression in definition\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -533,15 +537,15 @@ Code parse_array_decl()
 
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of array declaration, expected ]\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Error, unexpected end of array declaration, expected ]\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
 		if ( currtok.Type != TokType::BraceSquare_Close )
 		{
-			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", ETokType::to_str( currtok.Type ), Context.to_string() );
-			Context.pop();
+			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", ETokType::to_str( currtok.Type ), to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -557,11 +561,11 @@ Code parse_array_decl()
 			array_expr->Next.ast = adjacent_arr_expr.ast;
 		}
 
-		Context.pop();
+		pop(& Context);
 		return array_expr;
 	}
 
-	Context.pop();
+	pop(& Context);
 	return { nullptr };
 }
 
@@ -659,7 +663,7 @@ CodeAttributes parse_attributes()
 	if ( len > 0 )
 	{
 		StrC attribute_txt = { len, start.Text };
-		Context.pop();
+		pop(& Context);
 
 		String name_stripped = strip_formatting( attribute_txt, strip_formatting_dont_preserve_newlines );
 
@@ -672,7 +676,7 @@ CodeAttributes parse_attributes()
 		return ( CodeAttributes )result;
 	}
 
-	Context.pop();
+	pop(& Context);
 	return { nullptr };
 }
 
@@ -681,7 +685,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 {
 	if ( which != TokType::Decl_Class && which != TokType::Decl_Struct )
 	{
-		log_failure( "Error, expected class or struct, not %s\n%s", ETokType::to_str( which ), Context.to_string() );
+		log_failure( "Error, expected class or struct, not %s\n%s", ETokType::to_str( which ), to_string(Context) );
 		return InvalidCode;
 	}
 
@@ -904,7 +908,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			case TokType::Operator:
 				if ( currtok.Text[0] != '~' )
 				{
-					log_failure( "Operator token found in global body but not destructor unary negation\n%s", Context.to_string() );
+					log_failure( "Operator token found in global body but not destructor unary negation\n%s", to_string(Context) );
 					return InvalidCode;
 				}
 
@@ -1017,8 +1021,8 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 						break;
 
 						default:
-							log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str(spec), Context.to_string() );
-							Context.pop();
+							log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str(spec), to_string(Context) );
+							pop(& Context);
 							return InvalidCode;
 					}
 
@@ -1114,8 +1118,8 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 		if ( member == Code_Invalid )
 		{
-			log_failure( "Failed to parse member\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Failed to parse member\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -1124,15 +1128,14 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 	eat( TokType::BraceCurly_Close );
 	// { <Members> }
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
 internal
 CodeComment parse_comment()
 {
-	StackNode scope { nullptr, currtok_noskip, NullToken, txt( __func__ ) };
-	Context.push( & scope );
+	push_scope();
 
 	CodeComment
 	result          = (CodeComment) make_code();
@@ -1142,7 +1145,7 @@ CodeComment parse_comment()
 	// result->Token   = currtok_noskip;
 	eat( TokType::Comment );
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -1174,7 +1177,7 @@ Code parse_complicated_definition( TokType which )
 		// Its a forward declaration only
 		Code result = parse_forward_or_definition( which, is_inplace );
 		// <class, enum, struct, or union> <Name>;
-		Context.pop();
+		pop(& Context);
 		return result;
 	}
 
@@ -1198,12 +1201,12 @@ Code parse_complicated_definition( TokType which )
 
 			Code result = parse_operator_function_or_variable( false, { nullptr }, { nullptr } );
 			// <Attributes> <Specifiers> <ReturnType/ValueType> <operator <Op>, or Name> ...
-			Context.pop();
+			pop(& Context);
 			return result;
 		}
 
-		log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), Context.to_string() );
-		Context.pop();
+		log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 	if ( tok.Type == TokType::Identifier )
@@ -1235,7 +1238,7 @@ Code parse_complicated_definition( TokType which )
 			// <enum> <class> <type_identifier> : <identifier>;
 			ok_to_parse = true;
 			Code result = parse_enum();
-			Context.pop();
+			pop(& Context);
 			return result;
 		}
 		else if ( is_indirection )
@@ -1247,14 +1250,14 @@ Code parse_complicated_definition( TokType which )
 
 		if ( ! ok_to_parse )
 		{
-			log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), Context.to_string() );
-			Context.pop();
+			log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
 		Code result = parse_operator_function_or_variable( false, { nullptr }, { nullptr } );
 		// <Attributes> <Specifiers> <ReturnType/ValueType> <operator <Op>, or Name> ...
-		Context.pop();
+		pop(& Context);
 		return result;
 	}
 	else if ( tok.Type >= TokType::Type_Unsigned && tok.Type <= TokType::Type_MS_W64 )
@@ -1266,8 +1269,8 @@ Code parse_complicated_definition( TokType which )
 			&&	( tokens.Arr[idx - 4].Type != which))
 		)
 		{
-			log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), Context.to_string() );
-			Context.pop();
+			log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -1275,7 +1278,7 @@ Code parse_complicated_definition( TokType which )
 		// <enum>         <type_identifier> : <identifier>;
 		// <enum> <class> <type_identifier> : <identifier>;
 		Code result = parse_enum();
-		Context.pop();
+		pop(& Context);
 		return result;
 	}
 	else if ( tok.Type == TokType::BraceCurly_Close )
@@ -1283,7 +1286,7 @@ Code parse_complicated_definition( TokType which )
 		// Its a definition
 		Code result = parse_forward_or_definition( which, is_inplace );
 		// <which> { ... };
-		Context.pop();
+		pop(& Context);
 		return result;
 	}
 	else if ( tok.Type == TokType::BraceSquare_Close )
@@ -1291,13 +1294,13 @@ Code parse_complicated_definition( TokType which )
 		// Its an array definition
 		Code result = parse_operator_function_or_variable( false, { nullptr }, { nullptr } );
 		// <which> <type_identifier> <identifier> [ ... ];
-		Context.pop();
+		pop(& Context);
 		return result;
 	}
 	else
 	{
-		log_failure( "Unsupported or bad member definition after %s declaration\n%S", to_str(which).Ptr, Context.to_string() );
-		Context.pop();
+		log_failure( "Unsupported or bad member definition after %s declaration\n%S", to_str(which).Ptr, to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 }
@@ -1315,8 +1318,8 @@ CodeDefine parse_define()
 
 	if ( ! check( TokType::Identifier ) )
 	{
-		log_failure( "Error, expected identifier after #define\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Error, expected identifier after #define\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -1327,8 +1330,8 @@ CodeDefine parse_define()
 
 	if ( ! check( TokType::Preprocess_Content ))
 	{
-		log_failure( "Error, expected content after #define %s\n%s", define->Name, Context.to_string() );
-		Context.pop();
+		log_failure( "Error, expected content after #define %s\n%s", define->Name, to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -1338,7 +1341,7 @@ CodeDefine parse_define()
 		eat( TokType::Preprocess_Content );
 		// #define <Name> <Content>
 
-		Context.pop();
+		pop(& Context);
 		return define;
 	}
 
@@ -1346,7 +1349,7 @@ CodeDefine parse_define()
 	eat( TokType::Preprocess_Content );
 	// #define <Name> <Content>
 
-	Context.pop();
+	pop(& Context);
 	return define;
 }
 
@@ -1362,8 +1365,8 @@ Code parse_assignment_expression()
 
 	if ( currtok.Type == TokType::Statement_End && currtok.Type != TokType::Comma )
 	{
-		log_failure( "Expected expression after assignment operator\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Expected expression after assignment operator\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -1414,7 +1417,7 @@ Code parse_forward_or_definition( TokType which, bool is_inplace )
 		default:
 			log_failure( "Error, wrong token type given to parse_complicated_definition "
 				"(only supports class, enum, struct, union) \n%s"
-				, Context.to_string() );
+				, to_string(Context) );
 
 			return InvalidCode;
 	}
@@ -1456,7 +1459,7 @@ CodeFn parse_function_after_name(
 		body = parse_function_body();
 		if ( body == Code_Invalid )
 		{
-			Context.pop();
+			pop(& Context);
 			return InvalidCode;
 		}
 		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> { <Body> }
@@ -1507,8 +1510,8 @@ CodeFn parse_function_after_name(
 
 			default:
 			{
-				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", debug_str(body), Context.to_string());
-				Context.pop();
+				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", debug_str(body), to_string(Context));
+				pop(& Context);
 				return InvalidCode;
 			}
 		}
@@ -1535,7 +1538,7 @@ CodeFn parse_function_after_name(
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -1577,7 +1580,7 @@ Code parse_function_body()
 
 	eat( TokType::BraceCurly_Close );
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -1643,7 +1646,7 @@ CodeBody parse_global_nspace( CodeT which )
 
 			case TokType::Decl_Extern_Linkage:
 				if ( which == Extern_Linkage_Body )
-					log_failure( "Nested extern linkage\n%s", Context.to_string() );
+					log_failure( "Nested extern linkage\n%s", to_string(Context) );
 
 				member = parse_extern_link();
 				// extern "..." { ... }
@@ -1731,7 +1734,7 @@ CodeBody parse_global_nspace( CodeT which )
 
 			case TokType::Module_Export:
 				if ( which == Export_Body )
-					log_failure( "Nested export declaration\n%s", Context.to_string() );
+					log_failure( "Nested export declaration\n%s", to_string(Context) );
 
 				member = parse_export_body();
 				// export { ... }
@@ -1800,8 +1803,8 @@ CodeBody parse_global_nspace( CodeT which )
 						default:
 							StrC spec_str = ESpecifier::to_str(spec);
 
-							log_failure( "Invalid specifier %.*s for variable\n%s", spec_str.Len, spec_str, Context.to_string() );
-							Context.pop();
+							log_failure( "Invalid specifier %.*s for variable\n%s", spec_str.Len, spec_str, to_string(Context) );
+							pop(& Context);
 							return InvalidCode;
 					}
 
@@ -1876,8 +1879,8 @@ CodeBody parse_global_nspace( CodeT which )
 
 		if ( member == Code_Invalid )
 		{
-			log_failure( "Failed to parse member\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Failed to parse member\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -1889,7 +1892,7 @@ CodeBody parse_global_nspace( CodeT which )
 		eat( TokType::BraceCurly_Close );
 		// { <Body> }
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -2044,8 +2047,8 @@ Token parse_identifier( bool* possible_member_function )
 
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of static symbol identifier\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Error, unexpected end of static symbol identifier\n%s", to_string(Context) );
+			pop(& Context);
 			return { nullptr, 0, TokType::Invalid };
 		}
 
@@ -2055,12 +2058,12 @@ Token parse_identifier( bool* possible_member_function )
 			if (is_destructor)
 			{
 				name.Length = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )name.Text;
-				Context.pop();
+				pop(& Context);
 				return name;
 			}
 
-			log_failure( "Error, had a ~ operator after %S but not a destructor\n%s", ETokType::to_str( prevtok.Type ), Context.to_string() );
-			Context.pop();
+			log_failure( "Error, had a ~ operator after %S but not a destructor\n%s", ETokType::to_str( prevtok.Type ), to_string(Context) );
+			pop(& Context);
 			return { nullptr, 0, TokType::Invalid };
 		}
 
@@ -2071,16 +2074,16 @@ Token parse_identifier( bool* possible_member_function )
 
 			else
 			{
-				log_failure( "Found a member function pointer identifier but the parsing context did not expect it\n%s", Context.to_string() );
-				Context.pop();
+				log_failure( "Found a member function pointer identifier but the parsing context did not expect it\n%s", to_string(Context) );
+				pop(& Context);
 				return { nullptr, 0, TokType::Invalid };
 			}
 		}
 
 		if ( currtok.Type != TokType::Identifier )
 		{
-			log_failure( "Error, expected static symbol identifier, not %s\n%s", ETokType::to_str( currtok.Type ), Context.to_string() );
-			Context.pop();
+			log_failure( "Error, expected static symbol identifier, not %s\n%s", ETokType::to_str( currtok.Type ), to_string(Context) );
+			pop(& Context);
 			return { nullptr, 0, TokType::Invalid };
 		}
 
@@ -2093,7 +2096,7 @@ Token parse_identifier( bool* possible_member_function )
 	}
 	// <Qualifier Name> <Template Args> :: <Name> <Template Args> ...
 
-	Context.pop();
+	pop(& Context);
 	return name;
 }
 
@@ -2110,8 +2113,8 @@ CodeInclude parse_include()
 
 	if ( ! check( TokType::String ))
 	{
-		log_failure( "Error, expected include string after #include\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Error, expected include string after #include\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -2120,7 +2123,7 @@ CodeInclude parse_include()
 	eat( TokType::String );
 	// #include <Path> or "Path"
 
-	Context.pop();
+	pop(& Context);
 	return include;
 }
 
@@ -2159,8 +2162,8 @@ CodeOperator parse_operator_after_ret_type(
 		&& currtok.Type != TokType::Ampersand
 		&& currtok.Type != TokType::Ampersand_DBL )
 	{
-		log_failure( "Expected operator after 'operator' keyword\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Expected operator after 'operator' keyword\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -2412,8 +2415,8 @@ CodeOperator parse_operator_after_ret_type(
 			{
 				if ( op == Invalid )
 				{
-					log_failure( "Invalid operator '%s'\n%s", prevtok.Text, Context.to_string() );
-					Context.pop();
+					log_failure( "Invalid operator '%s'\n%s", prevtok.Text, to_string(Context) );
+					pop(& Context);
 					return InvalidCode;
 				}
 			}
@@ -2422,8 +2425,8 @@ CodeOperator parse_operator_after_ret_type(
 
 	if ( op == Invalid )
 	{
-		log_failure( "Invalid operator '%s'\n%s", currtok.Text, Context.to_string() );
-		Context.pop();
+		log_failure( "Invalid operator '%s'\n%s", currtok.Text, to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -2460,7 +2463,7 @@ CodeOperator parse_operator_after_ret_type(
 		body = parse_function_body();
 		if ( body == Code_Invalid )
 		{
-			Context.pop();
+			pop(& Context);
 			return InvalidCode;
 		}
 		// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers> { ... }
@@ -2482,7 +2485,7 @@ CodeOperator parse_operator_after_ret_type(
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -2498,7 +2501,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	{
 		// Were dealing with a macro after attributes/specifiers.
 		result = parse_simple_preprocess( TokType::Preprocess_Macro );
-		Context.pop();
+		pop(& Context);
 		return result;
 		// <Attributes> <Specifiers> <Macro>
 	}
@@ -2509,7 +2512,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 
 	if ( type == InvalidCode )
 	{
-		Context.pop();
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -2564,8 +2567,8 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		{
 			if ( expects_function )
 			{
-				log_failure( "Expected function declaration (consteval was used)\n%s", Context.to_string() );
-				Context.pop();
+				log_failure( "Expected function declaration (consteval was used)\n%s", to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 			}
 
@@ -2575,7 +2578,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		}
 	}
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -2592,8 +2595,8 @@ CodePragma parse_pragma()
 
 	if ( ! check( TokType::Preprocess_Content ))
 	{
-		log_failure( "Error, expected content after #pragma\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Error, expected content after #pragma\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -2603,7 +2606,7 @@ CodePragma parse_pragma()
 	eat( TokType::Preprocess_Content );
 	// #pragma <Content>
 
-	Context.pop();
+	pop(& Context);
 	return pragma;
 }
 
@@ -2628,14 +2631,14 @@ CodeParam parse_params( bool use_template_capture )
 	{
 		eat( TokType::Capture_End );
 		// )
-		Context.pop();
+		pop(& Context);
 		return { nullptr };
 	}
 	else if ( check( TokType::Operator ) && currtok.Text[ 0 ] == '>' )
 	{
 		eat( TokType::Operator );
 		// >
-		Context.pop();
+		pop(& Context);
 		return { nullptr };
 	}
 
@@ -2650,7 +2653,7 @@ CodeParam parse_params( bool use_template_capture )
 		eat( TokType::Varadic_Argument );
 		// ( or <  ...
 
-		Context.pop();
+		pop(& Context);
 		return param_varadic;
 		// ( ... )
 		// or < ... >
@@ -2673,7 +2676,7 @@ CodeParam parse_params( bool use_template_capture )
 		type = parse_type( use_template_capture );
 		if ( type == Code_Invalid )
 		{
-			Context.pop();
+			pop(& Context);
 			return InvalidCode;
 		}
 		// ( <Macro> <ValueType>
@@ -2706,8 +2709,8 @@ CodeParam parse_params( bool use_template_capture )
 
 			if ( currtok.Type == TokType::Comma )
 			{
-				log_failure( "Expected value after assignment operator\n%s.", Context.to_string() );
-				Context.pop();
+				log_failure( "Expected value after assignment operator\n%s.", to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 			}
 
@@ -2783,7 +2786,7 @@ CodeParam parse_params( bool use_template_capture )
 			type = parse_type( use_template_capture );
 			if ( type == Code_Invalid )
 			{
-				Context.pop();
+				pop(& Context);
 				return InvalidCode;
 			}
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType>
@@ -2818,8 +2821,8 @@ CodeParam parse_params( bool use_template_capture )
 
 				if ( currtok.Type == TokType::Comma )
 				{
-					log_failure( "Expected value after assignment operator\n%s", Context.to_string() );
-					Context.pop();
+					log_failure( "Expected value after assignment operator\n%s", to_string(Context) );
+					pop(& Context);
 					return InvalidCode;
 				}
 
@@ -2879,15 +2882,15 @@ CodeParam parse_params( bool use_template_capture )
 	{
 		if ( ! check( TokType::Operator ) || currtok.Text[ 0 ] != '>' )
 		{
-			log_failure( "Expected '<' after 'template' keyword\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Expected '<' after 'template' keyword\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 		eat( TokType::Operator );
 		// < <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, .. >
 	}
 
-	Context.pop();
+	pop(& Context);
 	return result;
 #undef context
 }
@@ -2899,8 +2902,8 @@ CodePreprocessCond parse_preprocess_cond()
 
 	if ( ! is_preprocess_cond(currtok) )
 	{
-		log_failure( "Error, expected preprocess conditional\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Error, expected preprocess conditional\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -2912,8 +2915,8 @@ CodePreprocessCond parse_preprocess_cond()
 
 	if ( ! check( TokType::Preprocess_Content ))
 	{
-		log_failure( "Error, expected content after #define\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Error, expected content after #define\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -2922,7 +2925,7 @@ CodePreprocessCond parse_preprocess_cond()
 	eat( TokType::Preprocess_Content );
 	// #<Conditiona> <Content>
 
-	Context.pop();
+	pop(& Context);
 	return cond;
 }
 
@@ -3000,7 +3003,7 @@ Code parse_simple_preprocess( TokType which )
 	Code result = untyped_str( GEN_NS to_str(content) );
 	Context.Scope->Name = tok;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3042,7 +3045,7 @@ Code parse_static_assert()
 	assert->Content = get_cached_string( { content.Length + 1, str } );
 	assert->Name	= assert->Content;
 
-	Context.pop();
+	pop(& Context);
 	return assert;
 }
 
@@ -3170,8 +3173,8 @@ CodeVar parse_variable_after_name(
 
 		if ( currtok.Type == TokType::Statement_End )
 		{
-			log_failure( "Expected expression after bitfield \n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Expected expression after bitfield \n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -3257,7 +3260,7 @@ CodeVar parse_variable_after_name(
 
 	result->VarConstructorInit = using_constructor_initializer;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3290,7 +3293,7 @@ CodeVar parse_variable_declaration_list()
 					{
 						log_failure( "Error, const specifier must come after pointer specifier for variable declaration proceeding comma\n"
 						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%s"
-						, Context.to_string() );
+						, to_string(Context) );
 
 						append(specifiers, spec );
 					}
@@ -3305,7 +3308,7 @@ CodeVar parse_variable_declaration_list()
 				{
 					log_failure( "Error, invalid specifier '%s' proceeding comma\n"
 					"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%s"
-					, currtok.Text, Context.to_string() );
+					, currtok.Text, to_string(Context) );
 					continue;
 				}
 				break;
@@ -3340,7 +3343,7 @@ CodeVar parse_variable_declaration_list()
 		}
 	}
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3349,7 +3352,7 @@ CodeClass parse_class( bool inplace_def )
 {
 	push_scope();
 	CodeClass result = (CodeClass) parse_class_struct( TokType::Decl_Class, inplace_def );
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3439,7 +3442,7 @@ CodeConstructor parse_constructor( CodeSpecifiers specifiers )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3469,7 +3472,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 		eat( TokType::Operator );
 	else
 	{
-		log_failure( "Expected destructor '~' token\n%s", Context.to_string() );
+		log_failure( "Expected destructor '~' token\n%s", to_string(Context) );
 		return InvalidCode;
 	}
 	// <Virtual Specifier> ~
@@ -3506,7 +3509,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 		}
 		else
 		{
-			log_failure( "Pure or default specifier expected due to '=' token\n%s", Context.to_string() );
+			log_failure( "Pure or default specifier expected due to '=' token\n%s", to_string(Context) );
 			return InvalidCode;
 		}
 
@@ -3549,7 +3552,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3604,8 +3607,8 @@ CodeEnum parse_enum( bool inplace_def )
 		type = parse_type();
 		if ( type == Code_Invalid )
 		{
-			log_failure( "Failed to parse enum classifier\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Failed to parse enum classifier\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 		// enum <class> <Attributes> <Name> : <UnderlyingType>
@@ -3639,8 +3642,8 @@ CodeEnum parse_enum( bool inplace_def )
 		{
 			if ( ! expects_entry )
 			{
-				log_failure( "Did not expect an entry after last member of enum body.\n%s", Context.to_string() );
-				Context.pop();
+				log_failure( "Did not expect an entry after last member of enum body.\n%s", to_string(Context) );
+				pop(& Context);
 				break;
 			}
 
@@ -3744,8 +3747,8 @@ CodeEnum parse_enum( bool inplace_def )
 
 			if ( member == Code_Invalid )
 			{
-				log_failure( "Failed to parse member\n%s", Context.to_string() );
-				Context.pop();
+				log_failure( "Failed to parse member\n%s", to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 			}
 
@@ -3802,7 +3805,7 @@ CodeEnum parse_enum( bool inplace_def )
 		result->InlineCmt = inline_cmt;
 
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3811,7 +3814,7 @@ CodeBody parse_export_body()
 {
 	push_scope();
 	CodeBody result = parse_global_nspace( ECode::Export_Body );
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3820,7 +3823,7 @@ CodeBody parse_extern_link_body()
 {
 	push_scope();
 	CodeBody result = parse_global_nspace( ECode::Extern_Linkage_Body );
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3847,15 +3850,15 @@ CodeExtern parse_extern_link()
 	Code entry = parse_extern_link_body();
 	if ( entry == Code_Invalid )
 	{
-		log_failure( "Failed to parse body\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Failed to parse body\n%s", to_string(Context) );
+		pop(& Context);
 		return result;
 	}
 	// extern "<Name>" { <Body> }
 
 	result->Body = entry;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3874,7 +3877,7 @@ CodeFriend parse_friend()
 	CodeType type = parse_type();
 	if ( type == Code_Invalid )
 	{
-		Context.pop();
+		pop(& Context);
 		return InvalidCode;
 	}
 	// friend <Type>
@@ -3927,7 +3930,7 @@ CodeFriend parse_friend()
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -3970,8 +3973,8 @@ CodeFn parse_function()
 			break;
 
 			default:
-				log_failure( "Invalid specifier %s for functon\n%s", ESpecifier::to_str(spec), Context.to_string() );
-				Context.pop();
+				log_failure( "Invalid specifier %s for functon\n%s", ESpecifier::to_str(spec), to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 		}
 
@@ -3992,7 +3995,7 @@ CodeFn parse_function()
 	CodeType ret_type = parse_type();
 	if ( ret_type == Code_Invalid )
 	{
-		Context.pop();
+		pop(& Context);
 		return InvalidCode;
 	}
 	// <export> <Attributes> <Specifiers> <ReturnType>
@@ -4001,7 +4004,7 @@ CodeFn parse_function()
 	Context.Scope->Name = name;
 	if ( ! is_valid(name) )
 	{
-		Context.pop();
+		pop(& Context);
 		return InvalidCode;
 	}
 	// <export> <Attributes> <Specifiers> <ReturnType> <Name>
@@ -4009,7 +4012,7 @@ CodeFn parse_function()
 	CodeFn result = parse_function_after_name( mflags, attributes, specifiers, ret_type, name );
 	// <export> <Attributes> <Specifiers> <ReturnType> <Name> ...
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -4028,7 +4031,7 @@ CodeNS parse_namespace()
 	CodeBody body = parse_global_nspace( ECode::Namespace_Body );
 	if ( body == Code_Invalid )
 	{
-		Context.pop();
+		pop(& Context);
 		return InvalidCode;
 	}
 	// namespace <Name> { <Body> }
@@ -4040,7 +4043,7 @@ CodeNS parse_namespace()
 
 	result->Body = body;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -4081,8 +4084,8 @@ CodeOperator parse_operator()
 			break;
 
 			default:
-				log_failure( "Invalid specifier " "%s" " for operator\n%s", ESpecifier::to_str(spec), Context.to_string() );
-				Context.pop();
+				log_failure( "Invalid specifier " "%s" " for operator\n%s", ESpecifier::to_str(spec), to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 		}
 
@@ -4107,7 +4110,7 @@ CodeOperator parse_operator()
 	CodeOperator result = parse_operator_after_ret_type( mflags, attributes, specifiers, ret_type );
 	// <export> <Attributes> <Specifiers> <ReturnType> ...
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -4219,7 +4222,7 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 
 	result->ValueType = type;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -4228,7 +4231,7 @@ CodeStruct parse_struct( bool inplace_def )
 {
 	push_scope();
 	CodeStruct result = (CodeStruct) parse_class_struct( TokType::Decl_Struct, inplace_def );
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -4254,7 +4257,7 @@ CodeTemplate parse_template()
 	Code params = parse_params( UseTemplateCapture );
 	if ( params == Code_Invalid )
 	{
-		Context.pop();
+		pop(& Context);
 		return InvalidCode;
 	}
 	// <export> template< <Parameters> >
@@ -4332,8 +4335,8 @@ CodeTemplate parse_template()
 						break;
 
 					default :
-						log_failure( "Invalid specifier %s for variable or function\n%s", ESpecifier::to_str( spec ), Context.to_string() );
-						Context.pop();
+						log_failure( "Invalid specifier %s for variable or function\n%s", ESpecifier::to_str( spec ), to_string(Context) );
+						pop(& Context);
 						return InvalidCode;
 				}
 
@@ -4415,7 +4418,7 @@ CodeTemplate parse_template()
 	result->ModuleFlags = mflags;
 	// result->Name        = definition->Name;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 #undef UseTemplateCapture
 }
@@ -4455,8 +4458,8 @@ CodeType parse_type( bool from_template, bool* typedef_is_function )
 
 		if ( spec != ESpecifier::Const )
 		{
-			log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, Context.to_string() );
-			Context.pop();
+			log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -4468,8 +4471,8 @@ CodeType parse_type( bool from_template, bool* typedef_is_function )
 
 	if ( left == 0 )
 	{
-		log_failure( "Error, unexpected end of type definition\n%s", Context.to_string() );
-		Context.pop();
+		log_failure( "Error, unexpected end of type definition\n%s", to_string(Context) );
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -4552,8 +4555,8 @@ else if ( currtok.Type == TokType::DeclType )
 			Context.Scope->Name = name;
 			if ( ! is_valid(name) )
 			{
-				log_failure( "Error, failed to type signature\n%s", Context.to_string() );
-				Context.pop();
+				log_failure( "Error, failed to type signature\n%s", to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 			}
 		}
@@ -4566,8 +4569,8 @@ else if ( currtok.Type == TokType::DeclType )
 		Context.Scope->Name = name;
 		if ( ! is_valid(name) )
 		{
-			log_failure( "Error, failed to type signature\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Error, failed to type signature\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 		// <Attributes> <Specifiers> <Qualifier ::> <Identifier>
@@ -4581,8 +4584,8 @@ else if ( currtok.Type == TokType::DeclType )
 
 		if ( spec != ESpecifier::Const && spec != ESpecifier::Ptr && spec != ESpecifier::Ref && spec != ESpecifier::RValue )
 		{
-			log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, Context.to_string() );
-			Context.pop();
+			log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -4714,8 +4717,8 @@ else if ( currtok.Type == TokType::DeclType )
 
 				if ( spec != ESpecifier::Ptr && spec != ESpecifier::Ref && spec != ESpecifier::RValue )
 				{
-					log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, Context.to_string() );
-					Context.pop();
+					log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
+					pop(& Context);
 					return InvalidCode;
 				}
 
@@ -4784,8 +4787,8 @@ else if ( currtok.Type == TokType::DeclType )
 					// && spec != ESpecifier::NoExcept
 					&& spec != ESpecifier::RValue )
 			{
-				log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, Context.to_string() );
-				Context.pop();
+				log_failure( "Error, invalid specifier used in type definition: %s\n%s", currtok.Text, to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 			}
 
@@ -4869,7 +4872,7 @@ else if ( currtok.Type == TokType::DeclType )
 	if ( params )
 		result->Params = params;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -4982,8 +4985,8 @@ CodeTypedef parse_typedef()
 
 					if ( ! ok_to_parse )
 					{
-						log_failure( "Unsupported or bad member definition after struct declaration\n%s", Context.to_string() );
-						Context.pop();
+						log_failure( "Unsupported or bad member definition after struct declaration\n%s", to_string(Context) );
+						pop(& Context);
 						return InvalidCode;
 					}
 
@@ -5008,8 +5011,8 @@ CodeTypedef parse_typedef()
 				}
 				else
 				{
-					log_failure( "Unsupported or bad member definition after struct declaration\n%s", Context.to_string() );
-					Context.pop();
+					log_failure( "Unsupported or bad member definition after struct declaration\n%s", to_string(Context) );
+					pop(& Context);
 					return InvalidCode;
 				}
 			}
@@ -5029,8 +5032,8 @@ CodeTypedef parse_typedef()
 		}
 		else if ( ! is_function )
 		{
-			log_failure( "Error, expected identifier for typedef\n%s", Context.to_string() );
-			Context.pop();
+			log_failure( "Error, expected identifier for typedef\n%s", to_string(Context) );
+			pop(& Context);
 			return InvalidCode;
 		}
 
@@ -5078,7 +5081,7 @@ CodeTypedef parse_typedef()
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -5218,7 +5221,7 @@ CodeUnion parse_union( bool inplace_def )
 	if ( attributes )
 		result->Attributes = attributes;
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -5318,7 +5321,7 @@ CodeUsing parse_using()
 			result->InlineCmt = inline_cmt;
 	}
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
@@ -5364,8 +5367,8 @@ CodeVar parse_variable()
 			break;
 
 			default:
-				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), Context.to_string() );
-				Context.pop();
+				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 		}
 
@@ -5397,7 +5400,7 @@ CodeVar parse_variable()
 	// Regular  : <ModuleFlags> <Attributes> <Specifiers> <ValueType> <Name>                  = <Value>; <InlineCmt>
 	// Bitfield : <ModuleFlags> <Attributes> <Specifiers> <ValueType> <Name> : <BitfieldSize> = <Value>; <InlineCmt>
 
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 

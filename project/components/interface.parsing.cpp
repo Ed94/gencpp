@@ -10,23 +10,24 @@
 
 CodeClass parse_class( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
 	
-	parser::TokArray toks = parser::lex( def );
+	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	parser::Context.Tokens = toks;
+	Context.Tokens = toks;
 	push_scope();
-	CodeClass result = (CodeClass) parser::parse_class_struct( parser::TokType::Decl_Class );
-	parser::Context.pop();
+	CodeClass result = (CodeClass) parse_class_struct( parser::TokType::Decl_Class );
+	pop(& Context);
 	return result;
 }
 
 CodeConstructor parse_constructor( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -58,8 +59,8 @@ CodeConstructor parse_constructor( StrC def )
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), Context.to_string() );
-				Context.pop();
+				log_failure( "Invalid specifier %s for variable\n%s", ESpecifier::to_str( spec ), to_string(Context) );
+				pop(& Context);
 				return InvalidCode;
 		}
 
@@ -85,8 +86,8 @@ CodeConstructor parse_constructor( StrC def )
 
 CodeDestructor parse_destructor( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -102,13 +103,13 @@ CodeDestructor parse_destructor( StrC def )
 
 CodeEnum parse_enum( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 	{
-		Context.pop();
+		pop(& Context);
 		return InvalidCode;
 	}
 
@@ -118,8 +119,8 @@ CodeEnum parse_enum( StrC def )
 
 CodeBody parse_export_body( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -131,8 +132,8 @@ CodeBody parse_export_body( StrC def )
 
 CodeExtern parse_extern_link( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -144,8 +145,8 @@ CodeExtern parse_extern_link( StrC def )
 
 CodeFriend parse_friend( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -157,8 +158,8 @@ CodeFriend parse_friend( StrC def )
 
 CodeFn parse_function( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -170,8 +171,8 @@ CodeFn parse_function( StrC def )
 
 CodeBody parse_global_body( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -180,14 +181,14 @@ CodeBody parse_global_body( StrC def )
 	Context.Tokens = toks;
 	push_scope();
 	CodeBody result = parse_global_nspace( ECode::Global_Body );
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
 CodeNS parse_namespace( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -199,8 +200,8 @@ CodeNS parse_namespace( StrC def )
 
 CodeOperator parse_operator( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -212,8 +213,8 @@ CodeOperator parse_operator( StrC def )
 
 CodeOpCast parse_operator_cast( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -225,8 +226,8 @@ CodeOpCast parse_operator_cast( StrC def )
 
 CodeStruct parse_struct( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -235,14 +236,14 @@ CodeStruct parse_struct( StrC def )
 	Context.Tokens = toks;
 	push_scope();
 	CodeStruct result = (CodeStruct) parse_class_struct( TokType::Decl_Struct );
-	Context.pop();
+	pop(& Context);
 	return result;
 }
 
 CodeTemplate parse_template( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -254,8 +255,8 @@ CodeTemplate parse_template( StrC def )
 
 CodeType parse_type( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -267,8 +268,8 @@ CodeType parse_type( StrC def )
 
 CodeTypedef parse_typedef( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -280,8 +281,8 @@ CodeTypedef parse_typedef( StrC def )
 
 CodeUnion parse_union( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -293,8 +294,8 @@ CodeUnion parse_union( StrC def )
 
 CodeUsing parse_using( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
@@ -306,8 +307,8 @@ CodeUsing parse_using( StrC def )
 
 CodeVar parse_variable( StrC def )
 {
+	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	using namespace parser;
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )

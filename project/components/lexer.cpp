@@ -450,7 +450,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 }
 
 forceinline
-void lex_found_token( LexContext* ctx ) 
+void lex_found_token( LexContext* ctx )
 {
 	if ( ctx->token.Type != TokType::Invalid )
 	{

@@ -335,10 +335,17 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #pragma pop_macro("do_once_start")
 #pragma pop_macro("do_once_end")
 
-	CodeNS    nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
+	//CodeNS    nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
 	CodeUsing td_toktype = def_using( name(TokType), def_type( name(ETokType::Type) ) );
 
-	return def_global_body( args( nspace, td_toktype ) );
+	return def_global_body( args(
+		untyped_str(txt("GEN_NS_PARSER_BEGIN\n")),
+		attribute_entires_def, 
+		enum_code, 
+		to_str, 
+		td_toktype,
+		untyped_str(txt("GEN_NS_PARSER_END\n"))
+	));
 }
 
 CodeBody gen_ast_inlines()

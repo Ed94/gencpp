@@ -135,6 +135,7 @@
 #	if GEN_COMPILER_C
 #		define GEN_NS_PARSER_BEGIN
 #		define GEN_NS_PARSER_END
+#		define GEN_USING_NS_PARSER
 #		define GEN_NS_ENUM_BEGIN
 #		define GEN_NS_ENUM_END
 #		define GEN_NS
@@ -143,6 +144,7 @@
 #	else
 #		define GEN_NS_PARSER_BEGIN namespace parser {
 #		define GEN_NS_PARSER_END   }
+#		define GEN_USING_NS_PARSER using namespace parser
 #		define GEN_NS_ENUM_BEGIN namespace gen_internal_enums {
 #		define GEN_NS_ENUM_END   }
 #		define GEN_NS       ::
@@ -152,6 +154,7 @@
 #else
 #	define GEN_NS_PARSER_BEGIN namespace parser {
 #	define GEN_NS_PARSER_END   }
+#	define GEN_USING_NS_PARSER using namespace parser
 #	define GEN_NS_ENUM_BEGIN namespace gen_internal_enums {
 #	define GEN_NS_ENUM_END   }
 #	define GEN_NS       gen::

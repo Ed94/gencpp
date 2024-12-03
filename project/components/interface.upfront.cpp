@@ -499,7 +499,7 @@ CodeConstructor def_constructor( Opts_def_constructor p )
 {
 	CodeParam params           = p.params;
 	Code      initializer_list = p.initializer_list;
-	Code      body             = p.body;	
+	Code      body             = p.body;
 
 	if ( params && params->Type != ECode::Parameters )
 	{
