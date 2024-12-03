@@ -50,7 +50,7 @@ u32 gen_sanity_upfront()
 
 	// Enum
 	{
-		CodeEnum fwd = def_enum( name(ETestEnum), NoCode, t_u8 );
+		CodeEnum fwd = def_enum( name(ETestEnum), NullCode, t_u8 );
 		CodeEnum def;
 		{
 			Code body = untyped_str( code(
@@ -62,7 +62,7 @@ u32 gen_sanity_upfront()
 			def = def_enum( name(ETestEnum), body, t_u8 );
 		}
 
-		CodeEnum fwd_enum_class = def_enum( name(ETestEnumClass), NoCode, t_u8, EnumClass );
+		CodeEnum fwd_enum_class = def_enum( name(ETestEnumClass), NullCode, t_u8, EnumClass );
 
 		gen_sanity_file.print(fwd);
 		gen_sanity_file.print(def);

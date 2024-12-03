@@ -3,6 +3,7 @@
 #include "ast.hpp"
 #endif
 
+#pragma region Code Type Interface
 void   append           ( CodeBody body, Code     other );
 void   append           ( CodeBody body, CodeBody other );
 String to_string        ( CodeBody body );
@@ -117,6 +118,7 @@ void   to_string_ns(CodeUsing op_cast, String* result );
 
 String to_string(CodeVar self);
 void   to_string(CodeVar self, String* result);
+#pragma endregion Code Type Interface
 
 #pragma region Code Types
 // These structs are not used at all by the C vairant.
@@ -132,7 +134,7 @@ struct CodeBody
 
 	void append( Code other )    { return GEN_NS append( *this, other ); }
 	void append( CodeBody body ) { return GEN_NS append(*this, body); }
-	bool has_entries()           { return GEN_NS has_entries(rcast( AST*, ast )); }
+	bool has_entries()           { return GEN_NS has_entries(* this); }
 
 	String to_string()                        { return GEN_NS to_string(* this); }
 	void   to_string( String& result )        { return GEN_NS to_string(* this, & result ); }
@@ -1010,6 +1012,40 @@ void to_string_export( CodeBody body, String& result ) { return to_string_export
 #endif
 
 #undef Verify_POD
+
+struct InvalidCode_ImplictCaster
+{
+	// operator CodeBaseClass() const;
+    operator Code              () const { return Code_Invalid; }
+    operator CodeBody          () const { return cast(CodeBody,           Code_Invalid); }
+    operator CodeAttributes    () const { return cast(CodeAttributes,     Code_Invalid); }
+    operator CodeComment       () const { return cast(CodeComment,        Code_Invalid); }
+    operator CodeClass         () const { return cast(CodeClass,          Code_Invalid); }
+    operator CodeConstructor   () const { return cast(CodeConstructor,    Code_Invalid); }
+    operator CodeDefine        () const { return cast(CodeDefine,         Code_Invalid); }
+    operator CodeDestructor    () const { return cast(CodeDestructor,     Code_Invalid); }
+    operator CodeExec          () const { return cast(CodeExec,           Code_Invalid); }
+    operator CodeEnum          () const { return cast(CodeEnum,           Code_Invalid); }
+    operator CodeExtern        () const { return cast(CodeExtern,         Code_Invalid); }
+    operator CodeInclude       () const { return cast(CodeInclude,        Code_Invalid); }
+    operator CodeFriend        () const { return cast(CodeFriend,         Code_Invalid); }
+    operator CodeFn            () const { return cast(CodeFn,             Code_Invalid); }
+    operator CodeModule        () const { return cast(CodeModule,         Code_Invalid); }
+    operator CodeNS            () const { return cast(CodeNS,             Code_Invalid); }
+    operator CodeOperator      () const { return cast(CodeOperator,       Code_Invalid); }
+    operator CodeOpCast        () const { return cast(CodeOpCast,         Code_Invalid); }
+    operator CodeParam         () const { return cast(CodeParam,          Code_Invalid); }
+    operator CodePragma        () const { return cast(CodePragma,         Code_Invalid); }
+    operator CodePreprocessCond() const { return cast(CodePreprocessCond, Code_Invalid); }
+    operator CodeSpecifiers    () const { return cast(CodeSpecifiers,     Code_Invalid); }
+    operator CodeStruct        () const { return cast(CodeStruct,         Code_Invalid); }
+    operator CodeTemplate      () const { return cast(CodeTemplate,       Code_Invalid); }
+    operator CodeType          () const { return cast(CodeType,           Code_Invalid); }
+    operator CodeTypedef       () const { return cast(CodeTypedef,        Code_Invalid); }
+    operator CodeUnion         () const { return cast(CodeUnion,          Code_Invalid); }
+    operator CodeUsing         () const { return cast(CodeUsing,          Code_Invalid); }
+    operator CodeVar           () const { return cast(CodeVar,            Code_Invalid); }
+};
 
 #endif //if ! GEN_COMPILER_C
 

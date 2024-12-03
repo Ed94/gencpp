@@ -214,7 +214,7 @@ internal CodeVar            parse_variable_declaration_list    ();
 
 internal CodeClass       parse_class           ( bool inplace_def = false );
 internal CodeConstructor parse_constructor     ( CodeSpecifiers specifiers );
-internal CodeDestructor  parse_destructor      ( CodeSpecifiers specifiers = NoCode );
+internal CodeDestructor  parse_destructor      ( CodeSpecifiers specifiers = NullCode );
 internal CodeEnum        parse_enum            ( bool inplace_def = false );
 internal CodeBody        parse_export_body     ();
 internal CodeBody        parse_extern_link_body();
@@ -222,7 +222,7 @@ internal CodeExtern      parse_extern_link     ();
 internal CodeFriend      parse_friend          ();
 internal CodeFn          parse_function        ();
 internal CodeNS          parse_namespace       ();
-internal CodeOpCast      parse_operator_cast   ( CodeSpecifiers specifiers = NoCode );
+internal CodeOpCast      parse_operator_cast   ( CodeSpecifiers specifiers = NullCode );
 internal CodeStruct      parse_struct          ( bool inplace_def = false );
 internal CodeVar         parse_variable        ();
 internal CodeTemplate    parse_template        ();
@@ -550,7 +550,7 @@ Code parse_array_decl()
 			Code adjacent_arr_expr = parse_array_decl();
 			// [ <Content> ][ <Content> ]...
 
-			array_expr->Next = adjacent_arr_expr.ast;
+			array_expr->Next.ast = adjacent_arr_expr.ast;
 		}
 
 		Context.pop();
@@ -757,7 +757,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	}
 	// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }
 
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 	if ( ! inplace_def )
 	{
 		Token stmt_end = currtok;
@@ -1445,8 +1445,8 @@ CodeFn parse_function_after_name(
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
 
-	CodeBody    body       = NoCode;
-	CodeComment inline_cmt = NoCode;
+	CodeBody    body       = NullCode;
+	CodeComment inline_cmt = NullCode;
 	if ( check( TokType::BraceCurly_Open ) )
 	{
 		body = parse_function_body();
@@ -2450,7 +2450,7 @@ CodeOperator parse_operator_after_ret_type(
 
 	// Parse Body
 	CodeBody    body       = { nullptr };
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 	if ( check( TokType::BraceCurly_Open ) )
 	{
 		body = parse_function_body();
@@ -3181,9 +3181,9 @@ CodeVar parse_variable_after_name(
 		// <Attributes> <Specifiers> <ValueType> <Name> : <Expression>
 	}
 
-	CodeVar     next_var   = NoCode;
+	CodeVar     next_var   = NullCode;
 	Token       stmt_end   = NullToken;
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 	if ( type )
 	{
 		if ( currtok.Type == TokType::Comma )
@@ -3266,14 +3266,14 @@ CodeVar parse_variable_declaration_list()
 {
 	push_scope();
 
-	CodeVar result   = NoCode;
-	CodeVar last_var = NoCode;
+	CodeVar result   = NullCode;
+	CodeVar last_var = NullCode;
 	while ( check( TokType::Comma ) )
 	{
 		eat( TokType::Comma );
 		// ,
 
-		CodeSpecifiers specifiers = NoCode;
+		CodeSpecifiers specifiers = NullCode;
 
 		while ( left && currtok.is_specifier() )
 		{
@@ -3320,7 +3320,7 @@ CodeVar parse_variable_declaration_list()
 		eat( TokType::Identifier );
 		// , <Specifiers> <Name>
 
-		CodeVar var = parse_variable_after_name( ModuleFlag_None, NoCode, specifiers, NoCode, name );
+		CodeVar var = parse_variable_after_name( ModuleFlag_None, NullCode, specifiers, NullCode, name );
 		// , <Specifiers> <Name> ...
 
 		if ( ! result )
@@ -3358,9 +3358,9 @@ CodeConstructor parse_constructor( CodeSpecifiers specifiers )
 	CodeParam params     = parse_params();
 	// <Name> ( <Parameters> )
 
-	Code        initializer_list = NoCode;
-	CodeBody    body             = NoCode;
-	CodeComment inline_cmt       = NoCode;
+	Code        initializer_list = NullCode;
+	CodeBody    body             = NullCode;
+	CodeComment inline_cmt       = NullCode;
 
 	// TODO(Ed) : Need to support postfix specifiers
 
@@ -3472,7 +3472,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 
 	Token       identifier = parse_identifier();
 	CodeBody    body       = { nullptr };
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 	// <Virtual Specifier> ~<Name>
 
 	eat( TokType::Capture_Start );
@@ -3750,7 +3750,7 @@ CodeEnum parse_enum( bool inplace_def )
 		// enum <class> <Attributes> <Name> : <UnderlyingType> { <Body> }
 	}
 
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 
 	if ( ! inplace_def )
 	{
@@ -3881,7 +3881,7 @@ CodeFriend parse_friend()
 		Context.Scope->Name = name;
 		// friend <ReturnType> <Name>
 
-		function = parse_function_after_name( ModuleFlag_None, NoCode, NoCode, type, name );
+		function = parse_function_after_name( ModuleFlag_None, NullCode, NullCode, type, name );
 
 		// Parameter list
 		// CodeParam params = parse_params();
@@ -3896,7 +3896,7 @@ CodeFriend parse_friend()
 			// function->Params = params;
 	}
 
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 	if ( function && function->Type == ECode::Function_Fwd )
 	{
 		Token stmt_end = currtok;
@@ -4154,8 +4154,8 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 	}
 	// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>() <const>
 
-	Code        body       = NoCode;
-	CodeComment inline_cmt = NoCode;
+	Code        body       = NullCode;
+	CodeComment inline_cmt = NullCode;
 
 	if ( check( TokType::BraceCurly_Open) )
 	{
@@ -4595,11 +4595,11 @@ else if ( currtok.Type == TokType::DeclType )
 	// <Attributes> <Specifiers> <Identifier> <Specifiers>
 
 	// For function type signatures
-	CodeType  return_type = NoCode;
-	CodeParam params      = NoCode;
+	CodeType  return_type = NullCode;
+	CodeParam params      = NullCode;
 
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
-	CodeParam params_nested = NoCode;
+	CodeParam params_nested = NullCode;
 #endif
 
 	bool   is_function_typename = false;
@@ -5036,7 +5036,7 @@ CodeTypedef parse_typedef()
 	eat( TokType::Statement_End );
 	// <ModuleFalgs> typedef <UnderlyingType> <Name>;
 
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 		inline_cmt = parse_comment();
 		// <ModuleFalgs> typedef <UnderlyingType> <Name> <ArrayExpr>; <InlineCmt>
@@ -5061,8 +5061,8 @@ CodeTypedef parse_typedef()
 
 	if ( type )
 	{
-		result->UnderlyingType         = type;
-		result->UnderlyingType->Parent = rcast(AST*, result.ast);
+		result->UnderlyingType             = type;
+		result->UnderlyingType->Parent.ast = rcast(AST*, result.ast);
 	}
 	// Type needs to be aware of its parent so that it can be serialized properly.
 
@@ -5277,7 +5277,7 @@ CodeUsing parse_using()
 	eat( TokType::Statement_End );
 	// <ModuleFlags> using <namespace> <Attributes> <Name> = <UnderlyingType>;
 
-	CodeComment inline_cmt = NoCode;
+	CodeComment inline_cmt = NullCode;
 	if ( currtok_noskip.Type == TokType::Comment && currtok_noskip.Line == stmt_end.Line )
 	{
 		inline_cmt = parse_comment();

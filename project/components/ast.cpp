@@ -7,7 +7,7 @@ global Code Code_Global;
 global Code Code_Invalid;
 
 // This serializes all the data-members in a "debug" format, where each member is printed with its associated value.
-char const* debug_str(AST* self)
+char const* debug_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
 	String  result_stack = string_make_reserve( GlobalAllocator, kilobytes(1) );
@@ -360,26 +360,26 @@ char const* debug_str(AST* self)
 	return * result;
 }
 
-AST* duplicate(AST* self)
+Code duplicate(Code self)
 {
 	using namespace ECode;
 
-	AST* result = make_code().ast;
+	Code result = make_code();
 
-	mem_copy( result, self, sizeof( AST ) );
+	mem_copy( result.ast, self.ast, sizeof( AST ) );
 
-	result->Parent = nullptr;
+	result->Parent = { nullptr };
 	return result;
 }
 
-String to_string(AST* self)
+String to_string(Code self)
 {
 	String result = string_make( GlobalAllocator, "" );
 	GEN_NS to_string( self, & result );
 	return result;
 }
 
-void to_string( AST* self, String* result )
+void to_string( Code self, String* result )
 {
 	GEN_ASSERT(self != nullptr);
 	local_persist thread_local
@@ -593,7 +593,7 @@ void to_string( AST* self, String* result )
 	}
 }
 
-bool is_equal( AST* self, AST* other )
+bool is_equal( Code self, Code other )
 {
 /*
 	AST values are either some u32 value, a cached string, or a pointer to another AST.
@@ -910,8 +910,8 @@ bool is_equal( AST* self, AST* other )
 		{
 			if ( self->NumEntries > 1 )
 			{
-				AST* curr       = self;
-				AST* curr_other = other;
+				Code curr       = self;
+				Code curr_other = other;
 				while ( curr != nullptr  )
 				{
 					if ( curr )
@@ -1104,8 +1104,8 @@ bool is_equal( AST* self, AST* other )
 			check_member_ast( Front );
 			check_member_ast( Back );
 
-			AST* curr       = self->Front;
-			AST* curr_other = other->Front;
+			Code curr       = self->Front;
+			Code curr_other = other->Front;
 			while ( curr != nullptr )
 			{
 				if ( curr_other == nullptr )
@@ -1153,7 +1153,7 @@ bool is_equal( AST* self, AST* other )
 	return true;
 }
 
-bool validate_body(AST* self)
+bool validate_body(Code self)
 {
 	using namespace ECode;
 

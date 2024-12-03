@@ -3,11 +3,12 @@
 #include "interface.hpp"
 #endif
 
+#pragma region Code
 inline
-void append( AST* self, AST* other )
+void append( Code self, Code other )
 {
-	GEN_ASSERT(self  != nullptr);
-	GEN_ASSERT(other != nullptr);
+	GEN_ASSERT(self.ast  != nullptr);
+	GEN_ASSERT(other.ast != nullptr);
 
 	if ( other->Parent )
 		other = duplicate(other);
@@ -23,40 +24,15 @@ void append( AST* self, AST* other )
 		return;
 	}
 
-	AST*
+	Code
 	Current       = self->Back;
 	Current->Next = other;
 	other->Prev   = Current;
 	self->Back    = other;
 	self->NumEntries++;
 }
-
 inline
-Code* entry( AST* self, u32 idx )
-{
-	GEN_ASSERT(self != nullptr);
-	AST** current = & self->Front;
-	while ( idx >= 0 && current != nullptr )
-	{
-		if ( idx == 0 )
-			return rcast( Code*, current);
-
-		current = & ( * current )->Next;
-		idx--;
-	}
-
-	return rcast( Code*, current);
-}
-
-inline
-bool has_entries(AST* self)
-{
-	GEN_ASSERT(self != nullptr);
-	return self->NumEntries > 0;
-}
-
-inline
-bool is_body(AST* self)
+bool is_body(Code self)
 {
 	GEN_ASSERT(self != nullptr);
 	switch (self->Type)
@@ -74,64 +50,32 @@ bool is_body(AST* self)
 	}
 	return false;
 }
-
 inline
-char const* type_str(AST* self)
+Code* entry( Code self, u32 idx )
 {
-	GEN_ASSERT(self != nullptr);
-	return ECode::to_str( self->Type );
-}
-
-inline
-AST::operator Code()
-{
-	return { this };
-}
-
-#pragma region Code
-inline
-char const* debug_str( Code code )
-{
-	if ( code.ast == nullptr )
-		return "Code::debug_str: AST is null!";
-
-	return debug_str( code.ast );
-}
-inline
-Code duplicate( Code code )
-{
-	if ( code.ast == nullptr )
+	GEN_ASSERT(self.ast != nullptr);
+	Code* current = & self->Front;
+	while ( idx >= 0 && current != nullptr )
 	{
-		log_failure("Code::duplicate: Cannot duplicate code, AST is null!");
-		return Code_Invalid;
+		if ( idx == 0 )
+			return rcast( Code*, current);
+
+		current = & ( * current )->Next;
+		idx--;
 	}
 
-	return { duplicate(code.ast) };
-}
-inline
-bool is_body(Code code)
-{
-	if ( code.ast == nullptr )
-	{
-		return is_body(code.ast);
-	}
-	return false;
-}
-inline
-bool is_equal( Code self, Code other )
-{
-	if ( self.ast == nullptr || other.ast == nullptr )
-	{
-		// Just check if they're both null.
-		// log_failure( "Code::is_equal: Cannot compare code, AST is null!" );
-		return self.ast == nullptr && other.ast == nullptr;
-	}
-	return is_equal( self.ast, other.ast );
+	return rcast( Code*, current);
 }
 inline
 bool is_valid(Code self)
 {
 	return self.ast != nullptr && self.ast->Type != CodeT::Invalid;
+}
+inline
+bool has_entries(AST* self)
+{
+	GEN_ASSERT(self != nullptr);
+	return self->NumEntries > 0;
 }
 inline
 void set_global(Code self)
@@ -142,15 +86,21 @@ void set_global(Code self)
 		return;
 	}
 
-	self->Parent = Code_Global.ast;
+	self->Parent.ast = Code_Global.ast;
 }
 inline
 Code& Code::operator ++()
 {
 	if ( ast )
-		ast = ast->Next;
+		ast = ast->Next.ast;
 
-	return *this;
+	return * this;
+}
+inline
+char const* type_str(Code self)
+{
+	GEN_ASSERT(self != nullptr);
+	return ECode::to_str( self->Type );
 }
 #pragma endregion Code
 
@@ -165,7 +115,7 @@ void append( CodeBody self, Code other )
 		return;
 	}
 
-	append( rcast(AST*, self.ast), other.ast );
+	append( cast(Code, self), other );
 }
 inline
 void append( CodeBody self, CodeBody body )
@@ -216,8 +166,8 @@ inline
 void append( CodeParam appendee, CodeParam other )
 {
 	GEN_ASSERT(appendee.ast != nullptr);
-	AST* self  = cast(Code, appendee).ast;
-	AST* entry = (AST*) other.ast;
+	Code self  = cast(Code, appendee);
+	Code entry = cast(Code, other);
 
 	if ( entry->Parent )
 		entry = GEN_NS duplicate( entry );
@@ -246,7 +196,7 @@ CodeParam get(CodeParam self, s32 idx )
 		if ( ! ++ param )
 			return { nullptr };
 
-		param = { (AST_Param*) cast(Code, param)->Next };
+		param = cast(Code, param)->Next;
 	}
 	while ( --idx );
 

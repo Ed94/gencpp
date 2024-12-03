@@ -136,7 +136,7 @@ extern CodeType t_typename;
 #ifndef token_fmt
 #	define gen_main main
 
-#	define __ NoCode
+#	define __ NullCode
 
 	//	Convienence for defining any name used with the gen api.
 	//  Lets you provide the length and string literal to the functions without the need for the DSL.

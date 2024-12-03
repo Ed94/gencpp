@@ -3,16 +3,6 @@
 #include "ast.cpp"
 #endif
 
-String to_string(Code self)
-{
-	if ( self.ast == nullptr )
-	{
-		log_failure( "Code::to_string: Cannot convert code to string, AST is null!" );
-		return { nullptr };
-	}
-	return to_string( self.ast );
-}
-
 String to_string(CodeAttributes attributes) {
 	return GEN_NS duplicate( attributes->Content, GlobalAllocator );
 }
@@ -100,7 +90,7 @@ String to_string(CodeConstructor self)
 
 void to_string_def(CodeConstructor self, String* result )
 {
-	AST* ClassStructParent = self->Parent->Parent;
+	Code ClassStructParent = self->Parent->Parent;
 	if (ClassStructParent) {
 		append( result, ClassStructParent->Name );
 	}
@@ -124,7 +114,7 @@ void to_string_def(CodeConstructor self, String* result )
 
 void to_string_fwd(CodeConstructor self, String* result )
 {
-	AST* ClassStructParent = self->Parent->Parent;
+	Code ClassStructParent = self->Parent->Parent;
 	if (ClassStructParent) {
 		append( result, ClassStructParent->Name );
 	}
@@ -1117,7 +1107,7 @@ void to_string(CodeTypedef self, String* result )
 	{
 		append_fmt( result, "[ %S ];", GEN_NS to_string(self->UnderlyingType->ArrExpr) );
 
-		AST* next_arr_expr = self->UnderlyingType->ArrExpr->Next;
+		Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
 			append_fmt( result, "[ %S ];", GEN_NS to_string(next_arr_expr) );
@@ -1256,7 +1246,7 @@ void to_string(CodeUsing self, String* result )
 		{
 			append_fmt( result, "[ %S ]", GEN_NS to_string(self->UnderlyingType->ArrExpr) );
 
-			AST* next_arr_expr = self->UnderlyingType->ArrExpr->Next;
+			Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
 				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
@@ -1305,7 +1295,7 @@ void to_string(CodeVar self, String* result )
 		{
 			append_fmt( result, "[ %S ]", GEN_NS to_string(self->ValueType->ArrExpr) );
 
-			AST* next_arr_expr = self->ValueType->ArrExpr->Next;
+			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
 				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
@@ -1348,7 +1338,7 @@ void to_string(CodeVar self, String* result )
 		{
 			append_fmt( result, "[ %S ]", GEN_NS to_string(self->ValueType->ArrExpr) );
 
-			AST* next_arr_expr = self->ValueType->ArrExpr->Next;
+			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
 				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
@@ -1388,7 +1378,7 @@ void to_string(CodeVar self, String* result )
 	{
 		append_fmt( result, "%S %S[ %S ]", GEN_NS to_string(self->ValueType), self->Name, GEN_NS to_string(self->ValueType->ArrExpr) );
 
-		AST* next_arr_expr = self->ValueType->ArrExpr->Next;
+		Code next_arr_expr = self->ValueType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
 			append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );

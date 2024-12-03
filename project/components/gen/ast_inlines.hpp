@@ -11,8 +11,8 @@ inline Code& Code::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -27,8 +27,8 @@ inline CodeBody& CodeBody::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -43,8 +43,8 @@ inline CodeAttributes& CodeAttributes::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -74,8 +74,8 @@ inline CodeComment& CodeComment::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -105,8 +105,8 @@ inline CodeConstructor& CodeConstructor::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -136,8 +136,8 @@ inline CodeClass& CodeClass::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -152,8 +152,8 @@ inline CodeDefine& CodeDefine::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -183,8 +183,8 @@ inline CodeDestructor& CodeDestructor::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -214,8 +214,8 @@ inline CodeEnum& CodeEnum::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -245,8 +245,8 @@ inline CodeExec& CodeExec::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -276,8 +276,8 @@ inline CodeExtern& CodeExtern::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -307,8 +307,8 @@ inline CodeFriend& CodeFriend::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -338,8 +338,8 @@ inline CodeFn& CodeFn::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -369,8 +369,8 @@ inline CodeInclude& CodeInclude::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -400,8 +400,8 @@ inline CodeModule& CodeModule::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -431,8 +431,8 @@ inline CodeNS& CodeNS::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -462,8 +462,8 @@ inline CodeOperator& CodeOperator::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -493,8 +493,8 @@ inline CodeOpCast& CodeOpCast::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -524,8 +524,8 @@ inline CodeParam& CodeParam::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -540,8 +540,8 @@ inline CodePragma& CodePragma::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -571,8 +571,8 @@ inline CodePreprocessCond& CodePreprocessCond::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -602,8 +602,8 @@ inline CodeSpecifiers& CodeSpecifiers::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -618,8 +618,8 @@ inline CodeStruct& CodeStruct::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -634,8 +634,8 @@ inline CodeTemplate& CodeTemplate::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -665,8 +665,8 @@ inline CodeType& CodeType::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -696,8 +696,8 @@ inline CodeTypedef& CodeTypedef::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -727,8 +727,8 @@ inline CodeUnion& CodeUnion::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -758,8 +758,8 @@ inline CodeUsing& CodeUsing::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -789,8 +789,8 @@ inline CodeVar& CodeVar::operator=( Code other )
 {
 	if ( other.ast && other->Parent )
 	{
-		ast                        = rcast( decltype( ast ), GEN_NS duplicate( other.ast ) );
-		rcast( AST*, ast )->Parent = nullptr;
+		ast         = rcast( decltype( ast ), GEN_NS duplicate( other ).ast );
+		ast->Parent = { nullptr };
 	}
 	ast = rcast( decltype( ast ), other.ast );
 	return *this;
@@ -820,19 +820,9 @@ inline AST_Var* CodeVar::operator->()
 
 #pragma region generated AST/Code cast implementation
 
-inline AST::operator CodeBody()
-{
-	return { rcast( AST_Body*, this ) };
-}
-
 inline Code::operator CodeBody() const
 {
 	return { (AST_Body*)ast };
-}
-
-inline AST::operator CodeAttributes()
-{
-	return { rcast( AST_Attributes*, this ) };
 }
 
 inline Code::operator CodeAttributes() const
@@ -840,19 +830,9 @@ inline Code::operator CodeAttributes() const
 	return { (AST_Attributes*)ast };
 }
 
-inline AST::operator CodeComment()
-{
-	return { rcast( AST_Comment*, this ) };
-}
-
 inline Code::operator CodeComment() const
 {
 	return { (AST_Comment*)ast };
-}
-
-inline AST::operator CodeConstructor()
-{
-	return { rcast( AST_Constructor*, this ) };
 }
 
 inline Code::operator CodeConstructor() const
@@ -860,19 +840,9 @@ inline Code::operator CodeConstructor() const
 	return { (AST_Constructor*)ast };
 }
 
-inline AST::operator CodeClass()
-{
-	return { rcast( AST_Class*, this ) };
-}
-
 inline Code::operator CodeClass() const
 {
 	return { (AST_Class*)ast };
-}
-
-inline AST::operator CodeDefine()
-{
-	return { rcast( AST_Define*, this ) };
 }
 
 inline Code::operator CodeDefine() const
@@ -880,19 +850,9 @@ inline Code::operator CodeDefine() const
 	return { (AST_Define*)ast };
 }
 
-inline AST::operator CodeDestructor()
-{
-	return { rcast( AST_Destructor*, this ) };
-}
-
 inline Code::operator CodeDestructor() const
 {
 	return { (AST_Destructor*)ast };
-}
-
-inline AST::operator CodeEnum()
-{
-	return { rcast( AST_Enum*, this ) };
 }
 
 inline Code::operator CodeEnum() const
@@ -900,19 +860,9 @@ inline Code::operator CodeEnum() const
 	return { (AST_Enum*)ast };
 }
 
-inline AST::operator CodeExec()
-{
-	return { rcast( AST_Exec*, this ) };
-}
-
 inline Code::operator CodeExec() const
 {
 	return { (AST_Exec*)ast };
-}
-
-inline AST::operator CodeExtern()
-{
-	return { rcast( AST_Extern*, this ) };
 }
 
 inline Code::operator CodeExtern() const
@@ -920,19 +870,9 @@ inline Code::operator CodeExtern() const
 	return { (AST_Extern*)ast };
 }
 
-inline AST::operator CodeFriend()
-{
-	return { rcast( AST_Friend*, this ) };
-}
-
 inline Code::operator CodeFriend() const
 {
 	return { (AST_Friend*)ast };
-}
-
-inline AST::operator CodeFn()
-{
-	return { rcast( AST_Fn*, this ) };
 }
 
 inline Code::operator CodeFn() const
@@ -940,19 +880,9 @@ inline Code::operator CodeFn() const
 	return { (AST_Fn*)ast };
 }
 
-inline AST::operator CodeInclude()
-{
-	return { rcast( AST_Include*, this ) };
-}
-
 inline Code::operator CodeInclude() const
 {
 	return { (AST_Include*)ast };
-}
-
-inline AST::operator CodeModule()
-{
-	return { rcast( AST_Module*, this ) };
 }
 
 inline Code::operator CodeModule() const
@@ -960,19 +890,9 @@ inline Code::operator CodeModule() const
 	return { (AST_Module*)ast };
 }
 
-inline AST::operator CodeNS()
-{
-	return { rcast( AST_NS*, this ) };
-}
-
 inline Code::operator CodeNS() const
 {
 	return { (AST_NS*)ast };
-}
-
-inline AST::operator CodeOperator()
-{
-	return { rcast( AST_Operator*, this ) };
 }
 
 inline Code::operator CodeOperator() const
@@ -980,19 +900,9 @@ inline Code::operator CodeOperator() const
 	return { (AST_Operator*)ast };
 }
 
-inline AST::operator CodeOpCast()
-{
-	return { rcast( AST_OpCast*, this ) };
-}
-
 inline Code::operator CodeOpCast() const
 {
 	return { (AST_OpCast*)ast };
-}
-
-inline AST::operator CodeParam()
-{
-	return { rcast( AST_Param*, this ) };
 }
 
 inline Code::operator CodeParam() const
@@ -1000,19 +910,9 @@ inline Code::operator CodeParam() const
 	return { (AST_Param*)ast };
 }
 
-inline AST::operator CodePragma()
-{
-	return { rcast( AST_Pragma*, this ) };
-}
-
 inline Code::operator CodePragma() const
 {
 	return { (AST_Pragma*)ast };
-}
-
-inline AST::operator CodePreprocessCond()
-{
-	return { rcast( AST_PreprocessCond*, this ) };
 }
 
 inline Code::operator CodePreprocessCond() const
@@ -1020,19 +920,9 @@ inline Code::operator CodePreprocessCond() const
 	return { (AST_PreprocessCond*)ast };
 }
 
-inline AST::operator CodeSpecifiers()
-{
-	return { rcast( AST_Specifiers*, this ) };
-}
-
 inline Code::operator CodeSpecifiers() const
 {
 	return { (AST_Specifiers*)ast };
-}
-
-inline AST::operator CodeStruct()
-{
-	return { rcast( AST_Struct*, this ) };
 }
 
 inline Code::operator CodeStruct() const
@@ -1040,19 +930,9 @@ inline Code::operator CodeStruct() const
 	return { (AST_Struct*)ast };
 }
 
-inline AST::operator CodeTemplate()
-{
-	return { rcast( AST_Template*, this ) };
-}
-
 inline Code::operator CodeTemplate() const
 {
 	return { (AST_Template*)ast };
-}
-
-inline AST::operator CodeType()
-{
-	return { rcast( AST_Type*, this ) };
 }
 
 inline Code::operator CodeType() const
@@ -1060,19 +940,9 @@ inline Code::operator CodeType() const
 	return { (AST_Type*)ast };
 }
 
-inline AST::operator CodeTypedef()
-{
-	return { rcast( AST_Typedef*, this ) };
-}
-
 inline Code::operator CodeTypedef() const
 {
 	return { (AST_Typedef*)ast };
-}
-
-inline AST::operator CodeUnion()
-{
-	return { rcast( AST_Union*, this ) };
 }
 
 inline Code::operator CodeUnion() const
@@ -1080,19 +950,9 @@ inline Code::operator CodeUnion() const
 	return { (AST_Union*)ast };
 }
 
-inline AST::operator CodeUsing()
-{
-	return { rcast( AST_Using*, this ) };
-}
-
 inline Code::operator CodeUsing() const
 {
 	return { (AST_Using*)ast };
-}
-
-inline AST::operator CodeVar()
-{
-	return { rcast( AST_Var*, this ) };
 }
 
 inline Code::operator CodeVar() const

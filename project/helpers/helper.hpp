@@ -358,12 +358,12 @@ CodeBody gen_ast_inlines()
 		{
 			if ( other.ast && other->Parent )
 			{
-				ast = rcast( decltype(ast), GEN_NS duplicate(other.ast) );
-				rcast( AST*, ast)->Parent = nullptr;
+				ast         = rcast( decltype(ast),  GEN_NS duplicate(other).ast);
+				ast->Parent = { nullptr };
 			}
 
-			ast = rcast( decltype(ast), other.ast );
-			return *this;
+			ast = rcast( decltype( ast ), other.ast );
+			return * this;
 		}
 		inline
 		<typename>::operator bool()
@@ -448,10 +448,6 @@ CodeBody gen_ast_inlines()
 	append(impl_code_var,      parse_global_body( token_fmt( "typename", StrC name(Var),            codetype_impl_tmpl )));
 
 	char const* cast_tmpl = stringize(
-		inline	AST::operator Code<typename>()
-		{
-			return { rcast( AST_<typename>*, this ) };
-		}
 		inline Code::operator Code<typename>() const
 		{
 			return { (AST_<typename>*) ast };

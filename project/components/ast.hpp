@@ -161,13 +161,21 @@ namespace parser
 template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( Type*, & self ); }
 #endif
 
-char const* debug_str (Code code);
-Code        duplicate (Code code);
-bool        is_equal  (Code code, Code other);
-bool        is_body   (Code code);
-bool        is_valid  (Code code);
-void        set_global(Code code);
-String      to_string (Code code);
+#pragma region Code Interface
+void        append       (Code code, Code other );
+char const* debug_str    (Code code);
+Code        duplicate    (Code code);
+Code*       entry        (Code code, u32 idx );
+bool        has_entries  (Code code);
+bool        is_body      (Code code);
+bool        is_equal     (Code code, Code other);
+bool        is_valid     (Code code);
+void        set_global   (Code code);
+String      to_string    (Code self );
+void        to_string    (Code self, String* result );
+char const* type_str     (Code self );
+bool        validate_body(Code self );
+#pragma endregion Code Interface
 
 #if ! GEN_COMPILER_C
 /*
@@ -188,7 +196,6 @@ struct Code
 	void        set_global()               { return GEN_NS set_global(* this); }
 
 #	define Using_CodeOps( Typename )                                         \
-	Typename&   operator = ( AST* other );                                   \
 	Typename&   operator = ( Code other );                                   \
 	bool        operator ==( Code other ) { return (AST*)ast == other.ast; } \
 	bool        operator !=( Code other ) { return (AST*)ast != other.ast; } \
@@ -196,7 +203,13 @@ struct Code
 
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( Code );
-	String to_string() { return GEN_NS to_string(* this); }
+	void        append(Code other)        { return GEN_NS append(* this, other); }
+	Code*       entry(u32 idx)            { return GEN_NS entry(* this, idx); }
+	bool        has_entries()             { return GEN_NS has_entries(* this); }
+	String      to_string()               { return GEN_NS to_string(* this); }
+	void        to_string(String& result) { return GEN_NS to_string(* this, & result); }
+	char const* type_str()                { return GEN_NS type_str(* this); }
+	bool        validate_body()           { return GEN_NS validate_body(*this); }
 #endif
 
 	Using_CodeOps( Code );
@@ -215,6 +228,11 @@ struct Code
 
 		return *this;
 	}
+
+	       bool operator==(std::nullptr_t) const            { return ast == nullptr; }
+	       bool operator!=(std::nullptr_t) const            { return ast != nullptr; }
+	friend bool operator==(std::nullptr_t, const Code code) { return code.ast == nullptr; }
+	friend bool operator!=(std::nullptr_t, const Code code) { return code.ast != nullptr; }
 
 #ifdef GEN_ENFORCE_STRONG_CODE_TYPES
 #	define operator explicit operator
@@ -269,27 +287,6 @@ static_assert( sizeof(Code) == sizeof(Code_POD), "ERROR: Code is not POD" );
 // Desired width of the AST data structure.
 constexpr int const AST_POD_Size = 128;
 
-void        append       ( AST* self, AST* other );
-char const* debug_str    ( AST* self );
-AST*        duplicate    ( AST* self );
-Code*       entry        ( AST* self, u32 idx );
-bool        has_entries  ( AST* self );
-bool        is_body      ( AST* self );
-bool        is_equal     ( AST* self, AST* other );
-String      to_string    ( AST* self );
-void        to_string    ( AST* self, String* result );
-char const* type_str     ( AST* self );
-bool        validate_body( AST* self );
-
-#if GEN_CPP_SUPPORT_REFERENCES
-void        append   ( AST& self, AST& other ) { return append(& self, & other); }
-bool        is_body  ( AST& self )             { return is_body(& self); }
-bool        is_equal ( AST& self, AST& other ) { return is_equal(& self, & other); }
-char const* debug_str( AST& self )             { return debug_str( & self ); }
-String      to_string( AST& self )             { return to_string( & self ); }
-char const* type_str ( AST& self )             { return type_str( & self ); }
-#endif
-
 constexpr static
 int AST_ArrSpecs_Cap =
 (
@@ -309,102 +306,53 @@ int AST_ArrSpecs_Cap =
 */
 struct AST
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
-#	pragma region Member Functions
-	void        append     ( AST* other )  { GEN_NS append(this, other); }
-	char const* debug_str  ()              { return GEN_NS debug_str(this); }
-	AST*        duplicate  ()              { return GEN_NS duplicate(this); }
-	Code*       entry      ( u32 idx )     { return GEN_NS entry(this, idx); }
-	bool        has_entries()              { return GEN_NS has_entries(this); }
-	bool        is_equal   ( AST* other )  { return GEN_NS is_equal(this, other); }
-	bool        is_body()                  { return GEN_NS is_body(this); }
-	char const* type_str()                 { return GEN_NS type_str(this); }
-	bool        validate_body()            { return GEN_NS validate_body(this); }
-
-	String to_string()                 { return GEN_NS to_string(this); }
-	void   to_string( String& result ) { return GEN_NS to_string(this, & result); }
-
-#	pragma endregion Member Functions
-#endif
-
-	operator Code();
-	operator CodeBody();
-	operator CodeAttributes();
-	// operator CodeBaseClass();
-	operator CodeComment();
-	operator CodeConstructor();
-	operator CodeDestructor();
-	operator CodeClass();
-	operator CodeDefine();
-	operator CodeEnum();
-	operator CodeExec();
-	operator CodeExtern();
-	operator CodeInclude();
-	operator CodeFriend();
-	operator CodeFn();
-	operator CodeModule();
-	operator CodeNS();
-	operator CodeOperator();
-	operator CodeOpCast();
-	operator CodeParam();
-	operator CodePragma();
-	operator CodePreprocessCond();
-	operator CodeSpecifiers();
-	operator CodeStruct();
-	operator CodeTemplate();
-	operator CodeType();
-	operator CodeTypedef();
-	operator CodeUnion();
-	operator CodeUsing();
-	operator CodeVar();
-
 	union {
 		struct
 		{
-			AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-			AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-			AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
+			Code      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
+			Code      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+			Code      Specs;           // Destructor, Function, Operator, Typename, Variable
 			union {
-				AST*  InitializerList; // Constructor
-				AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
-				AST*  ReturnType;      // Function, Operator, Typename
-				AST*  UnderlyingType;  // Enum, Typedef
-				AST*  ValueType;       // Parameter, Variable
+				Code  InitializerList; // Constructor
+				Code  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
+				Code  ReturnType;      // Function, Operator, Typename
+				Code  UnderlyingType;  // Enum, Typedef
+				Code  ValueType;       // Parameter, Variable
 			};
 			union {
-				AST*  Macro;           // Parameter
-				AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
-				AST*  Params;          // Constructor, Function, Operator, Template, Typename
+				Code  Macro;           // Parameter
+				Code  BitfieldSize;    // Variable (Class/Struct Data Member)
+				Code  Params;          // Constructor, Function, Operator, Template, Typename
 			};
 			union {
-				AST*  ArrExpr;          // Typename
-				AST*  Body;             // Class, Constructor, Destructor, Enum, Friend, Function, Namespace, Struct, Union
-				AST*  Declaration;      // Friend, Template
-				AST*  Value;            // Parameter, Variable
+				Code  ArrExpr;          // Typename
+				Code  Body;             // Class, Constructor, Destructor, Enum, Friend, Function, Namespace, Struct, Union
+				Code  Declaration;      // Friend, Template
+				Code  Value;            // Parameter, Variable
 			};
 			union {
-				AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-				AST*  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
-				AST*  PostNameMacro;     // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
+				Code  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+				Code  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
+				Code  PostNameMacro;     // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
 			SpecifierT ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
-			AST*       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
+			Code       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
 	union {
-		AST* Prev;
-		AST* Front;
-		AST* Last;
+		Code Prev;
+		Code Front;
+		Code Last;
 	};
 	union {
-		AST* Next;
-		AST* Back;
+		Code Next;
+		Code Back;
 	};
 	parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
-	AST*              Parent;
+	Code              Parent;
 	StringCached      Name;
 	CodeT             Type;
 //	CodeFlag          CodeFlags;
@@ -419,11 +367,16 @@ struct AST
 		b32           EnumUnderlyingMacro; // Used by enums incase the user wants to wrap underlying type specification in a macro
 	};
 };
-
-// Its intended for the AST to have equivalent size to its POD.
-// All extra functionality within the AST namespace should just be syntatic sugar.
 static_assert( sizeof(AST) == AST_POD_Size,    "ERROR: AST POD is not size of AST_POD_Size" );
 
+#if ! GEN_COMPILER_C
+// Uses an implicitly overloaded cast from the AST to the desired code type.
+// Necessary if the user wants GEN_ENFORCE_STRONG_CODE_TYPES
+struct  InvalidCode_ImplictCaster;
+#define InvalidCode (InvalidCode_ImplictCaster{})
+#else
+#define InvalidCode Code_Invalid
+#endif
+
 // Used when the its desired when omission is allowed in a definition.
-#define NoCode      { nullptr }
-#define InvalidCode (* Code_Invalid.ast) // Uses an implicitly overloaded cast from the AST to the desired code type.
+#define NullCode    { nullptr }

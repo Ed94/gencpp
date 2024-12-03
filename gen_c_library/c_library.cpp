@@ -157,7 +157,7 @@ int gen_main()
 					CodeFn fn = cast(CodeFn, entry);
 					s32 constexpr_found = fn->Specs.remove( ESpecifier::Constexpr );
 					if (constexpr_found > -1) {
-						log_fmt("Found constexpr: %S\n", entry->to_string());
+						log_fmt("Found constexpr: %S\n", entry.to_string());
 						fn->Specs.append(ESpecifier::Inline);
 					}
 					if ( fn->Name.is_equal(txt("free")) )
@@ -189,7 +189,7 @@ int gen_main()
 				case ECode::Class:
 				case ECode::Struct:
 				{
-					CodeBody body     = entry->Body->operator CodeBody();
+					CodeBody body     = cast(CodeBody, entry->Body);
 					CodeBody new_body = def_body( entry->Body->Type );
 					for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
 					(body_entry->Type) {
@@ -204,7 +204,7 @@ int gen_main()
 						break;
 					}
 
-					entry->Body = rcast(AST*, new_body.ast);
+					entry->Body = new_body;
 					memory.append(entry);
 				}
 				break;
@@ -324,7 +324,7 @@ int gen_main()
 
 				case ECode::Struct:
 				{
-					CodeBody body     = entry->Body->operator CodeBody();
+					CodeBody body     = cast(CodeBody, entry->Body);
 					CodeBody new_body = def_body( entry->Body->Type );
 					for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
 					(body_entry->Type) {
@@ -340,7 +340,7 @@ int gen_main()
 							new_body.append(body_entry);
 						break;
 					}
-					entry->Body = rcast(AST*, new_body.ast);
+					entry->Body = new_body;
 					strings.append(entry);
 				}
 				break;

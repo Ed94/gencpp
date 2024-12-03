@@ -43,21 +43,21 @@ CodeAttributes def_attributes( StrC content );
 CodeComment    def_comment   ( StrC content );
 
 CodeClass def_class( StrC name
-	, Code           body         = NoCode
-	, CodeType       parent       = NoCode, AccessSpec access = AccessSpec_Default
-	, CodeAttributes attributes   = NoCode
+	, Code           body         = NullCode
+	, CodeType       parent       = NullCode, AccessSpec access = AccessSpec_Default
+	, CodeAttributes attributes   = NullCode
 	, ModuleFlag     mflags       = ModuleFlag_None
 	, CodeType*      interfaces   = nullptr, s32 num_interfaces = 0 );
 
-CodeConstructor def_constructor( CodeParam params = NoCode, Code initializer_list = NoCode, Code body = NoCode );
+CodeConstructor def_constructor( CodeParam params = NullCode, Code initializer_list = NullCode, Code body = NullCode );
 
 CodeDefine def_define( StrC name, StrC content );
 
-CodeDestructor def_destructor( Code body = NoCode, CodeSpecifiers specifiers = NoCode );
+CodeDestructor def_destructor( Code body = NullCode, CodeSpecifiers specifiers = NullCode );
 
 CodeEnum def_enum( StrC name
-	, Code         body      = NoCode,           CodeType       type       = NoCode
-	, EnumT        specifier = EnumDecl_Regular, CodeAttributes attributes = NoCode
+	, Code         body      = NullCode,           CodeType       type       = NullCode
+	, EnumT        specifier = EnumDecl_Regular, CodeAttributes attributes = NullCode
 	, ModuleFlag   mflags    = ModuleFlag_None );
 
 CodeExec   def_execution  ( StrC content );
@@ -65,8 +65,8 @@ CodeExtern def_extern_link( StrC name, Code body );
 CodeFriend def_friend     ( Code symbol );
 
 CodeFn def_function( StrC name
-	, CodeParam      params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
-	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
+	, CodeParam      params     = NullCode, CodeType       ret_type   = NullCode, Code body = NullCode
+	, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode
 	, ModuleFlag mflags     = ModuleFlag_None );
 
 CodeInclude   def_include  ( StrC content, bool foreign = false );
@@ -74,13 +74,13 @@ CodeModule    def_module   ( StrC name,            ModuleFlag mflags = ModuleFla
 CodeNS        def_namespace( StrC name, Code body, ModuleFlag mflags = ModuleFlag_None );
 
 CodeOperator def_operator( OperatorT op, StrC nspace
-	, CodeParam      params     = NoCode, CodeType       ret_type   = NoCode, Code body = NoCode
-	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
+	, CodeParam      params     = NullCode, CodeType       ret_type   = NullCode, Code body = NullCode
+	, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode
 	, ModuleFlag     mflags     = ModuleFlag_None );
 
-CodeOpCast def_operator_cast( CodeType type, Code body = NoCode, CodeSpecifiers specs = NoCode );
+CodeOpCast def_operator_cast( CodeType type, Code body = NullCode, CodeSpecifiers specs = NullCode );
 
-CodeParam  def_param ( CodeType type, StrC name, Code value = NoCode );
+CodeParam  def_param ( CodeType type, StrC name, Code value = NullCode );
 CodePragma def_pragma( StrC directive );
 
 CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC content );
@@ -88,27 +88,27 @@ CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC content );
 CodeSpecifiers def_specifier( SpecifierT specifier );
 
 CodeStruct def_struct( StrC name
-	, Code           body       = NoCode
-	, CodeType       parent     = NoCode, AccessSpec access = AccessSpec_Default
-	, CodeAttributes attributes = NoCode
+	, Code           body       = NullCode
+	, CodeType       parent     = NullCode, AccessSpec access = AccessSpec_Default
+	, CodeAttributes attributes = NullCode
 	, ModuleFlag     mflags     = ModuleFlag_None
 	, CodeType*      interfaces = nullptr, s32 num_interfaces = 0 );
 
 CodeTemplate def_template( CodeParam params, Code definition, ModuleFlag mflags = ModuleFlag_None );
 
-CodeType    def_type   ( StrC name, Code arrayexpr = NoCode, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode );
-CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag_None );
+CodeType    def_type   ( StrC name, Code arrayexpr = NullCode, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode );
+CodeTypedef def_typedef( StrC name, Code type, CodeAttributes attributes = NullCode, ModuleFlag mflags = ModuleFlag_None );
 
-CodeUnion def_union( StrC name, Code body, CodeAttributes attributes = NoCode, ModuleFlag mflags = ModuleFlag_None );
+CodeUnion def_union( StrC name, Code body, CodeAttributes attributes = NullCode, ModuleFlag mflags = ModuleFlag_None );
 
-CodeUsing def_using( StrC name, CodeType type = NoCode
-	, CodeAttributes attributess = NoCode
+CodeUsing def_using( StrC name, CodeType type = NullCode
+	, CodeAttributes attributess = NullCode
 	, ModuleFlag     mflags      = ModuleFlag_None );
 
 CodeUsing def_using_namespace( StrC name );
 
-CodeVar def_variable( CodeType type, StrC name, Code value = NoCode
-	, CodeSpecifiers specifiers = NoCode, CodeAttributes attributes = NoCode
+CodeVar def_variable( CodeType type, StrC name, Code value = NullCode
+	, CodeSpecifiers specifiers = NullCode, CodeAttributes attributes = NullCode
 	, ModuleFlag     mflags     = ModuleFlag_None );
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.

@@ -253,7 +253,7 @@
 
 // word log_failure, new_name
 
-// word NoCode,      new_name
+// word NullCode,      new_name
 // word CodeInvalid, new_name
 
 // ------------ gencpp common
