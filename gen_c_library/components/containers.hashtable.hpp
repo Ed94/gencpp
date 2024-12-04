@@ -88,7 +88,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		void       <fn>_remove      ( <tbl_type> self, u64 key );
 		void       <fn>_remove_entry( <tbl_type> self, ssize idx );
 		void       <fn>_set         ( <tbl_type>* self, u64 key, <type> value );
-		ssize         <fn>_slot        ( <tbl_type> self, u64 key );
+		ssize      <fn>_slot        ( <tbl_type> self, u64 key );
 
 		ssize            <fn>__add_entry( <tbl_type> self, u64 key );
 		HT_FindResult <fn>__find     ( <tbl_type> self, u64 key );

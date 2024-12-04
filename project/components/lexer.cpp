@@ -578,16 +578,16 @@ TokArray lex( StrC content )
 		return { {}, 0 };
 	}
 
-	for ( StringCached* entry = array_begin(PreprocessorDefines); entry != array_end(PreprocessorDefines); array_next(PreprocessorDefines, entry))
+	for ( StringCached* entry = array_begin(PreprocessorDefines); entry != array_end(PreprocessorDefines); entry = array_next(PreprocessorDefines, entry))
 	{
 		s32         length  = 0;
-		char const* scanner = * entry;
-		while ( entry->Len > length && (char_is_alphanumeric( *scanner ) || *scanner == '_') )
+		char const* entry_scanner = * entry;
+		while ( entry->Len > length && (char_is_alphanumeric( *entry_scanner ) || *entry_scanner == '_') )
 		{
-			c.scanner++;
+			entry_scanner++;
 			length ++;
 		}
-		if ( c.scanner[0] == '(' )
+		if ( entry_scanner[0] == '(' )
 		{
 			length++;
 		}

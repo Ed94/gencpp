@@ -100,6 +100,9 @@ int gen_main()
 #define project_dir "../project/"
 	gen::init();
 
+	PreprocessorDefines.append(txt("GEN_API_C_BEGIN"));
+	PreprocessorDefines.append(txt("GEN_API_C_END"));
+
 	Code push_ignores           = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores            = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
 	Code c_library_header_start = scan_file( "components/header_start.hpp" );
@@ -127,21 +130,21 @@ int gen_main()
 		header.print( basic_types );
 		header.print( debug );
 
-		Array(StrC) to_rename = array_init_reserve(StrC, GlobalAllocator, 128);
-		to_rename.append(txt("align_forward"));
-		to_rename.append(txt("pointer_add"));
-		to_rename.append(txt("allocator_info"));
-		to_rename.append(txt("size_remaining"));
-		to_rename.append(txt("free"));
+		// Array(StrC) to_rename = array_init_reserve(StrC, GlobalAllocator, 128);
+		// to_rename.append(txt("align_forward"));
+		// to_rename.append(txt("pointer_add"));
+		// to_rename.append(txt("allocator_info"));
+		// to_rename.append(txt("size_remaining"));
+		// to_rename.append(txt("free"));
 		// to_rename.append(txt("clear"));
 		// to_rename.append(txt("init_sub"));
 		// to_rename.append(txt("check"));
 
-		NeedsSelectors needs_selectors;
-		needs_selectors.table = hashtable_init_reserve(Array(CodeFn), GlobalAllocator, 1024);
-		for ( StrC id : to_rename ) {
-			needs_selectors.set(id, array_init_reserve(CodeFn, GlobalAllocator, 128));
-		}
+		// NeedsSelectors needs_selectors;
+		// needs_selectors.table = hashtable_init_reserve(Array(CodeFn), GlobalAllocator, 1024);
+		// for ( StrC id : to_rename ) {
+		// 	needs_selectors.set(id, array_init_reserve(CodeFn, GlobalAllocator, 128));
+		// }
 
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
 		CodeBody memory        = def_body(CT_Global_Body);
@@ -152,7 +155,7 @@ int gen_main()
 			{
 				case CT_Using:
 				{
-					log_fmt("REPLACE THIS MANUALLY: %S\n", entry->Name);
+					log_fmt("REPLACE THIS MANUALLY: %SC\n", entry->Name);
 					CodeUsing   using_ver   = cast(CodeUsing, entry);
 					CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
 

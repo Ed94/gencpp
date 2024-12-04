@@ -320,7 +320,9 @@ ssize arena_size_remaining(Arena* arena, ssize alignment)
 }
 #pragma endregion Arena
 
+
 GEN_API_C_END
+
 
 #pragma region FixedArena
 template<s32 Size>
@@ -384,7 +386,9 @@ using Arena_2MB   = FixedArena< megabytes( 2 ) >;
 using Arena_4MB   = FixedArena< megabytes( 4 ) >;
 #pragma endregion FixedArena
 
+
 GEN_API_C_BEGIN
+
 
 #pragma region Pool
 struct Pool_Def;

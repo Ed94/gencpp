@@ -3859,8 +3859,47 @@ CodeFriend parse_friend()
 	eat( Tok_Decl_Friend );
 	// friend
 
-	CodeFn       function = { nullptr };
-	CodeOperator op       = { nullptr };
+	CodeFn         function   = { nullptr };
+	CodeOperator   op         = { nullptr };
+	CodeSpecifiers specifiers = { nullptr };
+
+	// Specifiers Parsing
+	{
+		Specifier specs_found[ 16 ] { Spec_NumSpecifiers };
+		s32       NumSpecifiers = 0;
+
+		while ( left && is_specifier(currtok) )
+		{
+			Specifier spec = to_specifier( to_str(currtok) );
+
+			switch ( spec )
+			{
+				case Spec_Const :
+				case Spec_Inline :
+				case Spec_ForceInline :
+					break;
+
+				default :
+					log_failure( "Invalid specifier %s for friend definition\n%s", to_str( spec ), to_string(Context) );
+					pop(& Context);
+					return InvalidCode;
+			}
+
+			// Ignore const it will be handled by the type
+			if ( spec == Spec_Const )
+				break;
+
+			specs_found[ NumSpecifiers ] = spec;
+			NumSpecifiers++;
+			eat( currtok.Type );
+		}
+
+		if ( NumSpecifiers )
+		{
+			specifiers = def_specifiers( NumSpecifiers, specs_found );
+		}
+		// <friend> <specifiers>
+	}
 
 	// Type declaration or return type
 	CodeTypename type = parse_type();
@@ -3879,7 +3918,7 @@ CodeFriend parse_friend()
 		Context.Scope->Name = name;
 		// friend <ReturnType> <Name>
 
-		function = parse_function_after_name( ModuleFlag_None, NullCode, NullCode, type, name );
+		function = parse_function_after_name( ModuleFlag_None, NullCode, specifiers, type, name );
 
 		// Parameter list
 		// CodeParam params = parse_params();
@@ -3897,7 +3936,7 @@ CodeFriend parse_friend()
 	// Operator declaration or definition
 	if ( currtok.Type == Tok_Decl_Operator )
 	{
-		op = parse_operator_after_ret_type( ModuleFlag_None, NullCode, NullCode, type );
+		op = parse_operator_after_ret_type( ModuleFlag_None, NullCode, specifiers, type );
 	}
 
 	CodeComment inline_cmt = NullCode;

@@ -159,16 +159,16 @@ extern CodeTypename t_typename;
 // Used by the lexer to persistently treat all these identifiers as preprocessor defines.
 // Populate with strings via gen::get_cached_string.
 // Functional defines must have format: id( ;at minimum to indicate that the define is only valid with arguments.
-extern Array< StringCached > PreprocessorDefines;
+extern Array(StringCached) PreprocessorDefines;
 
 #ifdef GEN_EXPOSE_BACKEND
 
 	// Global allocator used for data with process lifetime.
 	extern AllocatorInfo  GlobalAllocator;
-	extern Array< Arena > Global_AllocatorBuckets;
+	extern Array(Arena) Global_AllocatorBuckets;
 
-	extern Array< Pool >  CodePools;
-	extern Array< Arena > StringArenas;
+	extern Array(Pool)  CodePools;
+	extern Array(Arena) StringArenas;
 
 	extern StringTable StringCache;
 

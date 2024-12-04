@@ -82,7 +82,7 @@ global CodeTypename t_wchar_t;
 global CodeTypename t_class;
 global CodeTypename t_typename;
 
-global Array< StringCached > PreprocessorDefines;
+global Array(StringCached) PreprocessorDefines;
 
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 global CodeTypename t_b32;

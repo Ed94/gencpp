@@ -114,7 +114,7 @@ template<class Type> forceinline Type* next(Array<Type>& array, Type* entry) { r
 
 template<class Type> forceinline Type* array_begin(Array<Type> array)             { return array;      }
 template<class Type> forceinline Type* array_end(Array<Type> array)               { return array + array_get_header(array)->Num; }
-template<class Type> forceinline Type* array_next(Array<Type> array, Type* entry) { return entry + 1; }
+template<class Type> forceinline Type* array_next(Array<Type> array, Type* entry) { return ++ entry; }
 
 template<class Type> inline
 Array<Type> array_init(AllocatorInfo allocator) {

@@ -49,13 +49,14 @@ forceinline char const* strc_end  (StrC str)                   { return str.Ptr 
 forceinline char const* strc_next (StrC str, char const* iter) { return iter + 1; }
 GEN_API_C_END
 
-#if GEN_COMPILER_CPP && 0
+#if GEN_COMPILER_CPP
 forceinline char const* begin(StrC str)                   { return str.Ptr; }
 forceinline char const* end  (StrC str)                   { return str.Ptr + str.Len; }
 forceinline char const* next (StrC str, char const* iter) { return iter + 1; }
 #endif
 
 GEN_API_C_BEGIN
+
 inline
 bool strc_are_equal(StrC lhs, StrC rhs)
 {
@@ -119,6 +120,7 @@ struct String;
 #endif
 
 GEN_API_C_BEGIN
+
 forceinline usize string_grow_formula(usize value);
 
 String        string_make_c_str          (AllocatorInfo allocator, char const*  str);
@@ -155,6 +157,7 @@ StrC          string_to_strc             (String       str);
 void          string_trim                (String       str, char const* cut_set);
 void          string_trim_space          (String       str);
 String        string_visualize_whitespace(String const str);
+
 GEN_API_C_END
 
 struct StringHeader {

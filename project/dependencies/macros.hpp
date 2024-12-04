@@ -206,7 +206,7 @@
 #endif
 
 #ifndef GEN_API_C_BEGIN
-#	if GEN_COMPILER_C
+#	if GEN_COMPILER_C || (GEN_COMPILER_CPP && GEN_SUPPORT_CPP_REFERENCES)
 #		define GEN_API_C_BEGIN
 #		define GEN_API_C_END
 #	else
