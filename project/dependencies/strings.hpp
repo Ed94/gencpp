@@ -32,8 +32,8 @@ struct StrC
 	StrC        duplicate           (AllocatorInfo allocator) const { return GEN_NS duplicate(* this, allocator); }
 	b32         starts_with         (StrC substring)          const { return GEN_NS starts_with(* this, substring); }
 	StrC        visualize_whitespace(AllocatorInfo allocator) const { return GEN_NS visualize_whitespace(* this, allocator); }
-#endif // GEN_SUPPORT_CPP_MEMBER_FUNCTIONS
-#endif // GEN_COMPILERC
+#endif
+#endif
 };
 
 #define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(ssize) )

@@ -3893,11 +3893,11 @@ CodeFriend parse_friend()
 		// if ( params )
 			// function->Params = params;
 	}
-	
+
 	// Operator declaration or definition
 	if ( currtok.Type == Tok_Decl_Operator )
 	{
-		op = parse_operator_after_ret_type( ModuleFlag_None, NullCode, type );
+		op = parse_operator_after_ret_type( ModuleFlag_None, NullCode, NullCode, type );
 	}
 
 	CodeComment inline_cmt = NullCode;
