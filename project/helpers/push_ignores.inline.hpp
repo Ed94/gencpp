@@ -7,6 +7,7 @@
 #   pragma clang diagnostic ignored "-Wunknown-pragmas"
 #	pragma clang diagnostic ignored "-Wvarargs"
 #	pragma clang diagnostic ignored "-Wunused-function"
+#	pragma clang diagnostic ignored "-Wbraced-scalar-init"
 #endif
 
 #ifdef __GNUC__

@@ -905,11 +905,11 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			break;
 
 			case Tok_Operator:
-				if ( currtok.Text[0] != '~' )
-				{
-					log_failure( "Operator token found in global body but not destructor unary negation\n%s", to_string(Context) );
-					return InvalidCode;
-				}
+				//if ( currtok.Text[0] != '~' )
+				//{
+				//	log_failure( "Operator token found in global body but not destructor unary negation\n%s", to_string(Context) );
+				//	return InvalidCode;
+				//}
 
 				member = parse_destructor();
 				// ~<Name>()
@@ -3859,7 +3859,8 @@ CodeFriend parse_friend()
 	eat( Tok_Decl_Friend );
 	// friend
 
-	CodeFn function = { nullptr };
+	CodeFn       function = { nullptr };
+	CodeOperator op       = { nullptr };
 
 	// Type declaration or return type
 	CodeTypename type = parse_type();
@@ -3892,6 +3893,12 @@ CodeFriend parse_friend()
 		// if ( params )
 			// function->Params = params;
 	}
+	
+	// Operator declaration or definition
+	if ( currtok.Type == Tok_Decl_Operator )
+	{
+		op = parse_operator_after_ret_type( ModuleFlag_None, NullCode, type );
+	}
 
 	CodeComment inline_cmt = NullCode;
 	if ( function && function->Type == CT_Function_Fwd )
@@ -3912,6 +3919,8 @@ CodeFriend parse_friend()
 
 	if ( function )
 		result->Declaration = function;
+	else if ( op )
+		result->Declaration = op;
 	else
 		result->Declaration = type;
 

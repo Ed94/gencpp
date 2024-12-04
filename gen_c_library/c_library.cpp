@@ -128,12 +128,12 @@ int gen_main()
 		header.print( debug );
 
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
-		CodeBody memory        = def_body(ECode::Global_Body);
+		CodeBody memory        = def_body(CT_Global_Body);
 		for ( Code entry = parsed_memory.begin(); entry != parsed_memory.end(); ++ entry )
 		{
 			switch (entry->Type)
 			{
-				case ECode::Using:
+				case CT_Using:
 				{
 					log_fmt("REPLACE THIS MANUALLY: %S\n", entry->Name);
 					CodeUsing   using_ver   = cast(CodeUsing, entry);
@@ -142,7 +142,7 @@ int gen_main()
 					memory.append(typedef_ver);
 				}
 				break;
-				case ECode::Function_Fwd:
+				case CT_Function_Fwd:
 				{
 					CodeFn fn = cast(CodeFn, entry);
 					if ( fn->Name.is_equal(txt("free")) )
@@ -152,13 +152,13 @@ int gen_main()
 					memory.append(entry);
 				}
 				break;
-				case ECode::Function:
+				case CT_Function:
 				{
 					CodeFn fn = cast(CodeFn, entry);
-					s32 constexpr_found = fn->Specs.remove( ESpecifier::Constexpr );
+					s32 constexpr_found = fn->Specs.remove( Spec_Constexpr );
 					if (constexpr_found > -1) {
 						log_fmt("Found constexpr: %S\n", entry.to_string());
-						fn->Specs.append(ESpecifier::Inline);
+						fn->Specs.append(Spec_Inline);
 					}
 					if ( fn->Name.is_equal(txt("free")) )
 					{
@@ -167,7 +167,7 @@ int gen_main()
 					memory.append(entry);
 				}
 				break;
-				case ECode::Template:
+				case CT_Template:
 				{
 					CodeTemplate tmpl = cast(CodeTemplate, entry);
 					if ( tmpl->Declaration->Name.contains(txt("swap")))
@@ -186,14 +186,14 @@ int gen_main()
 					}
 				}
 				break;
-				case ECode::Class:
-				case ECode::Struct:
+				case CT_Class:
+				case CT_Struct:
 				{
 					CodeBody body     = cast(CodeBody, entry->Body);
 					CodeBody new_body = def_body( entry->Body->Type );
 					for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
 					(body_entry->Type) {
-						case ECode::Preprocess_If:
+						case CT_Preprocess_If:
 						{
 							ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), body_entry, body );
 						}
@@ -208,7 +208,7 @@ int gen_main()
 					memory.append(entry);
 				}
 				break;
-				case ECode::Preprocess_If:
+				case CT_Preprocess_If:
 				{
 					b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory );
 					if (found) break;
@@ -216,7 +216,7 @@ int gen_main()
 					memory.append(entry);
 				}
 				break;
-				case ECode::Preprocess_IfDef:
+				case CT_Preprocess_IfDef:
 				{
 					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory );
 					if (found) break;
@@ -224,7 +224,7 @@ int gen_main()
 					memory.append(entry);
 				}
 				break;
-				case ECode::Preprocess_Pragma:
+				case CT_Preprocess_Pragma:
 				{
 					b32 found = swap_pragma_region_implementation( txt("FixedArena"), gen_fixed_arenas, entry, memory);
 					if (found) break;
@@ -244,12 +244,12 @@ int gen_main()
 		header.print( string_ops );
 
 		CodeBody printing_parsed = parse_file( project_dir "dependencies/printing.hpp" );
-		CodeBody printing        = def_body(ECode::Global_Body);
+		CodeBody printing        = def_body(CT_Global_Body);
 		for ( Code entry = printing_parsed.begin(); entry != printing_parsed.end(); ++ entry )
 		{
 			switch (entry->Type)
 			{
-				case ECode::Preprocess_IfDef:
+				case CT_Preprocess_IfDef:
 				{
 					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed );
 					if (found) break;
@@ -257,7 +257,7 @@ int gen_main()
 					printing.append(entry);
 				}
 				break;
-				case ECode::Variable:
+				case CT_Variable:
 				{
 					if (contains(entry->Name, txt("Msg_Invalid_Value")))
 					{
@@ -275,7 +275,7 @@ int gen_main()
 		}
 		header.print(dump_to_scratch_and_retireve(printing));
 
-		CodeBody containers = def_body(ECode::Global_Body);
+		CodeBody containers = def_body(CT_Global_Body);
 		{
 			containers.append( def_pragma(code(region Containers)));
 
@@ -291,24 +291,24 @@ int gen_main()
 		header.print( hashing );
 
 		CodeBody parsed_strings = parse_file( project_dir "dependencies/strings.hpp" );
-		CodeBody strings        = def_body(ECode::Global_Body);
+		CodeBody strings        = def_body(CT_Global_Body);
 		for ( Code entry = parsed_strings.begin(); entry != parsed_strings.end(); ++ entry )
 		{
 			switch (entry->Type)
 			{
-				case ECode::Preprocess_If:
+				case CT_Preprocess_If:
 				{
 					ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), entry, parsed_strings);
 				}
 				break;
 
-				case ECode::Preprocess_IfDef:
+				case CT_Preprocess_IfDef:
 				{
 					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_strings );
 				}
 				break;
 
-				case ECode::Struct_Fwd:
+				case CT_Struct_Fwd:
 				{
 					if ( entry->Name.is_equal(txt("String")) )
 					{
@@ -322,13 +322,13 @@ int gen_main()
 				}
 				break;
 
-				case ECode::Struct:
+				case CT_Struct:
 				{
 					CodeBody body     = cast(CodeBody, entry->Body);
 					CodeBody new_body = def_body( entry->Body->Type );
 					for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
 					(body_entry->Type) {
-						case ECode::Preprocess_If:
+						case CT_Preprocess_If:
 						{
 							b32 found = ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), body_entry, body );
 							if (found) break;

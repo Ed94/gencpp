@@ -449,7 +449,7 @@ void to_string(CodeFriend self, String* result )
 {
 	append_fmt( result, "friend %S", to_string(self->Declaration) );
 
-	if ( self->Declaration->Type != CT_Function && (* result)[ length(* result) - 1 ] != ';' )
+	if ( self->Declaration->Type != CT_Function && self->Declaration->Type != CT_Operator && (* result)[ length(* result) - 1 ] != ';' )
 	{
 		append( result, ";" );
 	}

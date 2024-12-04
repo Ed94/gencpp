@@ -25,13 +25,13 @@ struct StrC
 	operator char const* ()               const { return Ptr; }
 	char const& operator[]( ssize index ) const { return Ptr[index]; }
 
-#if GEN_SUPPORT_CPP_MEMBER_FUNCTIONS
-	bool   is_equal            (StrC rhs)                { return are_equal(* this, rhs); }
-	char*  back                ()                        { return back(* this); }
-	bool   contains            (StrC substring)          { return contains(* this, substring); }
-	String duplicate           (AllocatorInfo allocator) { return duplicate(* this, allocator); }
-	b32    starts_with         (StrC substring)          { return starts_with(* this, substring); }
-	String visualize_whitespace()                        { return visualize_whitespace(* this); }
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+	bool        is_equal            (StrC rhs)                const { return GEN_NS are_equal(* this, rhs); }
+	char const* back                ()                        const { return GEN_NS back(* this); }
+	bool        contains            (StrC substring)          const { return GEN_NS contains(* this, substring); }
+	StrC        duplicate           (AllocatorInfo allocator) const { return GEN_NS duplicate(* this, allocator); }
+	b32         starts_with         (StrC substring)          const { return GEN_NS starts_with(* this, substring); }
+	StrC        visualize_whitespace(AllocatorInfo allocator) const { return GEN_NS visualize_whitespace(* this, allocator); }
 #endif // GEN_SUPPORT_CPP_MEMBER_FUNCTIONS
 #endif // GEN_COMPILERC
 };

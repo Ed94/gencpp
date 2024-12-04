@@ -17,13 +17,13 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& bod
 		s32 depth = 1;
 		++ entry_iter; for(b32 continue_for = true; continue_for && entry_iter != body.end(); ) switch
 		(entry_iter->Type) {
-			case ECode::Preprocess_If:
-			case ECode::Preprocess_IfDef:
-			case ECode::Preprocess_IfNotDef:
+			case CT_Preprocess_If:
+			case CT_Preprocess_IfDef:
+			case CT_Preprocess_IfNotDef:
 				depth ++;
 			break;
 
-			case ECode::Preprocess_EndIf:
+			case CT_Preprocess_EndIf:
 			{
 				depth --;
 				if (depth == 0) {
@@ -56,7 +56,7 @@ bool swap_pragma_region_implementation( StrC region_name, SwapContentProc* swap_
 
 		++ entry_iter; for(b32 continue_for = true; continue_for; ++entry_iter) switch
 		(entry_iter->Type) {
-			case ECode::Preprocess_Pragma:
+			case CT_Preprocess_Pragma:
 			{
 				CodePragma possible_end_region = cast(CodePragma, entry_iter);
 				if ( possible_end_region->Content.contains(endregion_sig) ) {

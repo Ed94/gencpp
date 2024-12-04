@@ -5,7 +5,7 @@ using namespace gen;
 
 CodeBody gen_fixed_arenas()
 {
-	CodeBody result = def_body(ECode::Global_Body);
+	CodeBody result = def_body(CT_Global_Body);
 	result.append(def_pragma(txt("region FixedArena")));
 
 	char const* template_struct = stringize(
