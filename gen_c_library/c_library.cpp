@@ -53,7 +53,7 @@ constexpr StrC implementation_guard_end = txt(R"(
 
 void format_file( char const* path )
 {
-	String resolved_path = String::make(GlobalAllocator, to_str(path));
+	String resolved_path = String::make(GlobalAllocator, to_strc_from_c_str(path));
 
 	String style_arg = String::make(GlobalAllocator, txt("-style=file:"));
 	style_arg.append("../scripts/.clang-format ");
@@ -289,7 +289,7 @@ int gen_main()
 				break;
 				case CT_Variable:
 				{
-					if (contains(entry->Name, txt("Msg_Invalid_Value")))
+					if ( strc_contains(entry->Name, txt("Msg_Invalid_Value")))
 					{
 						CodeDefine define = def_define(entry->Name, entry->Value->Content);
 						printing.append(define);

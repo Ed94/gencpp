@@ -265,7 +265,7 @@ char const* debug_str(Code self)
 		case CT_Specifiers:
 		{
 			string_append_fmt( result, "\n\tNumEntries: %d", self->NumEntries );
-			string_append_c_str( result, "\n\tArrSpecs: " );
+			string_append_strc( result, txt("\n\tArrSpecs: ") );
 
 			s32 idx  = 0;
 			s32 left = self->NumEntries;
@@ -387,7 +387,7 @@ void to_string( Code self, String* result )
 		#ifdef GEN_DONT_ALLOW_INVALID_CODE
 			log_failure("Attempted to serialize invalid code! - %S", Parent ? Parent->debug_str() : Name );
 		#else
-			append_fmt( result, "Invalid Code!" );
+			string_append_fmt( result, "Invalid Code!" );
 		#endif
 		break;
 

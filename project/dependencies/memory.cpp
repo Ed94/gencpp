@@ -5,6 +5,8 @@
 
 #pragma region Memory
 
+GEN_API_C_BEGIN
+
 void* mem_copy( void* dest, void const* source, ssize n )
 {
 	if ( dest == NULL )
@@ -495,16 +497,16 @@ Pool pool_init_align( AllocatorInfo backing, ssize num_blocks, ssize block_size,
 	return pool;
 }
 
-void clear(Pool& pool)
+void pool_clear(Pool* pool)
 {
 	ssize actual_block_size, block_index;
 	void* curr;
 	uptr* end;
 
-	actual_block_size = pool.BlockSize + pool.BlockAlign;
+	actual_block_size = pool->BlockSize + pool->BlockAlign;
 
-	curr = pool.PhysicalStart;
-	for ( block_index = 0; block_index < pool.NumBlocks - 1; block_index++ )
+	curr = pool->PhysicalStart;
+	for ( block_index = 0; block_index < pool->NumBlocks - 1; block_index++ )
 	{
 		uptr* next = ( uptr* ) curr;
 		*next      = ( uptr  ) curr + actual_block_size;
@@ -514,7 +516,9 @@ void clear(Pool& pool)
 	end  =  ( uptr* ) curr;
 	*end =  ( uptr )  NULL;
 
-	pool.FreeList = pool.PhysicalStart;
+	pool->FreeList = pool->PhysicalStart;
 }
+
+GEN_API_C_END
 
 #pragma endregion Memory

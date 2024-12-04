@@ -96,7 +96,7 @@ String to_string(Token tok)
 
 	StrC type_str = to_str( tok.Type );
 
-	append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
+	string_append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
 		, tok.Line, tok.Column
 		, type_str.Len, type_str.Ptr
 		, tok.Length, tok.Text

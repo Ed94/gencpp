@@ -907,14 +907,14 @@ CodeInclude def_include( StrC path, Opts_def_include p )
 		return InvalidCode;
 	}
 
-	StrC content = p.foreign ?
-			string_to_strc( str_fmt_buf( "<%.*s>", path.Len, path.Ptr ))
-		:	string_to_strc( str_fmt_buf( "\"%.*s\"", path.Len, path.Ptr ));
+	String content = p.foreign ?
+			string_fmt_buf( GlobalAllocator, "<%.*s>",   path.Len, path.Ptr )
+		:	string_fmt_buf( GlobalAllocator, "\"%.*s\"", path.Len, path.Ptr );
 
 	Code
 	result          = make_code();
 	result->Type    = CT_Preprocess_Include;
-	result->Name    = get_cached_string( content );
+	result->Name    = get_cached_string( string_to_strc(content) );
 	result->Content = result->Name;
 
 	return (CodeInclude) result;
@@ -938,7 +938,7 @@ CodeNS def_namespace( StrC name, Code body, Opts_def_namespace p )
 {
 	name_check( def_namespace, name );
 	null_check( def_namespace, body);
-	
+
 	if ( body && body->Type != CT_Namespace_Body && body->Type != CT_Untyped )
 	{
 		log_failure("gen::def_namespace: body is not of namespace or untyped type %s", debug_str(body));

@@ -351,7 +351,7 @@ void reset()
 	do
 	{
 		Pool* code_pool = & CodePools[index];
-		clear(* code_pool);
+		pool_clear(code_pool);
 		index++;
 	}
 	while ( left--, left );

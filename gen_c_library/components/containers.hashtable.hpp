@@ -341,14 +341,14 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		, type.Len, type.Ptr );
 
 	return def_global_body(args(
-		def_pragma( to_str( str_fmt_buf( "region %S", tbl_type ))),
+		def_pragma( string_to_strc( string_fmt_buf( GlobalAllocator, "region %S", tbl_type ))),
 		fmt_newline,
 		hashtable_types,
 		fmt_newline,
 		entry_array,
 		hashtable_def,
 		fmt_newline,
-		def_pragma( to_str( str_fmt_buf( "endregion %S", tbl_type ))),
+		def_pragma( string_to_strc( string_fmt_buf( GlobalAllocator, "endregion %S", tbl_type ))),
 		fmt_newline
 	));
 }

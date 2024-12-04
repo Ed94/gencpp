@@ -170,7 +170,7 @@ struct String
 
 	forceinline operator char*()             { return Data; }
 	forceinline operator char const*() const { return Data; }
-	forceinline operator StrC()        const { return { GEN_NS length(* this), Data }; }
+	forceinline operator StrC()        const { return { string_length(* this), Data }; }
 
 	String const& operator=(String const& other) const {
 		if (this == &other)
@@ -191,23 +191,23 @@ struct String
 	friend forceinline bool operator!=(std::nullptr_t, const String str) { return str.Data != nullptr; }
 
 	forceinline char* begin() const { return Data; }
-	forceinline char* end()   const { return Data + GEN_NS length(* this); }
+	forceinline char* end()   const { return Data + string_length(* this); }
 
 #pragma region Member Mapping
-	forceinline static String make(AllocatorInfo allocator, char const* str)                { return GEN_NS string_make(allocator, str); }
-	forceinline static String make(AllocatorInfo allocator, StrC str)                       { return GEN_NS string_make(allocator, str); }
-	forceinline static String make_reserve(AllocatorInfo allocator, ssize cap)              { return GEN_NS string_make_reserve(allocator, cap); }
-	forceinline static String make_length(AllocatorInfo a, char const* s, ssize l)          { return GEN_NS string_make_length(a, s, l); }
-	forceinline static String join(AllocatorInfo a, char const** p, ssize n, char const* g) { return GEN_NS string_join(a, p, n, g); }
-	forceinline static usize  grow_formula(usize value)                                     { return GEN_NS string_grow_formula(value); }
+	forceinline static String make(AllocatorInfo allocator, char const* str)                { return string_make_c_str(allocator, str); }
+	forceinline static String make(AllocatorInfo allocator, StrC str)                       { return string_make_strc(allocator, str); }
+	forceinline static String make_reserve(AllocatorInfo allocator, ssize cap)              { return string_make_reserve(allocator, cap); }
+	forceinline static String make_length(AllocatorInfo a, char const* s, ssize l)          { return string_make_length(a, s, l); }
+	forceinline static String join(AllocatorInfo a, char const** p, ssize n, char const* g) { return string_join(a, p, n, g); }
+	forceinline static usize  grow_formula(usize value)                                     { return string_grow_formula(value); }
 
 	static
 	String fmt(AllocatorInfo allocator, char* buf, ssize buf_size, char const* fmt, ...) {
 		va_list va;
 		va_start(va, fmt);
-		str_fmt_va(buf, buf_size, fmt, va);
+		ssize res = str_fmt_va(buf, buf_size, fmt, va);
 		va_end(va);
-		return GEN_NS string_make(allocator, buf);
+		return string_make_length(allocator, buf, res);
 	}
 
 	static
@@ -216,37 +216,37 @@ struct String
 		char buf[GEN_PRINTF_MAXLEN] = { 0 };
 		va_list va;
 		va_start(va, fmt);
-		str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
+		ssize res = str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
 		va_end(va);
-		return GEN_NS string_make(allocator, buf);
+		return string_make_length(allocator, buf, res);
 	}
 
-	forceinline bool          make_space_for(char const* str, ssize add_len) { return GEN_NS make_space_for(this, str, add_len); }
-	forceinline bool          append(char c)                                 { return GEN_NS string_append_char(this, c); }
-	forceinline bool          append(char const* str)                        { return GEN_NS string_append_c_str(this, str); }
-	forceinline bool          append(char const* str, ssize length)          { return GEN_NS string_append_c_str_len(this, str, length); }
-	forceinline bool          append(StrC str)                               { return GEN_NS string_append_strc(this, str); }
-	forceinline bool          append(const String other)                     { return GEN_NS string_append_string(this, other); }
-	forceinline ssize         avail_space() const                            { return GEN_NS string_avail_space(* this); }
-	forceinline char*         back()                                         { return GEN_NS string_back(* this); }
-	forceinline bool          contains(StrC substring) const                 { return GEN_NS string_contains_strc(* this, substring); }
-	forceinline bool          contains(String const& substring) const        { return GEN_NS string_contains_string(* this, substring); }
-	forceinline ssize         capacity() const                               { return GEN_NS capacity(* this); }
-	forceinline void          clear()                                        {        GEN_NS clear(* this); }
-	forceinline String        duplicate(AllocatorInfo allocator) const       { return GEN_NS duplicate(* this, allocator); }
-	forceinline void          free()                                         {        GEN_NS free(this); }
-	forceinline bool          is_equal(String const& other) const            { return GEN_NS are_equal(* this, other); }
-	forceinline bool          is_equal(StrC other) const                     { return GEN_NS are_equal(* this, other); }
-	forceinline ssize         length() const                                 { return GEN_NS length(* this); }
-	forceinline b32           starts_with(StrC substring) const              { return GEN_NS starts_with(* this, substring); }
-	forceinline b32           starts_with(String substring) const            { return GEN_NS starts_with(* this, substring); }
-	forceinline void          skip_line()                                    {        GEN_NS skip_line(* this); }
-	forceinline void          strip_space()                                  {        GEN_NS strip_space(* this); }
-	forceinline StrC          to_strc()                                      { return { length(), Data}; }
-	forceinline void          trim(char const* cut_set)                      {        GEN_NS trim(* this, cut_set); }
-	forceinline void          trim_space()                                   {        GEN_NS trim_space(* this); }
-	forceinline String        visualize_whitespace() const                   { return GEN_NS visualize_whitespace(* this); }
-	forceinline StringHeader& get_header()                                   { return * GEN_NS get_header(* this); }
+	forceinline bool          make_space_for(char const* str, ssize add_len) { return string_make_space_for(this, str, add_len); }
+	forceinline bool          append(char c)                                 { return string_append_char(this, c); }
+	forceinline bool          append(char const* str)                        { return string_append_c_str(this, str); }
+	forceinline bool          append(char const* str, ssize length)          { return string_append_c_str_len(this, str, length); }
+	forceinline bool          append(StrC str)                               { return string_append_strc(this, str); }
+	forceinline bool          append(const String other)                     { return string_append_string(this, other); }
+	forceinline ssize         avail_space() const                            { return string_avail_space(* this); }
+	forceinline char*         back()                                         { return string_back(* this); }
+	forceinline bool          contains(StrC substring) const                 { return string_contains_strc(* this, substring); }
+	forceinline bool          contains(String const& substring) const        { return string_contains_string(* this, substring); }
+	forceinline ssize         capacity() const                               { return string_capacity(* this); }
+	forceinline void          clear()                                        {        string_clear(* this); }
+	forceinline String        duplicate(AllocatorInfo allocator) const       { return string_duplicate(* this, allocator); }
+	forceinline void          free()                                         {        string_free(this); }
+	forceinline bool          is_equal(String const& other) const            { return string_are_equal(* this, other); }
+	forceinline bool          is_equal(StrC other) const                     { return string_are_equal_strc(* this, other); }
+	forceinline ssize         length() const                                 { return string_length(* this); }
+	forceinline b32           starts_with(StrC substring) const              { return string_starts_with_strc(* this, substring); }
+	forceinline b32           starts_with(String substring) const            { return string_starts_with_string(* this, substring); }
+	forceinline void          skip_line()                                    {        string_skip_line(* this); }
+	forceinline void          strip_space()                                  {        string_strip_space(* this); }
+	forceinline StrC          to_strc()                                      { return { string_length(*this), Data}; }
+	forceinline void          trim(char const* cut_set)                      {        string_trim(* this, cut_set); }
+	forceinline void          trim_space()                                   {        string_trim_space(* this); }
+	forceinline String        visualize_whitespace() const                   { return string_visualize_whitespace(* this); }
+	forceinline StringHeader& get_header()                                   { return * string_get_header(* this); }
 
 	bool append_fmt(char const* fmt, ...) {
 		ssize res;
@@ -257,7 +257,7 @@ struct String
 		res = str_fmt_va(buf, count_of(buf) - 1, fmt, va) - 1;
 		va_end(va);
 
-		return GEN_NS append(this, buf, res);
+		return string_append_c_str_len(this, buf, res);
 	}
 #pragma endregion Member Mapping
 };
@@ -360,7 +360,7 @@ bool string_append_c_str(String* str, char const* str_to_append) {
 }
 
 inline
-bool string_append_str_c_len(String* str, char const* str_to_append, ssize append_length)
+bool string_append_c_str_len(String* str, char const* str_to_append, ssize append_length)
 {
 	GEN_ASSERT(str != nullptr);
 	if (sptr(str_to_append) > 0)
@@ -394,7 +394,7 @@ bool string_append_string(String* str, String const other) {
 	return string_append_c_str_len(str, (char const*)other, string_length(other));
 }
 
-bool append_fmt(String* str, char const* fmt, ...) {
+bool string_append_fmt(String* str, char const* fmt, ...) {
 	GEN_ASSERT(str != nullptr);
 	ssize res;
 	char buf[GEN_PRINTF_MAXLEN] = { 0 };
@@ -434,18 +434,18 @@ bool string_are_equal_strc(String const lhs, StrC rhs)
 }
 
 forceinline
-ssize avail_space(String const str) {
+ssize string_avail_space(String const str) {
 	StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
 	return header->Capacity - header->Length;
 }
 
 forceinline
-char* back(String* str) {
-	return & (*str)[string_length(* str) - 1];
+char* string_back(String str) {
+	return & (str)[string_length(str) - 1];
 }
 
 inline
-bool contains(String const str, StrC substring)
+bool string_contains_StrC(String const str, StrC substring)
 {
 	StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
 

@@ -222,6 +222,7 @@ struct Arena_Def
 };
 
 #if GEN_SUPPORT_CPP_REFERENCES
+GEN_API_C_END
 forceinline AllocatorInfo allocator_info(Arena& arena )                 { return arena_allocator_info(& arena); }
 forceinline Arena         init_sub      (Arena& parent, ssize size)     { return arena_init_sub( & parent, size); }
 forceinline ssize         alignment_of  (Arena& arena, ssize alignment) { return arena_alignment_of( & arena, alignment); }
@@ -231,8 +232,9 @@ forceinline ssize         size_remaining(Arena& arena, ssize alignment) { return
 // This id is defined by Unreal for asserts
 #pragma push_macro("check")
 #undef check
-forceinline void check(Arena& arena) { return check(& arena); };
+forceinline void check(Arena& arena) { return arena_check(& arena); };
 #pragma pop_macro("check")
+GEN_API_C_BEGIN
 #endif
 
 
@@ -397,9 +399,11 @@ void          pool_clear(Pool* pool);
 void          pool_free(Pool* pool);
 
 #if GEN_SUPPORT_CPP_REFERENCES
-AllocatorInfo allocator_info(Pool& pool) { return GEN_NS allocator_info(& pool); }
-void          clear(Pool& pool)          { return GEN_NS clear(& pool); }
-void          free(Pool& pool)           { return GEN_NS free(& pool); }
+GEN_API_C_END
+AllocatorInfo allocator_info(Pool& pool) { return pool_allocator_info(& pool); }
+void          clear(Pool& pool)          { return pool_clear(& pool); }
+void          free(Pool& pool)           { return pool_free(& pool); }
+GEN_API_C_BEGIN
 #endif
 
 struct Pool_Def

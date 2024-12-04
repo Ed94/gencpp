@@ -365,7 +365,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 				string_append_c_str_len( & content, cut_ptr, cut_length);
 
 			if ( * string_back( content ) != ' ' )
-				string_append_strc( & content, txt(' '));
+				string_append_char( & content, ' ' );
 
 			move_fwd();
 			last_cut = sptr(scanner) - sptr(raw_text.Ptr);
@@ -391,7 +391,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 
 			// Replace with a space
 			if ( * string_back( content ) != ' ' )
-				string_append_strc( & content,  txt(' ') );
+				string_append_char( & content,  ' ' );
 
 			scanner += 2;
 			tokleft -= 2;
@@ -417,8 +417,8 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 				string_append_c_str_len( & content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( * back( & content ) != ' ' )
-				string_append_strc( & content,  txt(' ') );
+			if ( * string_back( content ) != ' ' )
+				string_append_char( & content,  ' ' );
 
 			move_fwd();
 
@@ -466,9 +466,9 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 
 			// Preserve only 1 space of formattting
-			char* last = back(& content);
+			char* last = string_back(content);
 			if ( last == nullptr || * last != ' ' )
-				string_append_strc( & content,  txt(' ') );
+				string_append_char( & content, ' ' );
 
 			continue;
 		}

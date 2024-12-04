@@ -283,11 +283,11 @@ CodeBody gen_array( StrC type, StrC array_name )
 #pragma pop_macro( "GEN_ASSERT" )
 
 	return def_global_body( args(
-		def_pragma( to_str( str_fmt_buf( "region %S", array_type ))),
+		def_pragma( string_to_strc( string_fmt_buf( GlobalAllocator, "region %S", array_type ))),
 		fmt_newline,
 		result,
 		fmt_newline,
-		def_pragma( to_str( str_fmt_buf( "endregion %S", array_type ))),
+		def_pragma( string_to_strc(string_fmt_buf( GlobalAllocator, "endregion %S", array_type ))),
 		fmt_newline
 	));
 };
