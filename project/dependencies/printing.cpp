@@ -43,8 +43,8 @@ struct _format_info
 
 internal ssize _print_string( char* text, ssize max_len, _format_info* info, char const* str )
 {
-	ssize    res = 0, len = 0;
-	ssize    remaining = max_len;
+	ssize res = 0, len = 0;
+	ssize remaining = max_len;
 	char* begin     = text;
 
 	if ( str == NULL && max_len >= 6 )
@@ -247,7 +247,7 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 	while ( *fmt )
 	{
 		_format_info info = { 0 };
-		ssize           len  = 0;
+		ssize        len  = 0;
 		info.precision    = -1;
 
 		while ( *fmt && *fmt != '%' && remaining )
@@ -420,6 +420,15 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 
 			case 'S':
 			{
+				if ( *(fmt + 1) == 'C' )
+				{
+					++ fmt;
+					StrC gen_str   = va_arg( va, StrC);
+					info.precision = gen_str.Len;
+					len            = _print_string( text, remaining, &info, gen_str.Ptr );
+					break;
+				}
+
 				String gen_str = String { va_arg( va, char*) };
 
 				info.precision = length(gen_str);

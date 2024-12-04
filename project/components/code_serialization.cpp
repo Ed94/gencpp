@@ -97,17 +97,17 @@ void to_string_def(CodeConstructor self, String* result )
 	}
 
 	if ( self->Params )
-		append_fmt( result, "( %S )", GEN_NS to_string(self->Params) );
+		append_fmt( result, "( %S )", to_string(self->Params) );
 	else
 		append( result, "()" );
 
 	if ( self->InitializerList )
-		append_fmt( result, " : %S", GEN_NS to_string(self->InitializerList) );
+		append_fmt( result, " : %S", to_string(self->InitializerList) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, " // %s", self->InlineCmt->Content.Ptr );
+		append_fmt( result, " // %SC", self->InlineCmt->Content );
 
-	append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
+	append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 }
 
 void to_string_fwd(CodeConstructor self, String* result )
@@ -121,15 +121,15 @@ void to_string_fwd(CodeConstructor self, String* result )
 	}
 
 	if ( self->Params )
-		append_fmt( result, "( %S )", GEN_NS to_string(self->Params) );
+		append_fmt( result, "( %S )", to_string(self->Params) );
 	else
 		append_fmt( result, "()");
 
 	if (self->Body)
-		append_fmt( result, " = %S", GEN_NS to_string(self->Body) );
+		append_fmt( result, " = %S", to_string(self->Body) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "; // %s\n", self->InlineCmt->Content.ptr );
+		append_fmt( result, "; // %SC\n", self->InlineCmt->Content );
 	else
 		append( result, ";\n" );
 }
@@ -168,7 +168,7 @@ void to_string_def( CodeClass self, String* result )
 	{
 		char const* access_level = to_str( ast->ParentAccess );
 
-		append_fmt( result, "%S : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
+		append_fmt( result, "%SC : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, ast->ParentType->Next);
 		if ( interface )
@@ -187,10 +187,10 @@ void to_string_def( CodeClass self, String* result )
 
 	if ( ast->InlineCmt )
 	{
-		append_fmt( result, " // %s", ast->InlineCmt->Content.Ptr );
+		append_fmt( result, " // %SC", ast->InlineCmt->Content );
 	}
 
-	append_fmt( result, "\n{\n%S\n}", GEN_NS to_string(ast->Body) );
+	append_fmt( result, "\n{\n%S\n}", to_string(ast->Body) );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
@@ -205,15 +205,15 @@ void to_string_fwd( CodeClass self, String* result )
 		append( result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( result, "class %S %S", to_string(ast->Attributes), ast->Name );
+		append_fmt( result, "class %S %SC", to_string(ast->Attributes), ast->Name );
 
-	else append_fmt( result, "class %S", ast->Name );
+	else append_fmt( result, "class %SC", ast->Name );
 
 	// Check if it can have an end-statement
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 	{
 		if ( ast->InlineCmt )
-			append_fmt( result, "; // %S\n", ast->InlineCmt->Content );
+			append_fmt( result, "; // %SC\n", ast->InlineCmt->Content );
 		else
 			append( result,";\n");
 	}
@@ -221,12 +221,12 @@ void to_string_fwd( CodeClass self, String* result )
 
 String to_string(CodeDefine define)
 {
-	return string_fmt_buf( GlobalAllocator, "#define %S %S\n", define->Name, define->Content );
+	return string_fmt_buf( GlobalAllocator, "#define %SC %SC\n", define->Name, define->Content );
 }
 
 void to_string(CodeDefine define, String* result )
 {
-	append_fmt( result, "#define %S %S\n", define->Name, define->Content );
+	append_fmt( result, "#define %SC %SC\n", define->Name, define->Content );
 }
 
 String to_string(CodeDestructor self)
@@ -248,19 +248,19 @@ void to_string_def(CodeDestructor self, String* result )
 {
 	if ( self->Name )
 	{
-		append_fmt( result, "%S()", self->Name );
+		append_fmt( result, "%SC()", self->Name );
 	}
 	else if ( self->Specs )
 	{
 		if ( has(self->Specs, Spec_Virtual ) )
-			append_fmt( result, "virtual ~%S()", self->Parent->Name );
+			append_fmt( result, "virtual ~%SC()", self->Parent->Name );
 		else
-			append_fmt( result, "~%S()", self->Parent->Name );
+			append_fmt( result, "~%SC()", self->Parent->Name );
 	}
 	else
-		append_fmt( result, "~%S()", self->Parent->Name );
+		append_fmt( result, "~%SC()", self->Parent->Name );
 
-	append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
+	append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 }
 
 void to_string_fwd(CodeDestructor self, String* result )
@@ -268,20 +268,20 @@ void to_string_fwd(CodeDestructor self, String* result )
 	if ( self->Specs )
 	{
 		if ( has(self->Specs, Spec_Virtual ) )
-			append_fmt( result, "virtual ~%S();\n", self->Parent->Name );
+			append_fmt( result, "virtual ~%SC();\n", self->Parent->Name );
 		else
-			append_fmt( result, "~%S()", self->Parent->Name );
+			append_fmt( result, "~%SC()", self->Parent->Name );
 
 		if ( has(self->Specs, Spec_Pure ) )
 			append( result, " = 0;" );
 		else if (self->Body)
-			append_fmt( result, " = %S;", GEN_NS to_string(self->Body) );
+			append_fmt( result, " = %S;", to_string(self->Body) );
 	}
 	else
-		append_fmt( result, "~%S();", self->Parent->Name );
+		append_fmt( result, "~%SC();", self->Parent->Name );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %S", self->InlineCmt->Content );
+		append_fmt( result, "  %SC", self->InlineCmt->Content );
 	else
 		append( result, "\n");
 }
@@ -317,24 +317,24 @@ void to_string_def(CodeEnum self, String* result )
 		append( result, "enum " );
 
 		if ( self->Attributes )
-			append_fmt( result, "%S ", GEN_NS to_string(self->Attributes) );
+			append_fmt( result, "%S ", to_string(self->Attributes) );
 
 		if ( self->UnderlyingType )
-			append_fmt( result, "%S : %S\n{\n%S\n}"
+			append_fmt( result, "%SC : %S\n{\n%S\n}"
 				, self->Name
 				, to_string(self->UnderlyingType)
-				, GEN_NS to_string(self->Body)
+				, to_string(self->Body)
 			);
 		else if ( self->UnderlyingTypeMacro )
-			append_fmt( result, "%S : %S\n{\n%S\n}"
+			append_fmt( result, "%SC : %S\n{\n%S\n}"
 				, self->Name
-				, GEN_NS to_string(self->UnderlyingTypeMacro)
-				, GEN_NS to_string(self->Body)
+				, to_string(self->UnderlyingTypeMacro)
+				, to_string(self->Body)
 			);
 
-		else append_fmt( result, "%S\n{\n%S\n}", self->Name, GEN_NS to_string(self->Body) );
+		else append_fmt( result, "%SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 	}
-	else append_fmt( result, "enum %S\n{\n%S\n}", self->Name, GEN_NS to_string(self->Body) );
+	else append_fmt( result, "enum %SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
@@ -346,17 +346,17 @@ void to_string_fwd(CodeEnum self, String* result )
 		append( result, "export " );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->UnderlyingType )
-		append_fmt( result, "enum %S : %S", self->Name, to_string(self->UnderlyingType) );
+		append_fmt( result, "enum %SC : %S", self->Name, to_string(self->UnderlyingType) );
 	else
-		append_fmt( result, "enum %S", self->Name );
+		append_fmt( result, "enum %SC", self->Name );
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 	{
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %S", self->InlineCmt->Content );
+			append_fmt( result, ";  %SC", self->InlineCmt->Content );
 		else
 			append( result, ";\n");
 	}
@@ -373,21 +373,21 @@ void to_string_class_def(CodeEnum self, String* result )
 
 		if ( self->Attributes )
 		{
-			append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+			append_fmt( result, "%S ", to_string(self->Attributes) );
 		}
 
 		if ( self->UnderlyingType )
 		{
-			append_fmt( result, "%S : %S\n{\n%S\n}", self->Name, to_string(self->UnderlyingType), GEN_NS to_string(self->Body) );
+			append_fmt( result, "%SC : %S\n{\n%S\n}", self->Name, to_string(self->UnderlyingType), to_string(self->Body) );
 		}
 		else
 		{
-			append_fmt( result, "%S\n{\n%S\n}", self->Name, GEN_NS to_string(self->Body) );
+			append_fmt( result, "%SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 		}
 	}
 	else
 	{
-		append_fmt( result, "enum class %S\n{\n%S\n}", GEN_NS to_string(self->Body) );
+		append_fmt( result, "enum %SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 	}
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
@@ -402,14 +402,14 @@ void to_string_class_fwd(CodeEnum self, String* result )
 	append( result, "enum class " );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
-	append_fmt( result, "%S : %S", self->Name, to_string(self->UnderlyingType) );
+	append_fmt( result, "%SC : %S", self->Name, to_string(self->UnderlyingType) );
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 	{
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %S", self->InlineCmt->Content );
+			append_fmt( result, ";  %SC", self->InlineCmt->Content );
 		else
 			append( result, ";\n");
 	}
@@ -423,19 +423,19 @@ String to_string(CodeExec exec)
 void to_string(CodeExtern self, String* result )
 {
 	if ( self->Body )
-		append_fmt( result, "extern \"%S\"\n{\n%S\n}\n", self->Name, GEN_NS to_string(self->Body) );
+		append_fmt( result, "extern \"%SC\"\n{\n%S\n}\n", self->Name, to_string(self->Body) );
 	else
-		append_fmt( result, "extern \"%S\"\n{}\n", self->Name );
+		append_fmt( result, "extern \"%SC\"\n{}\n", self->Name );
 }
 
 String to_string(CodeInclude include)
 {
-	return string_fmt_buf( GlobalAllocator, "#include %S\n", include->Content );
+	return string_fmt_buf( GlobalAllocator, "#include %SC\n", include->Content );
 }
 
 void to_string( CodeInclude include, String* result )
 {
-	append_fmt( result, "#include %S\n", include->Content );
+	append_fmt( result, "#include %SC\n", include->Content );
 }
 
 String to_string(CodeFriend self)
@@ -447,7 +447,7 @@ String to_string(CodeFriend self)
 
 void to_string(CodeFriend self, String* result )
 {
-	append_fmt( result, "friend %S", GEN_NS to_string(self->Declaration) );
+	append_fmt( result, "friend %S", to_string(self->Declaration) );
 
 	if ( self->Declaration->Type != CT_Function && (* result)[ length(* result) - 1 ] != ';' )
 	{
@@ -455,7 +455,7 @@ void to_string(CodeFriend self, String* result )
 	}
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %S", self->InlineCmt->Content );
+		append_fmt( result, "  %SC", self->InlineCmt->Content );
 	else
 		append( result, "\n");
 }
@@ -481,7 +481,7 @@ void to_string_def(CodeFn self, String* result )
 		append( result, "export" );
 
 	if ( self->Attributes )
-		append_fmt( result, " %S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, " %S ", to_string(self->Attributes) );
 
 	bool prefix_specs = false;
 	if ( self->Specs )
@@ -502,13 +502,13 @@ void to_string_def(CodeFn self, String* result )
 		append( result, "\n" );
 
 	if ( self->ReturnType )
-		append_fmt( result, "%S %S(", to_string(self->ReturnType), self->Name );
+		append_fmt( result, "%S %SC(", to_string(self->ReturnType), self->Name );
 
 	else
-		append_fmt( result, "%S(", self->Name );
+		append_fmt( result, "%SC(", self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", GEN_NS to_string(self->Params) );
+		append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
 		append( result, ")" );
@@ -525,7 +525,7 @@ void to_string_def(CodeFn self, String* result )
 		}
 	}
 
-	append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
+	append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 }
 
 void to_string_fwd(CodeFn self, String* result )
@@ -534,7 +534,7 @@ void to_string_fwd(CodeFn self, String* result )
 		append( result, "export " );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	b32 prefix_specs = false;
 	if ( self->Specs )
@@ -557,13 +557,13 @@ void to_string_fwd(CodeFn self, String* result )
 	}
 
 	if ( self->ReturnType )
-		append_fmt( result, "%S %S(", to_string(self->ReturnType), self->Name );
+		append_fmt( result, "%S %SC(", to_string(self->ReturnType), self->Name );
 
 	else
-		append_fmt( result, "%S(", self->Name );
+		append_fmt( result, "%SC(", self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", GEN_NS to_string(self->Params) );
+		append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
 		append( result, ")" );
@@ -583,10 +583,10 @@ void to_string_fwd(CodeFn self, String* result )
 	if ( self->Specs && has(self->Specs, Spec_Pure ) >= 0 )
 		append( result, " = 0;" );
 	else if (self->Body)
-		append_fmt( result, " = %S;", GEN_NS to_string(self->Body) );
+		append_fmt( result, " = %S;", to_string(self->Body) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, ";  %S", self->InlineCmt->Content );
+		append_fmt( result, ";  %SC", self->InlineCmt->Content );
 	else
 		append( result, ";\n" );
 }
@@ -606,7 +606,7 @@ void to_string(CodeModule self, String* result )
 	if (((u32(ModuleFlag_Import) & u32(self->ModuleFlags)) == u32(ModuleFlag_Import)))
 		append( result, "import ");
 
-	append_fmt( result, "%S;\n", self->Name );
+	append_fmt( result, "%SC;\n", self->Name );
 }
 
 String to_string(CodeNS self)
@@ -621,7 +621,7 @@ void to_string(CodeNS self, String* result )
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
 		append( result, "export " );
 
-	append_fmt( result, "namespace %S\n{\n%S\n}\n", self->Name, to_string(self->Body) );
+	append_fmt( result, "namespace %SC\n{\n%S\n}\n", self->Name, to_string(self->Body) );
 }
 
 String to_string(CodeOperator self)
@@ -647,10 +647,10 @@ void to_string_def(CodeOperator self, String* result )
 		append( result, "export " );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Specs )
 	{
@@ -670,10 +670,10 @@ void to_string_def(CodeOperator self, String* result )
 	}
 
 	if ( self->ReturnType )
-		append_fmt( result, "%S %S (", GEN_NS to_string(self->ReturnType), self->Name );
+		append_fmt( result, "%S %SC (", to_string(self->ReturnType), self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", GEN_NS to_string(self->Params) );
+		append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
 		append( result, ")" );
@@ -691,7 +691,7 @@ void to_string_def(CodeOperator self, String* result )
 	}
 
 	append_fmt( result, "\n{\n%S\n}\n"
-		, GEN_NS to_string(self->Body)
+		, to_string(self->Body)
 	);
 }
 
@@ -701,7 +701,7 @@ void to_string_fwd(CodeOperator self, String* result )
 		append( result, "export " );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S\n",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S\n", to_string(self->Attributes) );
 
 	if ( self->Specs )
 	{
@@ -720,10 +720,10 @@ void to_string_fwd(CodeOperator self, String* result )
 		append( result, "\n" );
 	}
 
-	append_fmt( result, "%S %S (", to_string(self->ReturnType), self->Name );
+	append_fmt( result, "%S %SC (", to_string(self->ReturnType), self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", GEN_NS to_string(self->Params) );
+		append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
 		append_fmt( result, ")" );
@@ -741,7 +741,7 @@ void to_string_fwd(CodeOperator self, String* result )
 	}
 
 	if ( self->InlineCmt )
-		append_fmt( result, ";  %S", self->InlineCmt->Content );
+		append_fmt( result, ";  %SC", self->InlineCmt->Content );
 	else
 		append( result, ";\n" );
 }
@@ -775,7 +775,7 @@ void to_string_def(CodeOpCast self, String* result )
 		}
 
 		if ( self->Name && self->Name.Len )
-			append_fmt( result, "%Soperator %S()", self->Name, to_string(self->ValueType) );
+			append_fmt( result, "%SC operator %S()", self->Name, to_string(self->ValueType) );
 		else
 			append_fmt( result, "operator %S()", to_string(self->ValueType) );
 
@@ -788,14 +788,14 @@ void to_string_def(CodeOpCast self, String* result )
 			}
 		}
 
-		append_fmt( result, "\n{\n%S\n}\n", GEN_NS to_string(self->Body) );
+		append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 		return;
 	}
 
 	if ( self->Name && self->Name.Len )
-		append_fmt( result, "%Soperator %S()\n{\n%S\n}\n", self->Name, to_string(self->ValueType), GEN_NS to_string(self->Body) );
+		append_fmt( result, "%SC operator %S()\n{\n%S\n}\n", self->Name, to_string(self->ValueType), to_string(self->Body) );
 	else
-		append_fmt( result, "operator %S()\n{\n%S\n}\n", to_string(self->ValueType), GEN_NS to_string(self->Body) );
+		append_fmt( result, "operator %S()\n{\n%S\n}\n", to_string(self->ValueType), to_string(self->Body) );
 }
 
 void to_string_fwd(CodeOpCast self, String* result )
@@ -823,7 +823,7 @@ void to_string_fwd(CodeOpCast self, String* result )
 		}
 
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %S", self->InlineCmt->Content );
+			append_fmt( result, ";  %SC", self->InlineCmt->Content );
 		else
 			append( result, ";\n" );
 		return;
@@ -848,16 +848,16 @@ void to_string( CodeParam self, String* result )
 	if ( ast->Macro )
 	{
 		// Related to parsing: ( <macro>, ... )
-		GEN_NS append( result, ast->Macro.ast->Content );
+		append( result, ast->Macro.ast->Content );
 		// Could also be: ( <macro> <type <name>, ... )
 	}
 
 	if ( ast->Name )
 	{
 		if ( ast->ValueType.ast == nullptr )
-			append_fmt( result, " %S", ast->Name );
+			append_fmt( result, " %SC", ast->Name );
 		else
-			append_fmt( result, " %S %S", to_string(ast->ValueType), ast->Name );
+			append_fmt( result, " %S %SC", to_string(ast->ValueType), ast->Name );
 
 	}
 	else if ( ast->ValueType )
@@ -865,11 +865,11 @@ void to_string( CodeParam self, String* result )
 
 	if ( ast->PostNameMacro )
 	{
-		append_fmt( result, " %S", GEN_NS to_string(ast->PostNameMacro) );
+		append_fmt( result, " %S", to_string(ast->PostNameMacro) );
 	}
 
 	if ( ast->Value )
-		append_fmt( result, " = %S", GEN_NS to_string(ast->Value) );
+		append_fmt( result, " = %S", to_string(ast->Value) );
 
 	if ( ast->NumEntries - 1 > 0 )
 	{
@@ -909,22 +909,22 @@ String to_string(CodePreprocessCond self)
 
 void to_string_if(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#if %S\n", cond->Content );
+	append_fmt( result, "#if %SC\n", cond->Content );
 }
 
 void to_string_ifdef(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#ifdef %S\n", cond->Content );
+	append_fmt( result, "#ifdef %SC\n", cond->Content );
 }
 
 void to_string_ifndef(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#ifndef %S\n", cond->Content );
+	append_fmt( result, "#ifndef %SC\n", cond->Content );
 }
 
 void to_string_elif(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#elif %S\n", cond->Content );
+	append_fmt( result, "#elif %SC\n", cond->Content );
 }
 
 void to_string_else(CodePreprocessCond cond, String* result )
@@ -946,7 +946,7 @@ String to_string(CodePragma self)
 
 void to_string(CodePragma self, String* result )
 {
-	append_fmt( result, "#pragma %S\n", self->Content );
+	append_fmt( result, "#pragma %SC\n", self->Content );
 }
 
 String to_string(CodeSpecifiers self)
@@ -998,14 +998,14 @@ void to_string_def( CodeStruct self, String* result )
 
 	if ( ast->Attributes )
 	{
-		append_fmt( result, "%S ",GEN_NS to_string(ast->Attributes) );
+		append_fmt( result, "%S ", to_string(ast->Attributes) );
 	}
 
 	if ( ast->ParentType )
 	{
 		char const* access_level = to_str( ast->ParentAccess );
 
-		append_fmt( result, "%S : %s %S", ast->Name, access_level, GEN_NS to_string(ast->ParentType) );
+		append_fmt( result, "%SC : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, ast->ParentType->Next);
 		if ( interface )
@@ -1013,7 +1013,7 @@ void to_string_def( CodeStruct self, String* result )
 
 		while ( interface )
 		{
-			append_fmt( result, ", %S", GEN_NS to_string(interface) );
+			append_fmt( result, ", %S", to_string(interface) );
 			interface = interface->Next ? cast( CodeTypename, interface->Next) : CodeTypename { nullptr };
 		}
 	}
@@ -1024,10 +1024,10 @@ void to_string_def( CodeStruct self, String* result )
 
 	if ( ast->InlineCmt )
 	{
-		append_fmt( result, " // %S", ast->InlineCmt->Content );
+		append_fmt( result, " // %SC", ast->InlineCmt->Content );
 	}
 
-	append_fmt( result, "\n{\n%S\n}", GEN_NS to_string(ast->Body) );
+	append_fmt( result, "\n{\n%S\n}", to_string(ast->Body) );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 		append( result, ";\n");
@@ -1042,14 +1042,14 @@ void to_string_fwd( CodeStruct self, String* result )
 		append( result, "export " );
 
 	if ( ast->Attributes )
-		append_fmt( result, "struct %S %S", GEN_NS to_string(ast->Attributes), ast->Name );
+		append_fmt( result, "struct %S %SC", to_string(ast->Attributes), ast->Name );
 
-	else append_fmt( result, "struct %S", ast->Name );
+	else append_fmt( result, "struct %SC", ast->Name );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 	{
 		if ( ast->InlineCmt )
-			append_fmt( result, ";  %S", ast->InlineCmt->Content );
+			append_fmt( result, ";  %SC", ast->InlineCmt->Content );
 		else
 			append( result, ";\n");
 	}
@@ -1068,9 +1068,9 @@ void to_string(CodeTemplate self, String* result )
 		append( result, "export " );
 
 	if ( self->Params )
-		append_fmt( result, "template< %S >\n%S", GEN_NS to_string(self->Params), GEN_NS to_string(self->Declaration) );
+		append_fmt( result, "template< %S >\n%S", to_string(self->Params), to_string(self->Declaration) );
 	else
-		append_fmt( result, "template<>\n%S", GEN_NS to_string(self->Declaration) );
+		append_fmt( result, "template<>\n%S", to_string(self->Declaration) );
 }
 
 String to_string(CodeTypedef self)
@@ -1089,18 +1089,18 @@ void to_string(CodeTypedef self, String* result )
 
 	// Determines if the typedef is a function typename
 	if ( self->UnderlyingType->ReturnType )
-		append( result, GEN_NS to_string(self->UnderlyingType) );
+		append( result, to_string(self->UnderlyingType) );
 	else
-		append_fmt( result, "%S %S", GEN_NS to_string(self->UnderlyingType), self->Name );
+		append_fmt( result, "%S %SC", to_string(self->UnderlyingType), self->Name );
 
 	if ( self->UnderlyingType->Type == CT_Typename && self->UnderlyingType->ArrExpr )
 	{
-		append_fmt( result, "[ %S ];", GEN_NS to_string(self->UnderlyingType->ArrExpr) );
+		append_fmt( result, "[ %S ];", to_string(self->UnderlyingType->ArrExpr) );
 
 		Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( result, "[ %S ];", GEN_NS to_string(next_arr_expr) );
+			append_fmt( result, "[ %S ];", to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
@@ -1110,7 +1110,7 @@ void to_string(CodeTypedef self, String* result )
 	}
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %S", self->InlineCmt->Content);
+		append_fmt( result, "  %SC", self->InlineCmt->Content);
 	else
 		append( result, "\n");
 }
@@ -1128,13 +1128,13 @@ void to_string(CodeTypename self, String* result )
 		if ( self->ReturnType && self->Params )
 		{
 			if ( self->Attributes )
-				append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+				append_fmt( result, "%S ", to_string(self->Attributes) );
 			else
 			{
 				if ( self->Specs )
-					append_fmt( result, "%S ( %S ) ( %S ) %S", self->ReturnType.to_string(), self->Name, self->Params.to_string(), self->Specs.to_string() );
+					append_fmt( result, "%S ( %SC ) ( %S ) %S", to_string(self->ReturnType), self->Name, to_string(self->Params), to_string(self->Specs) );
 				else
-					append_fmt( result, "%S ( %S ) ( %S )", self->ReturnType.to_string(), self->Name, self->Params.to_string() );
+					append_fmt( result, "%S ( %SC ) ( %S )", to_string(self->ReturnType), self->Name, to_string(self->Params) );
 			}
 
 			break;
@@ -1143,13 +1143,13 @@ void to_string(CodeTypename self, String* result )
 		if ( self->ReturnType && self->Params )
 		{
 			if ( self->Attributes )
-				append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+				append_fmt( result, "%S ", to_string(self->Attributes) );
 			else
 			{
 				if ( self->Specs )
-					append_fmt( result, "%S %S ( %S ) %S", GEN_NS to_string(self->ReturnType), self->Name, GEN_NS to_string(self->Params), GEN_NS to_string(self->Specs) );
+					append_fmt( result, "%S %SC ( %S ) %S", to_string(self->ReturnType), self->Name, to_string(self->Params), to_string(self->Specs) );
 				else
-					append_fmt( result, "%S %S ( %S )", GEN_NS to_string(self->ReturnType), self->Name, GEN_NS to_string(self->Params) );
+					append_fmt( result, "%S %SC ( %S )", to_string(self->ReturnType), self->Name, to_string(self->Params) );
 			}
 
 			return;
@@ -1157,12 +1157,12 @@ void to_string(CodeTypename self, String* result )
 	#endif
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Specs )
-		append_fmt( result, "%S %S", self->Name, GEN_NS to_string(self->Specs) );
+		append_fmt( result, "%SC %S", self->Name, to_string(self->Specs) );
 	else
-		append_fmt( result, "%S", self->Name );
+		append_fmt( result, "%SC", self->Name );
 
 	if ( self->IsParamPack )
 		append( result, "...");
@@ -1183,11 +1183,11 @@ void to_string(CodeUnion self, String* result )
 	append( result, "union " );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Name )
 	{
-		append_fmt( result, "%S\n{\n%S\n}"
+		append_fmt( result, "%SC\n{\n%S\n}"
 			, self->Name
 			, GEN_NS to_string(self->Body)
 		);
@@ -1225,20 +1225,20 @@ void to_string(CodeUsing self, String* result )
 		append( result, "export " );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ",GEN_NS to_string(self->Attributes) );
+		append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->UnderlyingType )
 	{
-		append_fmt( result, "using %S = %S", self->Name, GEN_NS to_string(self->UnderlyingType) );
+		append_fmt( result, "using %SC = %S", self->Name, to_string(self->UnderlyingType) );
 
 		if ( self->UnderlyingType->ArrExpr )
 		{
-			append_fmt( result, "[ %S ]", GEN_NS to_string(self->UnderlyingType->ArrExpr) );
+			append_fmt( result, "[ %S ]", to_string(self->UnderlyingType->ArrExpr) );
 
 			Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+				append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1246,10 +1246,10 @@ void to_string(CodeUsing self, String* result )
 		append( result, ";" );
 	}
 	else
-		append_fmt( result, "using %S;", self->Name );
+		append_fmt( result, "using %SC;", self->Name );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %S\n", self->InlineCmt->Content );
+		append_fmt( result, "  %SC\n", self->InlineCmt->Content );
 	else
 		append( result, "\n");
 }
@@ -1257,9 +1257,9 @@ void to_string(CodeUsing self, String* result )
 void to_string_ns(CodeUsing self, String* result )
 {
 	if ( self->InlineCmt )
-		append_fmt( result, "using namespace $S;  %S", self->Name, self->InlineCmt->Content );
+		append_fmt( result, "using namespace $SC;  %SC", self->Name, self->InlineCmt->Content );
 	else
-		append_fmt( result, "using namespace %s;\n", self->Name );
+		append_fmt( result, "using namespace %SC;\n", self->Name );
 }
 
 String to_string(CodeVar self)
@@ -1276,18 +1276,18 @@ void to_string(CodeVar self, String* result )
 		// Its a comma-separated variable ( a NextVar )
 
 		if ( self->Specs )
-			append_fmt( result, "%S ", GEN_NS to_string(self->Specs) );
+			append_fmt( result, "%S ", to_string(self->Specs) );
 
 		append( result, self->Name );
 
 		if ( self->ValueType->ArrExpr )
 		{
-			append_fmt( result, "[ %S ]", GEN_NS to_string(self->ValueType->ArrExpr) );
+			append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
 
 			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+				append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1295,14 +1295,14 @@ void to_string(CodeVar self, String* result )
 		if ( self->Value )
 		{
 			if ( self->VarConstructorInit )
-				append_fmt( result, "( %S ", GEN_NS to_string(self->Value) );
+				append_fmt( result, "( %S ", to_string(self->Value) );
 			else
-				append_fmt( result, " = %S", GEN_NS to_string(self->Value) );
+				append_fmt( result, " = %S", to_string(self->Value) );
 		}
 
 		// Keep the chain going...
 		if ( self->NextVar )
-			append_fmt( result, ", %S", self->NextVar.to_string() );
+			append_fmt( result, ", %S", to_string(self->NextVar) );
 
 		if ( self->VarConstructorInit )
 			append( result, " )");
@@ -1316,44 +1316,44 @@ void to_string(CodeVar self, String* result )
 	if ( self->Attributes || self->Specs )
 	{
 		if ( self->Attributes )
-			append_fmt( result, "%S ", GEN_NS to_string(self->Specs) );
+			append_fmt( result, "%S ", to_string(self->Specs) );
 
 		if ( self->Specs )
-			append_fmt( result, "%S\n", GEN_NS to_string(self->Specs) );
+			append_fmt( result, "%S\n", to_string(self->Specs) );
 
-		append_fmt( result, "%S %S", GEN_NS to_string(self->ValueType), self->Name );
+		append_fmt( result, "%S %SC", to_string(self->ValueType), self->Name );
 
 		if ( self->ValueType->ArrExpr )
 		{
-			append_fmt( result, "[ %S ]", GEN_NS to_string(self->ValueType->ArrExpr) );
+			append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
 
 			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+				append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
 
 		if ( self->BitfieldSize )
-			append_fmt( result, " : %S", GEN_NS to_string(self->BitfieldSize) );
+			append_fmt( result, " : %S", to_string(self->BitfieldSize) );
 
 		if ( self->Value )
 		{
 			if ( self->VarConstructorInit )
-				append_fmt( result, "( %S ", GEN_NS to_string(self->Value) );
+				append_fmt( result, "( %S ", to_string(self->Value) );
 			else
-				append_fmt( result, " = %S", GEN_NS to_string(self->Value) );
+				append_fmt( result, " = %S", to_string(self->Value) );
 		}
 
 		if ( self->NextVar )
-			append_fmt( result, ", %S", self->NextVar.to_string() );
+			append_fmt( result, ", %S", to_string(self->NextVar) );
 
 		if ( self->VarConstructorInit )
 			append( result, " )");
 
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %S", self->InlineCmt->Content);
+			append_fmt( result, ";  %SC", self->InlineCmt->Content);
 		else
 			append( result, ";\n" );
 
@@ -1361,33 +1361,33 @@ void to_string(CodeVar self, String* result )
 	}
 
 	if ( self->BitfieldSize )
-		append_fmt( result, "%S %S : %S", GEN_NS to_string(self->ValueType), self->Name, GEN_NS to_string(self->BitfieldSize) );
+		append_fmt( result, "%S %SC : %S", to_string(self->ValueType), self->Name, to_string(self->BitfieldSize) );
 
 	else if ( self->ValueType->ArrExpr )
 	{
-		append_fmt( result, "%S %S[ %S ]", GEN_NS to_string(self->ValueType), self->Name, GEN_NS to_string(self->ValueType->ArrExpr) );
+		append_fmt( result, "%S %SC[ %S ]", to_string(self->ValueType), self->Name, to_string(self->ValueType->ArrExpr) );
 
 		Code next_arr_expr = self->ValueType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( result, "[ %S ]", GEN_NS to_string(next_arr_expr) );
+			append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
 
 	else
-		append_fmt( result, "%S %S", GEN_NS to_string(self->ValueType), self->Name );
+		append_fmt( result, "%S %SC", to_string(self->ValueType), self->Name );
 
 	if ( self->Value )
 	{
 		if ( self->VarConstructorInit )
-			append_fmt( result, "( %S ", GEN_NS to_string(self->Value) );
+			append_fmt( result, "( %S ", to_string(self->Value) );
 		else
-			append_fmt( result, " = %S", GEN_NS to_string(self->Value) );
+			append_fmt( result, " = %S", to_string(self->Value) );
 	}
 
 	if ( self->NextVar )
-		append_fmt( result, ", %S", self->NextVar.to_string() );
+		append_fmt( result, ", %S", to_string( self->NextVar) );
 
 	if ( self->VarConstructorInit )
 		append( result, " )");
@@ -1395,7 +1395,7 @@ void to_string(CodeVar self, String* result )
 	append( result, ";" );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %S", self->InlineCmt->Content);
+		append_fmt( result, "  %SC", self->InlineCmt->Content);
 	else
 		append( result, "\n");
 }

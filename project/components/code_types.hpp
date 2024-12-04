@@ -959,7 +959,7 @@ struct CodeTypedef
 
 struct CodeUnion
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeUnion );
 
 	String to_string()                 { return GEN_NS to_string(* this); }
@@ -974,7 +974,7 @@ struct CodeUnion
 
 struct CodeUsing
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeUsing );
 
 	String to_string()                    { return GEN_NS to_string(* this); }
@@ -990,7 +990,7 @@ struct CodeUsing
 
 struct CodeVar
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeVar );
 
 	String to_string()                 { return GEN_NS to_string(* this); }
