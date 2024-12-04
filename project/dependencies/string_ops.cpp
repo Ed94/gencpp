@@ -19,7 +19,7 @@ ssize _scan_zpl_i64( const char* text, s32 base, s64* value )
 		text++;
 	}
 
-	if ( base == 16 && str_compare( text, "0x", 2 ) == 0 )
+	if ( base == 16 && str_compare_len( text, "0x", 2 ) == 0 )
 		text += 2;
 
 	for ( ;; )
@@ -61,7 +61,7 @@ s64 str_to_i64( const char* str, char** end_ptr, s32 base )
 
 	if ( ! base )
 	{
-		if ( ( str_len( str ) > 2 ) && ( str_compare( str, "0x", 2 ) == 0 ) )
+		if ( ( str_len( str ) > 2 ) && ( str_compare_len( str, "0x", 2 ) == 0 ) )
 			base = 16;
 		else
 			base = 10;

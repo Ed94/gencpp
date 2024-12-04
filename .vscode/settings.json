@@ -40,7 +40,9 @@
 		"*.m": "cpp",
 		"atomic": "cpp",
 		"gen.h": "c",
-		"string_ops.hpp": "c"
+		"string_ops.hpp": "c",
+		"assert.h": "c",
+		"intrin.h": "c"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,

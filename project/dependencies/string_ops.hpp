@@ -5,6 +5,8 @@
 
 #pragma region String Ops
 
+GEN_API_C_BEGIN
+
 const char* char_first_occurence( const char* str, char c );
 
 b32   char_is_alpha( char c );
@@ -19,11 +21,11 @@ s32  digit_to_int( char c );
 s32  hex_digit_to_int( char c );
 
 s32         str_compare( const char* s1, const char* s2 );
-s32         str_compare( const char* s1, const char* s2, ssize len );
+s32         str_compare_len( const char* s1, const char* s2, ssize len );
 char*       str_copy( char* dest, const char* source, ssize len );
 ssize       str_copy_nulpad( char* dest, const char* source, ssize len );
 ssize       str_len( const char* str );
-ssize       str_len( const char* str, ssize max_len );
+ssize       str_len_capped( const char* str, ssize max_len );
 char*       str_reverse( char* str );    // NOTE: ASCII only
 char const* str_skip( char const* str, char c );
 char const* str_skip_any( char const* str, char const* char_list );
@@ -132,7 +134,7 @@ s32 str_compare( const char* s1, const char* s2 )
 }
 
 inline
-s32 str_compare( const char* s1, const char* s2, ssize len )
+s32 str_compare_len( const char* s1, const char* s2, ssize len )
 {
 	for ( ; len > 0; s1++, s2++, len-- )
 	{
@@ -204,7 +206,7 @@ ssize str_len( const char* str )
 }
 
 inline
-ssize str_len( const char* str, ssize max_len )
+ssize str_len_capped( const char* str, ssize max_len )
 {
 	const char* end = rcast(const char*, mem_find( str, 0, max_len ));
 	if ( end )
@@ -240,7 +242,7 @@ char const* str_skip( char const* str, char c )
 inline
 char const* str_skip_any( char const* str, char const* char_list )
 {
-	char const* closest_ptr     = rcast( char const*, pointer_add_const( rcast(void const*, str), str_len( str ) ));
+	char const* closest_ptr     = rcast( char const*, pointer_add_const( rcast(mem_ptr_const, str), str_len( str ) ));
 	ssize       char_list_count = str_len( char_list );
 	for ( ssize i = 0; i < char_list_count; i++ )
 	{
@@ -283,5 +285,7 @@ void str_to_upper( char* str )
 		str++;
 	}
 }
+
+GEN_API_C_END
 
 #pragma endregion String Ops

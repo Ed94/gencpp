@@ -31,23 +31,23 @@ usize array_grow_formula(ssize value);
 
 template<class Type> Array(Type)  array_init        (AllocatorInfo allocator);
 template<class Type> Array(Type)  array_init_reserve(AllocatorInfo allocator, ssize capacity);
-template<class Type> bool         append            (Array(Type)* array, Array(Type) other);
-template<class Type> bool         append            (Array(Type)* array, Type value);
-template<class Type> bool         append            (Array(Type)* array, Type* items, usize item_num);
-template<class Type> bool         append_at         (Array(Type)* array, Type item, usize idx);
-template<class Type> bool         append_at         (Array(Type)* array, Type* items, usize item_num, usize idx);
-template<class Type> Type*        back              (Array(Type)  array);
-template<class Type> void         clear             (Array(Type)  array);
-template<class Type> bool         fill              (Array(Type)  array, usize begin, usize end, Type value);
-template<class Type> void         free              (Array(Type)* array);
-template<class Type> bool         grow              (Array(Type)* array, usize min_capacity);
-template<class Type> usize        num               (Array(Type)  array);
-template<class Type> void         pop               (Array(Type)  array);
-template<class Type> void         remove_at         (Array(Type)  array, usize idx);
-template<class Type> bool         reserve           (Array(Type)* array, usize new_capacity);
-template<class Type> bool         resize            (Array(Type)* array, usize num);
-template<class Type> bool         set_capacity      (Array(Type)* array, usize new_capacity);
-template<class Type> ArrayHeader* get_header        (Array(Type)  array);
+template<class Type> bool         array_append      (Array(Type)* array, Array(Type) other);
+template<class Type> bool         array_append      (Array(Type)* array, Type value);
+template<class Type> bool         array_append      (Array(Type)* array, Type* items, usize item_num);
+template<class Type> bool         array_append_at   (Array(Type)* array, Type item, usize idx);
+template<class Type> bool         array_append_at   (Array(Type)* array, Type* items, usize item_num, usize idx);
+template<class Type> Type*        array_back        (Array(Type)  array);
+template<class Type> void         array_clear       (Array(Type)  array);
+template<class Type> bool         array_fill        (Array(Type)  array, usize begin, usize end, Type value);
+template<class Type> void         array_free        (Array(Type)* array);
+template<class Type> bool         arary_grow        (Array(Type)* array, usize min_capacity);
+template<class Type> usize        array_num         (Array(Type)  array);
+template<class Type> void         arary_pop         (Array(Type)  array);
+template<class Type> void         arary_remove_at   (Array(Type)  array, usize idx);
+template<class Type> bool         arary_reserve     (Array(Type)* array, usize new_capacity);
+template<class Type> bool         arary_resize      (Array(Type)* array, usize num);
+template<class Type> bool         arary_set_capacity(Array(Type)* array, usize new_capacity);
+template<class Type> ArrayHeader* arary_get_header  (Array(Type)  array);
 
 struct ArrayHeader {
 	AllocatorInfo Allocator;
@@ -66,23 +66,23 @@ struct Array
 	forceinline static Array  init_reserve(AllocatorInfo allocator, ssize capacity) { return GEN_NS array_init_reserve<Type>(allocator, capacity); }
 	forceinline static usize  grow_formula(ssize value)                             { return GEN_NS array_grow_formula<Type>(value); }
 
-	forceinline bool         append(Array other)                               { return GEN_NS append<Type>(this, other); }
-	forceinline bool         append(Type value)                                { return GEN_NS append<Type>(this, value); }
-	forceinline bool         append(Type* items, usize item_num)               { return GEN_NS append<Type>(this, items, item_num); }
-	forceinline bool         append_at(Type item, usize idx)                   { return GEN_NS append_at<Type>(this, item, idx); }
-	forceinline bool         append_at(Type* items, usize item_num, usize idx) { return GEN_NS append_at<Type>(this, items, item_num, idx); }
-	forceinline Type*        back()                                            { return GEN_NS back<Type>(* this); }
-	forceinline void         clear()                                           { GEN_NS clear<Type>(* this); }
-	forceinline bool         fill(usize begin, usize end, Type value)          { return GEN_NS fill<Type>(* this, begin, end, value); }
-	forceinline void         free()                                            { GEN_NS free<Type>(this); }
-	forceinline ArrayHeader* get_header()                                      { return GEN_NS get_header<Type>(* this); }
-	forceinline bool         grow(usize min_capacity)                          { return GEN_NS grow<Type>(this, min_capacity); }
-	forceinline usize        num()                                             { return GEN_NS num<Type>(*this); }
-	forceinline void         pop()                                             { GEN_NS pop<Type>(* this); }
-	forceinline void         remove_at(usize idx)                              { GEN_NS remove_at<Type>(* this, idx); }
-	forceinline bool         reserve(usize new_capacity)                       { return GEN_NS reserve<Type>(this, new_capacity); }
-	forceinline bool         resize(usize num)                                 { return GEN_NS resize<Type>(this, num); }
-	forceinline bool         set_capacity(usize new_capacity)                  { return GEN_NS set_capacity<Type>(this, new_capacity); }
+	forceinline bool         append(Array other)                               { return GEN_NS array_append<Type>(this, other); }
+	forceinline bool         append(Type value)                                { return GEN_NS array_append<Type>(this, value); }
+	forceinline bool         append(Type* items, usize item_num)               { return GEN_NS array_append<Type>(this, items, item_num); }
+	forceinline bool         append_at(Type item, usize idx)                   { return GEN_NS array_append_at<Type>(this, item, idx); }
+	forceinline bool         append_at(Type* items, usize item_num, usize idx) { return GEN_NS array_append_at<Type>(this, items, item_num, idx); }
+	forceinline Type*        back()                                            { return GEN_NS array_back<Type>(* this); }
+	forceinline void         clear()                                           {        GEN_NS array_clear<Type>(* this); }
+	forceinline bool         fill(usize begin, usize end, Type value)          { return GEN_NS array_fill<Type>(* this, begin, end, value); }
+	forceinline void         free()                                            {        GEN_NS array_free<Type>(this); }
+	forceinline ArrayHeader* get_header()                                      { return GEN_NS array_get_header<Type>(* this); }
+	forceinline bool         grow(usize min_capacity)                          { return GEN_NS array_grow<Type>(this, min_capacity); }
+	forceinline usize        num()                                             { return GEN_NS array_num<Type>(*this); }
+	forceinline void         pop()                                             {        GEN_NS array_pop<Type>(* this); }
+	forceinline void         remove_at(usize idx)                              {        GEN_NS array_remove_at<Type>(* this, idx); }
+	forceinline bool         reserve(usize new_capacity)                       { return GEN_NS array_reserve<Type>(this, new_capacity); }
+	forceinline bool         resize(usize num)                                 { return GEN_NS array_resize<Type>(this, num); }
+	forceinline bool         set_capacity(usize new_capacity)                  { return GEN_NS array_set_capacity<Type>(this, new_capacity); }
 #pragma endregion Member Mapping
 
 	forceinline operator Type*()             { return Data; }
@@ -108,13 +108,13 @@ template<class Type> bool         resize(Array<Type>& array, usize num)         
 template<class Type> bool         set_capacity(Array<Type>& array, usize new_capacity)                  { return GEN_NS set_capacity( & array, new_capacity); }
 
 template<class Type> forceinline Type* begin(Array<Type>& array)             { return array;      }
-template<class Type> forceinline Type* end(Array<Type>& array)               { return array + get_header(array)->Num; }
+template<class Type> forceinline Type* end(Array<Type>& array)               { return array + array_get_header(array)->Num; }
 template<class Type> forceinline Type* next(Array<Type>& array, Type* entry) { return entry + 1; }
-#else
-template<class Type> forceinline Type* begin(Array<Type> array)             { return array;      }
-template<class Type> forceinline Type* end(Array<Type> array)               { return array + get_header(array)->Num; }
-template<class Type> forceinline Type* next(Array<Type> array, Type* entry) { return entry + 1; }
 #endif
+
+template<class Type> forceinline Type* array_begin(Array<Type> array)             { return array;      }
+template<class Type> forceinline Type* array_end(Array<Type> array)               { return array + array_get_header(array)->Num; }
+template<class Type> forceinline Type* array_next(Array<Type> array, Type* entry) { return entry + 1; }
 
 template<class Type> inline
 Array<Type> array_init(AllocatorInfo allocator) {
@@ -141,20 +141,20 @@ usize array_grow_formula(ssize value) {
 }
 
 template<class Type> inline
-bool append(Array<Type>* array, Array<Type> other) {
+bool array_append(Array<Type>* array, Array<Type> other) {
 	return append(array, other, num(other));
 }
 
 template<class Type> inline
-bool append(Array<Type>* array, Type value)
+bool array_append(Array<Type>* array, Type value)
 {
-	ArrayHeader* header = get_header(* array);
+	ArrayHeader* header = array_get_header(* array);
 
 	if (header->Num == header->Capacity)
 	{
-		if ( ! grow(array, header->Capacity))
+		if ( ! array_grow(array, header->Capacity))
 			return false;
-		header = get_header(* array);
+		header = array_get_header(* array);
 	}
 
 	(*array)[ header->Num] = value;
@@ -164,15 +164,15 @@ bool append(Array<Type>* array, Type value)
 }
 
 template<class Type> inline
-bool append(Array<Type>* array, Type* items, usize item_num)
+bool array_append(Array<Type>* array, Type* items, usize item_num)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = array_get_header(array);
 
 	if (header->Num + item_num > header->Capacity)
 	{
 		if ( ! grow(array, header->Capacity + item_num))
 			return false;
-		header = get_header(array);
+		header = array_get_header(array);
 	}
 
 	mem_copy((Type*)array + header->Num, items, item_num * sizeof(Type));
@@ -182,9 +182,9 @@ bool append(Array<Type>* array, Type* items, usize item_num)
 }
 
 template<class Type> inline
-bool append_at(Array<Type>* array, Type item, usize idx)
+bool array_append_at(Array<Type>* array, Type item, usize idx)
 {
-	ArrayHeader* header = get_header(* array);
+	ArrayHeader* header = array_get_header(* array);
 
 	ssize slot = idx;
 	if (slot >= header->Num)
@@ -195,10 +195,10 @@ bool append_at(Array<Type>* array, Type item, usize idx)
 
 	if (header->Capacity < header->Num + 1)
 	{
-		if ( ! grow(array, header->Capacity + 1))
+		if ( ! array_grow(array, header->Capacity + 1))
 			return false;
 
-		header = get_header(* array);
+		header = array_get_header(* array);
 	}
 
 	Type* target = &(*array)[slot];
@@ -206,13 +206,13 @@ bool append_at(Array<Type>* array, Type item, usize idx)
 	mem_move(target + 1, target, (header->Num - slot) * sizeof(Type));
 	header->Num++;
 
-	header = get_header(* array);
+	header = array_get_header(* array);
 
 	return true;
 }
 
 template<class Type> inline
-bool append_at(Array<Type>* array, Type* items, usize item_num, usize idx)
+bool array_append_at(Array<Type>* array, Type* items, usize item_num, usize idx)
 {
 	ArrayHeader* header = get_header(array);
 
@@ -240,11 +240,11 @@ bool append_at(Array<Type>* array, Type* items, usize item_num, usize idx)
 }
 
 template<class Type> inline
-Type* back(Array<Type>* array)
+Type* array_back(Array<Type>* array)
 {
 	GEN_ASSERT(array != nullptr);
 
-	ArrayHeader* header = get_header(* array);
+	ArrayHeader* header = array_get_header(* array);
 	if (header->Num <= 0)
 		return nullptr;
 
@@ -252,15 +252,15 @@ Type* back(Array<Type>* array)
 }
 
 template<class Type> inline
-void clear(Array<Type> array) {
-	ArrayHeader* header = get_header(array);
+void array_clear(Array<Type> array) {
+	ArrayHeader* header = array_get_header(array);
 	header->Num = 0;
 }
 
 template<class Type> inline
-bool fill(Array<Type> array, usize begin, usize end, Type value)
+bool array_fill(Array<Type> array, usize begin, usize end, Type value)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = array_get_header(array);
 
 	if (begin < 0 || end > header->Num)
 	return false;
@@ -274,49 +274,49 @@ bool fill(Array<Type> array, usize begin, usize end, Type value)
 }
 
 template<class Type> inline
-void free(Array<Type>* array) {
+void array_free(Array<Type>* array) {
 	GEN_ASSERT(array != nullptr);
-	ArrayHeader* header = get_header(* array);
-	GEN_NS free(header->Allocator, header);
+	ArrayHeader* header = array_get_header(* array);
+	allocator_free(header->Allocator, header);
 	Type** Data = (Type**)array;
 	*Data = nullptr;
 }
 
 template<class Type> forceinline
-ArrayHeader* get_header(Array<Type> array) {
+ArrayHeader* array_get_header(Array<Type> array) {
     Type* Data = array;
 
 	using NonConstType = TRemoveConst<Type>;
     return rcast(ArrayHeader*, const_cast<NonConstType*>(Data)) - 1;
 }
 template<class Type> inline
-bool grow(Array<Type>* array, usize min_capacity)
+bool array_grow(Array<Type>* array, usize min_capacity)
 {
-	ArrayHeader* header       = get_header(* array);
+	ArrayHeader* header       = array_get_header(* array);
 	usize        new_capacity = array_grow_formula(header->Capacity);
 
 	if (new_capacity < min_capacity)
 		new_capacity = min_capacity;
 
-	return set_capacity(array, new_capacity);
+	return array_set_capacity(array, new_capacity);
 }
 
 template<class Type> inline
-usize num(Array<Type> array) {
-	return get_header(array)->Num;
+usize array_num(Array<Type> array) {
+	return array_get_header(array)->Num;
 }
 
 template<class Type> inline
-void pop(Array<Type> array) {
-	ArrayHeader* header = get_header(array);
+void array_pop(Array<Type> array) {
+	ArrayHeader* header = array_get_header(array);
 	GEN_ASSERT(header->Num > 0);
 	header->Num--;
 }
 
 template<class Type> inline
-void remove_at(Array<Type> array, usize idx)
+void array_remove_at(Array<Type> array, usize idx)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = array_get_header(array);
 	GEN_ASSERT(idx < header->Num);
 
 	mem_move(array + idx, array + idx + 1, sizeof(Type) * (header->Num - idx - 1));
@@ -324,9 +324,9 @@ void remove_at(Array<Type> array, usize idx)
 }
 
 template<class Type> inline
-bool reserve(Array<Type>* array, usize new_capacity)
+bool array_reserve(Array<Type>* array, usize new_capacity)
 {
-	ArrayHeader* header = get_header(array);
+	ArrayHeader* header = array_get_header(array);
 
 	if (header->Capacity < new_capacity)
  		return set_capacity(array, new_capacity);
@@ -335,14 +335,14 @@ bool reserve(Array<Type>* array, usize new_capacity)
 }
 
 template<class Type> inline
-bool resize(Array<Type>* array, usize num)
+bool array_resize(Array<Type>* array, usize num)
 {
-	ArrayHeader* header = get_header(* array);
+	ArrayHeader* header = array_get_header(* array);
 
 	if (header->Capacity < num) {
-		if (! grow( array, num))
+		if (! array_grow( array, num))
 			return false;
-		header = get_header(* array);
+		header = array_get_header(* array);
 	}
 
 	header->Num = num;
@@ -350,9 +350,9 @@ bool resize(Array<Type>* array, usize num)
 }
 
 template<class Type> inline
-bool set_capacity(Array<Type>* array, usize new_capacity)
+bool array_set_capacity(Array<Type>* array, usize new_capacity)
 {
-	ArrayHeader* header = get_header(* array);
+	ArrayHeader* header = array_get_header(* array);
 
 	if (new_capacity == header->Capacity)
 	return true;
@@ -373,12 +373,14 @@ bool set_capacity(Array<Type>* array, usize new_capacity)
 
 	new_header->Capacity = new_capacity;
 
-	GEN_NS free(header->Allocator, header);
+	allocator_free(header->Allocator, header);
 
 	Type** Data = (Type**)array;
 	* Data = rcast(Type*, new_header + 1);
 	return true;
 }
+
+#define array_init_reserve(type, allocator, cap) array_init_reserve<type>(allocator, cap)
 
 #pragma endregion Array
 
@@ -471,9 +473,9 @@ HashTable<Type> hashtable_init_reserve(AllocatorInfo allocator, usize num)
 	HashTable<Type> result = { { nullptr }, { nullptr } };
 
 	result.Hashes = array_init_reserve<ssize>(allocator, num);
-	get_header(result.Hashes)->Num = num;
-	resize(& result.Hashes, num);
-	fill<ssize>(result.Hashes, 0, num, -1);
+	array_get_header(result.Hashes)->Num = num;
+	array_resize(& result.Hashes, num);
+	array_fill<ssize>(result.Hashes, 0, num, -1);
 
 	result.Entries = array_init_reserve<HashTableEntry<Type>>(allocator, num);
 	return result;
@@ -481,15 +483,15 @@ HashTable<Type> hashtable_init_reserve(AllocatorInfo allocator, usize num)
 
 template<typename Type> inline
 void clear(HashTable<Type> table) {
-	clear(table.Entries);
-	fill<ssize>(table.Hashes, 0, num(table.Hashes), -1);
+	array_clear(table.Entries);
+	array_fill(table.Hashes, 0, array_num(table.Hashes), (ssize)-1);
 }
 
 template<typename Type> inline
 void destroy(HashTable<Type>* table) {
-	if (table->Hashes && get_header(table->Hashes)->Capacity) {
-		free(& table->Hashes);
-		free(& table->Entries);
+	if (table->Hashes && array_get_header(table->Hashes)->Capacity) {
+		array_free(& table->Hashes);
+		array_free(& table->Entries);
 	}
 }
 
@@ -522,7 +524,7 @@ void map_mut(HashTable<Type> table, void (*map_proc)(u64 key, Type* value)) {
 
 template<typename Type> inline
 void grow(HashTable<Type>* table) {
-	ssize new_num = array_grow_formula(num(table->Entries));
+	ssize new_num = array_grow_formula( array_num(table->Entries));
 	rehash(table, new_num);
 }
 
@@ -530,9 +532,9 @@ template<typename Type> inline
 void rehash(HashTable<Type>* table, ssize new_num)
 {
 	ssize last_added_index;
-	HashTable<Type> new_ht = hashtable_init_reserve<Type>(get_header(table->Hashes)->Allocator, new_num);
+	HashTable<Type> new_ht = hashtable_init_reserve<Type>( array_get_header(table->Hashes)->Allocator, new_num);
 
-	for (ssize idx = 0; idx < ssize(num(table->Entries)); ++idx)
+	for (ssize idx = 0; idx < ssize( array_num(table->Entries)); ++idx)
 	{
 		HashTableFindResult find_result;
 		HashTableEntry<Type>& entry = table->Entries[idx];
@@ -639,8 +641,8 @@ ssize add_entry(HashTable<Type>* table, u64 key) {
 	ssize idx;
 	HashTableEntry<Type> entry = { key, -1 };
 
-	idx = num(table->Entries);
-	append( & table->Entries, entry);
+	idx = array_num(table->Entries);
+	array_append( & table->Entries, entry);
 	return idx;
 }
 
@@ -649,9 +651,9 @@ HashTableFindResult find(HashTable<Type> table, u64 key)
 {
 	HashTableFindResult result = { -1, -1, -1 };
 
-	if (num(table.Hashes) > 0)
+	if (array_num(table.Hashes) > 0)
 	{
-		result.HashIndex = key % num(table.Hashes);
+		result.HashIndex = key % array_num(table.Hashes);
 		result.EntryIndex = table.Hashes[result.HashIndex];
 
 		while (result.EntryIndex >= 0)
@@ -669,8 +671,8 @@ HashTableFindResult find(HashTable<Type> table, u64 key)
 
 template<typename Type> inline
 bool full(HashTable<Type> table) {
-	usize critical_load = usize(HashTable_CriticalLoadScale * f32(num(table.Hashes)));
-	b32 result = num(table.Entries) > critical_load;
+	usize critical_load = usize(HashTable_CriticalLoadScale * f32(array_num(table.Hashes)));
+	b32 result = array_num(table.Entries) > critical_load;
 	return result;
 }
 

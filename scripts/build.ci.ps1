@@ -231,10 +231,12 @@ if ( $c_library )
 	$executable = join-path $path_build     "gen_c_library_test.exe"
 
 	if ($vendor -eq "clang") {
-		$compiler_args += "-x"
-		$compiler_args += "c"
+		$compiler_args += '-x'
+		$compiler_args += 'c'
+		$compiler_args += '-std=c11'
 	} elseif ($vendor -eq "msvc") {
-		$compiler_args += "/TC"
+		$compiler_args += "/TC"       # Compile as C
+		$compiler_args += "/Zc:__cplusplus" # Fix __cplusplus macro
 	}
 
 	build-simple $path_build $includes $compiler_args $linker_args $unit $executable

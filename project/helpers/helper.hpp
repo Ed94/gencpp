@@ -13,7 +13,7 @@ CodeBody gen_ecode( char const* path )
 	char  scratch_mem[kilobytes(1)];
 	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	file_read_contents( allocator_info( & scratch), zero_terminate, path );
+	file_read_contents( arena_allocator_info( & scratch), zero_terminate, path );
 
 	CSV_Object csv_nodes;
 	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
@@ -23,19 +23,21 @@ CodeBody gen_ecode( char const* path )
 	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for ( ADT_Node& node : enum_strs )
+	for ( ADT_Node* node = array_begin(enum_strs); node != array_end(enum_strs); node = array_next(enum_strs, node) )
 	{
-		char const* code = node.string;
+		char const* code = node->string;
 
 		append_fmt( & enum_entries, "CT_%s,\n", code );
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 	}
 
-	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", to_strc(enum_entries), "enum CodeType_Def : u32 { <entries> CT_NumTypes };"));
+	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", string_to_strc(enum_entries), 
+		"enum CodeType_Def : u32 { <entries> CT_NumTypes };"
+	));
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	CodeFn to_str = parse_function( token_fmt( "entries", to_strc(to_str_entries), stringize(
+	CodeFn to_str = parse_function( token_fmt( "entries", string_to_strc(to_str_entries), stringize(
 		inline
 		StrC to_str( CodeType type )
 		{
@@ -61,7 +63,7 @@ CodeBody gen_eoperator( char const* path )
 	char scratch_mem[kilobytes(4)];
 	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	file_read_contents( allocator_info(& scratch), zero_terminate, path );
+	file_read_contents( arena_allocator_info(& scratch), zero_terminate, path );
 
 	CSV_Object csv_nodes;
 	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
@@ -72,7 +74,7 @@ CodeBody gen_eoperator( char const* path )
 	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for (usize idx = 0; idx < num(enum_strs); idx++)
+	for (usize idx = 0; idx < array_num(enum_strs); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
@@ -81,7 +83,7 @@ CodeBody gen_eoperator( char const* path )
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
-	CodeEnum  enum_code = parse_enum(token_fmt("entries", to_strc(enum_entries), stringize(
+	CodeEnum  enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), stringize(
 		enum Operator_Def : u32
 		{
 			<entries>
@@ -91,7 +93,7 @@ CodeBody gen_eoperator( char const* path )
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	CodeFn to_str = parse_function(token_fmt("entries", to_strc(to_str_entries), stringize(
+	CodeFn to_str = parse_function(token_fmt("entries", string_to_strc(to_str_entries), stringize(
 		inline
 		StrC to_str( Operator op )
 		{
@@ -117,7 +119,7 @@ CodeBody gen_especifier( char const* path )
 	char scratch_mem[kilobytes(4)];
 	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	file_read_contents( allocator_info(& scratch), zero_terminate, path );
+	file_read_contents( arena_allocator_info(& scratch), zero_terminate, path );
 
 	CSV_Object csv_nodes;
 	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
@@ -128,7 +130,7 @@ CodeBody gen_especifier( char const* path )
 	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for (usize idx = 0; idx < num(enum_strs); idx++)
+	for (usize idx = 0; idx < array_num(enum_strs); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
@@ -137,7 +139,7 @@ CodeBody gen_especifier( char const* path )
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
-	CodeEnum  enum_code = parse_enum(token_fmt("entries", to_strc(enum_entries), stringize(
+	CodeEnum  enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), stringize(
 		enum Specifier_Def : u32
 		{
 			<entries>
@@ -145,7 +147,7 @@ CodeBody gen_especifier( char const* path )
 		};
 	)));
 
-	CodeFn is_trailing = parse_function(token_fmt("specifier", to_strc(to_str_entries), stringize(
+	CodeFn is_trailing = parse_function(token_fmt("specifier", string_to_strc(to_str_entries), stringize(
 		inline
 		bool is_trailing( Specifier specifier )
 		{
@@ -163,7 +165,7 @@ CodeBody gen_especifier( char const* path )
 #undef do_once_end
 #undef forceinline
 #undef neverinline
-	CodeFn to_str = parse_function(token_fmt("entries", to_strc(to_str_entries), stringize(
+	CodeFn to_str = parse_function(token_fmt("entries", string_to_strc(to_str_entries), stringize(
 		inline
 		StrC to_str( Specifier type )
 		{
@@ -176,7 +178,7 @@ CodeBody gen_especifier( char const* path )
 		}
 	)));
 
-	CodeFn to_type = parse_function( token_fmt( "entries", to_strc(to_str_entries), stringize(
+	CodeFn to_type = parse_function( token_fmt( "entries", string_to_strc(to_str_entries), stringize(
 		inline
 		Specifier to_specifier( StrC str )
 		{
@@ -222,7 +224,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	char  scratch_mem[kilobytes(16)];
 	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
-	AllocatorInfo scratch_info = allocator_info(& scratch);
+	AllocatorInfo scratch_info = arena_allocator_info(& scratch);
 
 	FileContents enum_content = file_read_contents( scratch_info, zero_terminate, etok_path );
 
@@ -245,7 +247,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 	String to_str_attributes        = string_make_reserve( GlobalAllocator, kilobytes(4) );
 	String attribute_define_entries = string_make_reserve( GlobalAllocator, kilobytes(4) );
 
-	for (usize idx = 0; idx < num(enum_strs); idx++)
+	for (usize idx = 0; idx < array_num(enum_strs); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = enum_str_strs [idx].string;
@@ -254,7 +256,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
-	for ( usize idx = 0; idx < num(attribute_strs); idx++ )
+	for ( usize idx = 0; idx < array_num(attribute_strs); idx++ )
 	{
 		char const* attribute_str = attribute_strs[idx].string;
 		char const* entry_to_str  = attribute_str_strs [idx].string;
@@ -263,19 +265,19 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		append_fmt( & to_str_attributes, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 		append_fmt( & attribute_define_entries, "Entry( Tok_Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
 
-		if ( idx < num(attribute_strs) - 1 )
-			append( & attribute_define_entries, " \\\n");
+		if ( idx < array_num(attribute_strs) - 1 )
+			string_append_strc( & attribute_define_entries, txt(" \\\n"));
 		else
-			append( & attribute_define_entries, "\n");
+			string_append_strc( & attribute_define_entries, txt("\n"));
 	}
 
 #pragma push_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 #undef GEN_DEFINE_ATTRIBUTE_TOKENS
-	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), to_strc(attribute_define_entries)  );
+	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), string_to_strc(attribute_define_entries)  );
 #pragma pop_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 
 	// We cannot parse this enum, it has Attribute names as enums
-	CodeEnum enum_code = parse_enum(token_fmt("entries", to_str(enum_entries), "attribute_toks", to_str(attribute_entries), stringize(
+	CodeEnum enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), "attribute_toks", string_to_strc(attribute_entries), stringize(
 		enum TokType_Def : u32
 		{
 			<entries>
@@ -290,7 +292,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 #undef local_persist
 #undef do_once_start
 #undef do_once_end
-	CodeFn to_str = parse_function(token_fmt("entries", to_strc(to_str_entries), "attribute_toks", to_strc(to_str_attributes), stringize(
+	CodeFn to_str = parse_function(token_fmt("entries", string_to_strc(to_str_entries), "attribute_toks", string_to_strc(to_str_attributes), stringize(
 		inline
 		StrC to_str( TokType type )
 		{
@@ -304,7 +306,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
 		}
 	)));
 
-	CodeFn to_type = parse_function( token_fmt( "entries", to_strc(to_str_entries), stringize(
+	CodeFn to_type = parse_function( token_fmt( "entries", string_to_strc(to_str_entries), stringize(
 		inline
 		TokType to_toktype( StrC str )
 		{

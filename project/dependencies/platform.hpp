@@ -106,12 +106,24 @@
 #  define GEN_GCC_VERSION_CHECK(major,minor,patch) (0)
 #endif
 
-#ifndef GEN_COMPILER_C
-#	if defined(__STDC_VERSION__)
-#		define GEN_COMPILER_C 1
+#if !defined(GEN_COMPILER_C)
+#	ifdef __cplusplus
+#		define GEN_COMPILER_C   0
+#		define GEN_COMPILER_CPP 1
 #	else
-#		define GEN_COMPILER_C 0
-#	endif
+#		if defined(__STDC__)
+#			define GEN_COMPILER_C   1
+#		    define GEN_COMPILER_CPP 0
+#		else
+            // Fallback for very old C compilers
+#			define GEN_COMPILER_C   1
+#		    define GEN_COMPILER_CPP 0
+#		endif
+#   endif
+#endif
+
+#if GEN_COMPILER_C
+#pragma message("Detected C")
 #endif
 
 #pragma endregion Platform Detection
@@ -136,8 +148,6 @@
 #		define GEN_NS_PARSER_BEGIN
 #		define GEN_NS_PARSER_END
 #		define GEN_USING_NS_PARSER
-#		define GEN_NS_ENUM_BEGIN
-#		define GEN_NS_ENUM_END
 #		define GEN_NS
 #		define GEN_NS_BEGIN
 #		define GEN_NS_END
@@ -145,8 +155,6 @@
 #		define GEN_NS_PARSER_BEGIN namespace parser {
 #		define GEN_NS_PARSER_END   }
 #		define GEN_USING_NS_PARSER using namespace parser
-#		define GEN_NS_ENUM_BEGIN namespace gen_internal_enums {
-#		define GEN_NS_ENUM_END   }
 #		define GEN_NS       ::
 #		define GEN_NS_BEGIN
 #		define GEN_NS_END
@@ -155,8 +163,6 @@
 #	define GEN_NS_PARSER_BEGIN namespace parser {
 #	define GEN_NS_PARSER_END   }
 #	define GEN_USING_NS_PARSER using namespace parser
-#	define GEN_NS_ENUM_BEGIN namespace gen_internal_enums {
-#	define GEN_NS_ENUM_END   }
 #	define GEN_NS       gen::
 #	define GEN_NS_BEGIN namespace gen {
 #	define GEN_NS_END   }

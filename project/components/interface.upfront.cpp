@@ -472,23 +472,23 @@ CodeComment def_comment( StrC content )
 		length++;
 
 		str_copy( line, scanner, length );
-		append_fmt(& cmt_formatted, "//%.*s", length, line );
+		string_append_fmt(& cmt_formatted, "//%.*s", length, line );
 		mem_set( line, 0, MaxCommentLineLength );
 
 		scanner += length;
 	}
 	while ( scanner <= end );
 
-	if ( * back(& cmt_formatted) != '\n' )
-		append( & cmt_formatted, "\n" );
+	if ( * string_back(cmt_formatted) != '\n' )
+		string_append_strc( & cmt_formatted, txt("\n") );
 
 	Code
 	result          = make_code();
 	result->Type    = CT_Comment;
-	result->Name    = get_cached_string( { length(cmt_formatted), cmt_formatted } );
+	result->Name    = get_cached_string( { string_length(cmt_formatted), cmt_formatted } );
 	result->Content = result->Name;
 
-	free(& cmt_formatted);
+	string_free(& cmt_formatted);
 
 	return (CodeComment) result;
 }
@@ -908,8 +908,8 @@ CodeInclude def_include( StrC path, Opts_def_include p )
 	}
 
 	StrC content = p.foreign ?
-			to_str( str_fmt_buf( "<%.*s>", path.Len, path.Ptr ))
-		:	to_str( str_fmt_buf( "\"%.*s\"", path.Len, path.Ptr ));
+			string_to_strc( str_fmt_buf( "<%.*s>", path.Len, path.Ptr ))
+		:	string_to_strc( str_fmt_buf( "\"%.*s\"", path.Len, path.Ptr ));
 
 	Code
 	result          = make_code();

@@ -17,7 +17,7 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 		char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
 
 		tok_map_arena = arena_init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
-		tok_map       = hashtable_init(StrC, allocator_info(& tok_map_arena) );
+		tok_map       = hashtable_init(StrC, arena_allocator_info(& tok_map_arena) );
 
 		s32 left = num_tokens - 1;
 
@@ -94,7 +94,7 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 	}
 
 	clear(tok_map);
-	free(& tok_map_arena);
+	arena_free(& tok_map_arena);
 
 	ssize result = buf_size - remaining;
 
@@ -142,7 +142,7 @@ Code untyped_fmt( char const* fmt, ...)
 
 	Code
 	result          = make_code();
-	result->Name    = get_cached_string( { str_len(fmt, MaxNameLength), fmt } );
+	result->Name    = get_cached_string( { str_len_capped(fmt, MaxNameLength), fmt } );
 	result->Type    = CT_Untyped;
 	result->Content = get_cached_string( { length, buf } );
 

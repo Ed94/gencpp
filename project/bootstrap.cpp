@@ -26,20 +26,20 @@ constexpr char const* generation_notice =
 
 void format_file( char const* path )
 {
-	String resolved_path = string_make(GlobalAllocator, to_str(path));
+	String resolved_path = string_make_strc(GlobalAllocator, to_strc_from_c_str(path));
 
-	String style_arg = string_make(GlobalAllocator, txt("-style=file:"));
-	append( & style_arg, "../scripts/.clang-format ");
+	String style_arg = string_make_strc(GlobalAllocator, txt("-style=file:"));
+	string_append_strc( & style_arg, txt("../scripts/.clang-format "));
 
 	// Need to execute clang format on the generated file to get it to match the original.
-	#define clang_format      "clang-format "
-	#define cf_format_inplace "-i "
-	#define cf_verbose        "-verbose "
-	String command = string_make( GlobalAllocator, clang_format );
-	append( & command, cf_format_inplace );
-	append( & command, cf_verbose );
-	append( & command, style_arg );
-	append( & command, resolved_path );
+	#define clang_format      txt("clang-format ")
+	#define cf_format_inplace txt("-i ")
+	#define cf_verbose        txt("-verbose ")
+	String command = string_make_strc( GlobalAllocator, clang_format );
+	string_append_strc( & command, cf_format_inplace );
+	string_append_strc( & command, cf_verbose );
+	string_append_string( & command, style_arg );
+	string_append_string( & command, resolved_path );
 		log_fmt("\tRunning clang-format on file:\n");
 		system( command );
 		log_fmt("\tclang-format finished reformatting.\n");
@@ -145,7 +145,7 @@ int gen_main()
 		def_include(txt("components/types.hpp")),
 		preprocess_endif,
 		fmt_newline,
-		untyped_str( to_str(generation_notice) )
+		untyped_str( strc_to_str(generation_notice) )
 	));
 
 	// gen.hpp

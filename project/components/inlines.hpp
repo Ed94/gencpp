@@ -134,7 +134,7 @@ Code begin( CodeBody body) {
 }
 inline
 Code end(CodeBody body ){
-	return { nullptr };
+	return { rcast(AST*, body.ast)->Back->Next };
 }
 #pragma endregion CodeBody
 

@@ -346,7 +346,7 @@ void* arena_allocator_proc( void* allocator_data, AllocType type, ssize size, ss
 		case EAllocation_ALLOC :
 			{
 				void* end        = pointer_add( arena->PhysicalStart, arena->TotalUsed );
-				ssize    total_size = align_forward_i64( size, alignment );
+				ssize total_size = align_forward_s64( size, alignment );
 
 				// NOTE: Out of memory
 				if ( arena->TotalUsed + total_size > (ssize) arena->TotalSize )

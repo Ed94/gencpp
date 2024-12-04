@@ -36,7 +36,7 @@ wchar_t* _alloc_utf8_to_ucs2( AllocatorInfo a, char const* text, ssize* w_len_ )
 	w_len1 = MultiByteToWideChar( CP_UTF8, MB_ERR_INVALID_CHARS, text, scast( int, len), w_text, scast( int, w_len) );
 	if ( w_len1 == 0 )
 	{
-		free( a, w_text );
+		allocator_free( a, w_text );
 		if ( w_len_ )
 			*w_len_ = 0;
 		return NULL;
@@ -145,7 +145,7 @@ GEN_FILE_OPEN_PROC( _win32_file_open )
 	w_text = _alloc_utf8_to_ucs2( heap(), filename, NULL );
 	handle = CreateFileW( w_text, desired_access, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, creation_disposition, FILE_ATTRIBUTE_NORMAL, NULL );
 
-	free( heap(), w_text );
+	allocator_free( heap(), w_text );
 
 	if ( handle == INVALID_HANDLE_VALUE )
 	{
@@ -340,7 +340,7 @@ FileError file_close( FileInfo* f )
 		return EFileError_INVALID;
 
 	if ( f->filename )
-		free( heap(), ccast( char*, f->filename ));
+		allocator_free( heap(), ccast( char*, f->filename ));
 
 #if defined( GEN_SYSTEM_WINDOWS )
 	if ( f->fd.p == INVALID_HANDLE_VALUE )
@@ -540,7 +540,7 @@ b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, ssize 
 		mem_copy( d->buf, buffer, size );
 		d->cap = size;
 
-		get_header(arr)->Num = size;
+		array_get_header(arr)->Num = size;
 	}
 	else
 	{
@@ -610,9 +610,9 @@ GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 	{
 		Array<u8> arr = { d->buf };
 
-		if ( get_header(arr)->Capacity < usize(new_cap) )
+		if ( array_get_header(arr)->Capacity < usize(new_cap) )
 		{
-			if ( ! grow( & arr, ( s64 )( new_cap ) ) )
+			if ( ! array_grow( & arr, ( s64 )( new_cap ) ) )
 				return false;
 			d->buf = arr;
 		}
@@ -626,7 +626,7 @@ GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 
 		mem_copy( d->buf + offset + rwlen, pointer_add_const( buffer, rwlen ), extralen );
 		d->cap = new_cap;
-		get_header(arr)->Capacity = new_cap;
+		array_get_header(arr)->Capacity = new_cap;
 	}
 	else
 	{
@@ -647,10 +647,10 @@ GEN_FILE_CLOSE_PROC( _memory_file_close )
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
 		Array<u8> arr = { d->buf };
-		free(& arr);
+		array_free(& arr);
 	}
 
-	free( allocator, d );
+	allocator_free( allocator, d );
 }
 
 FileOperations const memory_file_operations = { _memory_file_read, _memory_file_write, _memory_file_seek, _memory_file_close };

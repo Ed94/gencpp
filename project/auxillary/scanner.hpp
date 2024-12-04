@@ -25,7 +25,7 @@ Code scan_file( char const* path )
 
 	String str = string_make_reserve( GlobalAllocator, fsize );
 		file_read( & file, str, fsize );
-		get_header(str)->Length = fsize;
+		string_get_header(str)->Length = fsize;
 
 	// Skip GEN_INTELLISENSE_DIRECTIVES preprocessor blocks
 	// Its designed so that the directive should be the first thing in the file.
@@ -52,7 +52,7 @@ Code scan_file( char const* path )
 
 				if ( ! found_directive )
 				{
-					if ( left && str_compare( scanner, directive_start.Ptr, directive_start.Len ) == matched )
+					if ( left && str_compare_len( scanner, directive_start.Ptr, directive_start.Len ) == matched )
 					{
 						scanner += directive_start.Len;
 						left    -= directive_start.Len;
@@ -60,7 +60,7 @@ Code scan_file( char const* path )
 						while ( left && char_is_space( current ) )
 							move_fwd();
 
-						if ( left && str_compare( scanner, def_intellisense.Ptr, def_intellisense.Len ) == matched )
+						if ( left && str_compare_len( scanner, def_intellisense.Ptr, def_intellisense.Len ) == matched )
 						{
 							scanner += def_intellisense.Len;
 							left    -= def_intellisense.Len;
@@ -80,7 +80,7 @@ Code scan_file( char const* path )
 					continue;
 				}
 
-				if ( left && str_compare( scanner, directive_end.Ptr, directive_end.Len ) == matched )
+				if ( left && str_compare_len( scanner, directive_end.Ptr, directive_end.Len ) == matched )
 				{
 					scanner += directive_end.Len;
 					left    -= directive_end.Len;
@@ -97,12 +97,12 @@ Code scan_file( char const* path )
 					if ( (scanner + 2) >= ( (char const*) str + fsize ) )
 					{
 						mem_move( str, scanner, left );
-						get_header(str)->Length = left;
+						string_get_header(str)->Length = left;
 						break;
 					}
 
 					mem_move( str, scanner, left );
-					get_header(str)->Length = left;
+					string_get_header(str)->Length = left;
 
 					break;
 				}
@@ -116,7 +116,7 @@ Code scan_file( char const* path )
 	}
 
 	file_close( & file );
-	return untyped_str( to_strc(str) );
+	return untyped_str( string_to_strc(str) );
 }
 
 #if 0

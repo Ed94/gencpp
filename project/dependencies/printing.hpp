@@ -5,6 +5,8 @@
 
 #pragma region Printing
 
+GEN_API_C_BEGIN
+
 struct FileInfo;
 
 #ifndef GEN_PRINTF_MAXLEN
@@ -37,5 +39,7 @@ ssize log_fmt(char const* fmt, ...)
 
 	return res;
 }
+
+GEN_API_C_END
 
 #pragma endregion Printing

@@ -50,28 +50,28 @@ String to_string(ParseContext ctx)
 	String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
 
 	Token scope_start = ctx.Scope->Start;
-	Token last_valid  = ctx.Tokens.Idx >= num(ctx.Tokens.Arr) ? ctx.Tokens.Arr[num(ctx.Tokens.Arr) -1] : (* current(& ctx.Tokens, true));
+	Token last_valid  = ctx.Tokens.Idx >= array_num(ctx.Tokens.Arr) ? ctx.Tokens.Arr[array_num(ctx.Tokens.Arr) -1] : (* current(& ctx.Tokens, true));
 
 	sptr        length  = scope_start.Length;
 	char const* current = scope_start.Text + length;
-	while ( current <= back( & ctx.Tokens.Arr)->Text && *current != '\n' && length < 74 )
+	while ( current <= array_back( & ctx.Tokens.Arr)->Text && *current != '\n' && length < 74 )
 	{
 		current++;
 		length++;
 	}
 
-	String line = string_make( GlobalAllocator, { length, scope_start.Text } );
-	append_fmt( & result, "\tScope    : %s\n", line );
-	free(& line);
+	String line = string_make_strc( GlobalAllocator, { length, scope_start.Text } );
+	string_append_fmt( & result, "\tScope    : %s\n", line );
+	string_free(& line);
 
 	sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
 	sptr   length_from_err = dist;
-	String line_from_err   = string_make( GlobalAllocator, { length_from_err, last_valid.Text } );
+	String line_from_err   = string_make_strc( GlobalAllocator, { length_from_err, last_valid.Text } );
 
 	if ( length_from_err < 100 )
-		append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
+		string_append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
 	else
-		append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
+		string_append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
 
 	StackNode* curr_scope = ctx.Scope;
 	s32 level = 0;
@@ -79,11 +79,11 @@ String to_string(ParseContext ctx)
 	{
 		if ( is_valid(curr_scope->Name) )
 		{
-			append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
+			string_append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
 		}
 		else
 		{
-			append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
+			string_append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
 		}
 
 		curr_scope = curr_scope->Prev;
@@ -97,7 +97,7 @@ global ParseContext Context;
 
 bool __eat(TokArray* self, TokType type )
 {
-	if ( num(self->Arr) - self->Idx <= 0 )
+	if ( array_num(self->Arr) - self->Idx <= 0 )
 	{
 		log_failure( "No tokens left.\n%s", to_string(Context) );
 		return false;
@@ -136,12 +136,12 @@ bool __eat(TokArray* self, TokType type )
 internal
 void init()
 {
-	Tokens = array_init_reserve<Token>( allocator_info( & LexArena)
+	Tokens = array_init_reserve(Token, arena_allocator_info( & LexArena)
 		, ( LexAllocator_Size - sizeof( ArrayHeader ) ) / sizeof(Token)
 	);
 
 	fixed_arena_init(& defines_map_arena);
-	defines = hashtable_init_reserve<StrC>( allocator_info( & defines_map_arena), 256 );
+	defines = hashtable_init_reserve(StrC, allocator_info( & defines_map_arena), 256 );
 }
 
 internal
@@ -175,7 +175,7 @@ bool _check_parse_args( StrC def, char const* func_name )
 #	define prevtok        (* previous( Context.Tokens, dont_skip_formatting))
 #	define nexttok		  (* next( Context.Tokens, skip_formatting ))
 #	define eat( Type_ )   __eat( & Context.Tokens, Type_ )
-#	define left           ( num(Context.Tokens.Arr) - Context.Tokens.Idx )
+#	define left           ( array_num(Context.Tokens.Arr) - Context.Tokens.Idx )
 
 #ifdef check
 #define CHECK_WAS_DEFINED
@@ -298,7 +298,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if ( tokleft )
 				move_fwd();
 
-			append( & content, cut_ptr, cut_length );
+			string_append_c_str_len( & content, cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -320,7 +320,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if ( tokleft )
 				move_fwd();
 
-			append( & content, cut_ptr, cut_length );
+			string_append_c_str_len( & content, cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -334,7 +334,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			scanner += 2;
 			tokleft -= 2;
 
-			append( & content,  cut_ptr, cut_length );
+			string_append_c_str_len( & content,  cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -353,7 +353,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			if (tokleft)
 				move_fwd();
 
-			append( & content,  cut_ptr, cut_length );
+			string_append_c_str_len( & content,  cut_ptr, cut_length );
 			last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 			continue;
 		}
@@ -362,10 +362,10 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		if (scanner[0] == '\t')
 		{
 			if (pos > last_cut)
-				append( & content, cut_ptr, cut_length);
+				string_append_c_str_len( & content, cut_ptr, cut_length);
 
-			if ( * back( & content ) != ' ' )
-				append( & content, ' ');
+			if ( * string_back( content ) != ' ' )
+				string_append_strc( & content, txt(' '));
 
 			move_fwd();
 			last_cut = sptr(scanner) - sptr(raw_text.Ptr);
@@ -381,17 +381,17 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 				scanner += 2;
 				tokleft -= 2;
 
-				append( & content,  cut_ptr, cut_length );
+				string_append_c_str_len( & content,  cut_ptr, cut_length );
 				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				append( & content,  cut_ptr, cut_length );
+				string_append_c_str_len( & content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( * back( & content ) != ' ' )
-				append( & content,  ' ' );
+			if ( * string_back( content ) != ' ' )
+				string_append_strc( & content,  txt(' ') );
 
 			scanner += 2;
 			tokleft -= 2;
@@ -408,17 +408,17 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 
 				move_fwd();
 
-				append( & content,  cut_ptr, cut_length );
+				string_append_c_str_len( & content,  cut_ptr, cut_length );
 				last_cut = sptr( scanner ) - sptr( raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				append( & content,  cut_ptr, cut_length );
+				string_append_c_str_len( & content,  cut_ptr, cut_length );
 
 			// Replace with a space
 			if ( * back( & content ) != ' ' )
-				append( & content,  ' ' );
+				string_append_strc( & content,  txt(' ') );
 
 			move_fwd();
 
@@ -429,7 +429,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Escaped newlines
 		if ( scanner[0] == '\\' )
 		{
-			append( & content,  cut_ptr, cut_length );
+			string_append_c_str_len( & content,  cut_ptr, cut_length );
 
 			s32 amount_to_skip = 1;
 			if ( tokleft > 1 && scanner[1] == '\n' )
@@ -456,7 +456,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 		// Consectuive spaces
 		if ( tokleft > 1 && char_is_space( scanner[0] ) && char_is_space( scanner[ 1 ] ) )
 		{
-			append( & content,  cut_ptr, cut_length );
+			string_append_c_str_len( & content,  cut_ptr, cut_length );
 			do
 			{
 				move_fwd();
@@ -468,7 +468,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 			// Preserve only 1 space of formattting
 			char* last = back(& content);
 			if ( last == nullptr || * last != ' ' )
-				append( & content,  ' ' );
+				string_append_strc( & content,  txt(' ') );
 
 			continue;
 		}
@@ -478,7 +478,7 @@ String strip_formatting( StrC raw_text, bool preserve_newlines = true )
 
 	if ( last_cut < raw_text.Len )
 	{
-		append( & content,  cut_ptr, raw_text.Len - last_cut );
+		string_append_c_str_len( & content,  cut_ptr, raw_text.Len - last_cut );
 	}
 
 #undef cut_ptr
@@ -669,7 +669,7 @@ CodeAttributes parse_attributes()
 
 		Code result     = make_code();
 		result->Type    = CT_PlatformAttributes;
-		result->Name    = get_cached_string( { length(name_stripped), name_stripped } );
+		result->Name    = get_cached_string( { string_length(name_stripped), name_stripped } );
 		result->Content = result->Name;
 		// result->Token   =
 
@@ -723,7 +723,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 		char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeTypename> interfaces; {
 		Arena arena = arena_init_from_memory( interface_arr_mem, kilobytes(4) );
-		interfaces  = array_init_reserve<CodeTypename>( allocator_info(& arena), 4 );
+		interfaces  = array_init_reserve(CodeTypename, arena_allocator_info(& arena), 4 );
 	}
 
 	// TODO(Ed) : Make an AST_DerivedType, we'll store any arbitary derived type into there as a linear linked list of them.
@@ -754,7 +754,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 			}
 			Token interface_tok = parse_identifier();
 
-			append( & interfaces, def_type( to_str(interface_tok) ) );
+			array_append( & interfaces, def_type( to_str(interface_tok) ) );
 			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ...
 		}
 	}
@@ -786,7 +786,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	free(& interfaces);
+	array_free(& interfaces);
 	return result;
 }
 
@@ -1048,9 +1048,9 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 					if ( attributes )
 					{
 						String fused = string_make_reserve( GlobalAllocator, attributes->Content.Len + more_attributes->Content.Len );
-						append_fmt( & fused, "%S %S", attributes->Content, more_attributes->Content );
+						string_append_fmt( & fused, "%S %S", attributes->Content, more_attributes->Content );
 
-						attributes->Name    = get_cached_string({ length(fused), fused });
+						attributes->Name    = get_cached_string( { string_length(fused), fused });
 						attributes->Content = attributes->Name;
 						// <Attributes> <Specifiers> <Attributes>
 					}
@@ -1086,7 +1086,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			{
 				if ( nexttok.Type == Tok_Capture_Start && name.Length && currtok.Type == Tok_Identifier )
 				{
-					if ( str_compare( name.Text, currtok.Text, name.Length ) == 0 )
+					if ( str_compare_len( name.Text, currtok.Text, name.Length ) == 0 )
 					{
 						member = parse_constructor( specifiers );
 						// <Attributes> <Specifiers> <Name>()
@@ -1159,7 +1159,7 @@ Code parse_complicated_definition( TokType which )
 
 	s32 idx         = tokens.Idx;
 	s32 level       = 0;
-	for ( ; idx < num(tokens.Arr); idx++ )
+	for ( ; idx < array_num(tokens.Arr); idx++ )
 	{
 		if ( tokens.Arr[ idx ].Type == Tok_BraceCurly_Open )
 			level++;
@@ -1344,7 +1344,7 @@ CodeDefine parse_define()
 		return define;
 	}
 
-	define->Content = get_cached_string( to_strc( strip_formatting( to_str(currtok), strip_formatting_dont_preserve_newlines )) );
+	define->Content = get_cached_string( string_to_strc( strip_formatting( to_str(currtok), strip_formatting_dont_preserve_newlines )) );
 	eat( Tok_Preprocess_Content );
 	// #define <Name> <Content>
 
@@ -1489,12 +1489,12 @@ CodeFn parse_function_after_name(
 	}
 
 	String
-	name_stripped = string_make( GlobalAllocator, to_str(name) );
+	name_stripped = string_make_strc( GlobalAllocator, to_str(name) );
 	strip_space(name_stripped);
 
 	CodeFn
 	result              = (CodeFn) make_code();
-	result->Name        = get_cached_string( to_strc(name_stripped) );
+	result->Name        = get_cached_string( string_to_strc(name_stripped) );
 	result->ModuleFlags = mflags;
 
 	if ( body )
@@ -1840,7 +1840,7 @@ CodeBody parse_global_nspace( CodeType which )
 				bool found_operator_cast_outside_class_implmentation = false;
 				s32  idx = Context.Tokens.Idx;
 
-				for ( ; idx < num(Context.Tokens.Arr); idx++ )
+				for ( ; idx < array_num(Context.Tokens.Arr); idx++ )
 				{
 					Token tok = Context.Tokens.Arr[ idx ];
 
@@ -1912,14 +1912,14 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 
 	s32   idx = tokens.Idx;
 	Token nav = tokens.Arr[ idx ];
-	for ( ; idx < num(tokens.Arr); idx++, nav = tokens.Arr[ idx ] )
+	for ( ; idx < array_num(tokens.Arr); idx++, nav = tokens.Arr[ idx ] )
 	{
 		if ( nav.Text[0] == '<' )
 		{
 			// Skip templated expressions as they mey have expressions with the () operators
 			s32 capture_level  = 0;
 			s32 template_level = 0;
-			for ( ; idx < num(tokens.Arr); idx++, nav = tokens.Arr[idx] )
+			for ( ; idx < array_num(tokens.Arr); idx++, nav = tokens.Arr[idx] )
 			{
 				if (nav.Text[ 0 ] == '<')
 					++ template_level;
@@ -2001,7 +2001,7 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 		tok_left = tokens.Arr[idx];
 	}
 
-	bool is_same = str_compare( tok_right.Text, tok_left.Text, tok_right.Length ) == 0;
+	bool is_same = str_compare_len( tok_right.Text, tok_left.Text, tok_right.Length ) == 0;
 	if (tok_left.Type == Tok_Identifier && is_same)
 	{
 		// We have found the pattern we desired
@@ -2357,7 +2357,7 @@ CodeOperator parse_operator_after_ret_type(
 		{
 			StrC str_new    = to_str(Op_New);
 			StrC str_delete = to_str(Op_Delete);
-			if ( str_compare( currtok.Text, str_new.Ptr, max(str_new.Len - 1, currtok.Length)) == 0)
+			if ( str_compare_len( currtok.Text, str_new.Ptr, max(str_new.Len - 1, currtok.Length)) == 0)
 			{
 				op = Op_New;
 				eat( Tok_Identifier );
@@ -2369,7 +2369,7 @@ CodeOperator parse_operator_after_ret_type(
 						idx++;
 				}
 				Token next = Context.Tokens.Arr[idx];
-				if ( currtok.Type == Tok_Operator && str_compare(currtok.Text, "[]", 2) == 0)
+				if ( currtok.Type == Tok_Operator && str_compare_len(currtok.Text, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
 					op = Op_NewArray;
@@ -2381,7 +2381,7 @@ CodeOperator parse_operator_after_ret_type(
 					op = Op_NewArray;
 				}
 			}
-			else if ( str_compare( currtok.Text, str_delete.Ptr, max(str_delete.Len - 1, currtok.Length )) == 0)
+			else if ( str_compare_len( currtok.Text, str_delete.Ptr, max(str_delete.Len - 1, currtok.Length )) == 0)
 			{
 				op = Op_Delete;
 				eat(Tok_Identifier);
@@ -2393,7 +2393,7 @@ CodeOperator parse_operator_after_ret_type(
 						idx++;
 				}
 				Token next = Context.Tokens.Arr[idx];
-				if ( currtok.Type == Tok_Operator && str_compare(currtok.Text, "[]", 2) == 0)
+				if ( currtok.Type == Tok_Operator && str_compare_len(currtok.Text, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
 					op = Op_DeleteArray;
@@ -2513,7 +2513,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	bool found_operator = false;
 	s32  idx            = Context.Tokens.Idx;
 
-	for ( ; idx < num(Context.Tokens.Arr); idx++ )
+	for ( ; idx < array_num(Context.Tokens.Arr); idx++ )
 	{
 		Token tok = Context.Tokens.Arr[ idx ];
 
@@ -2730,7 +2730,7 @@ CodeParam parse_params( bool use_template_capture )
 				eat( currtok.Type );
 			}
 
-			value = untyped_str( to_strc(strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines )) );
+			value = untyped_str( string_to_strc(strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines )) );
 			// ( <Macro> <ValueType> <Name> = <Expression>
 		}
 	}
@@ -2845,7 +2845,7 @@ CodeParam parse_params( bool use_template_capture )
 					eat( currtok.Type );
 				}
 
-				value = untyped_str( to_strc(strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines )) );
+				value = untyped_str( string_to_strc(strip_formatting( to_str(value_tok), strip_formatting_dont_preserve_newlines )) );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>
 			}
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, ..
@@ -2957,7 +2957,7 @@ Code parse_simple_preprocess( TokType which )
 		// <Macro> { <Body> }
 
 		StrC prev_proc = Context.Scope->Prev->ProcName;
-		if ( str_compare( prev_proc.Ptr, "parse_typedef", prev_proc.Len ) != 0 )
+		if ( str_compare_len( prev_proc.Ptr, "parse_typedef", prev_proc.Len ) != 0 )
 		{
 			if ( check( Tok_Statement_End ))
 			{
@@ -2975,7 +2975,7 @@ Code parse_simple_preprocess( TokType which )
 	}
 	else
 	{
-		if ( str_compare( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )
+		if ( str_compare_len( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )
 		{
 			if ( check( Tok_Statement_End ))
 			{
@@ -2994,7 +2994,7 @@ Code parse_simple_preprocess( TokType which )
 
 	char const* content = str_fmt_buf( "%.*s ", tok.Length, tok.Text );
 
-	Code result = untyped_str( GEN_NS to_str(content) );
+	Code result = untyped_str( to_strc_from_c_str(content) );
 	Context.Scope->Name = tok;
 
 	pop(& Context);
@@ -3494,7 +3494,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 
 			append(specifiers, Spec_Pure );
 		}
-		else if ( left && str_compare( upcoming.Text, "default", sizeof("default") - 1 ) == 0)
+		else if ( left && str_compare_len( upcoming.Text, "default", sizeof("default") - 1 ) == 0)
 		{
 			body = parse_assignment_expression();
 			// <Virtual Specifier> ~<
@@ -3609,7 +3609,7 @@ CodeEnum parse_enum( bool inplace_def )
 		// We'll support the enum_underlying macro
 		StrC sig = txt("enum_underlying");
 
-		if (currtok.Length >= sig.Len && str_compare(currtok.Text, sig.Ptr, sig.Len) == 0 )
+		if (currtok.Length >= sig.Len && str_compare_len(currtok.Text, sig.Ptr, sig.Len) == 0 )
 		{
 			use_macro_underlying = true;
 			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro);
@@ -4375,7 +4375,7 @@ CodeTemplate parse_template()
 			bool found_operator_cast_outside_class_implmentation = false;
 			s32  idx = Context.Tokens.Idx;
 
-			for ( ; idx < num(Context.Tokens.Arr); idx++ )
+			for ( ; idx < array_num(Context.Tokens.Arr); idx++ )
 			{
 				Token tok = Context.Tokens.Arr[ idx ];
 
@@ -4829,7 +4829,7 @@ else if ( currtok.Type == Tok_DeclType )
 	}
 #endif
 
-	result->Name = get_cached_string( to_strc(name_stripped) );
+	result->Name = get_cached_string( string_to_strc(name_stripped) );
 
 	if ( attributes )
 		result->Attributes = attributes;
@@ -4924,7 +4924,7 @@ CodeTypedef parse_typedef()
 
 			s32 idx = tokens.Idx;
 			s32 level = 0;
-			for ( ; idx < num(tokens.Arr); idx ++ )
+			for ( ; idx < array_num(tokens.Arr); idx ++ )
 			{
 				if ( tokens.Arr[idx].Type == Tok_BraceCurly_Open )
 					level++;

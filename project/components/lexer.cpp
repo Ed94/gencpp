@@ -221,7 +221,7 @@ forceinline
 s32 lex_preprocessor_directive( LexContext* ctx )
 {
 	char const* hash = ctx->scanner;
-	append( & Tokens, { hash, 1, Tok_Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess } );
+	array_append( & Tokens, { hash, 1, Tok_Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess } );
 
 	move_forward();
 	SkipWhitespace();
@@ -297,14 +297,14 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		ctx->token.Length = ctx->token.Length + ctx->token.Text - hash;
 		ctx->token.Text   = hash;
-		append( & Tokens, ctx->token );
+		array_append( & Tokens, ctx->token );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
 	if ( ctx->token.Type == Tok_Preprocess_Else || ctx->token.Type == Tok_Preprocess_EndIf )
 	{
 		ctx->token.Flags |= TF_Preprocess_Cond;
-		append( & Tokens, ctx->token );
+		array_append( & Tokens, ctx->token );
 		end_line();
 		return Lex_Continue;
 	}
@@ -313,7 +313,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Flags |= TF_Preprocess_Cond;
 	}
 
-	append( & Tokens, ctx->token );
+	array_append( & Tokens, ctx->token );
 
 	SkipWhitespace();
 
@@ -337,7 +337,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			name.Length++;
 		}
 
-		append( & Tokens, name );
+		array_append( & Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
 		set(& ctx->defines, key, to_str(name) );
@@ -383,7 +383,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			move_forward();
 		}
 
-		append( & Tokens, preprocess_content );
+		array_append( & Tokens, preprocess_content );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
@@ -445,7 +445,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		preprocess_content.Length++;
 	}
 
-	append( & Tokens, preprocess_content );
+	array_append( & Tokens, preprocess_content );
 	return Lex_Continue; // Skip found token, its all handled here.
 }
 
@@ -454,7 +454,7 @@ void lex_found_token( LexContext* ctx )
 {
 	if ( ctx->token.Type != Tok_Invalid )
 	{
-		append( & Tokens, ctx->token );
+		array_append( & Tokens, ctx->token );
 		return;
 	}
 
@@ -481,7 +481,7 @@ void lex_found_token( LexContext* ctx )
 		}
 
 		ctx->token.Type = type;
-		append( & Tokens, ctx->token );
+		array_append( & Tokens, ctx->token );
 		return;
 	}
 
@@ -491,7 +491,7 @@ void lex_found_token( LexContext* ctx )
 	{
 		ctx->token.Type   = type;
 		ctx->token.Flags |= TF_Specifier;
-		append( & Tokens, ctx->token );
+		array_append( & Tokens, ctx->token );
 		return;
 	}
 
@@ -499,7 +499,7 @@ void lex_found_token( LexContext* ctx )
 	if ( type != Tok_Invalid )
 	{
 		ctx->token.Type = type;
-		append( & Tokens, ctx->token );
+		array_append( & Tokens, ctx->token );
 		return;
 	}
 
@@ -551,7 +551,7 @@ void lex_found_token( LexContext* ctx )
 		ctx->token.Type = Tok_Identifier;
 	}
 
-	append( & Tokens, ctx->token );
+	array_append( & Tokens, ctx->token );
 }
 
 
@@ -578,7 +578,7 @@ TokArray lex( StrC content )
 		return { {}, 0 };
 	}
 
-	foreach( StringCached*, entry, PreprocessorDefines )
+	for ( StringCached* entry = array_begin(PreprocessorDefines); entry != array_end(PreprocessorDefines); array_next(PreprocessorDefines, entry))
 	{
 		s32         length  = 0;
 		char const* scanner = * entry;
@@ -596,7 +596,7 @@ TokArray lex( StrC content )
 		set(& c.defines, key, (StrC) * entry );
 	}
 
-	clear(Tokens);
+	array_clear(Tokens);
 
 	while (c.left )
 	{
@@ -626,7 +626,7 @@ TokArray lex( StrC content )
 				c.token.Type = Tok_NewLine;
 				c.token.Length++;
 
-				append( & Tokens, c.token );
+				array_append( & Tokens, c.token );
 				continue;
 			}
 		}
@@ -1095,7 +1095,7 @@ TokArray lex( StrC content )
 							move_forward();
 							c.token.Length++;
 						}
-						append( & Tokens, c.token );
+						array_append( & Tokens, c.token );
 						continue;
 					}
 					else if ( current == '*' )
@@ -1131,7 +1131,7 @@ TokArray lex( StrC content )
 							move_forward();
 							c.token.Length++;
 						}
-						append( & Tokens, c.token );
+						array_append( & Tokens, c.token );
 						// end_line();
 						continue;
 					}
@@ -1224,9 +1224,9 @@ TokArray lex( StrC content )
 		}
 		else
 		{
-			s32 start = max( 0, num(Tokens) - 100 );
+			s32 start = max( 0, array_num(Tokens) - 100 );
 			log_fmt("\n%d\n", start);
-			for ( s32 idx = start; idx < num(Tokens); idx++ )
+			for ( s32 idx = start; idx < array_num(Tokens); idx++ )
 			{
 				log_fmt( "Token %d Type: %s : %.*s\n"
 					, idx
@@ -1249,7 +1249,7 @@ TokArray lex( StrC content )
 		lex_found_token( ctx );
 	}
 
-	if ( num(Tokens) == 0 )
+	if ( array_num(Tokens) == 0 )
 	{
 		log_failure( "Failed to lex any tokens" );
 		return { {}, 0 };

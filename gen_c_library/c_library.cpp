@@ -127,8 +127,25 @@ int gen_main()
 		header.print( basic_types );
 		header.print( debug );
 
+		Array(StrC) to_rename = array_init_reserve(StrC, GlobalAllocator, 128);
+		to_rename.append(txt("align_forward"));
+		to_rename.append(txt("pointer_add"));
+		to_rename.append(txt("allocator_info"));
+		to_rename.append(txt("size_remaining"));
+		to_rename.append(txt("free"));
+		// to_rename.append(txt("clear"));
+		// to_rename.append(txt("init_sub"));
+		// to_rename.append(txt("check"));
+
+		NeedsSelectors needs_selectors;
+		needs_selectors.table = hashtable_init_reserve(Array(CodeFn), GlobalAllocator, 1024);
+		for ( StrC id : to_rename ) {
+			needs_selectors.set(id, array_init_reserve(CodeFn, GlobalAllocator, 128));
+		}
+
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
 		CodeBody memory        = def_body(CT_Global_Body);
+
 		for ( Code entry = parsed_memory.begin(); entry != parsed_memory.end(); ++ entry )
 		{
 			switch (entry->Type)
@@ -145,11 +162,10 @@ int gen_main()
 				case CT_Function_Fwd:
 				{
 					CodeFn fn = cast(CodeFn, entry);
-					if ( fn->Name.is_equal(txt("free")) )
-					{
-						fn->Name = get_cached_string(txt("gen_free_ptr"));
-					}
-					memory.append(entry);
+					// for ( StrC id : to_rename ) if (fn->Name.is_equal(id)) {
+					// 	rename_function_to_unique_symbol(fn);
+					// }
+					memory.append(fn);
 				}
 				break;
 				case CT_Function:
@@ -160,11 +176,11 @@ int gen_main()
 						log_fmt("Found constexpr: %S\n", entry.to_string());
 						fn->Specs.append(Spec_Inline);
 					}
-					if ( fn->Name.is_equal(txt("free")) )
-					{
-						fn->Name = get_cached_string(txt("gen_free_ptr"));
-					}
-					memory.append(entry);
+					// for ( StrC id : to_rename ) if (fn->Name.is_equal(id)) {
+					// 	Array(CodeFn) list = * needs_selectors.get(id);
+					// 	list.append(rename_function_to_unique_symbol(fn));
+					// }
+					memory.append(fn);
 				}
 				break;
 				case CT_Template:
@@ -213,6 +229,9 @@ int gen_main()
 					b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory );
 					if (found) break;
 
+					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_memory );
+					if (found) break;
+
 					memory.append(entry);
 				}
 				break;
@@ -226,6 +245,12 @@ int gen_main()
 				break;
 				case CT_Preprocess_Pragma:
 				{
+					CodePragma pragma = cast(CodePragma, entry);
+					// if (pragma->Content.starts_with(txt("region Memory"))) {
+					// 	memory.append(generic_test);
+					// 	break;
+					// }
+
 					b32 found = swap_pragma_region_implementation( txt("FixedArena"), gen_fixed_arenas, entry, memory);
 					if (found) break;
 
@@ -238,10 +263,15 @@ int gen_main()
 				break;
 			}
 		}
+
+		// CodeBody selectors = generate_generic_selectors(needs_selectors);
+		// memory.append_at(selectors, 0)
+		// memory.append(fmt_newline);
+
 		header.print( dump_to_scratch_and_retireve(memory) );
 
 		Code string_ops = scan_file( project_dir "dependencies/string_ops.hpp" );
-		header.print( string_ops );
+		// header.print( string_ops );
 
 		CodeBody printing_parsed = parse_file( project_dir "dependencies/printing.hpp" );
 		CodeBody printing        = def_body(CT_Global_Body);
@@ -273,7 +303,7 @@ int gen_main()
 				break;
 			}
 		}
-		header.print(dump_to_scratch_and_retireve(printing));
+		// header.print(dump_to_scratch_and_retireve(printing));
 
 		CodeBody containers = def_body(CT_Global_Body);
 		{
@@ -285,10 +315,10 @@ int gen_main()
 			containers.append( def_pragma(code(endregion Containers)));
 		}
 		header.print(fmt_newline);
-		header.print(dump_to_scratch_and_retireve(containers));
+		// header.print(dump_to_scratch_and_retireve(containers));
 
 		Code hashing = scan_file( project_dir "dependencies/hashing.hpp" );
-		header.print( hashing );
+		// header.print( hashing );
 
 		CodeBody parsed_strings = parse_file( project_dir "dependencies/strings.hpp" );
 		CodeBody strings        = def_body(CT_Global_Body);
@@ -298,7 +328,22 @@ int gen_main()
 			{
 				case CT_Preprocess_If:
 				{
-					ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), entry, parsed_strings);
+					CodePreprocessCond cond = cast(CodePreprocessCond, entry);
+					if (cond->Content.starts_with(txt("GEN_COMPILER_C || ! GEN_SUPPORT_CPP_MEMBER_FEATURES")))
+					{
+						++ entry;
+						strings.append(entry); // typedef
+						strings.append(fmt_newline);
+
+						for (; entry != end(parsed_strings) && entry->Type != CT_Preprocess_EndIf; ++ entry) {}
+						++ entry;
+						break;
+					}
+
+					bool found = ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), entry, parsed_strings);
+					if (found) break;
+
+					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_strings);
 				}
 				break;
 
@@ -350,7 +395,7 @@ int gen_main()
 				break;
 			}
 		}
-		header.print(dump_to_scratch_and_retireve(strings));
+		// header.print(dump_to_scratch_and_retireve(strings));
 
 		Code filesystem = scan_file( project_dir "dependencies/filesystem.hpp" );
 		Code timing = scan_file( project_dir "dependencies/timing.hpp" );

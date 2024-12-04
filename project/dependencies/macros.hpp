@@ -14,17 +14,12 @@
 #define local_persist static    // Local Persisting variables
 #endif
 
-#ifndef api_c
-#define api_c extern "C"
-#endif
-
 #ifndef bit
 #define bit( Value )                             ( 1 << Value )
 #define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
 #endif
 
-
-#if ! GEN_C_COMPILER
+#if GEN_COMPILER_CPP
 #	ifndef cast
 #	define cast( type, value ) (tmpl_cast<type>( value ))
 #	endif
@@ -198,7 +193,7 @@
 #	define   GEN_SUPPORT_CPP_MEMBER_FEATURES 0
 #endif
 
-#if !defined(typeof) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
+#if ! defined(typeof) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
 #	if ! GEN_COMPILER_C
 #		define typeof decltype
 #	elif defined(_MSC_VER)
@@ -210,9 +205,15 @@
 #	endif
 #endif
 
-// This is intended to only really be used internally or with the C-library variant
-// C++ users can just use the for-range directly.
-#define foreach(Type, entry_id, iterable) for ( Type entry_id = begin(iterable); entry_id != end(iterable); entry_id = next(iterable, entry_id) )
+#ifndef GEN_API_C_BEGIN
+#	if GEN_COMPILER_C
+#		define GEN_API_C_BEGIN
+#		define GEN_API_C_END
+#	else
+#		define GEN_API_C_BEGIN extern "C" {
+#		define GEN_API_C_END }
+#	endif
+#endif
 
 #if GEN_COMPILER_C
 #	if __STDC_VERSION__ >= 202311L
@@ -230,7 +231,7 @@
 #	endif
 #endif
 
-#if ! defined(GEN_PARAM_DEFAULT) && ! GEN_COMPILER_C
+#if ! defined(GEN_PARAM_DEFAULT) && GEN_COMPILER_CPP
 #	define GEN_PARAM_DEFAULT = {}
 #else
 #	define GEN_PARAM_DEFAULT

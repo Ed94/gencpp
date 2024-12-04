@@ -49,7 +49,7 @@ typedef struct FileOperations FileOperations;
 
 #define GEN_FILE_OPEN_PROC( name )     FileError name( FileDescriptor* fd, FileOperations* ops, FileMode mode, char const* filename )
 #define GEN_FILE_READ_AT_PROC( name )  b32 name( FileDescriptor fd, void* buffer, ssize size, s64 offset, ssize* bytes_read, b32 stop_at_newline )
-#define GEN_FILE_WRITE_AT_PROC( name ) b32 name( FileDescriptor fd, void const* buffer, ssize size, s64 offset, ssize* bytes_written )
+#define GEN_FILE_WRITE_AT_PROC( name ) b32 name( FileDescriptor fd, mem_ptr_const buffer, ssize size, s64 offset, ssize* bytes_written )
 #define GEN_FILE_SEEK_PROC( name )     b32 name( FileDescriptor fd, s64 offset, SeekWhenceType whence, s64* new_offset )
 #define GEN_FILE_CLOSE_PROC( name )    void name( FileDescriptor fd )
 

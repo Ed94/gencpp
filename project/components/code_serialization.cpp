@@ -4,18 +4,18 @@
 #endif
 
 String to_string(CodeAttributes attributes) {
-	return {(char*) duplicate( attributes->Content, GlobalAllocator ).Ptr};
+	return {(char*) strc_duplicate( attributes->Content, GlobalAllocator ).Ptr};
 }
 
 String to_string(CodeBody body)
 {
 	GEN_ASSERT(body.ast != nullptr);
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 128 );
 	switch ( body.ast->Type )
 	{
 		case CT_Untyped:
 		case CT_Execution:
-			append( & result, rcast(AST*, body.ast)->Content );
+			string_append_strc( & result, rcast(AST*, body.ast)->Content );
 		break;
 
 		case CT_Enum_Body:
@@ -44,7 +44,7 @@ void to_string( CodeBody body, String* result )
 	s32  left = body.ast->NumEntries;
 	while ( left -- )
 	{
-		append_fmt( result, "%S", GEN_NS to_string(curr) );
+		string_append_fmt( result, "%S", GEN_NS to_string(curr) );
 		++curr;
 	}
 }
@@ -53,27 +53,27 @@ void to_string_export( CodeBody body, String* result )
 {
 	GEN_ASSERT(body.ast != nullptr);
 	GEN_ASSERT(result   != nullptr);
-	append_fmt( result, "export\n{\n" );
+	string_append_fmt( result, "export\n{\n" );
 
 	Code curr = body;
 	s32  left = body.ast->NumEntries;
 	while ( left-- )
 	{
-		append_fmt( result, "%S", to_string(curr) );
+		string_append_fmt( result, "%S", to_string(curr) );
 		++curr;
 	}
 
-	append_fmt( result, "};\n" );
+	string_append_fmt( result, "};\n" );
 }
 
 String to_string(CodeComment comment)
 {
-	return {(char*) duplicate( comment->Content, GlobalAllocator ).Ptr};
+	return {(char*) strc_duplicate( comment->Content, GlobalAllocator ).Ptr};
 }
 
 String to_string(CodeConstructor self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 128 );
 	switch (self->Type)
 	{
 		case CT_Constructor:
@@ -90,53 +90,53 @@ void to_string_def(CodeConstructor self, String* result )
 {
 	Code ClassStructParent = self->Parent->Parent;
 	if (ClassStructParent) {
-		append( result, ClassStructParent->Name );
+		string_append_strc( result, ClassStructParent->Name );
 	}
 	else {
-		append( result, self->Name );
+		string_append_strc( result, self->Name );
 	}
 
 	if ( self->Params )
-		append_fmt( result, "( %S )", to_string(self->Params) );
+		string_append_fmt( result, "( %S )", to_string(self->Params) );
 	else
-		append( result, "()" );
+		string_append_strc( result, txt("()") );
 
 	if ( self->InitializerList )
-		append_fmt( result, " : %S", to_string(self->InitializerList) );
+		string_append_fmt( result, " : %S", to_string(self->InitializerList) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, " // %SC", self->InlineCmt->Content );
+		string_append_fmt( result, " // %SC", self->InlineCmt->Content );
 
-	append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
+	string_append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 }
 
 void to_string_fwd(CodeConstructor self, String* result )
 {
 	Code ClassStructParent = self->Parent->Parent;
 	if (ClassStructParent) {
-		append( result, ClassStructParent->Name );
+		string_append_strc( result, ClassStructParent->Name );
 	}
 	else {
-		append( result, self->Name );
+		string_append_strc( result, self->Name );
 	}
 
 	if ( self->Params )
-		append_fmt( result, "( %S )", to_string(self->Params) );
+		string_append_fmt( result, "( %S )", to_string(self->Params) );
 	else
-		append_fmt( result, "()");
+		string_append_fmt( result, "()");
 
 	if (self->Body)
-		append_fmt( result, " = %S", to_string(self->Body) );
+		string_append_fmt( result, " = %S", to_string(self->Body) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "; // %SC\n", self->InlineCmt->Content );
+		string_append_fmt( result, "; // %SC\n", self->InlineCmt->Content );
 	else
-		append( result, ";\n" );
+		string_append_strc( result, txt(";\n") );
 }
 
 String to_string( CodeClass self )
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 512 );
 	switch ( self->Type )
 	{
 		case CT_Class:
@@ -155,45 +155,45 @@ void to_string_def( CodeClass self, String* result )
 	AST_Class* ast = self.ast;
 
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
-	append( result, "class " );
+	string_append_strc( result, txt("class ") );
 
 	if ( ast->Attributes )
 	{
-		append_fmt( result, "%S ", GEN_NS to_string(ast->Attributes) );
+		string_append_fmt( result, "%S ", GEN_NS to_string(ast->Attributes) );
 	}
 
 	if ( ast->ParentType )
 	{
 		char const* access_level = to_str( ast->ParentAccess );
 
-		append_fmt( result, "%SC : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
+		string_append_fmt( result, "%SC : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, ast->ParentType->Next);
 		if ( interface )
-			append( result, "\n" );
+			string_append_strc( result, txt("\n") );
 
 		while ( interface )
 		{
-			append_fmt( result, ", %S", to_string(interface) );
+			string_append_fmt( result, ", %S", to_string(interface) );
 			interface = interface->Next ? cast(CodeTypename, interface->Next) : CodeTypename { nullptr };
 		}
 	}
 	else if ( ast->Name )
 	{
-		append( result, ast->Name );
+		string_append_strc( result, ast->Name );
 	}
 
 	if ( ast->InlineCmt )
 	{
-		append_fmt( result, " // %SC", ast->InlineCmt->Content );
+		string_append_fmt( result, " // %SC", ast->InlineCmt->Content );
 	}
 
-	append_fmt( result, "\n{\n%S\n}", to_string(ast->Body) );
+	string_append_fmt( result, "\n{\n%S\n}", to_string(ast->Body) );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
-		append( result, ";\n");
+		string_append_strc( result, txt(";\n") );
 }
 
 void to_string_fwd( CodeClass self, String* result )
@@ -202,20 +202,20 @@ void to_string_fwd( CodeClass self, String* result )
 	AST_Class* ast = self.ast;
 
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( ast->Attributes )
-		append_fmt( result, "class %S %SC", to_string(ast->Attributes), ast->Name );
+		string_append_fmt( result, "class %S %SC", to_string(ast->Attributes), ast->Name );
 
-	else append_fmt( result, "class %SC", ast->Name );
+	else string_append_fmt( result, "class %SC", ast->Name );
 
 	// Check if it can have an end-statement
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 	{
 		if ( ast->InlineCmt )
-			append_fmt( result, "; // %SC\n", ast->InlineCmt->Content );
+			string_append_fmt( result, "; // %SC\n", ast->InlineCmt->Content );
 		else
-			append( result,";\n");
+			string_append_strc( result, txt(";\n") );
 	}
 }
 
@@ -226,12 +226,12 @@ String to_string(CodeDefine define)
 
 void to_string(CodeDefine define, String* result )
 {
-	append_fmt( result, "#define %SC %SC\n", define->Name, define->Content );
+	string_append_fmt( result, "#define %SC %SC\n", define->Name, define->Content );
 }
 
 String to_string(CodeDestructor self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 128 );
 	switch ( self->Type )
 	{
 		case CT_Destructor:
@@ -248,19 +248,19 @@ void to_string_def(CodeDestructor self, String* result )
 {
 	if ( self->Name )
 	{
-		append_fmt( result, "%SC()", self->Name );
+		string_append_fmt( result, "%SC()", self->Name );
 	}
 	else if ( self->Specs )
 	{
 		if ( has(self->Specs, Spec_Virtual ) )
-			append_fmt( result, "virtual ~%SC()", self->Parent->Name );
+			string_append_fmt( result, "virtual ~%SC()", self->Parent->Name );
 		else
-			append_fmt( result, "~%SC()", self->Parent->Name );
+			string_append_fmt( result, "~%SC()", self->Parent->Name );
 	}
 	else
-		append_fmt( result, "~%SC()", self->Parent->Name );
+		string_append_fmt( result, "~%SC()", self->Parent->Name );
 
-	append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
+	string_append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 }
 
 void to_string_fwd(CodeDestructor self, String* result )
@@ -268,27 +268,27 @@ void to_string_fwd(CodeDestructor self, String* result )
 	if ( self->Specs )
 	{
 		if ( has(self->Specs, Spec_Virtual ) )
-			append_fmt( result, "virtual ~%SC();\n", self->Parent->Name );
+			string_append_fmt( result, "virtual ~%SC();\n", self->Parent->Name );
 		else
-			append_fmt( result, "~%SC()", self->Parent->Name );
+			string_append_fmt( result, "~%SC()", self->Parent->Name );
 
 		if ( has(self->Specs, Spec_Pure ) )
-			append( result, " = 0;" );
+			string_append_strc( result, txt(" = 0;") );
 		else if (self->Body)
-			append_fmt( result, " = %S;", to_string(self->Body) );
+			string_append_fmt( result, " = %S;", to_string(self->Body) );
 	}
 	else
-		append_fmt( result, "~%SC();", self->Parent->Name );
+		string_append_fmt( result, "~%SC();", self->Parent->Name );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %SC", self->InlineCmt->Content );
+		string_append_fmt( result, "  %SC", self->InlineCmt->Content );
 	else
-		append( result, "\n");
+		string_append_strc( result, txt("\n"));
 }
 
 String to_string(CodeEnum self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 512 );
 	switch ( self->Type )
 	{
 		case CT_Enum:
@@ -310,122 +310,122 @@ String to_string(CodeEnum self)
 void to_string_def(CodeEnum self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes || self->UnderlyingType )
 	{
-		append( result, "enum " );
+		string_append_strc( result, txt("enum ") );
 
 		if ( self->Attributes )
-			append_fmt( result, "%S ", to_string(self->Attributes) );
+			string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 		if ( self->UnderlyingType )
-			append_fmt( result, "%SC : %S\n{\n%S\n}"
+			string_append_fmt( result, "%SC : %S\n{\n%S\n}"
 				, self->Name
 				, to_string(self->UnderlyingType)
 				, to_string(self->Body)
 			);
 		else if ( self->UnderlyingTypeMacro )
-			append_fmt( result, "%SC : %S\n{\n%S\n}"
+			string_append_fmt( result, "%SC : %S\n{\n%S\n}"
 				, self->Name
 				, to_string(self->UnderlyingTypeMacro)
 				, to_string(self->Body)
 			);
 
-		else append_fmt( result, "%SC\n{\n%S\n}", self->Name, to_string(self->Body) );
+		else string_append_fmt( result, "%SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 	}
-	else append_fmt( result, "enum %SC\n{\n%S\n}", self->Name, to_string(self->Body) );
+	else string_append_fmt( result, "enum %SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
-		append( result, ";\n");
+		string_append_strc( result, txt(";\n"));
 }
 
 void to_string_fwd(CodeEnum self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->UnderlyingType )
-		append_fmt( result, "enum %SC : %S", self->Name, to_string(self->UnderlyingType) );
+		string_append_fmt( result, "enum %SC : %S", self->Name, to_string(self->UnderlyingType) );
 	else
-		append_fmt( result, "enum %SC", self->Name );
+		string_append_fmt( result, "enum %SC", self->Name );
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 	{
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %SC", self->InlineCmt->Content );
+			string_append_fmt( result, ";  %SC", self->InlineCmt->Content );
 		else
-			append( result, ";\n");
+			string_append_strc( result, txt(";\n"));
 	}
 }
 
 void to_string_class_def(CodeEnum self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes || self->UnderlyingType )
 	{
-		append( result, "enum class " );
+		string_append_strc( result, txt("enum class ") );
 
 		if ( self->Attributes )
 		{
-			append_fmt( result, "%S ", to_string(self->Attributes) );
+			string_append_fmt( result, "%S ", to_string(self->Attributes) );
 		}
 
 		if ( self->UnderlyingType )
 		{
-			append_fmt( result, "%SC : %S\n{\n%S\n}", self->Name, to_string(self->UnderlyingType), to_string(self->Body) );
+			string_append_fmt( result, "%SC : %S\n{\n%S\n}", self->Name, to_string(self->UnderlyingType), to_string(self->Body) );
 		}
 		else
 		{
-			append_fmt( result, "%SC\n{\n%S\n}", self->Name, to_string(self->Body) );
+			string_append_fmt( result, "%SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 		}
 	}
 	else
 	{
-		append_fmt( result, "enum %SC\n{\n%S\n}", self->Name, to_string(self->Body) );
+		string_append_fmt( result, "enum %SC\n{\n%S\n}", self->Name, to_string(self->Body) );
 	}
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
-		append( result, ";\n");
+		string_append_strc( result, txt(";\n"));
 }
 
 void to_string_class_fwd(CodeEnum self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
-	append( result, "enum class " );
+	string_append_strc( result, txt("enum class ") );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
-	append_fmt( result, "%SC : %S", self->Name, to_string(self->UnderlyingType) );
+	string_append_fmt( result, "%SC : %S", self->Name, to_string(self->UnderlyingType) );
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
 	{
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %SC", self->InlineCmt->Content );
+			string_append_fmt( result, ";  %SC", self->InlineCmt->Content );
 		else
-			append( result, ";\n");
+			string_append_strc( result, txt(";\n"));
 	}
 }
 
 String to_string(CodeExec exec)
 {
-	return {(char*) duplicate( exec->Content, GlobalAllocator ).Ptr};
+	return {(char*) strc_duplicate( exec->Content, GlobalAllocator ).Ptr};
 }
 
 void to_string(CodeExtern self, String* result )
 {
 	if ( self->Body )
-		append_fmt( result, "extern \"%SC\"\n{\n%S\n}\n", self->Name, to_string(self->Body) );
+		string_append_fmt( result, "extern \"%SC\"\n{\n%S\n}\n", self->Name, to_string(self->Body) );
 	else
-		append_fmt( result, "extern \"%SC\"\n{}\n", self->Name );
+		string_append_fmt( result, "extern \"%SC\"\n{}\n", self->Name );
 }
 
 String to_string(CodeInclude include)
@@ -435,34 +435,34 @@ String to_string(CodeInclude include)
 
 void to_string( CodeInclude include, String* result )
 {
-	append_fmt( result, "#include %SC\n", include->Content );
+	string_append_fmt( result, "#include %SC\n", include->Content );
 }
 
 String to_string(CodeFriend self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 256 );
 	to_string( self, & result );
 	return result;
 }
 
 void to_string(CodeFriend self, String* result )
 {
-	append_fmt( result, "friend %S", to_string(self->Declaration) );
+	string_append_fmt( result, "friend %S", to_string(self->Declaration) );
 
-	if ( self->Declaration->Type != CT_Function && self->Declaration->Type != CT_Operator && (* result)[ length(* result) - 1 ] != ';' )
+	if ( self->Declaration->Type != CT_Function && self->Declaration->Type != CT_Operator && (* result)[ string_length(* result) - 1 ] != ';' )
 	{
-		append( result, ";" );
+		string_append_strc( result, txt(";") );
 	}
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %SC", self->InlineCmt->Content );
+		string_append_fmt( result, "  %SC", self->InlineCmt->Content );
 	else
-		append( result, "\n");
+		string_append_strc( result, txt("\n"));
 }
 
 String to_string(CodeFn self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 512 );
 	switch ( self->Type )
 	{
 		case CT_Function:
@@ -478,10 +478,10 @@ String to_string(CodeFn self)
 void to_string_def(CodeFn self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export" );
+		string_append_strc( result, txt("export") );
 
 	if ( self->Attributes )
-		append_fmt( result, " %S ", to_string(self->Attributes) );
+		string_append_fmt( result, " %S ", to_string(self->Attributes) );
 
 	bool prefix_specs = false;
 	if ( self->Specs )
@@ -491,7 +491,7 @@ void to_string_def(CodeFn self, String* result )
 			if ( ! is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
 			}
@@ -499,19 +499,19 @@ void to_string_def(CodeFn self, String* result )
 	}
 
 	if ( self->Attributes || prefix_specs )
-		append( result, "\n" );
+		string_append_strc( result, txt("\n") );
 
 	if ( self->ReturnType )
-		append_fmt( result, "%S %SC(", to_string(self->ReturnType), self->Name );
+		string_append_fmt( result, "%S %SC(", to_string(self->ReturnType), self->Name );
 
 	else
-		append_fmt( result, "%SC(", self->Name );
+		string_append_fmt( result, "%SC(", self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", to_string(self->Params) );
+		string_append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
-		append( result, ")" );
+		string_append_strc( result, txt(")") );
 
 	if ( self->Specs )
 	{
@@ -520,21 +520,21 @@ void to_string_def(CodeFn self, String* result )
 			if ( is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
-	append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
+	string_append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 }
 
 void to_string_fwd(CodeFn self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	b32 prefix_specs = false;
 	if ( self->Specs )
@@ -544,7 +544,7 @@ void to_string_fwd(CodeFn self, String* result )
 			if ( ! is_trailing( spec ) || ! (spec != Spec_Pure) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
 			}
@@ -553,20 +553,20 @@ void to_string_fwd(CodeFn self, String* result )
 
 	if ( self->Attributes || prefix_specs )
 	{
-		append( result, "\n" );
+		string_append_strc( result, txt("\n") );
 	}
 
 	if ( self->ReturnType )
-		append_fmt( result, "%S %SC(", to_string(self->ReturnType), self->Name );
+		string_append_fmt( result, "%S %SC(", to_string(self->ReturnType), self->Name );
 
 	else
-		append_fmt( result, "%SC(", self->Name );
+		string_append_fmt( result, "%SC(", self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", to_string(self->Params) );
+		string_append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
-		append( result, ")" );
+		string_append_strc( result, txt(")") );
 
 	if ( self->Specs )
 	{
@@ -575,25 +575,25 @@ void to_string_fwd(CodeFn self, String* result )
 			if ( is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
 	if ( self->Specs && has(self->Specs, Spec_Pure ) >= 0 )
-		append( result, " = 0;" );
+		string_append_strc( result, txt(" = 0;") );
 	else if (self->Body)
-		append_fmt( result, " = %S;", to_string(self->Body) );
+		string_append_fmt( result, " = %S;", to_string(self->Body) );
 
 	if ( self->InlineCmt )
-		append_fmt( result, ";  %SC", self->InlineCmt->Content );
+		string_append_fmt( result, ";  %SC", self->InlineCmt->Content );
 	else
-		append( result, ";\n" );
+		string_append_strc( result, txt(";\n") );
 }
 
 String to_string(CodeModule self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 64 );
 	to_string( self, & result );
 	return result;
 }
@@ -601,17 +601,17 @@ String to_string(CodeModule self)
 void to_string(CodeModule self, String* result )
 {
 	if (((u32(ModuleFlag_Export) & u32(self->ModuleFlags)) == u32(ModuleFlag_Export)))
-		append( result, "export ");
+		string_append_strc( result, txt("export "));
 
 	if (((u32(ModuleFlag_Import) & u32(self->ModuleFlags)) == u32(ModuleFlag_Import)))
-		append( result, "import ");
+		string_append_strc( result, txt("import "));
 
-	append_fmt( result, "%SC;\n", self->Name );
+	string_append_fmt( result, "%SC;\n", self->Name );
 }
 
 String to_string(CodeNS self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 512 );
 	to_string( self, & result );
 	return result;
 }
@@ -619,14 +619,14 @@ String to_string(CodeNS self)
 void to_string(CodeNS self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
-	append_fmt( result, "namespace %SC\n{\n%S\n}\n", self->Name, to_string(self->Body) );
+	string_append_fmt( result, "namespace %SC\n{\n%S\n}\n", self->Name, to_string(self->Body) );
 }
 
 String to_string(CodeOperator self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 512 );
 	switch ( self->Type )
 	{
 		case CT_Operator:
@@ -644,13 +644,13 @@ String to_string(CodeOperator self)
 void to_string_def(CodeOperator self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Specs )
 	{
@@ -659,24 +659,24 @@ void to_string_def(CodeOperator self, String* result )
 			if ( ! is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
 	if ( self->Attributes || self->Specs )
 	{
-		append( result, "\n" );
+		string_append_strc( result, txt("\n") );
 	}
 
 	if ( self->ReturnType )
-		append_fmt( result, "%S %SC (", to_string(self->ReturnType), self->Name );
+		string_append_fmt( result, "%S %SC (", to_string(self->ReturnType), self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", to_string(self->Params) );
+		string_append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
-		append( result, ")" );
+		string_append_strc( result, txt(")") );
 
 	if ( self->Specs )
 	{
@@ -685,12 +685,12 @@ void to_string_def(CodeOperator self, String* result )
 			if ( is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
-	append_fmt( result, "\n{\n%S\n}\n"
+	string_append_fmt( result, "\n{\n%S\n}\n"
 		, to_string(self->Body)
 	);
 }
@@ -698,10 +698,10 @@ void to_string_def(CodeOperator self, String* result )
 void to_string_fwd(CodeOperator self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S\n", to_string(self->Attributes) );
+		string_append_fmt( result, "%S\n", to_string(self->Attributes) );
 
 	if ( self->Specs )
 	{
@@ -710,23 +710,23 @@ void to_string_fwd(CodeOperator self, String* result )
 			if ( ! is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
 	if ( self->Attributes || self->Specs )
 	{
-		append( result, "\n" );
+		string_append_strc( result, txt("\n") );
 	}
 
-	append_fmt( result, "%S %SC (", to_string(self->ReturnType), self->Name );
+	string_append_fmt( result, "%S %SC (", to_string(self->ReturnType), self->Name );
 
 	if ( self->Params )
-		append_fmt( result, "%S)", to_string(self->Params) );
+		string_append_fmt( result, "%S)", to_string(self->Params) );
 
 	else
-		append_fmt( result, ")" );
+		string_append_fmt( result, ")" );
 
 	if ( self->Specs )
 	{
@@ -735,20 +735,20 @@ void to_string_fwd(CodeOperator self, String* result )
 			if ( is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 	}
 
 	if ( self->InlineCmt )
-		append_fmt( result, ";  %SC", self->InlineCmt->Content );
+		string_append_fmt( result, ";  %SC", self->InlineCmt->Content );
 	else
-		append( result, ";\n" );
+		string_append_strc( result, txt(";\n") );
 }
 
 String to_string(CodeOpCast self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 128 );
 	switch ( self->Type )
 	{
 		case CT_Operator_Cast:
@@ -770,32 +770,32 @@ void to_string_def(CodeOpCast self, String* result )
 			if ( ! is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
 			}
 		}
 
 		if ( self->Name && self->Name.Len )
-			append_fmt( result, "%SC operator %S()", self->Name, to_string(self->ValueType) );
+			string_append_fmt( result, "%SC operator %S()", self->Name, to_string(self->ValueType) );
 		else
-			append_fmt( result, "operator %S()", to_string(self->ValueType) );
+			string_append_fmt( result, "operator %S()", to_string(self->ValueType) );
 
 		for ( Specifier spec : self->Specs )
 		{
 			if ( is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 
-		append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
+		string_append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
 		return;
 	}
 
 	if ( self->Name && self->Name.Len )
-		append_fmt( result, "%SC operator %S()\n{\n%S\n}\n", self->Name, to_string(self->ValueType), to_string(self->Body) );
+		string_append_fmt( result, "%SC operator %S()\n{\n%S\n}\n", self->Name, to_string(self->ValueType), to_string(self->Body) );
 	else
-		append_fmt( result, "operator %S()\n{\n%S\n}\n", to_string(self->ValueType), to_string(self->Body) );
+		string_append_fmt( result, "operator %S()\n{\n%S\n}\n", to_string(self->ValueType), to_string(self->Body) );
 }
 
 void to_string_fwd(CodeOpCast self, String* result )
@@ -807,37 +807,37 @@ void to_string_fwd(CodeOpCast self, String* result )
 			if ( ! is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
 			}
 		}
 
-		append_fmt( result, "operator %S()", to_string(self->ValueType) );
+		string_append_fmt( result, "operator %S()", to_string(self->ValueType) );
 
 		for ( Specifier spec : self->Specs )
 		{
 			if ( is_trailing( spec ) )
 			{
 				StrC spec_str = to_str( spec );
-				append_fmt( result, " %*s", spec_str.Len, spec_str.Ptr );
+				string_append_fmt( result, " %*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
 
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %SC", self->InlineCmt->Content );
+			string_append_fmt( result, ";  %SC", self->InlineCmt->Content );
 		else
-			append( result, ";\n" );
+			string_append_strc( result, txt(";\n") );
 		return;
 	}
 
 	if ( self->InlineCmt )
-		append_fmt( result, "operator %S();  %S", to_string(self->ValueType) );
+		string_append_fmt( result, "operator %S();  %S", to_string(self->ValueType) );
 	else
-		append_fmt( result, "operator %S();\n", to_string(self->ValueType) );
+		string_append_fmt( result, "operator %S();\n", to_string(self->ValueType) );
 }
 
 String to_string(CodeParam self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 128 );
 	to_string( self, & result );
 	return result;
 }
@@ -848,41 +848,41 @@ void to_string( CodeParam self, String* result )
 	if ( ast->Macro )
 	{
 		// Related to parsing: ( <macro>, ... )
-		append( result, ast->Macro.ast->Content );
+		string_append_strc( result, ast->Macro.ast->Content );
 		// Could also be: ( <macro> <type <name>, ... )
 	}
 
 	if ( ast->Name )
 	{
 		if ( ast->ValueType.ast == nullptr )
-			append_fmt( result, " %SC", ast->Name );
+			string_append_fmt( result, " %SC", ast->Name );
 		else
-			append_fmt( result, " %S %SC", to_string(ast->ValueType), ast->Name );
+			string_append_fmt( result, " %S %SC", to_string(ast->ValueType), ast->Name );
 
 	}
 	else if ( ast->ValueType )
-		append_fmt( result, " %S", to_string(ast->ValueType) );
+		string_append_fmt( result, " %S", to_string(ast->ValueType) );
 
 	if ( ast->PostNameMacro )
 	{
-		append_fmt( result, " %S", to_string(ast->PostNameMacro) );
+		string_append_fmt( result, " %S", to_string(ast->PostNameMacro) );
 	}
 
 	if ( ast->Value )
-		append_fmt( result, " = %S", to_string(ast->Value) );
+		string_append_fmt( result, " = %S", to_string(ast->Value) );
 
 	if ( ast->NumEntries - 1 > 0 )
 	{
 		for ( CodeParam param : ast->Next )
 		{
-			append_fmt( result, ", %S", to_string(param) );
+			string_append_fmt( result, ", %S", to_string(param) );
 		}
 	}
 }
 
 String to_string(CodePreprocessCond self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 256 );
 	switch ( self->Type )
 	{
 		case CT_Preprocess_If:
@@ -909,49 +909,49 @@ String to_string(CodePreprocessCond self)
 
 void to_string_if(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#if %SC\n", cond->Content );
+	string_append_fmt( result, "#if %SC\n", cond->Content );
 }
 
 void to_string_ifdef(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#ifdef %SC\n", cond->Content );
+	string_append_fmt( result, "#ifdef %SC\n", cond->Content );
 }
 
 void to_string_ifndef(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#ifndef %SC\n", cond->Content );
+	string_append_fmt( result, "#ifndef %SC\n", cond->Content );
 }
 
 void to_string_elif(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#elif %SC\n", cond->Content );
+	string_append_fmt( result, "#elif %SC\n", cond->Content );
 }
 
 void to_string_else(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#else\n" );
+	string_append_strc( result, txt("#else\n") );
 }
 
 void to_string_endif(CodePreprocessCond cond, String* result )
 {
-	append_fmt( result, "#endif\n" );
+	string_append_strc( result, txt("#endif\n") );
 }
 
 String to_string(CodePragma self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 256 );
 	to_string( self, & result );
 	return result;
 }
 
 void to_string(CodePragma self, String* result )
 {
-	append_fmt( result, "#pragma %SC\n", self->Content );
+	string_append_fmt( result, "#pragma %SC\n", self->Content );
 }
 
 String to_string(CodeSpecifiers self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 64 );
 	to_string( self, & result );
 	return result;
 }
@@ -965,7 +965,7 @@ void to_string( CodeSpecifiers self, String* result )
 	while ( left-- )
 	{
 		StrC spec = to_str( self->ArrSpecs[idx] );
-		append_fmt( result, "%.*s ", spec.Len, spec.Ptr );
+		string_append_fmt( result, "%.*s ", spec.Len, spec.Ptr );
 		idx++;
 	}
 }
@@ -973,7 +973,7 @@ void to_string( CodeSpecifiers self, String* result )
 String to_string(CodeStruct self)
 {
 	GEN_ASSERT(self.ast != nullptr);
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 512 );
 	switch ( self->Type )
 	{
 		case CT_Struct:
@@ -992,45 +992,45 @@ void to_string_def( CodeStruct self, String* result )
 	AST_Struct* ast = self.ast;
 
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
-	append( result, "struct " );
+	string_append_strc( result, txt("struct ") );
 
 	if ( ast->Attributes )
 	{
-		append_fmt( result, "%S ", to_string(ast->Attributes) );
+		string_append_fmt( result, "%S ", to_string(ast->Attributes) );
 	}
 
 	if ( ast->ParentType )
 	{
 		char const* access_level = to_str( ast->ParentAccess );
 
-		append_fmt( result, "%SC : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
+		string_append_fmt( result, "%SC : %s %S", ast->Name, access_level, to_string(ast->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, ast->ParentType->Next);
 		if ( interface )
-			append( result, "\n" );
+			string_append_strc( result, txt("\n") );
 
 		while ( interface )
 		{
-			append_fmt( result, ", %S", to_string(interface) );
+			string_append_fmt( result, ", %S", to_string(interface) );
 			interface = interface->Next ? cast( CodeTypename, interface->Next) : CodeTypename { nullptr };
 		}
 	}
 	else if ( ast->Name )
 	{
-		append( result, ast->Name );
+		string_append_strc( result, ast->Name );
 	}
 
 	if ( ast->InlineCmt )
 	{
-		append_fmt( result, " // %SC", ast->InlineCmt->Content );
+		string_append_fmt( result, " // %SC", ast->InlineCmt->Content );
 	}
 
-	append_fmt( result, "\n{\n%S\n}", to_string(ast->Body) );
+	string_append_fmt( result, "\n{\n%S\n}", to_string(ast->Body) );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
-		append( result, ";\n");
+		string_append_strc( result, txt(";\n"));
 }
 
 void to_string_fwd( CodeStruct self, String* result )
@@ -1039,25 +1039,25 @@ void to_string_fwd( CodeStruct self, String* result )
 	AST_Struct* ast = self.ast;
 
 	if ( bitfield_is_equal( u32, ast->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( ast->Attributes )
-		append_fmt( result, "struct %S %SC", to_string(ast->Attributes), ast->Name );
+		string_append_fmt( result, "struct %S %SC", to_string(ast->Attributes), ast->Name );
 
-	else append_fmt( result, "struct %SC", ast->Name );
+	else string_append_fmt( result, "struct %SC", ast->Name );
 
 	if ( ast->Parent.ast == nullptr || ( ast->Parent->Type != CT_Typedef && ast->Parent->Type != CT_Variable ) )
 	{
 		if ( ast->InlineCmt )
-			append_fmt( result, ";  %SC", ast->InlineCmt->Content );
+			string_append_fmt( result, ";  %SC", ast->InlineCmt->Content );
 		else
-			append( result, ";\n");
+			string_append_strc( result, txt( ";\n") );
 	}
 }
 
 String to_string(CodeTemplate self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 1024 );
 	to_string( self, & result );
 	return result;
 }
@@ -1065,17 +1065,17 @@ String to_string(CodeTemplate self)
 void to_string(CodeTemplate self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Params )
-		append_fmt( result, "template< %S >\n%S", to_string(self->Params), to_string(self->Declaration) );
+		string_append_fmt( result, "template< %S >\n%S", to_string(self->Params), to_string(self->Declaration) );
 	else
-		append_fmt( result, "template<>\n%S", to_string(self->Declaration) );
+		string_append_fmt( result, "template<>\n%S", to_string(self->Declaration) );
 }
 
 String to_string(CodeTypedef self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 128 );
 	to_string( self, & result );
 	return result;
 }
@@ -1083,41 +1083,41 @@ String to_string(CodeTypedef self)
 void to_string(CodeTypedef self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
-	append( result, "typedef ");
+	string_append_strc( result, txt("typedef "));
 
 	// Determines if the typedef is a function typename
 	if ( self->UnderlyingType->ReturnType )
-		append( result, to_string(self->UnderlyingType) );
+		string_append_string( result, to_string(self->UnderlyingType) );
 	else
-		append_fmt( result, "%S %SC", to_string(self->UnderlyingType), self->Name );
+		string_append_fmt( result, "%S %SC", to_string(self->UnderlyingType), self->Name );
 
 	if ( self->UnderlyingType->Type == CT_Typename && self->UnderlyingType->ArrExpr )
 	{
-		append_fmt( result, "[ %S ];", to_string(self->UnderlyingType->ArrExpr) );
+		string_append_fmt( result, "[ %S ];", to_string(self->UnderlyingType->ArrExpr) );
 
 		Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( result, "[ %S ];", to_string(next_arr_expr) );
+			string_append_fmt( result, "[ %S ];", to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
 	else
 	{
-		append( result, ";" );
+		string_append_strc( result, txt(";") );
 	}
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %SC", self->InlineCmt->Content);
+		string_append_fmt( result, "  %SC", self->InlineCmt->Content);
 	else
-		append( result, "\n");
+		string_append_strc( result, txt("\n"));
 }
 
 String to_string(CodeTypename self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_strc( GlobalAllocator, txt("") );
 	to_string( self, & result );
 	return result;
 }
@@ -1128,13 +1128,13 @@ void to_string(CodeTypename self, String* result )
 		if ( self->ReturnType && self->Params )
 		{
 			if ( self->Attributes )
-				append_fmt( result, "%S ", to_string(self->Attributes) );
+				string_append_fmt( result, "%S ", to_string(self->Attributes) );
 			else
 			{
 				if ( self->Specs )
-					append_fmt( result, "%S ( %SC ) ( %S ) %S", to_string(self->ReturnType), self->Name, to_string(self->Params), to_string(self->Specs) );
+					string_append_fmt( result, "%S ( %SC ) ( %S ) %S", to_string(self->ReturnType), self->Name, to_string(self->Params), to_string(self->Specs) );
 				else
-					append_fmt( result, "%S ( %SC ) ( %S )", to_string(self->ReturnType), self->Name, to_string(self->Params) );
+					string_append_fmt( result, "%S ( %SC ) ( %S )", to_string(self->ReturnType), self->Name, to_string(self->Params) );
 			}
 
 			break;
@@ -1143,13 +1143,13 @@ void to_string(CodeTypename self, String* result )
 		if ( self->ReturnType && self->Params )
 		{
 			if ( self->Attributes )
-				append_fmt( result, "%S ", to_string(self->Attributes) );
+				string_append_fmt( result, "%S ", to_string(self->Attributes) );
 			else
 			{
 				if ( self->Specs )
-					append_fmt( result, "%S %SC ( %S ) %S", to_string(self->ReturnType), self->Name, to_string(self->Params), to_string(self->Specs) );
+					string_append_fmt( result, "%S %SC ( %S ) %S", to_string(self->ReturnType), self->Name, to_string(self->Params), to_string(self->Specs) );
 				else
-					append_fmt( result, "%S %SC ( %S )", to_string(self->ReturnType), self->Name, to_string(self->Params) );
+					string_append_fmt( result, "%S %SC ( %S )", to_string(self->ReturnType), self->Name, to_string(self->Params) );
 			}
 
 			return;
@@ -1157,20 +1157,20 @@ void to_string(CodeTypename self, String* result )
 	#endif
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Specs )
-		append_fmt( result, "%SC %S", self->Name, to_string(self->Specs) );
+		string_append_fmt( result, "%SC %S", self->Name, to_string(self->Specs) );
 	else
-		append_fmt( result, "%SC", self->Name );
+		string_append_fmt( result, "%SC", self->Name );
 
 	if ( self->IsParamPack )
-		append( result, "...");
+		string_append_strc( result, txt("..."));
 }
 
 String to_string(CodeUnion self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 512 );
 	to_string( self, & result );
 	return result;
 }
@@ -1178,16 +1178,16 @@ String to_string(CodeUnion self)
 void to_string(CodeUnion self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
-	append( result, "union " );
+	string_append_strc( result, txt("union ") );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->Name )
 	{
-		append_fmt( result, "%SC\n{\n%S\n}"
+		string_append_fmt( result, "%SC\n{\n%S\n}"
 			, self->Name
 			, GEN_NS to_string(self->Body)
 		);
@@ -1195,18 +1195,18 @@ void to_string(CodeUnion self, String* result )
 	else
 	{
 		// Anonymous union
-		append_fmt( result, "\n{\n%S\n}"
+		string_append_fmt( result, "\n{\n%S\n}"
 			, GEN_NS to_string(self->Body)
 		);
 	}
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
-		append( result, ";\n");
+		string_append_strc( result, txt(";\n"));
 }
 
 String to_string(CodeUsing self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 128 );
 	switch ( self->Type )
 	{
 		case CT_Using:
@@ -1222,49 +1222,49 @@ String to_string(CodeUsing self)
 void to_string(CodeUsing self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes )
-		append_fmt( result, "%S ", to_string(self->Attributes) );
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
 
 	if ( self->UnderlyingType )
 	{
-		append_fmt( result, "using %SC = %S", self->Name, to_string(self->UnderlyingType) );
+		string_append_fmt( result, "using %SC = %S", self->Name, to_string(self->UnderlyingType) );
 
 		if ( self->UnderlyingType->ArrExpr )
 		{
-			append_fmt( result, "[ %S ]", to_string(self->UnderlyingType->ArrExpr) );
+			string_append_fmt( result, "[ %S ]", to_string(self->UnderlyingType->ArrExpr) );
 
 			Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+				string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
 
-		append( result, ";" );
+		string_append_strc( result, txt(";") );
 	}
 	else
-		append_fmt( result, "using %SC;", self->Name );
+		string_append_fmt( result, "using %SC;", self->Name );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %SC\n", self->InlineCmt->Content );
+		string_append_fmt( result, "  %SC\n", self->InlineCmt->Content );
 	else
-		append( result, "\n");
+		string_append_strc( result, txt("\n"));
 }
 
 void to_string_ns(CodeUsing self, String* result )
 {
 	if ( self->InlineCmt )
-		append_fmt( result, "using namespace $SC;  %SC", self->Name, self->InlineCmt->Content );
+		string_append_fmt( result, "using namespace $SC;  %SC", self->Name, self->InlineCmt->Content );
 	else
-		append_fmt( result, "using namespace %SC;\n", self->Name );
+		string_append_fmt( result, "using namespace %SC;\n", self->Name );
 }
 
 String to_string(CodeVar self)
 {
-	String result = string_make( GlobalAllocator, "" );
+	String result = string_make_reserve( GlobalAllocator, 256 );
 	to_string( self, & result );
 	return result;
 }
@@ -1276,18 +1276,18 @@ void to_string(CodeVar self, String* result )
 		// Its a comma-separated variable ( a NextVar )
 
 		if ( self->Specs )
-			append_fmt( result, "%S ", to_string(self->Specs) );
+			string_append_fmt( result, "%S ", to_string(self->Specs) );
 
-		append( result, self->Name );
+		string_append_strc( result, self->Name );
 
 		if ( self->ValueType->ArrExpr )
 		{
-			append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
+			string_append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
 
 			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+				string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1295,107 +1295,107 @@ void to_string(CodeVar self, String* result )
 		if ( self->Value )
 		{
 			if ( self->VarConstructorInit )
-				append_fmt( result, "( %S ", to_string(self->Value) );
+				string_append_fmt( result, "( %S ", to_string(self->Value) );
 			else
-				append_fmt( result, " = %S", to_string(self->Value) );
+				string_append_fmt( result, " = %S", to_string(self->Value) );
 		}
 
 		// Keep the chain going...
 		if ( self->NextVar )
-			append_fmt( result, ", %S", to_string(self->NextVar) );
+			string_append_fmt( result, ", %S", to_string(self->NextVar) );
 
 		if ( self->VarConstructorInit )
-			append( result, " )");
+			string_append_strc( result, txt(" )"));
 
 		return;
 	}
 
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
-		append( result, "export " );
+		string_append_strc( result, txt("export ") );
 
 	if ( self->Attributes || self->Specs )
 	{
 		if ( self->Attributes )
-			append_fmt( result, "%S ", to_string(self->Specs) );
+			string_append_fmt( result, "%S ", to_string(self->Specs) );
 
 		if ( self->Specs )
-			append_fmt( result, "%S\n", to_string(self->Specs) );
+			string_append_fmt( result, "%S\n", to_string(self->Specs) );
 
-		append_fmt( result, "%S %SC", to_string(self->ValueType), self->Name );
+		string_append_fmt( result, "%S %SC", to_string(self->ValueType), self->Name );
 
 		if ( self->ValueType->ArrExpr )
 		{
-			append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
+			string_append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
 
 			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+				string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
 
 		if ( self->BitfieldSize )
-			append_fmt( result, " : %S", to_string(self->BitfieldSize) );
+			string_append_fmt( result, " : %S", to_string(self->BitfieldSize) );
 
 		if ( self->Value )
 		{
 			if ( self->VarConstructorInit )
-				append_fmt( result, "( %S ", to_string(self->Value) );
+				string_append_fmt( result, "( %S ", to_string(self->Value) );
 			else
-				append_fmt( result, " = %S", to_string(self->Value) );
+				string_append_fmt( result, " = %S", to_string(self->Value) );
 		}
 
 		if ( self->NextVar )
-			append_fmt( result, ", %S", to_string(self->NextVar) );
+			string_append_fmt( result, ", %S", to_string(self->NextVar) );
 
 		if ( self->VarConstructorInit )
-			append( result, " )");
+			string_append_strc( result, txt(" )"));
 
 		if ( self->InlineCmt )
-			append_fmt( result, ";  %SC", self->InlineCmt->Content);
+			string_append_fmt( result, ";  %SC", self->InlineCmt->Content);
 		else
-			append( result, ";\n" );
+			string_append_strc( result, txt(";\n") );
 
 		return;
 	}
 
 	if ( self->BitfieldSize )
-		append_fmt( result, "%S %SC : %S", to_string(self->ValueType), self->Name, to_string(self->BitfieldSize) );
+		string_append_fmt( result, "%S %SC : %S", to_string(self->ValueType), self->Name, to_string(self->BitfieldSize) );
 
 	else if ( self->ValueType->ArrExpr )
 	{
-		append_fmt( result, "%S %SC[ %S ]", to_string(self->ValueType), self->Name, to_string(self->ValueType->ArrExpr) );
+		string_append_fmt( result, "%S %SC[ %S ]", to_string(self->ValueType), self->Name, to_string(self->ValueType->ArrExpr) );
 
 		Code next_arr_expr = self->ValueType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+			string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
 
 	else
-		append_fmt( result, "%S %SC", to_string(self->ValueType), self->Name );
+		string_append_fmt( result, "%S %SC", to_string(self->ValueType), self->Name );
 
 	if ( self->Value )
 	{
 		if ( self->VarConstructorInit )
-			append_fmt( result, "( %S ", to_string(self->Value) );
+			string_append_fmt( result, "( %S ", to_string(self->Value) );
 		else
-			append_fmt( result, " = %S", to_string(self->Value) );
+			string_append_fmt( result, " = %S", to_string(self->Value) );
 	}
 
 	if ( self->NextVar )
-		append_fmt( result, ", %S", to_string( self->NextVar) );
+		string_append_fmt( result, ", %S", to_string( self->NextVar) );
 
 	if ( self->VarConstructorInit )
-		append( result, " )");
+		string_append_strc( result, txt(" )"));
 
-	append( result, ";" );
+	string_append_strc( result, txt(";") );
 
 	if ( self->InlineCmt )
-		append_fmt( result, "  %SC", self->InlineCmt->Content);
+		string_append_fmt( result, "  %SC", self->InlineCmt->Content);
 	else
-		append( result, "\n");
+		string_append_strc( result, txt("\n"));
 }

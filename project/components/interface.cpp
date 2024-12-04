@@ -11,7 +11,7 @@ internal void deinit();
 internal
 void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
-	Arena* last = back(& Global_AllocatorBuckets);
+	Arena* last = array_back(& Global_AllocatorBuckets);
 
 	switch ( type )
 	{
@@ -24,13 +24,13 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
-				if ( ! append( & Global_AllocatorBuckets, bucket ) )
+				if ( ! array_append( & Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
-				last = back(& Global_AllocatorBuckets);
+				last = array_back(& Global_AllocatorBuckets);
 			}
 
-			return alloc_align( allocator_info(last), size, alignment );
+			return alloc_align( arena_allocator_info(last), size, alignment );
 		}
 		case EAllocation_FREE:
 		{
@@ -51,10 +51,10 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
-				if ( ! append( & Global_AllocatorBuckets, bucket ) )
+				if ( ! array_append( & Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
-				last = back(& Global_AllocatorBuckets);
+				last = array_back(& Global_AllocatorBuckets);
 			}
 
 			void* result = alloc_align( last->Backing, size, alignment );
@@ -249,7 +249,7 @@ void init()
 		if ( bucket.PhysicalStart == nullptr )
 			GEN_FATAL( "Failed to create first bucket for Global_AllocatorBuckets");
 
-		append( & Global_AllocatorBuckets, bucket );
+		array_append( & Global_AllocatorBuckets, bucket );
 	}
 
 	// Setup the arrays
@@ -272,7 +272,7 @@ void init()
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the code pool" );
 
-		append( & CodePools, code_pool );
+		array_append( & CodePools, code_pool );
 
 		LexArena = arena_init_from_allocator( Allocator_Lexer, LexAllocator_Size );
 
@@ -281,7 +281,7 @@ void init()
 		if ( string_arena.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the string arena" );
 
-		append( & StringArenas, string_arena );
+		array_append( & StringArenas, string_arena );
 	}
 
 	// Setup the hash tables
@@ -302,52 +302,52 @@ void init()
 void deinit()
 {
 	usize index = 0;
-	usize left  = num(CodePools);
+	usize left  = array_num(CodePools);
 	do
 	{
 		Pool* code_pool = & CodePools[index];
-		free(code_pool);
+		pool_free(code_pool);
 		index++;
 	}
 	while ( left--, left );
 
 	index = 0;
-	left  = num(StringArenas);
+	left  = array_num(StringArenas);
 	do
 	{
 		Arena* string_arena = & StringArenas[index];
-		free(string_arena);
+		arena_free(string_arena);
 		index++;
 	}
 	while ( left--, left );
 
 	destroy(& StringCache);
 
-	free( & CodePools);
-	free( & StringArenas);
+	array_free( & CodePools);
+	array_free( & StringArenas);
 
-	free(& LexArena);
+	arena_free(& LexArena);
 
-	free(& PreprocessorDefines);
+	array_free(& PreprocessorDefines);
 
 	index = 0;
-	left  = num(Global_AllocatorBuckets);
+	left  = array_num(Global_AllocatorBuckets);
 	do
 	{
 		Arena* bucket = & Global_AllocatorBuckets[ index ];
-		free(bucket);
+		arena_free(bucket);
 		index++;
 	}
 	while ( left--, left );
 
-	free(Global_AllocatorBuckets);
+	array_free(& Global_AllocatorBuckets);
 	parser::deinit();
 }
 
 void reset()
 {
 	s32 index = 0;
-	s32 left  = num(CodePools);
+	s32 left  = array_num(CodePools);
 	do
 	{
 		Pool* code_pool = & CodePools[index];
@@ -357,7 +357,7 @@ void reset()
 	while ( left--, left );
 
 	index = 0;
-	left  = num(StringArenas);
+	left  = array_num(StringArenas);
 	do
 	{
 		Arena* string_arena = & StringArenas[index];
@@ -373,7 +373,7 @@ void reset()
 
 AllocatorInfo get_string_allocator( s32 str_length )
 {
-	Arena* last = back(& StringArenas);
+	Arena* last = array_back(& StringArenas);
 
 	usize size_req = str_length + sizeof(StringHeader) + sizeof(char*);
 
@@ -381,13 +381,13 @@ AllocatorInfo get_string_allocator( s32 str_length )
 	{
 		Arena new_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
-		if ( ! append( & StringArenas, new_arena ) )
+		if ( ! array_append( & StringArenas, new_arena ) )
 			GEN_FATAL( "gen::get_string_allocator: Failed to allocate a new string arena" );
 
-		last = back(& StringArenas);
+		last = array_back(& StringArenas);
 	}
 
-	return allocator_info(last);
+	return arena_allocator_info(last);
 }
 
 // Will either make or retrive a code string.
@@ -402,16 +402,16 @@ StringCached get_cached_string( StrC str )
 			return * result;
 	}
 
-	String result = string_make( get_string_allocator( str.Len ), str );
-	set(& StringCache, key, { length(result), result } );
+	String result = string_make_strc( get_string_allocator( str.Len ), str );
+	set(& StringCache, key, { str.Len, result } );
 
-	return { length(result), result };
+	return { str.Len, result };
 }
 
 // Used internally to retireve a Code object form the CodePool.
 Code make_code()
 {
-	Pool* allocator = back( & CodePools);
+	Pool* allocator = array_back( & CodePools);
 	if ( allocator->FreeList == nullptr )
 	{
 		Pool code_pool = pool_init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
@@ -419,13 +419,13 @@ Code make_code()
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePool allcoator returned nullptr." );
 
-		if ( ! append( & CodePools, code_pool ) )
+		if ( ! array_append( & CodePools, code_pool ) )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
 
-		allocator = back( & CodePools);
+		allocator = array_back( & CodePools);
 	}
 
-	Code result { rcast( AST*, alloc( allocator_info(allocator), sizeof(AST) )) };
+	Code result { rcast( AST*, alloc( pool_allocator_info(allocator), sizeof(AST) )) };
 	mem_set( result.ast, 0, sizeof(AST) );
 	// result->Type = ECode::Invalid;
 

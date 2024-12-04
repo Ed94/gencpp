@@ -21,7 +21,7 @@ Builder Builder::open( char const* path )
 
 void Builder::pad_lines( s32 num )
 {
-	append( & Buffer,  "\n" );
+	string_append_strc( & Buffer, txt("\n") );
 }
 
 void Builder::print( Code code )
@@ -29,7 +29,7 @@ void Builder::print( Code code )
 	String   str = to_string(code);
 	// const ssize len = str.length();
 	// log_fmt( "%s - print: %.*s\n", File.filename, len > 80 ? 80 : len, str.Data );
-	append( & Buffer, str );
+	string_append_string( & Buffer, str );
 }
 
 void Builder::print_fmt( char const* fmt, ... )
@@ -43,17 +43,17 @@ void Builder::print_fmt( char const* fmt, ... )
 	va_end( va );
 
 	// log_fmt( "$%s - print_fmt: %.*s\n", File.filename, res > 80 ? 80 : res, buf );
-	append( (String*) & Buffer, (char const*)buf, res );
+	string_append_c_str_len( (String*) & Buffer, (char const*)buf, res );
 }
 
 void Builder::write()
 {
-	b32 result = file_write( & File, Buffer, length(Buffer) );
+	b32 result = file_write( & File, Buffer, string_length(Buffer) );
 
 	if ( result == false )
 		log_failure("gen::File::write - Failed to write to file: %s\n", file_name( & File ) );
 
 	log_fmt( "Generated: %s\n", File.filename );
 	file_close( & File );
-	free(& Buffer);
+	string_free(& Buffer);
 }

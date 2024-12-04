@@ -22,6 +22,8 @@ void swap( Type& a, Type& b )
 	b = tmp;
 }
 
+GEN_API_C_BEGIN
+
 //! Checks if value is power of 2.
 b32 is_power_of_two( ssize x );
 
@@ -29,7 +31,7 @@ b32 is_power_of_two( ssize x );
 void* align_forward( void* ptr, ssize alignment );
 
 //! Aligns value to a specified alignment.
-s64 align_forward_i64( s64 value, ssize alignment );
+s64 align_forward_by_value( s64 value, ssize alignment );
 
 //! Moves pointer forward by bytes.
 void* pointer_add( void* ptr, ssize bytes );
@@ -100,7 +102,7 @@ void* alloc( AllocatorInfo a, ssize size );
 void* alloc_align( AllocatorInfo a, ssize size, ssize alignment );
 
 //! Free allocated memory.
-void free( AllocatorInfo a, void* ptr );
+void allocator_free( AllocatorInfo a, void* ptr );
 
 //! Free all memory allocated by an allocator.
 void free_all( AllocatorInfo a );
@@ -142,11 +144,12 @@ constexpr AllocatorInfo heap( void ) { AllocatorInfo allocator = { heap_allocato
 //! Helper to free memory allocated by heap allocator.
 #define mfree( ptr ) free( heap(), ptr )
 
-struct VirtualMemory
+struct VirtualMemory_Def
 {
 	void*  data;
 	ssize size;
 };
+typedef struct VirtualMemory_Def VirtualMemory;
 
 //! Initialize virtual memory from existing data.
 VirtualMemory vm_from_memory( void* data, ssize size );
@@ -164,15 +167,16 @@ b32 vm_free( VirtualMemory vm );
 VirtualMemory vm_trim( VirtualMemory vm, ssize lead_size, ssize size );
 
 //! Purge virtual memory.
-b32 gen_vm_purge( VirtualMemory vm );
+b32 vm_purge( VirtualMemory vm );
 
 //! Retrieve VM's page size and alignment.
-ssize gen_virtual_memory_page_size( ssize* alignment_out );
+ssize virtual_memory_page_size( ssize* alignment_out );
 
 #pragma region Arena
-struct Arena;
+struct Arena_Def;
+typedef struct Arena_Def Arena;
 
-AllocatorInfo allocator_info( Arena* arena );
+AllocatorInfo arena_allocator_info( Arena* arena );
 
 // Remove static keyword and rename allocator_proc
 void* arena_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
@@ -181,18 +185,13 @@ void* arena_allocator_proc(void* allocator_data, AllocType type, ssize size, ssi
 Arena arena_init_from_allocator(AllocatorInfo backing, ssize size);
 Arena arena_init_from_memory   ( void* start, ssize size );
 
-Arena init_sub      (Arena* parent, ssize size);
-ssize alignment_of  (Arena* arena, ssize alignment);
-void  free          (Arena* arena);
-ssize size_remaining(Arena* arena, ssize alignment);
+Arena arena_init_sub      (Arena* parent, ssize size);
+ssize arena_alignment_of  (Arena* arena, ssize alignment);
+void  arena_check         (Arena* arena);
+void  arena_free          (Arena* arena);
+ssize arena_size_remaining(Arena* arena, ssize alignment);
 
-// This id is defined by Unreal for asserts
-#pragma push_macro("check")
-#undef check
-void   check(Arena* arena);
-#pragma pop_macro("check")
-
-struct Arena
+struct Arena_Def
 {
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
@@ -202,20 +201,20 @@ struct Arena
 
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 #pragma region Member Mapping
-	forceinline operator AllocatorInfo() { return GEN_NS allocator_info(this); }
+	forceinline operator AllocatorInfo() { return GEN_NS arena_allocator_info(this); }
 
 	forceinline static void* allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags ) { return GEN_NS arena_allocator_proc( allocator_data, type, size, alignment, old_memory, old_size, flags ); }
 	forceinline static Arena init_from_memory( void* start, ssize size )                                                                                      { return GEN_NS arena_init_from_memory( start, size ); }
 	forceinline static Arena init_from_allocator( AllocatorInfo backing, ssize size )                                                                         { return GEN_NS arena_init_from_allocator( backing, size ); }
 	forceinline static Arena init_sub( Arena& parent, ssize size )                                                                                            { return GEN_NS arena_init_from_allocator( parent.Backing, size ); }
-	forceinline        ssize alignment_of( ssize alignment )                                                                                                  { return GEN_NS alignment_of(this, alignment); }
-	forceinline        void  free()                                                                                                                           { return GEN_NS free(this);  }
-	forceinline        ssize size_remaining( ssize alignment )                                                                                                { return GEN_NS size_remaining(this, alignment); }
+	forceinline        ssize alignment_of( ssize alignment )                                                                                                  { return GEN_NS arena_alignment_of(this, alignment); }
+	forceinline        void  free()                                                                                                                           { return GEN_NS arena_free(this);  }
+	forceinline        ssize size_remaining( ssize alignment )                                                                                                { return GEN_NS arena_size_remaining(this, alignment); }
 
 // This id is defined by Unreal for asserts
 #pragma push_macro("check")
 #undef check
-	forceinline void check() { GEN_NS check(this); }
+	forceinline void check() { GEN_NS arena_check(this); }
 #pragma pop_macro("check")
 
 #pragma endregion Member Mapping
@@ -223,11 +222,11 @@ struct Arena
 };
 
 #if GEN_SUPPORT_CPP_REFERENCES
-forceinline AllocatorInfo allocator_info(Arena& arena )                 { return allocator_info(& arena); }
-forceinline Arena         init_sub      (Arena& parent, ssize size)     { return init_sub( & parent, size); }
-forceinline ssize         alignment_of  (Arena& arena, ssize alignment) { return alignment_of( & arena, alignment); }
-forceinline void          free          (Arena& arena)                  { return free(& arena); }
-forceinline ssize         size_remaining(Arena& arena, ssize alignment) { return size_remaining(& arena, alignment); }
+forceinline AllocatorInfo allocator_info(Arena& arena )                 { return arena_allocator_info(& arena); }
+forceinline Arena         init_sub      (Arena& parent, ssize size)     { return arena_init_sub( & parent, size); }
+forceinline ssize         alignment_of  (Arena& arena, ssize alignment) { return arena_alignment_of( & arena, alignment); }
+forceinline void          free          (Arena& arena)                  { return arena_free(& arena); }
+forceinline ssize         size_remaining(Arena& arena, ssize alignment) { return arena_size_remaining(& arena, alignment); }
 
 // This id is defined by Unreal for asserts
 #pragma push_macro("check")
@@ -238,9 +237,10 @@ forceinline void check(Arena& arena) { return check(& arena); };
 
 
 inline
-AllocatorInfo allocator_info( Arena* arena ) {
+AllocatorInfo arena_allocator_info( Arena* arena ) {
 	GEN_ASSERT(arena != nullptr);
-	return { arena_allocator_proc, arena };
+	AllocatorInfo info = { arena_allocator_proc, arena };
+	return info;
 }
 
 inline
@@ -269,13 +269,13 @@ Arena arena_init_from_allocator(AllocatorInfo backing, ssize size) {
 }
 
 inline
-Arena init_sub(Arena* parent, ssize size) {
+Arena arena_init_sub(Arena* parent, ssize size) {
 	GEN_ASSERT(parent != nullptr);
 	return arena_init_from_allocator(parent->Backing, size);
 }
 
 inline
-ssize alignment_of(Arena* arena, ssize alignment)
+ssize arena_alignment_of(Arena* arena, ssize alignment)
 {
 	GEN_ASSERT(arena != nullptr);
 	ssize alignment_offset, result_pointer, mask;
@@ -291,35 +291,34 @@ ssize alignment_of(Arena* arena, ssize alignment)
 	return alignment_offset;
 }
 
-#pragma push_macro("check")
-#undef check
 inline
-void check(Arena* arena)
+void arena_check(Arena* arena)
 {
     GEN_ASSERT(arena != nullptr );
     GEN_ASSERT(arena->TempCount == 0);
 }
-#pragma pop_macro("check")
 
 inline
-void free(Arena* arena)
+void arena_free(Arena* arena)
 {
 	GEN_ASSERT(arena != nullptr);
 	if (arena->Backing.Proc)
 	{
-		GEN_NS free(arena->Backing, arena->PhysicalStart);
+		allocator_free(arena->Backing, arena->PhysicalStart);
 		arena->PhysicalStart = nullptr;
 	}
 }
 
 inline
-ssize size_remaining(Arena* arena, ssize alignment)
+ssize arena_size_remaining(Arena* arena, ssize alignment)
 {
 	GEN_ASSERT(arena != nullptr);
-	ssize result = arena->TotalSize - (arena->TotalUsed + alignment_of(arena, alignment));
+	ssize result = arena->TotalSize - (arena->TotalUsed + arena_alignment_of(arena, alignment));
 	return result;
 }
 #pragma endregion Arena
+
+GEN_API_C_END
 
 #pragma region FixedArena
 template<s32 Size>
@@ -383,24 +382,27 @@ using Arena_2MB   = FixedArena< megabytes( 2 ) >;
 using Arena_4MB   = FixedArena< megabytes( 4 ) >;
 #pragma endregion FixedArena
 
+GEN_API_C_BEGIN
+
 #pragma region Pool
-struct Pool;
+struct Pool_Def;
+typedef struct Pool_Def Pool;
 
 void* pool_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
 
 Pool          pool_init(AllocatorInfo backing, ssize num_blocks, ssize block_size);
 Pool          pool_init_align(AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align);
-AllocatorInfo allocator_info(Pool* pool);
-void          clear(Pool* pool);
-void          free(Pool* pool);
+AllocatorInfo pool_allocator_info(Pool* pool);
+void          pool_clear(Pool* pool);
+void          pool_free(Pool* pool);
 
 #if GEN_SUPPORT_CPP_REFERENCES
-AllocatorInfo allocator_info(Pool& pool);
-void          clear(Pool& pool);
-void          free(Pool& pool);
+AllocatorInfo allocator_info(Pool& pool) { return GEN_NS allocator_info(& pool); }
+void          clear(Pool& pool)          { return GEN_NS clear(& pool); }
+void          free(Pool& pool)           { return GEN_NS free(& pool); }
 #endif
 
-struct Pool
+struct Pool_Def
 {
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
@@ -412,19 +414,19 @@ struct Pool
 
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 #pragma region Member Mapping
-    forceinline operator AllocatorInfo() { return GEN_NS allocator_info(this); }
+    forceinline operator AllocatorInfo() { return GEN_NS pool_allocator_info(this); }
 
     forceinline static void* allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags) { return GEN_NS pool_allocator_proc(allocator_data, type, size, alignment, old_memory, old_size, flags); }
     forceinline static Pool  init(AllocatorInfo backing, ssize num_blocks, ssize block_size)                                                                { return GEN_NS pool_init(backing, num_blocks, block_size); }
     forceinline static Pool  init_align(AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align)                                       { return GEN_NS pool_init_align(backing, num_blocks, block_size, block_align); }
-    forceinline        void  clear() { GEN_NS clear( this); }
-    forceinline        void  free()  { GEN_NS free( this); }
+    forceinline        void  clear() { GEN_NS pool_clear( this); }
+    forceinline        void  free()  { GEN_NS pool_free( this); }
 #pragma endregion
 #endif
 };
 
 inline
-AllocatorInfo allocator_info(Pool* pool) {
+AllocatorInfo pool_allocator_info(Pool* pool) {
    return { pool_allocator_proc, pool };
 }
 
@@ -434,9 +436,9 @@ Pool pool_init(AllocatorInfo backing, ssize num_blocks, ssize block_size) {
 }
 
 inline
-void free(Pool* pool) {
+void pool_free(Pool* pool) {
    if(pool->Backing.Proc) {
-       GEN_NS free(pool->Backing, pool->PhysicalStart);
+       allocator_free(pool->Backing, pool->PhysicalStart);
    }
 }
 #pragma endregion Pool
@@ -458,9 +460,9 @@ mem_ptr align_forward( void* ptr, ssize alignment )
 	return to_mem_ptr(forward);
 }
 
-inline s64 align_forward_i64( s64 value, ssize alignment ) { return value + ( alignment - value % alignment ) % alignment; }
+inline s64 align_forward_s64( s64 value, ssize alignment ) { return value + ( alignment - value % alignment ) % alignment; }
 
-inline void*       pointer_add      ( void*       ptr, ssize bytes ) { return rcast(void*,       rcast( u8*,        ptr) + bytes ); }
+inline void*       pointer_add      ( void*       ptr, ssize bytes ) { return rcast(void*,         rcast( u8*,        ptr) + bytes ); }
 inline void const* pointer_add_const( void const* ptr, ssize bytes ) { return rcast(void const*, rcast( u8 const*,  ptr) + bytes ); }
 
 inline sptr pointer_diff( mem_ptr_const begin, mem_ptr_const end ) {
@@ -616,7 +618,7 @@ void* alloc( AllocatorInfo a, ssize size ) {
 }
 
 inline
-void free( AllocatorInfo a, void* ptr ) {
+void allocator_free( AllocatorInfo a, void* ptr ) {
 	if ( ptr != nullptr )
 		a.Proc( a.Data, EAllocation_FREE, 0, 0, ptr, 0, GEN_DEFAULT_ALLOCATOR_FLAGS );
 }
@@ -644,7 +646,7 @@ void* default_resize_align( AllocatorInfo a, void* old_memory, ssize old_size, s
 
 	if ( new_size == 0 )
 	{
-		free( a, old_memory );
+		allocator_free( a, old_memory );
 		return nullptr;
 	}
 
@@ -662,7 +664,7 @@ void* default_resize_align( AllocatorInfo a, void* old_memory, ssize old_size, s
 			return nullptr;
 
 		mem_move( new_memory, old_memory, min( new_size, old_size ) );
-		free( a, old_memory );
+		allocator_free( a, old_memory );
 		return new_memory;
 	}
 }
@@ -671,5 +673,7 @@ inline
 void zero_size( void* ptr, ssize size ) {
 	mem_set( ptr, 0, size );
 }
+
+GEN_API_C_END
 
 #pragma endregion Memory
