@@ -139,6 +139,7 @@
 
 #if GEN_COMPILER_C
 #include <assert.h>
+#include <stdbool.h>
 #endif
 
 #pragma endregion Mandatory Includes
@@ -148,6 +149,7 @@
 #		define GEN_NS_PARSER_BEGIN
 #		define GEN_NS_PARSER_END
 #		define GEN_USING_NS_PARSER
+#		define GEN_NS_PARSER
 #		define GEN_NS
 #		define GEN_NS_BEGIN
 #		define GEN_NS_END
@@ -155,6 +157,7 @@
 #		define GEN_NS_PARSER_BEGIN namespace parser {
 #		define GEN_NS_PARSER_END   }
 #		define GEN_USING_NS_PARSER using namespace parser
+#		define GEN_NS_PARSER       parser::
 #		define GEN_NS       ::
 #		define GEN_NS_BEGIN
 #		define GEN_NS_END
@@ -162,6 +165,7 @@
 #else
 #	define GEN_NS_PARSER_BEGIN namespace parser {
 #	define GEN_NS_PARSER_END   }
+#	define GEN_NS_PARSER       parser::
 #	define GEN_USING_NS_PARSER using namespace parser
 #	define GEN_NS       gen::
 #	define GEN_NS_BEGIN namespace gen {

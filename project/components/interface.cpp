@@ -11,7 +11,7 @@ internal void deinit();
 internal
 void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
-	Arena* last = array_back(& Global_AllocatorBuckets);
+	Arena* last = array_back(Global_AllocatorBuckets);
 
 	switch ( type )
 	{
@@ -27,7 +27,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( ! array_append( & Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
-				last = array_back(& Global_AllocatorBuckets);
+				last = array_back(Global_AllocatorBuckets);
 			}
 
 			return alloc_align( arena_allocator_info(last), size, alignment );
@@ -54,7 +54,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( ! array_append( & Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
-				last = array_back(& Global_AllocatorBuckets);
+				last = array_back(Global_AllocatorBuckets);
 			}
 
 			void* result = alloc_align( last->Backing, size, alignment );
@@ -296,7 +296,7 @@ void init()
 	PreprocessorDefines = array_init_reserve<StringCached>( GlobalAllocator, kilobytes(1) );
 
 	define_constants();
-	parser::init();
+	GEN_NS_PARSER init();
 }
 
 void deinit()
@@ -321,14 +321,14 @@ void deinit()
 	}
 	while ( left--, left );
 
-	destroy(& StringCache);
+	hashtable_destroy(StringCache);
 
-	array_free( & CodePools);
-	array_free( & StringArenas);
+	array_free( CodePools);
+	array_free( StringArenas);
 
 	arena_free(& LexArena);
 
-	array_free(& PreprocessorDefines);
+	array_free(PreprocessorDefines);
 
 	index = 0;
 	left  = array_num(Global_AllocatorBuckets);
@@ -340,8 +340,8 @@ void deinit()
 	}
 	while ( left--, left );
 
-	array_free(& Global_AllocatorBuckets);
-	parser::deinit();
+	array_free(Global_AllocatorBuckets);
+	GEN_NS_PARSER deinit();
 }
 
 void reset()
@@ -366,14 +366,14 @@ void reset()
 	}
 	while ( left--, left );
 
-	clear(StringCache);
+	hashtable_clear(StringCache);
 
 	define_constants();
 }
 
 AllocatorInfo get_string_allocator( s32 str_length )
 {
-	Arena* last = array_back(& StringArenas);
+	Arena* last = array_back(StringArenas);
 
 	usize size_req = str_length + sizeof(StringHeader) + sizeof(char*);
 
@@ -384,7 +384,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 		if ( ! array_append( & StringArenas, new_arena ) )
 			GEN_FATAL( "gen::get_string_allocator: Failed to allocate a new string arena" );
 
-		last = array_back(& StringArenas);
+		last = array_back(StringArenas);
 	}
 
 	return arena_allocator_info(last);
@@ -396,14 +396,14 @@ StringCached get_cached_string( StrC str )
 	s32 hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
 	u64 key         = crc32( str.Ptr, hash_length );
 	{
-		StringCached* result = get(StringCache, key );
+		StringCached* result = hashtable_get(StringCache, key );
 
 		if ( result )
 			return * result;
 	}
 
-	String result = string_make_strc( get_string_allocator( str.Len ), str );
-	set(& StringCache, key, { str.Len, result } );
+	StrC result = string_to_strc( string_make_strc( get_string_allocator( str.Len ), str ));
+	hashtable_set(StringCache, key, result );
 
 	return { str.Len, result };
 }
@@ -411,7 +411,7 @@ StringCached get_cached_string( StrC str )
 // Used internally to retireve a Code object form the CodePool.
 Code make_code()
 {
-	Pool* allocator = array_back( & CodePools);
+	Pool* allocator = array_back( CodePools);
 	if ( allocator->FreeList == nullptr )
 	{
 		Pool code_pool = pool_init( Allocator_CodePool, CodePool_NumBlocks, sizeof(AST) );
@@ -422,7 +422,7 @@ Code make_code()
 		if ( ! array_append( & CodePools, code_pool ) )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
 
-		allocator = array_back( & CodePools);
+		allocator = array_back( CodePools);
 	}
 
 	Code result { rcast( AST*, alloc( pool_allocator_info(allocator), sizeof(AST) )) };

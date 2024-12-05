@@ -133,8 +133,8 @@ template<typename Type> sptr to_sptr( Type* ptr ) { return (sptr)ptr; }
 template<typename Type> mem_ptr       to_mem_ptr      ( Type ptr ) { return (mem_ptr)      ptr; }
 template<typename Type> mem_ptr_const to_mem_ptr_const( Type ptr ) { return (mem_ptr_const)ptr; }
 #else
-#define to_utpr( ptr ) ((uptr)(ptr))
-#define to_stpr( ptr ) ((sptr)(ptr))
+#define to_uptr( ptr ) ((uptr)(ptr))
+#define to_sptr( ptr ) ((sptr)(ptr))
 
 #define to_mem_ptr( ptr)       ((mem_ptr)ptr)
 #define to_mem_ptr_const( ptr) ((mem_ptr)ptr)

@@ -208,7 +208,7 @@ struct String
 	String fmt(AllocatorInfo allocator, char* buf, ssize buf_size, char const* fmt, ...) {
 		va_list va;
 		va_start(va, fmt);
-		ssize res = str_fmt_va(buf, buf_size, fmt, va);
+		ssize res = str_fmt_va(buf, buf_size, fmt, va) - 1;
 		va_end(va);
 		return string_make_length(allocator, buf, res);
 	}
@@ -219,7 +219,7 @@ struct String
 		char buf[GEN_PRINTF_MAXLEN] = { 0 };
 		va_list va;
 		va_start(va, fmt);
-		ssize res = str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
+		ssize res = str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va) - 1;
 		va_end(va);
 		return string_make_length(allocator, buf, res);
 	}
@@ -314,7 +314,7 @@ inline
 String string_fmt(AllocatorInfo allocator, char* buf, ssize buf_size, char const* fmt, ...) {
 	va_list va;
 	va_start(va, fmt);
-	ssize res = str_fmt_va(buf, buf_size, fmt, va);
+	ssize res = str_fmt_va(buf, buf_size, fmt, va) - 1;
 	va_end(va);
 
 	return string_make_length(allocator, buf, res);
@@ -328,7 +328,7 @@ String string_fmt_buf(AllocatorInfo allocator, char const* fmt, ...)
 
 	va_list va;
 	va_start(va, fmt);
-	ssize res = str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
+	ssize res = str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va) -1;
 	va_end(va);
 
 	return string_make_length(allocator, buf, res);

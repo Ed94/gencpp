@@ -124,6 +124,21 @@ Token* current(TokArray* self, bool skip_formatting )
 	return & self->Arr[self->Idx];
 }
 
+Token* peek(TokArray self, bool skip_formatting)
+{
+	s32 idx = self.Idx;
+
+	if ( skip_formatting )
+	{
+		while ( self.Arr[idx].Type == Tok_NewLine )
+			idx++;
+
+		return & self.Arr[idx];
+	}
+
+	return & self.Arr[idx];
+}
+
 Token* previous(TokArray self, bool skip_formatting)
 {
 	s32 idx = self.Idx;
@@ -340,7 +355,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		array_append( & Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
-		set(& ctx->defines, key, to_str(name) );
+		hashtable_set(ctx->defines, key, to_str(name) );
 	}
 
 	Token preprocess_content = { ctx->scanner, 0, Tok_Preprocess_Content, ctx->line, ctx->column, TF_Preprocess };
@@ -432,12 +447,13 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		if ( current == '\r' )
 		{
-			move_forward();
+			break;
+			//move_forward();
 		}
 
 		if ( current == '\n' )
 		{
-			move_forward();
+			//move_forward();
 			break;
 		}
 
@@ -509,7 +525,7 @@ void lex_found_token( LexContext* ctx )
 	else
 		key = crc32( ctx->token.Text, ctx->token.Length );
 
-	StrC* define = get(ctx->defines, key );
+	StrC* define = hashtable_get(ctx->defines, key );
 	if ( define )
 	{
 		ctx->token.Type = Tok_Preprocess_Macro;
@@ -537,14 +553,16 @@ void lex_found_token( LexContext* ctx )
 			ctx->token.Length++;
 		}
 
-		if ( current == '\r' && ctx->scanner[1] == '\n' )
-		{
-			move_forward();
-		}
-		else if ( current == '\n' )
-		{
-			move_forward();
-		}
+		//if ( current == '\r' && ctx->scanner[1] == '\n' )
+		//{
+		//	move_forward();
+		//	ctx->token.Length++;
+		//}
+		//else if ( current == '\n' )
+		//{
+		//	move_forward();
+		//	ctx->token.Length++;
+		//}
 	}
 	else
 	{
@@ -553,7 +571,6 @@ void lex_found_token( LexContext* ctx )
 
 	array_append( & Tokens, ctx->token );
 }
-
 
 neverinline
 // TokArray lex( Array<Token> tokens, StrC content )
@@ -593,7 +610,7 @@ TokArray lex( StrC content )
 		}
 
 		u64 key = crc32( * entry, length );
-		set(& c.defines, key, (StrC) * entry );
+		hashtable_set(c.defines, key, (StrC) * entry );
 	}
 
 	array_clear(Tokens);
@@ -645,7 +662,29 @@ TokArray lex( StrC content )
 				switch ( result )
 				{
 					case Lex_Continue:
+					{
+						//TokType last_type = Tokens[array_get_header(Tokens)->Num - 2].Type;
+						//if ( last_type == Tok_Preprocess_Pragma )
+						{
+							c.token = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+							if ( current == '\r')
+							{
+								move_forward();
+								c.token.Length = 1;
+							}
+
+							if ( current == '\n' )
+							{
+								c.token.Type = Tok_NewLine;
+								c.token.Length++;
+								move_forward();
+
+								array_append( & Tokens, c.token );
+							}
+						}
+
 						continue;
+					}
 
 					case Lex_ReturnNull:
 						return { {}, 0 };
@@ -1245,8 +1284,30 @@ TokArray lex( StrC content )
 			}
 		}
 
-	FoundToken:
-		lex_found_token( ctx );
+		FoundToken:
+		{
+			lex_found_token( ctx );
+			TokType last_type = array_back(Tokens)->Type;
+			if ( last_type == Tok_Preprocess_Macro )
+			{
+				c.token = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+				if ( current == '\r')
+				{
+					move_forward();
+					c.token.Length = 1;
+				}
+
+				if ( current == '\n' )
+				{
+					c.token.Type = Tok_NewLine;
+					c.token.Length++;
+					move_forward();
+
+					array_append( & Tokens, c.token );
+					continue;
+				}
+			}
+		}
 	}
 
 	if ( array_num(Tokens) == 0 )
@@ -1255,7 +1316,7 @@ TokArray lex( StrC content )
 		return { {}, 0 };
 	}
 
-	clear(defines);
+	hashtable_clear(defines);
 	// defines_map_arena.free();
 	return { Tokens, 0 };
 }

@@ -9,46 +9,48 @@ CodeBody gen_fixed_arenas()
 	result.append(def_pragma(txt("region FixedArena")));
 
 	char const* template_struct = stringize(
-		struct FixedArena_<Name>
+		struct FixedArena_<Name>_Def
 		{
 			char  memory[<Size>];
 			Arena arena;
 		};
+		typedef struct FixedArena_<Name>_Def FixedArena_<Name>;
 	);
 
 	char const* template_interface = stringize(
 		inline
-		void fixed_arena_init_<Name>(FixedArena_<Name>* result) {
-			zero_size(& result->memory[0], <Size>);
+		void fixed_arena_init_<Name>(FixedArena_<Name>* result)
+		{
 			result->arena = arena_init_from_memory(& result->memory[0], <Size>);
 		}
 
 		inline
-		ssize fixed_arena_size_remaining_<Name>(FixedArena_<Name>* fixed_arena, ssize alignment) {
-			return size_remaining(fixed_arena->arena, alignment);
+		ssize fixed_arena_size_remaining_<Name>(FixedArena_<Name>* fixed_arena, ssize alignment)
+		{
+			return arena_size_remaining( & fixed_arena->arena, alignment);
 		}
 	);
 
-	CodeStruct arena_struct_1kb   = parse_struct( token_fmt_impl( 3, "Name", txt("1KB"),   "Size", txt("kilobytes(1)"),   template_struct ));
-	CodeStruct arena_struct_4kb   = parse_struct( token_fmt_impl( 3, "Name", txt("4KB"),   "Size", txt("kilobytes(4)"),   template_struct ));
-	CodeStruct arena_struct_8kb   = parse_struct( token_fmt_impl( 3, "Name", txt("8KB"),   "Size", txt("kilobytes(8)"),   template_struct ));
-	CodeStruct arena_struct_16kb  = parse_struct( token_fmt_impl( 3, "Name", txt("16KB"),  "Size", txt("kilobytes(16)"),  template_struct ));
-	CodeStruct arena_struct_32kb  = parse_struct( token_fmt_impl( 3, "Name", txt("32KB"),  "Size", txt("kilobytes(32)"),  template_struct ));
-	CodeStruct arena_struct_64kb  = parse_struct( token_fmt_impl( 3, "Name", txt("64KB"),  "Size", txt("kilobytes(64)"),  template_struct ));
-	CodeStruct arena_struct_128kb = parse_struct( token_fmt_impl( 3, "Name", txt("128KB"), "Size", txt("kilobytes(128)"), template_struct ));
-	CodeStruct arena_struct_256kb = parse_struct( token_fmt_impl( 3, "Name", txt("256KB"), "Size", txt("kilobytes(256)"), template_struct ));
-	CodeStruct arena_struct_512kb = parse_struct( token_fmt_impl( 3, "Name", txt("512KB"), "Size", txt("kilobytes(512)"), template_struct ));
-	CodeStruct arena_struct_1mb   = parse_struct( token_fmt_impl( 3, "Name", txt("1MB"),   "Size", txt("megabytes(1)"),   template_struct ));
-	CodeStruct arena_struct_2mb   = parse_struct( token_fmt_impl( 3, "Name", txt("2MB"),   "Size", txt("megabytes(2)"),   template_struct ));
-	CodeStruct arena_struct_4mb   = parse_struct( token_fmt_impl( 3, "Name", txt("4MB"),   "Size", txt("megabytes(4)"),   template_struct ));
+	CodeBody arena_struct_1kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("1KB"),   "Size", txt("kilobytes(1)"),   template_struct ));
+	CodeBody arena_struct_4kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("4KB"),   "Size", txt("kilobytes(4)"),   template_struct ));
+	CodeBody arena_struct_8kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("8KB"),   "Size", txt("kilobytes(8)"),   template_struct ));
+	CodeBody arena_struct_16kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("16KB"),  "Size", txt("kilobytes(16)"),  template_struct ));
+	CodeBody arena_struct_32kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("32KB"),  "Size", txt("kilobytes(32)"),  template_struct ));
+	CodeBody arena_struct_64kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("64KB"),  "Size", txt("kilobytes(64)"),  template_struct ));
+	CodeBody arena_struct_128kb = parse_global_body( token_fmt_impl( 3, "Name", txt("128KB"), "Size", txt("kilobytes(128)"), template_struct ));
+	CodeBody arena_struct_256kb = parse_global_body( token_fmt_impl( 3, "Name", txt("256KB"), "Size", txt("kilobytes(256)"), template_struct ));
+	CodeBody arena_struct_512kb = parse_global_body( token_fmt_impl( 3, "Name", txt("512KB"), "Size", txt("kilobytes(512)"), template_struct ));
+	CodeBody arena_struct_1mb   = parse_global_body( token_fmt_impl( 3, "Name", txt("1MB"),   "Size", txt("megabytes(1)"),   template_struct ));
+	CodeBody arena_struct_2mb   = parse_global_body( token_fmt_impl( 3, "Name", txt("2MB"),   "Size", txt("megabytes(2)"),   template_struct ));
+	CodeBody arena_struct_4mb   = parse_global_body( token_fmt_impl( 3, "Name", txt("4MB"),   "Size", txt("megabytes(4)"),   template_struct ));
 
 
-	CodeBody arena_interface_1kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("1KB"),   "Size", txt("kilobytes(1)"),    template_interface ));
-	CodeBody arena_interface_4kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("4KB"),   "Size", txt("kilobytes(4)"),    template_interface ));
-	CodeBody arena_interface_8kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("8KB"),   "Size", txt("kilobytes(8)"),    template_interface ));
-	CodeBody arena_interface_16kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("16KB"),  "Size", txt("kilobytes(16)"),   template_interface ));
-	CodeBody arena_interface_32kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("32KB"),  "Size", txt("kilobytes(32)"),   template_interface ));
-	CodeBody arena_interface_64kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("64KB"),  "Size", txt("kilobytes(64)"),   template_interface ));
+	CodeBody arena_interface_1kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("1KB"),   "Size", txt("kilobytes(1)"),   template_interface ));
+	CodeBody arena_interface_4kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("4KB"),   "Size", txt("kilobytes(4)"),   template_interface ));
+	CodeBody arena_interface_8kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("8KB"),   "Size", txt("kilobytes(8)"),   template_interface ));
+	CodeBody arena_interface_16kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("16KB"),  "Size", txt("kilobytes(16)"),  template_interface ));
+	CodeBody arena_interface_32kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("32KB"),  "Size", txt("kilobytes(32)"),  template_interface ));
+	CodeBody arena_interface_64kb  = parse_global_body( token_fmt_impl( 3, "Name", txt("64KB"),  "Size", txt("kilobytes(64)"),  template_interface ));
 	CodeBody arena_interface_128kb = parse_global_body( token_fmt_impl( 3, "Name", txt("128KB"), "Size", txt("kilobytes(128)"), template_interface ));
 	CodeBody arena_interface_256kb = parse_global_body( token_fmt_impl( 3, "Name", txt("256KB"), "Size", txt("kilobytes(256)"), template_interface ));
 	CodeBody arena_interface_512kb = parse_global_body( token_fmt_impl( 3, "Name", txt("512KB"), "Size", txt("kilobytes(512)"), template_interface ));
@@ -82,6 +84,7 @@ CodeBody gen_fixed_arenas()
 
 	CodeDefine def = def_define(txt("fixed_arena_allocator_info(fixed_arena)"), code({ arena_allocator_proc, & fixed_arena.arena }) );
 	result.append(def);
+	result.append(fmt_newline);
 
 	result.append(parse_global_body(txt(R"(
 #define fixed_arena_init(expr) _Generic((expr), \
@@ -116,6 +119,7 @@ CodeBody gen_fixed_arenas()
 )"
 	)));
 
+	result.append(fmt_newline);
 	result.append(def_pragma(txt("endregion FixedArena")));
 
 	return result;

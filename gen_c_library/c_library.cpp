@@ -130,22 +130,6 @@ int gen_main()
 		header.print( basic_types );
 		header.print( debug );
 
-		// Array(StrC) to_rename = array_init_reserve(StrC, GlobalAllocator, 128);
-		// to_rename.append(txt("align_forward"));
-		// to_rename.append(txt("pointer_add"));
-		// to_rename.append(txt("allocator_info"));
-		// to_rename.append(txt("size_remaining"));
-		// to_rename.append(txt("free"));
-		// to_rename.append(txt("clear"));
-		// to_rename.append(txt("init_sub"));
-		// to_rename.append(txt("check"));
-
-		// NeedsSelectors needs_selectors;
-		// needs_selectors.table = hashtable_init_reserve(Array(CodeFn), GlobalAllocator, 1024);
-		// for ( StrC id : to_rename ) {
-		// 	needs_selectors.set(id, array_init_reserve(CodeFn, GlobalAllocator, 128));
-		// }
-
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
 		CodeBody memory        = def_body(CT_Global_Body);
 
@@ -317,7 +301,7 @@ int gen_main()
 
 			containers.append( def_pragma(code(endregion Containers)));
 		}
-		header.print(fmt_newline);
+		// header.print(fmt_newline);
 		// header.print(dump_to_scratch_and_retireve(containers));
 
 		Code hashing = scan_file( project_dir "dependencies/hashing.hpp" );
@@ -421,7 +405,7 @@ int gen_main()
 		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
 
-#if 0
+	#if 0
 		header.print_fmt("#pragma region Types\n");
 		header.print( types );
 		header.print( fmt_newline );

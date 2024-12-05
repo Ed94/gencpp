@@ -43,7 +43,7 @@ void Builder::print_fmt( char const* fmt, ... )
 	va_end( va );
 
 	// log_fmt( "$%s - print_fmt: %.*s\n", File.filename, res > 80 ? 80 : res, buf );
-	string_append_c_str_len( (String*) & Buffer, (char const*)buf, res );
+	string_append_c_str_len( (String*) & Buffer, (char const*)buf, res);
 }
 
 void Builder::write()

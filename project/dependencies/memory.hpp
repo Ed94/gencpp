@@ -320,17 +320,15 @@ ssize arena_size_remaining(Arena* arena, ssize alignment)
 }
 #pragma endregion Arena
 
-
 GEN_API_C_END
-
 
 #pragma region FixedArena
 template<s32 Size>
 struct FixedArena;
 
 template<s32 Size> FixedArena<Size> fixed_arena_init();
-template<s32 Size> AllocatorInfo    allocator_info(FixedArena<Size>* fixed_arena );
-template<s32 Size> ssize            size_remaining(FixedArena<Size>* fixed_arena, ssize alignment);
+template<s32 Size> AllocatorInfo    fixed_arena_allocator_info(FixedArena<Size>* fixed_arena );
+template<s32 Size> ssize            fixed_arena_size_remaining(FixedArena<Size>* fixed_arena, ssize alignment);
 
 #if GEN_SUPPORT_CPP_REFERENCES
 template<s32 Size> AllocatorInfo    allocator_info( FixedArena<Size>& fixed_arena )                { return allocator_info(& fixed_arena); }
@@ -356,7 +354,7 @@ struct FixedArena
 };
 
 template<s32 Size> inline
-AllocatorInfo allocator_info( FixedArena<Size>* fixed_arena ) {
+AllocatorInfo fixed_arena_allocator_info( FixedArena<Size>* fixed_arena ) {
 	GEN_ASSERT(fixed_arena);
 	return { arena_allocator_proc, & fixed_arena->arena };
 }
@@ -368,7 +366,12 @@ void fixed_arena_init(FixedArena<Size>* result) {
 }
 
 template<s32 Size> inline
-ssize size_remaining(FixedArena<Size>* fixed_arena, ssize alignment) {
+void fixed_arena_free(FixedArena<Size>* fixed_arena) {
+	arena_free( & fixed_arena->arena);
+}
+
+template<s32 Size> inline
+ssize fixed_arena_size_remaining(FixedArena<Size>* fixed_arena, ssize alignment) {
     return size_remaining(fixed_arena->arena, alignment);
 }
 
@@ -386,9 +389,7 @@ using Arena_2MB   = FixedArena< megabytes( 2 ) >;
 using Arena_4MB   = FixedArena< megabytes( 4 ) >;
 #pragma endregion FixedArena
 
-
 GEN_API_C_BEGIN
-
 
 #pragma region Pool
 struct Pool_Def;
@@ -435,7 +436,8 @@ struct Pool_Def
 
 inline
 AllocatorInfo pool_allocator_info(Pool* pool) {
-   return { pool_allocator_proc, pool };
+	AllocatorInfo info = { pool_allocator_proc, pool };
+	return info;
 }
 
 inline

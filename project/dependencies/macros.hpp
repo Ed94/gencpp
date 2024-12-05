@@ -183,14 +183,20 @@
 #	endif
 #endif
 
-#if !defined(GEN_SUPPORT_CPP_REFERENCES) && (GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
-#	undef    GEN_SUPPORT_CPP_REFERENCES
-#	define   GEN_SUPPORT_CPP_REFERENCES 0
+#if !defined(GEN_SUPPORT_CPP_REFERENCES)
+#	define   GEN_SUPPORT_CPP_REFERENCES 1
+#endif
+#if GEN_COMPILER_C && defined(GEN_SUPPORT_CPP_REFERENCES)
+#	undef  GEN_SUPPORT_CPP_REFERENCES
+#	define GEN_SUPPORT_CPP_REFERENCES 0
 #endif
 
-#if !defined(GEN_SUPPORT_CPP_MEMBER_FEATURES) && (GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
-#	undef    GEN_SUPPORT_CPP_MEMBER_FEATURES
-#	define   GEN_SUPPORT_CPP_MEMBER_FEATURES 0
+#if !defined(GEN_SUPPORT_CPP_MEMBER_FEATURES)
+#	define   GEN_SUPPORT_CPP_MEMBER_FEATURES 1
+#endif
+#if GEN_COMPILER_C && defined(GEN_SUPPORT_CPP_MEMBER_FEATURES)
+#	undef  GEN_SUPPORT_CPP_MEMBER_FEATURES
+#	define GEN_SUPPORT_CPP_MEMBER_FEATURES 0
 #endif
 
 #if ! defined(typeof) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
@@ -228,6 +234,10 @@
 #if GEN_COMPILER_C
 #	ifndef nullptr
 #		define nullptr NULL
+#	endif
+
+#	ifndef GEN_REMOVE_PTR
+#		define GEN_REMOVE_PTR(type) typeof(* ( (type) NULL) )
 #	endif
 #endif
 

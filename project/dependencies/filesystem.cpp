@@ -647,7 +647,7 @@ GEN_FILE_CLOSE_PROC( _memory_file_close )
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
 		Array<u8> arr = { d->buf };
-		array_free(& arr);
+		array_free(arr);
 	}
 
 	allocator_free( allocator, d );

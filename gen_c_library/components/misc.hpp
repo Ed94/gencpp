@@ -3,37 +3,7 @@
 
 // using namespace gen;
 
-using SwapContentProc = CodeBody(void);
 
-
-struct NeedsSelectors {
-	HashTable(Array(CodeFn)) table;
-
-	void set(StrC sig, Array(CodeFn) list) {
-		u32  key = crc32(sig.Ptr, sig.Len);
-		table.set(key, list);
-	}
-	Array(CodeFn)* get(StrC sig) {
-		u32  key = crc32(sig.Ptr, sig.Len);
-		return table.get(key);
-	}
-};
-CodeBody generate_generic_selectors(Array(Array(CodeFn)) listing)
-{
-	constexpr char const* tmpl_selector = 
-R"( #define <base_name>(<params>) \
-_Generic((
-))
-);
-)";
-
-	CodeBody result = def_body(CT_Global_Body);
-	for (Array(CodeFn) functions : listing)
-	{
-		
-	}
-	return result;
-}
 
 b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& body )
 {
@@ -153,6 +123,7 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
     return fn;
 }
 
+using SwapContentProc = CodeBody(void);
 bool swap_pragma_region_implementation( StrC region_name, SwapContentProc* swap_content, Code& entry_iter, CodeBody& body )
 {
 	bool found = false;

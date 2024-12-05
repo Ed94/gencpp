@@ -9,15 +9,13 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 	ssize       remaining = buf_size;
 
 	local_persist
-	Arena tok_map_arena;
+	FixedArena<TokenFmt_TokenMap_MemSize> tok_map_arena;
+	fixed_arena_init( & tok_map_arena);
 
+	local_persist
 	HashTable(StrC) tok_map;
 	{
-		local_persist
-		char tok_map_mem[ TokenFmt_TokenMap_MemSize ];
-
-		tok_map_arena = arena_init_from_memory( tok_map_mem, sizeof(tok_map_mem) );
-		tok_map       = hashtable_init(StrC, arena_allocator_info(& tok_map_arena) );
+		tok_map = hashtable_init(StrC, fixed_arena_allocator_info(& tok_map_arena) );
 
 		s32 left = num_tokens - 1;
 
@@ -27,7 +25,7 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 			StrC        value = va_arg( va, StrC );
 
 			u32 key = crc32( token, str_len(token) );
-			set(& tok_map, key, value );
+			hashtable_set( tok_map, key, value );
 		}
 	}
 
@@ -63,7 +61,7 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 			char const* token = fmt + 1;
 
 			u32       key   = crc32( token, tok_len );
-			StrC*     value = get(tok_map, key );
+			StrC*     value = hashtable_get(tok_map, key );
 
 			if ( value )
 			{
@@ -93,8 +91,8 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 		}
 	}
 
-	clear(tok_map);
-	arena_free(& tok_map_arena);
+	hashtable_clear(tok_map);
+	fixed_arena_free(& tok_map_arena);
 
 	ssize result = buf_size - remaining;
 

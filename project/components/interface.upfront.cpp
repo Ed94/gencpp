@@ -635,7 +635,7 @@ CodeDefine def_define( StrC name, StrC content )
 		result->Content = get_cached_string( txt("") );
 	}
 	else
-		result->Content = get_cached_string( content );
+		result->Content = get_cached_string( string_to_strc(string_fmt_buf(GlobalAllocator, "%SC\n", content)) );
 
 	return result;
 }
@@ -644,13 +644,13 @@ CodeDestructor def_destructor( Opts_def_destructor p )
 {
 	Code           body       = p.body;
 	CodeSpecifiers specifiers = p.specifiers;
-	
+
 	if ( specifiers && specifiers->Type != CT_Specifiers )
 	{
 		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", debug_str(specifiers) );
 		return InvalidCode;
 	}
-	
+
 	CodeDestructor result = (CodeDestructor) make_code();
 
 	if ( specifiers )

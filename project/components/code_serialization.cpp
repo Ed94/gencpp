@@ -221,12 +221,12 @@ void to_string_fwd( CodeClass self, String* result )
 
 String to_string(CodeDefine define)
 {
-	return string_fmt_buf( GlobalAllocator, "#define %SC %SC\n", define->Name, define->Content );
+	return string_fmt_buf( GlobalAllocator, "#define %SC %SC", define->Name, define->Content );
 }
 
 void to_string(CodeDefine define, String* result )
 {
-	string_append_fmt( result, "#define %SC %SC\n", define->Name, define->Content );
+	string_append_fmt( result, "#define %SC %SC", define->Name, define->Content );
 }
 
 String to_string(CodeDestructor self)
@@ -919,7 +919,7 @@ void to_string_ifdef(CodePreprocessCond cond, String* result )
 
 void to_string_ifndef(CodePreprocessCond cond, String* result )
 {
-	string_append_fmt( result, "#ifndef %SC\n", cond->Content );
+	string_append_fmt( result, "#ifndef %SC", cond->Content );
 }
 
 void to_string_elif(CodePreprocessCond cond, String* result )

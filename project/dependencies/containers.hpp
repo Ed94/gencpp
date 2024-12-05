@@ -10,8 +10,13 @@ template<class TType>             struct RemoveConst<const TType>       { typede
 template<class TType>             struct RemoveConst<const TType[]>     { typedef TType Type[];     };
 template<class TType, usize Size> struct RemoveConst<const TType[Size]> { typedef TType Type[Size]; };
 
-template<class TType>
-using TRemoveConst = typename RemoveConst<TType>::Type;
+template<class TType> using TRemoveConst = typename RemoveConst<TType>::Type;
+
+template <class TType> struct RemovePtr         { typedef TType Type; };
+template <class TType> struct RemovePtr<TType*> { typedef TType Type; };
+
+template <class TType> using TRemovePtr = typename RemovePtr<TType>::Type;
+
 
 #pragma region Array
 #define Array(Type) Array<Type>
@@ -23,31 +28,33 @@ struct ArrayHeader;
 
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	template<class Type> struct Array;
+#	define get_array_underlying_type(array) typename TRemovePtr<typeof(array)>:: DataType
 #else
 	template<class Type> using Array = Type*;
+#	define get_array_underlying_type(array) TRemovePtr<typeof(array)>
 #endif
 
 usize array_grow_formula(ssize value);
 
-template<class Type> Array(Type)  array_init        (AllocatorInfo allocator);
-template<class Type> Array(Type)  array_init_reserve(AllocatorInfo allocator, ssize capacity);
-template<class Type> bool         array_append      (Array(Type)* array, Array(Type) other);
-template<class Type> bool         array_append      (Array(Type)* array, Type value);
-template<class Type> bool         array_append      (Array(Type)* array, Type* items, usize item_num);
-template<class Type> bool         array_append_at   (Array(Type)* array, Type item, usize idx);
-template<class Type> bool         array_append_at   (Array(Type)* array, Type* items, usize item_num, usize idx);
-template<class Type> Type*        array_back        (Array(Type)  array);
-template<class Type> void         array_clear       (Array(Type)  array);
-template<class Type> bool         array_fill        (Array(Type)  array, usize begin, usize end, Type value);
-template<class Type> void         array_free        (Array(Type)* array);
-template<class Type> bool         arary_grow        (Array(Type)* array, usize min_capacity);
-template<class Type> usize        array_num         (Array(Type)  array);
-template<class Type> void         arary_pop         (Array(Type)  array);
-template<class Type> void         arary_remove_at   (Array(Type)  array, usize idx);
-template<class Type> bool         arary_reserve     (Array(Type)* array, usize new_capacity);
-template<class Type> bool         arary_resize      (Array(Type)* array, usize num);
-template<class Type> bool         arary_set_capacity(Array(Type)* array, usize new_capacity);
-template<class Type> ArrayHeader* arary_get_header  (Array(Type)  array);
+template<class Type> Array<Type>  array_init           (AllocatorInfo allocator);
+template<class Type> Array<Type>  array_init_reserve   (AllocatorInfo allocator, ssize capacity);
+template<class Type> bool         array_append_array   (Array<Type>* array, Array<Type> other);
+template<class Type> bool         array_append_value   (Array<Type>* array, Type value);
+template<class Type> bool         array_append_items   (Array<Type>* array, Type* items, usize item_num);
+template<class Type> bool         array_append_at      (Array<Type>* array, Type item, usize idx);
+template<class Type> bool         array_append_at_items(Array<Type>* array, Type* items, usize item_num, usize idx);
+template<class Type> Type*        array_back           (Array<Type>  array);
+template<class Type> void         array_clear          (Array<Type>  array);
+template<class Type> bool         array_fill           (Array<Type>  array, usize begin, usize end, Type value);
+template<class Type> void         array_free           (Array<Type>* array);
+template<class Type> bool         arary_grow           (Array<Type>* array, usize min_capacity);
+template<class Type> usize        array_num            (Array<Type>  array);
+template<class Type> void         arary_pop            (Array<Type>  array);
+template<class Type> void         arary_remove_at      (Array<Type>  array, usize idx);
+template<class Type> bool         arary_reserve        (Array<Type>* array, usize new_capacity);
+template<class Type> bool         arary_resize         (Array<Type>* array, usize num);
+template<class Type> bool         arary_set_capacity   (Array<Type>* array, usize new_capacity);
+template<class Type> ArrayHeader* arary_get_header     (Array<Type>  array);
 
 struct ArrayHeader {
 	AllocatorInfo Allocator;
@@ -92,6 +99,8 @@ struct Array
 
 	forceinline Type&       operator[](ssize index)       { return Data[index]; }
 	forceinline Type const& operator[](ssize index) const { return Data[index]; }
+
+	using DataType = Type;
 };
 #endif
 
@@ -240,15 +249,15 @@ bool array_append_at(Array<Type>* array, Type* items, usize item_num, usize idx)
 }
 
 template<class Type> inline
-Type* array_back(Array<Type>* array)
+Type* array_back(Array<Type> array)
 {
 	GEN_ASSERT(array != nullptr);
 
-	ArrayHeader* header = array_get_header(* array);
+	ArrayHeader* header = array_get_header(array);
 	if (header->Num <= 0)
 		return nullptr;
 
-	return & (*array)[header->Num - 1];
+	return & (array)[header->Num - 1];
 }
 
 template<class Type> inline
@@ -380,7 +389,30 @@ bool array_set_capacity(Array<Type>* array, usize new_capacity)
 	return true;
 }
 
-#define array_init_reserve(type, allocator, cap) array_init_reserve<type>(allocator, cap)
+// These are intended for use in the base library of gencpp and the C-variant of the library
+// It provides a interoperability between the C++ and C implementation of arrays. (not letting these do any crazy substiution though)
+// They are undefined in gen.hpp and gen.cpp at the end of the files.
+// We cpp library expects the user to use the regular calls as they can resolve the type fine.
+
+#define array_init(type, allocator)                        array_init           <type>                      (allocator )
+#define array_init_reserve(type, allocator, cap)           array_init_reserve   <type>                      (allocator, cap)
+#define array_append_array(array, other)                   array_append         < get_array_underlying_type(array) > (& array, other )
+#define array_append_value(array, value)                   array_append         < get_array_underlying_type(array) > (& array, value )
+#define array_append_items(array, items, item_num)         array_append         < get_array_underlying_type(array) > (& array, items, item_num )
+#define array_append_at(array, item, idx )                 array_append_at      < get_array_underlying_type(array) > (& array, item, idx )
+#define array_append_at_items(array, items, item_num, idx) array_append_at_items< get_array_underlying_type(array) > (& items, item_num, idx )
+#define array_back(array)                                  array_back           < get_array_underlying_type(array) > (array )
+#define array_clear(array)                                 array_clear          < get_array_underlying_type(array) > (array )
+#define array_fill(array, begin, end, value)               array_fill           < get_array_underlying_type(array) > (array, begin, end, value )
+#define array_free(array)                                  array_free           < get_array_underlying_type(array) > (& array )
+#define arary_grow(array, min_capacity)                    arary_grow           < get_array_underlying_type(array) > (& array, min_capacity)
+#define array_num(array)                                   array_num            < get_array_underlying_type(array) > (array )
+#define arary_pop(array)                                   arary_pop            < get_array_underlying_type(array) > (array )
+#define arary_remove_at(array, idx)                        arary_remove_at      < get_array_underlying_type(array) > (idx)
+#define arary_reserve(array, new_capacity)                 arary_reserve        < get_array_underlying_type(array) > (& array, new_capacity )
+#define arary_resize(array, num)                           arary_resize         < get_array_underlying_type(array) > (& array, num)
+#define arary_set_capacity(new_capacity)                   arary_set_capacity   < get_array_underlying_type(array) > (& array, new_capacity )
+#define arary_get_header(array)                            arary_get_header     < get_array_underlying_type(array) > (array )
 
 #pragma endregion Array
 
@@ -406,23 +438,23 @@ struct HashTableEntry {
 
 #define HashTableEntry(Type) HashTableEntry<Type>
 
-template<class Type> HashTable<Type>       hashtable_init(AllocatorInfo allocator);
+template<class Type> HashTable<Type>       hashtable_init        (AllocatorInfo allocator);
 template<class Type> HashTable<Type>       hashtable_init_reserve(AllocatorInfo allocator, usize num);
-template<class Type> void                  clear        (HashTable<Type>  table);
-template<class Type> void                  destroy      (HashTable<Type>* table);
-template<class Type> Type*                 get          (HashTable<Type>  table, u64 key);
-template<class Type> void                  grow         (HashTable<Type>* table);
-template<class Type> void                  rehash       (HashTable<Type>* table, ssize new_num);
-template<class Type> void                  rehash_fast  (HashTable<Type>  table);
-template<class Type> void                  remove       (HashTable<Type>  table, u64 key);
-template<class Type> void                  remove_entry (HashTable<Type>  table, ssize idx);
-template<class Type> void                  set          (HashTable<Type>* table, u64 key, Type value);
-template<class Type> ssize                 slot         (HashTable<Type>  table, u64 key);
-template<class Type> ssize                 add_entry    (HashTable<Type>* table, u64 key);
-template<class Type> HashTableFindResult   find         (HashTable<Type>  table, u64 key);
-template<class Type> bool                  full         (HashTable<Type>  table);
-template<class Type> void                  map          (HashTable<Type>  table, void (*map_proc)(u64 key, Type value));
-template<class Type> void                  map_mut      (HashTable<Type>  table, void (*map_proc)(u64 key, Type* value));
+template<class Type> void                  hashtable_clear       (HashTable<Type>  table);
+template<class Type> void                  hashtable_destroy     (HashTable<Type>* table);
+template<class Type> Type*                 hashtable_get         (HashTable<Type>  table, u64 key);
+template<class Type> void                  hashtable_grow        (HashTable<Type>* table);
+template<class Type> void                  hashtable_rehash      (HashTable<Type>* table, ssize new_num);
+template<class Type> void                  hashtable_rehash_fast (HashTable<Type>  table);
+template<class Type> void                  hashtable_remove      (HashTable<Type>  table, u64 key);
+template<class Type> void                  hashtable_remove_entry(HashTable<Type>  table, ssize idx);
+template<class Type> void                  hashtable_set         (HashTable<Type>* table, u64 key, Type value);
+template<class Type> ssize                 hashtable_slot        (HashTable<Type>  table, u64 key);
+template<class Type> ssize                 hashtable_add_entry   (HashTable<Type>* table, u64 key);
+template<class Type> HashTableFindResult   hashtable_find        (HashTable<Type>  table, u64 key);
+template<class Type> bool                  hashtable_full        (HashTable<Type>  table);
+template<class Type> void                  hashtable_map         (HashTable<Type>  table, void (*map_proc)(u64 key, Type value));
+template<class Type> void                  hashtable_map_mut     (HashTable<Type>  table, void (*map_proc)(u64 key, Type* value));
 
 static constexpr f32 HashTable_CriticalLoadScale = 0.7f;
 
@@ -482,22 +514,22 @@ HashTable<Type> hashtable_init_reserve(AllocatorInfo allocator, usize num)
 }
 
 template<typename Type> inline
-void clear(HashTable<Type> table) {
+void hashtable_clear(HashTable<Type> table) {
 	array_clear(table.Entries);
 	array_fill(table.Hashes, 0, array_num(table.Hashes), (ssize)-1);
 }
 
 template<typename Type> inline
-void destroy(HashTable<Type>* table) {
+void hashtable_destroy(HashTable<Type>* table) {
 	if (table->Hashes && array_get_header(table->Hashes)->Capacity) {
-		array_free(& table->Hashes);
-		array_free(& table->Entries);
+		array_free(table->Hashes);
+		array_free(table->Entries);
 	}
 }
 
 template<typename Type> inline
-Type* get(HashTable<Type> table, u64 key) {
-	ssize idx = find(table, key).EntryIndex;
+Type* hashtable_get(HashTable<Type> table, u64 key) {
+	ssize idx = hashtable_find(table, key).EntryIndex;
 	if (idx >= 0)
 		return & table.Entries[idx].Value;
 
@@ -505,7 +537,7 @@ Type* get(HashTable<Type> table, u64 key) {
 }
 
 template<typename Type> inline
-void map(HashTable<Type> table, void (*map_proc)(u64 key, Type value)) {
+void hashtable_map(HashTable<Type> table, void (*map_proc)(u64 key, Type value)) {
 	GEN_ASSERT_NOT_NULL(map_proc);
 
 	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx) {
@@ -514,7 +546,7 @@ void map(HashTable<Type> table, void (*map_proc)(u64 key, Type value)) {
 }
 
 template<typename Type> inline
-void map_mut(HashTable<Type> table, void (*map_proc)(u64 key, Type* value)) {
+void hashtable_map_mut(HashTable<Type> table, void (*map_proc)(u64 key, Type* value)) {
 	GEN_ASSERT_NOT_NULL(map_proc);
 
 	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx) {
@@ -523,13 +555,13 @@ void map_mut(HashTable<Type> table, void (*map_proc)(u64 key, Type* value)) {
 }
 
 template<typename Type> inline
-void grow(HashTable<Type>* table) {
+void hashtable_grow(HashTable<Type>* table) {
 	ssize new_num = array_grow_formula( array_num(table->Entries));
-	rehash(table, new_num);
+	hashtable_rehash(table, new_num);
 }
 
 template<typename Type> inline
-void rehash(HashTable<Type>* table, ssize new_num)
+void hashtable_rehash(HashTable<Type>* table, ssize new_num)
 {
 	ssize last_added_index;
 	HashTable<Type> new_ht = hashtable_init_reserve<Type>( array_get_header(table->Hashes)->Allocator, new_num);
@@ -539,8 +571,8 @@ void rehash(HashTable<Type>* table, ssize new_num)
 		HashTableFindResult find_result;
 		HashTableEntry<Type>& entry = table->Entries[idx];
 
-		find_result = find(new_ht, entry.Key);
-		last_added_index = add_entry(& new_ht, entry.Key);
+		find_result = hashtable_find(new_ht, entry.Key);
+		last_added_index = hashtable_add_entry(& new_ht, entry.Key);
 
 		if (find_result.PrevIndex < 0)
 			new_ht.Hashes[find_result.HashIndex] = last_added_index;
@@ -551,12 +583,12 @@ void rehash(HashTable<Type>* table, ssize new_num)
 		new_ht.Entries[last_added_index].Value = entry.Value;
 	}
 
-	destroy(table);
+	hashtable_destroy(table);
 	* table = new_ht;
 }
 
 template<typename Type> inline
-void rehash_fast(HashTable<Type> table)
+void hashtable_rehash_fast(HashTable<Type> table)
 {
 	ssize idx;
 
@@ -582,7 +614,7 @@ void rehash_fast(HashTable<Type> table)
 }
 
 template<typename Type> inline
-void remove(HashTable<Type> table, u64 key) {
+void hashtable_remove(HashTable<Type> table, u64 key) {
 	HashTableFindResult find_result = find(table, key);
 
 	if (find_result.EntryIndex >= 0) {
@@ -592,26 +624,26 @@ void remove(HashTable<Type> table, u64 key) {
 }
 
 template<typename Type> inline
-void remove_entry(HashTable<Type> table, ssize idx) {
+void hashtable_remove_entry(HashTable<Type> table, ssize idx) {
 	remove_at(table.Entries, idx);
 }
 
 template<typename Type> inline
-void set(HashTable<Type>* table, u64 key, Type value)
+void hashtable_set(HashTable<Type>* table, u64 key, Type value)
 {
 	ssize idx;
 	HashTableFindResult find_result;
 
-	if (full(* table))
-		grow(table);
+	if (hashtable_full(* table))
+		hashtable_grow(table);
 
-	find_result = find(* table, key);
+	find_result = hashtable_find(* table, key);
 	if (find_result.EntryIndex >= 0) {
 		idx = find_result.EntryIndex;
 	}
 	else
 	{
-		idx = add_entry(table, key);
+		idx = hashtable_add_entry(table, key);
 
 		if (find_result.PrevIndex >= 0) {
 			table->Entries[find_result.PrevIndex].Next = idx;
@@ -623,12 +655,12 @@ void set(HashTable<Type>* table, u64 key, Type value)
 
 	table->Entries[idx].Value = value;
 
-	if (full(* table))
-		grow(table);
+	if (hashtable_full(* table))
+		hashtable_grow(table);
 }
 
 template<typename Type> inline
-ssize slot(HashTable<Type> table, u64 key) {
+ssize hashtable_slot(HashTable<Type> table, u64 key) {
 	for (ssize idx = 0; idx < ssize(num(table.Hashes)); ++idx)
 		if (table.Hashes[idx] == key)
 			return idx;
@@ -637,7 +669,7 @@ ssize slot(HashTable<Type> table, u64 key) {
 }
 
 template<typename Type> inline
-ssize add_entry(HashTable<Type>* table, u64 key) {
+ssize hashtable_add_entry(HashTable<Type>* table, u64 key) {
 	ssize idx;
 	HashTableEntry<Type> entry = { key, -1 };
 
@@ -647,7 +679,7 @@ ssize add_entry(HashTable<Type>* table, u64 key) {
 }
 
 template<typename Type> inline
-HashTableFindResult find(HashTable<Type> table, u64 key)
+HashTableFindResult hashtable_find(HashTable<Type> table, u64 key)
 {
 	HashTableFindResult result = { -1, -1, -1 };
 
@@ -670,29 +702,29 @@ HashTableFindResult find(HashTable<Type> table, u64 key)
 }
 
 template<typename Type> inline
-bool full(HashTable<Type> table) {
+bool hashtable_full(HashTable<Type> table) {
 	usize critical_load = usize(HashTable_CriticalLoadScale * f32(array_num(table.Hashes)));
 	b32 result = array_num(table.Entries) > critical_load;
 	return result;
 }
 
-#define hashtable_init(Type, allocator)               hashtable_init<Type>(allocator)
-#define hashtable_init_reserve(Type, allocator, num)  hashtable_init_reserve<Type>(allocator, num)
-#define hashtable_clear(Type, table)                  clear<Type>(table)
-#define hashtable_destroy(Type, table)                destroy<Type>(table)
-#define hashtable_get(Type, table, key)               get<Type>(table, key)
-#define hashtable_grow(Type, table)                   grow<Type>(table)
-#define hashtable_rehash(Type, table, new_num)        rehash<Type>(table, new_num)
-#define hashtable_rehash_fast(Type, table)            rehash_fast<Type>(table)
-#define hashtable_remove(Type, table, key)            remove<Type>(table, key)
-#define hashtable_remove_entry(Type, table, idx)      remove_entry<Type>(table, idx)
-#define hashtable_set(Type, table, key, value)        set<Type>(table, key, value)
-#define hashtable_slot(Type, table, key)              slot<Type>(table, key)
-#define hashtable_add_entry(Type, table, key)         add_entry<Type>(table, key)
-#define hashtable_find(Type, table, key)              find<Type>(table, key)
-#define hashtable_full(Type, table)                   full<Type>(table)
-#define hashtable_map(Type, table, map_proc)          map<Type>(table, map_proc)
-#define hashtable_map_mut(Type, table, map_proc)      map_mut<Type>(table, map_proc)
+#define hashtable_init(type, allocator)              hashtable_init        <type>(allocator)
+#define hashtable_init_reserve(type, allocator, num) hashtable_init_reserve<type>(allocator, num)
+#define hashtable_clear(table)                       hashtable_clear       < TStripPtr<table> >(table)
+#define hashtable_destroy(table)                     hashtable_destroy     < TStripPtr<table> >(& table)
+#define hashtable_get(table, key)                    hashtable_get         < TStripPtr<table> >(table, key)
+#define hashtable_grow(table)                        hashtable_grow        < TStripPtr<table> >(& table)
+#define hashtable_rehash(table, new_num)             hashtable_rehash      < TStripPtr<table> >(& table, new_num)
+#define hashtable_rehash_fast(table)                 hashtable_rehash_fast < TStripPtr<table> >(table)
+#define hashtable_remove(table, key)                 hashtable_remove      < TStripPtr<table> >(table, key)
+#define hashtable_remove_entry(table, idx)           hashtable_remove_entry< TStripPtr<table> >(table, idx)
+#define hashtable_set(table, key, value)             hashtable_set         < TStripPtr<table> >(& table, key, value)
+#define hashtable_slot(table, key)                   hashtable_slot        < TStripPtr<table> >(table, key)
+#define hashtable_add_entry(table, key)              hashtable_add_entry   < TStripPtr<table> >(& table, key)
+#define hashtable_find(table, key)                   hashtable_find        < TStripPtr<table> >(table, key)
+#define hashtable_full(table)                        hashtable_full        < TStripPtr<table> >(table)
+#define hashtable_map(table, map_proc)               hashtable_map         < TStripPtr<table> >(table, map_proc)
+#define hashtable_map_mut(table, map_proc)           hashtable_map_mut     < TStripPtr<table> >(table, map_proc)
 
 #pragma endregion HashTable
 

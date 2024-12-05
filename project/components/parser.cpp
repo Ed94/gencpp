@@ -54,7 +54,7 @@ String to_string(ParseContext ctx)
 
 	sptr        length  = scope_start.Length;
 	char const* current = scope_start.Text + length;
-	while ( current <= array_back( & ctx.Tokens.Arr)->Text && *current != '\n' && length < 74 )
+	while ( current <= array_back( ctx.Tokens.Arr)->Text && *current != '\n' && length < 74 )
 	{
 		current++;
 		length++;
@@ -141,7 +141,7 @@ void init()
 	);
 
 	fixed_arena_init(& defines_map_arena);
-	defines = hashtable_init_reserve(StrC, allocator_info( & defines_map_arena), 256 );
+	defines = hashtable_init_reserve(StrC, fixed_arena_allocator_info( & defines_map_arena), 256 );
 }
 
 internal
@@ -170,8 +170,9 @@ bool _check_parse_args( StrC def, char const* func_name )
 	return true;
 }
 
-#	define currtok_noskip (*  current( &  Context.Tokens, dont_skip_formatting ))
-#	define currtok        (*  current( & Context.Tokens, skip_formatting ))
+#	define currtok_noskip (* current( &  Context.Tokens, dont_skip_formatting ))
+#	define currtok        (* current( & Context.Tokens, skip_formatting ))
+#	define peektok        (* peek(Context.Tokens, skip_formatting))
 #	define prevtok        (* previous( Context.Tokens, dont_skip_formatting))
 #	define nexttok		  (* next( Context.Tokens, skip_formatting ))
 #	define eat( Type_ )   __eat( & Context.Tokens, Type_ )
@@ -720,7 +721,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	// <ModuleFlags> <class/struct> <Attributes> <Name>
 
 	local_persist
-		char interface_arr_mem[ kilobytes(4) ] {0};
+	char interface_arr_mem[ kilobytes(4) ] {0};
 	Array<CodeTypename> interfaces; {
 		Arena arena = arena_init_from_memory( interface_arr_mem, kilobytes(4) );
 		interfaces  = array_init_reserve(CodeTypename, arena_allocator_info(& arena), 4 );
@@ -786,7 +787,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	array_free(& interfaces);
+	array_free(interfaces);
 	return result;
 }
 
@@ -1708,8 +1709,17 @@ CodeBody parse_global_nspace( CodeType which )
 			break;
 
 			case Tok_Preprocess_Macro:
+			{
 				member = parse_simple_preprocess( Tok_Preprocess_Macro );
 				// <Macro>
+
+				if ( member == Code_Invalid )
+				{
+					log_failure( "Failed to parse member\n%s", to_string(Context) );
+					pop(& Context);
+					return InvalidCode;
+				}
+			}
 			break;
 
 			case Tok_Preprocess_Pragma:
@@ -2935,7 +2945,7 @@ Code parse_simple_preprocess( TokType which )
 	eat( which );
 	// <Macro>
 
-	if ( currtok.Type == Tok_BraceCurly_Open )
+	if ( peektok.Type == Tok_BraceCurly_Open )
 	{
 		// Eat the block scope right after the macro. Were assuming the macro defines a function definition's signature
 		eat( Tok_BraceCurly_Open );
@@ -2977,7 +2987,7 @@ Code parse_simple_preprocess( TokType which )
 	{
 		if ( str_compare_len( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )
 		{
-			if ( check( Tok_Statement_End ))
+			if ( peektok.Type == Tok_Statement_End )
 			{
 				Token stmt_end = currtok;
 				eat( Tok_Statement_End );
@@ -2989,7 +2999,7 @@ Code parse_simple_preprocess( TokType which )
 			}
 		}
 
-		tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
+		tok.Length = ( (sptr)currtok_noskip.Text + currtok_noskip.Length ) - (sptr)tok.Text;
 	}
 
 	char const* content = str_fmt_buf( "%.*s ", tok.Length, tok.Text );
@@ -3554,7 +3564,7 @@ CodeEnum parse_enum( bool inplace_def )
 	push_scope();
 
 	Specifier specs_found[16] { Spec_NumSpecifiers };
-	s32        NumSpecifiers = 0;
+	s32       NumSpecifiers = 0;
 
 	CodeAttributes attributes = { nullptr };
 
@@ -3589,7 +3599,7 @@ CodeEnum parse_enum( bool inplace_def )
 	// enum <class> <Attributes> <Name>
 
 	b32  use_macro_underlying = false;
-	Code underlying_macro = { nullptr };
+	Code underlying_macro     = { nullptr };
 	if ( currtok.Type == Tok_Assign_Classifer )
 	{
 		eat( Tok_Assign_Classifer );
@@ -3701,9 +3711,9 @@ CodeEnum parse_enum( bool inplace_def )
 						eat( Tok_Operator );
 						// <Name> =
 
-						while ( currtok_noskip.Type != Tok_Comma && currtok_noskip.Type != Tok_BraceCurly_Close )
+						while ( currtok.Type != Tok_Comma && currtok.Type != Tok_BraceCurly_Close )
 						{
-							eat( currtok_noskip.Type );
+							eat( currtok.Type );
 						}
 					}
 					// <Name> = <Expression>
@@ -3717,6 +3727,9 @@ CodeEnum parse_enum( bool inplace_def )
 
 					if ( currtok.Type == Tok_Comma )
 					{
+						//Token prev = * previous(Context.Tokens, dont_skip_formatting);
+						//entry.Length = ( (sptr)prev.Text + prev.Length ) - (sptr)entry.Text;
+
 						eat( Tok_Comma );
 						// <Name> = <Expression> <Macro>,
 					}
@@ -3727,10 +3740,9 @@ CodeEnum parse_enum( bool inplace_def )
 						// eat( Tok_Comment );
 						// <Name> = <Expression> <Macro>, // <Inline Comment>
 					// }
-
-
-					//Token prev = * previous(Context.Tokens, dont_skip_formatting);
-					entry.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)entry.Text;
+					
+					Token prev = * previous(Context.Tokens, dont_skip_formatting);
+					entry.Length = ( (sptr)prev.Text + prev.Length ) - (sptr)entry.Text;
 
 					member = untyped_str( to_str(entry) );
 				break;
