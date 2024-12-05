@@ -7,11 +7,12 @@
 
 GEN_API_C_BEGIN
 
-struct FileInfo;
+typedef struct FileInfo_Def FileInfo;
 
 #ifndef GEN_PRINTF_MAXLEN
 #	define GEN_PRINTF_MAXLEN kilobytes(128)
 #endif
+typedef char PrintF_Buffer[GEN_PRINTF_MAXLEN];
 
 // NOTE: A locally persisting buffer is used internally
 char*  str_fmt_buf       ( char const* fmt, ... );

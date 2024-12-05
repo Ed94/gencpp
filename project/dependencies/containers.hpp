@@ -394,8 +394,8 @@ bool array_set_capacity(Array<Type>* array, usize new_capacity)
 // They are undefined in gen.hpp and gen.cpp at the end of the files.
 // We cpp library expects the user to use the regular calls as they can resolve the type fine.
 
-#define array_init(type, allocator)                        array_init           <type>                      (allocator )
-#define array_init_reserve(type, allocator, cap)           array_init_reserve   <type>                      (allocator, cap)
+#define array_init(type, allocator)                        array_init           <type>                               (allocator )
+#define array_init_reserve(type, allocator, cap)           array_init_reserve   <type>                               (allocator, cap)
 #define array_append_array(array, other)                   array_append         < get_array_underlying_type(array) > (& array, other )
 #define array_append_value(array, value)                   array_append         < get_array_underlying_type(array) > (& array, value )
 #define array_append_items(array, items, item_num)         array_append         < get_array_underlying_type(array) > (& array, items, item_num )
@@ -422,6 +422,10 @@ bool array_set_capacity(Array<Type>* array, usize new_capacity)
 #define HashTable(Type) HashTable<Type>
 
 template<class Type> struct HashTable;
+
+#ifndef get_hashtable_underlying_type
+#define get_hashtable_underlying_type(table) typename TRemovePtr<typeof(table)>:: DataType
+#endif
 
 struct HashTableFindResult {
 	ssize HashIndex;
@@ -483,6 +487,8 @@ struct HashTable
 	forceinline void  map_mut(void (*proc)(u64, Type*)) { GEN_NS map_mut<Type>(*this, proc); }
 #pragma endregion Member Mapping
 #endif
+
+	using DataType = Type;
 };
 
 #if GEN_SUPPORT_CPP_REFERENCES
@@ -708,23 +714,23 @@ bool hashtable_full(HashTable<Type> table) {
 	return result;
 }
 
-#define hashtable_init(type, allocator)              hashtable_init        <type>(allocator)
-#define hashtable_init_reserve(type, allocator, num) hashtable_init_reserve<type>(allocator, num)
-#define hashtable_clear(table)                       hashtable_clear       < TStripPtr<table> >(table)
-#define hashtable_destroy(table)                     hashtable_destroy     < TStripPtr<table> >(& table)
-#define hashtable_get(table, key)                    hashtable_get         < TStripPtr<table> >(table, key)
-#define hashtable_grow(table)                        hashtable_grow        < TStripPtr<table> >(& table)
-#define hashtable_rehash(table, new_num)             hashtable_rehash      < TStripPtr<table> >(& table, new_num)
-#define hashtable_rehash_fast(table)                 hashtable_rehash_fast < TStripPtr<table> >(table)
-#define hashtable_remove(table, key)                 hashtable_remove      < TStripPtr<table> >(table, key)
-#define hashtable_remove_entry(table, idx)           hashtable_remove_entry< TStripPtr<table> >(table, idx)
-#define hashtable_set(table, key, value)             hashtable_set         < TStripPtr<table> >(& table, key, value)
-#define hashtable_slot(table, key)                   hashtable_slot        < TStripPtr<table> >(table, key)
-#define hashtable_add_entry(table, key)              hashtable_add_entry   < TStripPtr<table> >(& table, key)
-#define hashtable_find(table, key)                   hashtable_find        < TStripPtr<table> >(table, key)
-#define hashtable_full(table)                        hashtable_full        < TStripPtr<table> >(table)
-#define hashtable_map(table, map_proc)               hashtable_map         < TStripPtr<table> >(table, map_proc)
-#define hashtable_map_mut(table, map_proc)           hashtable_map_mut     < TStripPtr<table> >(table, map_proc)
+#define hashtable_init(type, allocator)              hashtable_init        <type              >(allocator)
+#define hashtable_init_reserve(type, allocator, num) hashtable_init_reserve<type              >(allocator, num)
+#define hashtable_clear(table)                       hashtable_clear       < get_hashtable_underlying_type(table) >(table)
+#define hashtable_destroy(table)                     hashtable_destroy     < get_hashtable_underlying_type(table) >(& table)
+#define hashtable_get(table, key)                    hashtable_get         < get_hashtable_underlying_type(table) >(table, key)
+#define hashtable_grow(table)                        hashtable_grow        < get_hashtable_underlying_type(table) >(& table)
+#define hashtable_rehash(table, new_num)             hashtable_rehash      < get_hashtable_underlying_type(table) >(& table, new_num)
+#define hashtable_rehash_fast(table)                 hashtable_rehash_fast < get_hashtable_underlying_type(table) >(table)
+#define hashtable_remove(table, key)                 hashtable_remove      < get_hashtable_underlying_type(table) >(table, key)
+#define hashtable_remove_entry(table, idx)           hashtable_remove_entry< get_hashtable_underlying_type(table) >(table, idx)
+#define hashtable_set(table, key, value)             hashtable_set         < get_hashtable_underlying_type(table) >(& table, key, value)
+#define hashtable_slot(table, key)                   hashtable_slot        < get_hashtable_underlying_type(table) >(table, key)
+#define hashtable_add_entry(table, key)              hashtable_add_entry   < get_hashtable_underlying_type(table) >(& table, key)
+#define hashtable_find(table, key)                   hashtable_find        < get_hashtable_underlying_type(table) >(table, key)
+#define hashtable_full(table)                        hashtable_full        < get_hashtable_underlying_type(table) >(table)
+#define hashtable_map(table, map_proc)               hashtable_map         < get_hashtable_underlying_type(table) >(table, map_proc)
+#define hashtable_map_mut(table, map_proc)           hashtable_map_mut     < get_hashtable_underlying_type(table) >(table, map_proc)
 
 #pragma endregion HashTable
 

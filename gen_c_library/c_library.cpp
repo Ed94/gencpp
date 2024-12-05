@@ -26,7 +26,7 @@ GEN_NS_END
 using namespace gen;
 
 constexpr char const* generation_notice =
-"// This file was generated automatially by gencpp's c_library.cpp"
+"// This file was generated automatially by gencpp's c_library.cpp  "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
 constexpr StrC roll_own_dependencies_guard_start = txt(R"(
@@ -198,7 +198,7 @@ int gen_main()
 					(body_entry->Type) {
 						case CT_Preprocess_If:
 						{
-							ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), body_entry, body );
+							ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), body_entry, body, new_body );
 						}
 						break;
 
@@ -213,10 +213,10 @@ int gen_main()
 				break;
 				case CT_Preprocess_If:
 				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory );
+					b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory, memory );
 					if (found) break;
 
-					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_memory );
+					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_memory, memory );
 					if (found) break;
 
 					memory.append(entry);
@@ -224,7 +224,7 @@ int gen_main()
 				break;
 				case CT_Preprocess_IfDef:
 				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory );
+					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory, memory );
 					if (found) break;
 
 					memory.append(entry);
@@ -251,14 +251,10 @@ int gen_main()
 			}
 		}
 
-		// CodeBody selectors = generate_generic_selectors(needs_selectors);
-		// memory.append_at(selectors, 0)
-		// memory.append(fmt_newline);
-
 		header.print( dump_to_scratch_and_retireve(memory) );
 
 		Code string_ops = scan_file( project_dir "dependencies/string_ops.hpp" );
-		// header.print( string_ops );
+		header.print( string_ops );
 
 		CodeBody printing_parsed = parse_file( project_dir "dependencies/printing.hpp" );
 		CodeBody printing        = def_body(CT_Global_Body);
@@ -268,7 +264,7 @@ int gen_main()
 			{
 				case CT_Preprocess_IfDef:
 				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed );
+					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed, printing );
 					if (found) break;
 
 					printing.append(entry);
@@ -290,7 +286,7 @@ int gen_main()
 				break;
 			}
 		}
-		// header.print(dump_to_scratch_and_retireve(printing));
+		header.print(dump_to_scratch_and_retireve(printing));
 
 		CodeBody containers = def_body(CT_Global_Body);
 		{
@@ -301,11 +297,11 @@ int gen_main()
 
 			containers.append( def_pragma(code(endregion Containers)));
 		}
-		// header.print(fmt_newline);
-		// header.print(dump_to_scratch_and_retireve(containers));
+		header.print(fmt_newline);
+		header.print(dump_to_scratch_and_retireve(containers));
 
 		Code hashing = scan_file( project_dir "dependencies/hashing.hpp" );
-		// header.print( hashing );
+		header.print( hashing );
 
 		CodeBody parsed_strings = parse_file( project_dir "dependencies/strings.hpp" );
 		CodeBody strings        = def_body(CT_Global_Body);
@@ -318,8 +314,8 @@ int gen_main()
 					CodePreprocessCond cond = cast(CodePreprocessCond, entry);
 					if (cond->Content.starts_with(txt("GEN_COMPILER_C || ! GEN_SUPPORT_CPP_MEMBER_FEATURES")))
 					{
-						++ entry;
-						strings.append(entry); // typedef
+						for (; entry != end(parsed_strings) && entry->Type != CT_Typedef; ++ entry) {}
+						strings.append(entry);
 						strings.append(fmt_newline);
 
 						for (; entry != end(parsed_strings) && entry->Type != CT_Preprocess_EndIf; ++ entry) {}
@@ -327,16 +323,16 @@ int gen_main()
 						break;
 					}
 
-					bool found = ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), entry, parsed_strings);
+					bool found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_strings, strings);
 					if (found) break;
 
-					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_strings);
+					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_strings, strings );
 				}
 				break;
 
 				case CT_Preprocess_IfDef:
 				{
-					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_strings );
+					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_strings, strings );
 				}
 				break;
 
@@ -362,7 +358,7 @@ int gen_main()
 					(body_entry->Type) {
 						case CT_Preprocess_If:
 						{
-							b32 found = ignore_preprocess_cond_block(txt("! GEN_COMPILER_C"), body_entry, body );
+							b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), body_entry, body, new_body );
 							if (found) break;
 
 							new_body.append(body_entry);
@@ -382,7 +378,7 @@ int gen_main()
 				break;
 			}
 		}
-		// header.print(dump_to_scratch_and_retireve(strings));
+		header.print(dump_to_scratch_and_retireve(strings));
 
 		Code filesystem = scan_file( project_dir "dependencies/filesystem.hpp" );
 		Code timing = scan_file( project_dir "dependencies/timing.hpp" );

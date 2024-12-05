@@ -4,7 +4,6 @@
 #endif
 
 #pragma region Memory
-
 GEN_API_C_BEGIN
 
 void* mem_copy( void* dest, void const* source, ssize n )
@@ -520,5 +519,4 @@ void pool_clear(Pool* pool)
 }
 
 GEN_API_C_END
-
 #pragma endregion Memory

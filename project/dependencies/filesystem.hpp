@@ -4,10 +4,11 @@
 #endif
 
 #pragma region File Handling
+GEN_API_C_BEGIN
 
 typedef u32 FileMode;
 
-enum FileModeFlag
+enum FileModeFlag_Def
 {
 	EFileMode_READ   = bit( 0 ),
 	EFileMode_WRITE  = bit( 1 ),
@@ -15,16 +16,18 @@ enum FileModeFlag
 	EFileMode_RW     = bit( 3 ),
 	GEN_FILE_MODES   = EFileMode_READ | EFileMode_WRITE | EFileMode_APPEND | EFileMode_RW,
 };
+typedef enum FileModeFlag_Def FileModeFlag;
 
 // NOTE: Only used internally and for the file operations
-enum SeekWhenceType
+enum SeekWhenceType_Def
 {
 	ESeekWhence_BEGIN   = 0,
 	ESeekWhence_CURRENT = 1,
 	ESeekWhence_END     = 2,
 };
+typedef enum SeekWhenceType_Def SeekWhenceType;
 
-enum FileError
+enum FileError_Def
 {
 	EFileError_NONE,
 	EFileError_INVALID,
@@ -37,15 +40,17 @@ enum FileError
 	EFileError_NAME_TOO_LONG,
 	EFileError_UNKNOWN,
 };
+typedef enum FileError_Def FileError;
 
-union FileDescriptor
+union FileDescriptor_Def
 {
 	void* p;
 	sptr  i;
 	uptr  u;
 };
+typedef union FileDescriptor_Def FileDescriptor;
 
-typedef struct FileOperations FileOperations;
+typedef struct FileOperations_Def FileOperations;
 
 #define GEN_FILE_OPEN_PROC( name )     FileError name( FileDescriptor* fd, FileOperations* ops, FileMode mode, char const* filename )
 #define GEN_FILE_READ_AT_PROC( name )  b32 name( FileDescriptor fd, void* buffer, ssize size, s64 offset, ssize* bytes_read, b32 stop_at_newline )
@@ -59,35 +64,39 @@ typedef GEN_FILE_WRITE_AT_PROC( FileWriteProc );
 typedef GEN_FILE_SEEK_PROC( FileSeekProc );
 typedef GEN_FILE_CLOSE_PROC( FileCloseProc );
 
-struct FileOperations
+struct FileOperations_Def
 {
 	FileReadProc*  read_at;
 	FileWriteProc* write_at;
 	FileSeekProc*  seek;
 	FileCloseProc* close;
 };
+typedef struct FileOperations_Def FileOperations;
 
 extern FileOperations const default_file_operations;
 
 typedef u64 FileTime;
 
-enum DirType
+enum DirType_Def
 {
 	GEN_DIR_TYPE_FILE,
 	GEN_DIR_TYPE_FOLDER,
 	GEN_DIR_TYPE_UNKNOWN,
 };
+typedef enum DirType_Def DirType;
 
-struct DirInfo;
+struct DirInfo_Def;
+typedef struct DirInfo_Def DirInfo;
 
-struct DirEntry
+struct DirEntry_Def
 {
-	char const*     filename;
-	struct DirInfo* dir_info;
-	u8              type;
+	char const* filename;
+	DirInfo*    dir_info;
+	u8          type;
 };
+typedef struct DirEntry_Def DirEntry;
 
-struct DirInfo
+struct DirInfo_Def
 {
 	char const* fullpath;
 	DirEntry*   entries;    // zpl_array
@@ -97,7 +106,7 @@ struct DirInfo
 	String buf;
 };
 
-struct FileInfo
+struct FileInfo_Def
 {
 	FileOperations ops;
 	FileDescriptor fd;
@@ -107,8 +116,9 @@ struct FileInfo
 	FileTime    last_write_time;
 	DirEntry*   dir;
 };
+typedef struct FileInfo_Def FileInfo;
 
-enum FileStandardType
+enum FileStandardType_Def
 {
 	EFileStandard_INPUT,
 	EFileStandard_OUTPUT,
@@ -116,6 +126,7 @@ enum FileStandardType
 
 	EFileStandard_COUNT,
 };
+typedef enum FileStandardType_Def FileStandardType;
 
 /**
 	* Get standard file I/O.
@@ -257,7 +268,7 @@ b32 file_write_at( FileInfo* file, void const* buffer, ssize size, s64 offset );
 	*/
 b32 file_write_at_check( FileInfo* file, void const* buffer, ssize size, s64 offset, ssize* bytes_written );
 
-enum FileStreamFlags : u32
+enum FileStreamFlags_Def enum_underlying(u32)
 {
 	/* Allows us to write to the buffer directly. Beware: you can not append a new data! */
 	EFileStream_WRITABLE = bit( 0 ),
@@ -265,7 +276,10 @@ enum FileStreamFlags : u32
 	/* Clones the input buffer so you can write (zpl_file_write*) data into it. */
 	/* Since we work with a clone, the buffer size can dynamically grow as well. */
 	EFileStream_CLONE_WRITABLE = bit( 1 ),
+
+	EFileStream_UNDERLYING = GEN_U32_MAX,
 };
+typedef enum FileStreamFlags_Def FileStreamFlags;
 
 /**
 	* Opens a new memory stream
@@ -381,4 +395,5 @@ b32 file_write_at_check( FileInfo* f, void const* buffer, ssize size, s64 offset
 	return f->ops.write_at( f->fd, buffer, size, offset, bytes_written );
 }
 
+GEN_API_C_END
 #pragma endregion File Handling

@@ -4,6 +4,8 @@
 #endif
 
 #pragma region String
+GEN_API_C_BEGIN
+
 String string_make_length( AllocatorInfo allocator, char const* str, ssize length )
 {
 	constexpr ssize header_size = sizeof( StringHeader );
@@ -51,4 +53,6 @@ String string_make_reserve( AllocatorInfo allocator, ssize capacity )
 	String result = { rcast(char*, allocation) + header_size };
 	return result;
 }
+
+GEN_API_C_END
 #pragma endregion String

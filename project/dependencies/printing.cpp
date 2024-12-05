@@ -6,6 +6,7 @@
 #endif
 
 #pragma region Printing
+GEN_API_C_BEGIN
 
 enum
 {
@@ -549,7 +550,7 @@ char* str_fmt_buf( char const* fmt, ... )
 	return str;
 }
 
-ssize str_fmt_file_va( struct FileInfo* f, char const* fmt, va_list va )
+ssize str_fmt_file_va( FileInfo* f, char const* fmt, va_list va )
 {
 	local_persist thread_local char buf[ GEN_PRINTF_MAXLEN ];
 	ssize                              len = str_fmt_va( buf, size_of( buf ), fmt, va );
@@ -557,7 +558,7 @@ ssize str_fmt_file_va( struct FileInfo* f, char const* fmt, va_list va )
 	return res ? len : -1;
 }
 
-ssize str_fmt_file( struct FileInfo* f, char const* fmt, ... )
+ssize str_fmt_file( FileInfo* f, char const* fmt, ... )
 {
 	ssize      res;
 	va_list va;
@@ -597,4 +598,5 @@ ssize str_fmt_out_err( char const* fmt, ... )
 	return res;
 }
 
+GEN_API_C_END
 #pragma endregion Printing

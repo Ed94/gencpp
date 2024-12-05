@@ -7,7 +7,8 @@
 
 GEN_API_C_BEGIN
 
-struct StrC;
+struct StrC_Def;
+typedef struct StrC_Def StrC;
 
 bool        strc_are_equal           (StrC lhs, StrC rhs);
 char const* strc_back                (StrC str);
@@ -20,7 +21,7 @@ StrC        strc_visualize_whitespace(StrC str, AllocatorInfo allocator);
 GEN_API_C_END
 
 // Constant string with length.
-struct StrC
+struct StrC_Def
 {
 	ssize       Len;
 	char const* Ptr;
@@ -41,7 +42,14 @@ struct StrC
 };
 
 #define cast_to_strc( str ) * rcast( StrC*, (str) - sizeof(ssize) )
-#define txt( text )         StrC { sizeof( text ) - 1, ( text ) }
+
+#ifndef txt
+#	if GEN_COMPILER_CPP
+#		define txt( text )          StrC { sizeof( text ) - 1, ( text ) }
+#	else
+#		define txt( text )         (StrC){ sizeof( text ) - 1, ( text ) }
+#	endif
+#endif
 
 GEN_API_C_BEGIN
 forceinline char const* strc_begin(StrC str)                   { return str.Ptr; }
@@ -64,7 +72,7 @@ bool strc_are_equal(StrC lhs, StrC rhs)
 		return false;
 
 	for (ssize idx = 0; idx < lhs.Len; ++idx)
-		if (lhs[idx] != rhs[idx])
+		if (lhs.Ptr[idx] != rhs.Ptr[idx])
 			return false;
 
 	return true;
@@ -102,7 +110,8 @@ b32 strc_starts_with(StrC str, StrC substring) {
 
 inline
 StrC to_strc_from_c_str( char const* bad_str ) {
-	return { str_len( bad_str ), bad_str };
+	StrC result = { str_len( bad_str ), bad_str };
+	return result;
 }
 GEN_API_C_END
 
@@ -111,7 +120,8 @@ GEN_API_C_END
 // They used a header pattern
 // I kept it for simplicty of porting but its not necessary to keep it that way.
 #pragma region String
-struct StringHeader;
+        struct StringHeader_Def;
+typedef struct StringHeader_Def StringHeader;
 
 #if GEN_COMPILER_C || ! GEN_SUPPORT_CPP_MEMBER_FEATURES
 typedef char* String;
@@ -160,7 +170,7 @@ String        string_visualize_whitespace(String const str);
 
 GEN_API_C_END
 
-struct StringHeader {
+struct StringHeader_Def {
 	AllocatorInfo Allocator;
 	ssize         Capacity;
 	ssize         Length;
@@ -324,7 +334,7 @@ inline
 String string_fmt_buf(AllocatorInfo allocator, char const* fmt, ...)
 {
 	local_persist thread_local
-	char buf[GEN_PRINTF_MAXLEN] = { 0 };
+	PrintF_Buffer buf = struct_init(PrintF_Buffer, {0});
 
 	va_list va;
 	va_start(va, fmt);
@@ -366,7 +376,7 @@ inline
 bool string_append_c_str_len(String* str, char const* str_to_append, ssize append_length)
 {
 	GEN_ASSERT(str != nullptr);
-	if (sptr(str_to_append) > 0)
+	if ( rcast(sptr, str_to_append) > 0)
 	{
 		ssize curr_len = string_length(* str);
 
@@ -521,8 +531,8 @@ StringHeader* string_get_header(String str) {
 forceinline
 ssize string_length(String const str)
 {
-   StringHeader const& header = *rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
-   return header.Length;
+   StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
+   return header->Length;
 }
 
 inline
@@ -627,7 +637,8 @@ void strip_space(String str)
 
 forceinline
 StrC string_to_strc(String str) {
-	return { string_length(str), (char const*)str };
+	StrC result = { string_length(str), (char const*)str };
+	return result;
 }
 
 inline
@@ -695,15 +706,17 @@ String visualize_whitespace(String const str)
 }
 #pragma endregion String
 
+#if GEN_COMPILER_CPP
 struct String_POD {
 	char* Data;
 };
 static_assert( sizeof( String_POD ) == sizeof( String ), "String is not a POD" );
+#endif
 
 forceinline
 StrC strc_duplicate(StrC str, AllocatorInfo allocator) {
-	String result = string_make_length(allocator, str.Ptr, str.Len);
-	return { string_get_header(result)->Length, result };
+	StrC result = string_to_strc( string_make_length(allocator, str.Ptr, str.Len));
+	return result;
 }
 
 inline
@@ -745,5 +758,5 @@ typedef StrC StringCached;
 GEN_API_C_END
 
 // Implements basic string interning. Data structure is based off the ZPL Hashtable.
-typedef HashTable<StringCached> StringTable;
+typedef HashTable(StringCached) StringTable;
 #pragma endregion Strings

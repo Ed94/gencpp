@@ -7,7 +7,7 @@ using namespace gen;
 
 CodeBody gen_hashtable_base()
 {
-	return parse_global_body( code(
+	CodeBody struct_def = parse_global_body( code(
 		typedef struct HT_FindResult HT_FindResult;
 		struct HT_FindResult
 		{
@@ -16,6 +16,13 @@ CodeBody gen_hashtable_base()
 			ssize EntryIndex;
 		};
 	));
+
+	Code define_type = untyped_str(txt(
+R"(#define Hashtable(_type) HTE_##_type
+)"
+	));
+
+	return def_global_body(args(struct_def, define_type));
 }
 
 CodeBody gen_hashtable( StrC type, StrC hashtable_name )

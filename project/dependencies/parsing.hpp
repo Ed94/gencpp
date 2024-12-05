@@ -3,6 +3,7 @@
 #endif
 
 #pragma region ADT
+GEN_API_C_BEGIN
 
 enum ADT_Type : u32
 {
@@ -429,4 +430,5 @@ String csv_write_string( AllocatorInfo a, CSV_Object* obj )
 	return csv_write_string_delimiter( a, obj, ',' );
 }
 
+GEN_API_C_END
 #pragma endregion CSV

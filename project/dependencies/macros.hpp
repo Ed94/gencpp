@@ -183,6 +183,18 @@
 #	endif
 #endif
 
+#if GEN_COMPILER_CPP
+// Already Defined
+#elif GEN_COMPILER_C && __STDC_VERSION__ >= 201112L
+#	define thread_local _Thread_local
+#elif GEN_COMPILER_MSVC
+#	define thread_local __declspec(thread)
+#elif GEN_COMPILER_CLANG
+#	define thread_local __thread
+#else
+#	error "No thread local support"
+#endif
+
 #if !defined(GEN_SUPPORT_CPP_REFERENCES)
 #	define   GEN_SUPPORT_CPP_REFERENCES 1
 #endif
@@ -203,7 +215,7 @@
 #	if ! GEN_COMPILER_C
 #		define typeof decltype
 #	elif defined(_MSC_VER)
-#		define typeof(x) __typeof(x)
+#		define typeof(x) __typeof__(x)
 #	elif defined(__GNUC__) || defined(__clang__)
 #		define typeof(x) __typeof__(x)
 #	else
@@ -245,6 +257,12 @@
 #	define GEN_PARAM_DEFAULT = {}
 #else
 #	define GEN_PARAM_DEFAULT
+#endif
+
+#if GEN_COMPILER_CPP
+    #define struct_init(type, value) {value}
+#else
+    #define struct_init(type, value) {value}
 #endif
 
 #pragma endregion Macros

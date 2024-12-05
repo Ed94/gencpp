@@ -5,7 +5,7 @@
 
 
 
-b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& body )
+b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& parsed_body, CodeBody& body )
 {
 	b32 found = false;
 	CodePreprocessCond cond = cast(CodePreprocessCond, entry_iter);
@@ -16,7 +16,7 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& bod
 
 		s32 depth = 1;
 		++ entry_iter;
-		for(b32 continue_for = true; continue_for && entry_iter != body.end(); ) switch
+		for(b32 continue_for = true; continue_for && entry_iter != parsed_body.end(); ) switch
 		(entry_iter->Type) {
 			case CT_Preprocess_If:
 			case CT_Preprocess_IfDef:
@@ -27,7 +27,7 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& bod
 
 			case CT_Preprocess_Else:
 				++ entry_iter;
-				for(; continue_for && entry_iter != body.end(); ++ entry_iter)
+				for(; continue_for && entry_iter != parsed_body.end(); ++ entry_iter)
 				{
 					if (entry_iter->Type == CT_Preprocess_EndIf)
 					{
