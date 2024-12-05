@@ -236,7 +236,8 @@ forceinline
 s32 lex_preprocessor_directive( LexContext* ctx )
 {
 	char const* hash = ctx->scanner;
-	array_append( & Tokens, { hash, 1, Tok_Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess } );
+	Token hash_tok = { hash, 1, Tok_Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess };
+	array_append( Tokens, hash_tok  );
 
 	move_forward();
 	SkipWhitespace();
@@ -312,14 +313,14 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		ctx->token.Length = ctx->token.Length + ctx->token.Text - hash;
 		ctx->token.Text   = hash;
-		array_append( & Tokens, ctx->token );
+		array_append( Tokens, ctx->token );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
 	if ( ctx->token.Type == Tok_Preprocess_Else || ctx->token.Type == Tok_Preprocess_EndIf )
 	{
 		ctx->token.Flags |= TF_Preprocess_Cond;
-		array_append( & Tokens, ctx->token );
+		array_append( Tokens, ctx->token );
 		end_line();
 		return Lex_Continue;
 	}
@@ -328,7 +329,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Flags |= TF_Preprocess_Cond;
 	}
 
-	array_append( & Tokens, ctx->token );
+	array_append( Tokens, ctx->token );
 
 	SkipWhitespace();
 
@@ -352,7 +353,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			name.Length++;
 		}
 
-		array_append( & Tokens, name );
+		array_append( Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
 		hashtable_set(ctx->defines, key, to_str(name) );
@@ -398,7 +399,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			move_forward();
 		}
 
-		array_append( & Tokens, preprocess_content );
+		array_append( Tokens, preprocess_content );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
@@ -461,7 +462,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		preprocess_content.Length++;
 	}
 
-	array_append( & Tokens, preprocess_content );
+	array_append( Tokens, preprocess_content );
 	return Lex_Continue; // Skip found token, its all handled here.
 }
 
@@ -470,7 +471,7 @@ void lex_found_token( LexContext* ctx )
 {
 	if ( ctx->token.Type != Tok_Invalid )
 	{
-		array_append( & Tokens, ctx->token );
+		array_append( Tokens, ctx->token );
 		return;
 	}
 
@@ -497,7 +498,7 @@ void lex_found_token( LexContext* ctx )
 		}
 
 		ctx->token.Type = type;
-		array_append( & Tokens, ctx->token );
+		array_append( Tokens, ctx->token );
 		return;
 	}
 
@@ -507,7 +508,7 @@ void lex_found_token( LexContext* ctx )
 	{
 		ctx->token.Type   = type;
 		ctx->token.Flags |= TF_Specifier;
-		array_append( & Tokens, ctx->token );
+		array_append( Tokens, ctx->token );
 		return;
 	}
 
@@ -515,7 +516,7 @@ void lex_found_token( LexContext* ctx )
 	if ( type != Tok_Invalid )
 	{
 		ctx->token.Type = type;
-		array_append( & Tokens, ctx->token );
+		array_append( Tokens, ctx->token );
 		return;
 	}
 
@@ -569,7 +570,7 @@ void lex_found_token( LexContext* ctx )
 		ctx->token.Type = Tok_Identifier;
 	}
 
-	array_append( & Tokens, ctx->token );
+	array_append( Tokens, ctx->token );
 }
 
 neverinline
@@ -643,7 +644,7 @@ TokArray lex( StrC content )
 				c.token.Type = Tok_NewLine;
 				c.token.Length++;
 
-				array_append( & Tokens, c.token );
+				array_append( Tokens, c.token );
 				continue;
 			}
 		}
@@ -679,7 +680,7 @@ TokArray lex( StrC content )
 								c.token.Length++;
 								move_forward();
 
-								array_append( & Tokens, c.token );
+								array_append( Tokens, c.token );
 							}
 						}
 
@@ -1134,7 +1135,7 @@ TokArray lex( StrC content )
 							move_forward();
 							c.token.Length++;
 						}
-						array_append( & Tokens, c.token );
+						array_append( Tokens, c.token );
 						continue;
 					}
 					else if ( current == '*' )
@@ -1170,7 +1171,7 @@ TokArray lex( StrC content )
 							move_forward();
 							c.token.Length++;
 						}
-						array_append( & Tokens, c.token );
+						array_append( Tokens, c.token );
 						// end_line();
 						continue;
 					}
@@ -1303,7 +1304,7 @@ TokArray lex( StrC content )
 					c.token.Length++;
 					move_forward();
 
-					array_append( & Tokens, c.token );
+					array_append( Tokens, c.token );
 					continue;
 				}
 			}

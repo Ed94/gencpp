@@ -13,43 +13,7 @@
 // They are undefined in gen.hpp and gen.cpp at the end of the files.
 // We cpp library expects the user to use the regular calls as they can resolve the type fine.
 
-#define array_init(type, allocator)                        array_init           <type>                               (allocator )
-#define array_init_reserve(type, allocator, cap)           array_init_reserve   <type>                               (allocator, cap)
-#define array_append_array(array, other)                   array_append         < get_array_underlying_type(array) > (& array, other )
-#define array_append_value(array, value)                   array_append         < get_array_underlying_type(array) > (& array, value )
-#define array_append_items(array, items, item_num)         array_append         < get_array_underlying_type(array) > (& array, items, item_num )
-#define array_append_at(array, item, idx )                 array_append_at      < get_array_underlying_type(array) > (& array, item, idx )
-#define array_append_at_items(array, items, item_num, idx) array_append_at_items< get_array_underlying_type(array) > (& items, item_num, idx )
-#define array_back(array)                                  array_back           < get_array_underlying_type(array) > (array )
-#define array_clear(array)                                 array_clear          < get_array_underlying_type(array) > (array )
-#define array_fill(array, begin, end, value)               array_fill           < get_array_underlying_type(array) > (array, begin, end, value )
-#define array_free(array)                                  array_free           < get_array_underlying_type(array) > (& array )
-#define arary_grow(array, min_capacity)                    arary_grow           < get_array_underlying_type(array) > (& array, min_capacity)
-#define array_num(array)                                   array_num            < get_array_underlying_type(array) > (array )
-#define arary_pop(array)                                   arary_pop            < get_array_underlying_type(array) > (array )
-#define arary_remove_at(array, idx)                        arary_remove_at      < get_array_underlying_type(array) > (idx)
-#define arary_reserve(array, new_capacity)                 arary_reserve        < get_array_underlying_type(array) > (& array, new_capacity )
-#define arary_resize(array, num)                           arary_resize         < get_array_underlying_type(array) > (& array, num)
-#define arary_set_capacity(new_capacity)                   arary_set_capacity   < get_array_underlying_type(array) > (& array, new_capacity )
-#define arary_get_header(array)                            arary_get_header     < get_array_underlying_type(array) > (array )
-
-#define hashtable_init(type, allocator)              hashtable_init        <type              >(allocator)
-#define hashtable_init_reserve(type, allocator, num) hashtable_init_reserve<type              >(allocator, num)
-#define hashtable_clear(table)                       hashtable_clear       < get_hashtable_underlying_type(table) >(table)
-#define hashtable_destroy(table)                     hashtable_destroy     < get_hashtable_underlying_type(table) >(& table)
-#define hashtable_get(table, key)                    hashtable_get         < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_grow(table)                        hashtable_grow        < get_hashtable_underlying_type(table) >(& table)
-#define hashtable_rehash(table, new_num)             hashtable_rehash      < get_hashtable_underlying_type(table) >(& table, new_num)
-#define hashtable_rehash_fast(table)                 hashtable_rehash_fast < get_hashtable_underlying_type(table) >(table)
-#define hashtable_remove(table, key)                 hashtable_remove      < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_remove_entry(table, idx)           hashtable_remove_entry< get_hashtable_underlying_type(table) >(table, idx)
-#define hashtable_set(table, key, value)             hashtable_set         < get_hashtable_underlying_type(table) >(& table, key, value)
-#define hashtable_slot(table, key)                   hashtable_slot        < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_add_entry(table, key)              hashtable_add_entry   < get_hashtable_underlying_type(table) >(& table, key)
-#define hashtable_find(table, key)                   hashtable_find        < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_full(table)                        hashtable_full        < get_hashtable_underlying_type(table) >(table)
-#define hashtable_map(table, map_proc)               hashtable_map         < get_hashtable_underlying_type(table) >(table, map_proc)
-#define hashtable_map_mut(table, map_proc)           hashtable_map_mut     < get_hashtable_underlying_type(table) >(table, map_proc)
+#include "helpers/push_container_defines.inline.hpp"
 
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 //! Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
@@ -75,42 +39,5 @@ GEN_NS_BEGIN
 
 GEN_NS_END
 
+#include "helpers/pop_container_defines.inline.hpp"
 #include "helpers/pop_ignores.inline.hpp"
-
-#undef array_init
-#undef array_init_reserve
-#undef array_append_array
-#undef array_append_value
-#undef array_append_items
-#undef array_append_at
-#undef array_append_at
-#undef array_back
-#undef array_clear
-#undef array_fill
-#undef array_free
-#undef arary_grow
-#undef array_num
-#undef arary_pop
-#undef arary_remove_at
-#undef arary_reserve
-#undef arary_resize
-#undef arary_set_capacity
-#undef arary_get_header
-
-#undef hashtable_init
-#undef hashtable_init_reserve
-#undef hashtable_clear
-#undef hashtable_destroy
-#undef hashtable_get
-#undef hashtable_grow
-#undef hashtable_rehash
-#undef hashtable_rehash_fast
-#undef hashtable_remove
-#undef hashtable_remove_entry
-#undef hashtable_set
-#undef hashtable_slot
-#undef hashtable_add_entry
-#undef hashtable_find
-#undef hashtable_full
-#undef hashtable_map
-#undef hashtable_map_mut

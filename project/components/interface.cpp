@@ -24,7 +24,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
-				if ( ! array_append( & Global_AllocatorBuckets, bucket ) )
+				if ( ! array_append( Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
 				last = array_back(Global_AllocatorBuckets);
@@ -51,7 +51,7 @@ void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, s
 				if ( bucket.PhysicalStart == nullptr )
 					GEN_FATAL( "Failed to create bucket for Global_AllocatorBuckets");
 
-				if ( ! array_append( & Global_AllocatorBuckets, bucket ) )
+				if ( ! array_append( Global_AllocatorBuckets, bucket ) )
 					GEN_FATAL( "Failed to append bucket to Global_AllocatorBuckets");
 
 				last = array_back(Global_AllocatorBuckets);
@@ -249,7 +249,7 @@ void init()
 		if ( bucket.PhysicalStart == nullptr )
 			GEN_FATAL( "Failed to create first bucket for Global_AllocatorBuckets");
 
-		array_append( & Global_AllocatorBuckets, bucket );
+		array_append( Global_AllocatorBuckets, bucket );
 	}
 
 	// Setup the arrays
@@ -272,7 +272,7 @@ void init()
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the code pool" );
 
-		array_append( & CodePools, code_pool );
+		array_append( CodePools, code_pool );
 
 		LexArena = arena_init_from_allocator( Allocator_Lexer, LexAllocator_Size );
 
@@ -281,7 +281,7 @@ void init()
 		if ( string_arena.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the string arena" );
 
-		array_append( & StringArenas, string_arena );
+		array_append( StringArenas, string_arena );
 	}
 
 	// Setup the hash tables
@@ -381,7 +381,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 	{
 		Arena new_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
-		if ( ! array_append( & StringArenas, new_arena ) )
+		if ( ! array_append( StringArenas, new_arena ) )
 			GEN_FATAL( "gen::get_string_allocator: Failed to allocate a new string arena" );
 
 		last = array_back(StringArenas);
@@ -419,7 +419,7 @@ Code make_code()
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePool allcoator returned nullptr." );
 
-		if ( ! array_append( & CodePools, code_pool ) )
+		if ( ! array_append( CodePools, code_pool ) )
 			GEN_FATAL( "gen::make_code: Failed to allocate a new code pool - CodePools failed to append new pool." );
 
 		allocator = array_back( CodePools);

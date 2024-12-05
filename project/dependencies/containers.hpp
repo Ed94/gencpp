@@ -39,10 +39,10 @@ usize array_grow_formula(ssize value);
 template<class Type> Array<Type>  array_init           (AllocatorInfo allocator);
 template<class Type> Array<Type>  array_init_reserve   (AllocatorInfo allocator, ssize capacity);
 template<class Type> bool         array_append_array   (Array<Type>* array, Array<Type> other);
-template<class Type> bool         array_append_value   (Array<Type>* array, Type value);
+template<class Type> bool         array_append         (Array<Type>* array, Type value);
 template<class Type> bool         array_append_items   (Array<Type>* array, Type* items, usize item_num);
 template<class Type> bool         array_append_at      (Array<Type>* array, Type item, usize idx);
-template<class Type> bool         array_append_at_items(Array<Type>* array, Type* items, usize item_num, usize idx);
+template<class Type> bool         array_append_items_at(Array<Type>* array, Type* items, usize item_num, usize idx);
 template<class Type> Type*        array_back           (Array<Type>  array);
 template<class Type> void         array_clear          (Array<Type>  array);
 template<class Type> bool         array_fill           (Array<Type>  array, usize begin, usize end, Type value);
@@ -150,8 +150,8 @@ usize array_grow_formula(ssize value) {
 }
 
 template<class Type> inline
-bool array_append(Array<Type>* array, Array<Type> other) {
-	return append(array, other, num(other));
+bool array_append_array(Array<Type>* array, Array<Type> other) {
+	return array_append_items(array, (Type*)other, num(other));
 }
 
 template<class Type> inline
@@ -173,7 +173,7 @@ bool array_append(Array<Type>* array, Type value)
 }
 
 template<class Type> inline
-bool array_append(Array<Type>* array, Type* items, usize item_num)
+bool array_append_items(Array<Type>* array, Type* items, usize item_num)
 {
 	ArrayHeader* header = array_get_header(array);
 
@@ -221,7 +221,7 @@ bool array_append_at(Array<Type>* array, Type item, usize idx)
 }
 
 template<class Type> inline
-bool array_append_at(Array<Type>* array, Type* items, usize item_num, usize idx)
+bool array_append_items_at(Array<Type>* array, Type* items, usize item_num, usize idx)
 {
 	ArrayHeader* header = get_header(array);
 
@@ -396,9 +396,9 @@ bool array_set_capacity(Array<Type>* array, usize new_capacity)
 
 #define array_init(type, allocator)                        array_init           <type>                               (allocator )
 #define array_init_reserve(type, allocator, cap)           array_init_reserve   <type>                               (allocator, cap)
-#define array_append_array(array, other)                   array_append         < get_array_underlying_type(array) > (& array, other )
-#define array_append_value(array, value)                   array_append         < get_array_underlying_type(array) > (& array, value )
-#define array_append_items(array, items, item_num)         array_append         < get_array_underlying_type(array) > (& array, items, item_num )
+#define array_append_array(array, other)                   array_append_array   < get_array_underlying_type(array) > (& array, other )
+#define array_append(array, value)                         array_append         < get_array_underlying_type(array) > (& array, value )
+#define array_append_items(array, items, item_num)         array_append_items   < get_array_underlying_type(array) > (& array, items, item_num )
 #define array_append_at(array, item, idx )                 array_append_at      < get_array_underlying_type(array) > (& array, item, idx )
 #define array_append_at_items(array, items, item_num, idx) array_append_at_items< get_array_underlying_type(array) > (& items, item_num, idx )
 #define array_back(array)                                  array_back           < get_array_underlying_type(array) > (array )
@@ -680,7 +680,7 @@ ssize hashtable_add_entry(HashTable<Type>* table, u64 key) {
 	HashTableEntry<Type> entry = { key, -1 };
 
 	idx = array_num(table->Entries);
-	array_append( & table->Entries, entry);
+	array_append( table->Entries, entry);
 	return idx;
 }
 

@@ -89,6 +89,10 @@
 #endif
 
 #ifndef num_args_impl
+
+// This is essentially an arg couneter version of GEN_SELECT_ARG macros
+// See section : _Generic function overloading for that usage (explains this heavier case)
+
 #define num_args_impl( _0,                                 \
 		_1,  _2,  _3,  _4,  _5,  _6,  _7,  _8,  _9, _10,   \
 		_11, _12, _13, _14, _15, _16, _17, _18, _19, _20,  \
@@ -263,6 +267,100 @@
     #define struct_init(type, value) {value}
 #else
     #define struct_init(type, value) {value}
+#endif
+
+// ------------------------ _Generic function overloading -----------------------------------------
+#if GEN_COMPILER_C
+// This implemnents macros for utilizing "The Naive Extendible _Generic Macro" explained in:
+// https://github.com/JacksonAllan/CC/blob/main/articles/Better_C_Generics_Part_1_The_Extendible_Generic.md
+// Since gencpp is used to generate the c-library, it was choosen over the more novel implementations to keep the macros as easy to understand and unopaque as possible.
+// Extensive effort was put in below to make this as easy as possible to understand what is going on with this mess of a preoprocessor.
+
+#define GEN_COMMA_OPERATOR , // The comma operator is used by preprocessor macros to delimit arguments, so we have to represent it via a macro to prevent parsing incorrectly.
+
+// Helper macros for argument selection
+#define GEN_SELECT_ARG_1( _1, ... ) _1 // <-- Of all th args passed pick _1.
+#define GEN_SELECT_ARG_2( _1, _2, ... ) _2 // <-- Of all the args passed pick _2.
+#define GEN_SELECT_ARG_3( _1, _2, _3, ... ) _3 // etc.. (by induction until _8, which we don't support any more beyond)
+// #define GEN_SELECT_ARG_4( _1, _2, _3, _4, ... ) _4
+// #define GEN_SELECT_ARG_5( _1, _2, _3, _4, _5, ... ) _5
+// #define GEN_SELECT_ARG_6( _1, _2, _3, _4, _5, _6, ... ) _6
+// #define GEN_SELECT_ARG_7( _1, _2, _3, _4, _5, _6, _7, ... ) _7
+// #define GEN_SELECT_ARG_8( _1, _2, _3, _4, _5, _6, _7, _8, ... ) _8
+
+#define GEN_GENERIC_SEL_ENTRY_TYPE             GEN_SELECT_ARG_1 // Use the arg expansion macro to select arg 1 which should have the type.
+#define GEN_GENERIC_SEL_ENTRY_FUNCTION         GEN_SELECT_ARG_2 // Use the arg expansion macro to select arg 2 which should have the function.
+#define GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER  GEN_SELECT_ARG_3 // Use the arg expansion macro to select arg 3 which should have the comma delimiter ','.
+
+#define GEN_RESOLVED_FUNCTION_CALL // Just used to indicate where the call "occurs"
+
+// ----------------------------------------------------------------------------------------------------------------------------------
+// GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( macro ) includes a _Generic slot only if the specified macro is defined (as type, function_name).
+// It takes advantage of the fact that if the macro is defined, then the expanded text will contain a comma.
+// Expands to ',' if it can find (type): (function) <comma_operator: ',' >
+// Where GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER is specifically looking for that <comma> ,
+#define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( slot_exp ) GEN_SELECT_ARG_3( slot_exp, GEN_SELECT_ARG_1( slot_exp, ): GEN_SELECT_ARG_2( slot_exp, ) GEN_COMMA_OPERATOR, , )
+//       ^Selects the comma                               ^ is the type                             ^ is the function                                    ^ comma delimiter to select                ^ Insert a comma
+// The slot won't exist if that comma is not found.
+//                                                                                                                                                                                                    |
+// This  is the same as above but it does not insert a comma                                                                                                                                          V no comma here.
+#define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST( slot_exp ) GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER( slot_exp, GEN_GENERIC_SEL_ENTRY_TYPE( slot_exp, ): GEN_GENERIC_SEL_ENTRY_FUNCTION( slot_exp, ), , )
+// Needed for the last slot as they don't allow trailing commas.
+// ----------------------------------------------------------------------------------------------------------------------------------
+
+// Below are generated on demand for a generated function
+// ----------------------------------------------------------------------------------------------------------------------------------
+#define GEN_FUNCTION_GENERIC_EXAMPLE( function_arguments ) _Generic(   \
+(function_arguments), /* Select Via Expression*/                       \
+  /* Extendibility slots: */                                           \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST FunctionID__ARGS_SIG_1 ) \
+) GEN_RESOLVED_FUNCTION_CALL( function_arguments )
+// ----------------------------------------------------------------------------------------------------------------------------------
+
+// Then each definiton of a function has an associated define:
+// #define <function_id_macro> GEN_GENERIC_FUNCTION_ARG_SIGNATURE( <function_id>, <arguments> )
+#define GEN_GENERIC_FUNCTION_ARG_SIGNATURE( name_of_function, type_delimiter ) type_delimiter name_of_function
+
+// Then somehwere later on
+// <etc> <return_type> <function_id> ( <arguments> ) { <implementation> }
+
+// Concrete example:
+#define ENABLE_GENERIC_EXAMPLE 0
+#if ENABLE_GENERIC_EXAMPLE
+
+// To add support for long:
+#define HASH__ARGS_SIG_1 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long, long long )
+size_t hash__P_long    ( long val ) { return val * 2654435761ull; }
+
+// To add support for long long:
+#define HASH__ARGS_SIG_2 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long_long, long long )
+size_t hash__P_long_long( long long val ) { return val * 2654435761ull; }
+
+// If using an Editor with support for syntax hightlighting macros: HASH__ARGS_SIG_1 and HASH_ARGS_SIG_2 should show color highlighting indicating the slot is enabled,
+// or, "defined" for usage during the compilation pass that handles the _Generic instrinsic.
+#define hash( function_arguments ) _Generic(                      \
+(function_arguments), /* Select Via Expression*/                  \
+  /* Extendibility slots: */                                      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_1 )      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_2 )      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_3 )      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_4 )      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_5 )      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_6 )      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_7 )      \
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST( HASH__ARGS_SIG_8 ) \
+) GEN_RESOLVED_FUNCTION_CALL( function_arguments )
+
+#endif // ENABLE_GENERIC_EXAMPLE
+
+// END OF ------------------------ _Generic function overloading ----------------------------------------- END OF
 #endif
 
 #pragma endregion Macros

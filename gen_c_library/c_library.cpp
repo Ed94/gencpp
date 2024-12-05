@@ -118,22 +118,33 @@ int gen_main()
 	{
 		header.print( c_library_header_start );
 
+#pragma region Scan, Parse, and Generate Components
+		Code types      = scan_file( project_dir "components/types.hpp" );
+		Code ast        = scan_file( project_dir "components/ast.hpp" );
+		Code ast_types  = scan_file( project_dir "components/ast_types.hpp" );
+		Code code_types = scan_file( project_dir "components/code_types.hpp" );
+		Code interface  = scan_file( project_dir "components/interface.hpp" );
+		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
+		Code header_end = scan_file( project_dir "components/header_end.hpp" );
+
+		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv" );
+		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
+		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
+		CodeBody ast_inlines = gen_ast_inlines();
+#pragma endregion Scan, Parse, and Generate Components
+
+#pragma region Scan, Parse, and Generate Dependencies
 		Code platform     = scan_file( project_dir "dependencies/platform.hpp" );
 		Code macros       = scan_file( project_dir "dependencies/macros.hpp" );
 		Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
 		Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
-
-		header.print_fmt( roll_own_dependencies_guard_start );
-		header.print( platform );
-		header.print_fmt( "\nGEN_NS_BEGIN\n" );
-
-		header.print( macros );
-		header.print( basic_types );
-		header.print( debug );
+		Code string_ops   = scan_file( project_dir "dependencies/string_ops.hpp" );
+		Code hashing      = scan_file( project_dir "dependencies/hashing.hpp" );
+		Code filesystem   = scan_file( project_dir "dependencies/filesystem.hpp" );
+		Code timing       = scan_file( project_dir "dependencies/timing.hpp" );
 
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
 		CodeBody memory        = def_body(CT_Global_Body);
-
 		for ( Code entry = parsed_memory.begin(); entry != parsed_memory.end(); ++ entry )
 		{
 			switch (entry->Type)
@@ -252,11 +263,6 @@ int gen_main()
 			}
 		}
 
-		header.print( dump_to_scratch_and_retireve(memory) );
-
-		Code string_ops = scan_file( project_dir "dependencies/string_ops.hpp" );
-		header.print( string_ops );
-
 		CodeBody printing_parsed = parse_file( project_dir "dependencies/printing.hpp" );
 		CodeBody printing        = def_body(CT_Global_Body);
 		for ( Code entry = printing_parsed.begin(); entry != printing_parsed.end(); ++ entry )
@@ -287,27 +293,6 @@ int gen_main()
 				break;
 			}
 		}
-		header.print(dump_to_scratch_and_retireve(printing));
-
-		CodeBody containers = def_body(CT_Global_Body);
-		{
-			containers.append( def_pragma(code(region Containers)));
-
-			containers.append( gen_array_base() );
-			containers.append( gen_hashtable_base() );
-
-			containers.append(fmt_newline);
-
-			CodeBody array_ssize = gen_array(txt("ssize"), txt("Array_ssize"));
-			containers.append(array_ssize);
-
-			containers.append( def_pragma(code(endregion Containers)));
-		}
-		header.print(fmt_newline);
-		header.print(dump_to_scratch_and_retireve(containers));
-
-		Code hashing = scan_file( project_dir "dependencies/hashing.hpp" );
-		header.print( hashing );
 
 		CodeBody parsed_strings = parse_file( project_dir "dependencies/strings.hpp" );
 		CodeBody strings        = def_body(CT_Global_Body);
@@ -386,7 +371,7 @@ int gen_main()
 					CodeTypedef td = cast(CodeTypedef, entry);
 					if (td->Name.contains(name_string_table))
 					{
-						CodeBody ht = gen_hashtable(name_string_table, name_string_table);
+						CodeBody ht = gen_hashtable(txt("StrC"), name_string_table);
 						strings.append(ht);
 						strings.append(td);
 						break;
@@ -400,30 +385,49 @@ int gen_main()
 				break;
 			}
 		}
-		header.print(dump_to_scratch_and_retireve(strings));
 
-		Code filesystem = scan_file( project_dir "dependencies/filesystem.hpp" );
-		Code timing = scan_file( project_dir "dependencies/timing.hpp" );
+		CodeBody containers = def_body(CT_Global_Body);
+		{
+			CodeBody array_ssize = gen_array(txt("ssize"), txt("Array_ssize"));
+
+			containers.append( def_pragma(code(region Containers)));
+
+			// At this point all arrays required should have been defined so its safe to generate the generic selectors.
+			containers.append( gen_array_base() );
+			containers.append( gen_array_generic_selection_interface());
+			containers.append( gen_hashtable_base() );
+
+			containers.append(fmt_newline);
+			containers.append(array_ssize);
+
+			containers.append( def_pragma(code(endregion Containers)));
+			containers.append(fmt_newline);
+		}
+#pragma endregion Scan, Parse, and Generate Dependencies
+
+#pragma region Print Dependencies
+		header.print_fmt( roll_own_dependencies_guard_start );
+		header.print( platform );
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
+
+		header.print( macros );
+		header.print( basic_types );
+		header.print( debug );
+		header.print( dump_to_scratch_and_retireve(memory) );
+		header.print( dump_to_scratch_and_retireve(printing));
+		header.print( string_ops );
+		header.print( dump_to_scratch_and_retireve(containers));
+		header.print( hashing );
+		header.print( dump_to_scratch_and_retireve(strings));
 		// header.print( filesystem );
 		// header.print( timing );
-
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print_fmt( roll_own_dependencies_guard_end );
+#pragma endregion Print Dependencies
 
-		Code types      = scan_file( project_dir "components/types.hpp" );
-		Code ast        = scan_file( project_dir "components/ast.hpp" );
-		Code ast_types  = scan_file( project_dir "components/ast_types.hpp" );
-		Code code_types = scan_file( project_dir "components/code_types.hpp" );
-		Code interface  = scan_file( project_dir "components/interface.hpp" );
-		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
-		Code header_end = scan_file( project_dir "components/header_end.hpp" );
 
-		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv" );
-		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
-		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
-		CodeBody ast_inlines = gen_ast_inlines();
-
-	#if 0
+#if 0
+#region region Print Components
 		header.print_fmt("#pragma region Types\n");
 		header.print( types );
 		header.print( fmt_newline );
@@ -434,7 +438,8 @@ int gen_main()
 		header.print( dump_to_scratch_and_retireve( especifier ));
 		header.print( fmt_newline );
 		header.print_fmt("#pragma endregion Types\n\n");
-	#endif
+#pragma endregion Print Compoennts
+#endif
 	}
 
 	header.print( pop_ignores );

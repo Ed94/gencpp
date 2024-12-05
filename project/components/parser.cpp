@@ -755,7 +755,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 			}
 			Token interface_tok = parse_identifier();
 
-			array_append( & interfaces, def_type( to_str(interface_tok) ) );
+			array_append( interfaces, def_type( to_str(interface_tok) ) );
 			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ...
 		}
 	}

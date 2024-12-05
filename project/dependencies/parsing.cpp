@@ -955,7 +955,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			adt_append_arr( root, NULL );
 		}
 
-		array_append( & root->nodes[ columnIndex ].nodes, rowItem );
+		array_append( root->nodes[ columnIndex ].nodes, rowItem );
 
 		if ( delimiter == delim )
 		{

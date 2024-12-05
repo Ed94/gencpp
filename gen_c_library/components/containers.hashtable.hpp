@@ -30,10 +30,10 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 
 	String tbl_type = {(char*) hashtable_name.duplicate(GlobalAllocator).Ptr};
 	String fn       = tbl_type.duplicate(GlobalAllocator);
-	str_to_lower(fn.Data);
+	// str_to_lower(fn.Data);
 
 	String name_lower = String::make( GlobalAllocator, hashtable_name );
-	str_to_lower( name_lower.Data );
+	// str_to_lower( name_lower.Data );
 
 	String hashtable_entry   = String::fmt_buf( GlobalAllocator, "HTE_%.*s",     hashtable_name.Len, hashtable_name.Ptr );
 	String entry_array_name  = String::fmt_buf( GlobalAllocator, "Arr_HTE_%.*s", hashtable_name.Len, hashtable_name.Ptr );
@@ -44,6 +44,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		"tbl_name",    (StrC) hashtable_name,
 		"tbl_type",    (StrC) tbl_type,
 	stringize(
+		typedef struct <tbl_type> <tbl_type>;
 		typedef struct HTE_<tbl_name> HTE_<tbl_name>;
 		struct HTE_<tbl_name>
 		{
@@ -101,8 +102,8 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		{
 			<tbl_type>
 			result        = { NULL, NULL };
-			result.Hashes  = array_ssize_make( allocator );
-			result.Entries = <fn_array>_make( allocator );
+			array_init(result.Hashes, allocator );
+			array_init(result.Entries, allocator );
 
 			return result;
 		}
@@ -111,8 +112,8 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		{
 			<tbl_type>
 			result         = { NULL, NULL };
-			result.Hashes  = array_ssize_make_reserve( allocator, num );
-			result.Entries = <fn_array>_make_reserve( allocator, num );
+			array_init_reserve(result.Hashes, allocator, num );
+			array_init_reserve(result.Entries, allocator, num );
 
 			return result;
 		}

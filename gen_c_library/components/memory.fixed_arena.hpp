@@ -63,6 +63,7 @@ CodeBody gen_fixed_arenas()
 	result.append(arena_struct_8kb);
 	result.append(arena_struct_16kb);
 	result.append(arena_struct_32kb);
+	result.append(arena_struct_64kb);
 	result.append(arena_struct_128kb);
 	result.append(arena_struct_256kb);
 	result.append(arena_struct_512kb);
@@ -75,6 +76,7 @@ CodeBody gen_fixed_arenas()
 	result.append(arena_interface_8kb);
 	result.append(arena_interface_16kb);
 	result.append(arena_interface_32kb);
+	result.append(arena_interface_64kb);
 	result.append(arena_interface_128kb);
 	result.append(arena_interface_256kb);
 	result.append(arena_interface_512kb);
@@ -100,7 +102,7 @@ CodeBody gen_fixed_arenas()
     FixedArena_1MB*   : fixed_arena_init_1MB,   \
     FixedArena_2MB*   : fixed_arena_init_2MB,   \
     FixedArena_4MB*   : fixed_arena_init_4MB    \
-)(expr)
+) GEN_RESOLVED_FUNCTION_CALL(& expr)
 
 #define fixed_arena_size_remaining(expr, alignment) _Generic((expr), \
     FixedArena_1KB*   : fixed_arena_size_remaining_1KB,              \
@@ -115,7 +117,7 @@ CodeBody gen_fixed_arenas()
     FixedArena_1MB*   : fixed_arena_size_remaining_1MB,              \
     FixedArena_2MB*   : fixed_arena_size_remaining_2MB,              \
     FixedArena_4MB*   : fixed_arena_size_remaining_4MB               \
-)(expr, alignment)
+)	GEN_RESOLVED_FUNCTION_CALL(& expr, alignment)
 )"
 	)));
 

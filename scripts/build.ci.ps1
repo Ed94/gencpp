@@ -237,6 +237,7 @@ if ( $c_library )
 	} elseif ($vendor -eq "msvc") {
 		$compiler_args += "/TC"       # Compile as C
 		$compiler_args += "/Zc:__cplusplus" # Fix __cplusplus macro
+		$compiler_args += "/std:c11"
 	}
 
 	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
