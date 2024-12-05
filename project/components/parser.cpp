@@ -4957,6 +4957,13 @@ CodeTypedef parse_typedef()
 		Context.Scope->Name = name;
 		eat( Tok_Preprocess_Macro );
 		// <ModuleFalgs> typedef <Preprocessed_Macro>
+
+		if ( currtok.Type == Tok_Identifier )
+		{
+			type = untyped_str({ name.Length, name.Text });
+			name = currtok;
+			eat(Tok_Identifier);
+		}
 	}
 	else
 	{

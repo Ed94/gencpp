@@ -18,7 +18,7 @@ CodeBody gen_hashtable_base()
 	));
 
 	Code define_type = untyped_str(txt(
-R"(#define Hashtable(_type) HTE_##_type
+R"(#define HashTable(_type) struct _type
 )"
 	));
 
@@ -27,14 +27,10 @@ R"(#define Hashtable(_type) HTE_##_type
 
 CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 {
-	String
-	fn = String::make_reserve( GlobalAllocator, hashtable_name.Len + sizeof("gen") );
-	fn.append_fmt( "%.*s", hashtable_name.Len, hashtable_name.Ptr );
-	str_to_lower(fn.Data);
 
-	String
-	tbl_type = String::make_reserve( GlobalAllocator, hashtable_name.Len + sizeof("gen") );
-	tbl_type.append_fmt( "%.*s", hashtable_name.Len, hashtable_name.Ptr );
+	String tbl_type = {(char*) hashtable_name.duplicate(GlobalAllocator).Ptr};
+	String fn       = tbl_type.duplicate(GlobalAllocator);
+	str_to_lower(fn.Data);
 
 	String name_lower = String::make( GlobalAllocator, hashtable_name );
 	str_to_lower( name_lower.Data );

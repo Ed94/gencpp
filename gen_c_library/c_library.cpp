@@ -102,6 +102,7 @@ int gen_main()
 
 	PreprocessorDefines.append(txt("GEN_API_C_BEGIN"));
 	PreprocessorDefines.append(txt("GEN_API_C_END"));
+	PreprocessorDefines.append(txt("HashTable("));
 
 	Code push_ignores           = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores            = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
@@ -295,6 +296,11 @@ int gen_main()
 			containers.append( gen_array_base() );
 			containers.append( gen_hashtable_base() );
 
+			containers.append(fmt_newline);
+
+			CodeBody array_ssize = gen_array(txt("ssize"), txt("Array_ssize"));
+			containers.append(array_ssize);
+
 			containers.append( def_pragma(code(endregion Containers)));
 		}
 		header.print(fmt_newline);
@@ -370,6 +376,22 @@ int gen_main()
 					}
 					entry->Body = new_body;
 					strings.append(entry);
+				}
+				break;
+
+				case CT_Typedef:
+				{
+					StrC name_string_table = txt("StringTable");
+
+					CodeTypedef td = cast(CodeTypedef, entry);
+					if (td->Name.contains(name_string_table))
+					{
+						CodeBody ht = gen_hashtable(name_string_table, name_string_table);
+						strings.append(ht);
+						strings.append(td);
+						break;
+					}
+					strings.append(td);
 				}
 				break;
 
