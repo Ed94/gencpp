@@ -1,5 +1,6 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #	pragma once
+#	include "parsing.hpp"
 #endif
 
 #pragma region ADT
@@ -42,7 +43,7 @@ u8 adt_destroy_branch( ADT_Node* node )
 			adt_destroy_branch( node->nodes + i );
 		}
 
-		array_free(& node->nodes);
+		array_free(node->nodes);
 	}
 	return 0;
 }
@@ -288,7 +289,7 @@ ADT_Node* adt_alloc_at( ADT_Node* parent, ssize index )
 
 	ADT_Node o = { 0 };
 	o.parent   = parent;
-	if ( ! array_append_at( & parent->nodes, o, index ) )
+	if ( ! array_append_at( parent->nodes, o, index ) )
 		return NULL;
 
 	ADT_Node* node = & parent->nodes[index];

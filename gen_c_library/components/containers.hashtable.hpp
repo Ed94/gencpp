@@ -44,7 +44,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		"tbl_name",    (StrC) hashtable_name,
 		"tbl_type",    (StrC) tbl_type,
 	stringize(
-		typedef struct <tbl_type> <tbl_type>;
+		typedef struct HashTable_<type> <tbl_type>;
 		typedef struct HTE_<tbl_name> HTE_<tbl_name>;
 		struct HTE_<tbl_name>
 		{
@@ -72,8 +72,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		"array_entry",    (StrC) entry_array_name,
 		"fn_array",       (StrC) entry_array_fn_ns,
 	stringize(
-		typedef struct <tbl_type> <tbl_type>;
-		struct <tbl_type>
+		struct HashTable_<type>
 		{
 			Array_ssize   Hashes;
 			<array_entry> Entries;
@@ -120,19 +119,19 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 
 		void <fn>_clear( <tbl_type> self )
 		{
-			for ( ssize idx = 0; idx < array_header( self.Hashes )->Num; idx++ )
+			for ( ssize idx = 0; idx < array_get_header( self.Hashes )->Num; idx++ )
 				self.Hashes[idx] = -1;
 
-			array_ssize_clear( self.Hashes );
-			<fn_array>_clear( self.Entries );
+			array_clear( self.Hashes );
+			array_clear( self.Entries );
 		}
 
 		void <fn>_destroy( <tbl_type> self )
 		{
 			if ( self.Hashes && self.Entries )
 			{
-				array_ssize_free( self.Hashes );
-				<fn_array>_free( self.Entries );
+				array_free( self.Hashes );
+				array_free( self.Entries );
 			}
 		}
 
@@ -149,7 +148,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		{
 			GEN_ASSERT_NOT_NULL( map_proc );
 
-			for ( ssize idx = 0; idx < array_header( self.Entries )->Num; idx++ )
+			for ( ssize idx = 0; idx < array_get_header( self.Entries )->Num; idx++ )
 			{
 				map_proc( self, self.Entries[idx].Key, self.Entries[idx].Value );
 			}
@@ -159,7 +158,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		{
 			GEN_ASSERT_NOT_NULL( map_proc );
 
-			for ( ssize idx = 0; idx < array_header( self.Entries )->Num; idx++ )
+			for ( ssize idx = 0; idx < array_get_header( self.Entries )->Num; idx++ )
 			{
 				map_proc( self, self.Entries[idx].Key, & self.Entries[idx].Value );
 			}
@@ -167,7 +166,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 
 		void <fn>_grow( <tbl_type>* self )
 		{
-			ssize new_num = array_grow_formula( array_header( self->Entries )->Num );
+			ssize new_num = array_grow_formula( array_get_header( self->Entries )->Num );
 			<fn>_rehash( self, new_num );
 		}
 
@@ -176,12 +175,12 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 			ssize idx;
 			ssize last_added_index;
 
-			ArrayHeader* old_hash_header    = array_header( self->Hashes );
-			ArrayHeader* old_entries_header = array_header( self->Entries );
+			ArrayHeader* old_hash_header    = array_get_header( self->Hashes );
+			ArrayHeader* old_entries_header = array_get_header( self->Entries );
 
 			<tbl_type> new_tbl = <fn>_make_reserve( old_hash_header->Allocator, old_hash_header->Num );
 
-			ArrayHeader* new_hash_header = array_header( new_tbl.Hashes );
+			ArrayHeader* new_hash_header = array_get_header( new_tbl.Hashes );
 
 			for ( idx = 0; idx < new_hash_header->Num; idx++ )
 				new_tbl.Hashes[idx] = -1;
@@ -215,13 +214,13 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		{
 			ssize idx;
 
-			for ( idx = 0; idx < array_header( self.Entries )->Num; idx++ )
+			for ( idx = 0; idx < array_get_header( self.Entries )->Num; idx++ )
 				self.Entries[ idx ].Next = -1;
 
-			for ( idx = 0; idx < array_header( self.Hashes )->Num; idx++ )
+			for ( idx = 0; idx < array_get_header( self.Hashes )->Num; idx++ )
 				self.Hashes[ idx ] = -1;
 
-			for ( idx = 0; idx < array_header( self.Entries )->Num; idx++ )
+			for ( idx = 0; idx < array_get_header( self.Entries )->Num; idx++ )
 			{
 				<entry_type>*     entry;
 				HT_FindResult find_result;
@@ -242,22 +241,22 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 
 			if ( find_result.EntryIndex >= 0 )
 			{
-				<fn_array>_remove_at( self.Entries, find_result.EntryIndex );
+				array_remove_at( self.Entries, find_result.EntryIndex );
 				<fn>_rehash_fast( self );
 			}
 		}
 
 		void <fn>_remove_entry( <tbl_type> self, ssize idx )
 		{
-			<fn_array>_remove_at( self.Entries, idx );
+			array_remove_at( self.Entries, idx );
 		}
 
 		void <fn>_set( <tbl_type>* self, u64 key, <type> value )
 		{
-			ssize            idx;
+			ssize         idx;
 			HT_FindResult find_result;
 
-			if ( array_header( self->Hashes )->Num == 0 )
+			if ( array_get_header( self->Hashes )->Num == 0 )
 				<fn>_grow( self );
 
 			find_result = <fn>__find( * self, key );
@@ -288,7 +287,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 
 		ssize <fn>_slot( <tbl_type> self, u64 key )
 		{
-			for ( ssize idx = 0; idx < array_header( self.Hashes )->Num; ++idx )
+			for ( ssize idx = 0; idx < array_get_header( self.Hashes )->Num; ++idx )
 				if ( self.Hashes[ idx ] == key )
 					return idx;
 
@@ -300,8 +299,8 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 			ssize idx;
 			<entry_type> entry = { key, -1 };
 
-			idx = array_header( self.Entries )->Num;
-			<fn_array>_append( & self.Entries, entry );
+			idx = array_get_header( self.Entries )->Num;
+			array_append( self.Entries, entry );
 			return idx;
 		}
 
@@ -309,7 +308,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		{
 			HT_FindResult result = { -1, -1, -1 };
 
-			ArrayHeader* hash_header = array_header( self.Hashes );
+			ArrayHeader* hash_header = array_get_header( self.Hashes );
 
 			if ( hash_header->Num > 0 )
 			{
@@ -331,8 +330,8 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 
 		b32 <fn>__full( <tbl_type> self )
 		{
-			ArrayHeader* hash_header    = array_header( self.Hashes );
-			ArrayHeader* entries_header = array_header( self.Entries );
+			ArrayHeader* hash_header    = array_get_header( self.Hashes );
+			ArrayHeader* entries_header = array_get_header( self.Entries );
 
 			return 0.75f * hash_header->Num < entries_header->Num;
 		}

@@ -2,10 +2,10 @@
 #undef array_init
 #undef array_init_reserve
 #undef array_append_array
-#undef array_append_value
+#undef array_append
 #undef array_append_items
 #undef array_append_at
-#undef array_append_at
+#undef array_append_items_at
 #undef array_back
 #undef array_clear
 #undef array_fill

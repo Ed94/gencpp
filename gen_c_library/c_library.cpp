@@ -9,7 +9,9 @@
 #include "helpers/helper.hpp"
 
 GEN_NS_BEGIN
+#include "helpers/push_container_defines.inline.hpp"
 #include "dependencies/parsing.cpp"
+#include "helpers/pop_container_defines.inline.hpp"
 GEN_NS_END
 
 #include "auxillary/builder.hpp"
@@ -373,7 +375,6 @@ int gen_main()
 					{
 						CodeBody ht = gen_hashtable(txt("StrC"), name_string_table);
 						strings.append(ht);
-						strings.append(td);
 						break;
 					}
 					strings.append(td);

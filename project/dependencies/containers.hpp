@@ -73,11 +73,11 @@ struct Array
 	forceinline static Array  init_reserve(AllocatorInfo allocator, ssize capacity) { return GEN_NS array_init_reserve<Type>(allocator, capacity); }
 	forceinline static usize  grow_formula(ssize value)                             { return GEN_NS array_grow_formula<Type>(value); }
 
-	forceinline bool         append(Array other)                               { return GEN_NS array_append<Type>(this, other); }
+	forceinline bool         append(Array other)                               { return GEN_NS array_append_array<Type>(this, other); }
 	forceinline bool         append(Type value)                                { return GEN_NS array_append<Type>(this, value); }
-	forceinline bool         append(Type* items, usize item_num)               { return GEN_NS array_append<Type>(this, items, item_num); }
+	forceinline bool         append(Type* items, usize item_num)               { return GEN_NS array_append_items<Type>(this, items, item_num); }
 	forceinline bool         append_at(Type item, usize idx)                   { return GEN_NS array_append_at<Type>(this, item, idx); }
-	forceinline bool         append_at(Type* items, usize item_num, usize idx) { return GEN_NS array_append_at<Type>(this, items, item_num, idx); }
+	forceinline bool         append_at(Type* items, usize item_num, usize idx) { return GEN_NS array_append_items_at<Type>(this, items, item_num, idx); }
 	forceinline Type*        back()                                            { return GEN_NS array_back<Type>(* this); }
 	forceinline void         clear()                                           {        GEN_NS array_clear<Type>(* this); }
 	forceinline bool         fill(usize begin, usize end, Type value)          { return GEN_NS array_fill<Type>(* this, begin, end, value); }

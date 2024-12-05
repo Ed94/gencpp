@@ -41,23 +41,24 @@ CodeBody gen_array( StrC type, StrC array_name )
 	, stringize(
 		typedef <type>* <array_type>;
 
-		void         <fn>_init           ( <array_type>* self, AllocatorInfo allocator );
-		void         <fn>_init_reserve   ( <array_type>* self, AllocatorInfo allocator, usize capacity );
-		bool         <fn>_append_array   ( <array_type>* self, <array_type> other );
-		bool         <fn>_append         ( <array_type>* self, <type> value );
-		bool         <fn>_append_items   ( <array_type>* self, <type>* items, usize item_num );
-		bool         <fn>_append_at      ( <array_type>* self, <type> item, usize idx );
-		bool         <fn>_append_items_at( <array_type>* self, <type>* items, usize item_num, usize idx );
-		<type>*      <fn>_back           ( <array_type>  self );
-		void         <fn>_clear          ( <array_type>  self );
-		bool         <fn>_fill		     ( <array_type>  self, usize begin, usize end, <type> value );
-		void         <fn>_free           ( <array_type>  self );
-		bool         <fn>_grow           ( <array_type>* self, usize min_capacity );
-		usize        <fn>_num            ( <array_type>  self );
-		<type>       <fn>_pop 	         ( <array_type>  self );
-		bool         <fn>_reserve        ( <array_type>* self, usize new_capacity );
-		bool         <fn>_resize         ( <array_type>* self, usize num );
-		bool         <fn>_set_capacity   ( <array_type>* self, usize new_capacity );
+		void         <fn>_init           ( <array_type>*  self, AllocatorInfo allocator );
+		void         <fn>_init_reserve   ( <array_type>*  self, AllocatorInfo allocator, usize capacity );
+		bool         <fn>_append_array   ( <array_type>*  self, <array_type> other );
+		bool         <fn>_append         ( <array_type>*  self, <type> value );
+		bool         <fn>_append_items   ( <array_type>*  self, <type>* items, usize item_num );
+		bool         <fn>_append_at      ( <array_type>*  self, <type> item, usize idx );
+		bool         <fn>_append_items_at( <array_type>*  self, <type>* items, usize item_num, usize idx );
+		<type>*      <fn>_back           ( <array_type>   self );
+		void         <fn>_clear          ( <array_type>   self );
+		bool         <fn>_fill		     ( <array_type>   self, usize begin, usize end, <type> value );
+		void         <fn>_free           ( <array_type>*  self );
+		bool         <fn>_grow           ( <array_type>*  self, usize min_capacity );
+		usize        <fn>_num            ( <array_type>   self );
+		<type>       <fn>_pop 	         ( <array_type>   self );
+		void         <fn>_remove_at      ( <array_type>   self, usize idx );
+		bool         <fn>_reserve        ( <array_type>*  self, usize new_capacity );
+		bool         <fn>_resize         ( <array_type>*  self, usize num );
+		bool         <fn>_set_capacity   ( <array_type>*  self, usize new_capacity );
 
 		void <fn>_init( <array_type>* self, AllocatorInfo allocator )
 		{
@@ -202,9 +203,9 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
-		void <fn>_free( <array_type> self )
+		void <fn>_free( <array_type>* self )
 		{
-			ArrayHeader* header = array_get_header( self );
+			ArrayHeader* header = array_get_header( * self );
 			allocator_free( header->Allocator, header );
 			self = NULL;
 		}
@@ -217,7 +218,7 @@ CodeBody gen_array( StrC type, StrC array_name )
 			if ( new_capacity < min_capacity )
 				new_capacity = min_capacity;
 
-			return array_set_capacity( * self, new_capacity );
+			return array_set_capacity( self, new_capacity );
 		}
 
 		usize <fn>_num( <array_type> self )
@@ -249,7 +250,7 @@ CodeBody gen_array( StrC type, StrC array_name )
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( header->Capacity < new_capacity )
-				return array_set_capacity( * self, new_capacity );
+				return array_set_capacity( self, new_capacity );
 
 			return true;
 		}
@@ -311,12 +312,14 @@ R"(#define GENERIC_SLOT_<slot>__array_init         <type_delimiter>,  <type_deli
 #define GENERIC_SLOT_<slot>__array_back            <type_delimiter>,  <type_delimiter>_back
 #define GENERIC_SLOT_<slot>__array_clear           <type_delimiter>,  <type_delimiter>_clear
 #define GENERIC_SLOT_<slot>__array_fill            <type_delimiter>,  <type_delimiter>_fill
+#define GENERIC_SLOT_<slot>__array_free            <type_delimiter>,  <type_delimiter>_free
 #define GENERIC_SLOT_<slot>__array_grow            <type_delimiter>*, <type_delimiter>_grow
 #define GENERIC_SLOT_<slot>__array_num             <type_delimiter>,  <type_delimiter>_num
 #define GENERIC_SLOT_<slot>__array_pop             <type_delimiter>,  <type_delimiter>_pop
+#define GENERIC_SLOT_<slot>__array_remove_at       <type_delimiter>,  <type_delimiter>_remove_at
 #define GENERIC_SLOT_<slot>__array_reserve         <type_delimiter>,  <type_delimiter>_reserve
 #define GENERIC_SLOT_<slot>__array_resize          <type_delimiter>,  <type_delimiter>_resize
-#define GENERIC_SLOT_<slot>__array_set_capacity    <type_delimiter>,  <type_delimiter>_set_capacity
+#define GENERIC_SLOT_<slot>__array_set_capacity    <type_delimiter>*, <type_delimiter>_set_capacity
 )"
 	));
 
@@ -387,12 +390,12 @@ CodeBody gen_array_generic_selection_interface()
 	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_back")) );
 	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_clear")) );
 	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_fill")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_free")) );
+	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_free"), array_by_ref) );
 	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_grow")) );
 	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_num")) );
 	interface_defines.append( gen_array_generic_selection_function_macro(txt("arary_pop")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("arary_remove_at")) );
+	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_remove_at")) );
 	interface_defines.append( gen_array_generic_selection_function_macro(txt("arary_reserve"), array_by_ref) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_set_capacity"), array_by_ref) );
+	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_set_capacity")) );
 	return interface_defines;
 }
