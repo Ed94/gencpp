@@ -194,6 +194,7 @@ b32 file_read_at( FileInfo* file, void* buffer, ssize size, s64 offset );
 	*/
 b32 file_read_at_check( FileInfo* file, void* buffer, ssize size, s64 offset, ssize* bytes_read );
 
+typedef struct FileContents FileContents;
 struct FileContents
 {
 	AllocatorInfo allocator;
@@ -201,8 +202,8 @@ struct FileContents
 	ssize            size;
 };
 
-constexpr b32 zero_terminate    = true;
-constexpr b32 no_zero_terminate = false;
+constexpr b32 file_zero_terminate    = true;
+constexpr b32 file_no_zero_terminate = false;
 
 /**
 	* Reads the whole file contents

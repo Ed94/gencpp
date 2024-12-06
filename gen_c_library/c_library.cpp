@@ -142,7 +142,6 @@ int gen_main()
 		Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
 		Code string_ops   = scan_file( project_dir "dependencies/string_ops.hpp" );
 		Code hashing      = scan_file( project_dir "dependencies/hashing.hpp" );
-		Code filesystem   = scan_file( project_dir "dependencies/filesystem.hpp" );
 		Code timing       = scan_file( project_dir "dependencies/timing.hpp" );
 
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
@@ -387,6 +386,44 @@ int gen_main()
 			}
 		}
 
+		CodeBody parsed_filesystem = parse_file( project_dir "dependencies/filesystem.hpp" );
+		CodeBody filesystem        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_filesystem.begin(); entry != parsed_filesystem.end(); ++ entry )
+		{
+			switch (entry->Type)
+			{
+				case CT_Preprocess_IfDef:
+				{
+					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_filesystem, filesystem );
+					if (found) break;
+
+					filesystem.append(entry);
+				}
+				break;
+				case CT_Variable:
+				{
+					CodeVar var = cast(CodeVar, entry);
+					if (var->Specs.has(Spec_Constexpr) > -1)
+					{
+						CodeDefine define = def_define(entry->Name, entry->Value->Content);
+						filesystem.append(define);
+						continue;
+					}
+					//if ( strc_contains(entry->Name, txt("Msg_Invalid_Value")))
+					//{
+					//	CodeDefine define = def_define(entry->Name, entry->Value->Content);
+					//	printing.append(define);
+					//	continue;
+					//}
+					filesystem.append(entry);
+				}
+				break;
+				default:
+					filesystem.append(entry);
+				break;
+			}
+		}
+
 		CodeBody containers = def_body(CT_Global_Body);
 		{
 			CodeBody array_ssize = gen_array(txt("ssize"), txt("Array_ssize"));
@@ -421,8 +458,8 @@ int gen_main()
 		header.print( dump_to_scratch_and_retireve(containers));
 		header.print( hashing );
 		header.print( dump_to_scratch_and_retireve(strings));
-		// header.print( filesystem );
-		// header.print( timing );
+		header.print( dump_to_scratch_and_retireve(filesystem));
+		header.print( timing );
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print_fmt( roll_own_dependencies_guard_end );
 #pragma endregion Print Dependencies
