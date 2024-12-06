@@ -7,6 +7,12 @@
 	https://github.com/Ed94/gencpp
 
 	This is a variant intended for use with Unreal Engine 5
+
+	! ----------------------------------------------------------------------- VERSION: v0.19-Alpha !
+	! ============================================================================================ !
+	! WARNING: THIS IS AN ALPHA VERSION OF THE LIBRARY, USE AT YOUR OWN DISCRETION                 !
+	! NEVER DO CODE GENERATION WITHOUT AT LEAST HAVING CONTENT IN A CODEBASE UNDER VERSION CONTROL !
+	! ============================================================================================ !
 */
 #if ! defined(GEN_DONT_ENFORCE_GEN_TIME_GUARD) && ! defined(GEN_TIME)
 #	error Gen.hpp : GEN_TIME not defined
