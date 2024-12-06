@@ -187,6 +187,17 @@
 #	endif
 #endif
 
+#if GEN_COMPILER_C
+#ifndef static_assert
+#undef  static_assert
+    #if GEN_COMPILER_C && __STDC_VERSION__ >= 201112L
+        #define static_assert(condition, message) _Static_assert(condition, message)
+    #else
+        #define static_assert(condition, message) typedef char static_assertion_##__LINE__[(condition)?1:-1]
+	#endif
+#endif
+#endif
+
 #if GEN_COMPILER_CPP
 // Already Defined
 #elif GEN_COMPILER_C && __STDC_VERSION__ >= 201112L
@@ -277,7 +288,7 @@
 // Extensive effort was put in below to make this as easy as possible to understand what is going on with this mess of a preoprocessor.
 
 // Where the signature would be defined using:
-#define GEN_TYPE_TO_EXP(type) (type*)NULL
+#define GEN_TYPE_TO_EXP(type) (* (type*)NULL)
 
 #define GEN_COMMA_OPERATOR , // The comma operator is used by preprocessor macros to delimit arguments, so we have to represent it via a macro to prevent parsing incorrectly.
 

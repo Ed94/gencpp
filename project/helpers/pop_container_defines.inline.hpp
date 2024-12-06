@@ -31,8 +31,9 @@
 #undef hashtable_remove_entry
 #undef hashtable_set
 #undef hashtable_slot
-#undef hashtable_add_entry
-#undef hashtable_find
-#undef hashtable_full
 #undef hashtable_map
 #undef hashtable_map_mut
+
+//#undef hashtable_add_entry
+//#undef hashtable_find
+//#undef hashtable_full

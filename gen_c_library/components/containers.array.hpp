@@ -5,7 +5,7 @@
 using namespace gen;
 
 // Used to know what slot the array will be for generic selection
-global s32 ArrayDefinitionCounter = 0;
+global s32 Array_DefinitionCounter = 0;
 
 CodeBody gen_array_base()
 {
@@ -359,8 +359,8 @@ CodeBody gen_array( StrC type, StrC array_name )
 #pragma pop_macro( "typeof" )
 #pragma pop_macro( "forceinline" )
 
-	++ ArrayDefinitionCounter;
-	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", ArrayDefinitionCounter).to_strc();
+	++ Array_DefinitionCounter;
+	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", Array_DefinitionCounter).to_strc();
 
 	Code generic_interface_slot = untyped_str(token_fmt( "type_delimiter", (StrC)array_type, "slot", (StrC)slot_str,
 R"(#define GENERIC_SLOT_<slot>__array_init         <type_delimiter>,  <type_delimiter>_init
@@ -398,19 +398,20 @@ R"(#define GENERIC_SLOT_<slot>__array_init         <type_delimiter>,  <type_deli
 CodeBody gen_array_generic_selection_interface()
 {
 	CodeBody interface_defines = def_body(CT_Global_Body);
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_init"), GenericSel_Direct_Type ));
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_init_reserve"), GenericSel_Direct_Type ));
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_append"), GenericSel_By_Ref ));
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_append_items"), GenericSel_By_Ref ));
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_back"), GenericSel_Default, GenericSel_One_Arg ));
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_clear"), GenericSel_Default, GenericSel_One_Arg ));
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_fill")) );
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_free"), GenericSel_By_Ref, GenericSel_One_Arg ) );
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_grow")) );
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_num")) );
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_pop"), GenericSel_Default, GenericSel_One_Arg ));
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_remove_at")) );
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_reserve"), GenericSel_By_Ref) );
-	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_set_capacity")) );
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_init"), GenericSel_Direct_Type ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_init_reserve"), GenericSel_Direct_Type ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_append"), GenericSel_By_Ref ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_append_items"), GenericSel_By_Ref ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_back"), GenericSel_Default, GenericSel_One_Arg ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_clear"), GenericSel_Default, GenericSel_One_Arg ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_fill")) );
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_free"), GenericSel_By_Ref, GenericSel_One_Arg ) );
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_grow")) );
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_num"), GenericSel_Default, GenericSel_One_Arg ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_pop"), GenericSel_Default, GenericSel_One_Arg ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_remove_at")) );
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_reserve"), GenericSel_By_Ref) );
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_resize"), GenericSel_By_Ref) );
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_set_capacity")) );
 	return interface_defines;
 }

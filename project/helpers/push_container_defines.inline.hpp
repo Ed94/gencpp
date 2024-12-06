@@ -31,8 +31,9 @@
 #define hashtable_remove_entry(table, idx)           hashtable_remove_entry< get_hashtable_underlying_type(table) >(table, idx)
 #define hashtable_set(table, key, value)             hashtable_set         < get_hashtable_underlying_type(table) >(& table, key, value)
 #define hashtable_slot(table, key)                   hashtable_slot        < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_add_entry(table, key)              hashtable_add_entry   < get_hashtable_underlying_type(table) >(& table, key)
-#define hashtable_find(table, key)                   hashtable_find        < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_full(table)                        hashtable_full        < get_hashtable_underlying_type(table) >(table)
 #define hashtable_map(table, map_proc)               hashtable_map         < get_hashtable_underlying_type(table) >(table, map_proc)
 #define hashtable_map_mut(table, map_proc)           hashtable_map_mut     < get_hashtable_underlying_type(table) >(table, map_proc)
+
+//#define hashtable_add_entry(table, key)              hashtable_add_entry   < get_hashtable_underlying_type(table) >(& table, key)
+//#define hashtable_find(table, key)                   hashtable_find        < get_hashtable_underlying_type(table) >(table, key)
+//#define hashtable_full(table)                        hashtable_full        < get_hashtable_underlying_type(table) >(table)

@@ -397,8 +397,9 @@ int gen_main()
 			containers.append( gen_array_base() );
 			containers.append( gen_array_generic_selection_interface());
 			containers.append( gen_hashtable_base() );
-
 			containers.append(fmt_newline);
+			containers.append( gen_hashtable_generic_selection_interface());
+
 			containers.append(array_ssize);
 
 			containers.append( def_pragma(code(endregion Containers)));

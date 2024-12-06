@@ -481,11 +481,12 @@ template<class Type> void                  hashtable_remove      (HashTable<Type
 template<class Type> void                  hashtable_remove_entry(HashTable<Type>  table, ssize idx);
 template<class Type> void                  hashtable_set         (HashTable<Type>* table, u64 key, Type value);
 template<class Type> ssize                 hashtable_slot        (HashTable<Type>  table, u64 key);
-template<class Type> ssize                 hashtable_add_entry   (HashTable<Type>* table, u64 key);
-template<class Type> HashTableFindResult   hashtable_find        (HashTable<Type>  table, u64 key);
-template<class Type> bool                  hashtable_full        (HashTable<Type>  table);
 template<class Type> void                  hashtable_map         (HashTable<Type>  table, void (*map_proc)(u64 key, Type value));
 template<class Type> void                  hashtable_map_mut     (HashTable<Type>  table, void (*map_proc)(u64 key, Type* value));
+
+template<class Type> ssize                 hashtable__add_entry  (HashTable<Type>* table, u64 key);
+template<class Type> HashTableFindResult   hashtable__find       (HashTable<Type>  table, u64 key);
+template<class Type> bool                  hashtable__full       (HashTable<Type>  table);
 
 static constexpr f32 HashTable_CriticalLoadScale = 0.7f;
 
@@ -540,37 +541,45 @@ HashTable<Type> hashtable_init_reserve(AllocatorInfo allocator, usize num)
 	result.Hashes = array_init_reserve<ssize>(allocator, num);
 	array_get_header(result.Hashes)->Num = num;
 	array_resize(& result.Hashes, num);
-	array_fill<ssize>(result.Hashes, 0, num, -1);
+	array_fill(result.Hashes, 0, num, (ssize)-1);
 
 	result.Entries = array_init_reserve<HashTableEntry<Type>>(allocator, num);
 	return result;
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 void hashtable_clear(HashTable<Type> table) {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	array_clear(table.Entries);
 	array_fill(table.Hashes, 0, array_num(table.Hashes), (ssize)-1);
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 void hashtable_destroy(HashTable<Type>* table) {
+	GEN_ASSERT_NOT_NULL(table->Hashes);
+	GEN_ASSERT_NOT_NULL(table->Entries);
 	if (table->Hashes && array_get_header(table->Hashes)->Capacity) {
 		array_free(table->Hashes);
 		array_free(table->Entries);
 	}
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 Type* hashtable_get(HashTable<Type> table, u64 key) {
-	ssize idx = hashtable_find(table, key).EntryIndex;
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
+	ssize idx = hashtable__find(table, key).EntryIndex;
 	if (idx >= 0)
 		return & table.Entries[idx].Value;
 
 	return nullptr;
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 void hashtable_map(HashTable<Type> table, void (*map_proc)(u64 key, Type value)) {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	GEN_ASSERT_NOT_NULL(map_proc);
 
 	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx) {
@@ -578,8 +587,10 @@ void hashtable_map(HashTable<Type> table, void (*map_proc)(u64 key, Type value))
 	}
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 void hashtable_map_mut(HashTable<Type> table, void (*map_proc)(u64 key, Type* value)) {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	GEN_ASSERT_NOT_NULL(map_proc);
 
 	for (ssize idx = 0; idx < ssize(num(table.Entries)); ++idx) {
@@ -587,8 +598,11 @@ void hashtable_map_mut(HashTable<Type> table, void (*map_proc)(u64 key, Type* va
 	}
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 void hashtable_grow(HashTable<Type>* table) {
+	GEN_ASSERT_NOT_NULL(table);
+	GEN_ASSERT_NOT_NULL(table->Hashes);
+	GEN_ASSERT_NOT_NULL(table->Entries);
 	ssize new_num = array_grow_formula( array_num(table->Entries));
 	hashtable_rehash(table, new_num);
 }
@@ -596,6 +610,9 @@ void hashtable_grow(HashTable<Type>* table) {
 template<typename Type> inline
 void hashtable_rehash(HashTable<Type>* table, ssize new_num)
 {
+	GEN_ASSERT_NOT_NULL(table);
+	GEN_ASSERT_NOT_NULL(table->Hashes);
+	GEN_ASSERT_NOT_NULL(table->Entries);
 	ssize last_added_index;
 	HashTable<Type> new_ht = hashtable_init_reserve<Type>( array_get_header(table->Hashes)->Allocator, new_num);
 
@@ -604,8 +621,8 @@ void hashtable_rehash(HashTable<Type>* table, ssize new_num)
 		HashTableFindResult find_result;
 		HashTableEntry<Type>& entry = table->Entries[idx];
 
-		find_result = hashtable_find(new_ht, entry.Key);
-		last_added_index = hashtable_add_entry(& new_ht, entry.Key);
+		find_result = hashtable__find(new_ht, entry.Key);
+		last_added_index = hashtable__add_entry(& new_ht, entry.Key);
 
 		if (find_result.PrevIndex < 0)
 			new_ht.Hashes[find_result.HashIndex] = last_added_index;
@@ -623,6 +640,8 @@ void hashtable_rehash(HashTable<Type>* table, ssize new_num)
 template<typename Type> inline
 void hashtable_rehash_fast(HashTable<Type> table)
 {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	ssize idx;
 
 	for (idx = 0; idx < ssize(num(table.Entries)); idx++)
@@ -646,8 +665,10 @@ void hashtable_rehash_fast(HashTable<Type> table)
 	}
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 void hashtable_remove(HashTable<Type> table, u64 key) {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	HashTableFindResult find_result = find(table, key);
 
 	if (find_result.EntryIndex >= 0) {
@@ -656,27 +677,32 @@ void hashtable_remove(HashTable<Type> table, u64 key) {
 	}
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 void hashtable_remove_entry(HashTable<Type> table, ssize idx) {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	remove_at(table.Entries, idx);
 }
 
 template<typename Type> inline
 void hashtable_set(HashTable<Type>* table, u64 key, Type value)
 {
+	GEN_ASSERT_NOT_NULL(table);
+	GEN_ASSERT_NOT_NULL(table->Hashes);
+	GEN_ASSERT_NOT_NULL(table->Entries);
 	ssize idx;
 	HashTableFindResult find_result;
 
 	if (hashtable_full(* table))
 		hashtable_grow(table);
 
-	find_result = hashtable_find(* table, key);
+	find_result = hashtable__find(* table, key);
 	if (find_result.EntryIndex >= 0) {
 		idx = find_result.EntryIndex;
 	}
 	else
 	{
-		idx = hashtable_add_entry(table, key);
+		idx = hashtable__add_entry(table, key);
 
 		if (find_result.PrevIndex >= 0) {
 			table->Entries[find_result.PrevIndex].Next = idx;
@@ -692,8 +718,10 @@ void hashtable_set(HashTable<Type>* table, u64 key, Type value)
 		hashtable_grow(table);
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 ssize hashtable_slot(HashTable<Type> table, u64 key) {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	for (ssize idx = 0; idx < ssize(num(table.Hashes)); ++idx)
 		if (table.Hashes[idx] == key)
 			return idx;
@@ -701,8 +729,11 @@ ssize hashtable_slot(HashTable<Type> table, u64 key) {
 	return -1;
 }
 
-template<typename Type> inline
-ssize hashtable_add_entry(HashTable<Type>* table, u64 key) {
+template<typename Type> forceinline
+ssize hashtable__add_entry(HashTable<Type>* table, u64 key) {
+	GEN_ASSERT_NOT_NULL(table);
+	GEN_ASSERT_NOT_NULL(table->Hashes);
+	GEN_ASSERT_NOT_NULL(table->Entries);
 	ssize idx;
 	HashTableEntry<Type> entry = { key, -1 };
 
@@ -712,8 +743,10 @@ ssize hashtable_add_entry(HashTable<Type>* table, u64 key) {
 }
 
 template<typename Type> inline
-HashTableFindResult hashtable_find(HashTable<Type> table, u64 key)
+HashTableFindResult hashtable__find(HashTable<Type> table, u64 key)
 {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	HashTableFindResult result = { -1, -1, -1 };
 
 	if (array_num(table.Hashes) > 0)
@@ -734,8 +767,10 @@ HashTableFindResult hashtable_find(HashTable<Type> table, u64 key)
 	return result;
 }
 
-template<typename Type> inline
+template<typename Type> forceinline
 bool hashtable_full(HashTable<Type> table) {
+	GEN_ASSERT_NOT_NULL(table.Hashes);
+	GEN_ASSERT_NOT_NULL(table.Entries);
 	usize critical_load = usize(HashTable_CriticalLoadScale * f32(array_num(table.Hashes)));
 	b32 result = array_num(table.Entries) > critical_load;
 	return result;
@@ -753,11 +788,12 @@ bool hashtable_full(HashTable<Type> table) {
 #define hashtable_remove_entry(table, idx)           hashtable_remove_entry< get_hashtable_underlying_type(table) >(table, idx)
 #define hashtable_set(table, key, value)             hashtable_set         < get_hashtable_underlying_type(table) >(& table, key, value)
 #define hashtable_slot(table, key)                   hashtable_slot        < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_add_entry(table, key)              hashtable_add_entry   < get_hashtable_underlying_type(table) >(& table, key)
-#define hashtable_find(table, key)                   hashtable_find        < get_hashtable_underlying_type(table) >(table, key)
-#define hashtable_full(table)                        hashtable_full        < get_hashtable_underlying_type(table) >(table)
 #define hashtable_map(table, map_proc)               hashtable_map         < get_hashtable_underlying_type(table) >(table, map_proc)
 #define hashtable_map_mut(table, map_proc)           hashtable_map_mut     < get_hashtable_underlying_type(table) >(table, map_proc)
+
+//#define hashtable_add_entry(table, key)              hashtable_add_entry   < get_hashtable_underlying_type(table) >(& table, key)
+//#define hashtable_find(table, key)                   hashtable_find        < get_hashtable_underlying_type(table) >(table, key)
+//#define hashtable_full(table)                        hashtable_full        < get_hashtable_underlying_type(table) >(table)
 
 #pragma endregion HashTable
 

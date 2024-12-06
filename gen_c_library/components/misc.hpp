@@ -96,6 +96,14 @@ R"(#define <macro_name>(selector_arg, ...) _Generic( (selector_arg), \
 R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(  GENERIC_SLOT_<slot>__<macro_name> ) \
 )"
 			));
+			// if ( one_arg )
+			// 	define_builder.append(token_fmt( "macro_name", macro_name, stringize(
+			// 		default: static_assert(false, "<macro_name>: Failed to select correct function signature (Did you pass the type?)")
+			// 	)));
+			// else
+			// 	define_builder.append(token_fmt( "macro_name", macro_name, stringize(
+			// 		default: static_assert(false, "<macro_name>: Failed to select correct function signature")
+			// 	)));
 			continue;
 		}
 
