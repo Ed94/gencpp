@@ -105,6 +105,10 @@ int gen_main()
 	PreprocessorDefines.append(txt("GEN_API_C_BEGIN"));
 	PreprocessorDefines.append(txt("GEN_API_C_END"));
 	PreprocessorDefines.append(txt("HashTable("));
+	PreprocessorDefines.append(txt("GEN_NS_PARSER"));
+	PreprocessorDefines.append(txt("GEN_NS_PARSER_BEGIN"));
+	PreprocessorDefines.append(txt("GEN_NS_PARSER_END"));
+	//PreprocessorDefines.append(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"));
 
 	Code push_ignores           = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores            = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
@@ -121,8 +125,45 @@ int gen_main()
 		header.print( c_library_header_start );
 
 #pragma region Scan, Parse, and Generate Components
-		Code types      = scan_file( project_dir "components/types.hpp" );
-		Code ast        = scan_file( project_dir "components/ast.hpp" );
+		CodeBody parsed_types = parse_file( project_dir "components/types.hpp" );
+		CodeBody types        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_types.begin(); entry != parsed_types.end(); ++ entry )
+		{
+			switch(entry->Type)
+			{
+				case CT_Using:
+				{
+					CodeUsing using_ver = cast(CodeUsing, entry);
+
+					if (using_ver->UnderlyingType->ReturnType)
+					{
+						CodeTypename type       = using_ver->UnderlyingType;
+						CodeTypedef typedef_ver = parse_typedef(token_fmt( 
+							"ReturnType", to_string(type->ReturnType).to_strc()
+						,	"Name"      , using_ver->Name
+						,	"Parameters", to_string(type->Params).to_strc()
+						,	stringize(
+								typedef <ReturnType>( * <Name>)(<Parameters>);
+						)));
+						types.append(typedef_ver);
+						break;
+					}
+					CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
+					types.append(typedef_ver);
+				}
+				break;
+
+				case CT_Enum:
+				{
+					CodeEnum    enum_def     = cast(CodeEnum, entry);
+					CodeTypedef typedef_enum = parse_typedef(token_fmt("name", enum_def->Name, stringize( typedef enum <name> <name>; )));
+					types.append(enum_def);
+					types.append(typedef_enum);
+				}
+				break;
+			}
+		}
+
 		Code ast_types  = scan_file( project_dir "components/ast_types.hpp" );
 		Code code_types = scan_file( project_dir "components/code_types.hpp" );
 		Code interface  = scan_file( project_dir "components/interface.hpp" );
@@ -133,6 +174,86 @@ int gen_main()
 		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
 		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
+
+		CodeBody parsed_ast = parse_file( project_dir "components/ast.hpp" );
+		CodeBody ast        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_ast.begin(); entry != parsed_ast.end(); ++ entry )
+		switch (entry->Type)
+		{
+			case CT_Preprocess_If:
+			{
+				CodePreprocessCond cond = cast(CodePreprocessCond, entry);
+				if (cond->Content.contains(txt("GEN_COMPILER_C")))
+				{
+					//++ entry;         // 
+					//ast.append(entry) // typedef
+					//for ( ; entry != parsed_ast.end() && entry->Type != CT_Preprocess_EndIf; ++ entry) {}
+					//++ entry;        // Consume endif
+				}
+
+				b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_ast, ast );
+				if (found) break;
+
+				found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_ast, ast);
+				if (found) break;
+
+				found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_ast, ast);
+				if (found) break;
+
+				ast.append(entry);
+			}
+			break;
+
+			case CT_Struct_Fwd:
+			{
+				CodeStruct fwd = cast(CodeStruct, entry);
+				if (fwd->Name.starts_with(txt("AST"))) {
+					ast.append(fwd);
+					CodeTypedef td = parse_typedef(token_fmt("name", fwd->Name, stringize( typedef struct <name> <name>; )));
+					ast.append(td);
+				}
+			}
+			break;
+
+			case CT_Variable:
+			{
+				CodeVar var = cast(CodeVar, entry);
+
+				s32 constexpr_found = var->Specs.remove( Spec_Constexpr );
+				if (constexpr_found > -1) {
+					log_fmt("Found constexpr: %S\n", entry.to_string());
+					if (var->Name.contains(txt("AST_ArrSpecs_Cap")))
+					{
+						Code def = untyped_str(txt(
+R"(#define AST_ArrSpecs_Cap       \
+(                                 \
+        AST_POD_Size              \
+		- sizeof(AST*) * 3        \
+		- sizeof(Token*)          \
+		- sizeof(AST*)            \
+		- sizeof(StringCached)    \
+		- sizeof(CodeType)        \
+		- sizeof(ModuleFlag)      \
+		- sizeof(int)             \
+)                                 \
+/ sizeof(int) - 1
+)"
+						));
+						ast.append(def);
+						break;
+					}
+					CodeDefine def = def_define(var->Name, var->Value.to_string());
+					ast.append(def);
+					break;
+				}
+				ast.append(var);
+			}
+			break;
+
+			default:
+				ast.append(entry);
+			break;
+		}
 #pragma endregion Scan, Parse, and Generate Components
 
 #pragma region Scan, Parse, and Generate Dependencies
@@ -464,19 +585,30 @@ int gen_main()
 		header.print_fmt( roll_own_dependencies_guard_end );
 #pragma endregion Print Dependencies
 
+		header.print(fmt_newline);
 
-#if 0
-#region region Print Components
+#if 1
+#pragma region region Print Components
+		header.print_fmt( "GEN_NS_BEGIN\n" );
+		header.print_fmt( "GEN_API_C_BEGIN\n\n" );
+
 		header.print_fmt("#pragma region Types\n");
-		header.print( types );
+		header.print( dump_to_scratch_and_retireve(types) );
 		header.print( fmt_newline );
 		header.print( dump_to_scratch_and_retireve( ecode ));
 		header.print( fmt_newline );
 		header.print( dump_to_scratch_and_retireve( eoperator ));
 		header.print( fmt_newline );
 		header.print( dump_to_scratch_and_retireve( especifier ));
-		header.print( fmt_newline );
 		header.print_fmt("#pragma endregion Types\n\n");
+
+		header.print_fmt("#pragma region AST\n");
+		header.print( dump_to_scratch_and_retireve(ast) );
+		header.print_fmt("\n#pragma endregion AST\n");
+
+		header.print_fmt( "\nGEN_API_C_END\n" );
+
+		header.print_fmt( "GEN_NS_END\n\n" );
 #pragma endregion Print Compoennts
 #endif
 	}

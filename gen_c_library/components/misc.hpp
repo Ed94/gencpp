@@ -181,7 +181,7 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
 						continue;
 					}
 
-                    new_name.append_fmt("%SC_", to_str(spec));
+                    new_name.append_fmt("%SC_", spec_to_str(spec));
                 }
             }
 
@@ -197,7 +197,7 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
              spec != end(fn->Specs); 
              ++spec)
         {
-            new_name.append_fmt("%SC_", to_str(*spec));
+            new_name.append_fmt("%SC_", spec_to_str(*spec));
         }
     }
 
