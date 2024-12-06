@@ -44,7 +44,7 @@ void to_string( CodeBody body, String* result )
 	s32  left = body.ast->NumEntries;
 	while ( left -- )
 	{
-		string_append_fmt( result, "%S", GEN_NS to_string(curr) );
+		string_append_fmt( result, "%S", code_to_string(curr) );
 		++curr;
 	}
 }
@@ -59,7 +59,7 @@ void to_string_export( CodeBody body, String* result )
 	s32  left = body.ast->NumEntries;
 	while ( left-- )
 	{
-		string_append_fmt( result, "%S", to_string(curr) );
+		string_append_fmt( result, "%S", code_to_string(curr) );
 		++curr;
 	}
 
@@ -102,12 +102,12 @@ void to_string_def(CodeConstructor self, String* result )
 		string_append_strc( result, txt("()") );
 
 	if ( self->InitializerList )
-		string_append_fmt( result, " : %S", to_string(self->InitializerList) );
+		string_append_fmt( result, " : %S", code_to_string(self->InitializerList) );
 
 	if ( self->InlineCmt )
 		string_append_fmt( result, " // %SC", self->InlineCmt->Content );
 
-	string_append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
+	string_append_fmt( result, "\n{\n%S\n}\n", code_to_string(self->Body) );
 }
 
 void to_string_fwd(CodeConstructor self, String* result )
@@ -126,7 +126,7 @@ void to_string_fwd(CodeConstructor self, String* result )
 		string_append_fmt( result, "()");
 
 	if (self->Body)
-		string_append_fmt( result, " = %S", to_string(self->Body) );
+		string_append_fmt( result, " = %S", code_to_string(self->Body) );
 
 	if ( self->InlineCmt )
 		string_append_fmt( result, "; // %SC\n", self->InlineCmt->Content );
@@ -260,7 +260,7 @@ void to_string_def(CodeDestructor self, String* result )
 	else
 		string_append_fmt( result, "~%SC()", self->Parent->Name );
 
-	string_append_fmt( result, "\n{\n%S\n}\n", to_string(self->Body) );
+	string_append_fmt( result, "\n{\n%S\n}\n", code_to_string(self->Body) );
 }
 
 void to_string_fwd(CodeDestructor self, String* result )
@@ -275,7 +275,7 @@ void to_string_fwd(CodeDestructor self, String* result )
 		if ( has(self->Specs, Spec_Pure ) )
 			string_append_strc( result, txt(" = 0;") );
 		else if (self->Body)
-			string_append_fmt( result, " = %S;", to_string(self->Body) );
+			string_append_fmt( result, " = %S;", code_to_string(self->Body) );
 	}
 	else
 		string_append_fmt( result, "~%SC();", self->Parent->Name );
@@ -312,7 +312,7 @@ void to_string_def(CodeEnum self, String* result )
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
 		string_append_strc( result, txt("export ") );
 
-	if ( self->Attributes || self->UnderlyingType )
+	if ( self->Attributes || self->UnderlyingType || self->UnderlyingTypeMacro )
 	{
 		string_append_strc( result, txt("enum ") );
 
@@ -326,9 +326,9 @@ void to_string_def(CodeEnum self, String* result )
 				, to_string(self->Body)
 			);
 		else if ( self->UnderlyingTypeMacro )
-			string_append_fmt( result, "%SC : %S\n{\n%S\n}"
+			string_append_fmt( result, "%SC %S\n\n{\n%S\n}"
 				, self->Name
-				, to_string(self->UnderlyingTypeMacro)
+				, code_to_string(self->UnderlyingTypeMacro)
 				, to_string(self->Body)
 			);
 
@@ -351,7 +351,7 @@ void to_string_fwd(CodeEnum self, String* result )
 	if ( self->UnderlyingType )
 		string_append_fmt( result, "enum %SC : %S", self->Name, to_string(self->UnderlyingType) );
 	else if (self->UnderlyingTypeMacro)
-		string_append_fmt( result, "enum %SC : %S", self->Name, to_string(self->UnderlyingTypeMacro) );
+		string_append_fmt( result, "enum %SC %S", self->Name, to_string(self->UnderlyingType) );
 	else
 		string_append_fmt( result, "enum %SC", self->Name );
 
@@ -449,7 +449,7 @@ String to_string(CodeFriend self)
 
 void to_string(CodeFriend self, String* result )
 {
-	string_append_fmt( result, "friend %S", to_string(self->Declaration) );
+	string_append_fmt( result, "friend %S", code_to_string(self->Declaration) );
 
 	if ( self->Declaration->Type != CT_Function && self->Declaration->Type != CT_Operator && (* result)[ string_length(* result) - 1 ] != ';' )
 	{
@@ -490,9 +490,9 @@ void to_string_def(CodeFn self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( ! is_trailing( spec ) )
+			if ( ! spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
@@ -519,9 +519,9 @@ void to_string_def(CodeFn self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( is_trailing( spec ) )
+			if ( spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -543,9 +543,9 @@ void to_string_fwd(CodeFn self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( ! is_trailing( spec ) || ! (spec != Spec_Pure) )
+			if ( ! spec_is_trailing( spec ) || ! (spec != Spec_Pure) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 
 				prefix_specs = true;
@@ -574,9 +574,9 @@ void to_string_fwd(CodeFn self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( is_trailing( spec ) )
+			if ( spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -658,9 +658,9 @@ void to_string_def(CodeOperator self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( ! is_trailing( spec ) )
+			if ( ! spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -684,9 +684,9 @@ void to_string_def(CodeOperator self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( is_trailing( spec ) )
+			if ( spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -709,9 +709,9 @@ void to_string_fwd(CodeOperator self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( ! is_trailing( spec ) )
+			if ( ! spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -734,9 +734,9 @@ void to_string_fwd(CodeOperator self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( is_trailing( spec ) )
+			if ( spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -769,9 +769,9 @@ void to_string_def(CodeOpCast self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( ! is_trailing( spec ) )
+			if ( ! spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -783,9 +783,9 @@ void to_string_def(CodeOpCast self, String* result )
 
 		for ( Specifier spec : self->Specs )
 		{
-			if ( is_trailing( spec ) )
+			if ( spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -806,9 +806,9 @@ void to_string_fwd(CodeOpCast self, String* result )
 	{
 		for ( Specifier spec : self->Specs )
 		{
-			if ( ! is_trailing( spec ) )
+			if ( ! spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, "%*s ", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -817,9 +817,9 @@ void to_string_fwd(CodeOpCast self, String* result )
 
 		for ( Specifier spec : self->Specs )
 		{
-			if ( is_trailing( spec ) )
+			if ( spec_is_trailing( spec ) )
 			{
-				StrC spec_str = to_str( spec );
+				StrC spec_str = spec_to_str( spec );
 				string_append_fmt( result, " %*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
@@ -867,11 +867,11 @@ void to_string( CodeParam self, String* result )
 
 	if ( ast->PostNameMacro )
 	{
-		string_append_fmt( result, " %S", to_string(ast->PostNameMacro) );
+		string_append_fmt( result, " %S", code_to_string(ast->PostNameMacro) );
 	}
 
 	if ( ast->Value )
-		string_append_fmt( result, " = %S", to_string(ast->Value) );
+		string_append_fmt( result, " = %S", code_to_string(ast->Value) );
 
 	if ( ast->NumEntries - 1 > 0 )
 	{
@@ -911,7 +911,7 @@ String to_string(CodePreprocessCond self)
 
 void to_string_if(CodePreprocessCond cond, String* result )
 {
-	string_append_fmt( result, "#if %SC\n", cond->Content );
+	string_append_fmt( result, "#if %SC", cond->Content );
 }
 
 void to_string_ifdef(CodePreprocessCond cond, String* result )
@@ -948,7 +948,7 @@ String to_string(CodePragma self)
 
 void to_string(CodePragma self, String* result )
 {
-	string_append_fmt( result, "#pragma %SC\n", self->Content );
+	string_append_fmt( result, "#pragma %SC", self->Content );
 }
 
 String to_string(CodeSpecifiers self)
@@ -966,7 +966,7 @@ void to_string( CodeSpecifiers self, String* result )
 	s32 left = self->NumEntries;
 	while ( left-- )
 	{
-		StrC spec = to_str( self->ArrSpecs[idx] );
+		StrC spec = spec_to_str( self->ArrSpecs[idx] );
 		string_append_fmt( result, "%.*s ", spec.Len, spec.Ptr );
 		idx++;
 	}
@@ -1070,9 +1070,9 @@ void to_string(CodeTemplate self, String* result )
 		string_append_strc( result, txt("export ") );
 
 	if ( self->Params )
-		string_append_fmt( result, "template< %S >\n%S", to_string(self->Params), to_string(self->Declaration) );
+		string_append_fmt( result, "template< %S >\n%S", to_string(self->Params), code_to_string(self->Declaration) );
 	else
-		string_append_fmt( result, "template<>\n%S", to_string(self->Declaration) );
+		string_append_fmt( result, "template<>\n%S", code_to_string(self->Declaration) );
 }
 
 String to_string(CodeTypedef self)
@@ -1091,18 +1091,18 @@ void to_string(CodeTypedef self, String* result )
 
 	// Determines if the typedef is a function typename
 	if ( self->UnderlyingType->ReturnType )
-		string_append_string( result, to_string(self->UnderlyingType) );
+		string_append_string( result, code_to_string(self->UnderlyingType) );
 	else
-		string_append_fmt( result, "%S %SC", to_string(self->UnderlyingType), self->Name );
+		string_append_fmt( result, "%S %SC", code_to_string(self->UnderlyingType), self->Name );
 
 	if ( self->UnderlyingType->Type == CT_Typename && self->UnderlyingType->ArrExpr )
 	{
-		string_append_fmt( result, "[ %S ];", to_string(self->UnderlyingType->ArrExpr) );
+		string_append_fmt( result, "[ %S ];", code_to_string(self->UnderlyingType->ArrExpr) );
 
 		Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			string_append_fmt( result, "[ %S ];", to_string(next_arr_expr) );
+			string_append_fmt( result, "[ %S ];", code_to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
@@ -1262,12 +1262,12 @@ void to_string(CodeUsing self, String* result )
 
 		if ( self->UnderlyingType->ArrExpr )
 		{
-			string_append_fmt( result, "[ %S ]", to_string(self->UnderlyingType->ArrExpr) );
+			string_append_fmt( result, "[ %S ]", code_to_string(self->UnderlyingType->ArrExpr) );
 
 			Code next_arr_expr = self->UnderlyingType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+				string_append_fmt( result, "[ %S ]", code_to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1311,12 +1311,12 @@ void to_string(CodeVar self, String* result )
 
 		if ( self->ValueType->ArrExpr )
 		{
-			string_append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
+			string_append_fmt( result, "[ %S ]", code_to_string(self->ValueType->ArrExpr) );
 
 			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+				string_append_fmt( result, "[ %S ]", code_to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
@@ -1324,9 +1324,9 @@ void to_string(CodeVar self, String* result )
 		if ( self->Value )
 		{
 			if ( self->VarConstructorInit )
-				string_append_fmt( result, "( %S ", to_string(self->Value) );
+				string_append_fmt( result, "( %S ", code_to_string(self->Value) );
 			else
-				string_append_fmt( result, " = %S", to_string(self->Value) );
+				string_append_fmt( result, " = %S", code_to_string(self->Value) );
 		}
 
 		// Keep the chain going...
@@ -1354,25 +1354,25 @@ void to_string(CodeVar self, String* result )
 
 		if ( self->ValueType->ArrExpr )
 		{
-			string_append_fmt( result, "[ %S ]", to_string(self->ValueType->ArrExpr) );
+			string_append_fmt( result, "[ %S ]", code_to_string(self->ValueType->ArrExpr) );
 
 			Code next_arr_expr = self->ValueType->ArrExpr->Next;
 			while ( next_arr_expr )
 			{
-				string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+				string_append_fmt( result, "[ %S ]", code_to_string(next_arr_expr) );
 				next_arr_expr = next_arr_expr->Next;
 			}
 		}
 
 		if ( self->BitfieldSize )
-			string_append_fmt( result, " : %S", to_string(self->BitfieldSize) );
+			string_append_fmt( result, " : %S", code_to_string(self->BitfieldSize) );
 
 		if ( self->Value )
 		{
 			if ( self->VarConstructorInit )
-				string_append_fmt( result, "( %S ", to_string(self->Value) );
+				string_append_fmt( result, "( %S ", code_to_string(self->Value) );
 			else
-				string_append_fmt( result, " = %S", to_string(self->Value) );
+				string_append_fmt( result, " = %S", code_to_string(self->Value) );
 		}
 
 		if ( self->NextVar )
@@ -1390,16 +1390,16 @@ void to_string(CodeVar self, String* result )
 	}
 
 	if ( self->BitfieldSize )
-		string_append_fmt( result, "%S %SC : %S", to_string(self->ValueType), self->Name, to_string(self->BitfieldSize) );
+		string_append_fmt( result, "%S %SC : %S", to_string(self->ValueType), self->Name, code_to_string(self->BitfieldSize) );
 
 	else if ( self->ValueType->ArrExpr )
 	{
-		string_append_fmt( result, "%S %SC[ %S ]", to_string(self->ValueType), self->Name, to_string(self->ValueType->ArrExpr) );
+		string_append_fmt( result, "%S %SC[ %S ]", to_string(self->ValueType), self->Name, code_to_string(self->ValueType->ArrExpr) );
 
 		Code next_arr_expr = self->ValueType->ArrExpr->Next;
 		while ( next_arr_expr )
 		{
-			string_append_fmt( result, "[ %S ]", to_string(next_arr_expr) );
+			string_append_fmt( result, "[ %S ]", code_to_string(next_arr_expr) );
 			next_arr_expr = next_arr_expr->Next;
 		}
 	}
@@ -1410,9 +1410,9 @@ void to_string(CodeVar self, String* result )
 	if ( self->Value )
 	{
 		if ( self->VarConstructorInit )
-			string_append_fmt( result, "( %S ", to_string(self->Value) );
+			string_append_fmt( result, "( %S ", code_to_string(self->Value) );
 		else
-			string_append_fmt( result, " = %S", to_string(self->Value) );
+			string_append_fmt( result, " = %S", code_to_string(self->Value) );
 	}
 
 	if ( self->NextVar )

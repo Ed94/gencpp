@@ -41,7 +41,7 @@ CodeConstructor parse_constructor( StrC def )
 
 	while ( left && is_specifier(currtok) )
 	{
-		Specifier spec = to_specifier( to_str(currtok) );
+		Specifier spec = strc_to_specifier( to_str(currtok) );
 
 		b32 ignore_spec = false;
 
@@ -59,7 +59,7 @@ CodeConstructor parse_constructor( StrC def )
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%s", to_str( spec ), to_string(Context) );
+				log_failure( "Invalid specifier %s for variable\n%s", spec_to_str( spec ), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}

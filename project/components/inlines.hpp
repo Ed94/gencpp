@@ -5,13 +5,13 @@
 
 #pragma region Code
 inline
-void append( Code self, Code other )
+void code_append( Code self, Code other )
 {
 	GEN_ASSERT(self.ast  != nullptr);
 	GEN_ASSERT(other.ast != nullptr);
 
 	if ( other->Parent )
-		other = duplicate(other);
+		other = code_duplicate(other);
 
 	other->Parent = self;
 
@@ -32,7 +32,7 @@ void append( Code self, Code other )
 	self->NumEntries++;
 }
 inline
-bool is_body(Code self)
+bool code_is_body(Code self)
 {
 	GEN_ASSERT(self != nullptr);
 	switch (self->Type)
@@ -51,7 +51,7 @@ bool is_body(Code self)
 	return false;
 }
 inline
-Code* entry( Code self, u32 idx )
+Code* code_entry( Code self, u32 idx )
 {
 	GEN_ASSERT(self.ast != nullptr);
 	Code* current = & self->Front;
@@ -67,18 +67,18 @@ Code* entry( Code self, u32 idx )
 	return rcast( Code*, current);
 }
 inline
-bool is_valid(Code self)
+bool code_is_valid(Code self)
 {
 	return self.ast != nullptr && self.ast->Type != CT_Invalid;
 }
 inline
-bool has_entries(AST* self)
+bool code_has_entries(AST* self)
 {
 	GEN_ASSERT(self != nullptr);
 	return self->NumEntries > 0;
 }
 inline
-void set_global(Code self)
+void code_set_global(Code self)
 {
 	if ( self.ast == nullptr )
 	{
@@ -97,10 +97,10 @@ Code& Code::operator ++()
 	return * this;
 }
 inline
-char const* type_str(Code self)
+char const* code_type_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
-	return to_str( self->Type );
+	return codetype_to_str( self->Type );
 }
 #pragma endregion Code
 
@@ -110,12 +110,12 @@ void append( CodeBody self, Code other )
 {
 	GEN_ASSERT(other.ast != nullptr);
 
-	if (is_body(other)) {
+	if (code_is_body(other)) {
 		append( self, cast(CodeBody, other) );
 		return;
 	}
 
-	append( cast(Code, self), other );
+	code_append( cast(Code, self), other );
 }
 inline
 void append( CodeBody self, CodeBody body )
@@ -135,6 +135,10 @@ Code begin( CodeBody body) {
 inline
 Code end(CodeBody body ){
 	return { rcast(AST*, body.ast)->Back->Next };
+}
+inline
+Code next(CodeBody body, Code entry) {
+	return entry->Next;
 }
 #pragma endregion CodeBody
 
@@ -170,7 +174,7 @@ void append( CodeParam appendee, CodeParam other )
 	Code entry = cast(Code, other);
 
 	if ( entry->Parent )
-		entry = GEN_NS duplicate( entry );
+		entry = code_duplicate( entry );
 
 	entry->Parent = self;
 
@@ -355,7 +359,7 @@ CodeBody def_body( CodeType type )
 			break;
 
 		default:
-			log_failure( "def_body: Invalid type %s", (char const*)to_str(type) );
+			log_failure( "def_body: Invalid type %s", (char const*)codetype_to_str(type) );
 			return (CodeBody)Code_Invalid;
 	}
 

@@ -24,24 +24,24 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 #	define check_params()                                                                                 \
 	if ( ! params_code )                                                                                  \
 	{                                                                                                     \
-		log_failure("gen::def_operator: params is null and operator%s requires it", to_str(op));          \
+		log_failure("gen::def_operator: params is null and operator%s requires it", operator_to_str(op)); \
 		return OpValResult_Fail;                                                                          \
 	}                                                                                                     \
 	if ( params_code->Type != CT_Parameters )                                                             \
 	{                                                                                                     \
-		log_failure("gen::def_operator: params is not of Parameters type - %s", debug_str(params_code));  \
+		log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code));  \
 		return OpValResult_Fail;                                                                          \
 	}
 
 #	define check_param_eq_ret()                                                                     \
-	if ( ! is_member_symbol && ! is_equal(params_code->ValueType, ret_type) )                       \
+	if ( ! is_member_symbol && ! code_is_equal(params_code->ValueType, ret_type) )                       \
 	{                                                                                               \
 		log_failure("gen::def_operator: operator%s requires first parameter to equal return type\n" \
 			"param types: %s\n"                                                                     \
 			"return type: %s",                                                                      \
-			to_str(op).Ptr,                                                                         \
-			debug_str(params_code),                                                                 \
-			debug_str(ret_type)                                                                     \
+			operator_to_str(op).Ptr,                                                                \
+			code_debug_str(params_code),                                                                 \
+			code_debug_str(ret_type)                                                                     \
 		);                                                                                          \
 		return OpValResult_Fail;                                                                    \
 	}
@@ -49,12 +49,12 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 
 	if ( ! ret_type )
 	{
-		log_failure("gen::def_operator: ret_type is null but is required by operator%s", to_str(op));
+		log_failure("gen::def_operator: ret_type is null but is required by operator%s", operator_to_str(op));
 	}
 
 	if ( ret_type->Type != CT_Typename )
 	{
-		log_failure("gen::def_operator: ret_type is not of typename type - %s", debug_str(ret_type));
+		log_failure("gen::def_operator: ret_type is not of typename type - %s", code_debug_str(ret_type));
 		return OpValResult_Fail;
 	}
 
@@ -70,8 +70,8 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			{
 				log_failure("gen::def_operator: "
 					"operator%s does not support non-member definition (more than one parameter provided) - %s",
-					to_str(op),
-					debug_str(params_code)
+					operator_to_str(op),
+					code_debug_str(params_code)
 				);
 				return OpValResult_Fail;
 			}
@@ -100,9 +100,9 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			if (params_code->NumEntries > 2 )
 			{
 				log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
-					, to_str(op)
+					, operator_to_str(op)
 					, params_code->NumEntries
-					, debug_str(params_code)
+					, code_debug_str(params_code)
 				);
 				return OpValResult_Fail;
 			}
@@ -116,8 +116,8 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				if ( params_code->Type != CT_Parameters )
 				{
 					log_failure("gen::def_operator: operator%s params code provided is not of Parameters type - %s"
-						, to_str(op)
-						, debug_str(params_code)
+						, operator_to_str(op)
+						, code_debug_str(params_code)
 					);
 					return OpValResult_Fail;
 				}
@@ -125,7 +125,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				switch ( params_code->NumEntries )
 				{
 					case 1:
-						if ( is_equal(params_code->ValueType, t_int ) )
+						if ( code_is_equal(params_code->ValueType, t_int ) )
 							is_member_symbol = true;
 
 						else
@@ -135,11 +135,11 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 					case 2:
 						check_param_eq_ret();
 
-						if ( ! is_equal(get(params_code, 1), t_int ) )
+						if ( ! code_is_equal(get(params_code, 1), t_int ) )
 						{
 							log_failure("gen::def_operator: "
 								"operator%s requires second parameter of non-member definition to be int for post-decrement",
-								to_str(op)
+								operator_to_str(op)
 							);
 							return OpValResult_Fail;
 						}
@@ -147,7 +147,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 
 					default:
 						log_failure("gen::def_operator: operator%s recieved unexpected number of parameters recived %d instead of 0-2"
-							, to_str(op)
+							, operator_to_str(op)
 							, params_code->NumEntries
 						);
 						return OpValResult_Fail;
@@ -164,18 +164,18 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", debug_str(params_code));
+					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code));
 					return OpValResult_Fail;
 				}
 
-				if ( is_equal(params_code->ValueType, ret_type ) )
+				if ( code_is_equal(params_code->ValueType, ret_type ) )
 				{
 					log_failure("gen::def_operator: "
 						"operator%s is non-member symbol yet first paramter does not equal return type\n"
 						"param type: %s\n"
 						"return type: %s\n"
-						, debug_str(params_code)
-						, debug_str(ret_type)
+						, code_debug_str(params_code)
+						, code_debug_str(ret_type)
 					);
 					return OpValResult_Fail;
 				}
@@ -183,7 +183,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				if ( params_code->NumEntries > 1 )
 				{
 					log_failure("gen::def_operator: operator%s may not have more than one parameter - param count: %d"
-						, to_str(op)
+						, operator_to_str(op)
 						, params_code->NumEntries
 					);
 					return OpValResult_Fail;
@@ -197,7 +197,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 		#if 0
 			if ( ! ret_type.is_equal( t_bool) )
 			{
-				log_failure( "gen::def_operator: return type is not a boolean - %s", debug_str(params_code) );
+				log_failure( "gen::def_operator: return type is not a boolean - %s", code_debug_str(params_code) );
 				return OpValidateResult::Fail;
 			}
 		#endif
@@ -209,7 +209,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure( "gen::def_operator: params is not of Parameters type - %s", debug_str(params_code) );
+					log_failure( "gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code) );
 					return OpValResult_Fail;
 				}
 
@@ -217,7 +217,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				{
 					log_failure(
 					    "gen::def_operator: operator%s may not have more than one parameter - param count: %d",
-					    to_str( op ),
+					    operator_to_str( op ),
 					    params_code->NumEntries
 					);
 					return OpValResult_Fail;
@@ -245,14 +245,14 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 					break;
 
 				case 2:
-					if ( ! is_equal(params_code->ValueType, ret_type ) )
+					if ( ! code_is_equal(params_code->ValueType, ret_type ) )
 					{
 						log_failure("gen::def_operator: "
 							"operator%s is non-member symbol yet first paramter does not equal return type\n"
 							"param type: %s\n"
 							"return type: %s\n"
-							, debug_str(params_code)
-							, debug_str(ret_type)
+							, code_debug_str(params_code)
+							, code_debug_str(ret_type)
 						);
 						return OpValResult_Fail;
 					}
@@ -260,7 +260,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 
 				default:
 					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
-						, to_str(op)
+						, operator_to_str(op)
 						, params_code->NumEntries
 					);
 					return OpValResult_Fail;
@@ -275,25 +275,25 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", debug_str(params_code));
+					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code));
 					return OpValResult_Fail;
 				}
 
 				if ( params_code->NumEntries != 1 )
 				{
 					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
-						, to_str(op)
+						, operator_to_str(op)
 						, params_code->NumEntries
 					);
 					return OpValResult_Fail;
 				}
 			}
 
-			if ( ! is_equal(ret_type, t_bool ))
+			if ( ! code_is_equal(ret_type, t_bool ))
 			{
 				log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
-					, to_str(op)
-					, debug_str(ret_type)
+					, operator_to_str(op)
+					, code_debug_str(ret_type)
 				);
 				return OpValResult_Fail;
 			}
@@ -320,7 +320,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 
 				default:
 					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 1-2"
-						, to_str(op)
+						, operator_to_str(op)
 						, params_code->NumEntries
 					);
 					return OpValResult_Fail;
@@ -333,7 +333,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			if ( params_code && params_code->NumEntries > 1)
 			{
 				log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
-					, to_str(op)
+					, operator_to_str(op)
 					, params_code->NumEntries
 				);
 				return OpValResult_Fail;
@@ -347,7 +347,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 		case Op_PtrToMemOfPtr:
 			if ( params_code )
 			{
-				log_failure("gen::def_operator: operator%s expects no paramters - %s", to_str(op), debug_str(params_code));
+				log_failure("gen::def_operator: operator%s expects no paramters - %s", operator_to_str(op), code_debug_str(params_code));
 				return OpValResult_Fail;
 			}
 			break;
@@ -501,7 +501,7 @@ CodeConstructor def_constructor( Opts_def_constructor p )
 
 	if ( params && params->Type != CT_Parameters )
 	{
-		log_failure("gen::def_constructor: params must be of Parameters type - %s", debug_str(params));
+		log_failure("gen::def_constructor: params must be of Parameters type - %s", code_debug_str(params));
 		return InvalidCode;
 	}
 
@@ -527,7 +527,7 @@ CodeConstructor def_constructor( Opts_def_constructor p )
 			break;
 
 			default:
-				log_failure("gen::def_constructor: body must be either of Function_Body or Untyped type - %s", debug_str(body));
+				log_failure("gen::def_constructor: body must be either of Function_Body or Untyped type - %s", code_debug_str(body));
 				return InvalidCode;
 		}
 
@@ -545,7 +545,7 @@ CodeConstructor def_constructor( Opts_def_constructor p )
 CodeClass def_class( StrC name, Opts_def_struct p )
 {
 	name_check( def_class, name );
-	
+
 	Code           body           = p.body;
 	CodeTypename   parent         = p.parent;
 	AccessSpec     parent_access  = p.parent_access;
@@ -556,13 +556,13 @@ CodeClass def_class( StrC name, Opts_def_struct p )
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", debug_str(attributes) );
+		log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", code_debug_str(attributes) );
 		return InvalidCode;
 	}
 
 	if ( parent && ( parent->Type != CT_Class && parent->Type != CT_Struct && parent->Type != CT_Typename && parent->Type != CT_Untyped ) )
 	{
-		log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", debug_str(parent) );
+		log_failure( "gen::def_class: parent provided is not type 'Class', 'Struct', 'Typeanme', or 'Untyped': %s", code_debug_str(parent) );
 		return InvalidCode;
 	}
 
@@ -580,7 +580,7 @@ CodeClass def_class( StrC name, Opts_def_struct p )
 			break;
 
 			default:
-				log_failure("gen::def_class: body must be either of Class_Body or Untyped type - %s", debug_str(body));
+				log_failure("gen::def_class: body must be either of Class_Body or Untyped type - %s", code_debug_str(body));
 				return InvalidCode;
 		}
 
@@ -647,7 +647,7 @@ CodeDestructor def_destructor( Opts_def_destructor p )
 
 	if ( specifiers && specifiers->Type != CT_Specifiers )
 	{
-		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", debug_str(specifiers) );
+		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", code_debug_str(specifiers) );
 		return InvalidCode;
 	}
 
@@ -665,7 +665,7 @@ CodeDestructor def_destructor( Opts_def_destructor p )
 			break;
 
 			default:
-				log_failure("gen::def_destructor: body must be either of Function_Body or Untyped type - %s", debug_str(body));
+				log_failure("gen::def_destructor: body must be either of Function_Body or Untyped type - %s", code_debug_str(body));
 				return InvalidCode;
 		}
 
@@ -692,13 +692,13 @@ CodeEnum def_enum( StrC name, Opts_def_enum p )
 
 	if ( type && type->Type != CT_Typename )
 	{
-		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", debug_str(type) );
+		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", code_debug_str(type) );
 		return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", debug_str(attributes) );
+		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", code_debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -716,7 +716,7 @@ CodeEnum def_enum( StrC name, Opts_def_enum p )
 			break;
 
 			default:
-				log_failure( "gen::def_enum: body must be of Enum_Body or Untyped type %s", debug_str(body));
+				log_failure( "gen::def_enum: body must be of Enum_Body or Untyped type %s", code_debug_str(body));
 				return InvalidCode;
 		}
 
@@ -771,7 +771,7 @@ CodeExtern def_extern_link( StrC name, Code body )
 
 	if ( body->Type != CT_Extern_Linkage_Body && body->Type != CT_Untyped )
 	{
-		log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", debug_str(body));
+		log_failure("gen::def_extern_linkage: body is not of extern_linkage or untyped type %s", code_debug_str(body));
 		return InvalidCode;
 	}
 
@@ -801,7 +801,7 @@ CodeFriend def_friend( Code declaration )
 		break;
 
 		default:
-			log_failure("gen::def_friend: requires declartion to have class, function, operator, or struct - %s", debug_str(declaration));
+			log_failure("gen::def_friend: requires declartion to have class, function, operator, or struct - %s", code_debug_str(declaration));
 			return InvalidCode;
 	}
 
@@ -827,25 +827,25 @@ CodeFn def_function( StrC name, Opts_def_function p )
 
 	if ( params && params->Type != CT_Parameters )
 	{
-		log_failure( "gen::def_function: params was not a `Parameters` type: %s", debug_str(params) );
+		log_failure( "gen::def_function: params was not a `Parameters` type: %s", code_debug_str(params) );
 		return InvalidCode;
 	}
 
 	if ( ret_type && ret_type->Type != CT_Typename )
 	{
-		log_failure( "gen::def_function: ret_type was not a Typename: %s", debug_str(ret_type) );
+		log_failure( "gen::def_function: ret_type was not a Typename: %s", code_debug_str(ret_type) );
 		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != CT_Specifiers )
 	{
-		log_failure( "gen::def_function: specifiers was not a `Specifiers` type: %s", debug_str(specifiers) );
+		log_failure( "gen::def_function: specifiers was not a `Specifiers` type: %s", code_debug_str(specifiers) );
 		return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_function: attributes was not a `PlatformAttributes` type: %s", debug_str(attributes) );
+		log_failure( "gen::def_function: attributes was not a `PlatformAttributes` type: %s", code_debug_str(attributes) );
 		return InvalidCode;
 	}
 
@@ -865,7 +865,7 @@ CodeFn def_function( StrC name, Opts_def_function p )
 
 			default:
 			{
-				log_failure("gen::def_function: body must be either of Function_Body, Execution, or Untyped type. %s", debug_str(body));
+				log_failure("gen::def_function: body must be either of Function_Body, Execution, or Untyped type. %s", code_debug_str(body));
 				return InvalidCode;
 			}
 		}
@@ -941,7 +941,7 @@ CodeNS def_namespace( StrC name, Code body, Opts_def_namespace p )
 
 	if ( body && body->Type != CT_Namespace_Body && body->Type != CT_Untyped )
 	{
-		log_failure("gen::def_namespace: body is not of namespace or untyped type %s", debug_str(body));
+		log_failure("gen::def_namespace: body is not of namespace or untyped type %s", code_debug_str(body));
 		return InvalidCode;
 	}
 
@@ -965,13 +965,13 @@ CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", debug_str(attributes) );
+		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", code_debug_str(attributes) );
 		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != CT_Specifiers )
 	{
-		log_failure( "gen::def_operator: Specifiers was provided but its not of specifiers type: %s", debug_str(specifiers) );
+		log_failure( "gen::def_operator: Specifiers was provided but its not of specifiers type: %s", code_debug_str(specifiers) );
 		return InvalidCode;
 	}
 
@@ -984,7 +984,7 @@ CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 
 	char const* name = nullptr;
 
-	StrC op_str = to_str( op );
+	StrC op_str = operator_to_str( op );
 	if ( nspace.Len > 0 )
 		name = str_fmt_buf( "%.*soperator %.*s", nspace.Len, nspace.Ptr, op_str.Len, op_str.Ptr );
 	else
@@ -1006,7 +1006,7 @@ CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 
 			default:
 			{
-				log_failure("gen::def_operator: body must be either of Function_Body, Execution, or Untyped type. %s", debug_str(body));
+				log_failure("gen::def_operator: body must be either of Function_Body, Execution, or Untyped type. %s", code_debug_str(body));
 				return InvalidCode;
 			}
 		}
@@ -1045,7 +1045,7 @@ CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast p )
 
 	if ( type->Type != CT_Typename )
 	{
-		log_failure( "gen::def_operator_cast: type is not a typename - %s", debug_str(type) );
+		log_failure( "gen::def_operator_cast: type is not a typename - %s", code_debug_str(type) );
 		return InvalidCode;
 	}
 
@@ -1057,7 +1057,7 @@ CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast p )
 
 		if ( body->Type != CT_Function_Body && body->Type != CT_Execution )
 		{
-			log_failure( "gen::def_operator_cast: body is not of function body or execution type - %s", debug_str(body) );
+			log_failure( "gen::def_operator_cast: body is not of function body or execution type - %s", code_debug_str(body) );
 			return InvalidCode;
 		}
 
@@ -1084,13 +1084,13 @@ CodeParam def_param( CodeTypename type, StrC name, Opts_def_param p )
 
 	if ( type->Type != CT_Typename )
 	{
-		log_failure( "gen::def_param: type is not a typename - %s", debug_str(type) );
+		log_failure( "gen::def_param: type is not a typename - %s", code_debug_str(type) );
 		return InvalidCode;
 	}
 
 	if ( p.value && p.value->Type != CT_Untyped )
 	{
-		log_failure( "gen::def_param: value is not untyped - %s", debug_str(p.value) );
+		log_failure( "gen::def_param: value is not untyped - %s", code_debug_str(p.value) );
 		return InvalidCode;
 	}
 
@@ -1178,19 +1178,19 @@ CodeStruct def_struct( StrC name, Opts_def_struct p )
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", debug_str(attributes) );
+		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", code_debug_str(attributes) );
 		return InvalidCode;
 	}
 
 	if ( parent && parent->Type != CT_Typename )
 	{
-		log_failure( "gen::def_struct: parent was not a `Struct` type - %s", debug_str(parent) );
+		log_failure( "gen::def_struct: parent was not a `Struct` type - %s", code_debug_str(parent) );
 		return InvalidCode;
 	}
 
 	if ( body && body->Type != CT_Struct_Body )
 	{
-		log_failure( "gen::def_struct: body was not a Struct_Body type - %s", debug_str(body) );
+		log_failure( "gen::def_struct: body was not a Struct_Body type - %s", code_debug_str(body) );
 		return InvalidCode;
 	}
 
@@ -1237,7 +1237,7 @@ CodeTemplate def_template( CodeParam params, Code declaration, Opts_def_template
 
 	if ( params && params->Type != CT_Parameters )
 	{
-		log_failure( "gen::def_template: params is not of parameters type - %s", debug_str(params) );
+		log_failure( "gen::def_template: params is not of parameters type - %s", code_debug_str(params) );
 		return InvalidCode;
 	}
 
@@ -1251,7 +1251,7 @@ CodeTemplate def_template( CodeParam params, Code declaration, Opts_def_template
 		break;
 
 		default:
-			log_failure( "gen::def_template: declaration is not of class, function, struct, variable, or using type - %s", debug_str(declaration) );
+			log_failure( "gen::def_template: declaration is not of class, function, struct, variable, or using type - %s", code_debug_str(declaration) );
 	}
 
 	CodeTemplate
@@ -1266,26 +1266,26 @@ CodeTemplate def_template( CodeParam params, Code declaration, Opts_def_template
 CodeTypename def_type( StrC name, Opts_def_type p )
 {
 	name_check( def_type, name );
-	
+
 	Code           arrayexpr  = p.arrayexpr;
 	CodeSpecifiers specifiers = p.specifiers;
 	CodeAttributes attributes = p.attributes;
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_type: attributes is not of attributes type - %s", debug_str(attributes) );
+		log_failure( "gen::def_type: attributes is not of attributes type - %s", code_debug_str(attributes) );
 		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != CT_Specifiers )
 	{
-		log_failure( "gen::def_type: specifiers is not of specifiers type - %s", debug_str(specifiers) );
+		log_failure( "gen::def_type: specifiers is not of specifiers type - %s", code_debug_str(specifiers) );
 		return InvalidCode;
 	}
 
 	if ( arrayexpr && arrayexpr->Type != CT_Untyped )
 	{
-		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", debug_str(arrayexpr) );
+		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", code_debug_str(arrayexpr) );
 		return InvalidCode;
 	}
 
@@ -1325,13 +1325,13 @@ CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
 		case CT_Typename:
 			break;
 		default:
-			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", debug_str(type) );
+			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", code_debug_str(type) );
 			return InvalidCode;
 	}
 
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", debug_str(p.attributes) );
+		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", code_debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
@@ -1355,7 +1355,7 @@ CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
 	{
 		if (type->Type != CT_Untyped)
 		{
-			log_failure( "gen::def_typedef: name was empty and type was not untyped (indicating its a function typedef) - %s", debug_str(type) );
+			log_failure( "gen::def_typedef: name was empty and type was not untyped (indicating its a function typedef) - %s", code_debug_str(type) );
 			return InvalidCode;
 		}
 
@@ -1377,13 +1377,13 @@ CodeUnion def_union( StrC name, Code body, Opts_def_union p )
 
 	if ( body->Type != CT_Union_Body )
 	{
-		log_failure( "gen::def_union: body was not a Union_Body type - %s", debug_str(body) );
+		log_failure( "gen::def_union: body was not a Union_Body type - %s", code_debug_str(body) );
 		return InvalidCode;
 	}
 
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", debug_str(p.attributes) );
+		log_failure( "gen::def_union: attributes was not a PlatformAttributes type - %s", code_debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
@@ -1418,7 +1418,7 @@ CodeUsing def_using( StrC name, Code type, Opts_def_using p )
 
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", debug_str(p.attributes) );
+		log_failure( "gen::def_using: attributes was not a PlatformAttributes type - %s", code_debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
@@ -1456,25 +1456,25 @@ CodeVar def_variable( CodeTypename type, StrC name, Code value, Opts_def_variabl
 
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type - %s", debug_str(p.attributes) );
+		log_failure( "gen::def_variable: attributes was not a `PlatformAttributes` type - %s", code_debug_str(p.attributes) );
 		return InvalidCode;
 	}
 
 	if ( p.specifiers && p.specifiers->Type != CT_Specifiers )
 	{
-		log_failure( "gen::def_variable: specifiers was not a `Specifiers` type - %s", debug_str(p.specifiers) );
+		log_failure( "gen::def_variable: specifiers was not a `Specifiers` type - %s", code_debug_str(p.specifiers) );
 		return InvalidCode;
 	}
 
 	if ( type->Type != CT_Typename )
 	{
-		log_failure( "gen::def_variable: type was not a Typename - %s", debug_str(type) );
+		log_failure( "gen::def_variable: type was not a Typename - %s", code_debug_str(type) );
 		return InvalidCode;
 	}
 
 	if ( value && value->Type != CT_Untyped )
 	{
-		log_failure( "gen::def_variable: value was not a `Untyped` type - %s", debug_str(value) );
+		log_failure( "gen::def_variable: value was not a `Untyped` type - %s", code_debug_str(value) );
 		return InvalidCode;
 	}
 
@@ -1546,7 +1546,7 @@ CodeBody def_class_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
-				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1583,7 +1583,7 @@ CodeBody def_class_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES
-				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1620,7 +1620,7 @@ CodeBody def_enum_body( s32 num, ... )
 
 		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
 		{
-			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", debug_str(entry) );
+			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", code_debug_str(entry) );
 			return InvalidCode;
 		}
 
@@ -1652,7 +1652,7 @@ CodeBody def_enum_body( s32 num, Code* codes )
 
 		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
 		{
-			log_failure("gen::def_enum_body: Entry type is not allowed: %s", debug_str(entry) );
+			log_failure("gen::def_enum_body: Entry type is not allowed: %s", code_debug_str(entry) );
 			return InvalidCode;
 		}
 
@@ -1687,7 +1687,7 @@ CodeBody def_export_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
-				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1724,7 +1724,7 @@ CodeBody def_export_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES
-				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1750,8 +1750,8 @@ CodeBody def_extern_link_body( s32 num, ... )
 	va_start(va, num);
 	do
 	{
-		Code_POD pod = va_arg(va, Code_POD);
-		Code entry = pcast(Code, pod);
+		Code_POD pod   = va_arg(va, Code_POD);
+		Code     entry = pcast(Code, pod);
 
 		if (!entry)
 		{
@@ -1762,7 +1762,7 @@ CodeBody def_extern_link_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
-				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1799,7 +1799,7 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES
-				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1839,7 +1839,7 @@ CodeBody def_function_body( s32 num, ... )
 		{
 
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
-				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1876,7 +1876,7 @@ CodeBody def_function_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES
-				log_failure("gen::" "def_function_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_function_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1918,7 +1918,7 @@ CodeBody def_global_body( s32 num, ... )
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
-				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1959,7 +1959,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
-				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -1997,7 +1997,7 @@ CodeBody def_namespace_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
-				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -2034,7 +2034,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES
-				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", debug_str(entry) );
+				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", code_debug_str(entry) );
 				return InvalidCode;
 
 			default: break;
@@ -2065,7 +2065,7 @@ CodeParam def_params( s32 num, ... )
 		return InvalidCode;
 	}
 
-	CodeParam result = (CodeParam) duplicate(param);
+	CodeParam result = (CodeParam) code_duplicate(param);
 
 	while ( -- num )
 	{
@@ -2098,11 +2098,11 @@ CodeParam def_params( s32 num, CodeParam* codes )
 																												\
 	if (current->Type != CT_Parameters )                                                                        \
 	{                                                                                                           \
-		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", debug_str(current) );   \
+		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", code_debug_str(current) );   \
 		return InvalidCode;                                                                                     \
 	}
 
-	CodeParam current = (CodeParam)duplicate(* codes);
+	CodeParam current = (CodeParam)code_duplicate(* codes);
 	check_current();
 
 	CodeParam
@@ -2206,7 +2206,7 @@ CodeBody def_struct_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
-				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", debug_str(entry));
+				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
 			default:
@@ -2243,7 +2243,7 @@ CodeBody def_struct_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES
-				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", debug_str(entry) );
+				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", code_debug_str(entry) );
 				return InvalidCode;
 
 			default:
@@ -2280,7 +2280,7 @@ CodeBody def_union_body( s32 num, ... )
 
 		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
 		{
-			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", debug_str(entry) );
+			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", code_debug_str(entry) );
 			return InvalidCode;
 		}
 
@@ -2312,7 +2312,7 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 
 		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
 		{
-			log_failure("gen::def_union_body: Entry type is not allowed: %s", debug_str(entry) );
+			log_failure("gen::def_union_body: Entry type is not allowed: %s", code_debug_str(entry) );
 			return InvalidCode;
 		}
 

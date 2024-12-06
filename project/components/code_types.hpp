@@ -12,6 +12,7 @@ void   to_string_export ( CodeBody body, String* result );
 
 Code begin( CodeBody body);
 Code end  ( CodeBody body );
+Code next ( CodeBody body );
 
 void   add_interface( CodeClass self, CodeType interface );
 String to_string    ( CodeClass self );
@@ -135,7 +136,7 @@ struct CodeBody
 
 	void append( Code other )    { return GEN_NS append( *this, other ); }
 	void append( CodeBody body ) { return GEN_NS append(*this, body); }
-	bool has_entries()           { return GEN_NS has_entries(* this); }
+	bool has_entries()           { return GEN_NS code_has_entries(* this); }
 
 	String to_string()                        { return GEN_NS to_string(* this); }
 	void   to_string( String& result )        { return GEN_NS to_string(* this, & result ); }
@@ -696,7 +697,7 @@ struct CodeOpCast
 
 struct CodePragma
 {
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES || 1
+#if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodePragma );
 
 	String to_string()                 { return GEN_NS to_string(* this); }
@@ -963,8 +964,9 @@ struct CodeUnion
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( CodeUnion );
 
-	String to_string()                 { return GEN_NS to_string(* this); }
-	void   to_string( String& result ) { return GEN_NS to_string(* this, & result); }
+	String to_string()                     { return GEN_NS to_string(* this); }
+	void   to_string_def( String& result ) { return GEN_NS to_string_def(* this, & result); }
+	void   to_string_fwd( String& result ) { return GEN_NS to_string_fwd(* this, & result); }
 #endif
 
 	Using_CodeOps(CodeUnion);

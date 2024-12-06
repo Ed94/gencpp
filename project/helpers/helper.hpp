@@ -32,17 +32,21 @@ CodeBody gen_ecode( char const* path )
 	}
 
 	CodeEnum enum_code = parse_enum(gen::token_fmt_impl((3 + 1) / 2, "entries", string_to_strc(enum_entries), 
-		"enum CodeType_Def : u32 { <entries> CT_NumTypes };"
+		"enum CodeType_Def enum_underlying(u32) { <entries> CT_NumTypes };"
 	));
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	CodeFn to_str = parse_function( token_fmt( "entries", string_to_strc(to_str_entries), stringize(
+	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
+	CodeFn to_str = parse_function( token_fmt( 
+		"entries", string_to_strc(to_str_entries)
+	,	"num",     lookup_size
+	, stringize(
 		inline
-		StrC to_str( CodeType type )
+		StrC codetype_to_str( CodeType type )
 		{
 			local_persist
-			StrC lookup[] {
+			StrC lookup[<num>] = {
 				<entries>
 			};
 
@@ -83,22 +87,29 @@ CodeBody gen_eoperator( char const* path )
 		string_append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
+#pragma push_macro("enum_underlying")
+#undef enum_underlying
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), stringize(
-		enum Operator_Def : u32
+		enum Operator_Def enum_underlying(u32)
 		{
 			<entries>
 			NumOps
 		};
 	)));
+#pragma pop_macro("enum_underlying")
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	CodeFn to_str = parse_function(token_fmt("entries", string_to_strc(to_str_entries), stringize(
+	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
+	CodeFn to_str   = parse_function(token_fmt(
+		"entries", string_to_strc(to_str_entries)
+	,	"num",     lookup_size
+	, stringize(
 		inline
-		StrC to_str( Operator op )
+		StrC operator_to_str( Operator op )
 		{
 			local_persist
-			StrC lookup[] {
+			StrC lookup[<num>] = {
 				<entries>
 			};
 
@@ -139,17 +150,20 @@ CodeBody gen_especifier( char const* path )
 		string_append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
 	}
 
+#pragma push_macro("enum_underlying")
+#undef enum_underlying
 	CodeEnum  enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), stringize(
-		enum Specifier_Def : u32
+		enum Specifier_Def enum_underlying(u32)
 		{
 			<entries>
 			Spec_NumSpecifiers
 		};
 	)));
+#pragma pop_macro("enum_underlying")
 
 	CodeFn is_trailing = parse_function(token_fmt("specifier", string_to_strc(to_str_entries), stringize(
 		inline
-		bool is_trailing( Specifier specifier )
+		bool spec_is_trailing( Specifier specifier )
 		{
 			return specifier > Spec_Virtual;
 		}
@@ -165,12 +179,17 @@ CodeBody gen_especifier( char const* path )
 #undef do_once_end
 #undef forceinline
 #undef neverinline
-	CodeFn to_str = parse_function(token_fmt("entries", string_to_strc(to_str_entries), stringize(
+
+	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
+	CodeFn to_str   = parse_function(token_fmt(
+		"entries", string_to_strc(to_str_entries)
+	,	"num",     lookup_size
+	, stringize(
 		inline
-		StrC to_str( Specifier type )
+		StrC spec_to_str( Specifier type )
 		{
 			local_persist
-			StrC lookup[] {
+			StrC lookup[<num>] = {
 				<entries>
 			};
 
@@ -180,14 +199,14 @@ CodeBody gen_especifier( char const* path )
 
 	CodeFn to_type = parse_function( token_fmt( "entries", string_to_strc(to_str_entries), stringize(
 		inline
-		Specifier to_specifier( StrC str )
+		Specifier strc_to_specifier( StrC str )
 		{
 			local_persist
 			u32 keymap[ Spec_NumSpecifiers ];
 			do_once_start
 				for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 				{
-					StrC enum_str = to_str( (Specifier)index );
+					StrC enum_str = spec_to_str( (Specifier)index );
 
 					// We subtract 1 to remove the null terminator
 					// This is because the tokens lexed are not null terminated.
@@ -367,7 +386,7 @@ CodeBody gen_ast_inlines()
 		{
 			if ( other.ast && other->Parent )
 			{
-				ast         = rcast( decltype(ast),  GEN_NS duplicate(other).ast);
+				ast         = rcast( decltype(ast), code_duplicate(other).ast);
 				ast->Parent = { nullptr };
 			}
 

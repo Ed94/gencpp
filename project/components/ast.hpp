@@ -6,6 +6,8 @@
 #include "gen/especifier.hpp"
 #endif
 
+GEN_API_C_BEGIN
+
 struct AST;
 struct AST_Body;
 struct AST_Attributes;
@@ -80,7 +82,7 @@ struct AST_Var;
 #endif
 
 #if GEN_COMPILER_C
-typedef AST* code;
+typedef AST* Code;
 #else
 struct Code;
 #endif
@@ -155,29 +157,35 @@ Define_Code(Var);
 GEN_NS_PARSER_BEGIN
 struct Token;
 GEN_NS_PARSER_END
-typedef struct GEN_NS_PARSER Token Token;
 
-#if ! GEN_COMPILER_C
+#define Token_Typedef struct Token Token
+typedef Token_Typedef;
+#undef Token_Typedef
+
+#if GEN_COMPILER_CPP
+GEN_API_C_END
 template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( Type*, & self ); }
+GEN_API_C_BEGIN
 #endif
 
 #pragma region Code Interface
-void        append       (Code code, Code other );
-char const* debug_str    (Code code);
-Code        duplicate    (Code code);
-Code*       entry        (Code code, u32 idx );
-bool        has_entries  (Code code);
-bool        is_body      (Code code);
-bool        is_equal     (Code code, Code other);
-bool        is_valid     (Code code);
-void        set_global   (Code code);
-String      to_string    (Code self );
-void        to_string    (Code self, String* result );
-char const* type_str     (Code self );
-bool        validate_body(Code self );
+void        code_append       (Code code, Code other );
+char const* code_debug_str    (Code code);
+Code        code_duplicate    (Code code);
+Code*       code_entry        (Code code, u32 idx );
+bool        code_has_entries  (Code code);
+bool        code_is_body      (Code code);
+bool        code_is_equal     (Code code, Code other);
+bool        code_is_valid     (Code code);
+void        code_set_global   (Code code);
+String      code_to_string    (Code self );
+void        code_to_string_ptr(Code self, String* result );
+char const* code_type_str     (Code self );
+bool        code_validate_body(Code self );
 #pragma endregion Code Interface
 
-#if ! GEN_COMPILER_C
+#if GEN_COMPILER_CPP
+GEN_API_C_END
 /*
 	AST* wrapper
 	- Not constantly have to append the '*' as this is written often..
@@ -187,13 +195,13 @@ struct Code
 {
 	AST* ast;
 
-#	define Using_Code( Typename )                                                     \
-	char const* debug_str()                { return GEN_NS debug_str(* this); }       \
-	Code        duplicate()                { return GEN_NS duplicate(* this); }	      \
-	bool        is_equal( Code other )     { return GEN_NS is_equal(* this, other); } \
-	bool        is_body()                  { return GEN_NS is_body(* this); }         \
-	bool        is_valid()                 { return GEN_NS is_valid(* this); }        \
-	void        set_global()               { return GEN_NS set_global(* this); }
+#	define Using_Code( Typename )                                                   \
+	char const* debug_str()                { return code_debug_str(* this); }       \
+	Code        duplicate()                { return code_duplicate(* this); }	    \
+	bool        is_equal( Code other )     { return code_is_equal(* this, other); } \
+	bool        is_body()                  { return code_is_body(* this); }         \
+	bool        is_valid()                 { return code_is_valid(* this); }        \
+	void        set_global()               { return code_set_global(* this); }
 
 #	define Using_CodeOps( Typename )                                         \
 	Typename&   operator = ( Code other );                                   \
@@ -203,13 +211,13 @@ struct Code
 
 #if GEN_SUPPORT_CPP_MEMBER_FEATURES
 	Using_Code( Code );
-	void        append(Code other)        { return GEN_NS append(* this, other); }
-	Code*       entry(u32 idx)            { return GEN_NS entry(* this, idx); }
-	bool        has_entries()             { return GEN_NS has_entries(* this); }
-	String      to_string()               { return GEN_NS to_string(* this); }
-	void        to_string(String& result) { return GEN_NS to_string(* this, & result); }
-	char const* type_str()                { return GEN_NS type_str(* this); }
-	bool        validate_body()           { return GEN_NS validate_body(*this); }
+	void        append(Code other)        { return code_append(* this, other); }
+	Code*       entry(u32 idx)            { return code_entry(* this, idx); }
+	bool        has_entries()             { return code_has_entries(* this); }
+	String      to_string()               { return code_to_string(* this); }
+	void        to_string(String& result) { return code_to_string_ptr(* this, & result); }
+	char const* type_str()                { return code_type_str(* this); }
+	bool        validate_body()           { return code_validate_body(*this); }
 #endif
 
 	Using_CodeOps( Code );
@@ -268,6 +276,7 @@ struct Code
 	operator CodeVar() const;
 	#undef operator
 };
+GEN_API_C_BEGIN
 #endif
 
 #pragma region Statics
@@ -278,6 +287,7 @@ extern Code Code_Global;
 extern Code Code_Invalid;
 #pragma endregion Statics
 
+typedef struct Code_POD Code_POD;
 struct Code_POD
 {
 	AST* ast;
@@ -352,7 +362,7 @@ struct AST
 		Code Next;
 		Code Back;
 	};
-	parser::Token*    Token; // Reference to starting token, only avaialble if it was derived from parsing.
+	Token*           Token; // Reference to starting token, only avaialble if it was derived from parsing.
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -369,7 +379,7 @@ struct AST
 };
 static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST POD is not size of AST_POD_Size" );
 
-#if ! GEN_COMPILER_C
+#if GEN_COMPILER_CPP
 // Uses an implicitly overloaded cast from the AST to the desired code type.
 // Necessary if the user wants GEN_ENFORCE_STRONG_CODE_TYPES
 struct  InvalidCode_ImplictCaster;
@@ -380,3 +390,5 @@ struct  InvalidCode_ImplictCaster;
 
 // Used when the its desired when omission is allowed in a definition.
 #define NullCode    { nullptr }
+
+GEN_API_C_END

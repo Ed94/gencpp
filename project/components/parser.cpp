@@ -995,7 +995,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 				while ( left && is_specifier(currtok) )
 				{
-					Specifier spec = to_specifier( to_str(currtok) );
+					Specifier spec = strc_to_specifier( to_str(currtok) );
 
 					b32 ignore_spec = false;
 
@@ -1022,7 +1022,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 						break;
 
 						default:
-							log_failure( "Invalid specifier %s for variable\n%s", to_str(spec), to_string(Context) );
+							log_failure( "Invalid specifier %s for variable\n%s", spec_to_str(spec), to_string(Context) );
 							pop(& Context);
 							return InvalidCode;
 					}
@@ -1183,13 +1183,13 @@ Code parse_complicated_definition( TokType which )
 	}
 
 	Token tok = tokens.Arr[ idx - 1 ];
-	if ( is_specifier(tok) && is_trailing( to_specifier( to_str(tok))) )
+	if ( is_specifier(tok) && spec_is_trailing( strc_to_specifier( to_str(tok))) )
 	{
 		// <which> <type_identifier>(...) <specifier> ...;
 
 		s32   spec_idx = idx - 1;
 		Token spec     = tokens.Arr[spec_idx];
-		while ( is_specifier(spec) && is_trailing( to_specifier( to_str(spec))) )
+		while ( is_specifier(spec) && spec_is_trailing( strc_to_specifier( to_str(spec))) )
 		{
 			-- spec_idx;
 			spec = tokens.Arr[spec_idx];
@@ -1443,12 +1443,12 @@ CodeFn parse_function_after_name(
 	{
 		if ( specifiers.ast == nullptr )
 		{
-			specifiers = def_specifier( to_specifier( to_str(currtok)) );
+			specifiers = def_specifier( strc_to_specifier( to_str(currtok)) );
 			eat( currtok.Type );
 			continue;
 		}
 
-		append(specifiers, to_specifier( to_str(currtok)) );
+		append(specifiers, strc_to_specifier( to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
@@ -1509,7 +1509,7 @@ CodeFn parse_function_after_name(
 
 			default:
 			{
-				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", debug_str(body), to_string(Context));
+				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", code_debug_str(body), to_string(Context));
 				pop(& Context);
 				return InvalidCode;
 			}
@@ -1779,7 +1779,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 				while ( left && is_specifier(currtok) )
 				{
-					Specifier spec = to_specifier( to_str(currtok) );
+					Specifier spec = strc_to_specifier( to_str(currtok) );
 
 					bool ignore_spec = false;
 
@@ -1807,7 +1807,7 @@ CodeBody parse_global_nspace( CodeType which )
 						break;
 
 						default:
-							StrC spec_str = to_str(spec);
+							StrC spec_str = spec_to_str(spec);
 
 							log_failure( "Invalid specifier %.*s for variable\n%s", spec_str.Len, spec_str, to_string(Context) );
 							pop(& Context);
@@ -2366,8 +2366,8 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		default:
 		{
-			StrC str_new    = to_str(Op_New);
-			StrC str_delete = to_str(Op_Delete);
+			StrC str_new    = operator_to_str(Op_New);
+			StrC str_delete = operator_to_str(Op_Delete);
 			if ( str_compare_len( currtok.Text, str_new.Ptr, max(str_new.Len - 1, currtok.Length)) == 0)
 			{
 				op = Op_New;
@@ -2450,12 +2450,12 @@ CodeOperator parse_operator_after_ret_type(
 	{
 		if ( specifiers.ast == nullptr )
 		{
-			specifiers = def_specifier( to_specifier( to_str(currtok)) );
+			specifiers = def_specifier( strc_to_specifier( to_str(currtok)) );
 			eat( currtok.Type );
 			continue;
 		}
 
-		append(specifiers, to_specifier( to_str(currtok)) );
+		append(specifiers, strc_to_specifier( to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>
@@ -2618,7 +2618,6 @@ CodePragma parse_pragma()
 internal inline
 CodeParam parse_params( bool use_template_capture )
 {
-	
 	push_scope();
 
 	if ( ! use_template_capture )
@@ -2989,6 +2988,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 		if (strc_contains(Context.Scope->Prev->ProcName, txt("parse_enum")))
 		{
 			// Do nothing
+			goto Leave_Scope_Early;
 		}
 		else if (strc_contains(Context.Scope->Prev->ProcName, txt("parse_typedef")))
 		{
@@ -3002,10 +3002,13 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 					eat( Tok_Comment );
 					// <Macro>; <InlineCmt>
 			}
+
 		}
 
 		tok.Length = ( (sptr)currtok_noskip.Text + currtok_noskip.Length ) - (sptr)tok.Text;
 	}
+
+Leave_Scope_Early:
 
 	char const* content = str_fmt_buf( "%.*s ", tok.Length, tok.Text );
 
@@ -3291,7 +3294,7 @@ CodeVar parse_variable_declaration_list()
 
 		while ( left && is_specifier(currtok) )
 		{
-			Specifier spec = to_specifier( to_str(currtok) );
+			Specifier spec = strc_to_specifier( to_str(currtok) );
 
 			switch ( spec )
 			{
@@ -3744,7 +3747,7 @@ CodeEnum parse_enum( bool inplace_def )
 						// eat( Tok_Comment );
 						// <Name> = <Expression> <Macro>, // <Inline Comment>
 					// }
-					
+
 					Token prev = * previous(Context.Tokens, dont_skip_formatting);
 					entry.Length = ( (sptr)prev.Text + prev.Length ) - (sptr)entry.Text;
 
@@ -3880,7 +3883,7 @@ CodeFriend parse_friend()
 
 		while ( left && is_specifier(currtok) )
 		{
-			Specifier spec = to_specifier( to_str(currtok) );
+			Specifier spec = strc_to_specifier( to_str(currtok) );
 
 			switch ( spec )
 			{
@@ -3890,7 +3893,7 @@ CodeFriend parse_friend()
 					break;
 
 				default :
-					log_failure( "Invalid specifier %s for friend definition\n%s", to_str( spec ), to_string(Context) );
+					log_failure( "Invalid specifier %s for friend definition\n%s", spec_to_str( spec ), to_string(Context) );
 					pop(& Context);
 					return InvalidCode;
 			}
@@ -4004,7 +4007,7 @@ CodeFn parse_function()
 
 	while ( left && is_specifier(currtok) )
 	{
-		Specifier spec = to_specifier( to_str(currtok) );
+		Specifier spec = strc_to_specifier( to_str(currtok) );
 
 		switch ( spec )
 		{
@@ -4019,7 +4022,7 @@ CodeFn parse_function()
 			break;
 
 			default:
-				log_failure( "Invalid specifier %s for functon\n%s", to_str(spec), to_string(Context) );
+				log_failure( "Invalid specifier %s for functon\n%s", spec_to_str(spec), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}
@@ -4117,7 +4120,7 @@ CodeOperator parse_operator()
 
 	while ( left && is_specifier(currtok) )
 	{
-		Specifier spec = to_specifier( to_str(currtok) );
+		Specifier spec = strc_to_specifier( to_str(currtok) );
 
 		switch ( spec )
 		{
@@ -4130,7 +4133,7 @@ CodeOperator parse_operator()
 			break;
 
 			default:
-				log_failure( "Invalid specifier " "%s" " for operator\n%s", to_str(spec), to_string(Context) );
+				log_failure( "Invalid specifier " "%s" " for operator\n%s", spec_to_str(spec), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}
@@ -4358,7 +4361,7 @@ CodeTemplate parse_template()
 		{
 			while ( left && is_specifier(currtok) )
 			{
-				Specifier spec = to_specifier( to_str(currtok) );
+				Specifier spec = strc_to_specifier( to_str(currtok) );
 
 				switch ( spec )
 				{
@@ -4381,7 +4384,7 @@ CodeTemplate parse_template()
 						break;
 
 					default :
-						log_failure( "Invalid specifier %s for variable or function\n%s", to_str( spec ), to_string(Context) );
+						log_failure( "Invalid specifier %s for variable or function\n%s", spec_to_str( spec ), to_string(Context) );
 						pop(& Context);
 						return InvalidCode;
 				}
@@ -4500,7 +4503,7 @@ CodeTypename parse_type( bool from_template, bool* typedef_is_function )
 	// Prefix specifiers
 	while ( left && is_specifier(currtok) )
 	{
-		Specifier spec = to_specifier( to_str(currtok) );
+		Specifier spec = strc_to_specifier( to_str(currtok) );
 
 		if ( spec != Spec_Const )
 		{
@@ -4626,7 +4629,7 @@ else if ( currtok.Type == Tok_DeclType )
 	// Suffix specifiers for typename.
 	while ( left && is_specifier(currtok) )
 	{
-		Specifier spec = to_specifier( to_str(currtok) );
+		Specifier spec = strc_to_specifier( to_str(currtok) );
 
 		if ( spec != Spec_Const && spec != Spec_Ptr && spec != Spec_Ref && spec != Spec_RValue )
 		{
@@ -4826,7 +4829,7 @@ else if ( currtok.Type == Tok_DeclType )
 		// Look for suffix specifiers for the function
 		while ( left && is_specifier(currtok) )
 		{
-			Specifier spec = to_specifier( to_str(currtok) );
+			Specifier spec = strc_to_specifier( to_str(currtok) );
 
 			if ( spec != Spec_Const
 					// TODO : Add support for NoExcept, l-value, volatile, l-value, etc
@@ -4863,7 +4866,7 @@ else if ( currtok.Type == Tok_DeclType )
 	}
 
 	CodeTypename result = ( CodeTypename )make_code();
-	result->Type    = CT_Typename;
+	result->Type        = CT_Typename;
 	// result->Token = Context.Scope->Start;
 
 	// Need to wait until were using the new parsing method to do this.
@@ -5162,9 +5165,9 @@ CodeUnion parse_union( bool inplace_def )
 		eat( Tok_Identifier );
 	}
 	// <ModuleFlags> union <Attributes> <Name>
-	
+
 	CodeBody body = { nullptr };
-	
+
 	if ( ! inplace_def || ! check(Tok_Identifier) )
 	{
 		eat( Tok_BraceCurly_Open );
@@ -5250,7 +5253,7 @@ CodeUnion parse_union( bool inplace_def )
 				append(body, member );
 		}
 		// <ModuleFlags> union <Attributes> <Name> { <Body>
-		
+
 		eat( Tok_BraceCurly_Close );
 		// <ModuleFlags> union <Attributes> <Name> { <Body> }
 	}
@@ -5396,7 +5399,7 @@ CodeVar parse_variable()
 
 	while ( left && is_specifier(currtok) )
 	{
-		Specifier spec = to_specifier( to_str(currtok) );
+		Specifier spec = strc_to_specifier( to_str(currtok) );
 		switch  ( spec )
 		{
 			case Spec_Const:
@@ -5413,7 +5416,7 @@ CodeVar parse_variable()
 			break;
 
 			default:
-				log_failure( "Invalid specifier %s for variable\n%s", to_str( spec ), to_string(Context) );
+				log_failure( "Invalid specifier %s for variable\n%s", spec_to_str( spec ), to_string(Context) );
 				pop(& Context);
 				return InvalidCode;
 		}
