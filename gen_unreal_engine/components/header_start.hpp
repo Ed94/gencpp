@@ -8,7 +8,7 @@
 
 	This is a variant intended for use with Unreal Engine 5
 
-	! ----------------------------------------------------------------------- VERSION: v0.19-Alpha !
+	! ----------------------------------------------------------------------- VERSION: v0.20-Alpha !
 	! ============================================================================================ !
 	! WARNING: THIS IS AN ALPHA VERSION OF THE LIBRARY, USE AT YOUR OWN DISCRETION                 !
 	! NEVER DO CODE GENERATION WITHOUT AT LEAST HAVING CONTENT IN A CODEBASE UNDER VERSION CONTROL !
