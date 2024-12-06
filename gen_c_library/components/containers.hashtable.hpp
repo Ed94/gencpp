@@ -93,16 +93,16 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		void       <fn>_set         ( <tbl_type>* self, u64 key, <type> value );
 		ssize      <fn>_slot        ( <tbl_type> self, u64 key );
 
-		ssize            <fn>__add_entry( <tbl_type> self, u64 key );
+		ssize         <fn>__add_entry( <tbl_type> self, u64 key );
 		HT_FindResult <fn>__find     ( <tbl_type> self, u64 key );
 		b32           <fn>__full     ( <tbl_type> self );
 
 		<tbl_type> <fn>_make( AllocatorInfo allocator )
 		{
 			<tbl_type>
-			result        = { NULL, NULL };
-			array_init(result.Hashes, allocator );
-			array_init(result.Entries, allocator );
+			result         = { NULL, NULL };
+			result.Hashes  = array_init(Array_ssize, allocator );
+			result.Entries = array_init(<array_entry>, allocator );
 
 			return result;
 		}
@@ -111,8 +111,8 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		{
 			<tbl_type>
 			result         = { NULL, NULL };
-			array_init_reserve(result.Hashes, allocator, num );
-			array_init_reserve(result.Entries, allocator, num );
+			result.Hashes  = array_init_reserve(Array_ssize, allocator, num );
+			result.Entries = array_init_reserve(<array_entry>, allocator, num );
 
 			return result;
 		}

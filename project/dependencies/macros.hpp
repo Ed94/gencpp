@@ -269,12 +269,15 @@
     #define struct_init(type, value) {value}
 #endif
 
-// ------------------------ _Generic function overloading -----------------------------------------
 #if GEN_COMPILER_C
+// ------------------------ _Generic function overloading -----------------------------------------
 // This implemnents macros for utilizing "The Naive Extendible _Generic Macro" explained in:
 // https://github.com/JacksonAllan/CC/blob/main/articles/Better_C_Generics_Part_1_The_Extendible_Generic.md
 // Since gencpp is used to generate the c-library, it was choosen over the more novel implementations to keep the macros as easy to understand and unopaque as possible.
 // Extensive effort was put in below to make this as easy as possible to understand what is going on with this mess of a preoprocessor.
+
+// Where the signature would be defined using:
+#define GEN_TYPE_TO_EXP(type) (type*)NULL
 
 #define GEN_COMMA_OPERATOR , // The comma operator is used by preprocessor macros to delimit arguments, so we have to represent it via a macro to prevent parsing incorrectly.
 
@@ -299,19 +302,19 @@
 // It takes advantage of the fact that if the macro is defined, then the expanded text will contain a comma.
 // Expands to ',' if it can find (type): (function) <comma_operator: ',' >
 // Where GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER is specifically looking for that <comma> ,
-#define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( slot_exp ) GEN_SELECT_ARG_3( slot_exp, GEN_SELECT_ARG_1( slot_exp, ): GEN_SELECT_ARG_2( slot_exp, ) GEN_COMMA_OPERATOR, , )
-//       ^Selects the comma                               ^ is the type                             ^ is the function                                    ^ comma delimiter to select                ^ Insert a comma
-// The slot won't exist if that comma is not found.
+#define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( slot_exp ) GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER( slot_exp, GEN_GENERIC_SEL_ENTRY_TYPE( slot_exp, ): GEN_GENERIC_SEL_ENTRY_FUNCTION( slot_exp, ) GEN_COMMA_OPERATOR, , )
+//                                                          ^ Selects the comma                              ^ is the type                             ^ is the function                              ^ Insert a comma
+// The slot won't exist if that comma is not found.                                                                                                                                                   |
 //                                                                                                                                                                                                    |
 // This  is the same as above but it does not insert a comma                                                                                                                                          V no comma here.
 #define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST( slot_exp ) GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER( slot_exp, GEN_GENERIC_SEL_ENTRY_TYPE( slot_exp, ): GEN_GENERIC_SEL_ENTRY_FUNCTION( slot_exp, ), , )
 // Needed for the last slot as they don't allow trailing commas.
 // ----------------------------------------------------------------------------------------------------------------------------------
 
-// Below are generated on demand for a generated function
+// Below are generated on demand for an overlaod depdendent on a type:
 // ----------------------------------------------------------------------------------------------------------------------------------
-#define GEN_FUNCTION_GENERIC_EXAMPLE( function_arguments ) _Generic(   \
-(function_arguments), /* Select Via Expression*/                       \
+#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg ) _Generic(         \
+(selector_arg), /* Select Via Expression*/                             \
   /* Extendibility slots: */                                           \
   GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
   GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
@@ -320,8 +323,8 @@
   GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
   GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
   GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST FunctionID__ARGS_SIG_1 ) \
-) GEN_RESOLVED_FUNCTION_CALL( function_arguments )
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(FunctionID__ARGS_SIG_1 ) \
+) GEN_RESOLVED_FUNCTION_CALL( selector_arg )
 // ----------------------------------------------------------------------------------------------------------------------------------
 
 // Then each definiton of a function has an associated define:
@@ -332,16 +335,14 @@
 // <etc> <return_type> <function_id> ( <arguments> ) { <implementation> }
 
 // Concrete example:
-#define ENABLE_GENERIC_EXAMPLE 0
-#if ENABLE_GENERIC_EXAMPLE
 
 // To add support for long:
-#define HASH__ARGS_SIG_1 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long, long long )
-size_t hash__P_long    ( long val ) { return val * 2654435761ull; }
+#define GEN_EXAMPLE_HASH__ARGS_SIG_1 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long, long long )
+size_t gen_example_hash__P_long( long val ) { return val * 2654435761ull; }
 
 // To add support for long long:
-#define HASH__ARGS_SIG_2 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long_long, long long )
-size_t hash__P_long_long( long long val ) { return val * 2654435761ull; }
+#define GEN_EXAMPLE_HASH__ARGS_SIG_2 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long_long, long long )
+size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761ull; }
 
 // If using an Editor with support for syntax hightlighting macros: HASH__ARGS_SIG_1 and HASH_ARGS_SIG_2 should show color highlighting indicating the slot is enabled,
 // or, "defined" for usage during the compilation pass that handles the _Generic instrinsic.
@@ -358,8 +359,28 @@ size_t hash__P_long_long( long long val ) { return val * 2654435761ull; }
   GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST( HASH__ARGS_SIG_8 ) \
 ) GEN_RESOLVED_FUNCTION_CALL( function_arguments )
 
-#endif // ENABLE_GENERIC_EXAMPLE
+// Additional Variations:
 
+// If the function takes more than one argument the following is used:
+#define GEN_FUNCTION_GENERIC_EXAMPLE_VARADIC( selector_arg, ... ) _Generic( \
+(selector_arg),                                                             \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )        \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_2 )        \
+	...                                                                     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(FunctionID__ARGS_SIG_N )    \
+) GEN_RESOLVED_FUNCTION_CALL( selector_arg, __VA_ARG__ )
+
+// If the function does not take the arugment as a parameter:
+#define GEN_FUNCTION_GENERIC_EXAMPLE_DIRECT_TYPE( selector_arg ) _Generic( \
+( GEN_TYPE_TO_EXP(selector_arg) ),                                         \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )       \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_2 )       \
+	/* ... */                                                              \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(FunctionID__ARGS_SIG_N )   \
+) GEN_RESOLVED_FUNCTION_CALL()
+
+// typedef void* GEN_GenericExampleType;
+// GEN_FUNCTION_GENERIC_EXAMPLE_DIRECT_TYPE( GEN_GenericExampleType );
 // END OF ------------------------ _Generic function overloading ----------------------------------------- END OF
 #endif
 

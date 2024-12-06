@@ -1,9 +1,7 @@
-// #pragma once
-// #include "../project/gen.hpp"
+#pragma once
+#include "../project/gen.hpp"
 
-// using namespace gen;
-
-
+using namespace gen;
 
 b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& parsed_body, CodeBody& body )
 {
@@ -55,6 +53,82 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& par
 	}
 
 	return found;
+}
+
+constexpr bool GenericSel_One_Arg = true;
+enum GenericSelectionOpts : u32 { GenericSel_Default, GenericSel_By_Ref, GenericSel_Direct_Type };
+Code gen_generic_selection_function_macro( s32 num_slots, StrC macro_name, GenericSelectionOpts opts = GenericSel_Default, bool one_arg = false )
+{
+/* Implements:
+	#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg, ... ) _Generic(      \
+	(selector_arg),                                                          \
+		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_2 )     \
+		...                                                                  \
+		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(FunctionID__ARGS_SIG_N ) \
+	) GEN_RESOLVED_FUNCTION_CALL( selector_arg )
+*/
+	local_persist
+	String define_builder = String::make_reserve(GlobalAllocator, kilobytes(64));
+	define_builder.clear();
+
+	StrC macro_begin;
+	if (opts == GenericSel_Direct_Type) {
+		macro_begin = token_fmt( "macro_name", (StrC)macro_name,
+R"(#define <macro_name>(selector_arg, ...) _Generic( (*(selector_arg*)NULL ), \
+)"
+		);
+	}
+	else {
+		macro_begin = token_fmt( "macro_name", (StrC)macro_name,
+R"(#define <macro_name>(selector_arg, ...) _Generic( (selector_arg), \
+)"
+		);
+	}
+	define_builder.append(macro_begin);
+
+	for ( s32 slot = 1; slot <= num_slots; ++ slot )
+	{
+		StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", slot).to_strc();
+		if (slot == num_slots)
+		{
+			define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
+R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(  GENERIC_SLOT_<slot>__<macro_name> ) \
+)"
+			));
+			continue;
+		}
+
+		define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
+R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_<slot>__<macro_name> ) \
+)"
+		));
+	}
+
+	if ( ! one_arg )
+	{
+		if (opts == GenericSel_By_Ref)
+			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( & selector_arg, __VA_ARGS__ )"));
+		else if (opts == GenericSel_Direct_Type)
+			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( __VA_ARGS__ )"));
+		else
+			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( selector_arg, __VA_ARGS__ )"));
+	}
+	else
+	{
+		if (opts == GenericSel_By_Ref)
+			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( & selector_arg )"));
+		else if (opts == GenericSel_Direct_Type)
+			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL()"));
+		else
+			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( selector_arg )"));
+	}
+
+	// Add gap for next definition
+	define_builder.append(txt("\n\n"));
+
+	Code macro = untyped_str(define_builder.to_strc());
+	return macro;
 }
 
 CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""))

@@ -34,15 +34,19 @@ CodeBody gen_array( StrC type, StrC array_name )
 #pragma push_macro( "GEN_ASSERT" )
 #pragma push_macro( "rcast" )
 #pragma push_macro( "cast" )
+#pragma push_macro( "typeof" )
+#pragma push_macro( "forceinline" )
 #undef GEN_ASSERT
 #undef rcast
 #undef cast
+#undef typeof
+#undef forceinline
 	CodeBody result = parse_global_body( token_fmt( "array_type", (StrC)array_type, "fn", (StrC)fn, "type", (StrC)type
 	, stringize(
 		typedef <type>* <array_type>;
 
-		void         <fn>_init           ( <array_type>*  self, AllocatorInfo allocator );
-		void         <fn>_init_reserve   ( <array_type>*  self, AllocatorInfo allocator, usize capacity );
+		<array_type> <fn>_init           ( AllocatorInfo allocator );
+		<array_type> <fn>_init_reserve   ( AllocatorInfo allocator, usize capacity );
 		bool         <fn>_append_array   ( <array_type>*  self, <array_type> other );
 		bool         <fn>_append         ( <array_type>*  self, <type> value );
 		bool         <fn>_append_items   ( <array_type>*  self, <type>* items, usize item_num );
@@ -60,33 +64,40 @@ CodeBody gen_array( StrC type, StrC array_name )
 		bool         <fn>_resize         ( <array_type>*  self, usize num );
 		bool         <fn>_set_capacity   ( <array_type>*  self, usize new_capacity );
 
-		void <fn>_init( <array_type>* self, AllocatorInfo allocator )
+		forceinline
+		<array_type> <fn>_init( AllocatorInfo allocator )
 		{
 			size_t initial_size = array_grow_formula(0);
-			array_init_reserve( * self, allocator, initial_size );
+			return array_init_reserve( <array_type>, allocator, initial_size );
 		}
 
-		void <fn>_init_reserve( <array_type>* self, AllocatorInfo allocator, usize capacity )
+		inline
+		<array_type> <fn>_init_reserve( AllocatorInfo allocator, usize capacity )
 		{
+			GEN_ASSERT(capacity > 0);
 			ArrayHeader* header = rcast(ArrayHeader*, alloc(allocator, sizeof(ArrayHeader) + sizeof(<type>) * capacity));
 
 			if (header == nullptr)
-				self = nullptr;
+				return nullptr;
 
 			header->Allocator = allocator;
 			header->Capacity  = capacity;
 			header->Num       = 0;
 
-			self = rcast(<array_type>*, header + 1);
+			return rcast(<type>*, header + 1);
 		}
 
+		forceinline
 		bool <fn>_append_array( <array_type>* self, <array_type> other )
 		{
 			return array_append_items( * self, (<array_type>)other, <fn>_num(other));
 		}
 
+		inline
 		bool <fn>_append( <array_type>* self, <type> value )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( header->Num == header->Capacity )
@@ -103,8 +114,13 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
+		inline
 		bool <fn>_append_items( <array_type>* self, <type>* items, usize item_num )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
+			GEN_ASSERT(items != nullptr);
+			GEN_ASSERT(item_num > 0);
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( header->Num + item_num > header->Capacity )
@@ -121,8 +137,11 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
+		inline
 		bool <fn>_append_at( <array_type>* self, <type> item, usize idx )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( idx >= header->Num )
@@ -147,8 +166,11 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
+		inline
 		bool <fn>_append_items_at( <array_type>* self, <type>* items, usize item_num, usize idx )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( idx >= header->Num )
@@ -174,8 +196,10 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
+		inline
 		<type>* <fn>_back( <array_type> self )
 		{
+			GEN_ASSERT(self != nullptr);
 			ArrayHeader* header = array_get_header( self );
 
 			if ( header->Num == 0 )
@@ -184,14 +208,19 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return self + header->Num - 1;
 		}
 
+		inline
 		void <fn>_clear( <array_type> self )
 		{
+			GEN_ASSERT(self != nullptr);
 			ArrayHeader* header = array_get_header( self );
 			header->Num = 0;
 		}
 
+		inline
 		bool <fn>_fill( <array_type> self, usize begin, usize end, <type> value )
 		{
+			GEN_ASSERT(self != nullptr);
+			GEN_ASSERT(begin <= end);
 			ArrayHeader* header = array_get_header( self );
 
 			if ( begin < 0 || end >= header->Num )
@@ -203,17 +232,24 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
+		inline
 		void <fn>_free( <array_type>* self )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
 			ArrayHeader* header = array_get_header( * self );
 			allocator_free( header->Allocator, header );
 			self = NULL;
 		}
 
+		inline
 		bool <fn>_grow( <array_type>* self, usize min_capacity )
 		{
-			ArrayHeader* header      = array_get_header( *self );
-			usize       new_capacity = array_grow_formula( header->Capacity );
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
+			GEN_ASSERT( min_capacity > 0 );
+			ArrayHeader* header       = array_get_header( *self );
+			usize        new_capacity = array_grow_formula( header->Capacity );
 
 			if ( new_capacity < min_capacity )
 				new_capacity = min_capacity;
@@ -221,13 +257,17 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return array_set_capacity( self, new_capacity );
 		}
 
+		forceinline
 		usize <fn>_num( <array_type> self )
 		{
+			GEN_ASSERT(  self != nullptr);
 			return array_get_header(self)->Num;
 		}
 
+		inline
 		<type> <fn>_pop( <array_type> self )
 		{
+			GEN_ASSERT(  self != nullptr);
 			ArrayHeader* header = array_get_header( self );
 			GEN_ASSERT( header->Num > 0 );
 
@@ -236,8 +276,10 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return result;
 		}
 
+		forceinline
 		void <fn>_remove_at( <array_type> self, usize idx )
 		{
+			GEN_ASSERT(  self != nullptr);
 			ArrayHeader* header = array_get_header( self );
 			GEN_ASSERT( idx < header->Num );
 
@@ -245,8 +287,12 @@ CodeBody gen_array( StrC type, StrC array_name )
 			header->Num--;
 		}
 
+		inline
 		bool <fn>_reserve( <array_type>* self, usize new_capacity )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
+			GEN_ASSERT(new_capacity > 0);
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( header->Capacity < new_capacity )
@@ -255,8 +301,12 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
+		inline
 		bool <fn>_resize( <array_type>* self, usize num )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
+			GEN_ASSERT(num > 0);
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( header->Capacity < num )
@@ -271,26 +321,34 @@ CodeBody gen_array( StrC type, StrC array_name )
 			return true;
 		}
 
+		inline
 		bool <fn>_set_capacity( <array_type>* self, usize new_capacity )
 		{
+			GEN_ASSERT(  self != nullptr);
+			GEN_ASSERT(* self != nullptr);
+			GEN_ASSERT( new_capacity > 0 );
 			ArrayHeader* header = array_get_header( * self );
 
 			if ( new_capacity == header->Capacity )
 				return true;
 
 			if ( new_capacity < header->Num )
+			{
 				header->Num = new_capacity;
+				return true;
+			}
 
-			usize       size        = sizeof( ArrayHeader ) + sizeof( <type> ) * new_capacity;
+			usize        size       = sizeof( ArrayHeader ) + sizeof( <type> ) * new_capacity;
 			ArrayHeader* new_header = cast( ArrayHeader*, alloc( header->Allocator, size ));
 
 			if ( new_header == NULL )
 				return false;
 
 			mem_move( new_header, header, sizeof( ArrayHeader ) + sizeof( <type> ) * header->Num );
+			new_header->Capacity = new_capacity;
+
 			allocator_free( header->Allocator, & header );
 
-			new_header->Capacity = new_capacity;
 			* self = cast( <type>*, new_header + 1 );
 			return true;
 		}
@@ -298,6 +356,8 @@ CodeBody gen_array( StrC type, StrC array_name )
 #pragma pop_macro( "GEN_ASSERT" )
 #pragma pop_macro( "rcast" )
 #pragma pop_macro( "cast" )
+#pragma pop_macro( "typeof" )
+#pragma pop_macro( "forceinline" )
 
 	++ ArrayDefinitionCounter;
 	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", ArrayDefinitionCounter).to_strc();
@@ -335,67 +395,22 @@ R"(#define GENERIC_SLOT_<slot>__array_init         <type_delimiter>,  <type_deli
 	));
 };
 
-constexpr bool array_by_ref = true;
-Code gen_array_generic_selection_function_macro( StrC macro_name, bool by_ref = false )
-{
-	local_persist
-	String define_builder = String::make_reserve(GlobalAllocator, kilobytes(64));
-	define_builder.clear();
-
-	StrC macro_begin = token_fmt( "macro_name", (StrC)macro_name,
-R"(#define <macro_name>(selector_arg, ...) _Generic( \
-	(selector_arg), /* Select Via Expression*/       \
-		/* Extendibility slots: */                   \
-)"
-	);
-	define_builder.append(macro_begin);
-
-	for ( s32 slot = 1; slot <= ArrayDefinitionCounter; ++ slot )
-	{
-		StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", slot).to_strc();
-		if (slot == ArrayDefinitionCounter)
-		{
-			define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
-R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(  GENERIC_SLOT_<slot>__<macro_name> ) \
-)"
-			));
-			continue;
-		}
-
-		define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
-R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_<slot>__<macro_name> ) \
-)"
-		));
-	}
-
-	if (by_ref)
-		define_builder.append(txt(")\tGEN_RESOLVED_FUNCTION_CALL( & selector_arg, __VA_ARGS__ )"));
-	else
-		define_builder.append(txt(")\tGEN_RESOLVED_FUNCTION_CALL( selector_arg, __VA_ARGS__ )"));
-
-	// Add gap for next definition
-	define_builder.append(txt("\n\n"));
-
-	Code macro = untyped_str(define_builder.to_strc());
-	return macro;
-}
-
 CodeBody gen_array_generic_selection_interface()
 {
 	CodeBody interface_defines = def_body(CT_Global_Body);
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_init"), array_by_ref) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_init_reserve"), array_by_ref) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_append"), array_by_ref) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_append_items"), array_by_ref) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_back")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_clear")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_fill")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_free"), array_by_ref) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_grow")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_num")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("arary_pop")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_remove_at")) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("arary_reserve"), array_by_ref) );
-	interface_defines.append( gen_array_generic_selection_function_macro(txt("array_set_capacity")) );
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_init"), GenericSel_Direct_Type ));
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_init_reserve"), GenericSel_Direct_Type ));
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_append"), GenericSel_By_Ref ));
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_append_items"), GenericSel_By_Ref ));
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_back"), GenericSel_Default, GenericSel_One_Arg ));
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_clear"), GenericSel_Default, GenericSel_One_Arg ));
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_fill")) );
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_free"), GenericSel_By_Ref, GenericSel_One_Arg ) );
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_grow")) );
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_num")) );
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_pop"), GenericSel_Default, GenericSel_One_Arg ));
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_remove_at")) );
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_reserve"), GenericSel_By_Ref) );
+	interface_defines.append( gen_generic_selection_function_macro( ArrayDefinitionCounter, txt("array_set_capacity")) );
 	return interface_defines;
 }

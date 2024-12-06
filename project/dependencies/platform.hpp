@@ -123,7 +123,7 @@
 #endif
 
 #if GEN_COMPILER_C
-#pragma message("Detected C")
+#pragma message("GENCPP: Detected C")
 #endif
 
 #pragma endregion Platform Detection

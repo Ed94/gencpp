@@ -137,7 +137,7 @@ if ( $bootstrap )
 	$unit       = join-path $path_project "bootstrap.cpp"
 	$executable = join-path $path_build   "bootstrap.exe"
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_project
 		if ( Test-Path( $executable ) ) {
@@ -175,7 +175,7 @@ if ( $singleheader )
 		$flag_link_win_subsystem_console
 	)
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_singleheader
 		if ( Test-Path( $executable ) ) {
@@ -213,7 +213,7 @@ if ( $c_library )
 		$flag_link_win_subsystem_console
 	)
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_c_library
 		if ( Test-Path( $executable ) ) {
@@ -240,7 +240,7 @@ if ( $c_library )
 		$compiler_args += "/std:c11"
 	}
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_c_library
 		if ( Test-Path( $executable ) ) {
@@ -278,7 +278,7 @@ if ( $unreal )
 		$flag_link_win_subsystem_console
 	)
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_unreal
 		if ( Test-Path( $executable ) ) {
@@ -340,7 +340,7 @@ if ( $test )
 		$flag_link_win_subsystem_console
 	)
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_test
 		Write-Host $path_test

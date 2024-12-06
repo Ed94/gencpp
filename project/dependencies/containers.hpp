@@ -133,6 +133,7 @@ Array<Type> array_init(AllocatorInfo allocator) {
 template<class Type> inline
 Array<Type> array_init_reserve(AllocatorInfo allocator, ssize capacity)
 {
+	GEN_ASSERT(capacity > 0);
 	ArrayHeader* header = rcast(ArrayHeader*, alloc(allocator, sizeof(ArrayHeader) + sizeof(Type) * capacity));
 
 	if (header == nullptr)
@@ -157,6 +158,8 @@ bool array_append_array(Array<Type>* array, Array<Type> other) {
 template<class Type> inline
 bool array_append(Array<Type>* array, Type value)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
 	ArrayHeader* header = array_get_header(* array);
 
 	if (header->Num == header->Capacity)
@@ -175,6 +178,10 @@ bool array_append(Array<Type>* array, Type value)
 template<class Type> inline
 bool array_append_items(Array<Type>* array, Type* items, usize item_num)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
+	GEN_ASSERT(items != nullptr);
+	GEN_ASSERT(item_num > 0);
 	ArrayHeader* header = array_get_header(array);
 
 	if (header->Num + item_num > header->Capacity)
@@ -193,6 +200,8 @@ bool array_append_items(Array<Type>* array, Type* items, usize item_num)
 template<class Type> inline
 bool array_append_at(Array<Type>* array, Type item, usize idx)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
 	ArrayHeader* header = array_get_header(* array);
 
 	ssize slot = idx;
@@ -215,19 +224,19 @@ bool array_append_at(Array<Type>* array, Type item, usize idx)
 	mem_move(target + 1, target, (header->Num - slot) * sizeof(Type));
 	header->Num++;
 
-	header = array_get_header(* array);
-
 	return true;
 }
 
 template<class Type> inline
 bool array_append_items_at(Array<Type>* array, Type* items, usize item_num, usize idx)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
 	ArrayHeader* header = get_header(array);
 
 	if (idx >= header->Num)
 	{
-		return append(array, items, item_num);
+		return array_append_items(array, items, item_num);
  	}
 
 	if (item_num > header->Capacity)
@@ -262,6 +271,7 @@ Type* array_back(Array<Type> array)
 
 template<class Type> inline
 void array_clear(Array<Type> array) {
+	GEN_ASSERT(array != nullptr);
 	ArrayHeader* header = array_get_header(array);
 	header->Num = 0;
 }
@@ -269,6 +279,8 @@ void array_clear(Array<Type> array) {
 template<class Type> inline
 bool array_fill(Array<Type> array, usize begin, usize end, Type value)
 {
+	GEN_ASSERT(array != nullptr);
+	GEN_ASSERT(begin <= end);
 	ArrayHeader* header = array_get_header(array);
 
 	if (begin < 0 || end > header->Num)
@@ -282,9 +294,10 @@ bool array_fill(Array<Type> array, usize begin, usize end, Type value)
 	return true;
 }
 
-template<class Type> inline
+template<class Type> forceinline
 void array_free(Array<Type>* array) {
-	GEN_ASSERT(array != nullptr);
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
 	ArrayHeader* header = array_get_header(* array);
 	allocator_free(header->Allocator, header);
 	Type** Data = (Type**)array;
@@ -293,14 +306,18 @@ void array_free(Array<Type>* array) {
 
 template<class Type> forceinline
 ArrayHeader* array_get_header(Array<Type> array) {
+	GEN_ASSERT(array != nullptr);
     Type* Data = array;
 
 	using NonConstType = TRemoveConst<Type>;
     return rcast(ArrayHeader*, const_cast<NonConstType*>(Data)) - 1;
 }
-template<class Type> inline
+template<class Type> forceinline
 bool array_grow(Array<Type>* array, usize min_capacity)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
+	GEN_ASSERT( min_capacity > 0 );
 	ArrayHeader* header       = array_get_header(* array);
 	usize        new_capacity = array_grow_formula(header->Capacity);
 
@@ -310,13 +327,15 @@ bool array_grow(Array<Type>* array, usize min_capacity)
 	return array_set_capacity(array, new_capacity);
 }
 
-template<class Type> inline
+template<class Type> forceinline
 usize array_num(Array<Type> array) {
+	GEN_ASSERT(array != nullptr);
 	return array_get_header(array)->Num;
 }
 
-template<class Type> inline
+template<class Type> forceinline
 void array_pop(Array<Type> array) {
+	GEN_ASSERT(array != nullptr);
 	ArrayHeader* header = array_get_header(array);
 	GEN_ASSERT(header->Num > 0);
 	header->Num--;
@@ -325,6 +344,7 @@ void array_pop(Array<Type> array) {
 template<class Type> inline
 void array_remove_at(Array<Type> array, usize idx)
 {
+	GEN_ASSERT(array != nullptr);
 	ArrayHeader* header = array_get_header(array);
 	GEN_ASSERT(idx < header->Num);
 
@@ -335,6 +355,9 @@ void array_remove_at(Array<Type> array, usize idx)
 template<class Type> inline
 bool array_reserve(Array<Type>* array, usize new_capacity)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
+	GEN_ASSERT(num > 0)
 	ArrayHeader* header = array_get_header(array);
 
 	if (header->Capacity < new_capacity)
@@ -346,6 +369,8 @@ bool array_reserve(Array<Type>* array, usize new_capacity)
 template<class Type> inline
 bool array_resize(Array<Type>* array, usize num)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
 	ArrayHeader* header = array_get_header(* array);
 
 	if (header->Capacity < num) {
@@ -361,10 +386,12 @@ bool array_resize(Array<Type>* array, usize num)
 template<class Type> inline
 bool array_set_capacity(Array<Type>* array, usize new_capacity)
 {
+	GEN_ASSERT(  array != nullptr);
+	GEN_ASSERT(* array != nullptr);
 	ArrayHeader* header = array_get_header(* array);
 
 	if (new_capacity == header->Capacity)
-	return true;
+		return true;
 
 	if (new_capacity < header->Num)
 	{
