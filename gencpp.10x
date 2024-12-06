@@ -10,7 +10,7 @@
 		<IsVirtual>false</IsVirtual>
 		<IsFolder>false</IsFolder>
 		<BuildCommand>pwsh ./scripts/build.ps1 msvc debug bootstrap</BuildCommand>
-		<RebuildCommand></RebuildCommand>
+		<RebuildCommand>pwsh ./scripts/build.ps1 msvc debug c_library</RebuildCommand>
 		<BuildFileCommand></BuildFileCommand>
 		<CleanCommand>pwsh ./scripts/clean.ps1</CleanCommand>
 		<BuildWorkingDirectory></BuildWorkingDirectory>

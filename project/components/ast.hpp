@@ -155,6 +155,7 @@ Define_Code(Var);
 GEN_NS_PARSER_BEGIN
 struct Token;
 GEN_NS_PARSER_END
+typedef struct GEN_NS_PARSER Token Token;
 
 #if ! GEN_COMPILER_C
 template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( Type*, & self ); }
@@ -319,9 +320,10 @@ struct AST
 				Code  ValueType;       // Parameter, Variable
 			};
 			union {
-				Code  Macro;           // Parameter
-				Code  BitfieldSize;    // Variable (Class/Struct Data Member)
-				Code  Params;          // Constructor, Function, Operator, Template, Typename
+				Code  Macro;               // Parameter
+				Code  BitfieldSize;        // Variable (Class/Struct Data Member)
+				Code  Params;              // Constructor, Function, Operator, Template, Typename
+				Code  UnderlyingTypeMacro; // Enum
 			};
 			union {
 				Code  ArrExpr;          // Typename
@@ -363,7 +365,6 @@ struct AST
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
 		s32           VarConstructorInit;  // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
-		b32           EnumUnderlyingMacro; // Used by enums incase the user wants to wrap underlying type specification in a macro
 	};
 };
 static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST POD is not size of AST_POD_Size" );

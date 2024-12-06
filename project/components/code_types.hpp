@@ -110,7 +110,8 @@ String to_string(CodeTypedef self);
 void   to_string(CodeTypedef self, String* result);
 
 String to_string(CodeUnion self);
-void   to_string(CodeUnion self, String* result);
+void   to_string_def(CodeUnion self, String* result);
+void   to_string_fwd(CodeUnion self, String* result);
 
 String to_string   (CodeUsing op_cast );
 void   to_string   (CodeUsing op_cast, String* result );

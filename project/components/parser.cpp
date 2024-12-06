@@ -215,7 +215,7 @@ internal Code               parse_operator_function_or_variable( bool expects_fu
 internal CodePragma         parse_pragma                       ();
 internal CodeParam          parse_params                       ( bool use_template_capture = false );
 internal CodePreprocessCond parse_preprocess_cond              ();
-internal Code               parse_simple_preprocess            ( TokType which );
+internal Code               parse_simple_preprocess            ( TokType which, bool dont_consume_braces = false );
 internal Code               parse_static_assert                ();
 internal void               parse_template_args                ( Token& token );
 internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, StrC name );
@@ -240,7 +240,8 @@ internal CodeTypedef     parse_typedef         ();
 internal CodeUnion       parse_union           ( bool inplace_def = false );
 internal CodeUsing       parse_using           ();
 
-constexpr bool inplace_def = true;
+constexpr bool inplace_def         = true;
+constexpr bool dont_consume_braces = true;
 
 // Internal parsing functions
 
@@ -2933,8 +2934,8 @@ CodePreprocessCond parse_preprocess_cond()
 	return cond;
 }
 
-internal inline
-Code parse_simple_preprocess( TokType which )
+internal 
+Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 {
 	// TODO(Ed): We can handle a macro a bit better than this. It's AST can be made more robust..
 	// Make an AST_Macro, it should have an Name be the macro itself, with the function body being an optional function body node.
@@ -2945,7 +2946,7 @@ Code parse_simple_preprocess( TokType which )
 	eat( which );
 	// <Macro>
 
-	if ( peektok.Type == Tok_BraceCurly_Open )
+	if ( ! dont_consume_braces && peektok.Type == Tok_BraceCurly_Open )
 	{
 		// Eat the block scope right after the macro. Were assuming the macro defines a function definition's signature
 		eat( Tok_BraceCurly_Open );
@@ -2985,7 +2986,11 @@ Code parse_simple_preprocess( TokType which )
 	}
 	else
 	{
-		if ( str_compare_len( Context.Scope->Prev->ProcName.Ptr, "parse_typedef", Context.Scope->Prev->ProcName.Len ) != 0 )
+		if (strc_contains(Context.Scope->Prev->ProcName, txt("parse_enum")))
+		{
+			// Do nothing
+		}
+		else if (strc_contains(Context.Scope->Prev->ProcName, txt("parse_typedef")))
 		{
 			if ( peektok.Type == Tok_Statement_End )
 			{
@@ -3614,15 +3619,14 @@ CodeEnum parse_enum( bool inplace_def )
 		}
 		// enum <class> <Attributes> <Name> : <UnderlyingType>
 	}
-	else if ( currtok.Type == Tok_Preprocess_Define )
+	else if ( currtok.Type == Tok_Preprocess_Macro )
 	{
 		// We'll support the enum_underlying macro
-		StrC sig = txt("enum_underlying");
-
-		if (currtok.Length >= sig.Len && str_compare_len(currtok.Text, sig.Ptr, sig.Len) == 0 )
+		StrC sig = txt("enum_underlying(");
+		if ( strc_contains(to_str(currtok), sig) )
 		{
 			use_macro_underlying = true;
-			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro);
+			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro, dont_consume_braces );
 		}
 	}
 
@@ -3793,14 +3797,8 @@ CodeEnum parse_enum( bool inplace_def )
 	if ( attributes )
 		result->Attributes = attributes;
 
-	if ( type )
-	{
-		result->EnumUnderlyingMacro = use_macro_underlying;
-		if ( use_macro_underlying )
-			result->UnderlyingTypeMacro = underlying_macro;
-		else
-			result->UnderlyingType = type;
-	}
+	result->UnderlyingTypeMacro = underlying_macro;
+	result->UnderlyingType      = type;
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
@@ -5164,95 +5162,98 @@ CodeUnion parse_union( bool inplace_def )
 		eat( Tok_Identifier );
 	}
 	// <ModuleFlags> union <Attributes> <Name>
-
+	
 	CodeBody body = { nullptr };
-
-	eat( Tok_BraceCurly_Open );
-	// <ModuleFlags> union <Attributes> <Name> {
-
-	body = make_code();
-	body->Type = CT_Union_Body;
-
-	while ( ! check_noskip( Tok_BraceCurly_Close ) )
+	
+	if ( ! inplace_def || ! check(Tok_Identifier) )
 	{
-		if ( currtok_noskip.Type == Tok_Preprocess_Hash )
-			eat( Tok_Preprocess_Hash );
+		eat( Tok_BraceCurly_Open );
+		// <ModuleFlags> union <Attributes> <Name> {
 
-		Code member = { nullptr };
-		switch ( currtok_noskip.Type )
+		body = make_code();
+		body->Type = CT_Union_Body;
+
+		while ( ! check_noskip( Tok_BraceCurly_Close ) )
 		{
-			case Tok_NewLine:
-				member = fmt_newline;
-				eat( Tok_NewLine );
-			break;
+			if ( currtok_noskip.Type == Tok_Preprocess_Hash )
+				eat( Tok_Preprocess_Hash );
 
-			case Tok_Comment:
-				member = parse_comment();
-			break;
+			Code member = { nullptr };
+			switch ( currtok_noskip.Type )
+			{
+				case Tok_NewLine:
+					member = fmt_newline;
+					eat( Tok_NewLine );
+				break;
 
-			// TODO(Ed) : Unions can have constructors and destructors
+				case Tok_Comment:
+					member = parse_comment();
+				break;
 
-			case Tok_Decl_Class:
-				member = parse_complicated_definition( Tok_Decl_Class );
-			break;
+				// TODO(Ed) : Unions can have constructors and destructors
 
-			case Tok_Decl_Enum:
-				member = parse_complicated_definition( Tok_Decl_Enum );
-			break;
+				case Tok_Decl_Class:
+					member = parse_complicated_definition( Tok_Decl_Class );
+				break;
 
-			case Tok_Decl_Struct:
-				member = parse_complicated_definition( Tok_Decl_Struct );
-			break;
+				case Tok_Decl_Enum:
+					member = parse_complicated_definition( Tok_Decl_Enum );
+				break;
 
-			case Tok_Decl_Union:
-				member = parse_complicated_definition( Tok_Decl_Union );
-			break;
+				case Tok_Decl_Struct:
+					member = parse_complicated_definition( Tok_Decl_Struct );
+				break;
 
-			case Tok_Preprocess_Define:
-				member = parse_define();
-			break;
+				case Tok_Decl_Union:
+					member = parse_complicated_definition( Tok_Decl_Union );
+				break;
 
-			case Tok_Preprocess_If:
-			case Tok_Preprocess_IfDef:
-			case Tok_Preprocess_IfNotDef:
-			case Tok_Preprocess_ElIf:
-				member = parse_preprocess_cond();
-			break;
+				case Tok_Preprocess_Define:
+					member = parse_define();
+				break;
 
-			case Tok_Preprocess_Else:
-				member = preprocess_else;
-				eat( Tok_Preprocess_Else );
-			break;
+				case Tok_Preprocess_If:
+				case Tok_Preprocess_IfDef:
+				case Tok_Preprocess_IfNotDef:
+				case Tok_Preprocess_ElIf:
+					member = parse_preprocess_cond();
+				break;
 
-			case Tok_Preprocess_EndIf:
-				member = preprocess_endif;
-				eat( Tok_Preprocess_EndIf );
-			break;
+				case Tok_Preprocess_Else:
+					member = preprocess_else;
+					eat( Tok_Preprocess_Else );
+				break;
 
-			case Tok_Preprocess_Macro:
-				member = parse_simple_preprocess( Tok_Preprocess_Macro );
-			break;
+				case Tok_Preprocess_EndIf:
+					member = preprocess_endif;
+					eat( Tok_Preprocess_EndIf );
+				break;
 
-			case Tok_Preprocess_Pragma:
-				member = parse_pragma();
-			break;
+				case Tok_Preprocess_Macro:
+					member = parse_simple_preprocess( Tok_Preprocess_Macro );
+				break;
 
-			case Tok_Preprocess_Unsupported:
-				member = parse_simple_preprocess( Tok_Preprocess_Unsupported );
-			break;
+				case Tok_Preprocess_Pragma:
+					member = parse_pragma();
+				break;
 
-			default:
-				member = parse_variable();
-			break;
+				case Tok_Preprocess_Unsupported:
+					member = parse_simple_preprocess( Tok_Preprocess_Unsupported );
+				break;
+
+				default:
+					member = parse_variable();
+				break;
+			}
+
+			if ( member )
+				append(body, member );
 		}
-
-		if ( member )
-			append(body, member );
+		// <ModuleFlags> union <Attributes> <Name> { <Body>
+		
+		eat( Tok_BraceCurly_Close );
+		// <ModuleFlags> union <Attributes> <Name> { <Body> }
 	}
-	// <ModuleFlags> union <Attributes> <Name> { <Body>
-
-	eat( Tok_BraceCurly_Close );
-	// <ModuleFlags> union <Attributes> <Name> { <Body> }
 
 	if ( ! inplace_def )
 		eat( Tok_Statement_End );
@@ -5260,17 +5261,14 @@ CodeUnion parse_union( bool inplace_def )
 
 	CodeUnion
 	result = (CodeUnion) make_code();
-	result->Type        = CT_Union;
+	result->Type        = body ? CT_Union : CT_Union_Fwd;
 	result->ModuleFlags = mflags;
 
 	if ( name )
 		result->Name = get_cached_string( name );
 
-	if ( body )
-		result->Body = body;
-
-	if ( attributes )
-		result->Attributes = attributes;
+	result->Body       = body;
+	result->Attributes = attributes;
 
 	pop(& Context);
 	return result;

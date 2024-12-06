@@ -54,6 +54,7 @@ Template
 Typedef
 Typename
 Union
+Union_Fwd
 Union_Body
 Using
 Using_Namespace

@@ -9,7 +9,7 @@ String to_string(CodeAttributes attributes) {
 
 String to_string(CodeBody body)
 {
-	GEN_ASSERT(body.ast != nullptr);
+	GEN_ASSERT_NOT_NULL(body.ast);
 	String result = string_make_reserve( GlobalAllocator, 128 );
 	switch ( body.ast->Type )
 	{
@@ -350,6 +350,8 @@ void to_string_fwd(CodeEnum self, String* result )
 
 	if ( self->UnderlyingType )
 		string_append_fmt( result, "enum %SC : %S", self->Name, to_string(self->UnderlyingType) );
+	else if (self->UnderlyingTypeMacro)
+		string_append_fmt( result, "enum %SC : %S", self->Name, to_string(self->UnderlyingTypeMacro) );
 	else
 		string_append_fmt( result, "enum %SC", self->Name );
 
@@ -1171,11 +1173,19 @@ void to_string(CodeTypename self, String* result )
 String to_string(CodeUnion self)
 {
 	String result = string_make_reserve( GlobalAllocator, 512 );
-	to_string( self, & result );
+	switch ( self->Type )
+	{
+		case CT_Union:
+			to_string_def( self, & result );
+		break;
+		case CT_Union_Fwd:
+			to_string_fwd( self, & result );
+		break;
+	}
 	return result;
 }
 
-void to_string(CodeUnion self, String* result )
+void to_string_def(CodeUnion self, String* result )
 {
 	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
 		string_append_strc( result, txt("export ") );
@@ -1198,6 +1208,25 @@ void to_string(CodeUnion self, String* result )
 		string_append_fmt( result, "\n{\n%S\n}"
 			, GEN_NS to_string(self->Body)
 		);
+	}
+
+	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )
+		string_append_strc( result, txt(";\n"));
+}
+
+void to_string_fwd(CodeUnion self, String* result )
+{
+	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+		string_append_strc( result, txt("export ") );
+
+	string_append_strc( result, txt("union ") );
+
+	if ( self->Attributes )
+		string_append_fmt( result, "%S ", to_string(self->Attributes) );
+
+	if ( self->Name )
+	{
+		string_append_fmt( result, "%SC", self->Name);
 	}
 
 	if ( self->Parent.ast == nullptr || ( self->Parent->Type != CT_Typedef && self->Parent->Type != CT_Variable ) )

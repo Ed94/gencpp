@@ -15,7 +15,7 @@ struct AST_Body
 	char              _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	Code              Front;
 	Code              Back;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -32,7 +32,7 @@ struct AST_Attributes
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -48,7 +48,7 @@ struct AST_BaseClass
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -65,10 +65,10 @@ struct AST_Comment
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
-	CodeType             Type;
+	CodeType          Type;
 	char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Comment) == sizeof(AST), "ERROR: AST_Comment is not the same size as AST");
@@ -90,7 +90,7 @@ struct AST_Class
 	};
 	CodeTypename            Prev;
 	CodeTypename            Next;
-	parser::Token*          Tok;
+	Token*                  Tok;
 	Code                    Parent;
 	StringCached            Name;
 	CodeType                Type;
@@ -116,7 +116,7 @@ struct AST_Constructor
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -132,7 +132,7 @@ struct AST_Define
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -156,7 +156,7 @@ struct AST_Destructor
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
@@ -181,12 +181,12 @@ struct AST_Enum
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
 	ModuleFlag             ModuleFlags;
-	b32                    EnumUnderlyingMacro;
+	char                   _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Enum) == sizeof(AST), "ERROR: AST_Enum is not the same size as AST");
 
@@ -198,7 +198,7 @@ struct AST_Exec
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -214,7 +214,7 @@ struct AST_Expr
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -229,7 +229,7 @@ struct AST_Expr_Assign
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -244,7 +244,7 @@ struct AST_Expr_Alignof
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -259,7 +259,7 @@ struct AST_Expr_Binary
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -274,7 +274,7 @@ struct AST_Expr_CStyleCast
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -289,7 +289,7 @@ struct AST_Expr_FunctionalCast
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -304,7 +304,7 @@ struct AST_Expr_CppCast
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -319,7 +319,7 @@ struct AST_Expr_ProcCall
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -334,7 +334,7 @@ struct AST_Expr_Decltype
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -349,7 +349,7 @@ struct AST_Expr_Comma
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -364,7 +364,7 @@ struct AST_Expr_AMS
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -379,7 +379,7 @@ struct AST_Expr_Sizeof
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -394,7 +394,7 @@ struct AST_Expr_Subscript
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -409,7 +409,7 @@ struct AST_Expr_Ternary
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -424,7 +424,7 @@ struct AST_Expr_UnaryPrefix
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -439,7 +439,7 @@ struct AST_Expr_UnaryPostfix
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -454,7 +454,7 @@ struct AST_Expr_Element
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -476,7 +476,7 @@ struct AST_Extern
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -492,7 +492,7 @@ struct AST_Include
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -514,7 +514,7 @@ struct AST_Friend
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -539,7 +539,7 @@ struct AST_Fn
 	};
 	Code                    Prev;
 	Code                    Next;
-	parser::Token*          Tok;
+	Token*                  Tok;
 	Code                    Parent;
 	StringCached            Name;
 	CodeType                Type;
@@ -553,7 +553,7 @@ struct AST_Module
 	char              _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -574,7 +574,7 @@ struct AST_NS
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -600,7 +600,7 @@ struct AST_Operator
 	};
 	Code           Prev;
 	Code           Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -626,7 +626,7 @@ struct AST_OpCast
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -650,7 +650,7 @@ struct AST_Param
 	};
 	CodeParam         Last;
 	CodeParam         Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -667,7 +667,7 @@ struct AST_Pragma
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -683,7 +683,7 @@ struct AST_PreprocessCond
 	};
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -697,7 +697,7 @@ struct AST_Specifiers
 	CodeSpecifiers    NextSpecs;
 	Code              Prev;
 	Code              Next;
-	parser::Token*    Tok;
+	Token*            Tok;
 	Code              Parent;
 	StringCached      Name;
 	CodeType          Type;
@@ -714,7 +714,7 @@ struct AST_Stmt
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -729,7 +729,7 @@ struct AST_Stmt_Break
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -744,7 +744,7 @@ struct AST_Stmt_Case
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -759,7 +759,7 @@ struct AST_Stmt_Continue
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -774,7 +774,7 @@ struct AST_Stmt_Decl
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -789,7 +789,7 @@ struct AST_Stmt_Do
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -804,7 +804,7 @@ struct AST_Stmt_Expr
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -819,7 +819,7 @@ struct AST_Stmt_Else
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -834,7 +834,7 @@ struct AST_Stmt_If
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -849,7 +849,7 @@ struct AST_Stmt_For
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -864,7 +864,7 @@ struct AST_Stmt_Goto
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -879,7 +879,7 @@ struct AST_Stmt_Label
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -894,7 +894,7 @@ struct AST_Stmt_Switch
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -909,7 +909,7 @@ struct AST_Stmt_While
 	};
 	CodeExpr       Prev;
 	CodeExpr       Next;
-	parser::Token* Tok;
+	Token*         Tok;
 	Code           Parent;
 	StringCached   Name;
 	CodeType       Type;
@@ -935,7 +935,7 @@ struct AST_Struct
 	};
 	CodeTypename           Prev;
 	CodeTypename           Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
@@ -958,7 +958,7 @@ struct AST_Template
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
@@ -987,7 +987,7 @@ struct AST_Type
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                  Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
@@ -1014,7 +1014,7 @@ struct AST_Typename
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
@@ -1037,7 +1037,7 @@ struct AST_Typedef
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
@@ -1061,7 +1061,7 @@ struct AST_Union
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;
@@ -1085,7 +1085,7 @@ struct AST_Using
 	};
 	Code                    Prev;
 	Code                    Next;
-	parser::Token*          Tok;
+	Token*                  Tok;
 	Code                    Parent;
 	StringCached            Name;
 	CodeType                Type;
@@ -1111,7 +1111,7 @@ struct AST_Var
 	};
 	Code                   Prev;
 	Code                   Next;
-	parser::Token*         Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	StringCached           Name;
 	CodeType               Type;

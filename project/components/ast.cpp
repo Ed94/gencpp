@@ -559,7 +559,11 @@ void to_string( Code self, String* result )
 		break;
 
 		case CT_Union:
-			to_string( cast(CodeUnion, self), result );
+			to_string_def( cast(CodeUnion, self), result );
+		break;
+		
+		case CT_Union_Fwd:
+			to_string_fwd( cast(CodeUnion, self), result );
 		break;
 
 		case CT_Using:
@@ -778,6 +782,7 @@ bool is_equal( Code self, Code other )
 			check_member_ast( Attributes );
 			check_member_ast( UnderlyingType );
 			check_member_ast( Body );
+			check_member_ast( UnderlyingTypeMacro );
 
 			return true;
 		}
@@ -789,6 +794,7 @@ bool is_equal( Code self, Code other )
 			check_member_str( Name );
 			check_member_ast( Attributes );
 			check_member_ast( UnderlyingType );
+			check_member_ast( UnderlyingTypeMacro );
 
 			return true;
 		}
@@ -1057,6 +1063,13 @@ bool is_equal( Code self, Code other )
 			check_member_ast( Body );
 
 			return true;
+		}
+		
+		case CT_Union_Fwd:
+		{
+			check_member_val( ModuleFlags );
+			check_member_str( Name );
+			check_member_ast( Attributes );
 		}
 
 		case CT_Using:

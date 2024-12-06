@@ -122,7 +122,7 @@ void define_constants()
 	fmt_newline = make_code();
 	fmt_newline->Type = CT_NewLine;
 	set_global(fmt_newline);
-
+	
 	pragma_once          = (CodePragma) make_code();
 	pragma_once->Type    = CT_Preprocess_Pragma;
 	pragma_once->Name    = get_cached_string( txt("once") );
@@ -227,7 +227,7 @@ void define_constants()
 #	pragma pop_macro("neverinline")
 
 #	pragma push_macro("enum_underlying")
-
+	array_append(PreprocessorDefines, txt("enum_underlying("));
 #	pragma pop_macro("enum_underlying")
 
 #	undef def_constant_spec
