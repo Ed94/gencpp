@@ -155,11 +155,13 @@ int gen_main()
 
 				case CT_Enum:
 				{
-					CodeEnum    enum_def     = cast(CodeEnum, entry);
-					CodeTypedef typedef_enum = parse_typedef(token_fmt("name", enum_def->Name, stringize( typedef enum <name> <name>; )));
-					types.append(enum_def);
-					types.append(typedef_enum);
+					log_fmt("Detected ENUM: %S", entry->Name);
+					convert_cpp_enum_to_c(cast(CodeEnum, entry), types);
 				}
+				break;
+
+				default:
+					types.append(entry);
 				break;
 			}
 		}
@@ -170,7 +172,7 @@ int gen_main()
 		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
 		Code header_end = scan_file( project_dir "components/header_end.hpp" );
 
-		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv",      helper_use_c_definition );
+		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECodeTypes.csv", helper_use_c_definition );
 		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv",  helper_use_c_definition );
 		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv", helper_use_c_definition );
 
@@ -193,13 +195,7 @@ int gen_main()
 					//++ entry;        // Consume endif
 				}
 
-				b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_ast, ast );
-				if (found) break;
-
-				found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_ast, ast);
-				if (found) break;
-
-				found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_ast, ast);
+				b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_ast, ast);
 				if (found) break;
 
 				ast.append(entry);
@@ -208,11 +204,22 @@ int gen_main()
 
 			case CT_Struct_Fwd:
 			{
-				CodeStruct fwd = cast(CodeStruct, entry);
-				if (fwd->Name.starts_with(txt("AST"))) {
-					ast.append(fwd);
-					CodeTypedef td = parse_typedef(token_fmt("name", fwd->Name, stringize( typedef struct <name> <name>; )));
-					ast.append(td);
+				CodeStruct  fwd  = cast(CodeStruct, entry);
+				CodeTypedef tdef = parse_typedef(token_fmt("name", fwd->Name, stringize( typedef struct <name> <name>; )));
+				ast.append(fwd);
+				ast.append(tdef);
+			}
+			break;
+
+			case CT_Struct:
+			{
+
+				CodeStruct struct_def = cast(CodeStruct, entry);
+				ast.append(struct_def);
+				if ( ! entry->Name.is_equal(txt("AST")))
+				{
+					CodeTypedef tdef = parse_typedef(token_fmt("name", struct_def->Name, stringize( typedef struct <name> <name>; )));
+					ast.append(tdef);
 				}
 			}
 			break;
@@ -221,7 +228,7 @@ int gen_main()
 			{
 				CodeVar var = cast(CodeVar, entry);
 
-				s32 constexpr_found = var->Specs.remove( Spec_Constexpr );
+				s32 constexpr_found = var->Specs ? var->Specs.remove( Spec_Constexpr ) : - 1;
 				if (constexpr_found > -1) {
 					log_fmt("Found constexpr: %S\n", entry.to_string());
 					if (var->Name.contains(txt("AST_ArrSpecs_Cap")))
@@ -323,6 +330,18 @@ R"(#define AST_ArrSpecs_Cap       \
 					}
 				}
 				break;
+				case CT_Enum:
+				{
+					convert_cpp_enum_to_c(cast(CodeEnum, entry), memory);
+				}
+				break;
+				case CT_Struct_Fwd:
+				{
+					CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+					memory.append(entry);
+					memory.append(tdef);
+				}
+				break;
 				case CT_Class:
 				case CT_Struct:
 				{
@@ -332,7 +351,7 @@ R"(#define AST_ArrSpecs_Cap       \
 					(body_entry->Type) {
 						case CT_Preprocess_If:
 						{
-							ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), body_entry, body, new_body );
+							ignore_preprocess_cond_block(txt("! GEN_C_LIKE_CPP"), body_entry, body, new_body );
 						}
 						break;
 
@@ -340,17 +359,16 @@ R"(#define AST_ArrSpecs_Cap       \
 							new_body.append(body_entry);
 						break;
 					}
-
 					entry->Body = new_body;
+
+					CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
 					memory.append(entry);
+					memory.append(tdef);
 				}
 				break;
 				case CT_Preprocess_If:
 				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_MEMBER_FEATURES"), entry, parsed_memory, memory );
-					if (found) break;
-
-					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_memory, memory );
+					b32 found = ignore_preprocess_cond_block(txt("! GEN_C_LIKE_CPP"), entry, parsed_memory, memory );
 					if (found) break;
 
 					memory.append(entry);
@@ -418,93 +436,104 @@ R"(#define AST_ArrSpecs_Cap       \
 
 		CodeBody parsed_strings = parse_file( project_dir "dependencies/strings.hpp" );
 		CodeBody strings        = def_body(CT_Global_Body);
-		for ( Code entry = parsed_strings.begin(); entry != parsed_strings.end(); ++ entry )
+		for ( Code entry = parsed_strings.begin(); entry != parsed_strings.end(); ++ entry ) switch (entry->Type)
 		{
-			switch (entry->Type)
+			case CT_Preprocess_If:
 			{
-				case CT_Preprocess_If:
+				CodePreprocessCond cond = cast(CodePreprocessCond, entry);
+				if (cond->Content.is_equal(txt("GEN_COMPILER_C")))
 				{
-					CodePreprocessCond cond = cast(CodePreprocessCond, entry);
-					if (cond->Content.starts_with(txt("GEN_COMPILER_C || ! GEN_SUPPORT_CPP_MEMBER_FEATURES")))
-					{
-						for (; entry != end(parsed_strings) && entry->Type != CT_Typedef; ++ entry) {}
-						strings.append(entry);
-						strings.append(fmt_newline);
-
-						for (; entry != end(parsed_strings) && entry->Type != CT_Preprocess_EndIf; ++ entry) {}
-						++ entry;
-						break;
+					++ entry;                                                 // Remove #if GEN_COMPILER_C
+					for ( ; entry->Type != CT_Preprocess_Else
+						&&  entry->Type != CT_Preprocess_EndIf; ++ entry ) {
+						strings.append(entry);                                // Preserve content
 					}
-
-					bool found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_strings, strings);
-					if (found) break;
-
-					found = ignore_preprocess_cond_block(txt("GEN_SUPPORT_CPP_REFERENCES"), entry, parsed_strings, strings );
+					for ( ; entry->Type != CT_Preprocess_EndIf; ++ entry ) {} // Discard C++
+					// #endif discarded by for loop
+					break;
 				}
-				break;
 
-				case CT_Preprocess_IfDef:
-				{
-					ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_strings, strings );
-				}
-				break;
+				bool found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_strings, strings);
+				if (found) break;
 
-				case CT_Struct_Fwd:
-				{
-					if ( entry->Name.is_equal(txt("String")) )
-					{
-						CodeTypedef c_def = parse_typedef(code( typedef char* String; ));
-						strings.append(c_def);
-						strings.append(fmt_newline);
-						++ entry;
-						continue;
-					}
-					strings.append(entry);
-				}
-				break;
-
-				case CT_Struct:
-				{
-					CodeBody body     = cast(CodeBody, entry->Body);
-					CodeBody new_body = def_body( entry->Body->Type );
-					for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
-					(body_entry->Type) {
-						case CT_Preprocess_If:
-						{
-							b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), body_entry, body, new_body );
-							if (found) break;
-
-							new_body.append(body_entry);
-						}
-						break;
-						default:
-							new_body.append(body_entry);
-						break;
-					}
-					entry->Body = new_body;
-					strings.append(entry);
-				}
-				break;
-
-				case CT_Typedef:
-				{
-					StrC name_string_table = txt("StringTable");
-
-					CodeTypedef td = cast(CodeTypedef, entry);
-					if (td->Name.contains(name_string_table))
-					{
-						CodeBody ht = gen_hashtable(txt("StrC"), name_string_table);
-						strings.append(ht);
-						break;
-					}
-					strings.append(td);
-				}
-				break;
-
-				default:
-					strings.append(entry);
-				break;
+				found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), entry, parsed_strings, strings);
+				if (found) break;
 			}
+			break;
+
+			case CT_Preprocess_IfDef:
+			{
+				ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_strings, strings );
+			}
+			break;
+
+			case CT_Preprocess_IfNotDef:
+			{
+				log_fmt("\nIFNDEF: %SC\n", entry->Content);
+				strings.append(entry);
+			}
+			break;
+
+			case CT_Struct_Fwd:
+			{
+				if ( entry->Name.is_equal(txt("String")) )
+				{
+					CodeTypedef c_def = parse_typedef(code( typedef char* String; ));
+					strings.append(c_def);
+					strings.append(fmt_newline);
+					++ entry;
+					continue;
+				}
+				else
+				{
+					CodeTypedef c_def = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+					strings.append(c_def);
+				}
+				strings.append(entry);
+			}
+			break;
+
+			case CT_Struct:
+			{
+				CodeBody body     = cast(CodeBody, entry->Body);
+				CodeBody new_body = def_body( entry->Body->Type );
+				for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
+				(body_entry->Type) {
+					case CT_Preprocess_If:
+					{
+						b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), body_entry, body, new_body );
+						if (found) break;
+
+						new_body.append(body_entry);
+					}
+					break;
+					default:
+						new_body.append(body_entry);
+					break;
+				}
+				entry->Body = new_body;
+				strings.append(entry);
+			}
+			break;
+
+			case CT_Typedef:
+			{
+				StrC name_string_table = txt("StringTable");
+
+				CodeTypedef td = cast(CodeTypedef, entry);
+				if (td->Name.contains(name_string_table))
+				{
+					CodeBody ht = gen_hashtable(txt("StrC"), name_string_table);
+					strings.append(ht);
+					break;
+				}
+				strings.append(td);
+			}
+			break;
+
+			default:
+				strings.append(entry);
+			break;
 		}
 
 		CodeBody parsed_filesystem = parse_file( project_dir "dependencies/filesystem.hpp" );
@@ -521,6 +550,30 @@ R"(#define AST_ArrSpecs_Cap       \
 					filesystem.append(entry);
 				}
 				break;
+
+				case CT_Enum:
+				case CT_Enum_Fwd:
+				case CT_Struct_Fwd:
+				case CT_Struct:
+				case CT_Union:
+				case CT_Union_Fwd:
+				{
+					if (entry->Name.is_equal(txt("FileOperations")))
+						continue;
+
+					// StrC type_str      = codetype_to_keyword_str(entry->Type);
+					// StrC formated_tmpl = token_fmt_impl( 3,
+					// 	"type", type_str
+					// ,	"name", entry->Name,
+					// stringize(
+					// 	typedef <type> <name> <name>;
+					// ));
+					// CodeTypedef tdef = parse_typedef(formated_tmpl);
+					// filesystem.append(entry);
+					// filesystem.append(tdef);
+				}
+				break;
+
 				case CT_Variable:
 				{
 					CodeVar var = cast(CodeVar, entry);

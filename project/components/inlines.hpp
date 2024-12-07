@@ -183,6 +183,7 @@ void params_append( CodeParam appendee, CodeParam other )
 {
 	GEN_ASSERT(appendee);
 	GEN_ASSERT(other);
+	GEN_ASSERT_MSG(appendee != other, "Attempted to append parameter to itself.");
 	Code self  = cast(Code, appendee);
 	Code entry = cast(Code, other);
 
@@ -250,7 +251,8 @@ CodeParam end_CodeParam(CodeParam params)
 forceinline
 CodeParam next_CodeParam(CodeParam params, CodeParam param_iter)
 {
-	return params->Next;
+	GEN_ASSERT(param_iter);
+	return param_iter->Next;
 }
 #pragma endregion CodeParam
 

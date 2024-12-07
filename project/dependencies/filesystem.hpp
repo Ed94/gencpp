@@ -5,8 +5,6 @@
 
 #pragma region File Handling
 
-typedef u32 FileMode;
-
 enum FileModeFlag
 {
 	EFileMode_READ   = bit( 0 ),
@@ -45,6 +43,7 @@ union FileDescriptor
 	uptr  u;
 };
 
+typedef u32                   FileMode;
 typedef struct FileOperations FileOperations;
 
 #define GEN_FILE_OPEN_PROC( name )     FileError name( FileDescriptor* fd, FileOperations* ops, FileMode mode, char const* filename )
@@ -107,7 +106,6 @@ struct FileInfo
 	FileTime    last_write_time;
 	DirEntry*   dir;
 };
-typedef struct FileInfo FileInfo;
 
 enum FileStandardType
 {
@@ -117,7 +115,6 @@ enum FileStandardType
 
 	EFileStandard_COUNT,
 };
-typedef enum FileStandardType FileStandardType;
 
 /**
 	* Get standard file I/O.

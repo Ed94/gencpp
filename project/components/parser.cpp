@@ -1614,6 +1614,13 @@ CodeBody parse_global_nspace( CodeType which )
 
 		switch ( currtok_noskip.Type )
 		{
+			case Tok_Comma:
+			{
+				log_failure("Dangling comma found: %S\nContext:\n%S", to_string(currtok), to_string(Context));
+				pop( & Context);
+				return InvalidCode;
+			}
+			break;
 			case Tok_Statement_End:
 			{
 				// TODO(Ed): Convert this to a general warning procedure
@@ -1885,7 +1892,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 		if ( member == Code_Invalid )
 		{
-			log_failure( "Failed to parse member\n%s", to_string(Context) );
+			log_failure( "Failed to parse member\nToken: %s\nContext:\n%s", to_string(currtok_noskip), to_string(Context) );
 			pop(& Context);
 			return InvalidCode;
 		}

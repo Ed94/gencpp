@@ -21,29 +21,29 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 	}
 
 #pragma region Helper Macros
-#	define check_params()                                                                                 \
-	if ( ! params_code )                                                                                  \
-	{                                                                                                     \
-		log_failure("gen::def_operator: params is null and operator%s requires it", operator_to_str(op)); \
-		return OpValResult_Fail;                                                                          \
-	}                                                                                                     \
-	if ( params_code->Type != CT_Parameters )                                                             \
-	{                                                                                                     \
+#	define check_params()                                                                                                   \
+	if ( ! params_code )                                                                                                    \
+	{                                                                                                                       \
+		log_failure("gen::def_operator: params is null and operator%s requires it", operator_to_str(op));                   \
+		return OpValResult_Fail;                                                                                            \
+	}                                                                                                                       \
+	if ( params_code->Type != CT_Parameters )                                                                               \
+	{                                                                                                                       \
 		log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str( cast(Code, params_code)));  \
-		return OpValResult_Fail;                                                                          \
+		return OpValResult_Fail;                                                                                            \
 	}
 
-#	define check_param_eq_ret()                                                                     \
-	if ( ! is_member_symbol && ! code_is_equal(cast(Code, params_code->ValueType), cast(Code, ret_type)) )                       \
-	{                                                                                               \
-		log_failure("gen::def_operator: operator%s requires first parameter to equal return type\n" \
-			"param types: %s\n"                                                                     \
-			"return type: %s",                                                                      \
-			operator_to_str(op).Ptr,                                                                \
-			code_debug_str(cast(Code, params_code)),                                                                 \
-			code_debug_str(cast(Code, ret_type))                                                                     \
-		);                                                                                          \
-		return OpValResult_Fail;                                                                    \
+#	define check_param_eq_ret()                                                                            \
+	if ( ! is_member_symbol && ! code_is_equal(cast(Code, params_code->ValueType), cast(Code, ret_type)) ) \
+	{                                                                                                      \
+		log_failure("gen::def_operator: operator%s requires first parameter to equal return type\n"        \
+			"param types: %s\n"                                                                            \
+			"return type: %s",                                                                             \
+			operator_to_str(op).Ptr,                                                                       \
+			code_debug_str(cast(Code, params_code)),                                                       \
+			code_debug_str(cast(Code, ret_type))                                                           \
+		);                                                                                                 \
+		return OpValResult_Fail;                                                                           \
 	}
 #pragma endregion Helper Macros
 
@@ -216,9 +216,9 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				if ( params_code->NumEntries > 1 )
 				{
 					log_failure(
-					    "gen::def_operator: operator%s may not have more than one parameter - param count: %d",
-					    operator_to_str( op ),
-					    params_code->NumEntries
+						"gen::def_operator: operator%s may not have more than one parameter - param count: %d",
+						operator_to_str( op ),
+						params_code->NumEntries
 					);
 					return OpValResult_Fail;
 				}

@@ -3,10 +3,10 @@
 #include "code_serialization.cpp"
 #endif
 
-namespace parser {
+GEN_NS_PARSER_BEGIN
 internal void init();
 internal void deinit();
-}
+GEN_NS_PARSER_END
 
 internal
 void* Global_Allocator_Proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )

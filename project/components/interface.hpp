@@ -161,7 +161,7 @@ struct Opts_def_variable
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeVar def_variable( CodeTypename type, StrC name, Opts_def_variable opts GEN_PARAM_DEFAULT ); 
+CodeVar def_variable( CodeTypename type, StrC name, Opts_def_variable opts GEN_PARAM_DEFAULT );
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
 CodeBody def_body( CodeTypename type );
@@ -265,5 +265,56 @@ Code untyped_fmt      ( char const* fmt, ... );
 Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
 
 #pragma endregion Untyped text
+
+#pragma region Macros
+
+#ifndef token_fmt
+#	define gen_main main
+
+#	define __ NullCode
+
+	//	Convienence for defining any name used with the gen api.
+	//  Lets you provide the length and string literal to the functions without the need for the DSL.
+#	define name( Id_ )   { sizeof(stringize( Id_ )) - 1, stringize(Id_) }
+
+	//  Same as name just used to indicate intention of literal for code instead of names.
+#	define code( ... ) { sizeof(stringize(__VA_ARGS__)) - 1, stringize( __VA_ARGS__ ) }
+
+	// Provides the number of arguments while passing args inplace.
+#	define args( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
+
+	// Just wrappers over common untyped code definition constructions.
+#	define code_str( ... ) GEN_NS untyped_str( code( __VA_ARGS__ ) )
+#	define code_fmt( ... ) GEN_NS untyped_str( token_fmt( __VA_ARGS__ ) )
+
+#	define parse_fmt( type, ... ) GEN_NS parse_##type( token_fmt( __VA_ARGS__ ) )
+
+	/*
+	Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
+	Tokens are provided in '<'identifier'>' format where '<' '>' are just angle brakcets (you can change it in token_fmt_va)
+	---------------------------------------------------------
+		Example - A string with:
+			typedef <type> <name> <name>;
+		Will have a token_fmt arguments populated with:
+			"type", strc_for_type,
+			"name", strc_for_name,
+		and:
+			stringize( typedef <type> <name> <name>; ) )
+	-----------------------------------------------------------
+	So the full call for this example would be:
+		token_fmt(
+			"type", strc_for_type
+		,	"name", strc_for_name
+		,	stringize(
+			typedef <type> <name> <name>
+		));
+	!----------------------------------------------------------
+	! Note: token_fmt_va is whitespace sensitive for the tokens.
+	! This can be alleviated by skipping whitespace between brackets but it was choosen to not have that implementation by default.
+	*/
+#	define token_fmt( ... ) GEN_NS token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
+#endif
+
+#pragma endregion Macros
 
 #pragma endregion Gen Interface

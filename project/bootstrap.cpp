@@ -160,7 +160,7 @@ int gen_main()
 		Code inlines      = scan_file( "components/inlines.hpp" );
 		Code header_end   = scan_file( "components/header_end.hpp" );
 
-		CodeBody ecode       = gen_ecode     ( "enums/ECode.csv" );
+		CodeBody ecode       = gen_ecode     ( "enums/ECodeTypes.csv" );
 		CodeBody eoperator   = gen_eoperator ( "enums/EOperator.csv" );
 		CodeBody especifier  = gen_especifier( "enums/ESpecifier.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();

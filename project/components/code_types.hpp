@@ -911,10 +911,6 @@ struct CodeVar
 #undef Using_Code
 #undef Using_CodeOps
 
-#if GEN_SUPPORT_CPP_REFERENCES
-void to_string_export( CodeBody body, String& result ) { return body_to_string_export(body, & result); };
-#endif
-
 #undef Verify_POD
 
 struct InvalidCode_ImplictCaster
@@ -951,6 +947,38 @@ struct InvalidCode_ImplictCaster
     operator CodeVar           () const { return cast(CodeVar,            Code_Invalid); }
 };
 
+struct NullCode_ImplicitCaster
+{
+    operator Code              () const { return {nullptr}; }
+    operator CodeBody          () const { return {(AST_Body*)      nullptr}; }
+    operator CodeAttributes    () const { return {(AST_Attributes*)nullptr}; }
+    operator CodeComment       () const { return {nullptr}; }
+    operator CodeClass         () const { return {nullptr}; }
+    operator CodeConstructor   () const { return {nullptr}; }
+    operator CodeDefine        () const { return {nullptr}; }
+    operator CodeDestructor    () const { return {nullptr}; }
+    operator CodeExec          () const { return {nullptr}; }
+    operator CodeEnum          () const { return {nullptr}; }
+    operator CodeExtern        () const { return {nullptr}; }
+    operator CodeInclude       () const { return {nullptr}; }
+    operator CodeFriend        () const { return {nullptr}; }
+    operator CodeFn            () const { return {nullptr}; }
+    operator CodeModule        () const { return {nullptr}; }
+    operator CodeNS            () const { return {nullptr}; }
+    operator CodeOperator      () const { return {nullptr}; }
+    operator CodeOpCast        () const { return {nullptr}; }
+    operator CodeParam         () const { return {nullptr}; }
+    operator CodePragma        () const { return {nullptr}; }
+    operator CodePreprocessCond() const { return {nullptr}; }
+    operator CodeSpecifiers    () const { return {nullptr}; }
+    operator CodeStruct        () const { return {nullptr}; }
+    operator CodeTemplate      () const { return {nullptr}; }
+    operator CodeTypename      () const { return CodeTypename{(AST_Typename*)nullptr}; }
+    operator CodeTypedef       () const { return {nullptr}; }
+    operator CodeUnion         () const { return {nullptr}; }
+    operator CodeUsing         () const { return {nullptr}; }
+    operator CodeVar           () const { return {nullptr}; }
+};
 
 #if ! GEN_C_LIKE_CPP
 GEN_OPTIMIZE_MAPPINGS_BEGIN

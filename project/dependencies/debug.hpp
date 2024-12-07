@@ -19,14 +19,14 @@
 
 #define GEN_ASSERT( cond ) GEN_ASSERT_MSG( cond, NULL )
 
-#define GEN_ASSERT_MSG( cond, msg, ... )                                                     \
-	do                                                                                       \
-	{                                                                                        \
-		if ( ! ( cond ) )                                                                    \
-		{                                                                                    \
-			assert_handler( #cond, __FILE__, scast( s64, __LINE__ ), msg, ##__VA_ARGS__ );   \
-			GEN_DEBUG_TRAP();                                                                \
-		}                                                                                    \
+#define GEN_ASSERT_MSG( cond, msg, ... )                                                              \
+	do                                                                                                \
+	{                                                                                                 \
+		if ( ! ( cond ) )                                                                             \
+		{                                                                                             \
+			assert_handler( #cond, __FILE__, __func__, scast( s64, __LINE__ ), msg, ##__VA_ARGS__ );  \
+			GEN_DEBUG_TRAP();                                                                         \
+		}                                                                                             \
 	} while ( 0 )
 
 #define GEN_ASSERT_NOT_NULL( ptr ) GEN_ASSERT_MSG( ( ptr ) != NULL, #ptr " must not be NULL" )
@@ -56,7 +56,7 @@
 	while (0)
 #endif
 
-void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
+void assert_handler( char const* condition, char const* file, char const* function, s32 line, char const* msg, ... );
 s32  assert_crash( char const* condition );
 void process_exit( u32 code );
 

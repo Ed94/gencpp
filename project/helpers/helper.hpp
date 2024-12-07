@@ -10,7 +10,7 @@ using namespace gen;
 
 CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 {
-	char  scratch_mem[kilobytes(1)];
+	char  scratch_mem[kilobytes(4)];
 	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
 
 	file_read_contents( arena_allocator_info( & scratch), file_zero_terminate, path );
@@ -18,17 +18,21 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 	CSV_Object csv_nodes;
 	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
 
-	Array<ADT_Node> enum_strs = csv_nodes.nodes[0].nodes;
+	Array<ADT_Node> enum_strs    = csv_nodes.nodes[0].nodes;
+	Array<ADT_Node> keyword_strs = csv_nodes.nodes[1].nodes;
 
-	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
-	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String enum_entries           = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String to_str_entries         = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	String to_keyword_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for ( ADT_Node* node = array_begin(enum_strs); node != array_end(enum_strs); node = array_next(enum_strs, node) )
+	for ( ssize idx = 0; idx < array_num(enum_strs); ++ idx )
 	{
-		char const* code = node->string;
+		char const* code    = enum_strs   [idx].string;
+		char const* keyword = keyword_strs[idx].string;
 
-		string_append_fmt( & enum_entries, "CT_%s,\n", code );
-		string_append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
+		string_append_fmt( & enum_entries,           "CT_%s,\n", code );
+		string_append_fmt( & to_str_entries,         "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
+		string_append_fmt( & to_keyword_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", keyword, keyword );
 	}
 
 	CodeEnum enum_code;
@@ -48,9 +52,10 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 #pragma push_macro("local_persist")
 #undef local_persist
 	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
-	CodeFn to_str = parse_function( token_fmt(
-		"entries", string_to_strc(to_str_entries)
-	,	"num",     lookup_size
+	CodeBody to_str_fns = parse_global_body( token_fmt(
+		"entries",  string_to_strc(to_str_entries)
+	,	"keywords", string_to_strc(to_keyword_str_entries)
+	,	"num",      lookup_size
 	, stringize(
 		inline
 		StrC codetype_to_str( CodeType type )
@@ -59,17 +64,41 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 			StrC lookup[<num>] = {
 				<entries>
 			};
+			return lookup[ type ];
+		}
 
+		inline
+		StrC codetype_to_keyword_str( CodeType type )
+		{
+			local_persist
+			StrC lookup[ <num> ] = {
+				<keywords>
+			};
 			return lookup[ type ];
 		}
 	)));
 #pragma pop_macro("local_persist")
 
-	//CodeNS    nspace = def_namespace( name(ECode), def_namespace_body( args( enum_code, to_str ) ) );
-	//CodeUsing code_t = def_using( name(CodeT), def_type( name(ECode::Type) ) );
-	CodeTypedef code_t = parse_typedef(code(typedef enum CodeType CodeType; ));
-
-	return def_global_body( args( enum_code, code_t, to_str, fmt_newline ) );
+	CodeBody result = def_body(CT_Global_Body);
+	body_append(result, enum_code);
+	body_append(result, to_str_fns);
+	if (! use_c_definition)
+	{
+		#pragma push_macro("forceinline")
+		#undef forceinline
+		CodeBody alias_mappings = parse_global_body(code(
+			forceinline StrC to_str        (CodeType type) { return codetype_to_str(type);         }
+			forceinline StrC to_keyword_str(CodeType type) { return codetype_to_keyword_str(type); }
+		));
+		#pragma pop_macro("forceinline")
+		body_append(result, alias_mappings);
+	}
+	else
+	{
+		CodeTypedef code_t = parse_typedef(code(typedef enum CodeType CodeType; ));
+		body_append(result, code_t);
+	}
+	return result;
 }
 
 CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
@@ -142,11 +171,25 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 	)));
 #pragma pop_macro("local_persist")
 
-	//CodeNS nspace = def_namespace( name(EOperator), def_namespace_body( args( enum_code, to_str ) ) );
-	//CodeUsing operator_t = def_using( name(OperatorT), def_type( name(EOperator::Type) ) );
-	CodeTypedef operator_t = parse_typedef(code( typedef enum Operator Operator; ));
-
-	return def_global_body( args( enum_code, operator_t, to_str, fmt_newline ) );
+	CodeBody result = def_body(CT_Global_Body);
+	body_append(result, enum_code);
+	body_append(result, to_str);
+	if (! use_c_definition)
+	{
+	#pragma push_macro("forceinline")
+	#undef forceinline
+		CodeBody alias_mappings = parse_global_body(code(
+			forceinline StrC to_str(Operator op) { return operator_to_str(op); }
+		));
+	#pragma pop_macro("forceinline")
+		body_append(result, alias_mappings);
+	}
+	else
+	{
+		CodeTypedef operator_t = parse_typedef(code( typedef enum Operator Operator; ));
+		body_append(result, operator_t);
+	}
+	return result;
 }
 
 CodeBody gen_especifier( char const* path, bool use_c_definition = false )
@@ -217,7 +260,6 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 #undef do_once_end
 #undef forceinline
 #undef neverinline
-
 	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
 	CodeFn to_str   = parse_function(token_fmt(
 		"entries", string_to_strc(to_str_entries)
@@ -269,11 +311,29 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 #pragma pop_macro("forceinline")
 #pragma pop_macro("neverinline")
 
-	//CodeNS nspace = def_namespace( name(ESpecifier), def_namespace_body( args( enum_code, is_trailing, to_str, to_type ) ) );
-	//CodeUsing specifier_t = def_using( name(SpecifierT), def_type( name(ESpecifier::Type) ) );
-	CodeTypedef specifier_t = parse_typedef( code(typedef enum Specifier Specifier; ));
-
-	return def_global_body( args( enum_code, specifier_t, is_trailing, to_str, to_type, fmt_newline ) );
+	CodeBody result = def_body(CT_Global_Body);
+	body_append(result, enum_code);
+	body_append(result, to_str);
+	body_append(result, is_trailing);
+	body_append(result, to_type);
+	if (! use_c_definition)
+	{
+	#pragma push_macro("forceinline")
+	#undef forceinline
+		CodeBody alias_mappings = parse_global_body(code(
+			forceinline StrC      to_str (Specifier spec)            { return spec_to_str(spec); }
+			forceinline Specifier to_type( StrC str )                { return strc_to_specifier(str); }
+			forceinline bool      is_trailing( Specifier specifier ) { return spec_is_trailing(specifier); }
+		));
+	#pragma pop_macro("forceinline")
+		body_append(result, alias_mappings);
+	}
+	else
+	{
+		CodeTypedef specifier_t = parse_typedef( code(typedef enum Specifier Specifier; ));
+		body_append(result, specifier_t);
+	}
+	return result;
 }
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path )

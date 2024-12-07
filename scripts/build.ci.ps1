@@ -2,7 +2,6 @@
 # It will most likely need a partial rewrite to segment the build process into separate script invocations based on the OS.
 # That or just rewrite it in an sh script and call it a day.
 
-$target_arch        = Join-Path $PSScriptRoot 'helpers/target_arch.psm1'
 $devshell           = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 $format_cpp	        = Join-Path $PSScriptRoot 'helpers/format_cpp.psm1'
 $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
@@ -91,7 +90,6 @@ else {
 if ( $bootstrap -eq $false -and $singleheader -eq $false -and $c_library -eq $false -and $unreal -eq $false -and $test -eq $false ) {
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
-
 
 . $vendor_toolchain
 . $incremental_checks

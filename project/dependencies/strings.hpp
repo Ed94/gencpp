@@ -5,8 +5,7 @@
 
 #pragma region Strings
 
-struct StrC_Def;
-typedef struct StrC_Def StrC;
+struct StrC;
 
 bool        strc_are_equal           (StrC lhs, StrC rhs);
 char const* strc_back                (StrC str);
@@ -17,7 +16,7 @@ StrC        strc_to_str              (char const* bad_string);
 StrC        strc_visualize_whitespace(StrC str, AllocatorInfo allocator);
 
 // Constant string with length.
-struct StrC_Def
+struct StrC
 {
 	ssize       Len;
 	char const* Ptr;
@@ -27,12 +26,12 @@ struct StrC_Def
 	forceinline char const& operator[]( ssize index ) const { return Ptr[index]; }
 
 #if ! GEN_C_LIKE_CPP
-	forceinline bool        is_equal            (StrC rhs)                const { return GEN_NS strc_are_equal(* this, rhs); }
-	forceinline char const* back                ()                        const { return GEN_NS strc_back(* this); }
-	forceinline bool        contains            (StrC substring)          const { return GEN_NS strc_contains(* this, substring); }
-	forceinline StrC        duplicate           (AllocatorInfo allocator) const { return GEN_NS strc_duplicate(* this, allocator); }
-	forceinline b32         starts_with         (StrC substring)          const { return GEN_NS strc_starts_with(* this, substring); }
-	forceinline StrC        visualize_whitespace(AllocatorInfo allocator) const { return GEN_NS strc_visualize_whitespace(* this, allocator); }
+	forceinline bool        is_equal            (StrC rhs)                const { return strc_are_equal(* this, rhs); }
+	forceinline char const* back                ()                        const { return strc_back(* this); }
+	forceinline bool        contains            (StrC substring)          const { return strc_contains(* this, substring); }
+	forceinline StrC        duplicate           (AllocatorInfo allocator) const { return strc_duplicate(* this, allocator); }
+	forceinline b32         starts_with         (StrC substring)          const { return strc_starts_with(* this, substring); }
+	forceinline StrC        visualize_whitespace(AllocatorInfo allocator) const { return strc_visualize_whitespace(* this, allocator); }
 #endif
 #endif
 };
@@ -113,8 +112,7 @@ StrC to_strc_from_c_str( char const* bad_str ) {
 // They used a header pattern
 // I kept it for simplicty of porting but its not necessary to keep it that way.
 #pragma region String
-        struct StringHeader;
-typedef struct StringHeader StringHeader;
+struct StringHeader;
 
 #if GEN_COMPILER_C
 typedef char* String;
@@ -267,11 +265,9 @@ struct String
 };
 #endif
 
-GEN_API_C_BEGIN
 forceinline char* string_begin(String str)                   { return ((char*) str); }
 forceinline char* string_end  (String str)                   { return ((char*) str + string_length(str)); }
 forceinline char* string_next (String str, char const* iter) { return ((char*) iter + 1); }
-GEN_API_C_END
 
 #if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 forceinline char* begin(String str)             { return ((char*) str); }
@@ -488,18 +484,18 @@ bool string_contains_string(String const str, String const substring)
 
 forceinline
 ssize string_capacity(String const str) {
-   StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
-   return header->Capacity;
+	StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
+	return header->Capacity;
 }
 
 forceinline
 void string_clear(String str) {
-   string_get_header(str)->Length = 0;
+	string_get_header(str)->Length = 0;
 }
 
 forceinline
 String string_duplicate(String const str, AllocatorInfo allocator) {
-   return string_make_length(allocator, str, string_length(str));
+	return string_make_length(allocator, str, string_length(str));
 }
 
 forceinline
@@ -514,14 +510,14 @@ void string_free(String* str) {
 
 forceinline
 StringHeader* string_get_header(String str) {
-   return (StringHeader*)(scast(char*, str) - sizeof(StringHeader));
+	return (StringHeader*)(scast(char*, str) - sizeof(StringHeader));
 }
 
 forceinline
 ssize string_length(String const str)
 {
-   StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
-   return header->Length;
+	StringHeader const* header = rcast(StringHeader const*, scast(char const*, str) - sizeof(StringHeader));
+	return header->Length;
 }
 
 inline
@@ -586,7 +582,7 @@ void string_skip_line(String str)
 #define current (*scanner)
 	char* scanner = str;
 	while (current != '\r' && current != '\n') {
- 		++scanner;
+		++scanner;
 	}
 
 	s32 new_length = scanner - str;
@@ -605,23 +601,22 @@ void string_skip_line(String str)
 inline
 void strip_space(String str)
 {
-   char* write_pos = str;
-   char* read_pos  = str;
+	char* write_pos = str;
+	char* read_pos  = str;
 
-   while (* read_pos)
-   {
-   	if (! char_is_space(* read_pos))
-   	{
-   		* write_pos = * read_pos;
-   		  write_pos++;
-   	}
-   	read_pos++;
-   }
-
+	while (* read_pos)
+	{
+		if (! char_is_space(* read_pos))
+		{
+   			* write_pos = * read_pos;
+			write_pos++;
+		}
+		read_pos++;
+	}
    write_pos[0] = '\0';  // Null-terminate the modified string
 
-   // Update the length if needed
-   string_get_header(str)->Length = write_pos - str;
+	// Update the length if needed
+	string_get_header(str)->Length = write_pos - str;
 }
 
 forceinline
@@ -651,12 +646,12 @@ void trim(String str, char const* cut_set)
 
 	str[len] = '\0';
 
-   string_get_header(str)->Length = len;
+	string_get_header(str)->Length = len;
 }
 
 forceinline
 void trim_space(String str) {
-   trim(str, " \t\r\n\v\f");
+	trim(str, " \t\r\n\v\f");
 }
 
 inline
@@ -712,7 +707,7 @@ inline
 StrC strc_visualize_whitespace(StrC str, AllocatorInfo allocator)
 {
 	String result = string_make_reserve(allocator, str.Len * 2); // Assume worst case for space requirements.
-	for (char const* c = strc_begin(str); c != strc_end(str); c = strc_next(str, c)) 
+	for (char const* c = strc_begin(str); c != strc_end(str); c = strc_next(str, c))
 	switch ( * c )
 	{
 		case ' ':

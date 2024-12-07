@@ -25,7 +25,7 @@
 #	define GEN_MAX_UNTYPED_STR_LENGTH megabytes(1)
 #endif
 #ifndef GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE
-#	define GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE kilobytes(4)
+#	define GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE kilobytes(8)
 #endif
 #ifndef GEN_LEX_ALLOCATOR_SIZE
 #	define GEN_LEX_ALLOCATOR_SIZE megabytes(4)
@@ -42,7 +42,7 @@ constexpr s32 InitSize_DataArrays = 16;
 
 // NOTE: This limits the maximum size of an allocation
 // If you are generating a string larger than this, increase the size of the bucket here.
-constexpr usize  Global_BucketSize         = GEN_GLOBAL_BUCKET_SIZE;
+constexpr usize  Global_BucketSize      = GEN_GLOBAL_BUCKET_SIZE;
 constexpr s32 CodePool_NumBlocks        = GEN_CODEPOOL_NUM_BLOCKS;
 constexpr s32 SizePer_StringArena       = GEN_SIZE_PER_STRING_ARENA;
 
@@ -131,38 +131,12 @@ extern CodeTypename t_typename;
 
 #pragma endregion Constants
 
-#pragma region Macros
-
-#ifndef token_fmt
-#	define gen_main main
-
-#	define __ NullCode
-
-	//	Convienence for defining any name used with the gen api.
-	//  Lets you provide the length and string literal to the functions without the need for the DSL.
-#	define name( Id_ )   { sizeof(stringize( Id_ )) - 1, stringize(Id_) }
-
-	//  Same as name just used to indicate intention of literal for code instead of names.
-#	define code( ... ) { sizeof(stringize(__VA_ARGS__)) - 1, stringize( __VA_ARGS__ ) }
-
-#	define args( ... ) num_args( __VA_ARGS__ ), __VA_ARGS__
-
-#	define code_str( ... ) GEN_NS untyped_str( code( __VA_ARGS__ ) )
-#	define code_fmt( ... ) GEN_NS untyped_str( token_fmt( __VA_ARGS__ ) )
-
-	// Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-#	define token_fmt( ... ) GEN_NS token_fmt_impl( (num_args( __VA_ARGS__ ) + 1) / 2, __VA_ARGS__ )
-#endif
-
-#pragma endregion Macros
-
 // Used by the lexer to persistently treat all these identifiers as preprocessor defines.
 // Populate with strings via gen::get_cached_string.
 // Functional defines must have format: id( ;at minimum to indicate that the define is only valid with arguments.
 extern Array(StringCached) PreprocessorDefines;
 
 #ifdef GEN_EXPOSE_BACKEND
-
 	// Global allocator used for data with process lifetime.
 	extern AllocatorInfo  GlobalAllocator;
 	extern Array(Arena) Global_AllocatorBuckets;
@@ -180,5 +154,4 @@ extern Array(StringCached) PreprocessorDefines;
 	extern AllocatorInfo Allocator_StringArena;
 	extern AllocatorInfo Allocator_StringTable;
 	extern AllocatorInfo Allocator_TypeTable;
-
 #endif

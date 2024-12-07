@@ -13,7 +13,7 @@ using LogFailType = ssize(*)(char const*, ...);
 	#define log_failure GEN_FATAL
 #endif
 
-enum AccessSpec enum_underlying(u32)
+enum AccessSpec : u32
 {
 	AccessSpec_Default,
 	AccessSpec_Private,
@@ -28,7 +28,7 @@ enum AccessSpec enum_underlying(u32)
 static_assert( size_of(AccessSpec) == size_of(u32), "AccessSpec not u32 size" );
 
 inline
-char const* to_str( AccessSpec type )
+char const* access_spec_to_str( AccessSpec type )
 {
 	local_persist
 	char const* lookup[ (u32)AccessSpec_Num_AccessSpec ] = {
@@ -44,7 +44,7 @@ char const* to_str( AccessSpec type )
 	return lookup[ (u32)type ];
 }
 
-enum CodeFlag enum_underlying(u32)
+enum CodeFlag : u32
 {
 	CodeFlag_None          = 0,
 	CodeFlag_FunctionType  = bit(0),
@@ -57,7 +57,7 @@ enum CodeFlag enum_underlying(u32)
 static_assert( size_of(CodeFlag) == size_of(u32), "CodeFlag not u32 size" );
 
 // Used to indicate if enum definitoin is an enum class or regular enum.
-enum EnumDecl enum_underlying(u8)
+enum EnumDecl : u8
 {
 	EnumDecl_Regular,
 	EnumDecl_Class,
@@ -66,7 +66,7 @@ enum EnumDecl enum_underlying(u8)
 };
 typedef u8 EnumT;
 
-enum ModuleFlag enum_underlying(u32)
+enum ModuleFlag : u32
 {
 	ModuleFlag_None    = 0,
 	ModuleFlag_Export  = bit(0),
@@ -80,28 +80,24 @@ enum ModuleFlag enum_underlying(u32)
 static_assert( size_of(ModuleFlag) == size_of(u32), "ModuleFlag not u32 size" );
 
 inline
-StrC to_str( ModuleFlag flag )
+StrC module_flag_to_str( ModuleFlag flag )
 {
 	local_persist
-	StrC lookup[ (u32)ModuleFlag::Num_ModuleFlags ] = {
+	StrC lookup[ (u32)Num_ModuleFlags ] = {
 		{ sizeof("__none__"), "__none__" },
 		{ sizeof("export"), "export" },
 		{ sizeof("import"), "import" },
 	};
 
+	local_persist
+	StrC invalid_flag = { sizeof("invalid"), "invalid" };
 	if ( flag > ModuleFlag_Import )
-		return { sizeof("invalid"), "invalid" };
+		return invalid_flag;
 
 	return lookup[ (u32)flag ];
 }
 
-inline
-ModuleFlag operator|( ModuleFlag A, ModuleFlag B)
-{
-	return (ModuleFlag)( (u32)A | (u32)B );
-}
-
-enum EPreprocessCond enum_underlying(u32)
+enum EPreprocessCond : u32
 {
 	PreprocessCond_If,
 	PreprocessCond_IfDef,

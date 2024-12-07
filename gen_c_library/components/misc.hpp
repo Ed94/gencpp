@@ -3,11 +3,26 @@
 
 using namespace gen;
 
+void convert_cpp_enum_to_c( CodeEnum to_convert, CodeBody to_append )
+{
+#pragma push_macro("enum_underlying")
+#undef enum_underlying
+	if (to_convert->UnderlyingType)
+	{
+		to_convert->UnderlyingTypeMacro = untyped_str(token_fmt("type", to_convert->UnderlyingType->Name, stringize(enum_underlying(<type>))));
+		to_convert->UnderlyingType      = CodeTypename{nullptr};
+	}
+	CodeTypedef tdef = parse_typedef(token_fmt("name", to_convert->Name, stringize( typedef enum <name> <name>; )));
+	to_append.append(to_convert);
+	to_append.append(tdef);
+#pragma pop_macro("enum_underlying")
+}
+
 b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& parsed_body, CodeBody& body )
 {
 	b32 found = false;
 	CodePreprocessCond cond = cast(CodePreprocessCond, entry_iter);
-	if ( cond->Content.contains(cond_sig) )
+	if ( cond->Content.is_equal(cond_sig) )
 	{
 		log_fmt("Preprocess cond found: %SC\n", cond->Content);
 		found = true;
@@ -193,8 +208,8 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
     if (fn->Specs && fn->Specs->NumEntries > 0)
     {
         new_name.append("_S_");
-        for (Specifier* spec = begin(fn->Specs); 
-             spec != end(fn->Specs); 
+        for (Specifier* spec = begin(fn->Specs);
+             spec != end(fn->Specs);
              ++spec)
         {
             new_name.append_fmt("%SC_", spec_to_str(*spec));

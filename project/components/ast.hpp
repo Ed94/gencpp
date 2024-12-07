@@ -153,7 +153,9 @@ Define_Code(Var);
 #undef Define_Code
 
 GEN_NS_PARSER_BEGIN
+
 struct Token;
+
 GEN_NS_PARSER_END
 
 #if GEN_COMPILER_CPP
@@ -380,12 +382,13 @@ static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST POD is not size of AST_P
 struct  InvalidCode_ImplictCaster;
 #define InvalidCode (InvalidCode_ImplictCaster{})
 #else
-#define InvalidCode { (AST*)Code_Invalid }
+#define InvalidCode { (void*)Code_Invalid }
 #endif
 
 #if GEN_COMPILER_CPP
+struct NullCode_ImplicitCaster;
 // Used when the its desired when omission is allowed in a definition.
-#define NullCode    { nullptr }
+#define NullCode    (NullCode_ImplicitCaster{})
 #else
 #define NullCode    nullptr
 #endif

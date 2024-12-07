@@ -322,17 +322,17 @@
 
 // Below are generated on demand for an overlaod depdendent on a type:
 // ----------------------------------------------------------------------------------------------------------------------------------
-#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg ) _Generic(         \
-(selector_arg), /* Select Via Expression*/                             \
-  /* Extendibility slots: */                                           \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(FunctionID__ARGS_SIG_1 ) \
+#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg ) _Generic(           \
+(selector_arg), /* Select Via Expression*/                               \
+  /* Extendibility slots: */                                             \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )     \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(FunctionID__ARGS_SIG_1 ) \
 ) GEN_RESOLVED_FUNCTION_CALL( selector_arg )
 // ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -355,17 +355,17 @@ size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761u
 
 // If using an Editor with support for syntax hightlighting macros: HASH__ARGS_SIG_1 and HASH_ARGS_SIG_2 should show color highlighting indicating the slot is enabled,
 // or, "defined" for usage during the compilation pass that handles the _Generic instrinsic.
-#define hash( function_arguments ) _Generic(                      \
-(function_arguments), /* Select Via Expression*/                  \
-  /* Extendibility slots: */                                      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_1 )      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_2 )      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_3 )      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_4 )      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_5 )      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_6 )      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_7 )      \
-  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST( HASH__ARGS_SIG_8 ) \
+#define hash( function_arguments ) _Generic(                        \
+(function_arguments), /* Select Via Expression*/                    \
+  /* Extendibility slots: */                                        \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_1 )      \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_2 )      \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_3 )      \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_4 )      \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_5 )      \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_6 )      \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_7 )      \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST( HASH__ARGS_SIG_8 ) \
 ) GEN_RESOLVED_FUNCTION_CALL( function_arguments )
 
 // Additional Variations:

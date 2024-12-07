@@ -184,7 +184,7 @@ void class_to_string_def( CodeClass self, String* result )
 
 	if ( self->ParentType )
 	{
-		char const* access_level = to_str( self->ParentAccess );
+		char const* access_level = access_spec_to_str( self->ParentAccess );
 
 		string_append_fmt( result, "%SC : %s %S", self->Name, access_level, typename_to_string(self->ParentType) );
 
@@ -368,7 +368,10 @@ void enum_to_string_fwd(CodeEnum self, String* result )
 	if ( self->UnderlyingType )
 		string_append_fmt( result, "enum %SC : %S", self->Name, typename_to_string(self->UnderlyingType) );
 	else if (self->UnderlyingTypeMacro)
-		string_append_fmt( result, "enum %SC %S", self->Name, typename_to_string(self->UnderlyingType) );
+	{
+		log_fmt("IDENTIFIED A UNDERLYING ENUM MACRO");
+		string_append_fmt( result, "enum %SC %S", self->Name, code_to_string(self->UnderlyingTypeMacro) );
+	}
 	else
 		string_append_fmt( result, "enum %SC", self->Name );
 
@@ -1033,7 +1036,7 @@ void struct_to_string_def( CodeStruct self, String* result )
 
 	if ( self->ParentType )
 	{
-		char const* access_level = to_str( self->ParentAccess );
+		char const* access_level = access_spec_to_str( self->ParentAccess );
 
 		string_append_fmt( result, "%SC : %s %S", self->Name, access_level, typename_to_string(self->ParentType) );
 

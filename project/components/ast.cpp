@@ -20,7 +20,7 @@ char const* code_debug_str(Code self)
 
 	string_append_fmt( result, "\n\tName         : %S", self->Name ? self->Name : "Null" );
 	string_append_fmt( result, "\n\tType         : %S", code_type_str(self) );
-	string_append_fmt( result, "\n\tModule Flags : %S", to_str( self->ModuleFlags ) );
+	string_append_fmt( result, "\n\tModule Flags : %S", module_flag_to_str( self->ModuleFlags ) );
 
 	switch ( self->Type )
 	{
@@ -64,7 +64,7 @@ char const* code_debug_str(Code self)
 
 			string_append_fmt( result, "\n\tInlineCmt   : %S", self->InlineCmt  ? self->InlineCmt->Content     : "Null" );
 			string_append_fmt( result, "\n\tAttributes  : %S", self->Attributes ? code_to_string(self->Attributes)  : "Null" );
-			string_append_fmt( result, "\n\tParentAccess: %s", self->ParentType ? to_str( self->ParentAccess ) : "No Parent" );
+			string_append_fmt( result, "\n\tParentAccess: %s", self->ParentType ? access_spec_to_str( self->ParentAccess ) : "No Parent" );
 			string_append_fmt( result, "\n\tParentType  : %s", self->ParentType ? code_type_str(self->ParentType)   : "Null" );
 			string_append_fmt( result, "\n\tBody        : %S", self->Body       ? code_debug_str(self->Body)        : "Null" );
 		break;
@@ -78,7 +78,7 @@ char const* code_debug_str(Code self)
 
 			string_append_fmt( result, "\n\tInlineCmt   : %S", self->InlineCmt  ? self->InlineCmt->Content     : "Null" );
 			string_append_fmt( result, "\n\tAttributes  : %S", self->Attributes ? code_to_string(self->Attributes)  : "Null" );
-			string_append_fmt( result, "\n\tParentAccess: %s", self->ParentType ? to_str( self->ParentAccess ) : "No Parent" );
+			string_append_fmt( result, "\n\tParentAccess: %s", self->ParentType ? access_spec_to_str( self->ParentAccess ) : "No Parent" );
 			string_append_fmt( result, "\n\tParentType  : %s", self->ParentType ? code_type_str(self->ParentType)   : "Null" );
 		break;
 
@@ -626,8 +626,8 @@ bool code_is_equal( Code self, Code other )
 		log_fmt("\nAST::is_equal: Member - " #val " failed\n" \
 		        "AST  : %S\n"                                 \
 		        "Other: %S\n"                                 \
-		    , code_debug_str(self)                                 \
-		    ,code_debug_str(other)                                 \
+		    , code_debug_str(self)                            \
+		    ,code_debug_str(other)                            \
 		);                                                    \
                                                               \
 		return false;                                         \
@@ -639,8 +639,8 @@ bool code_is_equal( Code self, Code other )
 		log_fmt("\nAST::is_equal: Member string - "#str " failed\n" \
 				"AST  : %S\n"                                       \
 				"Other: %S\n"                                       \
-			, code_debug_str(self)                                       \
-			,code_debug_str(other)                                       \
+			, code_debug_str(self)                                  \
+			,code_debug_str(other)                                  \
 		);                                                          \
 	                                                                \
 		return false;                                               \
@@ -652,8 +652,8 @@ bool code_is_equal( Code self, Code other )
 		log_fmt("\nAST::is_equal: Member content - "#content " failed\n"   \
 				"AST  : %S\n"                                              \
 				"Other: %S\n"                                              \
-			, code_debug_str(self)                                              \
-			, code_debug_str(other)                                             \
+			, code_debug_str(self)                                         \
+			, code_debug_str(other)                                        \
 		);                                                                 \
                                                                            \
 		log_fmt("Content cannot be trusted to be unique with this check "  \
@@ -674,25 +674,25 @@ bool code_is_equal( Code self, Code other )
 					"AST  : %s\n"                                                                  \
 					"Other: %s\n"                                                                  \
 					"For ast member: %s\n"                                                         \
-				, code_debug_str(self)                                                                  \
-				, code_debug_str(other)                                                                 \
-				, code_debug_str(self->ast)                                                             \
+				, code_debug_str(self)                                                             \
+				, code_debug_str(other)                                                            \
+				, code_debug_str(self->ast)                                                        \
 			);                                                                                     \
                                                                                                    \
 			return false;                                                                          \
 		}                                                                                          \
                                                                                                    \
-		if ( ! code_is_equal(self->ast, other->ast ) )                                                  \
+		if ( ! code_is_equal(self->ast, other->ast ) )                                             \
 		{                                                                                          \
 			log_fmt( "\nAST::is_equal: Failed for " #ast"\n"                                       \
-			         "AST  : %S\n"                                                                 \
-			         "Other: %S\n"                                                                 \
-			         "For     ast member: %S\n"                                                    \
-			         "other's ast member: %S\n"                                                    \
-				, code_debug_str(self)                                                                  \
-				, code_debug_str(other)                                                                 \
-				, code_debug_str(self->ast)                                                             \
-				, code_debug_str(other->ast)                                                            \
+					"AST  : %S\n"                                                                  \
+					"Other: %S\n"                                                                  \
+					"For     ast member: %S\n"                                                     \
+					"other's ast member: %S\n"                                                     \
+				, code_debug_str(self)                                                             \
+				, code_debug_str(other)                                                            \
+				, code_debug_str(self->ast)                                                        \
+				, code_debug_str(other->ast)                                                       \
 			);                                                                                     \
 		                                                                                           \
 			return false;                                                                          \
@@ -918,10 +918,10 @@ bool code_is_equal( Code self, Code other )
 						if ( curr_other == nullptr )
 						{
 							log_fmt("\nAST::is_equal: Failed for parameter, other equivalent param is null\n"
-							        "AST  : %S\n"
-							        "Other: %S\n"
-							        "For ast member: %S\n"
-							    , code_debug_str(curr)
+									"AST  : %S\n"
+									"Other: %S\n"
+									"For ast member: %S\n"
+								, code_debug_str(curr)
 							);
 
 							return false;
@@ -1066,7 +1066,7 @@ bool code_is_equal( Code self, Code other )
 
 			return true;
 		}
-		
+
 		case CT_Union_Fwd:
 		{
 			check_member_val( ModuleFlags );
@@ -1117,10 +1117,10 @@ bool code_is_equal( Code self, Code other )
 				if ( curr_other == nullptr )
 				{
 					log_fmt("\nAST::is_equal: Failed for body, other equivalent param is null\n"
-					        "AST  : %S\n"
-					        "Other: %S\n"
-					        "For ast member: %S\n"
-					    , code_debug_str(curr)
+							"AST  : %S\n"
+							"Other: %S\n"
+							"For ast member: %S\n"
+						, code_debug_str(curr)
 					);
 
 					return false;
