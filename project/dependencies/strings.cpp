@@ -4,7 +4,6 @@
 #endif
 
 #pragma region String
-GEN_API_C_BEGIN
 
 String string_make_length( AllocatorInfo allocator, char const* str, ssize length )
 {
@@ -54,5 +53,4 @@ String string_make_reserve( AllocatorInfo allocator, ssize capacity )
 	return result;
 }
 
-GEN_API_C_END
 #pragma endregion String

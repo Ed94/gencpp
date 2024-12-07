@@ -67,8 +67,10 @@
 	"C_Cpp.files.exclude": {
 		"**/.vscode": true,
 		"**/.vs": true,
-		"**/sanity.gen.hpp": true
+		"**/sanity.gen.hpp": true,
+		"test/**":true,
 	},
 	"autoHide.autoHidePanel": false,
-	"autoHide.autoHideSideBar": false
+	"autoHide.autoHideSideBar": false,
+	"dimmer.enabled": true
 }

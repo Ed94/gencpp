@@ -1,8 +1,6 @@
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
-#define GEN_SUPPORT_CPP_MEMBER_FEATURES 1
-#define GEN_SUPPORT_CPP_REFERENCES      1
 #include "../project/gen.cpp"
 
 #include "helpers/push_ignores.inline.hpp"
@@ -97,6 +95,8 @@ CodeBody parse_file( const char* path )
 	return code;
 }
 
+constexpr bool helper_use_c_definition = true;
+
 int gen_main()
 {
 #define project_dir "../project/"
@@ -138,7 +138,7 @@ int gen_main()
 					if (using_ver->UnderlyingType->ReturnType)
 					{
 						CodeTypename type       = using_ver->UnderlyingType;
-						CodeTypedef typedef_ver = parse_typedef(token_fmt( 
+						CodeTypedef typedef_ver = parse_typedef(token_fmt(
 							"ReturnType", to_string(type->ReturnType).to_strc()
 						,	"Name"      , using_ver->Name
 						,	"Parameters", to_string(type->Params).to_strc()
@@ -170,10 +170,12 @@ int gen_main()
 		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
 		Code header_end = scan_file( project_dir "components/header_end.hpp" );
 
-		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv" );
-		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
-		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
-		CodeBody ast_inlines = gen_ast_inlines();
+		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECode.csv",      helper_use_c_definition );
+		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv",  helper_use_c_definition );
+		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv", helper_use_c_definition );
+
+		// Only has operator overload definitions that C doesn't need.
+		// CodeBody ast_inlines = gen_ast_inlines();
 
 		CodeBody parsed_ast = parse_file( project_dir "components/ast.hpp" );
 		CodeBody ast        = def_body(CT_Global_Body);
@@ -185,7 +187,7 @@ int gen_main()
 				CodePreprocessCond cond = cast(CodePreprocessCond, entry);
 				if (cond->Content.contains(txt("GEN_COMPILER_C")))
 				{
-					//++ entry;         // 
+					//++ entry;         //
 					//ast.append(entry) // typedef
 					//for ( ; entry != parsed_ast.end() && entry->Type != CT_Preprocess_EndIf; ++ entry) {}
 					//++ entry;        // Consume endif
@@ -292,15 +294,13 @@ R"(#define AST_ArrSpecs_Cap       \
 				case CT_Function:
 				{
 					CodeFn fn = cast(CodeFn, entry);
-					s32 constexpr_found = fn->Specs.remove( Spec_Constexpr );
-					if (constexpr_found > -1) {
-						log_fmt("Found constexpr: %S\n", entry.to_string());
-						fn->Specs.append(Spec_Inline);
+					if (fn->Specs) {
+						s32 constexpr_found = fn->Specs.remove( Spec_Constexpr );
+						if (constexpr_found > -1) {
+							log_fmt("Found constexpr: %S\n", entry.to_string());
+							fn->Specs.append(Spec_Inline);
+						}
 					}
-					// for ( StrC id : to_rename ) if (fn->Name.is_equal(id)) {
-					// 	Array(CodeFn) list = * needs_selectors.get(id);
-					// 	list.append(rename_function_to_unique_symbol(fn));
-					// }
 					memory.append(fn);
 				}
 				break;

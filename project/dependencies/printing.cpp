@@ -6,7 +6,6 @@
 #endif
 
 #pragma region Printing
-GEN_API_C_BEGIN
 
 enum
 {
@@ -598,5 +597,4 @@ ssize str_fmt_out_err( char const* fmt, ... )
 	return res;
 }
 
-GEN_API_C_END
 #pragma endregion Printing

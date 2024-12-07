@@ -5,8 +5,6 @@
 
 #pragma region String Ops
 
-GEN_API_C_BEGIN
-
 const char* char_first_occurence( const char* str, char c );
 
 b32   char_is_alpha( char c );
@@ -285,7 +283,5 @@ void str_to_upper( char* str )
 		str++;
 	}
 }
-
-GEN_API_C_END
 
 #pragma endregion String Ops

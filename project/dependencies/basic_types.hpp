@@ -5,7 +5,6 @@
 #endif
 
 #pragma region Basic Types
-GEN_API_C_BEGIN
 
 #define GEN_U8_MIN 0u
 #define GEN_U8_MAX 0xffu
@@ -127,14 +126,12 @@ typedef s32 b32;
 typedef void*       mem_ptr;
 typedef void const* mem_ptr_const ;
 
-#if ! GEN_COMPILER_C
-GEN_API_C_END
+#if GEN_COMPILER_CPP
 template<typename Type> uptr to_uptr( Type* ptr ) { return (uptr)ptr; }
 template<typename Type> sptr to_sptr( Type* ptr ) { return (sptr)ptr; }
 
 template<typename Type> mem_ptr       to_mem_ptr      ( Type ptr ) { return (mem_ptr)      ptr; }
 template<typename Type> mem_ptr_const to_mem_ptr_const( Type ptr ) { return (mem_ptr_const)ptr; }
-GEN_API_C_BEGIN
 #else
 #define to_uptr( ptr ) ((uptr)(ptr))
 #define to_sptr( ptr ) ((sptr)(ptr))
@@ -143,5 +140,4 @@ GEN_API_C_BEGIN
 #define to_mem_ptr_const( ptr) ((mem_ptr)ptr)
 #endif
 
-GEN_API_C_END
 #pragma endregion Basic Types

@@ -362,7 +362,9 @@ Code code_duplicate(Code self)
 {
 	Code result = make_code();
 
-	mem_copy( result.ast, self.ast, sizeof( AST ) );
+	void* mem_result = rcast(void*, cast(AST*, result));
+	void* mem_self   = rcast(void*, cast(AST*, self));
+	mem_copy( mem_result, mem_self, sizeof( AST ) );
 
 	result->Parent = { nullptr };
 	return result;
@@ -409,173 +411,173 @@ void code_to_string_ptr( Code self, String* result )
 		break;
 
 		case CT_Class:
-			to_string_def(cast(CodeClass, self), result );
+			class_to_string_def(cast(CodeClass, self), result );
 		break;
 
 		case CT_Class_Fwd:
-			to_string_fwd(cast(CodeClass, self), result );
+			class_to_string_fwd(cast(CodeClass, self), result );
 		break;
 
 		case CT_Constructor:
-			to_string_def(cast(CodeConstructor, self), result );
+			constructor_to_string_def(cast(CodeConstructor, self), result );
 		break;
 
 		case CT_Constructor_Fwd:
-			to_string_fwd(cast(CodeConstructor, self), result );
+			constructor_to_string_fwd(cast(CodeConstructor, self), result );
 		break;
 
 		case CT_Destructor:
-			to_string_def(cast(CodeDestructor, self), result );
+			destructor_to_string_def(cast(CodeDestructor, self), result );
 		break;
 
 		case CT_Destructor_Fwd:
-			to_string_fwd(cast(CodeDestructor, self), result );
+			destructor_to_string_fwd(cast(CodeDestructor, self), result );
 		break;
 
 		case CT_Enum:
-			to_string_def(cast(CodeEnum, self), result );
+			enum_to_string_def(cast(CodeEnum, self), result );
 		break;
 
 		case CT_Enum_Fwd:
-			to_string_fwd(cast(CodeEnum, self), result );
+			enum_to_string_fwd(cast(CodeEnum, self), result );
 		break;
 
 		case CT_Enum_Class:
-			to_string_class_def(cast(CodeEnum, self), result );
+			enum_to_string_class_def(cast(CodeEnum, self), result );
 		break;
 
 		case CT_Enum_Class_Fwd:
-			to_string_class_fwd(cast(CodeEnum, self), result );
+			enum_to_string_class_fwd(cast(CodeEnum, self), result );
 		break;
 
 		case CT_Export_Body:
-			to_string_export(cast(CodeBody, self), result );
+			body_to_string_export(cast(CodeBody, self), result );
 		break;
 
 		case CT_Extern_Linkage:
-			to_string(cast(CodeExtern, self), result );
+			extern_to_string(cast(CodeExtern, self), result );
 		break;
 
 		case CT_Friend:
-			to_string(cast(CodeFriend, self), result );
+			friend_to_string_ref(cast(CodeFriend, self), result );
 		break;
 
 		case CT_Function:
-			to_string_def(cast(CodeFn, self), result );
+			fn_to_string_def(cast(CodeFn, self), result );
 		break;
 
 		case CT_Function_Fwd:
-			to_string_fwd(cast(CodeFn, self), result );
+			fn_to_string_fwd(cast(CodeFn, self), result );
 		break;
 
 		case CT_Module:
-			to_string(cast(CodeModule, self), result );
+			module_to_string_ref(cast(CodeModule, self), result );
 		break;
 
 		case CT_Namespace:
-			to_string(cast(CodeNS, self), result );
+			namespace_to_string_ref(cast(CodeNS, self), result );
 		break;
 
 		case CT_Operator:
 		case CT_Operator_Member:
-			to_string_def(cast(CodeOperator, self), result );
+			code_op_to_string_def(cast(CodeOperator, self), result );
 		break;
 
 		case CT_Operator_Fwd:
 		case CT_Operator_Member_Fwd:
-			to_string_fwd(cast(CodeOperator, self), result );
+			code_op_to_string_fwd(cast(CodeOperator, self), result );
 		break;
 
 		case CT_Operator_Cast:
-			to_string_def(cast(CodeOpCast, self), result );
+			opcast_to_string_def(cast(CodeOpCast, self), result );
 		break;
 
 		case CT_Operator_Cast_Fwd:
-			to_string_fwd(cast(CodeOpCast, self), result );
+			opcast_to_string_fwd(cast(CodeOpCast, self), result );
 		break;
 
 		case CT_Parameters:
-			to_string(cast(CodeParam, self), result );
+			params_to_string_ref(cast(CodeParam, self), result );
 		break;
 
 		case CT_Preprocess_Define:
-			to_string(cast(CodeDefine, self), result );
+			define_to_string_ref(cast(CodeDefine, self), result );
 		break;
 
 		case CT_Preprocess_If:
-			to_string_if(cast(CodePreprocessCond, self), result );
+			preprocess_to_string_if(cast(CodePreprocessCond, self), result );
 		break;
 
 		case CT_Preprocess_IfDef:
-			to_string_ifdef(cast(CodePreprocessCond, self), result );
+			preprocess_to_string_ifdef(cast(CodePreprocessCond, self), result );
 		break;
 
 		case CT_Preprocess_IfNotDef:
-			to_string_ifndef(cast(CodePreprocessCond, self), result );
+			preprocess_to_string_ifndef(cast(CodePreprocessCond, self), result );
 		break;
 
 		case CT_Preprocess_Include:
-			to_string(cast(CodeInclude, self), result );
+			include_to_string_ref(cast(CodeInclude, self), result );
 		break;
 
 		case CT_Preprocess_ElIf:
-			to_string_elif(cast(CodePreprocessCond, self), result );
+			preprocess_to_string_elif(cast(CodePreprocessCond, self), result );
 		break;
 
 		case CT_Preprocess_Else:
-			to_string_else(cast(CodePreprocessCond, self), result );
+			preprocess_to_string_else(cast(CodePreprocessCond, self), result );
 		break;
 
 		case CT_Preprocess_EndIf:
-			to_string_endif(cast(CodePreprocessCond, self), result );
+			preprocess_to_string_endif(cast(CodePreprocessCond, self), result );
 		break;
 
 		case CT_Preprocess_Pragma:
-			to_string(cast(CodePragma, self), result );
+			pragma_to_string_ref(cast(CodePragma, self), result );
 		break;
 
 		case CT_Specifiers:
-			to_string(cast(CodeSpecifiers, self), result );
+			specifiers_to_string_ref(cast(CodeSpecifiers, self), result );
 		break;
 
 		case CT_Struct:
-			to_string_def(cast(CodeStruct, self), result );
+			struct_to_string_def(cast(CodeStruct, self), result );
 		break;
 
 		case CT_Struct_Fwd:
-			to_string_fwd(cast(CodeStruct, self), result );
+			struct_to_string_fwd(cast(CodeStruct, self), result );
 		break;
 
 		case CT_Template:
-			to_string(cast(CodeTemplate, self), result );
+			template_to_string_ref(cast(CodeTemplate, self), result );
 		break;
 
 		case CT_Typedef:
-			to_string(cast(CodeTypedef, self), result );
+			typedef_to_string_ref(cast(CodeTypedef, self), result );
 		break;
 
 		case CT_Typename:
-			to_string(cast(CodeTypename, self), result );
+			typename_to_string_ref(cast(CodeTypename, self), result );
 		break;
 
 		case CT_Union:
-			to_string_def( cast(CodeUnion, self), result );
+			union_to_string_def( cast(CodeUnion, self), result );
 		break;
 
 		case CT_Union_Fwd:
-			to_string_fwd( cast(CodeUnion, self), result );
+			union_to_string_fwd( cast(CodeUnion, self), result );
 		break;
 
 		case CT_Using:
-			to_string(cast(CodeUsing, self), result );
+			using_to_string_ref(cast(CodeUsing, self), result );
 		break;
 
 		case CT_Using_Namespace:
-			to_string_ns(cast(CodeUsing, self), result );
+			using_to_string_ns(cast(CodeUsing, self), result );
 		break;
 
 		case CT_Variable:
-			to_string(cast(CodeVar, self), result );
+			var_to_string_ref(cast(CodeVar, self), result );
 		break;
 
 		case CT_Enum_Body:
@@ -586,7 +588,7 @@ void code_to_string_ptr( Code self, String* result )
 		case CT_Namespace_Body:
 		case CT_Struct_Body:
 		case CT_Union_Body:
-			to_string( cast(CodeBody, self), result );
+			body_to_string_ref( cast(CodeBody, self), result );
 		break;
 	}
 }
@@ -1159,20 +1161,20 @@ bool code_is_equal( Code self, Code other )
 
 bool code_validate_body(Code self)
 {
-#define CheckEntries( Unallowed_Types )                                                                     \
-	do                                                                                                      \
-	{                                                                                                       \
-		CodeBody body = cast(CodeBody, self);                                                               \
-		for ( Code code_entry = begin(body); code_entry != end(body); next(body, code_entry) )           \
-		{                                                                                                   \
-			switch ( code_entry->Type )                                                                     \
-			{                                                                                               \
-				Unallowed_Types                                                                             \
-					log_failure( "AST::validate_body: Invalid entry in body %s", code_debug_str(code_entry) ); \
-					return false;                                                                           \
-			}                                                                                               \
-		}                                                                                                   \
-	}                                                                                                       \
+#define CheckEntries( Unallowed_Types )                                                                                   \
+	do                                                                                                                    \
+	{                                                                                                                     \
+		CodeBody body = cast(CodeBody, self);                                                                             \
+		for ( Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry) ) \
+		{                                                                                                                 \
+			switch ( code_entry->Type )                                                                                   \
+			{                                                                                                             \
+				Unallowed_Types                                                                                           \
+					log_failure( "AST::validate_body: Invalid entry in body %s", code_debug_str(code_entry) );            \
+					return false;                                                                                         \
+			}                                                                                                             \
+		}                                                                                                                 \
+	}                                                                                                                     \
 	while (0);
 
 	switch ( self->Type )
@@ -1185,7 +1187,7 @@ bool code_validate_body(Code self)
 		case CT_Enum_Body:
 		{
 			CodeBody body = cast(CodeBody, self);
-			for ( Code entry = begin(body); entry != end(body); next(body, entry) )
+			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) )
 			{
 				if ( entry->Type != CT_Untyped )
 				{
@@ -1213,7 +1215,7 @@ bool code_validate_body(Code self)
 		case CT_Global_Body:
 		{
 			CodeBody body = cast(CodeBody, self);
-			for ( Code entry = begin(body); entry != end(body); next(body, entry) )
+			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) )
 			{
 				switch (entry->Type)
 				{
@@ -1253,7 +1255,7 @@ bool code_validate_body(Code self)
 		case CT_Union_Body:
 		{
 			CodeBody body = cast(CodeBody, self);
-			for ( Code entry = begin(body); entry != end(body); next(body, entry) )
+			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) )
 			{
 				if ( entry->Type != CT_Untyped )
 				{

@@ -6,7 +6,6 @@
 #endif
 
 #pragma region Debug
-GEN_API_C_BEGIN
 
 void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... )
 {
@@ -46,5 +45,4 @@ s32 assert_crash( char const* condition )
 	}
 #endif
 
-GEN_API_C_END
 #pragma endregion Debug

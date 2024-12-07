@@ -29,19 +29,19 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 	}                                                                                                     \
 	if ( params_code->Type != CT_Parameters )                                                             \
 	{                                                                                                     \
-		log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code));  \
+		log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str( cast(Code, params_code)));  \
 		return OpValResult_Fail;                                                                          \
 	}
 
 #	define check_param_eq_ret()                                                                     \
-	if ( ! is_member_symbol && ! code_is_equal(params_code->ValueType, ret_type) )                       \
+	if ( ! is_member_symbol && ! code_is_equal(cast(Code, params_code->ValueType), cast(Code, ret_type)) )                       \
 	{                                                                                               \
 		log_failure("gen::def_operator: operator%s requires first parameter to equal return type\n" \
 			"param types: %s\n"                                                                     \
 			"return type: %s",                                                                      \
 			operator_to_str(op).Ptr,                                                                \
-			code_debug_str(params_code),                                                                 \
-			code_debug_str(ret_type)                                                                     \
+			code_debug_str(cast(Code, params_code)),                                                                 \
+			code_debug_str(cast(Code, ret_type))                                                                     \
 		);                                                                                          \
 		return OpValResult_Fail;                                                                    \
 	}
@@ -54,7 +54,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 
 	if ( ret_type->Type != CT_Typename )
 	{
-		log_failure("gen::def_operator: ret_type is not of typename type - %s", code_debug_str(ret_type));
+		log_failure("gen::def_operator: ret_type is not of typename type - %s", code_debug_str(cast(Code, ret_type)));
 		return OpValResult_Fail;
 	}
 
@@ -71,7 +71,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				log_failure("gen::def_operator: "
 					"operator%s does not support non-member definition (more than one parameter provided) - %s",
 					operator_to_str(op),
-					code_debug_str(params_code)
+					code_debug_str(cast(Code, params_code))
 				);
 				return OpValResult_Fail;
 			}
@@ -102,7 +102,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
 					, operator_to_str(op)
 					, params_code->NumEntries
-					, code_debug_str(params_code)
+					, code_debug_str(cast(Code, params_code))
 				);
 				return OpValResult_Fail;
 			}
@@ -117,7 +117,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				{
 					log_failure("gen::def_operator: operator%s params code provided is not of Parameters type - %s"
 						, operator_to_str(op)
-						, code_debug_str(params_code)
+						, code_debug_str(cast(Code, params_code))
 					);
 					return OpValResult_Fail;
 				}
@@ -125,7 +125,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				switch ( params_code->NumEntries )
 				{
 					case 1:
-						if ( code_is_equal(params_code->ValueType, t_int ) )
+						if ( code_is_equal((Code)params_code->ValueType, (Code)t_int ) )
 							is_member_symbol = true;
 
 						else
@@ -135,7 +135,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 					case 2:
 						check_param_eq_ret();
 
-						if ( ! code_is_equal(get(params_code, 1), t_int ) )
+						if ( ! code_is_equal((Code)params_get(params_code, 1), (Code)t_int ) )
 						{
 							log_failure("gen::def_operator: "
 								"operator%s requires second parameter of non-member definition to be int for post-decrement",
@@ -164,18 +164,18 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code));
+					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str((Code)params_code));
 					return OpValResult_Fail;
 				}
 
-				if ( code_is_equal(params_code->ValueType, ret_type ) )
+				if ( code_is_equal((Code)params_code->ValueType, (Code)ret_type ) )
 				{
 					log_failure("gen::def_operator: "
 						"operator%s is non-member symbol yet first paramter does not equal return type\n"
 						"param type: %s\n"
 						"return type: %s\n"
-						, code_debug_str(params_code)
-						, code_debug_str(ret_type)
+						, code_debug_str((Code)params_code)
+						, code_debug_str((Code)ret_type)
 					);
 					return OpValResult_Fail;
 				}
@@ -209,7 +209,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure( "gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code) );
+					log_failure( "gen::def_operator: params is not of Parameters type - %s", code_debug_str((Code)params_code) );
 					return OpValResult_Fail;
 				}
 
@@ -245,14 +245,14 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 					break;
 
 				case 2:
-					if ( ! code_is_equal(params_code->ValueType, ret_type ) )
+					if ( ! code_is_equal((Code)params_code->ValueType, (Code)ret_type ) )
 					{
 						log_failure("gen::def_operator: "
 							"operator%s is non-member symbol yet first paramter does not equal return type\n"
 							"param type: %s\n"
 							"return type: %s\n"
-							, code_debug_str(params_code)
-							, code_debug_str(ret_type)
+							, code_debug_str((Code)params_code)
+							, code_debug_str((Code)ret_type)
 						);
 						return OpValResult_Fail;
 					}
@@ -275,7 +275,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str(params_code));
+					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str((Code)params_code));
 					return OpValResult_Fail;
 				}
 
@@ -289,11 +289,11 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 				}
 			}
 
-			if ( ! code_is_equal(ret_type, t_bool ))
+			if ( ! code_is_equal((Code)ret_type, (Code)t_bool ))
 			{
 				log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
 					, operator_to_str(op)
-					, code_debug_str(ret_type)
+					, code_debug_str((Code)ret_type)
 				);
 				return OpValResult_Fail;
 			}
@@ -347,7 +347,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 		case Op_PtrToMemOfPtr:
 			if ( params_code )
 			{
-				log_failure("gen::def_operator: operator%s expects no paramters - %s", operator_to_str(op), code_debug_str(params_code));
+				log_failure("gen::def_operator: operator%s expects no paramters - %s", operator_to_str(op), code_debug_str((Code)params_code));
 				return OpValResult_Fail;
 			}
 			break;
@@ -390,7 +390,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 }
 
 #define null_check( Context_, Code_ )                                                         \
-	if ( ! Code_ )                                                                            \
+	if ( Code_ != nullptr )                                                                   \
 	{                                                                                         \
 		log_failure( "gen::" stringize(Context_) ": " stringize(Code_) " provided is null" ); \
 		return InvalidCode;                                                                   \
@@ -501,7 +501,7 @@ CodeConstructor def_constructor( Opts_def_constructor p )
 
 	if ( params && params->Type != CT_Parameters )
 	{
-		log_failure("gen::def_constructor: params must be of Parameters type - %s", code_debug_str(params));
+		log_failure("gen::def_constructor: params must be of Parameters type - %s", code_debug_str((Code)params));
 		return InvalidCode;
 	}
 
@@ -606,7 +606,7 @@ CodeClass def_class( StrC name, Opts_def_struct p )
 	{
 		for (s32 idx = 0; idx < num_interfaces; idx++ )
 		{
-			add_interface(result, interfaces[idx] );
+			class_add_interface(result, interfaces[idx] );
 		}
 	}
 
@@ -692,13 +692,13 @@ CodeEnum def_enum( StrC name, Opts_def_enum p )
 
 	if ( type && type->Type != CT_Typename )
 	{
-		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", code_debug_str(type) );
+		log_failure( "gen::def_enum: enum underlying type provided was not of type Typename: %s", code_debug_str((Code)type) );
 		return InvalidCode;
 	}
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", code_debug_str(attributes) );
+		log_failure( "gen::def_enum: attributes was not a 'PlatformAttributes' type: %s", code_debug_str((Code)attributes) );
 		return InvalidCode;
 	}
 
@@ -1161,7 +1161,7 @@ CodeSpecifiers def_specifier( Specifier spec )
 	CodeSpecifiers
 	result       = (CodeSpecifiers) make_code();
 	result->Type = CT_Specifiers;
-	append(result, spec );
+	specifiers_append(result, spec );
 
 	return result;
 }
@@ -1178,7 +1178,7 @@ CodeStruct def_struct( StrC name, Opts_def_struct p )
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", code_debug_str(attributes) );
+		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", code_debug_str(cast(Code, attributes)) );
 		return InvalidCode;
 	}
 
@@ -1273,19 +1273,19 @@ CodeTypename def_type( StrC name, Opts_def_type p )
 
 	if ( attributes && attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_type: attributes is not of attributes type - %s", code_debug_str(attributes) );
+		log_failure( "gen::def_type: attributes is not of attributes type - %s", code_debug_str((Code)attributes) );
 		return InvalidCode;
 	}
 
 	if ( specifiers && specifiers->Type != CT_Specifiers )
 	{
-		log_failure( "gen::def_type: specifiers is not of specifiers type - %s", code_debug_str(specifiers) );
+		log_failure( "gen::def_type: specifiers is not of specifiers type - %s", code_debug_str((Code)specifiers) );
 		return InvalidCode;
 	}
 
 	if ( arrayexpr && arrayexpr->Type != CT_Untyped )
 	{
-		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", code_debug_str(arrayexpr) );
+		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", code_debug_str((Code)arrayexpr) );
 		return InvalidCode;
 	}
 
@@ -1325,13 +1325,13 @@ CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
 		case CT_Typename:
 			break;
 		default:
-			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", code_debug_str(type) );
+			log_failure( "gen::def_typedef: type was not a Class, Enum, Function Forward, Struct, Typename, or Union - %s", code_debug_str((Code)type) );
 			return InvalidCode;
 	}
 
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes )
 	{
-		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", code_debug_str(p.attributes) );
+		log_failure( "gen::def_typedef: attributes was not a PlatformAttributes - %s", code_debug_str((Code)p.attributes) );
 		return InvalidCode;
 	}
 
@@ -1553,7 +1553,7 @@ CodeBody def_class_body( s32 num, ... )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1590,7 +1590,7 @@ CodeBody def_class_body( s32 num, Code* codes )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -1624,7 +1624,7 @@ CodeBody def_enum_body( s32 num, ... )
 			return InvalidCode;
 		}
 
-		append(result, entry );
+		body_append(result, entry );
 	}
 	while ( num--, num > 0 );
 	va_end(va);
@@ -1656,7 +1656,7 @@ CodeBody def_enum_body( s32 num, Code* codes )
 			return InvalidCode;
 		}
 
-		append(result, entry );
+		body_append(result, entry );
 	}
 	while ( codes++, num--, num > 0 );
 
@@ -1694,7 +1694,7 @@ CodeBody def_export_body( s32 num, ... )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1731,7 +1731,7 @@ CodeBody def_export_body( s32 num, Code* codes )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -1769,7 +1769,7 @@ CodeBody def_extern_link_body( s32 num, ... )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1806,8 +1806,7 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 			break;
 		}
 
-		append(result, entry);
-
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -1846,7 +1845,7 @@ CodeBody def_function_body( s32 num, ... )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1882,7 +1881,7 @@ CodeBody def_function_body( s32 num, Code* codes )
 			default:
 			break;
 		}
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -1913,8 +1912,8 @@ CodeBody def_global_body( s32 num, ... )
 		switch (entry->Type)
 		{
 			case CT_Global_Body:
-				// result.append( entry.code_cast<CodeBody>() ) ;
-				append( result, cast(CodeBody, entry) );
+				// result.body_append( entry.code_cast<CodeBody>() ) ;
+				body_append( result, cast(CodeBody, entry) );
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
@@ -1925,7 +1924,7 @@ CodeBody def_global_body( s32 num, ... )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -1955,7 +1954,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			case CT_Global_Body:
-				append(result, cast(CodeBody, entry) );
+				body_append(result, cast(CodeBody, entry) );
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
@@ -1966,7 +1965,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -2004,7 +2003,7 @@ CodeBody def_namespace_body( s32 num, ... )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -2040,7 +2039,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 			default: break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -2078,7 +2077,7 @@ CodeParam def_params( s32 num, ... )
 			return InvalidCode;
 		}
 
-		append(result, param );
+		params_append(result, param );
 	}
 	va_end(va);
 
@@ -2114,7 +2113,7 @@ CodeParam def_params( s32 num, CodeParam* codes )
 	while( codes++, current = * codes, num--, num > 0 )
 	{
 		check_current();
-		append(result, current );
+		params_append(result, current );
 	}
 #	undef check_current
 
@@ -2145,7 +2144,7 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 	{
 		Specifier type = (Specifier)va_arg(va, int);
 
-		append(result, type );
+		specifiers_append(result, type );
 	}
 	while ( --num, num );
 	va_end(va);
@@ -2174,7 +2173,7 @@ CodeSpecifiers def_specifiers( s32 num, Specifier* specs )
 	s32 idx = 0;
 	do
 	{
-		append(result, specs[idx] );
+		specifiers_append(result, specs[idx] );
 		idx++;
 	}
 	while ( --num, num );
@@ -2213,7 +2212,7 @@ CodeBody def_struct_body( s32 num, ... )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 	va_end(va);
@@ -2250,7 +2249,7 @@ CodeBody def_struct_body( s32 num, Code* codes )
 			break;
 		}
 
-		append(result, entry);
+		body_append(result, entry);
 	}
 	while (num--, num > 0);
 
@@ -2284,7 +2283,7 @@ CodeBody def_union_body( s32 num, ... )
 			return InvalidCode;
 		}
 
-		append(result, entry );
+		body_append(result, entry );
 	}
 	while ( num--, num > 0 );
 	va_end(va);
@@ -2316,7 +2315,7 @@ CodeBody def_union_body( s32 num, CodeUnion* codes )
 			return InvalidCode;
 		}
 
-		append(result, entry );
+		body_append(result, entry );
 	}
 	while ( codes++, num--, num > 0 );
 

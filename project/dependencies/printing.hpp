@@ -5,9 +5,7 @@
 
 #pragma region Printing
 
-GEN_API_C_BEGIN
-
-typedef struct FileInfo_Def FileInfo;
+typedef struct FileInfo FileInfo;
 
 #ifndef GEN_PRINTF_MAXLEN
 #	define GEN_PRINTF_MAXLEN kilobytes(128)
@@ -40,7 +38,5 @@ ssize log_fmt(char const* fmt, ...)
 
 	return res;
 }
-
-GEN_API_C_END
 
 #pragma endregion Printing

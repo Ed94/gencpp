@@ -9,8 +9,6 @@ $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
 
-Import-Module $target_arch
-
 function Get-ScriptRepoRoot {
     $currentPath = $PSScriptRoot
     while ($currentPath -ne $null -and $currentPath -ne "")
@@ -33,7 +31,7 @@ function Get-ScriptRepoRoot {
 }
 $path_root = Get-ScriptRepoRoot
 
-Import-Module $target_arch
+# Import-Module $target_arch
 Import-Module $format_cpp
 
 Push-Location $path_root

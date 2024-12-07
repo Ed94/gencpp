@@ -56,10 +56,8 @@
 	while (0)
 #endif
 
-GEN_API_C_BEGIN
 void assert_handler( char const* condition, char const* file, s32 line, char const* msg, ... );
 s32  assert_crash( char const* condition );
 void process_exit( u32 code );
-GEN_API_C_END
 
 #pragma endregion Debug

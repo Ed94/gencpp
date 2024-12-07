@@ -19,10 +19,22 @@
 #define bitfield_is_equal( Type, Field, Mask ) ( (Type(Mask) & Type(Field)) == Type(Mask) )
 #endif
 
+// Mainly intended for forcing the base library to utilize only C-valid constructs or type coercion
+#ifndef GEN_C_LIKE_CPP
+#define GEN_C_LIKE_CPP 0
+#endif
+
 #if GEN_COMPILER_CPP
 #	ifndef cast
 #	define cast( type, value ) (tmpl_cast<type>( value ))
 #	endif
+#else
+#	ifndef cast
+#	define cast( type, value )  ( (type)(value) )
+#	endif
+#endif
+
+#if GEN_COMPILER_CPP
 #	ifndef ccast
 #	define ccast( type, value ) ( const_cast< type >( (value) ) )
 #	endif
@@ -36,9 +48,6 @@
 #	define scast( type, value ) static_cast< type >( value )
 #	endif
 #else
-#	ifndef cast
-#	define cast( type, value )  ( (type)(value) )
-#	endif
 #	ifndef ccast
 #	define ccast( type, value ) ( (type)(value) )
 #	endif
@@ -210,22 +219,6 @@
 #	error "No thread local support"
 #endif
 
-#if !defined(GEN_SUPPORT_CPP_REFERENCES)
-#	define   GEN_SUPPORT_CPP_REFERENCES 1
-#endif
-#if GEN_COMPILER_C && defined(GEN_SUPPORT_CPP_REFERENCES)
-#	undef  GEN_SUPPORT_CPP_REFERENCES
-#	define GEN_SUPPORT_CPP_REFERENCES 0
-#endif
-
-#if !defined(GEN_SUPPORT_CPP_MEMBER_FEATURES)
-#	define   GEN_SUPPORT_CPP_MEMBER_FEATURES 1
-#endif
-#if GEN_COMPILER_C && defined(GEN_SUPPORT_CPP_MEMBER_FEATURES)
-#	undef  GEN_SUPPORT_CPP_MEMBER_FEATURES
-#	define GEN_SUPPORT_CPP_MEMBER_FEATURES 0
-#endif
-
 #if ! defined(typeof) && (!GEN_COMPILER_C || __STDC_VERSION__ < 202311L)
 #	if ! GEN_COMPILER_C
 #		define typeof decltype
@@ -239,12 +232,12 @@
 #endif
 
 #ifndef GEN_API_C_BEGIN
-#	if GEN_COMPILER_C || (GEN_COMPILER_CPP && GEN_SUPPORT_CPP_REFERENCES)
+#	if GEN_COMPILER_C
 #		define GEN_API_C_BEGIN
 #		define GEN_API_C_END
 #	else
 #		define GEN_API_C_BEGIN extern "C" {
-#		define GEN_API_C_END }
+#		define GEN_API_C_END   }
 #	endif
 #endif
 
@@ -280,6 +273,16 @@
     #define struct_init(type, value) {value}
 #endif
 
+#if 0
+#ifndef GEN_OPTIMIZE_MAPPINGS_BEGIN
+#	define GEN_OPTIMIZE_MAPPINGS_BEGIN _pragma(optimize("gt", on))
+#	define GEN_OPITMIZE_MAPPINGS_END   _pragma(optimize("", on))
+#endif
+#else
+#	define GEN_OPTIMIZE_MAPPINGS_BEGIN
+#	define GEN_OPITMIZE_MAPPINGS_END
+#endif
+
 #if GEN_COMPILER_C
 // ------------------------ _Generic function overloading -----------------------------------------
 // This implemnents macros for utilizing "The Naive Extendible _Generic Macro" explained in:
@@ -295,12 +298,7 @@
 // Helper macros for argument selection
 #define GEN_SELECT_ARG_1( _1, ... ) _1 // <-- Of all th args passed pick _1.
 #define GEN_SELECT_ARG_2( _1, _2, ... ) _2 // <-- Of all the args passed pick _2.
-#define GEN_SELECT_ARG_3( _1, _2, _3, ... ) _3 // etc.. (by induction until _8, which we don't support any more beyond)
-// #define GEN_SELECT_ARG_4( _1, _2, _3, _4, ... ) _4
-// #define GEN_SELECT_ARG_5( _1, _2, _3, _4, _5, ... ) _5
-// #define GEN_SELECT_ARG_6( _1, _2, _3, _4, _5, _6, ... ) _6
-// #define GEN_SELECT_ARG_7( _1, _2, _3, _4, _5, _6, _7, ... ) _7
-// #define GEN_SELECT_ARG_8( _1, _2, _3, _4, _5, _6, _7, _8, ... ) _8
+#define GEN_SELECT_ARG_3( _1, _2, _3, ... ) _3 // etc..
 
 #define GEN_GENERIC_SEL_ENTRY_TYPE             GEN_SELECT_ARG_1 // Use the arg expansion macro to select arg 1 which should have the type.
 #define GEN_GENERIC_SEL_ENTRY_FUNCTION         GEN_SELECT_ARG_2 // Use the arg expansion macro to select arg 2 which should have the function.
@@ -314,10 +312,10 @@
 // Expands to ',' if it can find (type): (function) <comma_operator: ',' >
 // Where GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER is specifically looking for that <comma> ,
 #define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( slot_exp ) GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER( slot_exp, GEN_GENERIC_SEL_ENTRY_TYPE( slot_exp, ): GEN_GENERIC_SEL_ENTRY_FUNCTION( slot_exp, ) GEN_COMMA_OPERATOR, , )
-//                                                          ^ Selects the comma                              ^ is the type                             ^ is the function                              ^ Insert a comma
-// The slot won't exist if that comma is not found.                                                                                                                                                   |
-//                                                                                                                                                                                                    |
-// This  is the same as above but it does not insert a comma                                                                                                                                          V no comma here.
+//                                                          ^ Selects the comma                              ^ is the type                             ^ is the function                             ^ Insert a comma
+// The slot won't exist if that comma is not found.                                                                                                                                                  |
+//                                                                                                                                                                                                   |
+// This  is the same as above but it does not insert a comma                                                                                                                                         V no comma here.
 #define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST( slot_exp ) GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER( slot_exp, GEN_GENERIC_SEL_ENTRY_TYPE( slot_exp, ): GEN_GENERIC_SEL_ENTRY_FUNCTION( slot_exp, ), , )
 // Needed for the last slot as they don't allow trailing commas.
 // ----------------------------------------------------------------------------------------------------------------------------------
@@ -392,6 +390,7 @@ size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761u
 
 // typedef void* GEN_GenericExampleType;
 // GEN_FUNCTION_GENERIC_EXAMPLE_DIRECT_TYPE( GEN_GenericExampleType );
+
 // END OF ------------------------ _Generic function overloading ----------------------------------------- END OF
 #endif
 

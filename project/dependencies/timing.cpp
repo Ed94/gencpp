@@ -4,7 +4,6 @@
 #endif
 
 #pragma region Timing
-GEN_API_C_BEGIN
 
 #ifdef GEN_BENCHMARK
 	#if defined( GEN_COMPILER_MSVC ) && ! defined( __clang__ )
@@ -165,5 +164,4 @@ GEN_API_C_BEGIN
 	}
 #endif
 
-GEN_API_C_END
 #pragma endregion Timing

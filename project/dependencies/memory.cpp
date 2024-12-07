@@ -4,13 +4,12 @@
 #endif
 
 #pragma region Memory
-GEN_API_C_BEGIN
 
 void* mem_copy( void* dest, void const* source, ssize n )
 {
-	if ( dest == NULL )
+	if ( dest == nullptr )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return memcpy( dest, source, n );
@@ -518,5 +517,4 @@ void pool_clear(Pool* pool)
 	pool->FreeList = pool->PhysicalStart;
 }
 
-GEN_API_C_END
 #pragma endregion Memory

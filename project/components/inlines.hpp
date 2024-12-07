@@ -7,10 +7,11 @@
 inline
 void code_append( Code self, Code other )
 {
-	GEN_ASSERT(self.ast  != nullptr);
-	GEN_ASSERT(other.ast != nullptr);
+	GEN_ASSERT(self);
+	GEN_ASSERT(other);
+	GEN_ASSERT_MSG(self != other, "Attempted to recursively append Code AST to itself.");
 
-	if ( other->Parent )
+	if ( other->Parent != nullptr )
 		other = code_duplicate(other);
 
 	other->Parent = self;
@@ -34,7 +35,7 @@ void code_append( Code self, Code other )
 inline
 bool code_is_body(Code self)
 {
-	GEN_ASSERT(self != nullptr);
+	GEN_ASSERT(self);
 	switch (self->Type)
 	{
 		case CT_Enum_Body:
@@ -53,7 +54,7 @@ bool code_is_body(Code self)
 inline
 Code* code_entry( Code self, u32 idx )
 {
-	GEN_ASSERT(self.ast != nullptr);
+	GEN_ASSERT(self != nullptr);
 	Code* current = & self->Front;
 	while ( idx >= 0 && current != nullptr )
 	{
@@ -66,29 +67,31 @@ Code* code_entry( Code self, u32 idx )
 
 	return rcast( Code*, current);
 }
-inline
+forceinline
 bool code_is_valid(Code self)
 {
-	return self.ast != nullptr && self.ast->Type != CT_Invalid;
+	GEN_ASSERT(self);
+	return self != nullptr && self->Type != CT_Invalid;
 }
-inline
+forceinline
 bool code_has_entries(AST* self)
 {
-	GEN_ASSERT(self != nullptr);
+	GEN_ASSERT(self);
 	return self->NumEntries > 0;
 }
-inline
+forceinline
 void code_set_global(Code self)
 {
-	if ( self.ast == nullptr )
+	if ( self == nullptr )
 	{
 		log_failure("Code::set_global: Cannot set code as global, AST is null!");
 		return;
 	}
 
-	self->Parent.ast = Code_Global.ast;
+	self->Parent = Code_Global;
 }
-inline
+#if GEN_COMPILER_CPP
+forceinline
 Code& Code::operator ++()
 {
 	if ( ast )
@@ -96,7 +99,8 @@ Code& Code::operator ++()
 
 	return * this;
 }
-inline
+#endif
+forceinline
 char const* code_type_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
@@ -106,49 +110,57 @@ char const* code_type_str(Code self)
 
 #pragma region CodeBody
 inline
-void append( CodeBody self, Code other )
+void body_append( CodeBody self, Code other )
 {
-	GEN_ASSERT(other.ast != nullptr);
+	GEN_ASSERT(self);
+	GEN_ASSERT(other);
 
 	if (code_is_body(other)) {
-		append( self, cast(CodeBody, other) );
+		body_append_body( self, cast(CodeBody, other) );
 		return;
 	}
 
 	code_append( cast(Code, self), other );
 }
 inline
-void append( CodeBody self, CodeBody body )
+void body_append_body( CodeBody self, CodeBody body )
 {
-	GEN_ASSERT(self.ast != nullptr);
+	GEN_ASSERT(self);
+	GEN_ASSERT(body);
+	GEN_ASSERT_MSG(self != body, "Attempted to append body to itself.");
 
-	for ( Code entry : body ) {
-		append( self, entry );
+	for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); entry = next_CodeBody(body, entry) ) {
+		body_append( self, entry );
 	}
 }
 inline
-Code begin( CodeBody body) {
-	if ( body.ast )
-		return { rcast( AST*, body.ast)->Front };
+Code begin_CodeBody( CodeBody body) {
+	GEN_ASSERT(body);
+	if ( body != nullptr )
+		return body->Front;
 	return { nullptr };
 }
-inline
-Code end(CodeBody body ){
-	return { rcast(AST*, body.ast)->Back->Next };
+forceinline
+Code end_CodeBody(CodeBody body ){
+	GEN_ASSERT(body);
+	return body->Back->Next;
 }
 inline
-Code next(CodeBody body, Code entry) {
+Code next_CodeBody(CodeBody body, Code entry) {
+	GEN_ASSERT(body);
+	GEN_ASSERT(entry);
 	return entry->Next;
 }
 #pragma endregion CodeBody
 
 #pragma region CodeClass
 inline
-void add_interface( CodeClass self, CodeTypename type )
+void class_add_interface( CodeClass self, CodeTypename type )
 {
-	GEN_ASSERT(self.ast !=nullptr);
+	GEN_ASSERT(self);
+	GEN_ASSERT(type);
 	CodeTypename possible_slot = self->ParentType;
-	if ( possible_slot.ast )
+	if ( possible_slot != nullptr )
 	{
 		// Were adding an interface to parent type, so we need to make sure the parent type is public.
 		self->ParentAccess = AccessSpec_Public;
@@ -156,24 +168,25 @@ void add_interface( CodeClass self, CodeTypename type )
 		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}
 
-	while ( possible_slot.ast != nullptr )
+	while ( possible_slot != nullptr )
 	{
-		possible_slot.ast = (AST_Typename*) possible_slot->Next.ast;
+		possible_slot = possible_slot->Next;
 	}
 
-	possible_slot.ast = type.ast;
+	possible_slot = type;
 }
 #pragma endregion CodeClass
 
 #pragma region CodeParam
 inline
-void append( CodeParam appendee, CodeParam other )
+void params_append( CodeParam appendee, CodeParam other )
 {
-	GEN_ASSERT(appendee.ast != nullptr);
+	GEN_ASSERT(appendee);
+	GEN_ASSERT(other);
 	Code self  = cast(Code, appendee);
 	Code entry = cast(Code, other);
 
-	if ( entry->Parent )
+	if ( entry->Parent != nullptr )
 		entry = code_duplicate( entry );
 
 	entry->Parent = self;
@@ -191,54 +204,61 @@ void append( CodeParam appendee, CodeParam other )
 	self->NumEntries++;
 }
 inline
-CodeParam get(CodeParam self, s32 idx )
+CodeParam params_get(CodeParam self, s32 idx )
 {
-	GEN_ASSERT(self.ast != nullptr);
-	CodeParam param = * self;
+	GEN_ASSERT(self);
+	CodeParam param = self;
 	do
 	{
-		if ( ! ++ param )
+		if ( ++ param != nullptr )
 			return { nullptr };
 
-		param = cast(Code, param)->Next;
+		param = cast(CodeParam, cast(Code, param)->Next);
 	}
 	while ( --idx );
 
 	return param;
 }
-inline
-bool has_entries(CodeParam self)
+forceinline
+bool params_has_entries(CodeParam self)
 {
-	GEN_ASSERT(self.ast != nullptr);
+	GEN_ASSERT(self);
 	return self->NumEntries > 0;
 }
-inline
+#if GEN_COMPILER_CPP
+forceinline
 CodeParam& CodeParam::operator ++()
 {
-	ast = ast->Next.ast;
+	* this = ast->Next;
 	return * this;
 }
-inline
-CodeParam begin(CodeParam params)
+#endif
+forceinline
+CodeParam begin_CodeParam(CodeParam params)
 {
-	if ( params.ast )
-		return { params.ast };
+	if ( params != nullptr )
+		return params;
 
-	return { nullptr };
+	return NullCode;
 }
-inline
-CodeParam end(CodeParam params)
+forceinline
+CodeParam end_CodeParam(CodeParam params)
 {
 	// return { (AST_Param*) rcast( AST*, ast)->Last };
 	return { nullptr };
+}
+forceinline
+CodeParam next_CodeParam(CodeParam params, CodeParam param_iter)
+{
+	return params->Next;
 }
 #pragma endregion CodeParam
 
 #pragma region CodeSpecifiers
 inline
-bool append(CodeSpecifiers self, Specifier spec )
+bool specifiers_append(CodeSpecifiers self, Specifier spec )
 {
-	if ( self.ast == nullptr )
+	if ( self == nullptr )
 	{
 		log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
 		return false;
@@ -254,9 +274,9 @@ bool append(CodeSpecifiers self, Specifier spec )
 	return true;
 }
 inline
-s32 has(CodeSpecifiers self, Specifier spec)
+s32 specifiers_has(CodeSpecifiers self, Specifier spec)
 {
-	GEN_ASSERT(self.ast != nullptr);
+	GEN_ASSERT(self != nullptr);
 	for ( s32 idx = 0; idx < self->NumEntries; idx++ ) {
 		if ( self->ArrSpecs[ idx ] == spec )
 			return idx;
@@ -264,10 +284,9 @@ s32 has(CodeSpecifiers self, Specifier spec)
 	return -1;
 }
 inline
-s32 remove( CodeSpecifiers self, Specifier to_remove )
+s32 specifiers_remove( CodeSpecifiers self, Specifier to_remove )
 {
-	AST_Specifiers* ast = self.ast;
-	if ( ast == nullptr )
+	if ( self == nullptr )
 	{
 		log_failure("CodeSpecifiers: Attempted to append to a null specifiers AST!");
 		return -1;
@@ -304,18 +323,23 @@ s32 remove( CodeSpecifiers self, Specifier to_remove )
 	}
 	return result;
 }
-inline
-Specifier* begin(CodeSpecifiers self)
+forceinline
+Specifier* begin_CodeSpecifiers(CodeSpecifiers self)
 {
-	if ( self.ast )
+	if ( self != nullptr )
 		return & self->ArrSpecs[0];
 
 	return nullptr;
 }
-inline
-Specifier* end(CodeSpecifiers self)
+forceinline
+Specifier* end_CodeSpecifiers(CodeSpecifiers self)
 {
 	return self->ArrSpecs + self->NumEntries;
+}
+forceinline
+Specifier* next_CodeSpecifiers(CodeSpecifiers self, Specifier* spec_iter)
+{
+	return spec_iter + 1;
 }
 #pragma endregion CodeSpecifiers
 
@@ -324,7 +348,7 @@ inline
 void add_interface(CodeStruct self, CodeTypename type )
 {
 	CodeTypename possible_slot = self->ParentType;
-	if ( possible_slot.ast )
+	if ( possible_slot != nullptr )
 	{
 		// Were adding an interface to parent type, so we need to make sure the parent type is public.
 		self->ParentAccess = AccessSpec_Public;
@@ -332,12 +356,12 @@ void add_interface(CodeStruct self, CodeTypename type )
 		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}
 
-	while ( possible_slot.ast != nullptr )
+	while ( possible_slot != nullptr )
 	{
-		possible_slot.ast = (AST_Typename*) possible_slot->Next.ast;
+		possible_slot = possible_slot->Next;
 	}
 
-	possible_slot.ast = type.ast;
+	possible_slot = type;
 }
 #pragma endregion Code
 

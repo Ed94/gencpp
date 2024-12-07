@@ -22,8 +22,6 @@ void swap( Type& a, Type& b )
 	b = tmp;
 }
 
-GEN_API_C_BEGIN
-
 //! Checks if value is power of 2.
 b32 is_power_of_two( ssize x );
 
@@ -64,23 +62,21 @@ void zero_size( void* ptr, ssize size );
 //! Clears up an array.
 #define zero_array( a, count ) zero_size( ( a ), size_of( *( a ) ) * count )
 
-enum AllocType_Def //enum_underlying(u8)
+enum AllocType : u8
 {
 	EAllocation_ALLOC,
 	EAllocation_FREE,
 	EAllocation_FREE_ALL,
 	EAllocation_RESIZE,
 };
-typedef enum AllocType_Def AllocType;
 
 typedef void*(AllocatorProc)( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 
-struct AllocatorInfo_Def
+struct AllocatorInfo
 {
 	AllocatorProc* Proc;
 	void*          Data;
 };
-typedef struct AllocatorInfo_Def AllocatorInfo;
 
 enum AllocFlag
 {
@@ -144,12 +140,11 @@ constexpr AllocatorInfo heap( void ) { AllocatorInfo allocator = { heap_allocato
 //! Helper to free memory allocated by heap allocator.
 #define mfree( ptr ) free( heap(), ptr )
 
-struct VirtualMemory_Def
+struct VirtualMemory
 {
 	void*  data;
 	ssize size;
 };
-typedef struct VirtualMemory_Def VirtualMemory;
 
 //! Initialize virtual memory from existing data.
 VirtualMemory vm_from_memory( void* data, ssize size );
@@ -173,8 +168,7 @@ b32 vm_purge( VirtualMemory vm );
 ssize virtual_memory_page_size( ssize* alignment_out );
 
 #pragma region Arena
-struct Arena_Def;
-typedef struct Arena_Def Arena;
+struct Arena;
 
 AllocatorInfo arena_allocator_info( Arena* arena );
 
@@ -191,7 +185,7 @@ void  arena_check         (Arena* arena);
 void  arena_free          (Arena* arena);
 ssize arena_size_remaining(Arena* arena, ssize alignment);
 
-struct Arena_Def
+struct Arena
 {
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
@@ -199,7 +193,7 @@ struct Arena_Def
 	ssize         TotalUsed;
 	ssize         TempCount;
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if GEN_COMPILER_CPP
 #pragma region Member Mapping
 	forceinline operator AllocatorInfo() { return GEN_NS arena_allocator_info(this); }
 
@@ -221,8 +215,7 @@ struct Arena_Def
 #endif
 };
 
-#if GEN_SUPPORT_CPP_REFERENCES
-GEN_API_C_END
+#if GEN_COMPILER_CPP
 forceinline AllocatorInfo allocator_info(Arena& arena )                 { return arena_allocator_info(& arena); }
 forceinline Arena         init_sub      (Arena& parent, ssize size)     { return arena_init_sub( & parent, size); }
 forceinline ssize         alignment_of  (Arena& arena, ssize alignment) { return arena_alignment_of( & arena, alignment); }
@@ -234,7 +227,6 @@ forceinline ssize         size_remaining(Arena& arena, ssize alignment) { return
 #undef check
 forceinline void check(Arena& arena) { return arena_check(& arena); };
 #pragma pop_macro("check")
-GEN_API_C_BEGIN
 #endif
 
 
@@ -320,8 +312,6 @@ ssize arena_size_remaining(Arena* arena, ssize alignment)
 }
 #pragma endregion Arena
 
-GEN_API_C_END
-
 #pragma region FixedArena
 template<s32 Size>
 struct FixedArena;
@@ -330,7 +320,7 @@ template<s32 Size> FixedArena<Size> fixed_arena_init();
 template<s32 Size> AllocatorInfo    fixed_arena_allocator_info(FixedArena<Size>* fixed_arena );
 template<s32 Size> ssize            fixed_arena_size_remaining(FixedArena<Size>* fixed_arena, ssize alignment);
 
-#if GEN_SUPPORT_CPP_REFERENCES
+#if 0
 template<s32 Size> AllocatorInfo    allocator_info( FixedArena<Size>& fixed_arena )                { return allocator_info(& fixed_arena); }
 template<s32 Size> ssize            size_remaining(FixedArena<Size>& fixed_arena, ssize alignment) { return size_remaining( & fixed_arena, alignment); }
 #endif
@@ -343,7 +333,7 @@ struct FixedArena
 	char  memory[Size];
 	Arena arena;
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if 0
 #pragma region Member Mapping
 	forceinline operator AllocatorInfo() { return GEN_NS allocator_info(this); }
 
@@ -389,11 +379,8 @@ using Arena_2MB   = FixedArena< megabytes( 2 ) >;
 using Arena_4MB   = FixedArena< megabytes( 4 ) >;
 #pragma endregion FixedArena
 
-GEN_API_C_BEGIN
-
 #pragma region Pool
-struct Pool_Def;
-typedef struct Pool_Def Pool;
+struct Pool;
 
 void* pool_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
 
@@ -403,15 +390,13 @@ AllocatorInfo pool_allocator_info(Pool* pool);
 void          pool_clear(Pool* pool);
 void          pool_free(Pool* pool);
 
-#if GEN_SUPPORT_CPP_REFERENCES
-GEN_API_C_END
+#if 0
 AllocatorInfo allocator_info(Pool& pool) { return pool_allocator_info(& pool); }
 void          clear(Pool& pool)          { return pool_clear(& pool); }
 void          free(Pool& pool)           { return pool_free(& pool); }
-GEN_API_C_BEGIN
 #endif
 
-struct Pool_Def
+struct Pool
 {
 	AllocatorInfo Backing;
 	void*         PhysicalStart;
@@ -421,7 +406,7 @@ struct Pool_Def
 	ssize         TotalSize;
 	ssize         NumBlocks;
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if ! GEN_C_LIKE_CPP
 #pragma region Member Mapping
     forceinline operator AllocatorInfo() { return GEN_NS pool_allocator_info(this); }
 
@@ -683,7 +668,5 @@ inline
 void zero_size( void* ptr, ssize size ) {
 	mem_set( ptr, 0, size );
 }
-
-GEN_API_C_END
 
 #pragma endregion Memory

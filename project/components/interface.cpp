@@ -84,12 +84,12 @@ void define_constants()
 	t_empty       = (CodeTypename) make_code();
 	t_empty->Type = CT_Typename;
 	t_empty->Name = get_cached_string( txt("") );
-	code_set_global(t_empty);
+	code_set_global(cast(Code, t_empty));
 
 	access_private       = make_code();
 	access_private->Type = CT_Access_Private;
 	access_private->Name = get_cached_string( txt("private:\n") );
-	code_set_global(access_private);
+	code_set_global(cast(Code, access_private));
 
 	access_protected       = make_code();
 	access_protected->Type = CT_Access_Protected;
@@ -102,50 +102,50 @@ void define_constants()
 	code_set_global(access_public);
 
 	attrib_api_export = def_attributes( code(GEN_API_Export_Code));
-	code_set_global(attrib_api_export);
+	code_set_global(cast(Code, attrib_api_export));
 
 	attrib_api_import = def_attributes( code(GEN_API_Import_Code));
-	code_set_global(attrib_api_import);
+	code_set_global(cast(Code, attrib_api_import));
 
 	module_global_fragment          = make_code();
 	module_global_fragment->Type    = CT_Untyped;
 	module_global_fragment->Name    = get_cached_string( txt("module;") );
 	module_global_fragment->Content = module_global_fragment->Name;
-	code_set_global(module_global_fragment);
+	code_set_global(cast(Code, module_global_fragment));
 
 	module_private_fragment          = make_code();
 	module_private_fragment->Type    = CT_Untyped;
 	module_private_fragment->Name    = get_cached_string( txt("module : private;") );
 	module_private_fragment->Content = module_private_fragment->Name;
-	code_set_global(module_private_fragment);
+	code_set_global(cast(Code, module_private_fragment));
 
 	fmt_newline = make_code();
 	fmt_newline->Type = CT_NewLine;
-	code_set_global(fmt_newline);
-	
+	code_set_global((Code)fmt_newline);
+
 	pragma_once          = (CodePragma) make_code();
 	pragma_once->Type    = CT_Preprocess_Pragma;
 	pragma_once->Name    = get_cached_string( txt("once") );
 	pragma_once->Content = pragma_once->Name;
-	code_set_global(pragma_once);
+	code_set_global((Code)pragma_once);
 
-	param_varadic            = (CodeTypename) make_code();
+	param_varadic            = (CodeParam) make_code();
 	param_varadic->Type      = CT_Parameters;
 	param_varadic->Name      = get_cached_string( txt("...") );
 	param_varadic->ValueType = t_empty;
-	code_set_global(param_varadic);
+	code_set_global((Code)param_varadic);
 
 	preprocess_else = (CodePreprocessCond) make_code();
 	preprocess_else->Type = CT_Preprocess_Else;
-	code_set_global(preprocess_else);
+	code_set_global((Code)preprocess_else);
 
 	preprocess_endif = (CodePreprocessCond) make_code();
 	preprocess_endif->Type = CT_Preprocess_EndIf;
-	code_set_global(preprocess_endif);
+	code_set_global((Code)preprocess_endif);
 
 #	define def_constant_code_type( Type_ )   \
 		t_##Type_ = def_type( name(Type_) ); \
-		code_set_global(t_##Type_);
+		code_set_global( cast(Code, t_##Type_));
 
 	def_constant_code_type( auto );
 	def_constant_code_type( void );
@@ -180,7 +180,7 @@ void define_constants()
 
 #	define def_constant_spec( Type_, ... )                                  \
 		spec_##Type_ = def_specifiers( num_args(__VA_ARGS__), __VA_ARGS__); \
-		code_set_global(spec_##Type_);
+		code_set_global( cast(Code, spec_##Type_));
 
 #	pragma push_macro("forceinline")
 #	pragma push_macro("global")
@@ -218,7 +218,7 @@ void define_constants()
 	def_constant_spec( volatile, 	     Spec_Volatile)
 
 	spec_local_persist = def_specifiers( 1, Spec_Local_Persist );
-	code_set_global(spec_local_persist);
+	code_set_global(cast(Code, spec_local_persist));
 
 #	pragma pop_macro("forceinline")
 #	pragma pop_macro("global")
@@ -426,7 +426,7 @@ Code make_code()
 	}
 
 	Code result { rcast( AST*, alloc( pool_allocator_info(allocator), sizeof(AST) )) };
-	mem_set( result.ast, 0, sizeof(AST) );
+	mem_set( rcast(void*, cast(AST*, result)), 0, sizeof(AST) );
 	// result->Type = ECode::Invalid;
 
 	// result->Content     = { nullptr };

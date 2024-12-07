@@ -1124,7 +1124,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			return InvalidCode;
 		}
 
-		append(result, member );
+		body_append(result, member );
 	}
 
 	eat( Tok_BraceCurly_Close );
@@ -1438,7 +1438,7 @@ CodeFn parse_function_after_name(
 	CodeParam params = parse_params();
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Parameters> )
 
-	// TODO(Ed), Review old comment : These have to be kept separate from the return type's specifiers. 
+	// TODO(Ed), Review old comment : These have to be kept separate from the return type's specifiers.
 	while ( left && is_specifier(currtok) )
 	{
 		if ( specifiers.ast == nullptr )
@@ -1448,7 +1448,7 @@ CodeFn parse_function_after_name(
 			continue;
 		}
 
-		append(specifiers, strc_to_specifier( to_str(currtok)) );
+		specifiers_append(specifiers, strc_to_specifier( to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
@@ -1468,7 +1468,7 @@ CodeFn parse_function_after_name(
 	else if ( check(Tok_Operator) && currtok.Text[0] == '=' )
 	{
 		eat(Tok_Operator);
-		append(specifiers, Spec_Pure );
+		specifiers_append(specifiers, Spec_Pure );
 
 		eat( Tok_Number);
 		Token stmt_end = currtok;
@@ -1544,7 +1544,7 @@ CodeFn parse_function_after_name(
 internal
 Code parse_function_body()
 {
-	
+
 	push_scope();
 
 	eat( Tok_BraceCurly_Open );
@@ -1574,7 +1574,7 @@ Code parse_function_body()
 
 	if ( len > 0 )
 	{
-		append( result, def_execution( { len, start.Text } ) );
+		body_append( result, def_execution( { len, start.Text } ) );
 	}
 
 	eat( Tok_BraceCurly_Close );
@@ -1891,7 +1891,7 @@ CodeBody parse_global_nspace( CodeType which )
 		}
 
 		// log_fmt("Global Body Member: %s", member->debug_str());
-		append(result, member );
+		body_append(result, member );
 	}
 
 	if ( which != CT_Global_Body )
@@ -2032,7 +2032,7 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 
 // TODO(Ed): I want to eventually change the identifier to its own AST type.
 // This would allow distinction of the qualifier for a symbol <qualifier>::<nested symboL>
-// This would also allow 
+// This would also allow
 internal
 Token parse_identifier( bool* possible_member_function )
 {
@@ -2455,7 +2455,7 @@ CodeOperator parse_operator_after_ret_type(
 			continue;
 		}
 
-		append(specifiers, strc_to_specifier( to_str(currtok)) );
+		specifiers_append(specifiers, strc_to_specifier( to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>
@@ -2771,7 +2771,7 @@ CodeParam parse_params( bool use_template_capture )
 		if ( check( Tok_Varadic_Argument ) )
 		{
 			eat( Tok_Varadic_Argument );
-			append(result, param_varadic );
+			params_append(result, param_varadic );
 			continue;
 			// ( <Macro> <ValueType> <Name> = <Expression>, ...
 		}
@@ -2875,7 +2875,7 @@ CodeParam parse_params( bool use_template_capture )
 		if ( value )
 			param->Value = value;
 
-		append(result, param );
+		params_append(result, param );
 	}
 
 	if ( ! use_template_capture )
@@ -2933,7 +2933,7 @@ CodePreprocessCond parse_preprocess_cond()
 	return cond;
 }
 
-internal 
+internal
 Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 {
 	// TODO(Ed): We can handle a macro a bit better than this. It's AST can be made more robust..
@@ -3305,7 +3305,7 @@ CodeVar parse_variable_declaration_list()
 						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%s"
 						, to_string(Context) );
 
-						append(specifiers, spec );
+						specifiers_append(specifiers, spec );
 					}
 				break;
 
@@ -3327,7 +3327,7 @@ CodeVar parse_variable_declaration_list()
 			// eat(currtok.Type);
 
 			if ( specifiers )
-				append(specifiers, spec );
+				specifiers_append(specifiers, spec );
 			else
 				specifiers = def_specifier( spec );
 		}
@@ -3467,7 +3467,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 	if ( check( Tok_Spec_Virtual ) )
 	{
 		if ( specifiers )
-			append(specifiers, Spec_Virtual );
+			specifiers_append(specifiers, Spec_Virtual );
 		else
 			specifiers = def_specifier( Spec_Virtual );
 		eat( Tok_Spec_Virtual );
@@ -3510,7 +3510,7 @@ CodeDestructor parse_destructor( CodeSpecifiers specifiers )
 			eat( Tok_Number );
 			// <Virtual Specifier> ~<Name>() = 0
 
-			append(specifiers, Spec_Pure );
+			specifiers_append(specifiers, Spec_Pure );
 		}
 		else if ( left && str_compare_len( upcoming.Text, "default", sizeof("default") - 1 ) == 0)
 		{
@@ -3762,7 +3762,7 @@ CodeEnum parse_enum( bool inplace_def )
 				return InvalidCode;
 			}
 
-			append(body, member );
+			body_append(body, member );
 		}
 
 		eat( Tok_BraceCurly_Close );
@@ -4206,7 +4206,7 @@ CodeOpCast parse_operator_cast( CodeSpecifiers specifiers )
 			specifiers = def_specifier( Spec_Const );
 
 		else
-			append(specifiers, Spec_Const );
+			specifiers_append(specifiers, Spec_Const );
 
 		eat( Tok_Spec_Const );
 	}
@@ -4965,6 +4965,7 @@ CodeTypedef parse_typedef()
 			name = currtok;
 			eat(Tok_Identifier);
 		}
+		// <ModuleFalgs> typedef <Preprocessed_Macro> <Identifier>
 	}
 	else
 	{
@@ -5250,7 +5251,7 @@ CodeUnion parse_union( bool inplace_def )
 			}
 
 			if ( member )
-				append(body, member );
+				body_append(body, member );
 		}
 		// <ModuleFlags> union <Attributes> <Name> { <Body>
 

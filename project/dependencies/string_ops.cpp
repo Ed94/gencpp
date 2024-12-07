@@ -5,7 +5,6 @@
 #endif
 
 #pragma region String Ops
-GEN_API_C_BEGIN
 
 internal
 ssize _scan_zpl_i64( const char* text, s32 base, s64* value )
@@ -213,5 +212,4 @@ f64 str_to_f64( const char* str, char** end_ptr )
 	return result;
 }
 
-GEN_API_C_END
 #pragma endregion String Ops

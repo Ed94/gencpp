@@ -1,9 +1,9 @@
 {
     "configurations": [
         {
-            "name": "Win32 msvc",
+            "name": "Bootstrap",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/project/**"
             ],
             "defines": [
                 "_DEBUG",
@@ -15,10 +15,39 @@
                 "GEN_INTELLISENSE_DIRECTIVES",
                 "INTELLISENSE_DIRECTIVES"
             ],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.29.30133/bin/HostX64/x64/cl.exe",
             "intelliSenseMode": "msvc-x64",
-            "compileCommands": "${workspaceFolder}/project/build/compile_commands.json"
+            "compileCommands": "C:\\projects\\gencpp\\.vscode\\tasks.json",
+            "compilerArgs": [
+                "/EHsc-",
+                "/GR-",
+                "/Zc:preprocessor",
+                "/FC"
+            ]
+        },
+        {
+            "name": "Win32 msvc c_library",
+            "includePath": [
+                "${workspaceFolder}/gen_c_library/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "GEN_TIME",
+                "GEN_IMPLEMENTATION",
+                // "GEN_DONT_USE_NAMESPACE"
+                "GEN_INTELLISENSE_DIRECTIVES",
+                "INTELLISENSE_DIRECTIVES"
+            ],
+            "cppStandard": "c++17",
+            "windowsSdkVersion": "10.0.19041.0",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Professional/VC/Tools/MSVC/14.29.30133/bin/HostX64/x64/cl.exe",
+            "intelliSenseMode": "msvc-x64",
+            "compileCommands": "C:\\projects\\gencpp\\.vscode\\tasks.json"
         },
         {
             "name": "Win32 clang",
@@ -38,7 +67,7 @@
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:/Users/Ed/scoop/apps/llvm/current/bin/clang++.exe",
             "intelliSenseMode": "windows-clang-x64",
-            "compileCommands": "${workspaceFolder}/project/build/compile_commands.json"
+            "compileCommands": ".vscode/tasks.json"
         }
     ],
     "version": 4

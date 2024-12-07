@@ -26,12 +26,9 @@ template <class TType> using TRemovePtr = typename RemovePtr<TType>::Type;
 
 struct ArrayHeader;
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if GEN_COMPILER_CPP
 	template<class Type> struct Array;
 #	define get_array_underlying_type(array) typename TRemovePtr<typeof(array)>:: DataType
-#else
-	template<class Type> using Array = Type*;
-#	define get_array_underlying_type(array) TRemovePtr<typeof(array)>
 #endif
 
 usize array_grow_formula(ssize value);
@@ -62,7 +59,7 @@ struct ArrayHeader {
 	usize         Num;
 };
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if GEN_COMPILER_CPP
 template<class Type>
 struct Array
 {
@@ -104,7 +101,7 @@ struct Array
 };
 #endif
 
-#if GEN_SUPPORT_CPP_REFERENCES
+#if GEN_COMPILER_CPP && 0
 template<class Type> bool         append(Array<Type>& array, Array<Type> other)                         { return GEN_NS append( & array, other ); }
 template<class Type> bool         append(Array<Type>& array, Type value)                                { return GEN_NS append( & array, value ); }
 template<class Type> bool         append(Array<Type>& array, Type* items, usize item_num)               { return GEN_NS append( & array, items, item_num ); }

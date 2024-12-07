@@ -5,8 +5,6 @@
 
 #pragma region Strings
 
-GEN_API_C_BEGIN
-
 struct StrC_Def;
 typedef struct StrC_Def StrC;
 
@@ -18,8 +16,6 @@ b32         strc_starts_with         (StrC str, StrC substring);
 StrC        strc_to_str              (char const* bad_string);
 StrC        strc_visualize_whitespace(StrC str, AllocatorInfo allocator);
 
-GEN_API_C_END
-
 // Constant string with length.
 struct StrC_Def
 {
@@ -30,7 +26,7 @@ struct StrC_Def
 	forceinline operator char const* ()               const { return Ptr; }
 	forceinline char const& operator[]( ssize index ) const { return Ptr[index]; }
 
-#if GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if ! GEN_C_LIKE_CPP
 	forceinline bool        is_equal            (StrC rhs)                const { return GEN_NS strc_are_equal(* this, rhs); }
 	forceinline char const* back                ()                        const { return GEN_NS strc_back(* this); }
 	forceinline bool        contains            (StrC substring)          const { return GEN_NS strc_contains(* this, substring); }
@@ -62,8 +58,6 @@ forceinline char const* begin(StrC str)                   { return str.Ptr; }
 forceinline char const* end  (StrC str)                   { return str.Ptr + str.Len; }
 forceinline char const* next (StrC str, char const* iter) { return iter + 1; }
 #endif
-
-GEN_API_C_BEGIN
 
 inline
 bool strc_are_equal(StrC lhs, StrC rhs)
@@ -113,23 +107,20 @@ StrC to_strc_from_c_str( char const* bad_str ) {
 	StrC result = { str_len( bad_str ), bad_str };
 	return result;
 }
-GEN_API_C_END
 
 // Dynamic String
 // This is directly based off the ZPL string api.
 // They used a header pattern
 // I kept it for simplicty of porting but its not necessary to keep it that way.
 #pragma region String
-        struct StringHeader_Def;
-typedef struct StringHeader_Def StringHeader;
+        struct StringHeader;
+typedef struct StringHeader StringHeader;
 
-#if GEN_COMPILER_C || ! GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if GEN_COMPILER_C
 typedef char* String;
 #else
 struct String;
 #endif
-
-GEN_API_C_BEGIN
 
 forceinline usize string_grow_formula(usize value);
 
@@ -168,15 +159,13 @@ void          string_trim                (String       str, char const* cut_set)
 void          string_trim_space          (String       str);
 String        string_visualize_whitespace(String const str);
 
-GEN_API_C_END
-
-struct StringHeader_Def {
+struct StringHeader {
 	AllocatorInfo Allocator;
 	ssize         Capacity;
 	ssize         Length;
 };
 
-#if GEN_COMPILER_CPP && GEN_SUPPORT_CPP_MEMBER_FEATURES
+#if GEN_COMPILER_CPP
 struct String
 {
 	char* Data;
@@ -203,6 +192,7 @@ struct String
 	friend forceinline bool operator==(std::nullptr_t, const String str) { return str.Data == nullptr; }
 	friend forceinline bool operator!=(std::nullptr_t, const String str) { return str.Data != nullptr; }
 
+#if ! GEN_C_LIKE_CPP
 	forceinline char* begin() const { return Data; }
 	forceinline char* end()   const { return Data + string_length(* this); }
 
@@ -273,6 +263,7 @@ struct String
 		return string_append_c_str_len(this, buf, res);
 	}
 #pragma endregion Member Mapping
+#endif
 };
 #endif
 
@@ -282,13 +273,13 @@ forceinline char* string_end  (String str)                   { return ((char*) s
 forceinline char* string_next (String str, char const* iter) { return ((char*) iter + 1); }
 GEN_API_C_END
 
-#if GEN_COMPILER_CPP && 0
+#if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 forceinline char* begin(String str)             { return ((char*) str); }
 forceinline char* end  (String str)             { return ((char*) str + string_length(str)); }
 forceinline char* next (String str, char* iter) { return ((char*) iter + 1); }
 #endif
 
-#if GEN_SUPPORT_CPP_REFERENCES
+#if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 forceinline bool  make_space_for(String& str, char const* to_append, ssize add_len);
 forceinline bool  append(String& str, char c);
 forceinline bool  append(String& str, char const* str_to_append);
@@ -300,8 +291,6 @@ forceinline char& back(String& str);
 forceinline void  clear(String& str);
 forceinline void  free(String& str);
 #endif
-
-GEN_API_C_BEGIN
 
 forceinline
 usize string_grow_formula(usize value) {
@@ -754,8 +743,6 @@ StrC strc_visualize_whitespace(StrC str, AllocatorInfo allocator)
 // Represents strings cached with the string table.
 // Should never be modified, if changed string is desired, cache_string( str ) another.
 typedef StrC StringCached;
-
-GEN_API_C_END
 
 // Implements basic string interning. Data structure is based off the ZPL Hashtable.
 typedef HashTable(StringCached) StringTable;

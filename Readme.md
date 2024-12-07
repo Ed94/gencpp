@@ -1,9 +1,9 @@
 # gencpp
 
-An attempt at simple staged metaprogramming for c/c++.
+An attempt at simple staged metaprogramming for C/C++.
 
-The library API is a composition of code element constructors.  
-These build up a code AST to then serialize with a file builder.
+The library API is a composition of code element constructors, and a non-standards-compliant single-pass C/C++ parser.
+These build up a code AST to then serialize with a file builder, or can be traversed for staged-reflection of C/C++ code.
 
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).  
 Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.  
@@ -31,7 +31,7 @@ A metaprogram is built to generate files before the main program is built. We'll
 
 `gen.cpp` \`s  `main()` is defined as `gen_main()` which the user will have to define once for their program. There they will dictate everything that should be generated.
 
-In order to keep the locality of this code within the same files the following pattern may be used (although this pattern isn't required at all):
+In order to keep the locality of this code within the same files the following pattern may be used (although this pattern isn't the best to use):
 
 Within `program.cpp` :
 
@@ -54,7 +54,6 @@ u32 gen_main()
 
     // Regular runtime dependent on the generated code here.
 #endif
-
 ```
 
 The design uses a constructive builder API for the code to generate.  

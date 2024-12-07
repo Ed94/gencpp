@@ -4,7 +4,6 @@
 #endif
 
 #pragma region ADT
-GEN_API_C_BEGIN
 
 #define _adt_fprintf( s_, fmt_, ... )                      \
 	do                                                     \
@@ -1112,5 +1111,4 @@ String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimi
 	return output;
 }
 
-GEN_API_C_END
 #pragma endregion CSV

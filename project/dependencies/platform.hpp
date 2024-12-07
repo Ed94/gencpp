@@ -76,17 +76,20 @@
 /* Platform compiler */
 
 #if defined( _MSC_VER )
-#	define GEN_COMPILER_CLANG 0
+#	pragma message("Detected MSVC")
+// #	define GEN_COMPILER_CLANG 0
 #	define GEN_COMPILER_MSVC  1
-#	define GEN_COMPILER_GCC   0
+// #	define GEN_COMPILER_GCC   0
 #elif defined( __GNUC__ )
-#	define GEN_COMPILER_CLANG 0
-#	define GEN_COMPILER_MSVC  0
+#	pragma message("Detected GCC")
+// #	define GEN_COMPILER_CLANG 0
+// #	define GEN_COMPILER_MSVC  0
 #	define GEN_COMPILER_GCC   1
 #elif defined( __clang__ )
+#	pragma message("Detected CLANG")
 #	define GEN_COMPILER_CLANG 1
-#	define GEN_COMPILER_MSVC  0
-#	define GEN_COMPILER_GCC   1
+// #	define GEN_COMPILER_MSVC  0
+// #	define GEN_COMPILER_GCC   0
 #else
 #	error Unknown compiler
 #endif
