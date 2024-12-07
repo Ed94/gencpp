@@ -351,7 +351,8 @@ R"(#define AST_ArrSpecs_Cap       \
 					(body_entry->Type) {
 						case CT_Preprocess_If:
 						{
-							ignore_preprocess_cond_block(txt("! GEN_C_LIKE_CPP"), body_entry, body, new_body );
+							b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), body_entry, body, new_body );
+							if (found) break;
 						}
 						break;
 
@@ -552,25 +553,29 @@ R"(#define AST_ArrSpecs_Cap       \
 				break;
 
 				case CT_Enum:
+				{
+					if (entry->Name.is_equal(txt("FileOperations")))
+						continue;
+					convert_cpp_enum_to_c(cast(CodeEnum, entry), filesystem);
+				}
+				break;
+
 				case CT_Enum_Fwd:
 				case CT_Struct_Fwd:
 				case CT_Struct:
 				case CT_Union:
 				case CT_Union_Fwd:
 				{
-					if (entry->Name.is_equal(txt("FileOperations")))
-						continue;
-
-					// StrC type_str      = codetype_to_keyword_str(entry->Type);
-					// StrC formated_tmpl = token_fmt_impl( 3,
-					// 	"type", type_str
-					// ,	"name", entry->Name,
-					// stringize(
-					// 	typedef <type> <name> <name>;
-					// ));
-					// CodeTypedef tdef = parse_typedef(formated_tmpl);
-					// filesystem.append(entry);
-					// filesystem.append(tdef);
+					StrC type_str      = codetype_to_keyword_str(entry->Type);
+					StrC formated_tmpl = token_fmt_impl( 3,
+						"type", type_str
+					,	"name", entry->Name,
+					stringize(
+						typedef <type> <name> <name>;
+					));
+					CodeTypedef tdef = parse_typedef(formated_tmpl);
+					filesystem.append(entry);
+					filesystem.append(tdef);
 				}
 				break;
 

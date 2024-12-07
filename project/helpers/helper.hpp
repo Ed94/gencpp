@@ -30,9 +30,11 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 		char const* code    = enum_strs   [idx].string;
 		char const* keyword = keyword_strs[idx].string;
 
+		// TODO(Ed): to_str_entries and the others in here didn't have proper sizing of the StrC slice.
+
 		string_append_fmt( & enum_entries,           "CT_%s,\n", code );
 		string_append_fmt( & to_str_entries,         "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
-		string_append_fmt( & to_keyword_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", keyword, keyword );
+		string_append_fmt( & to_keyword_str_entries, "{ sizeof(\"%s\") - 1, \"%s\" },\n", keyword, keyword );
 	}
 
 	CodeEnum enum_code;
@@ -81,7 +83,6 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 
 	CodeBody result = def_body(CT_Global_Body);
 	body_append(result, enum_code);
-	body_append(result, to_str_fns);
 	if (! use_c_definition)
 	{
 		#pragma push_macro("forceinline")
@@ -98,6 +99,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 		CodeTypedef code_t = parse_typedef(code(typedef enum CodeType CodeType; ));
 		body_append(result, code_t);
 	}
+	body_append(result, to_str_fns);
 	return result;
 }
 
@@ -173,7 +175,6 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 
 	CodeBody result = def_body(CT_Global_Body);
 	body_append(result, enum_code);
-	body_append(result, to_str);
 	if (! use_c_definition)
 	{
 	#pragma push_macro("forceinline")
@@ -189,6 +190,7 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 		CodeTypedef operator_t = parse_typedef(code( typedef enum Operator Operator; ));
 		body_append(result, operator_t);
 	}
+	body_append(result, to_str);
 	return result;
 }
 
@@ -313,9 +315,6 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 
 	CodeBody result = def_body(CT_Global_Body);
 	body_append(result, enum_code);
-	body_append(result, to_str);
-	body_append(result, is_trailing);
-	body_append(result, to_type);
 	if (! use_c_definition)
 	{
 	#pragma push_macro("forceinline")
@@ -333,6 +332,9 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 		CodeTypedef specifier_t = parse_typedef( code(typedef enum Specifier Specifier; ));
 		body_append(result, specifier_t);
 	}
+	body_append(result, to_str);
+	body_append(result, is_trailing);
+	body_append(result, to_type);
 	return result;
 }
 

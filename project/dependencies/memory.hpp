@@ -193,7 +193,7 @@ struct Arena
 	ssize         TotalUsed;
 	ssize         TempCount;
 
-#if ! GEN_C_LIKE_CPP
+#if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 #pragma region Member Mapping
 	forceinline operator AllocatorInfo() { return arena_allocator_info(this); }
 
