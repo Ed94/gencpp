@@ -54,8 +54,8 @@ String constructor_to_string    (CodeConstructor constructor);
 void   constructor_to_string_def(CodeConstructor constructor, String* result );
 void   constructor_to_string_fwd(CodeConstructor constructor, String* result );
 
-String define_to_string    (CodeDefine define);
-void   define_to_string_ref(CodeDefine define, String* result);
+String define_to_string    (CodeDefine self);
+void   define_to_string_ref(CodeDefine self, String* result);
 
 String destructor_to_string    (CodeDestructor destructor);
 void   destructor_to_string_def(CodeDestructor destructor, String* result );
@@ -72,8 +72,8 @@ void   exec_to_string_ref(CodeExec exec, String* result);
 
 void extern_to_string(CodeExtern self, String* result);
 
-String include_to_string    (CodeInclude include);
-void   include_to_string_ref(CodeInclude include, String* result);
+String include_to_string    (CodeInclude self);
+void   include_to_string_ref(CodeInclude self, String* result);
 
 String friend_to_string     (CodeFriend self);
 void   friend_to_string_ref(CodeFriend self, String* result);
@@ -128,10 +128,10 @@ String var_to_string    (CodeVar self);
 void   var_to_string_ref(CodeVar self, String* result);
 #pragma endregion Code Type C-Interface
 
+#if GEN_COMPILER_CPP
 #pragma region Code Types C++
 
 // These structs are not used at all by the C vairant.
-#if GEN_COMPILER_CPP
 static_assert( GEN_COMPILER_CPP, "This should not be compiled with the C-library" );
 
 #define Verify_POD(Type) static_assert(size_of(Code##Type) == size_of(AST_##Type), "ERROR: Code##Type is not a POD")
@@ -983,7 +983,7 @@ struct NullCode_ImplicitCaster
 #if ! GEN_C_LIKE_CPP
 GEN_OPTIMIZE_MAPPINGS_BEGIN
 forceinline void   append          ( CodeBody body, Code     other ) { return body_append(body, other); }
-forceinline void   append          ( CodeBody body, CodeBody other ) { return body_append_body(body, other); };
+forceinline void   append          ( CodeBody body, CodeBody other ) { return body_append_body(body, other); }
 forceinline String to_string       ( CodeBody body )                 { return body_to_string(body); }
 forceinline void   to_string       ( CodeBody body, String& result ) { return body_to_string_ref(body, & result); }
 forceinline void   to_string_export( CodeBody body, String& result ) { return body_to_string_export(body, & result); }
@@ -1032,8 +1032,8 @@ forceinline String to_string    (CodeConstructor constructor)                  {
 forceinline void   to_string_def(CodeConstructor constructor, String& result ) { return constructor_to_string_def(constructor, & result); }
 forceinline void   to_string_fwd(CodeConstructor constructor, String& result ) { return constructor_to_string_fwd(constructor, & result); }
 
-forceinline String to_string(CodeDefine define)                 { return define_to_string(define); }
-forceinline void   to_string(CodeDefine define, String& result) { return define_to_string_ref(define, & result); }
+forceinline String to_string(CodeDefine self)                 { return define_to_string(self); }
+forceinline void   to_string(CodeDefine self, String& result) { return define_to_string_ref(self, & result); }
 
 forceinline String to_string    (CodeDestructor destructor)                  { return destructor_to_string(destructor); }
 forceinline void   to_string_def(CodeDestructor destructor, String& result ) { return destructor_to_string_def(destructor, & result); }
@@ -1050,8 +1050,8 @@ forceinline void   to_string(CodeExec exec, String& result) { return exec_to_str
 
 forceinline void to_string(CodeExtern self, String& result) { return extern_to_string(self, & result); }
 
-forceinline String to_string(CodeInclude include)                 { return include_to_string(include); }
-forceinline void   to_string(CodeInclude include, String& result) { return include_to_string_ref(include, & result); }
+forceinline String to_string(CodeInclude self)                 { return include_to_string(self); }
+forceinline void   to_string(CodeInclude self, String& result) { return include_to_string_ref(self, & result); }
 
 forceinline String to_string(CodeFriend self)                 { return friend_to_string(self); }
 forceinline void   to_string(CodeFriend self, String& result) { return friend_to_string_ref(self, & result); }
@@ -1105,8 +1105,7 @@ forceinline void   to_string_ns(CodeUsing op_cast, String& result ) { return usi
 forceinline String to_string(CodeVar self)                 { return var_to_string(self); }
 forceinline void   to_string(CodeVar self, String& result) { return var_to_string_ref(self, & result); }
 GEN_OPITMIZE_MAPPINGS_END
-#endif
-
-#endif //if GEN_COMPILER_CPP && GEN_SUPPORT_CPP_MEMBER_FEATURES
+#endif //if GEN_C_LIKE_CPP
 
 #pragma endregion Code Types C++
+#endif //if GEN_COMPILER_CPP

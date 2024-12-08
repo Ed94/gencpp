@@ -108,6 +108,10 @@ int gen_main()
 	PreprocessorDefines.append(txt("GEN_NS_PARSER"));
 	PreprocessorDefines.append(txt("GEN_NS_PARSER_BEGIN"));
 	PreprocessorDefines.append(txt("GEN_NS_PARSER_END"));
+	PreprocessorDefines.append(txt("Using_Code("));
+	PreprocessorDefines.append(txt("Using_CodeOps("));
+	PreprocessorDefines.append(txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"));
+	PreprocessorDefines.append(txt("GEN_OPITMIZE_MAPPINGS_END"));
 	//PreprocessorDefines.append(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"));
 
 	Code push_ignores           = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
@@ -125,6 +129,17 @@ int gen_main()
 		header.print( c_library_header_start );
 
 #pragma region Scan, Parse, and Generate Components
+		// Only has operator overload definitions that C doesn't need.
+		// CodeBody ast_inlines = gen_ast_inlines();
+
+		Code interface  = scan_file( project_dir "components/interface.hpp" );
+		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
+		Code header_end = scan_file( project_dir "components/header_end.hpp" );
+
+		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECodeTypes.csv", helper_use_c_definition );
+		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv",  helper_use_c_definition );
+		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv", helper_use_c_definition );
+
 		CodeBody parsed_types = parse_file( project_dir "components/types.hpp" );
 		CodeBody types        = def_body(CT_Global_Body);
 		for ( Code entry = parsed_types.begin(); entry != parsed_types.end(); ++ entry )
@@ -165,20 +180,6 @@ int gen_main()
 				break;
 			}
 		}
-
-		Code ast_types  = scan_file( project_dir "components/ast_types.hpp" );
-		Code code_types = scan_file( project_dir "components/code_types.hpp" );
-		Code interface  = scan_file( project_dir "components/interface.hpp" );
-		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
-		Code header_end = scan_file( project_dir "components/header_end.hpp" );
-
-		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECodeTypes.csv", helper_use_c_definition );
-		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv",  helper_use_c_definition );
-		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv", helper_use_c_definition );
-
-		// Only has operator overload definitions that C doesn't need.
-		// CodeBody ast_inlines = gen_ast_inlines();
-
 		CodeBody parsed_ast = parse_file( project_dir "components/ast.hpp" );
 		CodeBody ast        = def_body(CT_Global_Body);
 		for ( Code entry = parsed_ast.begin(); entry != parsed_ast.end(); ++ entry )
@@ -213,7 +214,6 @@ int gen_main()
 
 			case CT_Struct:
 			{
-
 				CodeStruct struct_def = cast(CodeStruct, entry);
 				ast.append(struct_def);
 				if ( ! entry->Name.is_equal(txt("AST")))
@@ -261,6 +261,56 @@ R"(#define AST_ArrSpecs_Cap       \
 
 			default:
 				ast.append(entry);
+			break;
+		}
+		CodeBody parsed_code_types = parse_file( project_dir "components/code_types.hpp" );
+		CodeBody code_types        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_code_types.begin(); entry != parsed_code_types.end(); ++ entry ) switch( entry->Type )
+		{
+			case CT_Preprocess_If:
+			case CT_Preprocess_IfDef:
+			{
+				b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_code_types, code_types );
+				if (found) {
+					++ entry;
+					break;
+				}
+				found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
+				if (found) break;
+
+				code_types.append(entry);
+			}
+			break;
+
+			default:
+				code_types.append(entry);
+			break;
+		}
+		CodeBody parsed_ast_types = parse_file( project_dir "components/ast_types.hpp" );
+		CodeBody ast_types        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_ast_types.begin(); entry != parsed_ast_types.end(); ++ entry ) switch( entry->Type )
+		{
+			case CT_Preprocess_If:
+			case CT_Preprocess_IfDef:
+			{
+				b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
+				if (found) break;
+
+				ast_types.append(entry);
+			}
+			break;
+
+			case CT_Struct:
+			{
+				CodeStruct struct_def = cast(CodeStruct, entry);
+				CodeTypedef tdef = parse_typedef(token_fmt("name", struct_def->Name, stringize( typedef struct <name> <name>; )));
+				ast_types.append(struct_def);
+				ast_types.append(tdef);
+			}
+			break;
+
+			default:
+				ast_types.append(entry);
 			break;
 		}
 #pragma endregion Scan, Parse, and Generate Components
@@ -662,6 +712,8 @@ R"(#define AST_ArrSpecs_Cap       \
 
 		header.print_fmt("#pragma region AST\n");
 		header.print( dump_to_scratch_and_retireve(ast) );
+		header.print( dump_to_scratch_and_retireve(code_types) );
+		header.print( dump_to_scratch_and_retireve(ast_types) );
 		header.print_fmt("\n#pragma endregion AST\n");
 
 		header.print_fmt( "\nGEN_API_C_END\n" );

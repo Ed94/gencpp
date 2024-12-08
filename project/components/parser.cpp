@@ -2992,6 +2992,10 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 	}
 	else
 	{
+		// If the macro is just a macro in the body of an AST it may have a semi-colon for the user to close on purpsoe
+		// (especially for functional macros)
+		StrC& calling_proc = Context.Scope->Prev->ProcName;
+
 		if (strc_contains(Context.Scope->Prev->ProcName, txt("parse_enum")))
 		{
 			// Do nothing
@@ -2999,17 +3003,30 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 		}
 		else if (strc_contains(Context.Scope->Prev->ProcName, txt("parse_typedef")))
 		{
+			// TODO(Ed): Reveiw the context for this?
 			if ( peektok.Type == Tok_Statement_End )
 			{
 				Token stmt_end = currtok;
 				eat( Tok_Statement_End );
 				// <Macro>;
 
+				// TODO(Ed): Reveiw the context for this? (ESPECIALLY THIS)
 				if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
 					eat( Tok_Comment );
 					// <Macro>; <InlineCmt>
 			}
-
+		}
+		else if (
+				strc_contains(calling_proc, txt("parse_global_nspace"))
+			&&	strc_contains(calling_proc, txt("parse_class_struct_body"))
+		)
+		{
+			if (peektok.Type == Tok_Statement_End)
+			{
+				Token stmt_end = currtok;
+				eat( Tok_Statement_End );
+				// <Macro>;
+			}
 		}
 
 		tok.Length = ( (sptr)currtok_noskip.Text + currtok_noskip.Length ) - (sptr)tok.Text;
