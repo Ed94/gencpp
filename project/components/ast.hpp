@@ -298,15 +298,15 @@ constexpr static
 int AST_ArrSpecs_Cap =
 (
 		AST_POD_Size
-		- sizeof(AST*) * 3
-		- sizeof(parser::Token*)
-		- sizeof(AST*)
 		- sizeof(StringCached)
+		- sizeof(AST*) * 3
+		- sizeof(Token*)
+		- sizeof(AST*)
 		- sizeof(CodeType)
 		- sizeof(ModuleFlag)
-		- sizeof(int)
+		- sizeof(u32)
 )
-/ sizeof(int) - 1; // -1 for 4 extra bytes
+/ sizeof(Specifier) - 1;
 
 /*
 	Simple AST POD with functionality to seralize into C++ syntax.
@@ -350,6 +350,7 @@ struct AST
 			Code       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
+	StringCached      Name;
 	union {
 		Code Prev;
 		Code Front;
@@ -361,7 +362,6 @@ struct AST
 	};
 	Token*            Token; // Reference to starting token, only avaialble if it was derived from parsing.
 	Code              Parent;
-	StringCached      Name;
 	CodeType          Type;
 //	CodeFlag          CodeFlags;
 	ModuleFlag        ModuleFlags;
@@ -374,7 +374,7 @@ struct AST
 		s32           VarConstructorInit;  // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
 	};
 };
-static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST POD is not size of AST_POD_Size" );
+static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST is not size of AST_POD_Size" );
 
 #if GEN_COMPILER_CPP
 // Uses an implicitly overloaded cast from the AST to the desired code type.

@@ -237,15 +237,15 @@ int gen_main()
 R"(#define AST_ArrSpecs_Cap       \
 (                                 \
         AST_POD_Size              \
+		- sizeof(StringCached)    \
 		- sizeof(AST*) * 3        \
 		- sizeof(Token*)          \
 		- sizeof(AST*)            \
-		- sizeof(StringCached)    \
 		- sizeof(CodeType)        \
 		- sizeof(ModuleFlag)      \
-		- sizeof(int)             \
+		- sizeof(u32)             \
 )                                 \
-/ sizeof(int) - 1
+/ sizeof(Specifier) - 1
 )"
 						));
 						ast.append(def);
