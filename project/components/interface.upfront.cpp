@@ -1224,7 +1224,7 @@ CodeStruct def_struct( StrC name, Opts_def_struct p )
 	{
 		for (s32 idx = 0; idx < num_interfaces; idx++ )
 		{
-			add_interface(result, interfaces[idx] );
+			struct_add_interface(result, interfaces[idx] );
 		}
 	}
 

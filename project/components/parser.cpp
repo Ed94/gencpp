@@ -3010,15 +3010,21 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 				eat( Tok_Statement_End );
 				// <Macro>;
 
+				tok.Length += prevtok.Length;
+
 				// TODO(Ed): Reveiw the context for this? (ESPECIALLY THIS)
 				if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
+				{
 					eat( Tok_Comment );
 					// <Macro>; <InlineCmt>
+
+					tok.Length += prevtok.Length;
+				}
 			}
 		}
 		else if (
 				strc_contains(calling_proc, txt("parse_global_nspace"))
-			&&	strc_contains(calling_proc, txt("parse_class_struct_body"))
+			||	strc_contains(calling_proc, txt("parse_class_struct_body"))
 		)
 		{
 			if (peektok.Type == Tok_Statement_End)
@@ -3026,10 +3032,11 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 				Token stmt_end = currtok;
 				eat( Tok_Statement_End );
 				// <Macro>;
+				tok.Length += prevtok.Length;
 			}
-		}
 
-		tok.Length = ( (sptr)currtok_noskip.Text + currtok_noskip.Length ) - (sptr)tok.Text;
+		}
+		// tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
 	}
 
 Leave_Scope_Early:

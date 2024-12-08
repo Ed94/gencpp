@@ -6,6 +6,18 @@
 #include "gen/especifier.hpp"
 #endif
 
+/*
+  ______   ______  ________      __    __       ______                 __
+ /      \ /      \|        \    |  \  |  \     /      \               |  \
+|  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\\▓▓▓▓▓▓▓▓    | ▓▓\ | ▓▓    |  ▓▓▓▓▓▓\ ______   ____| ▓▓ ______
+| ▓▓__| ▓▓ ▓▓___\▓▓  | ▓▓       | ▓▓▓\| ▓▓    | ▓▓   \▓▓/      \ /      ▓▓/      \
+| ▓▓    ▓▓\▓▓    \   | ▓▓       | ▓▓▓▓\ ▓▓    | ▓▓     |  ▓▓▓▓▓▓\  ▓▓▓▓▓▓▓  ▓▓▓▓▓▓\
+| ▓▓▓▓▓▓▓▓_\▓▓▓▓▓▓\  | ▓▓       | ▓▓\▓▓ ▓▓    | ▓▓   __| ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓    ▓▓
+| ▓▓  | ▓▓  \__| ▓▓  | ▓▓       | ▓▓ \▓▓▓▓    | ▓▓__/  \ ▓▓__/ ▓▓ ▓▓__| ▓▓ ▓▓▓▓▓▓▓▓
+| ▓▓  | ▓▓\▓▓    ▓▓  | ▓▓       | ▓▓  \▓▓▓     \▓▓    ▓▓\▓▓    ▓▓\▓▓    ▓▓\▓▓     \
+ \▓▓   \▓▓ \▓▓▓▓▓▓    \▓▓        \▓▓   \▓▓      \▓▓▓▓▓▓  \▓▓▓▓▓▓  \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓
+*/
+
 struct AST;
 struct AST_Body;
 struct AST_Attributes;
@@ -84,6 +96,7 @@ typedef AST* Code;
 #else
 struct Code;
 #endif
+
 Define_Code(Body);
 // These are to offer ease of use and optionally strong type safety for the AST.
 Define_Code(Attributes);
@@ -150,6 +163,7 @@ Define_Code(Typedef);
 Define_Code(Union);
 Define_Code(Using);
 Define_Code(Var);
+
 #undef Define_Code
 
 GEN_NS_PARSER_BEGIN
@@ -172,6 +186,7 @@ template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( 
 #endif
 
 #pragma region Code C-Interface
+
 void        code_append       (Code code, Code other );
 char const* code_debug_str    (Code code);
 Code        code_duplicate    (Code code);
@@ -185,6 +200,7 @@ String      code_to_string    (Code self );
 void        code_to_string_ptr(Code self, String* result );
 char const* code_type_str     (Code self );
 bool        code_validate_body(Code self );
+
 #pragma endregion Code C-Interface
 
 #if GEN_COMPILER_CPP
@@ -298,10 +314,11 @@ constexpr static
 int AST_ArrSpecs_Cap =
 (
 		AST_POD_Size
+		- sizeof(Code)
 		- sizeof(StringCached)
-		- sizeof(AST*) * 3
+		- sizeof(Code) * 2
 		- sizeof(Token*)
-		- sizeof(AST*)
+		- sizeof(Code)
 		- sizeof(CodeType)
 		- sizeof(ModuleFlag)
 		- sizeof(u32)

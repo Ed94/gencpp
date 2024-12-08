@@ -21,8 +21,9 @@ CodeBody gen_array_base()
 
 	Code grow_formula = untyped_str( txt( "#define array_grow_formula( value ) ( 2 * value + 8 )\n" ));
 	Code get_header   = untyped_str( txt( "#define array_get_header( self ) ( (ArrayHeader*)( self ) - 1)\n" ));
+	Code type_define  = untyped_str( txt( "#define Array(Type) Array_##Type\n"));
 
-	return def_global_body( args( fmt_newline, td_header, header, grow_formula, get_header, fmt_newline ) );
+	return def_global_body( args( fmt_newline, td_header, header, type_define, grow_formula, get_header, fmt_newline ) );
 };
 
 CodeBody gen_array( StrC type, StrC array_name )
@@ -68,7 +69,7 @@ CodeBody gen_array( StrC type, StrC array_name )
 		<array_type> <fn>_init( AllocatorInfo allocator )
 		{
 			size_t initial_size = array_grow_formula(0);
-			return array_init_reserve( <array_type>, allocator, initial_size );
+			return array_init_reserve( <type>, allocator, initial_size );
 		}
 
 		inline
@@ -362,24 +363,24 @@ CodeBody gen_array( StrC type, StrC array_name )
 	++ Array_DefinitionCounter;
 	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", Array_DefinitionCounter).to_strc();
 
-	Code generic_interface_slot = untyped_str(token_fmt( "type_delimiter", (StrC)array_type, "slot", (StrC)slot_str,
-R"(#define GENERIC_SLOT_<slot>__array_init         <type_delimiter>,  <type_delimiter>_init
-#define GENERIC_SLOT_<slot>__array_init_reserve    <type_delimiter>,  <type_delimiter>_init_reserve
-#define GENERIC_SLOT_<slot>__array_append          <type_delimiter>,  <type_delimiter>_append
-#define GENERIC_SLOT_<slot>__array_append_items    <type_delimiter>,  <type_delimiter>_append_items
-#define GENERIC_SLOT_<slot>__array_append_at       <type_delimiter>,  <type_delimiter>_append_at
-#define GENERIC_SLOT_<slot>__array_append_items_at <type_delimiter>,  <type_delimiter>_append_items_at
-#define GENERIC_SLOT_<slot>__array_back            <type_delimiter>,  <type_delimiter>_back
-#define GENERIC_SLOT_<slot>__array_clear           <type_delimiter>,  <type_delimiter>_clear
-#define GENERIC_SLOT_<slot>__array_fill            <type_delimiter>,  <type_delimiter>_fill
-#define GENERIC_SLOT_<slot>__array_free            <type_delimiter>,  <type_delimiter>_free
-#define GENERIC_SLOT_<slot>__array_grow            <type_delimiter>*, <type_delimiter>_grow
-#define GENERIC_SLOT_<slot>__array_num             <type_delimiter>,  <type_delimiter>_num
-#define GENERIC_SLOT_<slot>__array_pop             <type_delimiter>,  <type_delimiter>_pop
-#define GENERIC_SLOT_<slot>__array_remove_at       <type_delimiter>,  <type_delimiter>_remove_at
-#define GENERIC_SLOT_<slot>__array_reserve         <type_delimiter>,  <type_delimiter>_reserve
-#define GENERIC_SLOT_<slot>__array_resize          <type_delimiter>,  <type_delimiter>_resize
-#define GENERIC_SLOT_<slot>__array_set_capacity    <type_delimiter>*, <type_delimiter>_set_capacity
+	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "array_type", (StrC)array_type, "slot", (StrC)slot_str,
+R"(#define GENERIC_SLOT_<slot>__array_init         <type>,        <array_type>_init
+#define GENERIC_SLOT_<slot>__array_init_reserve    <type>,        <array_type>_init_reserve
+#define GENERIC_SLOT_<slot>__array_append          <array_type>,  <array_type>_append
+#define GENERIC_SLOT_<slot>__array_append_items    <array_type>,  <array_type>_append_items
+#define GENERIC_SLOT_<slot>__array_append_at       <array_type>,  <array_type>_append_at
+#define GENERIC_SLOT_<slot>__array_append_items_at <array_type>,  <array_type>_append_items_at
+#define GENERIC_SLOT_<slot>__array_back            <array_type>,  <array_type>_back
+#define GENERIC_SLOT_<slot>__array_clear           <array_type>,  <array_type>_clear
+#define GENERIC_SLOT_<slot>__array_fill            <array_type>,  <array_type>_fill
+#define GENERIC_SLOT_<slot>__array_free            <array_type>,  <array_type>_free
+#define GENERIC_SLOT_<slot>__array_grow            <array_type>*, <array_type>_grow
+#define GENERIC_SLOT_<slot>__array_num             <array_type>,  <array_type>_num
+#define GENERIC_SLOT_<slot>__array_pop             <array_type>,  <array_type>_pop
+#define GENERIC_SLOT_<slot>__array_remove_at       <array_type>,  <array_type>_remove_at
+#define GENERIC_SLOT_<slot>__array_reserve         <array_type>,  <array_type>_reserve
+#define GENERIC_SLOT_<slot>__array_resize          <array_type>,  <array_type>_resize
+#define GENERIC_SLOT_<slot>__array_set_capacity    <array_type>*, <array_type>_set_capacity
 )"
 	));
 

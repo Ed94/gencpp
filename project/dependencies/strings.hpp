@@ -7,12 +7,12 @@
 
 struct StrC;
 
+StrC        to_strc_from_c_str       (char const* bad_string);
 bool        strc_are_equal           (StrC lhs, StrC rhs);
 char const* strc_back                (StrC str);
 bool        strc_contains            (StrC str, StrC substring);
 StrC        strc_duplicate           (StrC str, AllocatorInfo allocator);
 b32         strc_starts_with         (StrC str, StrC substring);
-StrC        strc_to_str              (char const* bad_string);
 StrC        strc_visualize_whitespace(StrC str, AllocatorInfo allocator);
 
 // Constant string with length.

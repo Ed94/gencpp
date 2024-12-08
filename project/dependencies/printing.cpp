@@ -33,6 +33,7 @@ enum
 	GEN_FMT_INTS = GEN_FMT_CHAR | GEN_FMT_SHORT | GEN_FMT_INT | GEN_FMT_LONG | GEN_FMT_LLONG | GEN_FMT_SIZE | GEN_FMT_INTPTR
 };
 
+typedef struct _format_info _format_info;
 struct _format_info
 {
 	s32 base;
@@ -429,7 +430,7 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 					break;
 				}
 
-				String gen_str = String { va_arg( va, char*) };
+				String gen_str = { va_arg( va, char*) };
 
 				info.precision = string_length(gen_str);
 				len            = _print_string( text, remaining, &info, gen_str );

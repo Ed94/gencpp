@@ -24,7 +24,7 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& par
 	CodePreprocessCond cond = cast(CodePreprocessCond, entry_iter);
 	if ( cond->Content.is_equal(cond_sig) )
 	{
-		log_fmt("Preprocess cond found: %SC\n", cond->Content);
+		//log_fmt("Preprocess cond found: %SC\n", cond->Content);
 		found = true;
 
 		s32 depth = 1;
@@ -105,7 +105,7 @@ R"(#define <macro_name>(selector_arg, ...) _Generic( (selector_arg), \
 	for ( s32 slot = 1; slot <= num_slots; ++ slot )
 	{
 		StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", slot).to_strc();
-		if (slot == num_slots)
+		if (slot == num_slots && false)
 		{
 			define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
 R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(  GENERIC_SLOT_<slot>__<macro_name> ) \
@@ -127,6 +127,8 @@ R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_<slot>__<macro_name> )
 )"
 		));
 	}
+
+	define_builder.append( txt("default: gen_generic_selection_fail") );
 
 	if ( ! one_arg )
 	{

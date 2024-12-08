@@ -72,5 +72,5 @@
 	},
 	"autoHide.autoHidePanel": false,
 	"autoHide.autoHideSideBar": false,
-	"dimmer.enabled": true
+	"dimmer.enabled": false
 }

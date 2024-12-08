@@ -4,6 +4,22 @@
 #endif
 
 #pragma region AST Types
+
+/*
+  ______   ______  ________      ________
+ /      \ /      \|        \    |        \
+|  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\\▓▓▓▓▓▓▓▓     \▓▓▓▓▓▓▓▓__    __  ______   ______   _______
+| ▓▓__| ▓▓ ▓▓___\▓▓  | ▓▓          | ▓▓  |  \  |  \/      \ /      \ /       \
+| ▓▓    ▓▓\▓▓    \   | ▓▓          | ▓▓  | ▓▓  | ▓▓  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\  ▓▓▓▓▓▓▓
+| ▓▓▓▓▓▓▓▓_\▓▓▓▓▓▓\  | ▓▓          | ▓▓  | ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓    ▓▓\▓▓    \
+| ▓▓  | ▓▓  \__| ▓▓  | ▓▓          | ▓▓  | ▓▓__/ ▓▓ ▓▓__/ ▓▓ ▓▓▓▓▓▓▓▓_\▓▓▓▓▓▓\
+| ▓▓  | ▓▓\▓▓    ▓▓  | ▓▓          | ▓▓   \▓▓    ▓▓ ▓▓    ▓▓\▓▓     \       ▓▓
+ \▓▓   \▓▓ \▓▓▓▓▓▓    \▓▓           \▓▓   _\▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓  \▓▓▓▓▓▓▓\▓▓▓▓▓▓▓
+                                         |  \__| ▓▓ ▓▓
+                                          \▓▓    ▓▓ ▓▓
+                                           \▓▓▓▓▓▓ \▓▓
+*/
+
 /*
 	Show only relevant members of the AST for its type.
 	AST* fields are replaced with Code types.
@@ -12,7 +28,9 @@
 
 struct AST_Body
 {
-	char              _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+	union {
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+	};
 	StringCached      Name;
 	Code              Front;
 	Code              Back;
@@ -550,7 +568,9 @@ static_assert( sizeof(AST_Fn) == sizeof(AST), "ERROR: AST_Fn is not the same siz
 
 struct AST_Module
 {
-	char              _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+	union {
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+	};
 	StringCached      Name;
 	Code              Prev;
 	Code              Next;
@@ -693,7 +713,7 @@ static_assert( sizeof(AST_PreprocessCond) == sizeof(AST), "ERROR: AST_Preprocess
 
 struct AST_Specifiers
 {
-	Specifier        ArrSpecs[ AST_ArrSpecs_Cap ];
+	Specifier         ArrSpecs[ AST_ArrSpecs_Cap ];
 	StringCached      Name;
 	CodeSpecifiers    NextSpecs;
 	Code              Prev;

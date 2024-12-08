@@ -104,7 +104,7 @@ forceinline
 char const* code_type_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
-	return codetype_to_str( self->Type );
+	return codetype_to_str( self->Type ).Ptr;
 }
 #pragma endregion Code
 
@@ -138,7 +138,8 @@ Code begin_CodeBody( CodeBody body) {
 	GEN_ASSERT(body);
 	if ( body != nullptr )
 		return body->Front;
-	return { nullptr };
+
+	return NullCode;
 }
 forceinline
 Code end_CodeBody(CodeBody body ){
@@ -170,7 +171,7 @@ void class_add_interface( CodeClass self, CodeTypename type )
 
 	while ( possible_slot != nullptr )
 	{
-		possible_slot = possible_slot->Next;
+		possible_slot = cast(CodeTypename, possible_slot->Next);
 	}
 
 	possible_slot = type;
@@ -212,7 +213,7 @@ CodeParam params_get(CodeParam self, s32 idx )
 	do
 	{
 		if ( ++ param != nullptr )
-			return { nullptr };
+			return NullCode;
 
 		param = cast(CodeParam, cast(Code, param)->Next);
 	}
@@ -246,7 +247,7 @@ forceinline
 CodeParam end_CodeParam(CodeParam params)
 {
 	// return { (AST_Param*) rcast( AST*, ast)->Last };
-	return { nullptr };
+	return NullCode;
 }
 forceinline
 CodeParam next_CodeParam(CodeParam params, CodeParam param_iter)
@@ -347,7 +348,7 @@ Specifier* next_CodeSpecifiers(CodeSpecifiers self, Specifier* spec_iter)
 
 #pragma region CodeStruct
 inline
-void add_interface(CodeStruct self, CodeTypename type )
+void struct_add_interface(CodeStruct self, CodeTypename type )
 {
 	CodeTypename possible_slot = self->ParentType;
 	if ( possible_slot != nullptr )
@@ -360,7 +361,7 @@ void add_interface(CodeStruct self, CodeTypename type )
 
 	while ( possible_slot != nullptr )
 	{
-		possible_slot = possible_slot->Next;
+		possible_slot = cast(CodeTypename, possible_slot->Next);
 	}
 
 	possible_slot = type;
@@ -385,7 +386,7 @@ CodeBody def_body( CodeType type )
 			break;
 
 		default:
-			log_failure( "def_body: Invalid type %s", (char const*)codetype_to_str(type) );
+			log_failure( "def_body: Invalid type %s", codetype_to_str(type).Ptr );
 			return (CodeBody)Code_Invalid;
 	}
 
@@ -407,6 +408,7 @@ StrC token_fmt_impl( ssize num, ... )
 	ssize result = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num, va);
 	va_end(va);
 
-	return { result, buf };
+	StrC str = { result, buf };
+	return str;
 }
 #pragma endregion Interface

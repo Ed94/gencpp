@@ -46,6 +46,7 @@ void const* mem_find( void const* data, u8 c, ssize n )
 
 #define GEN_HEAP_STATS_MAGIC 0xDEADC0DE
 
+typedef struct _heap_stats _heap_stats;
 struct _heap_stats
 {
 	u32 magic;
@@ -80,6 +81,7 @@ void heap_stats_check( void )
 	GEN_ASSERT( _heap_stats_info.alloc_count == 0 );
 }
 
+typedef struct _heap_alloc_info _heap_alloc_info;
 struct _heap_alloc_info
 {
 	ssize    size;

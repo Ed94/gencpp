@@ -459,6 +459,7 @@ FileContents file_read_contents( AllocatorInfo a, b32 zero_terminate, char const
 	return result;
 }
 
+typedef struct _memory_fd _memory_fd;
 struct _memory_fd
 {
 	u8            magic;
@@ -505,7 +506,7 @@ b8 file_stream_new( FileInfo* file, AllocatorInfo allocator )
 	d->allocator = allocator;
 	d->flags     = EFileStream_CLONE_WRITABLE;
 	d->cap       = 0;
-	d->buf       = array_init<u8>( allocator );
+	d->buf       = array_init( u8, allocator );
 
 	if ( ! d->buf )
 		return false;
@@ -531,7 +532,7 @@ b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, ssize 
 	d->flags     = flags;
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
-		Array<u8> arr = array_init_reserve<u8>( allocator, size );
+		Array(u8) arr = array_init_reserve(u8, allocator, size );
 		d->buf = arr;
 
 		if ( ! d->buf )
@@ -608,9 +609,9 @@ GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
-		Array<u8> arr = { d->buf };
+		Array(u8) arr = { d->buf };
 
-		if ( array_get_header(arr)->Capacity < usize(new_cap) )
+		if ( array_get_header(arr)->Capacity < scast(usize, new_cap) )
 		{
 			if ( ! array_grow( & arr, ( s64 )( new_cap ) ) )
 				return false;
@@ -622,7 +623,7 @@ GEN_FILE_WRITE_AT_PROC( _memory_file_write )
 
 	if ( ( d->flags & EFileStream_CLONE_WRITABLE ) && extralen > 0 )
 	{
-		Array<u8> arr = { d->buf };
+		Array(u8) arr = { d->buf };
 
 		mem_copy( d->buf + offset + rwlen, pointer_add_const( buffer, rwlen ), extralen );
 		d->cap = new_cap;
@@ -646,7 +647,7 @@ GEN_FILE_CLOSE_PROC( _memory_file_close )
 
 	if ( d->flags & EFileStream_CLONE_WRITABLE )
 	{
-		Array<u8> arr = { d->buf };
+		Array(u8) arr = { d->buf };
 		array_free(arr);
 	}
 

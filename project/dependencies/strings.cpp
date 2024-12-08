@@ -7,17 +7,21 @@
 
 String string_make_length( AllocatorInfo allocator, char const* str, ssize length )
 {
-	constexpr ssize header_size = sizeof( StringHeader );
+	ssize const header_size = sizeof( StringHeader );
 
 	s32   alloc_size = header_size + length + 1;
 	void* allocation = alloc( allocator, alloc_size );
 
-	if ( allocation == nullptr )
-		return { nullptr };
+	if ( allocation == nullptr ) {
+		String null_string = {nullptr};
+		return null_string;
+	}
 
-	StringHeader&
-	header = * rcast(StringHeader*, allocation);
-	header = { allocator, length, length };
+	StringHeader*
+	header = rcast(StringHeader*, allocation);
+	header->Allocator = allocator;
+	header->Capacity  = length;
+	header->Length    = length;
 
 	String  result = { rcast( char*, allocation) + header_size };
 
@@ -33,14 +37,15 @@ String string_make_length( AllocatorInfo allocator, char const* str, ssize lengt
 
 String string_make_reserve( AllocatorInfo allocator, ssize capacity )
 {
-	constexpr ssize header_size = sizeof( StringHeader );
+	ssize const header_size = sizeof( StringHeader );
 
 	s32   alloc_size = header_size + capacity + 1;
 	void* allocation = alloc( allocator, alloc_size );
 
-	if ( allocation == nullptr )
-		return { nullptr };
-
+	if ( allocation == nullptr ) {
+		String null_string = {nullptr};
+		return null_string;
+	}
 	mem_set( allocation, 0, alloc_size );
 
 	StringHeader*

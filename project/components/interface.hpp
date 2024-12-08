@@ -4,6 +4,16 @@
 #endif
 
 #pragma region Gen Interface
+/*
+ /      \                       |      \          |  \                      /      \
+|  ▓▓▓▓▓▓\ ______  _______       \▓▓▓▓▓▓_______  _| ▓▓_    ______   ______ |  ▓▓▓▓▓▓\ ______   _______  ______
+| ▓▓ __\▓▓/      \|       \       | ▓▓ |       \|   ▓▓ \  /      \ /      \| ▓▓_  \▓▓|      \ /       \/      \
+| ▓▓|    \  ▓▓▓▓▓▓\ ▓▓▓▓▓▓▓\      | ▓▓ | ▓▓▓▓▓▓▓\\▓▓▓▓▓▓ |  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\ ▓▓ \     \▓▓▓▓▓▓\  ▓▓▓▓▓▓▓  ▓▓▓▓▓▓\
+| ▓▓ \▓▓▓▓ ▓▓    ▓▓ ▓▓  | ▓▓      | ▓▓ | ▓▓  | ▓▓ | ▓▓ __| ▓▓    ▓▓ ▓▓   \▓▓ ▓▓▓▓    /      ▓▓ ▓▓     | ▓▓    ▓▓
+| ▓▓__| ▓▓ ▓▓▓▓▓▓▓▓ ▓▓  | ▓▓     _| ▓▓_| ▓▓  | ▓▓ | ▓▓|  \ ▓▓▓▓▓▓▓▓ ▓▓     | ▓▓     |  ▓▓▓▓▓▓▓ ▓▓_____| ▓▓▓▓▓▓▓▓
+ \▓▓    ▓▓\▓▓     \ ▓▓  | ▓▓    |   ▓▓ \ ▓▓  | ▓▓  \▓▓  ▓▓\▓▓     \ ▓▓     | ▓▓      \▓▓    ▓▓\▓▓     \\▓▓     \
+  \▓▓▓▓▓▓  \▓▓▓▓▓▓▓\▓▓   \▓▓     \▓▓▓▓▓▓\▓▓   \▓▓   \▓▓▓▓  \▓▓▓▓▓▓▓\▓▓      \▓▓       \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓
+*/
 
 // Initialize the library.
 // This currently just initializes the CodePool.
@@ -164,7 +174,7 @@ struct Opts_def_variable
 CodeVar def_variable( CodeTypename type, StrC name, Opts_def_variable opts GEN_PARAM_DEFAULT );
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
-CodeBody def_body( CodeTypename type );
+CodeBody def_body( CodeType type );
 
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
@@ -199,23 +209,23 @@ CodeBody       def_union_body      ( s32 num, Code* codes );
 // TODO(Ed) : Implmeent the new parser API design.
 
 #if 0
-namespace parser {
-	struct StackNode
-	{
-		StackNode* Prev;
+GEN_NS_PARSER_BEGIN
+struct StackNode
+{
+	StackNode* Prev;
 
-		Token Start;
-		Token Name;       // The name of the AST node (if parsed)
-		StrC  FailedProc; // The name of the procedure that failed
-	};
-	// Stack nodes are allocated the error's allocator
+	Token Start;
+	Token Name;       // The name of the AST node (if parsed)
+	StrC  FailedProc; // The name of the procedure that failed
+};
+// Stack nodes are allocated the error's allocator
 
-	struct Error
-	{
-		String     message;
-		StackNode* context_stack;
-	};
-}
+struct Error
+{
+	String     message;
+	StackNode* context_stack;
+};
+GEN_NS_PARSER_END
 
 struct ParseInfo
 {
@@ -223,9 +233,9 @@ struct ParseInfo
 	Arena TokMem;
 	Arena CodeMem;
 
-	FileContents         FileContent;
-	Array<parser::Token> Tokens;
-	Array<parser::Error> Errors;
+	FileContents FileContent;
+	Array<Token> Tokens;
+	Array<Error> Errors;
 	// Errors are allocated to a dedicated general arena.
 };
 

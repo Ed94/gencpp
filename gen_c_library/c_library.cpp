@@ -1,3 +1,5 @@
+#include <cstdlib>   // for system()
+
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
@@ -16,7 +18,6 @@ GEN_NS_END
 #include "auxillary/builder.cpp"
 #include "auxillary/scanner.hpp"
 
-#include <cstdlib>   // for system()
 
 #include "components/memory.fixed_arena.hpp"
 #include "components/misc.hpp"
@@ -113,6 +114,7 @@ int gen_main()
 	PreprocessorDefines.append(txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"));
 	PreprocessorDefines.append(txt("GEN_OPITMIZE_MAPPINGS_END"));
 	//PreprocessorDefines.append(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"));
+	PreprocessorDefines.append(txt("GEN_PARAM_DEFAULT"));
 
 	Code push_ignores           = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores            = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
@@ -132,58 +134,57 @@ int gen_main()
 		// Only has operator overload definitions that C doesn't need.
 		// CodeBody ast_inlines = gen_ast_inlines();
 
-		Code interface  = scan_file( project_dir "components/interface.hpp" );
 		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
-		Code header_end = scan_file( project_dir "components/header_end.hpp" );
 
 		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECodeTypes.csv", helper_use_c_definition );
 		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv",  helper_use_c_definition );
 		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv", helper_use_c_definition );
 
+		// The following pattern will be used throughout parsing:
+		// for ( Code entry = parsed_<name_of_file>.begin(); entry != parsed_<name_of_file>.end(); ++ entry ) switch(entry->Type)
+		// it provides a concise scope for inspecting a file scope ast and nested code bodies (struct bodies, etc)
+
 		CodeBody parsed_types = parse_file( project_dir "components/types.hpp" );
 		CodeBody types        = def_body(CT_Global_Body);
-		for ( Code entry = parsed_types.begin(); entry != parsed_types.end(); ++ entry )
+		for ( Code entry = parsed_types.begin(); entry != parsed_types.end(); ++ entry ) switch(entry->Type)
 		{
-			switch(entry->Type)
+			case CT_Using:
 			{
-				case CT_Using:
-				{
-					CodeUsing using_ver = cast(CodeUsing, entry);
+				CodeUsing using_ver = cast(CodeUsing, entry);
 
-					if (using_ver->UnderlyingType->ReturnType)
-					{
-						CodeTypename type       = using_ver->UnderlyingType;
-						CodeTypedef typedef_ver = parse_typedef(token_fmt(
-							"ReturnType", to_string(type->ReturnType).to_strc()
-						,	"Name"      , using_ver->Name
-						,	"Parameters", to_string(type->Params).to_strc()
-						,	stringize(
-								typedef <ReturnType>( * <Name>)(<Parameters>);
-						)));
-						types.append(typedef_ver);
-						break;
-					}
-					CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
+				if (using_ver->UnderlyingType->ReturnType)
+				{
+					CodeTypename type       = using_ver->UnderlyingType;
+					CodeTypedef typedef_ver = parse_typedef(token_fmt(
+						"ReturnType", to_string(type->ReturnType).to_strc()
+					,	"Name"      , using_ver->Name
+					,	"Parameters", to_string(type->Params).to_strc()
+					,	stringize(
+							typedef <ReturnType>( * <Name>)(<Parameters>);
+					)));
 					types.append(typedef_ver);
+					break;
 				}
-				break;
-
-				case CT_Enum:
-				{
-					log_fmt("Detected ENUM: %S", entry->Name);
-					convert_cpp_enum_to_c(cast(CodeEnum, entry), types);
-				}
-				break;
-
-				default:
-					types.append(entry);
-				break;
+				CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
+				types.append(typedef_ver);
 			}
+			break;
+
+			case CT_Enum:
+			{
+				//log_fmt("Detected ENUM: %S", entry->Name);
+				convert_cpp_enum_to_c(cast(CodeEnum, entry), types);
+			}
+			break;
+
+			default:
+				types.append(entry);
+			break;
 		}
+
 		CodeBody parsed_ast = parse_file( project_dir "components/ast.hpp" );
 		CodeBody ast        = def_body(CT_Global_Body);
-		for ( Code entry = parsed_ast.begin(); entry != parsed_ast.end(); ++ entry )
-		switch (entry->Type)
+		for ( Code entry = parsed_ast.begin(); entry != parsed_ast.end(); ++ entry ) switch (entry->Type)
 		{
 			case CT_Preprocess_If:
 			{
@@ -230,21 +231,22 @@ int gen_main()
 
 				s32 constexpr_found = var->Specs ? var->Specs.remove( Spec_Constexpr ) : - 1;
 				if (constexpr_found > -1) {
-					log_fmt("Found constexpr: %S\n", entry.to_string());
+					//log_fmt("Found constexpr: %S\n", entry.to_string());
 					if (var->Name.contains(txt("AST_ArrSpecs_Cap")))
 					{
 						Code def = untyped_str(txt(
-R"(#define AST_ArrSpecs_Cap       \
-(                                 \
-        AST_POD_Size              \
-		- sizeof(StringCached)    \
-		- sizeof(AST*) * 3        \
-		- sizeof(Token*)          \
-		- sizeof(AST*)            \
-		- sizeof(CodeType)        \
-		- sizeof(ModuleFlag)      \
-		- sizeof(u32)             \
-)                                 \
+R"(#define AST_ArrSpecs_Cap    \
+(                              \
+        AST_POD_Size           \
+		- sizeof(Code)         \
+		- sizeof(StringCached) \
+		- sizeof(Code) * 2     \
+		- sizeof(Token*)       \
+		- sizeof(Code)         \
+		- sizeof(CodeType)     \
+		- sizeof(ModuleFlag)   \
+		- sizeof(u32)          \
+)                              \
 / sizeof(Specifier) - 1
 )"
 						));
@@ -263,6 +265,7 @@ R"(#define AST_ArrSpecs_Cap       \
 				ast.append(entry);
 			break;
 		}
+
 		CodeBody parsed_code_types = parse_file( project_dir "components/code_types.hpp" );
 		CodeBody code_types        = def_body(CT_Global_Body);
 		for ( Code entry = parsed_code_types.begin(); entry != parsed_code_types.end(); ++ entry ) switch( entry->Type )
@@ -286,6 +289,7 @@ R"(#define AST_ArrSpecs_Cap       \
 				code_types.append(entry);
 			break;
 		}
+
 		CodeBody parsed_ast_types = parse_file( project_dir "components/ast_types.hpp" );
 		CodeBody ast_types        = def_body(CT_Global_Body);
 		for ( Code entry = parsed_ast_types.begin(); entry != parsed_ast_types.end(); ++ entry ) switch( entry->Type )
@@ -302,15 +306,102 @@ R"(#define AST_ArrSpecs_Cap       \
 
 			case CT_Struct:
 			{
-				CodeStruct struct_def = cast(CodeStruct, entry);
-				CodeTypedef tdef = parse_typedef(token_fmt("name", struct_def->Name, stringize( typedef struct <name> <name>; )));
-				ast_types.append(struct_def);
+				CodeBody body = cast(CodeBody, entry->Body);
+				for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch (body_entry->Type)
+				{
+					case CT_Union:
+					{
+						Code union_entry = body_entry->Body->Front;
+						if ( body_entry && union_entry->Name.is_equal(txt("_PAD_")) )
+						{
+							char conversion_buf[32] = {};
+							u64_to_str(size_of(AST_Body::_PAD_), conversion_buf, 10);
+
+							StrC arr_exp  = union_entry->ValueType->ArrExpr->Content;
+							StrC cpp_size = to_strc_from_c_str(conversion_buf);
+							union_entry->ValueType->ArrExpr = untyped_str( cpp_size );
+							union_entry->InlineCmt          = untyped_str(token_fmt("arr_exp", arr_exp,
+								"// Had to hardcode _PAD_ because (<arr_exp>) was 67 bytes in C\n"
+								"// instead of 64 like C++'s AST_Body::_PAD_\n"
+							));
+						}
+					}
+				}
+				CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+				ast_types.append(entry);
 				ast_types.append(tdef);
 			}
 			break;
 
 			default:
 				ast_types.append(entry);
+			break;
+		}
+
+		CodeBody parsed_interface = parse_file( project_dir "components/interface.hpp" );
+		CodeBody interface        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_interface.begin(); entry != parsed_interface.end(); ++ entry ) switch( entry->Type )
+		{
+			case CT_Preprocess_IfDef:
+			{
+				b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
+				if (found) break;
+
+				interface.append(entry);
+			}
+			break;
+
+			case CT_Function_Fwd:
+			case CT_Function:
+			{
+				CodeFn fn = cast(CodeFn, entry);
+				Code prev = entry->Prev;
+				if (prev && prev->Name.is_equal(entry->Name)) {
+					String postfix_arr = String::fmt_buf(GlobalAllocator, "%SC_arr", entry->Name);
+					entry->Name = get_cached_string(postfix_arr.to_strc());
+					postfix_arr.free();
+				}
+				interface.append(fn);
+			}
+			break;
+
+			case CT_Struct:
+			{
+				CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+				interface.append(entry);
+				interface.append(tdef);
+				interface.append(fmt_newline);
+			}
+			break;
+
+			default:
+				interface.append(entry);
+			break;
+		}
+
+		s32 idx = 0;
+		CodeBody parsed_header_end = parse_file( project_dir "components/header_end.hpp" );
+		CodeBody header_end        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_header_end.begin(); entry != parsed_header_end.end(); ++ entry, ++ idx ) switch( entry->Type )
+		{
+			case CT_Variable:
+			{
+				CodeVar var = cast(CodeVar, entry);
+				if (var->Specs)
+				{
+					s32 constexpr_found = var->Specs.remove( Spec_Constexpr );
+					if (constexpr_found > -1) {
+						CodeDefine define = def_define(entry->Name, entry->Value->Content);
+						header_end.append(define);
+						continue;
+					}
+				}
+				header_end.append(entry);
+			}
+			break;
+
+			default:
+				header_end.append(entry);
 			break;
 		}
 #pragma endregion Scan, Parse, and Generate Components
@@ -326,163 +417,157 @@ R"(#define AST_ArrSpecs_Cap       \
 
 		CodeBody parsed_memory = parse_file( project_dir "dependencies/memory.hpp" );
 		CodeBody memory        = def_body(CT_Global_Body);
-		for ( Code entry = parsed_memory.begin(); entry != parsed_memory.end(); ++ entry )
+		for ( Code entry = parsed_memory.begin(); entry != parsed_memory.end(); ++ entry ) switch (entry->Type)
 		{
-			switch (entry->Type)
+			case CT_Using:
 			{
-				case CT_Using:
-				{
-					log_fmt("REPLACE THIS MANUALLY: %SC\n", entry->Name);
-					CodeUsing   using_ver   = cast(CodeUsing, entry);
-					CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
+				log_fmt("REPLACE THIS MANUALLY: %SC\n", entry->Name);
+				CodeUsing   using_ver   = cast(CodeUsing, entry);
+				CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
 
-					memory.append(typedef_ver);
-				}
-				break;
-				case CT_Function_Fwd:
-				{
-					CodeFn fn = cast(CodeFn, entry);
-					// for ( StrC id : to_rename ) if (fn->Name.is_equal(id)) {
-					// 	rename_function_to_unique_symbol(fn);
-					// }
-					memory.append(fn);
-				}
-				break;
-				case CT_Function:
-				{
-					CodeFn fn = cast(CodeFn, entry);
-					if (fn->Specs) {
-						s32 constexpr_found = fn->Specs.remove( Spec_Constexpr );
-						if (constexpr_found > -1) {
-							log_fmt("Found constexpr: %S\n", entry.to_string());
-							fn->Specs.append(Spec_Inline);
-						}
-					}
-					memory.append(fn);
-				}
-				break;
-				case CT_Template:
-				{
-					CodeTemplate tmpl = cast(CodeTemplate, entry);
-					if ( tmpl->Declaration->Name.contains(txt("swap")))
-					{
-						CodeBody macro_swap = parse_global_body( txt(R"(
-#define swap( a, b )              \
-	do                            \
-	{                             \
-		typeof( a ) temp = ( a ); \
-		( a )            = ( b ); \
-		( b )            = temp;  \
-	} while ( 0 )
-)"
-						));
-						memory.append(macro_swap);
-					}
-				}
-				break;
-				case CT_Enum:
-				{
-					convert_cpp_enum_to_c(cast(CodeEnum, entry), memory);
-				}
-				break;
-				case CT_Struct_Fwd:
-				{
-					CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
-					memory.append(entry);
-					memory.append(tdef);
-				}
-				break;
-				case CT_Class:
-				case CT_Struct:
-				{
-					CodeBody body     = cast(CodeBody, entry->Body);
-					CodeBody new_body = def_body( entry->Body->Type );
-					for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
-					(body_entry->Type) {
-						case CT_Preprocess_If:
-						{
-							b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), body_entry, body, new_body );
-							if (found) break;
-						}
-						break;
-
-						default:
-							new_body.append(body_entry);
-						break;
-					}
-					entry->Body = new_body;
-
-					CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
-					memory.append(entry);
-					memory.append(tdef);
-				}
-				break;
-				case CT_Preprocess_If:
-				{
-					b32 found = ignore_preprocess_cond_block(txt("! GEN_C_LIKE_CPP"), entry, parsed_memory, memory );
-					if (found) break;
-
-					memory.append(entry);
-				}
-				break;
-				case CT_Preprocess_IfDef:
-				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory, memory );
-					if (found) break;
-
-					memory.append(entry);
-				}
-				break;
-				case CT_Preprocess_Pragma:
-				{
-					CodePragma pragma = cast(CodePragma, entry);
-					// if (pragma->Content.starts_with(txt("region Memory"))) {
-					// 	memory.append(generic_test);
-					// 	break;
-					// }
-
-					b32 found = swap_pragma_region_implementation( txt("FixedArena"), gen_fixed_arenas, entry, memory);
-					if (found) break;
-
-					memory.append(entry);
-				}
-				break;
-				default: {
-					memory.append(entry);
-				}
-				break;
+				memory.append(typedef_ver);
 			}
+			break;
+			case CT_Function_Fwd:
+			{
+				CodeFn fn = cast(CodeFn, entry);
+				// for ( StrC id : to_rename ) if (fn->Name.is_equal(id)) {
+				// 	rename_function_to_unique_symbol(fn);
+				// }
+				memory.append(fn);
+			}
+			break;
+			case CT_Function:
+			{
+				CodeFn fn = cast(CodeFn, entry);
+				if (fn->Specs) {
+					s32 constexpr_found = fn->Specs.remove( Spec_Constexpr );
+					if (constexpr_found > -1) {
+						//log_fmt("Found constexpr: %S\n", entry.to_string());
+						fn->Specs.append(Spec_Inline);
+					}
+				}
+				memory.append(fn);
+			}
+			break;
+			case CT_Template:
+			{
+				CodeTemplate tmpl = cast(CodeTemplate, entry);
+				if ( tmpl->Declaration->Name.contains(txt("swap")))
+				{
+					CodeBody macro_swap = parse_global_body( txt(R"(
+#define swap( a, b )              \
+do                            \
+{                             \
+	typeof( a ) temp = ( a ); \
+	( a )            = ( b ); \
+	( b )            = temp;  \
+} while ( 0 )
+)"
+					));
+					memory.append(macro_swap);
+				}
+			}
+			break;
+			case CT_Enum:
+			{
+				convert_cpp_enum_to_c(cast(CodeEnum, entry), memory);
+			}
+			break;
+			case CT_Struct_Fwd:
+			{
+				CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+				memory.append(entry);
+				memory.append(tdef);
+			}
+			break;
+			case CT_Class:
+			case CT_Struct:
+			{
+				CodeBody body     = cast(CodeBody, entry->Body);
+				CodeBody new_body = def_body( entry->Body->Type );
+				for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch
+				(body_entry->Type) {
+					case CT_Preprocess_If:
+					{
+						b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), body_entry, body, new_body );
+						if (found) break;
+					}
+					break;
+
+					default:
+						new_body.append(body_entry);
+					break;
+				}
+				entry->Body = new_body;
+
+				CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+				memory.append(entry);
+				memory.append(tdef);
+			}
+			break;
+			case CT_Preprocess_If:
+			{
+				b32 found = ignore_preprocess_cond_block(txt("! GEN_C_LIKE_CPP"), entry, parsed_memory, memory );
+				if (found) break;
+
+				memory.append(entry);
+			}
+			break;
+			case CT_Preprocess_IfDef:
+			{
+				b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_memory, memory );
+				if (found) break;
+
+				memory.append(entry);
+			}
+			break;
+			case CT_Preprocess_Pragma:
+			{
+				CodePragma pragma = cast(CodePragma, entry);
+				// if (pragma->Content.starts_with(txt("region Memory"))) {
+				// 	memory.append(generic_test);
+				// 	break;
+				// }
+
+				b32 found = swap_pragma_region_implementation( txt("FixedArena"), gen_fixed_arenas, entry, memory);
+				if (found) break;
+
+				memory.append(entry);
+			}
+			break;
+			default: {
+				memory.append(entry);
+			}
+			break;
 		}
 
 		CodeBody printing_parsed = parse_file( project_dir "dependencies/printing.hpp" );
 		CodeBody printing        = def_body(CT_Global_Body);
-		for ( Code entry = printing_parsed.begin(); entry != printing_parsed.end(); ++ entry )
+		for ( Code entry = printing_parsed.begin(); entry != printing_parsed.end(); ++ entry ) switch (entry->Type)
 		{
-			switch (entry->Type)
+			case CT_Preprocess_IfDef:
 			{
-				case CT_Preprocess_IfDef:
-				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed, printing );
-					if (found) break;
+				b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, printing_parsed, printing );
+				if (found) break;
 
-					printing.append(entry);
-				}
-				break;
-				case CT_Variable:
-				{
-					if ( strc_contains(entry->Name, txt("Msg_Invalid_Value")))
-					{
-						CodeDefine define = def_define(entry->Name, entry->Value->Content);
-						printing.append(define);
-						continue;
-					}
-					printing.append(entry);
-				}
-				break;
-				default:
-					printing.append(entry);
-				break;
+				printing.append(entry);
 			}
+			break;
+			case CT_Variable:
+			{
+				if ( strc_contains(entry->Name, txt("Msg_Invalid_Value")))
+				{
+					CodeDefine define = def_define(entry->Name, entry->Value->Content);
+					printing.append(define);
+					continue;
+				}
+				printing.append(entry);
+			}
+			break;
+			default:
+				printing.append(entry);
+			break;
 		}
 
 		CodeBody parsed_strings = parse_file( project_dir "dependencies/strings.hpp" );
@@ -520,7 +605,7 @@ R"(#define AST_ArrSpecs_Cap       \
 
 			case CT_Preprocess_IfNotDef:
 			{
-				log_fmt("\nIFNDEF: %SC\n", entry->Content);
+				//log_fmt("\nIFNDEF: %SC\n", entry->Content);
 				strings.append(entry);
 			}
 			break;
@@ -589,73 +674,73 @@ R"(#define AST_ArrSpecs_Cap       \
 
 		CodeBody parsed_filesystem = parse_file( project_dir "dependencies/filesystem.hpp" );
 		CodeBody filesystem        = def_body(CT_Global_Body);
-		for ( Code entry = parsed_filesystem.begin(); entry != parsed_filesystem.end(); ++ entry )
+		for ( Code entry = parsed_filesystem.begin(); entry != parsed_filesystem.end(); ++ entry ) switch (entry->Type)
 		{
-			switch (entry->Type)
+			case CT_Preprocess_IfDef:
 			{
-				case CT_Preprocess_IfDef:
-				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_filesystem, filesystem );
-					if (found) break;
+				b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_filesystem, filesystem );
+				if (found) break;
 
-					filesystem.append(entry);
-				}
-				break;
-
-				case CT_Enum:
-				{
-					if (entry->Name.is_equal(txt("FileOperations")))
-						continue;
-					convert_cpp_enum_to_c(cast(CodeEnum, entry), filesystem);
-				}
-				break;
-
-				case CT_Enum_Fwd:
-				case CT_Struct_Fwd:
-				case CT_Struct:
-				case CT_Union:
-				case CT_Union_Fwd:
-				{
-					StrC type_str      = codetype_to_keyword_str(entry->Type);
-					StrC formated_tmpl = token_fmt_impl( 3,
-						"type", type_str
-					,	"name", entry->Name,
-					stringize(
-						typedef <type> <name> <name>;
-					));
-					CodeTypedef tdef = parse_typedef(formated_tmpl);
-					filesystem.append(entry);
-					filesystem.append(tdef);
-				}
-				break;
-
-				case CT_Variable:
-				{
-					CodeVar var = cast(CodeVar, entry);
-					if (var->Specs.has(Spec_Constexpr) > -1)
-					{
-						CodeDefine define = def_define(entry->Name, entry->Value->Content);
-						filesystem.append(define);
-						continue;
-					}
-					//if ( strc_contains(entry->Name, txt("Msg_Invalid_Value")))
-					//{
-					//	CodeDefine define = def_define(entry->Name, entry->Value->Content);
-					//	printing.append(define);
-					//	continue;
-					//}
-					filesystem.append(entry);
-				}
-				break;
-				default:
-					filesystem.append(entry);
-				break;
+				filesystem.append(entry);
 			}
+			break;
+
+			case CT_Enum:
+			{
+				if (entry->Name.is_equal(txt("FileOperations")))
+					continue;
+				convert_cpp_enum_to_c(cast(CodeEnum, entry), filesystem);
+			}
+			break;
+
+			case CT_Enum_Fwd:
+			case CT_Struct_Fwd:
+			case CT_Struct:
+			case CT_Union:
+			case CT_Union_Fwd:
+			{
+				StrC type_str      = codetype_to_keyword_str(entry->Type);
+				StrC formated_tmpl = token_fmt_impl( 3,
+					"type", type_str
+				,	"name", entry->Name,
+				stringize(
+					typedef <type> <name> <name>;
+				));
+				CodeTypedef tdef = parse_typedef(formated_tmpl);
+				filesystem.append(entry);
+				filesystem.append(tdef);
+			}
+			break;
+
+			case CT_Variable:
+			{
+				CodeVar var = cast(CodeVar, entry);
+				if (var->Specs.has(Spec_Constexpr) > -1)
+				{
+					CodeDefine define = def_define(entry->Name, entry->Value->Content);
+					filesystem.append(define);
+					continue;
+				}
+				//if ( strc_contains(entry->Name, txt("Msg_Invalid_Value")))
+				//{
+				//	CodeDefine define = def_define(entry->Name, entry->Value->Content);
+				//	printing.append(define);
+				//	continue;
+				//}
+				filesystem.append(entry);
+			}
+			break;
+			default:
+				filesystem.append(entry);
+			break;
 		}
+
+		CodeBody array_string_cached = gen_array(txt("StringCached"), txt("Array_StringCached"));
 
 		CodeBody containers = def_body(CT_Global_Body);
 		{
 			CodeBody array_ssize = gen_array(txt("ssize"), txt("Array_ssize"));
+			CodeBody array_u8    = gen_array(txt("u8"),    txt("Array_u8"));
 
 			containers.append( def_pragma(code(region Containers)));
 
@@ -667,6 +752,7 @@ R"(#define AST_ArrSpecs_Cap       \
 			containers.append( gen_hashtable_generic_selection_interface());
 
 			containers.append(array_ssize);
+			containers.append(array_u8);
 
 			containers.append( def_pragma(code(endregion Containers)));
 			containers.append(fmt_newline);
@@ -684,6 +770,7 @@ R"(#define AST_ArrSpecs_Cap       \
 		header.print( dump_to_scratch_and_retireve(memory) );
 		header.print( dump_to_scratch_and_retireve(printing));
 		header.print( string_ops );
+		header.print(fmt_newline);
 		header.print( dump_to_scratch_and_retireve(containers));
 		header.print( hashing );
 		header.print( dump_to_scratch_and_retireve(strings));
@@ -695,7 +782,6 @@ R"(#define AST_ArrSpecs_Cap       \
 
 		header.print(fmt_newline);
 
-#if 1
 #pragma region region Print Components
 		header.print_fmt( "GEN_NS_BEGIN\n" );
 		header.print_fmt( "GEN_API_C_BEGIN\n\n" );
@@ -716,17 +802,87 @@ R"(#define AST_ArrSpecs_Cap       \
 		header.print( dump_to_scratch_and_retireve(ast_types) );
 		header.print_fmt("\n#pragma endregion AST\n");
 
+		header.print( dump_to_scratch_and_retireve(interface) );
+
+		header.print_fmt("#pragma region Inlines\n");
+		header.print( inlines );
+		header.print_fmt("#pragma endregion Inlines\n");
+
+		header.print(fmt_newline);
+		header.print( dump_to_scratch_and_retireve(array_string_cached));
+		header.print(fmt_newline);
+
+		header.print( dump_to_scratch_and_retireve(header_end) );
+
 		header.print_fmt( "\nGEN_API_C_END\n" );
 
 		header.print_fmt( "GEN_NS_END\n\n" );
 #pragma endregion Print Compoennts
-#endif
+	}
+
+	// Implementation
+	{
+		header.print_fmt( implementation_guard_start );
+
+#pragma region Scan, Parse, and Generate Dependencies
+			Code impl_start = scan_file( project_dir "dependencies/src_start.cpp" );
+			Code debug      = scan_file( project_dir "dependencies/debug.cpp" );
+			Code string_ops = scan_file( project_dir "dependencies/string_ops.cpp" );
+			Code printing   = scan_file( project_dir "dependencies/printing.cpp" );
+			Code memory     = scan_file( project_dir "dependencies/memory.cpp" );
+			Code hashing    = scan_file( project_dir "dependencies/hashing.cpp" );
+			Code strings    = scan_file( project_dir "dependencies/strings.cpp" );
+			Code filesystem = scan_file( project_dir "dependencies/filesystem.cpp" );
+			Code timing     = scan_file( project_dir "dependencies/timing.cpp" );
+#pragma region Scan, Parse, and Generate Dependencies
+
+#pragma region Scan, Parse, and Generate Components
+		Code static_data 	   = scan_file( project_dir "components/static_data.cpp" );
+		Code ast_case_macros   = scan_file( project_dir "components/ast_case_macros.cpp" );
+		Code ast               = scan_file( project_dir "components/ast.cpp" );
+		Code code              = scan_file( project_dir "components/code_serialization.cpp" );
+		Code interface         = scan_file( project_dir "components/interface.cpp" );
+		Code upfront           = scan_file( project_dir "components/interface.upfront.cpp" );
+		Code lexer             = scan_file( project_dir "components/lexer.cpp" );
+		Code parser            = scan_file( project_dir "components/parser.cpp" );
+		Code parsing_interface = scan_file( project_dir "components/interface.parsing.cpp" );
+		Code untyped           = scan_file( project_dir "components/interface.untyped.cpp" );
+#pragma endregion Scan, Parse, and Generate Components
+
+#pragma region Print Dependencies
+		header.print_fmt( roll_own_dependencies_guard_start );
+		header.print_fmt( "GEN_NS_BEGIN\n\n");
+
+		header.print( impl_start );
+		header.print( debug );
+		header.print( string_ops );
+		header.print( printing );
+		header.print( memory );
+		header.print( hashing );
+		header.print( strings );
+		header.print( filesystem );
+		header.print( timing );
+
+		header.print_fmt( "\n#pragma region Parsing\n" );
+		header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
+		header.print_fmt( "#pragma endregion Parsing\n\n" );
+
+		header.print_fmt( "GEN_NS_END\n");
+		header.print_fmt( roll_own_dependencies_guard_end );
+
+#pragma endregion Print Dependencies
+
+#pragma region Print Components
+
+#pragma endregion Print Components
+
+		header.print_fmt( implementation_guard_end );
 	}
 
 	header.print( pop_ignores );
 	header.write();
 
-	// format_file( "gen/gen.h" );
+	//k
 
 	gen::deinit();
 	return 0;

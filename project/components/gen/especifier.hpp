@@ -33,7 +33,8 @@ enum Specifier : u32
 	Spec_Override,
 	Spec_Pure,
 	Spec_Volatile,
-	Spec_NumSpecifiers
+	Spec_NumSpecifiers,
+	Spec_UnderlyingType = 0xffffffffu
 };
 
 inline StrC spec_to_str( Specifier type )

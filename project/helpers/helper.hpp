@@ -41,13 +41,13 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 	if (use_c_definition)
 	{
 		enum_code = parse_enum(token_fmt_impl((3 + 1) / 2, "entries", string_to_strc(enum_entries),
-			"enum CodeType enum_underlying(u32) { <entries> CT_NumTypes };"
+			"enum CodeType enum_underlying(u32) { <entries> CT_NumTypes, CT_UnderlyingType = GEN_U32_MAX };"
 		));
 	}
 	else
 	{
 		enum_code = parse_enum(token_fmt_impl((3 + 1) / 2, "entries", string_to_strc(enum_entries),
-			"enum CodeType : u32 { <entries> CT_NumTypes };"
+			"enum CodeType : u32 { <entries> CT_NumTypes, CT_UnderlyingType = GEN_U32_MAX };"
 		));
 	}
 
@@ -140,7 +140,8 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 			enum Operator enum_underlying(u32)
 			{
 				<entries>
-				NumOps
+				Op_NumOps,
+				Op_UnderlyingType = GEN_U32_MAX
 			};
 		)));
 	#pragma pop_macro("enum_underlying")
@@ -151,7 +152,8 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 			enum Operator : u32
 			{
 				<entries>
-				NumOps
+				Op_NumOps,
+				Op_UnderlyingType = GEN_U32_MAX
 			};
 		)));
 	}
@@ -233,7 +235,8 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 			enum Specifier enum_underlying(u32)
 			{
 				<entries>
-				Spec_NumSpecifiers
+				Spec_NumSpecifiers,
+				Spec_UnderlyingType = GEN_U32_MAX
 			};
 		)));
 	#pragma pop_macro("enum_underlying")
@@ -244,7 +247,8 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 			enum Specifier : u32
 			{
 				<entries>
-				Spec_NumSpecifiers
+				Spec_NumSpecifiers,
+				Spec_UnderlyingType = GEN_U32_MAX
 			};
 		)));
 	}

@@ -109,19 +109,19 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 
 		<tbl_type> <fn>init( AllocatorInfo allocator )
 		{
-			<tbl_type> result = hashtable_init_reserve(<tbl_type>, allocator, 8);
+			<tbl_type> result = hashtable_init_reserve(<type>, allocator, 8);
 			return result;
 		}
 
 		<tbl_type> <fn>_init_reserve( AllocatorInfo allocator, ssize num )
 		{
 			<tbl_type> result = { NULL, NULL };
-			result.Hashes  = array_init_reserve(Array_ssize, allocator, num );
+			result.Hashes  = array_init_reserve(ssize, allocator, num );
 			array_get_header(result.Hashes)->Num = num;
 			array_resize(result.Hashes, num);
 			array_fill(result.Hashes, 0, num, -1);
 
-			result.Entries = array_init_reserve(<array_entry>, allocator, num );
+			result.Entries = array_init_reserve(<entry_type>, allocator, num );
 			return result;
 		}
 
@@ -199,7 +199,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 			ArrayHeader* old_hash_header    = array_get_header( self->Hashes );
 			ArrayHeader* old_entries_header = array_get_header( self->Entries );
 
-			<tbl_type> new_tbl = hashtable_init_reserve( <tbl_type>, old_hash_header->Allocator, old_hash_header->Num );
+			<tbl_type> new_tbl = hashtable_init_reserve( <type>, old_hash_header->Allocator, old_hash_header->Num );
 
 			ArrayHeader* new_hash_header = array_get_header( new_tbl.Hashes );
 
@@ -375,24 +375,24 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 	++ HashTable_DefinitionCounter;
 	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", Array_DefinitionCounter).to_strc();
 
-	Code generic_interface_slot = untyped_str(token_fmt( "type_delimiter", (StrC)tbl_type, "slot", (StrC)slot_str,
-R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type_delimiter>,  <type_delimiter>_init
-#define GENERIC_SLOT_<slot>__hashtable_init_reserve     <type_delimiter>,  <type_delimiter>_init_reserve
-#define GENERIC_SLOT_<slot>__hashtable_clear            <type_delimiter>,  <type_delimiter>_clear
-#define GENERIC_SLOT_<slot>__hashtable_destroy          <type_delimiter>*, <type_delimiter>_destroy
-#define GENERIC_SLOT_<slot>__hashtable_get              <type_delimiter>,  <type_delimiter>_get
-#define GENERIC_SLOT_<slot>__hashtable_map              <type_delimiter>,  <type_delimiter>_map
-#define GENERIC_SLOT_<slot>__hashtable_map_mut          <type_delimiter>,  <type_delimiter>_map_mut
-#define GENERIC_SLOT_<slot>__hashtable_grow             <type_delimiter>*, <type_delimiter>_grow
-#define GENERIC_SLOT_<slot>__hashtable_rehash           <type_delimiter>*, <type_delimiter>_rehash
-#define GENERIC_SLOT_<slot>__hashtable_rehash_fast      <type_delimiter>,  <type_delimiter>_rehash_fast
-#define GENERIC_SLOT_<slot>__hashtable_remove_entry     <type_delimiter>,  <type_delimiter>_remove_entry
-#define GENERIC_SLOT_<slot>__hashtable_set              <type_delimiter>*, <type_delimiter>_set
-#define GENERIC_SLOT_<slot>__hashtable_slot             <type_delimiter>,  <type_delimiter>_slot
+	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "tbl_type", (StrC)tbl_type, "slot", (StrC)slot_str,
+R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_init
+#define GENERIC_SLOT_<slot>__hashtable_init_reserve     <type>,      <tbl_type>_init_reserve
+#define GENERIC_SLOT_<slot>__hashtable_clear            <tbl_type>,  <tbl_type>_clear
+#define GENERIC_SLOT_<slot>__hashtable_destroy          <tbl_type>*, <tbl_type>_destroy
+#define GENERIC_SLOT_<slot>__hashtable_get              <tbl_type>,  <tbl_type>_get
+#define GENERIC_SLOT_<slot>__hashtable_map              <tbl_type>,  <tbl_type>_map
+#define GENERIC_SLOT_<slot>__hashtable_map_mut          <tbl_type>,  <tbl_type>_map_mut
+#define GENERIC_SLOT_<slot>__hashtable_grow             <tbl_type>*, <tbl_type>_grow
+#define GENERIC_SLOT_<slot>__hashtable_rehash           <tbl_type>*, <tbl_type>_rehash
+#define GENERIC_SLOT_<slot>__hashtable_rehash_fast      <tbl_type>,  <tbl_type>_rehash_fast
+#define GENERIC_SLOT_<slot>__hashtable_remove_entry     <tbl_type>,  <tbl_type>_remove_entry
+#define GENERIC_SLOT_<slot>__hashtable_set              <tbl_type>*, <tbl_type>_set
+#define GENERIC_SLOT_<slot>__hashtable_slot             <tbl_type>,  <tbl_type>_slot
 
-#define GENERIC_SLOT_<slot>__hashtable__add_entry       <type_delimiter>*, <type_delimiter>__add_entry
-#define GENERIC_SLOT_<slot>__hashtable__find            <type_delimiter>,  <type_delimiter>__find
-#define GENERIC_SLOT_<slot>__hashtable__full            <type_delimiter>,  <type_delimiter>__full
+#define GENERIC_SLOT_<slot>__hashtable__add_entry       <tbl_type>*, <tbl_type>__add_entry
+#define GENERIC_SLOT_<slot>__hashtable__find            <tbl_type>,  <tbl_type>__find
+#define GENERIC_SLOT_<slot>__hashtable__full            <tbl_type>,  <tbl_type>__full
 )"
 	));
 

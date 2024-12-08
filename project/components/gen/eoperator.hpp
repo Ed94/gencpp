@@ -54,7 +54,8 @@ enum Operator : u32
 	Op_NewArray,
 	Op_Delete,
 	Op_DeleteArray,
-	NumOps
+	Op_NumOps,
+	Op_UnderlyingType = 0xffffffffu
 };
 
 inline StrC operator_to_str( Operator op )

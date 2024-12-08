@@ -68,7 +68,8 @@ enum CodeType : u32
 	CT_Using,
 	CT_Using_Namespace,
 	CT_Variable,
-	CT_NumTypes
+	CT_NumTypes,
+	CT_UnderlyingType = GEN_U32_MAX
 };
 
 inline StrC codetype_to_str( CodeType type )

@@ -3,7 +3,20 @@
 #include "ast.hpp"
 #endif
 
+/*
+  ______                 __               ______            __                        ______
+ /      \               |  \             |      \          |  \                      /      \
+|  ▓▓▓▓▓▓\ ______   ____| ▓▓ ______       \▓▓▓▓▓▓_______  _| ▓▓_    ______   ______ |  ▓▓▓▓▓▓\ ______   _______  ______
+| ▓▓   \▓▓/      \ /      ▓▓/      \       | ▓▓ |       \|   ▓▓ \  /      \ /      \| ▓▓_  \▓▓|      \ /       \/      \
+| ▓▓     |  ▓▓▓▓▓▓\  ▓▓▓▓▓▓▓  ▓▓▓▓▓▓\      | ▓▓ | ▓▓▓▓▓▓▓\\▓▓▓▓▓▓ |  ▓▓▓▓▓▓\  ▓▓▓▓▓▓\ ▓▓ \     \▓▓▓▓▓▓\  ▓▓▓▓▓▓▓  ▓▓▓▓▓▓\
+| ▓▓   __| ▓▓  | ▓▓ ▓▓  | ▓▓ ▓▓    ▓▓      | ▓▓ | ▓▓  | ▓▓ | ▓▓ __| ▓▓    ▓▓ ▓▓   \▓▓ ▓▓▓▓    /      ▓▓ ▓▓     | ▓▓    ▓▓
+| ▓▓__/  \ ▓▓__/ ▓▓ ▓▓__| ▓▓ ▓▓▓▓▓▓▓▓     _| ▓▓_| ▓▓  | ▓▓ | ▓▓|  \ ▓▓▓▓▓▓▓▓ ▓▓     | ▓▓     |  ▓▓▓▓▓▓▓ ▓▓_____| ▓▓▓▓▓▓▓▓
+ \▓▓    ▓▓\▓▓    ▓▓\▓▓    ▓▓\▓▓     \    |   ▓▓ \ ▓▓  | ▓▓  \▓▓  ▓▓\▓▓     \ ▓▓     | ▓▓      \▓▓    ▓▓\▓▓     \\▓▓     \
+  \▓▓▓▓▓▓  \▓▓▓▓▓▓  \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓     \▓▓▓▓▓▓\▓▓   \▓▓   \▓▓▓▓  \▓▓▓▓▓▓▓\▓▓      \▓▓       \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓
+*/
+
 #pragma region Code Type C-Interface
+
 void   body_append          ( CodeBody body, Code     other );
 void   body_append_body     ( CodeBody body, CodeBody other );
 String body_to_string       ( CodeBody body );
@@ -14,7 +27,7 @@ Code begin_CodeBody( CodeBody body);
 Code end_CodeBody  ( CodeBody body );
 Code next_CodeBody ( CodeBody body, Code entry_iter );
 
-void   class_add_interface( CodeClass self, CodeType interface );
+void   class_add_interface( CodeClass self, CodeTypename interface );
 String class_to_string    ( CodeClass self );
 void   class_to_string_def( CodeClass self, String* result );
 void   class_to_string_fwd( CodeClass self, String* result );
@@ -39,7 +52,7 @@ Specifier* begin_CodeSpecifiers(CodeSpecifiers specifiers);
 Specifier* end_CodeSpecifiers  (CodeSpecifiers specifiers);
 Specifier* next_CodeSpecifiers (CodeSpecifiers specifiers, Specifier* spec_iter);
 
-void   struct_add_interface(CodeStruct self, CodeType interface);
+void   struct_add_interface(CodeStruct self, CodeTypename interface);
 String struct_to_string    (CodeStruct self);
 void   struct_to_string_fwd(CodeStruct self, String* result);
 void   struct_to_string_def(CodeStruct self, String* result);
@@ -126,6 +139,7 @@ void   using_to_string_ns (CodeUsing op_cast, String* result );
 
 String var_to_string    (CodeVar self);
 void   var_to_string_ref(CodeVar self, String* result);
+
 #pragma endregion Code Type C-Interface
 
 #if GEN_COMPILER_CPP
@@ -212,24 +226,6 @@ struct CodeSpecifiers
 		return ast;
 	}
 	AST_Specifiers* ast;
-};
-
-struct CodeStruct
-{
-#if ! GEN_C_LIKE_CPP
-	Using_Code( CodeStruct );
-	forceinline void add_interface( CodeType interface ) { return struct_add_interface(* this, interface); }
-	forceinline String to_string()                       { return struct_to_string(* this); }
-	forceinline void   to_string_fwd( String& result )   { return struct_to_string_fwd(* this, & result); }
-	forceinline void   to_string_def( String& result )   { return struct_to_string_def(* this, & result); }
-#endif
-	Using_CodeOps( CodeStruct );
-	forceinline operator Code() { return * rcast( Code*, this ); }
-	forceinline AST_Struct* operator->() {
-		GEN_ASSERT(ast);
-		return ast;
-	}
-	AST_Struct* ast;
 };
 
 struct CodeAttributes
@@ -907,6 +903,24 @@ struct CodeVar
 	AST_Var* ast;
 };
 
+struct CodeStruct
+{
+#if ! GEN_C_LIKE_CPP
+	Using_Code( CodeStruct );
+	forceinline void   add_interface( CodeTypename interface ) { return struct_add_interface(* this, interface); }
+	forceinline String to_string()                             { return struct_to_string(* this); }
+	forceinline void   to_string_fwd( String& result )         { return struct_to_string_fwd(* this, & result); }
+	forceinline void   to_string_def( String& result )         { return struct_to_string_def(* this, & result); }
+#endif
+	Using_CodeOps( CodeStruct );
+	forceinline operator Code() { return * rcast( Code*, this ); }
+	forceinline AST_Struct* operator->() {
+		GEN_ASSERT(ast);
+		return ast;
+	}
+	AST_Struct* ast;
+};
+
 #undef Define_CodeType
 #undef Using_Code
 #undef Using_CodeOps
@@ -982,6 +996,7 @@ struct NullCode_ImplicitCaster
 
 #if ! GEN_C_LIKE_CPP
 GEN_OPTIMIZE_MAPPINGS_BEGIN
+
 forceinline void   append          ( CodeBody body, Code     other ) { return body_append(body, other); }
 forceinline void   append          ( CodeBody body, CodeBody other ) { return body_append_body(body, other); }
 forceinline String to_string       ( CodeBody body )                 { return body_to_string(body); }
@@ -992,7 +1007,7 @@ forceinline Code begin( CodeBody body)                   { return begin_CodeBody
 forceinline Code end  ( CodeBody body )                  { return end_CodeBody(body); }
 forceinline Code next ( CodeBody body, Code entry_iter ) { return next_CodeBody(body, entry_iter); }
 
-forceinline void   add_interface( CodeClass self, CodeType interface ) { return class_add_interface(self, interface); }
+forceinline void   add_interface( CodeClass self, CodeTypename interface ) { return class_add_interface(self, interface); }
 forceinline String to_string    ( CodeClass self )                     { return class_to_string(self); }
 forceinline void   to_string_def( CodeClass self, String& result )     { return class_to_string_def(self, & result); }
 forceinline void   to_string_fwd( CodeClass self, String& result )     { return class_to_string_fwd(self, & result); }
@@ -1017,10 +1032,10 @@ forceinline Specifier* begin(CodeSpecifiers specifiers)                       { 
 forceinline Specifier* end  (CodeSpecifiers specifiers)                       { return end_CodeSpecifiers(specifiers); }
 forceinline Specifier* next (CodeSpecifiers specifiers, Specifier& spec_iter) { return next_CodeSpecifiers(specifiers, & spec_iter); }
 
-forceinline void   add_interface(CodeStruct self, CodeType interface) { return struct_add_interface(self, interface); }
-forceinline String to_string    (CodeStruct self)                     { return struct_to_string(self); }
-forceinline void   to_string_fwd(CodeStruct self, String& result)     { return struct_to_string_fwd(self, & result); }
-forceinline void   to_string_def(CodeStruct self, String& result)     { return struct_to_string_def(self, & result); }
+forceinline void   add_interface(CodeStruct self, CodeTypename interface) { return struct_add_interface(self, interface); }
+forceinline String to_string    (CodeStruct self)                         { return struct_to_string(self); }
+forceinline void   to_string_fwd(CodeStruct self, String& result)         { return struct_to_string_fwd(self, & result); }
+forceinline void   to_string_def(CodeStruct self, String& result)         { return struct_to_string_def(self, & result); }
 
 forceinline String to_string(CodeAttributes attributes)                 { return attributes_to_string(attributes); }
 forceinline void   to_string(CodeAttributes attributes, String& result) { return attributes_to_string_ref(attributes, & result); }
@@ -1104,6 +1119,7 @@ forceinline void   to_string_ns(CodeUsing op_cast, String& result ) { return usi
 
 forceinline String to_string(CodeVar self)                 { return var_to_string(self); }
 forceinline void   to_string(CodeVar self, String& result) { return var_to_string_ref(self, & result); }
+
 GEN_OPITMIZE_MAPPINGS_END
 #endif //if GEN_C_LIKE_CPP
 
