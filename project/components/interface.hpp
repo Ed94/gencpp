@@ -16,7 +16,6 @@
 */
 
 // Initialize the library.
-// This currently just initializes the CodePool.
 void init();
 
 // Currently manually free's the arenas, code for checking for leaks.
@@ -53,13 +52,13 @@ CodeAttributes def_attributes( StrC content );
 CodeComment    def_comment   ( StrC content );
 
 struct Opts_def_struct {
-	Code           body;
+	CodeBody       body;
 	CodeTypename   parent;
 	AccessSpec     parent_access;
 	CodeAttributes attributes;
-	ModuleFlag     mflags;
 	CodeTypename*  interfaces;
 	s32            num_interfaces;
+	ModuleFlag     mflags;
 };
 CodeClass def_class( StrC name, Opts_def_struct otps GEN_PARAM_DEFAULT );
 
@@ -79,7 +78,7 @@ struct Opts_def_destructor {
 CodeDestructor def_destructor( Opts_def_destructor opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_enum {
-	Code           body;
+	CodeBody       body;
 	CodeTypename   type;
 	EnumT          specifier;
 	CodeAttributes attributes;
@@ -88,13 +87,13 @@ struct Opts_def_enum {
 CodeEnum def_enum( StrC name, Opts_def_enum opts GEN_PARAM_DEFAULT );
 
 CodeExec   def_execution  ( StrC content );
-CodeExtern def_extern_link( StrC name, Code body );
+CodeExtern def_extern_link( StrC name, CodeBody body );
 CodeFriend def_friend     ( Code symbol );
 
 struct Opts_def_function {
 	CodeParam       params;
 	CodeTypename    ret_type;
-	Code            body;
+	CodeBody        body;
 	CodeSpecifiers  specs;
 	CodeAttributes  attrs;
 	ModuleFlag      mflags;
@@ -104,14 +103,14 @@ CodeFn def_function( StrC name, Opts_def_function opts GEN_PARAM_DEFAULT );
 struct Opts_def_include   { b32        foreign; };
 struct Opts_def_module    { ModuleFlag mflags;  };
 struct Opts_def_namespace { ModuleFlag mflags;  };
-CodeInclude def_include  ( StrC content,         Opts_def_include   opts GEN_PARAM_DEFAULT );
-CodeModule  def_module   ( StrC name,            Opts_def_module    opts GEN_PARAM_DEFAULT );
-CodeNS      def_namespace( StrC name, Code body, Opts_def_namespace opts GEN_PARAM_DEFAULT );
+CodeInclude def_include  ( StrC content,             Opts_def_include   opts GEN_PARAM_DEFAULT );
+CodeModule  def_module   ( StrC name,                Opts_def_module    opts GEN_PARAM_DEFAULT );
+CodeNS      def_namespace( StrC name, CodeBody body, Opts_def_namespace opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_operator {
 	CodeParam       params;
 	CodeTypename    ret_type;
-	Code            body;
+	CodeBody        body;
 	CodeSpecifiers  specifiers;
 	CodeAttributes  attributes;
 	ModuleFlag      mflags;
@@ -119,7 +118,7 @@ struct Opts_def_operator {
 CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_operator_cast {
-	Code           body;
+	CodeBody       body;
 	CodeSpecifiers specs;
 };
 CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
@@ -155,13 +154,13 @@ struct Opts_def_union {
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeUnion def_union( StrC name, Code body, Opts_def_union opts GEN_PARAM_DEFAULT );
+CodeUnion def_union( StrC name, CodeBody body, Opts_def_union opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_using {
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeUsing def_using( StrC name, Code type, Opts_def_using opts GEN_PARAM_DEFAULT );
+CodeUsing def_using( StrC name, CodeTypename type, Opts_def_using opts GEN_PARAM_DEFAULT );
 
 CodeUsing def_using_namespace( StrC name );
 

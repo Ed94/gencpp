@@ -4,8 +4,8 @@
 #endif
 
 GEN_NS_PARSER_BEGIN
-internal void init();
-internal void deinit();
+internal void parser_init();
+internal void parser_deinit();
 GEN_NS_PARSER_END
 
 internal
@@ -148,9 +148,8 @@ void define_constants()
 #	define def_constant_code_type( Type_ )           \
 		do                                           \
 		{                                            \
-		    Opts_def_type ops = {};                  \
 			StrC name_str = name(Type_);             \
-			t_##Type_ = def_type( name_str, ops );   \
+			t_##Type_ = def_type( name_str );        \
 			code_set_global( cast(Code, t_##Type_)); \
 		} while(0)
 
@@ -323,7 +322,7 @@ void init()
 	PreprocessorDefines = array_init_reserve(StringCached, GlobalAllocator, kilobytes(1) );
 
 	define_constants();
-	GEN_NS_PARSER init();
+	GEN_NS_PARSER parser_init();
 }
 
 void deinit()
@@ -368,7 +367,7 @@ void deinit()
 	while ( left--, left );
 
 	array_free(Global_AllocatorBuckets);
-	GEN_NS_PARSER deinit();
+	GEN_NS_PARSER parser_deinit();
 }
 
 void reset()

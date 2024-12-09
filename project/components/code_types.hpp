@@ -197,6 +197,9 @@ struct CodeParam
 	forceinline bool      has_entries();
 	forceinline String    to_string();
 	forceinline void      to_string( String& result );
+
+	forceinline CodeParam begin() { return begin_CodeParam(* this); }
+	forceinline CodeParam end()   { return end_CodeParam(* this); }
 #endif
 	Using_CodeOps( CodeParam );
 	forceinline operator Code()       { return { (AST*)ast }; }

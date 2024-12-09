@@ -538,8 +538,6 @@ do                          \
 	// Only has operator overload definitions that C doesn't need.
 	// CodeBody ast_inlines = gen_ast_inlines();
 
-	Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
-
 	CodeBody ecode       = gen_ecode     ( project_dir "enums/ECodeTypes.csv", helper_use_c_definition );
 	CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv",  helper_use_c_definition );
 	CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv", helper_use_c_definition );
@@ -595,6 +593,9 @@ do                          \
 		break;
 	}
 
+	// Used to track which functions need generic selectors.
+	Array(CodeFn) code_c_interface = array_init_reserve<CodeFn>(GlobalAllocator, 16);
+
 	CodeBody parsed_ast = parse_file( project_dir "components/ast.hpp" );
 	CodeBody ast        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_ast.begin(); entry != parsed_ast.end(); ++ entry ) switch (entry->Type)
@@ -614,6 +615,48 @@ do                          \
 			if (found) break;
 
 			ast.append(entry);
+		}
+		break;
+
+		case CT_Preprocess_Pragma:
+		{
+			if ( ! entry->Content.contains(txt("region Code C-Interface"))) {
+				continue;
+			}
+			// Reached the #pragma region Code C-Interface
+			for (b32 continue_for = true; continue_for; ++ entry) switch(entry->Type)
+			{
+				default:
+					// Pass through everything but function forwards or the end region pragma
+					ast.append(entry);
+				break;
+
+				case CT_Function_Fwd:
+				{
+					// Were going to wrap usage of these procedures into generic selectors in code_types.hpp section,
+					// so we're changing the namespace to code__<name>
+					CodeFn fn = cast(CodeFn, entry);
+					if (fn->Name.starts_with(txt("code_")))
+					{
+						StrC   old_prefix  = txt("code_");
+						StrC   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+						String new_name    = String::fmt_buf(GlobalAllocator, "code__%SC", actual_name );
+
+						fn->Name = get_cached_string(new_name);
+						code_c_interface.append(fn);
+					}
+					ast.append(entry);
+				}
+				break;
+
+				case CT_Preprocess_Pragma:
+					// Reached the end of the interface, go back to regular ast.hpp iteration.
+					ast.append(entry);
+					if ( entry->Content.contains(txt("endregion Code C-Interface"))) {
+						continue_for = false;
+					}
+				break;
+			}
 		}
 		break;
 
@@ -679,6 +722,37 @@ R"(#define AST_ArrSpecs_Cap \
 		break;
 	}
 
+	StrC code_typenames[] = {
+		txt("Code"),
+		txt("CodeBody"),
+		txt("CodeAttributes"),
+		txt("CodeComment"),
+		txt("CodeClass"),
+		txt("CodeConstructor"),
+		txt("CodeDefine"),
+		txt("CodeDestructor"),
+		txt("CodeEnum"),
+		txt("CodeExec"),
+		txt("CodeExtern"),
+		txt("CodeInclude"),
+		txt("CodeFriend"),
+		txt("CodeFn"),
+		txt("CodeModule"),
+		txt("CodeNS"),
+		txt("CodeOperator"),
+		txt("CodeOpCast"),
+		txt("CodePragma"),
+		txt("CodeParam"),
+		txt("CodePreprocessCond"),
+		txt("CodeSpecifiers"),
+		txt("CodeTemplate"),
+		txt("CodeTypename"),
+		txt("CodeTypedef"),
+		txt("CodeUnion"),
+		txt("CodeUsing"),
+		txt("CodeVar"),
+	};
+
 	CodeBody parsed_code_types = parse_file( project_dir "components/code_types.hpp" );
 	CodeBody code_types        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_code_types.begin(); entry != parsed_code_types.end(); ++ entry ) switch( entry->Type )
@@ -695,6 +769,84 @@ R"(#define AST_ArrSpecs_Cap \
 			if (found) break;
 
 			code_types.append(entry);
+		}
+		break;
+
+		case CT_Preprocess_Pragma: if ( entry->Content.is_equal(txt("region Code Type C-Interface")) )
+		{
+			code_types.append(entry);
+			code_types.append(fmt_newline);
+			/*
+			This thing makes a:
+			#define code_<interface_name>( code, ... ) _Generic( (code),                    \
+				<slots> of defintions that look like: <typeof(code)>: code__<interface_name>, \
+				default: gen_generic_selection (Fail case)                                    \
+			) GEN_RESOLVED_FUNCTION_CALL( code, ... )                                       \
+			*/
+			String generic_selector = String::make_reserve(GlobalAllocator, kilobytes(2));
+			for ( CodeFn fn : code_c_interface )
+			{
+				generic_selector.clear();
+				StrC   private_prefix  = txt("code__");
+				StrC   actual_name     = { fn->Name.Len - private_prefix.Len, fn->Name.Ptr + private_prefix.Len };
+				String interface_name  = String::fmt_buf(GlobalAllocator, "code_%SC", actual_name );
+
+				// Resolve generic's arguments
+				b32    has_args   = fn->Params->NumEntries > 1;
+				String params_str = String::make_reserve(GlobalAllocator, 32);
+				for (CodeParam param = fn->Params->Next; param != fn->Params.end(); ++ param) {
+					// We skip the first parameter as its always going to be the code for selection
+					if (param->Next == nullptr) {
+						params_str.append_fmt( "%SC", param->Name );
+						continue;
+					}
+					params_str.append_fmt( "%SC, ", param->Name );
+				}
+
+				char const* tmpl_def_start = nullptr;
+				if (has_args) {
+					tmpl_def_start =
+R"(#define <interface_name>( code, <params> ) _Generic( (code),  \
+)";
+				}
+				else {
+					tmpl_def_start =
+R"(#define <interface_name>( code ) _Generic( (code), \
+)";
+				}
+				// Definition start
+				generic_selector.append( token_fmt(
+							"interface_name", interface_name.to_strc()
+					,		"params",         params_str.to_strc() // Only used if has_args
+					, tmpl_def_start
+				));
+
+				// Append slots
+				for(StrC type : code_typenames ) {
+					generic_selector.append_fmt("%SC : %SC,\\\n", type, fn->Name );
+				}
+				generic_selector.append(txt("default: gen_generic_selection_fail \\\n"));
+
+				char const* tmpl_def_end = nullptr;
+				if (has_args) {
+					tmpl_def_end = txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( (<type>)code, <params> )");
+				}
+				else {
+					tmpl_def_end = txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( (<type>)code )");
+				}
+				// Definition end
+				generic_selector.append( token_fmt(
+						"params", params_str.to_strc()
+				, 	"type",   fn->Params->ValueType->Name
+				,		tmpl_def_end ) );
+
+				code_types.append( untyped_str(generic_selector) );
+				code_types.append( fmt_newline);
+				code_types.append( fmt_newline);
+			}
+		}
+		else {
+			code_types.append(entry); // Ignore the pragma otherwise
 		}
 		break;
 
@@ -768,12 +920,57 @@ R"(#define AST_ArrSpecs_Cap \
 		{
 			CodeFn fn = cast(CodeFn, entry);
 			Code prev = entry->Prev;
+
 			if (prev && prev->Name.is_equal(entry->Name)) {
+				// rename second definition so there isn't a symbol conflict
 				String postfix_arr = String::fmt_buf(GlobalAllocator, "%SC_arr", entry->Name);
 				entry->Name = get_cached_string(postfix_arr.to_strc());
 				postfix_arr.free();
 			}
-			interface.append(fn);
+
+			b32 handled= false;
+			for ( CodeParam opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
+			{
+				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
+				StrC prefix      = txt("def_");
+				StrC actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
+				StrC new_name    = String::fmt_buf(GlobalAllocator, "def__%SC", actual_name ).to_strc();
+
+				// Resolve define's arguments
+				b32    has_args   = fn->Params->NumEntries > 1;
+				String params_str = String::make_reserve(GlobalAllocator, 32);
+				for (CodeParam other_param = fn->Params; other_param != opt_param; ++ other_param) {
+					if ( other_param == opt_param ) {
+						params_str.append_fmt( "%SC", other_param->Name );
+						break;
+					}
+					// If there are arguments before the optional, prepare them here.
+					params_str.append_fmt( "%SC, ", other_param->Name );
+				}
+				char const* tmpl_fn_macro = nullptr;
+				if (params_str.length() > 0 ) {
+					tmpl_fn_macro= "#define <def_name>( <params> ... ) <def__name>( <params> (<opts_type>) { __VA_ARGS__ } )\n";
+				}
+				else {
+					tmpl_fn_macro= "#define <def_name>( ... ) <def__name>( (<opts_type>) { __VA_ARGS__ } )\n";
+				}
+				Code fn_macro = untyped_str(token_fmt(
+						"def_name",  fn->Name
+				,		"def__name", new_name
+				,		"params",    params_str.to_strc()
+				,		"opts_type", opt_param->ValueType->Name
+				,	tmpl_fn_macro
+				));
+
+				fn->Name = get_cached_string(new_name);
+				interface.append(fn);
+				interface.append(fn_macro);
+				handled = true;
+				break;
+			}
+
+			if (! handled)
+				interface.append(fn);
 		}
 		break;
 
@@ -788,6 +985,32 @@ R"(#define AST_ArrSpecs_Cap \
 
 		default:
 			interface.append(entry);
+		break;
+	}
+
+	CodeBody parsed_inlines = parse_file( project_dir "components/inlines.hpp" );
+	CodeBody inlines        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_inlines.begin(); entry != parsed_inlines.end(); ++ entry ) switch( entry->Type )
+	{
+		case CT_Function:
+		{
+			// Were going to wrap usage of these procedures into generic selectors in code_types.hpp section,
+			// so we're changing the namespace to code__<name>
+			CodeFn fn = cast(CodeFn, entry);
+			if (fn->Name.starts_with(txt("code_")))
+			{
+				StrC   old_prefix  = txt("code_");
+				StrC   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+				String new_name    = String::fmt_buf(GlobalAllocator, "code__%SC", actual_name );
+
+				fn->Name = get_cached_string(new_name);
+			}
+			inlines.append(entry);
+		}
+		break;
+
+		default:
+			inlines.append(entry);
 		break;
 	}
 
@@ -838,14 +1061,82 @@ R"(#define AST_ArrSpecs_Cap \
 
 	Code src_static_data 	    = scan_file( project_dir "components/static_data.cpp" );
 	Code src_ast_case_macros    = scan_file( project_dir "components/ast_case_macros.cpp" );
-	Code src_ast                = scan_file( project_dir "components/ast.cpp" );
 	Code src_code_serialization = scan_file( project_dir "components/code_serialization.cpp" );
 	Code src_interface          = scan_file( project_dir "components/interface.cpp" );
-	Code src_upfront            = scan_file( project_dir "components/interface.upfront.cpp" );
 	Code src_lexer              = scan_file( project_dir "components/lexer.cpp" );
 	Code src_parser             = scan_file( project_dir "components/parser.cpp" );
 	Code src_parsing_interface  = scan_file( project_dir "components/interface.parsing.cpp" );
 	Code src_untyped            = scan_file( project_dir "components/interface.untyped.cpp" );
+
+	CodeBody parsed_src_ast = parse_file( project_dir "components/ast.cpp" );
+	CodeBody src_ast        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_src_ast.begin(); entry != parsed_src_ast.end(); ++ entry ) switch( entry ->Type )
+	{
+		case CT_Function:
+		{
+			// Were going to wrap usage of these procedures into generic selectors in code_types.hpp section,
+			// so we're changing the namespace to code__<name>
+			CodeFn fn = cast(CodeFn, entry);
+			if (fn->Name.starts_with(txt("code_")))
+			{
+				StrC   old_prefix  = txt("code_");
+				StrC   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+				String new_name    = String::fmt_buf(GlobalAllocator, "code__%SC", actual_name );
+
+				fn->Name = get_cached_string(new_name);
+			}
+			src_ast.append(entry);
+		}
+		break;
+
+		default:
+			src_ast.append(entry);
+		break;
+	}
+
+	CodeBody parsed_src_upfront = parse_file( project_dir "components/interface.upfront.cpp" );
+	CodeBody src_upfront        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_src_upfront.begin(); entry != parsed_src_upfront.end(); ++ entry ) switch( entry ->Type )
+	{
+		case CT_Enum: {
+			convert_cpp_enum_to_c(cast(CodeEnum, entry), src_upfront);
+		}
+		break;
+
+		case CT_Function:
+		{
+			CodeFn fn = cast(CodeFn, entry);
+			Code prev = entry->Prev;
+
+			for ( CodeParam arr_param : fn->Params )
+				if (	fn->Name.starts_with(txt("def_"))
+					&&	(		arr_param->ValueType->Name.starts_with(txt("Specifier"))
+							||	arr_param->ValueType->Name.starts_with(txt("Code")) )
+				)
+				{
+					// rename second definition so there isn't a symbol conflict
+					String postfix_arr = String::fmt_buf(GlobalAllocator, "%SC_arr", fn->Name);
+					fn->Name = get_cached_string(postfix_arr.to_strc());
+					postfix_arr.free();
+				}
+
+			for ( CodeParam opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
+			{
+				StrC prefix      = txt("def_");
+				StrC actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
+				StrC new_name    = String::fmt_buf(GlobalAllocator, "def__%SC", actual_name ).to_strc();
+
+				fn->Name = get_cached_string(new_name);
+			}
+
+			src_upfront.append(fn);
+		}
+		break;
+
+		default:
+			src_upfront.append(entry);
+		break;
+	}
 #pragma endregion Resolve Components
 
 	// THERE SHOULD BE NO NEW GENERIC CONTAINER DEFINTIONS PAST THIS POINT (It will not have slots for the generic selection generated macros)
@@ -930,7 +1221,7 @@ R"(#define AST_ArrSpecs_Cap \
 		header.print( format_code_to_untyped(interface) );
 
 		header.print_fmt("#pragma region Inlines\n");
-		header.print( inlines );
+		header.print( format_code_to_untyped(inlines) );
 		header.print_fmt("#pragma endregion Inlines\n");
 
 		header.print(fmt_newline);
@@ -989,9 +1280,9 @@ R"(#define AST_ArrSpecs_Cap \
 		header.print( src_code_serialization );
 		header.print_fmt( "#pragma endregion AST\n\n" );
 
-		 header.print_fmt( "#pragma region Interface\n" );
-		 header.print( src_interface );
-		// header.print( src_upfront );
+		header.print_fmt( "#pragma region Interface\n" );
+		header.print( src_interface );
+		header.print( format_code_to_untyped(src_upfront) );
 		// header.print_fmt( "\n#pragma region Parsing\n\n" );
 		// header.print( format_code_to_untyped(parser_nspace) );
 		// header.print( lexer );

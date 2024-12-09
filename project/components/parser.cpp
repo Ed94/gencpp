@@ -134,7 +134,7 @@ bool __eat(TokArray* self, TokType type )
 }
 
 internal
-void init()
+void parser_init()
 {
 	Tokens = array_init_reserve(Token, arena_allocator_info( & LexArena)
 		, ( LexAllocator_Size - sizeof( ArrayHeader ) ) / sizeof(Token)
@@ -145,7 +145,7 @@ void init()
 }
 
 internal
-void deinit()
+void parser_deinit()
 {
 	parser::Tokens = { nullptr };
 }
@@ -780,10 +780,10 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 	}
 
 	if ( which == Tok_Decl_Class )
-		result = def_class( to_str(name), { body, parent, access, attributes, mflags } );
+		result = def_class( to_str(name), { body, parent, access, attributes, nullptr, 0, mflags } );
 
 	else
-		result = def_struct( to_str(name), { body, (CodeTypename)parent, access, attributes, mflags } );
+		result = def_struct( to_str(name), { body, (CodeTypename)parent, access, attributes, nullptr, 0, mflags } );
 
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;

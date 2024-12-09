@@ -402,7 +402,7 @@ static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST is not size of AST_POD_S
 struct  InvalidCode_ImplictCaster;
 #define InvalidCode (InvalidCode_ImplictCaster{})
 #else
-#define InvalidCode { (void*)Code_Invalid }
+#define InvalidCode (void*){ (void*)Code_Invalid }
 #endif
 
 #if GEN_COMPILER_CPP

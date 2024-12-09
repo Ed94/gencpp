@@ -482,10 +482,12 @@ CodeComment def_comment( StrC content )
 	if ( * string_back(cmt_formatted) != '\n' )
 		string_append_strc( & cmt_formatted, txt("\n") );
 
+	StrC name = { string_length(cmt_formatted), cmt_formatted };
+
 	Code
 	result          = make_code();
 	result->Type    = CT_Comment;
-	result->Name    = get_cached_string( { string_length(cmt_formatted), cmt_formatted } );
+	result->Name    = get_cached_string( name );
 	result->Content = result->Name;
 
 	string_free(& cmt_formatted);
@@ -546,7 +548,7 @@ CodeClass def_class( StrC name, Opts_def_struct p )
 {
 	name_check( def_class, name );
 
-	Code           body           = p.body;
+	CodeBody       body           = p.body;
 	CodeTypename   parent         = p.parent;
 	AccessSpec     parent_access  = p.parent_access;
 	CodeAttributes attributes     = p.attributes;
@@ -586,7 +588,7 @@ CodeClass def_class( StrC name, Opts_def_struct p )
 
 		result->Type = CT_Class;
 		result->Body = body;
-		result->Body->Parent = result; // TODO(Ed): Review this?
+		result->Body->Parent = cast(Code, result); // TODO(Ed): Review this?
 	}
 	else
 	{
@@ -682,7 +684,7 @@ CodeDestructor def_destructor( Opts_def_destructor p )
 
 CodeEnum def_enum( StrC name, Opts_def_enum p )
 {
-	Code           body       = p.body;
+	CodeBody       body       = p.body;
 	CodeTypename   type       = p.type;
 	EnumT          specifier  = p.specifier;
 	CodeAttributes attributes = p.attributes;
@@ -764,7 +766,7 @@ CodeExec def_execution( StrC content )
 	return (CodeExec) result;
 }
 
-CodeExtern def_extern_link( StrC name, Code body )
+CodeExtern def_extern_link( StrC name, CodeBody body )
 {
 	name_check( def_extern_linkage, name );
 	null_check( def_extern_linkage, body );
@@ -818,7 +820,7 @@ CodeFn def_function( StrC name, Opts_def_function p )
 {
 	CodeParam       params     = p.params;
 	CodeTypename    ret_type   = p.ret_type;
-	Code            body       = p.body;
+	CodeBody        body       = p.body;
 	CodeSpecifiers  specifiers = p.specs;
 	CodeAttributes  attributes = p.attrs;
 	ModuleFlag      mflags     = p.mflags;
@@ -934,7 +936,7 @@ CodeModule def_module( StrC name, Opts_def_module p )
 	return (CodeModule) result;
 }
 
-CodeNS def_namespace( StrC name, Code body, Opts_def_namespace p )
+CodeNS def_namespace( StrC name, CodeBody body, Opts_def_namespace p )
 {
 	name_check( def_namespace, name );
 	null_check( def_namespace, body);
@@ -958,7 +960,7 @@ CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 {
 	CodeParam       params_code = p.params;
 	CodeTypename    ret_type    = p.ret_type;
-	Code            body        = p.body;
+	CodeBody        body        = p.body;
 	CodeSpecifiers  specifiers  = p.specifiers;
 	CodeAttributes  attributes  = p.attributes;
 	ModuleFlag      mflags      = p.mflags;
@@ -989,9 +991,12 @@ CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 		name = str_fmt_buf( "%.*soperator %.*s", nspace.Len, nspace.Ptr, op_str.Len, op_str.Ptr );
 	else
 		name = str_fmt_buf( "operator %.*s", op_str.Len, op_str.Ptr );
+
+	StrC name_resolved = { str_len(name), name };
+
 	CodeOperator
 	result              = (CodeOperator) make_code();
-	result->Name        = get_cached_string( { str_len(name), name } );
+	result->Name        = get_cached_string( name_resolved );
 	result->ModuleFlags = mflags;
 	result->Op          = op;
 
@@ -1038,7 +1043,7 @@ CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 
 CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast p )
 {
-	Code           body       = p.body;
+	CodeBody       body       = p.body;
 	CodeSpecifiers const_spec = p.specs;
 
 	null_check( def_operator_cast, type );
@@ -1168,7 +1173,7 @@ CodeSpecifiers def_specifier( Specifier spec )
 
 CodeStruct def_struct( StrC name, Opts_def_struct p )
 {
-	Code           body           = p.body;
+	CodeBody       body           = p.body;
 	CodeTypename   parent         = p.parent;
 	AccessSpec     parent_access  = p.parent_access;
 	CodeAttributes attributes     = p.attributes;
@@ -1198,7 +1203,7 @@ CodeStruct def_struct( StrC name, Opts_def_struct p )
 	result              = (CodeStruct) make_code();
 	result->ModuleFlags = mflags;
 
-	if ( name )
+	if ( name.Len )
 		result->Name = get_cached_string( name );
 
 	if ( body )
@@ -1338,7 +1343,7 @@ CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
 	}
 
 	// Registering the type.
-	Code registered_type = def_type( name );
+	CodeTypename registered_type = def_type( name );
 
 	if ( ! registered_type )
 	{
@@ -1373,7 +1378,7 @@ CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
 	return result;
 }
 
-CodeUnion def_union( StrC name, Code body, Opts_def_union p )
+CodeUnion def_union( StrC name, CodeBody body, Opts_def_union p )
 {
 	null_check( def_union, body );
 
@@ -1405,12 +1410,12 @@ CodeUnion def_union( StrC name, Code body, Opts_def_union p )
 	return result;
 }
 
-CodeUsing def_using( StrC name, Code type, Opts_def_using p )
+CodeUsing def_using( StrC name, CodeTypename type, Opts_def_using p )
 {
 	name_check( def_using, name );
 	null_check( def_using, type );
 
-	Code register_type = def_type( name );
+	CodeTypename register_type = def_type( name );
 
 	if ( ! register_type )
 	{
@@ -1451,7 +1456,7 @@ CodeUsing def_using_namespace( StrC name )
 	return (CodeUsing) result;
 }
 
-CodeVar def_variable( CodeTypename type, StrC name, Code value, Opts_def_variable p )
+CodeVar def_variable( CodeTypename type, StrC name, Opts_def_variable p )
 {
 	name_check( def_variable, name );
 	null_check( def_variable, type );
@@ -1474,9 +1479,9 @@ CodeVar def_variable( CodeTypename type, StrC name, Code value, Opts_def_variabl
 		return InvalidCode;
 	}
 
-	if ( value && value->Type != CT_Untyped )
+	if ( p.value && p.value->Type != CT_Untyped )
 	{
-		log_failure( "gen::def_variable: value was not a `Untyped` type - %s", code_debug_str(value) );
+		log_failure( "gen::def_variable: value was not a `Untyped` type - %s", code_debug_str(p.value) );
 		return InvalidCode;
 	}
 
@@ -1494,8 +1499,8 @@ CodeVar def_variable( CodeTypename type, StrC name, Code value, Opts_def_variabl
 	if ( p.specifiers )
 		result->Specs = p.specifiers;
 
-	if ( value )
-		result->Value = value;
+	if ( p.value )
+		result->Value = p.value;
 
 	return result;
 }
@@ -1915,7 +1920,7 @@ CodeBody def_global_body( s32 num, ... )
 		{
 			case CT_Global_Body:
 				// result.body_append( entry.code_cast<CodeBody>() ) ;
-				body_append( result, cast(CodeBody, entry) );
+				body_append_body( result, cast(CodeBody, entry) );
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
@@ -1956,7 +1961,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 		switch (entry->Type)
 		{
 			case CT_Global_Body:
-				body_append(result, cast(CodeBody, entry) );
+				body_append_body(result, cast(CodeBody, entry) );
 				continue;
 
 			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES
@@ -2090,21 +2095,21 @@ CodeParam def_params( s32 num, CodeParam* codes )
 {
 	def_body_code_array_start( def_params );
 
-#	define check_current()                                                                                      \
-	if ( current.ast == nullptr )                                                                               \
-	{                                                                                                           \
-		log_failure("gen::def_params: Provide a null code in codes array");                                     \
-		return InvalidCode;                                                                                     \
-	}                                                                                                           \
-																												\
-	if (current->Type != CT_Parameters )                                                                        \
-	{                                                                                                           \
-		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", code_debug_str(current) );   \
-		return InvalidCode;                                                                                     \
+#	define check_current(current)                                                                                      \
+	if ( current == nullptr )                                                                                          \
+	{                                                                                                                  \
+		log_failure("gen::def_params: Provide a null code in codes array");                                            \
+		return InvalidCode;                                                                                            \
+	}                                                                                                                  \
+																												       \
+	if (current->Type != CT_Parameters )                                                                               \
+	{                                                                                                                  \
+		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", code_debug_str(current) );     \
+		return InvalidCode;                                                                                            \
 	}
 
 	CodeParam current = (CodeParam)code_duplicate(* codes);
-	check_current();
+	check_current(current);
 
 	CodeParam
 	result            = (CodeParam) make_code();
@@ -2114,7 +2119,7 @@ CodeParam def_params( s32 num, CodeParam* codes )
 
 	while( codes++, current = * codes, num--, num > 0 )
 	{
-		check_current();
+		check_current(current);
 		params_append(result, current );
 	}
 #	undef check_current
@@ -2293,7 +2298,7 @@ CodeBody def_union_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_union_body( s32 num, CodeUnion* codes )
+CodeBody def_union_body( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_union_body );
 

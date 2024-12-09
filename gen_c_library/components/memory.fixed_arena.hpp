@@ -89,19 +89,20 @@ CodeBody gen_fixed_arenas()
 	result.append(fmt_newline);
 
 	result.append(parse_global_body(txt(R"(
-#define fixed_arena_init(expr) _Generic((expr), \
-    FixedArena_1KB*   : fixed_arena_init_1KB,   \
-    FixedArena_4KB*   : fixed_arena_init_4KB,   \
-    FixedArena_8KB*   : fixed_arena_init_8KB,   \
-    FixedArena_16KB*  : fixed_arena_init_16KB,  \
-    FixedArena_32KB*  : fixed_arena_init_32KB,  \
-    FixedArena_64KB*  : fixed_arena_init_64KB,  \
-    FixedArena_128KB* : fixed_arena_init_128KB, \
-    FixedArena_256KB* : fixed_arena_init_256KB, \
-    FixedArena_512KB* : fixed_arena_init_512KB, \
-    FixedArena_1MB*   : fixed_arena_init_1MB,   \
-    FixedArena_2MB*   : fixed_arena_init_2MB,   \
-    FixedArena_4MB*   : fixed_arena_init_4MB    \
+#define fixed_arena_init(expr) _Generic((expr),    \
+    FixedArena_1KB*   : fixed_arena_init_1KB,      \
+    FixedArena_4KB*   : fixed_arena_init_4KB,      \
+    FixedArena_8KB*   : fixed_arena_init_8KB,      \
+    FixedArena_16KB*  : fixed_arena_init_16KB,     \
+    FixedArena_32KB*  : fixed_arena_init_32KB,     \
+    FixedArena_64KB*  : fixed_arena_init_64KB,     \
+    FixedArena_128KB* : fixed_arena_init_128KB,    \
+    FixedArena_256KB* : fixed_arena_init_256KB,    \
+    FixedArena_512KB* : fixed_arena_init_512KB,    \
+    FixedArena_1MB*   : fixed_arena_init_1MB,      \
+    FixedArena_2MB*   : fixed_arena_init_2MB,      \
+    FixedArena_4MB*   : fixed_arena_init_4MB,      \
+	default           : gen_generic_selection_fail \
 ) GEN_RESOLVED_FUNCTION_CALL(& expr)
 
 #define fixed_arena_size_remaining(expr, alignment) _Generic((expr), \
@@ -116,7 +117,8 @@ CodeBody gen_fixed_arenas()
     FixedArena_512KB* : fixed_arena_size_remaining_512KB,            \
     FixedArena_1MB*   : fixed_arena_size_remaining_1MB,              \
     FixedArena_2MB*   : fixed_arena_size_remaining_2MB,              \
-    FixedArena_4MB*   : fixed_arena_size_remaining_4MB               \
+    FixedArena_4MB*   : fixed_arena_size_remaining_4MB,              \
+	default           : gen_generic_selection_fail                   \
 )	GEN_RESOLVED_FUNCTION_CALL(& expr, alignment)
 )"
 	)));

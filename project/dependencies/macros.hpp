@@ -52,7 +52,7 @@
 #	define ccast( type, value ) ( (type)(value) )
 #	endif
 #	ifndef pcast
-#	define pcast( type, value ) ( * (type*)(value) )
+#	define pcast( type, value ) ( * (type*)(& value) )
 #	endif
 #	ifndef rcast
 #	define rcast( type, value ) ( (type)(value) )
