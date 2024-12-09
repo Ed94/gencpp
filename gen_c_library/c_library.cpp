@@ -1263,7 +1263,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	#pragma endregion Print Dependencies
 
 	#pragma region Print Components
-		CodeBody etoktype = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
+		CodeBody etoktype = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv", helper_use_c_definition );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 
@@ -1283,12 +1283,12 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "#pragma region Interface\n" );
 		header.print( src_interface );
 		header.print( format_code_to_untyped(src_upfront) );
-		// header.print_fmt( "\n#pragma region Parsing\n\n" );
-		// header.print( format_code_to_untyped(parser_nspace) );
+		header.print_fmt( "\n#pragma region Parsing\n\n" );
+		header.print( format_code_to_untyped(etoktype) );
 		// header.print( lexer );
 		// header.print( parser );
 		// header.print( parsing_interface );
-		// header.print_fmt( "\n#pragma endregion Parsing\n" );
+		header.print_fmt( "\n#pragma endregion Parsing\n" );
 		// header.print( untyped );
 		 header.print_fmt( "\n#pragma endregion Interface\n\n");
 

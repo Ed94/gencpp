@@ -376,7 +376,7 @@ size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761u
 (selector_arg),                                                             \
 	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )        \
 	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_2 )        \
-	...                                                                     \
+	/* ... */                                                               \
 	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT(FunctionID__ARGS_SIG_N )         \
 	default: gen_generic_selection_fail                                     \
 ) GEN_RESOLVED_FUNCTION_CALL( selector_arg, __VA_ARG__ )

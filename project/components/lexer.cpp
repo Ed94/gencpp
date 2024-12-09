@@ -94,7 +94,7 @@ String to_string(Token tok)
 {
 	String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
 
-	StrC type_str = to_str( tok.Type );
+	StrC type_str = toktype_to_str( tok.Type );
 
 	string_append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
 		, tok.Line, tok.Column
@@ -249,7 +249,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Length++;
 	}
 
-	ctx->token.Type = to_toktype( to_str(ctx->token) );
+	ctx->token.Type = strc_to_toktype( to_str(ctx->token) );
 
 	bool   is_preprocessor = ctx->token.Type >= Tok_Preprocess_Define && ctx->token.Type <= Tok_Preprocess_Pragma;
 	if ( ! is_preprocessor )
@@ -475,7 +475,7 @@ void lex_found_token( LexContext* ctx )
 		return;
 	}
 
-	TokType type = to_toktype( to_str(ctx->token) );
+	TokType type = strc_to_toktype( to_str(ctx->token) );
 
 	if (type <= Tok_Access_Public && type >= Tok_Access_Private )
 	{
@@ -1270,7 +1270,7 @@ TokArray lex( StrC content )
 			{
 				log_fmt( "Token %d Type: %s : %.*s\n"
 					, idx
-					, to_str( Tokens[ idx ].Type ).Ptr
+					, toktype_to_str( Tokens[ idx ].Type ).Ptr
 					, Tokens[ idx ].Length, Tokens[ idx ].Text
 				);
 			}

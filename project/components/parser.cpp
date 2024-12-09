@@ -115,7 +115,7 @@ bool __eat(TokArray* self, TokType type )
 	{
 		Token tok = * current( self, skip_formatting );
 		log_failure( "Parse Error, TokArray::eat, Expected: ' %s ' not ' %.*s ' (%d, %d)`\n%s"
-			, to_str(type).Ptr
+			, toktype_to_str(type).Ptr
 			, at_idx.Length, at_idx.Text
 			, tok.Line
 			, tok.Column
@@ -546,7 +546,7 @@ Code parse_array_decl()
 
 		if ( currtok.Type != Tok_BraceSquare_Close )
 		{
-			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", to_str( currtok.Type ), to_string(Context) );
+			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", toktype_to_str( currtok.Type ), to_string(Context) );
 			pop(& Context);
 			return InvalidCode;
 		}
@@ -687,7 +687,7 @@ Code parse_class_struct( TokType which, bool inplace_def = false )
 {
 	if ( which != Tok_Decl_Class && which != Tok_Decl_Struct )
 	{
-		log_failure( "Error, expected class or struct, not %s\n%s", to_str( which ), to_string(Context) );
+		log_failure( "Error, expected class or struct, not %s\n%s", toktype_to_str( which ), to_string(Context) );
 		return InvalidCode;
 	}
 
@@ -1206,7 +1206,7 @@ Code parse_complicated_definition( TokType which )
 			return result;
 		}
 
-		log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), to_string(Context) );
+		log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), to_string(Context) );
 		pop(& Context);
 		return InvalidCode;
 	}
@@ -1251,7 +1251,7 @@ Code parse_complicated_definition( TokType which )
 
 		if ( ! ok_to_parse )
 		{
-			log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), to_string(Context) );
+			log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), to_string(Context) );
 			pop(& Context);
 			return InvalidCode;
 		}
@@ -1270,7 +1270,7 @@ Code parse_complicated_definition( TokType which )
 			&&	( tokens.Arr[idx - 4].Type != which))
 		)
 		{
-			log_failure( "Unsupported or bad member definition after %s declaration\n%s", to_str(which), to_string(Context) );
+			log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), to_string(Context) );
 			pop(& Context);
 			return InvalidCode;
 		}
@@ -1300,7 +1300,7 @@ Code parse_complicated_definition( TokType which )
 	}
 	else
 	{
-		log_failure( "Unsupported or bad member definition after %s declaration\n%S", to_str(which).Ptr, to_string(Context) );
+		log_failure( "Unsupported or bad member definition after %s declaration\n%S", toktype_to_str(which).Ptr, to_string(Context) );
 		pop(& Context);
 		return InvalidCode;
 	}
@@ -2075,7 +2075,7 @@ Token parse_identifier( bool* possible_member_function )
 				return name;
 			}
 
-			log_failure( "Error, had a ~ operator after %S but not a destructor\n%s", to_str( prevtok.Type ), to_string(Context) );
+			log_failure( "Error, had a ~ operator after %S but not a destructor\n%s", toktype_to_str( prevtok.Type ), to_string(Context) );
 			pop(& Context);
 			return { nullptr, 0, Tok_Invalid };
 		}
@@ -2095,7 +2095,7 @@ Token parse_identifier( bool* possible_member_function )
 
 		if ( currtok.Type != Tok_Identifier )
 		{
-			log_failure( "Error, expected static symbol identifier, not %s\n%s", to_str( currtok.Type ), to_string(Context) );
+			log_failure( "Error, expected static symbol identifier, not %s\n%s", toktype_to_str( currtok.Type ), to_string(Context) );
 			pop(& Context);
 			return { nullptr, 0, Tok_Invalid };
 		}

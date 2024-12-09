@@ -407,14 +407,30 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 #pragma pop_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 
 	// We cannot parse this enum, it has Attribute names as enums
-	CodeEnum enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), "attribute_toks", string_to_strc(attribute_entries), stringize(
-		enum TokType_Def : u32
-		{
-			<entries>
-			<attribute_toks>
-			Tok_NumTokens
-		};
-	)));
+	CodeEnum enum_code;
+	if (use_c_definition)
+	{
+		enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), "attribute_toks", string_to_strc(attribute_entries), stringize(
+			enum TokType
+			{
+				<entries>
+				<attribute_toks>
+				Tok_NumTokens,
+				Tok_UnderlyingType = GEN_U32_MAX
+			};
+		)));
+	}
+	else
+	{
+		enum_code = parse_enum(token_fmt("entries", string_to_strc(enum_entries), "attribute_toks", string_to_strc(attribute_entries), stringize(
+			enum TokType : u32
+			{
+				<entries>
+				<attribute_toks>
+				Tok_NumTokens
+			};
+		)));
+	}
 
 #pragma push_macro("local_persist")
 #pragma push_macro("do_once_start")
@@ -424,10 +440,10 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 #undef do_once_end
 	CodeFn to_str = parse_function(token_fmt("entries", string_to_strc(to_str_entries), "attribute_toks", string_to_strc(to_str_attributes), stringize(
 		inline
-		StrC to_str( TokType type )
+		StrC toktype_to_str( TokType type )
 		{
 			local_persist
-			StrC lookup[] {
+			StrC lookup[] = {
 				<entries>
 				<attribute_toks>
 			};
@@ -438,14 +454,14 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 
 	CodeFn to_type = parse_function( token_fmt( "entries", string_to_strc(to_str_entries), stringize(
 		inline
-		TokType to_toktype( StrC str )
+		TokType strc_to_toktype( StrC str )
 		{
 			local_persist
 			u32 keymap[ Tok_NumTokens ];
 			do_once_start
 				for ( u32 index = 0; index < Tok_NumTokens; index++ )
 				{
-					StrC enum_str = to_str( (TokType)index );
+					StrC enum_str = toktype_to_str( (TokType)index );
 
 					// We subtract 1 to remove the null terminator
 					// This is because the tokens lexed are not null terminated.
@@ -468,16 +484,19 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 #pragma pop_macro("do_once_start")
 #pragma pop_macro("do_once_end")
 
-	//CodeNS    nspace     = def_namespace( name(ETokType), def_namespace_body( args( attribute_entires_def, enum_code, to_str, to_type ) ) );
-	CodeTypedef td_toktype = parse_typedef( code( typedef enum TokType_Def TokType; ));
-
-	return def_global_body( args(
-		attribute_entires_def,
-		enum_code,
-		td_toktype,
-		to_str,
-		to_type
-	));
+	CodeBody result = def_body(CT_Global_Body);
+	body_append(result, untyped_str(txt("GEN_NS_PARSER_BEGIN\n\n")));
+	body_append(result, attribute_entires_def);
+	body_append(result, enum_code);
+	if (use_c_definition)
+	{
+		CodeTypedef td_toktype = parse_typedef( code( typedef enum TokType TokType; ));
+		body_append(result, td_toktype);
+	}
+	body_append(result, to_str);
+	body_append(result, to_type);
+	body_append(result, untyped_str(txt("\nGEN_NS_PARSER_END\n\n")));
+	return result;
 }
 
 CodeBody gen_ast_inlines()
