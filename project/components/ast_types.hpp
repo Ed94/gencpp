@@ -1017,6 +1017,7 @@ struct AST_Type
 static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same size as AST");
 #endif
 
+// TODO(Ed): Add support for preserving the typename's keyword qualifier (struct, class, enum, etc), mostly needed for C.
 struct AST_Typename
 {
 	union {
@@ -1039,7 +1040,10 @@ struct AST_Typename
 	Code                   Parent;
 	CodeType               Type;
 	char 			       _PAD_UNUSED_[ sizeof(ModuleFlag) ];
-	b32                    IsParamPack;
+	struct {
+		b16                IsParamPack;   // Used by typename to know if type should be considered a parameter pack.
+		ETypenameTag       TypeTag;       // Used by typename to keep track of explicitly declared tags for the identifier (enum, struct, union)
+	};
 };
 static_assert( sizeof(AST_Typename) == sizeof(AST), "ERROR: AST_Type is not the same size as AST");
 

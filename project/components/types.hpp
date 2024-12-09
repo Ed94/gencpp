@@ -123,3 +123,15 @@ enum EPreprocessCond : u32
 	EPreprocessCond_SizeDef = GEN_U32_MAX,
 };
 static_assert( size_of(EPreprocessCond) == size_of(u32), "EPreprocessCond not u32 size" );
+
+enum ETypenameTag : u16
+{
+	Tag_None,
+	Tag_Class,
+	Tag_Enum,
+	Tag_Struct,
+	Tag_Union,
+
+	Tag_UnderlyingType = GEN_U16_MAX,
+};
+static_assert( size_of(ETypenameTag) == size_of(u16), "ETypenameTag is not u16 size");

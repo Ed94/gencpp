@@ -172,6 +172,19 @@ int gen_main()
 
 			case CT_Enum:
 			{
+				if (entry->Name.is_equal(txt("ETypenameTag")))
+				{
+#pragma push_macro("enum_underlying")
+#undef enum_underlying
+					entry->UnderlyingTypeMacro = untyped_str(token_fmt("type", entry->UnderlyingType->Name, stringize(enum_underlying(<type>))));
+					entry->UnderlyingType      = CodeTypename{nullptr};
+					types.append(entry);
+#pragma pop_macro("enum_underlying")
+
+					CodeTypedef entry_td = parse_typedef(code( typedef u16 ETypenameTag; ));
+					types.append(entry_td);
+					continue;
+				}
 				//log_fmt("Detected ENUM: %S", entry->Name);
 				convert_cpp_enum_to_c(cast(CodeEnum, entry), types);
 			}
@@ -735,6 +748,89 @@ do                            \
 			break;
 		}
 
+		CodeBody array_adt_node = gen_array(txt("ADT_Node"), txt("Array_ADT_Node"));
+
+		CodeBody parsed_parsing = parse_file( project_dir "dependencies/parsing.hpp" );
+		CodeBody parsing        = def_body(CT_Global_Body);
+		for ( Code entry = parsed_parsing.begin(); entry != parsed_parsing.end(); ++ entry ) switch (entry->Type)
+		{
+			case CT_Preprocess_Pragma:
+			{
+				if ( entry->Content.contains(txt("ADT")) )
+				{
+					parsing.append(entry);
+					parsing.append(fmt_newline);
+
+					// Add ADT_Node forward and typedef early.
+					CodeStruct  adt_node_fwd     = parse_struct(code( struct ADT_Node; ));
+					CodeTypedef adt_node_typedef = parse_typedef(code( typedef struct ADT_Node ADT_Node; ));
+					parsing.append(adt_node_fwd);
+					parsing.append(adt_node_typedef);
+
+					// Skip typedef since we added it
+					b32 continue_for = true;
+					for (Code array_entry = array_adt_node.begin(); continue_for && array_entry != array_adt_node.end(); ++ array_entry) switch (array_entry->Type)
+					{
+						case CT_Typedef:
+						{
+							// pop the array entry
+							array_adt_node->NumEntries -= 1;
+							Code next                   = array_entry->Next;
+							Code prev                   = array_entry->Prev;
+							next->Prev                  = array_entry->Prev;
+							prev->Next                  = next;
+							if ( array_adt_node->Front == array_entry )
+								array_adt_node->Front = next;
+
+							parsing.append(array_entry);
+							continue_for = false;
+						}
+						break;
+					}
+
+				}
+			}
+			break;
+
+			case CT_Enum:
+			{
+				convert_cpp_enum_to_c(cast(CodeEnum, entry), parsing);
+			}
+			break;
+
+			case CT_Struct:
+			{
+				CodeStruct struct_def = cast(CodeStruct, entry);
+				if ( struct_def->Name.is_equal(txt("ADT_Node") ) )
+				{
+					parsing.append(entry);
+
+					// We need to define the array for ADT_Node right here.
+					parsing.append(array_adt_node);
+					parsing.append(fmt_newline);
+					continue;
+				}
+
+				StrC type_str      = codetype_to_keyword_str(entry->Type);
+				StrC formated_tmpl = token_fmt_impl( 3,
+					"type", type_str
+				,	"name", entry->Name,
+				stringize(
+					typedef <type> <name> <name>;
+				));
+				CodeTypedef tdef = parse_typedef(formated_tmpl);
+				parsing.append(entry);
+				parsing.append(tdef);
+			}
+			break;
+
+			default:
+			{
+				parsing.append(entry);
+			}
+			break;
+		}
+
 		CodeBody array_string_cached = gen_array(txt("StringCached"), txt("Array_StringCached"));
 
 		CodeBody containers = def_body(CT_Global_Body);
@@ -776,6 +872,19 @@ do                            \
 		header.print( dump_to_scratch_and_retireve(strings));
 		header.print( dump_to_scratch_and_retireve(filesystem));
 		header.print( timing );
+
+		// CodeStruct fwd = parse_struct(txt("struct ADT_Node;"));
+
+		header.print_fmt( "\n#pragma region Parsing\n" );
+
+		// header.print( fwd );
+		// header.print( adt_node_typedef );
+		// header.print( fmt_newline );
+		// header.print(dump_to_scratch_and_retireve(array_adt_node));
+
+		header.print( dump_to_scratch_and_retireve(parsing) );
+		header.print_fmt( "#pragma endregion Parsing\n\n" );
+
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print_fmt( roll_own_dependencies_guard_end );
 #pragma endregion Print Dependencies
@@ -834,7 +943,7 @@ do                            \
 			Code strings    = scan_file( project_dir "dependencies/strings.cpp" );
 			Code filesystem = scan_file( project_dir "dependencies/filesystem.cpp" );
 			Code timing     = scan_file( project_dir "dependencies/timing.cpp" );
-#pragma region Scan, Parse, and Generate Dependencies
+#pragma endregion Scan, Parse, and Generate Dependencies
 
 #pragma region Scan, Parse, and Generate Components
 		Code static_data 	   = scan_file( project_dir "components/static_data.cpp" );
@@ -873,7 +982,38 @@ do                            \
 #pragma endregion Print Dependencies
 
 #pragma region Print Components
+#if 0
+		CodeBody etoktype = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
 
+		header.print_fmt( "\nGEN_NS_BEGIN\n");
+		header.print( static_data );
+
+		header.print_fmt( "#pragma region AST\n\n" );
+		header.print( ast_case_macros );
+		header.print( ast );
+		header.print( code );
+		header.print_fmt( "#pragma endregion AST\n\n" );
+
+		header.print_fmt( "#pragma region Interface\n" );
+		header.print( interface );
+		header.print( upfront );
+		header.print_fmt( "\n#pragma region Parsing\n\n" );
+		header.print( dump_to_scratch_and_retireve(parser_nspace) );
+		header.print( lexer );
+		header.print( parser );
+		header.print( parsing_interface );
+		header.print_fmt( "\n#pragma endregion Parsing\n" );
+		header.print( untyped );
+		header.print_fmt( "\n#pragma endregion Interface\n\n");
+
+			header.print_fmt( "#pragma region Builder\n" );
+			header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
+			header.print_fmt( "\n#pragma endregion Builder\n\n" );
+
+		header.print_fmt( "\n#pragma region Scanner\n" );
+		header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
+		header.print_fmt( "#pragma endregion Scanner\n\n" );
+#endif
 #pragma endregion Print Components
 
 		header.print_fmt( implementation_guard_end );
@@ -881,8 +1021,6 @@ do                            \
 
 	header.print( pop_ignores );
 	header.write();
-
-	//k
 
 	gen::deinit();
 	return 0;

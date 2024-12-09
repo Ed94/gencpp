@@ -138,6 +138,7 @@ struct Opts_def_template { ModuleFlag mflags; };
 CodeTemplate def_template( CodeParam params, Code definition, Opts_def_template opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_type {
+	ETypenameTag   type_tag;
 	Code           arrayexpr;
 	CodeSpecifiers specifiers;
 	CodeAttributes attributes;

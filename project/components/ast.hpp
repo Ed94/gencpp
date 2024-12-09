@@ -384,7 +384,10 @@ struct AST
 	ModuleFlag        ModuleFlags;
 	union {
 		b32           IsFunction;  // Used by typedef to not serialize the name field.
-		b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
+		struct {
+			b16           IsParamPack;   // Used by typename to know if type should be considered a parameter pack.
+			ETypenameTag  TypeTag;       // Used by typename to keep track of explicitly declared tags for the identifier (enum, struct, union)
+		};
 		Operator      Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;

@@ -4523,9 +4523,11 @@ CodeTypename parse_type( bool from_template, bool* typedef_is_function )
 	Token context_tok = prevtok;
 
 	Specifier specs_found[ 16 ] { Spec_NumSpecifiers };
-	s32        NumSpecifiers = 0;
+	s32       NumSpecifiers = 0;
 
-	Token name               = { nullptr, 0, Tok_Invalid };
+	Token name= { nullptr, 0, Tok_Invalid };
+
+	ETypenameTag tag = Tag_None;
 
 	// Attributes are assumed to be before the type signature
 	CodeAttributes attributes = parse_attributes();
@@ -4568,6 +4570,14 @@ CodeTypename parse_type( bool from_template, bool* typedef_is_function )
 	else if ( currtok.Type == Tok_Decl_Class || currtok.Type == Tok_Decl_Enum || currtok.Type == Tok_Decl_Struct
 			|| currtok.Type == Tok_Decl_Union )
 	{
+		switch (currtok.Type) {
+			case Tok_Decl_Class  : tag = Tag_Class;  break;
+			case Tok_Decl_Enum   : tag = Tag_Enum;   break;
+			case Tok_Decl_Struct : tag = Tag_Struct; break;
+			case Tok_Decl_Union  : tag = Tag_Union;  break;
+			default:
+				break;
+		}
 		eat( currtok.Type );
 		// <Attributes> <Specifiers> <class, enum, struct, union>
 
@@ -4949,6 +4959,8 @@ else if ( currtok.Type == Tok_DeclType )
 
 	if ( params )
 		result->Params = params;
+
+	result->TypeTag = tag;
 
 	pop(& Context);
 	return result;

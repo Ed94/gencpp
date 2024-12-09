@@ -349,7 +349,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 	return result;
 }
 
-CodeBody gen_etoktype( char const* etok_path, char const* attr_path )
+CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_definition = false )
 {
 	char  scratch_mem[kilobytes(16)];
 	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );

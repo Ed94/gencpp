@@ -24,7 +24,7 @@ u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32
 	node->type   = type;
 	node->name   = name;
 	node->parent = parent;
-	node->nodes  = array_init<ADT_Node>( backing );
+	node->nodes  = array_init(ADT_Node, backing );
 
 	if ( ! node->nodes )
 		return EADT_ERROR_OUT_OF_MEMORY;

@@ -402,7 +402,9 @@ CodeBody gen_array_generic_selection_interface()
 	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_init"), GenericSel_Direct_Type ));
 	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_init_reserve"), GenericSel_Direct_Type ));
 	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_append"), GenericSel_By_Ref ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_append_at"), GenericSel_By_Ref ));
 	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_append_items"), GenericSel_By_Ref ));
+	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_append_items_at"), GenericSel_By_Ref ));
 	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_back"), GenericSel_Default, GenericSel_One_Arg ));
 	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_clear"), GenericSel_Default, GenericSel_One_Arg ));
 	interface_defines.append( gen_generic_selection_function_macro( Array_DefinitionCounter, txt("array_fill")) );

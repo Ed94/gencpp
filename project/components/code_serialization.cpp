@@ -1194,6 +1194,16 @@ void typename_to_string_ref(CodeTypename self, String* result )
 	if ( self->Attributes )
 		string_append_fmt( result, "%S ", attributes_to_string(self->Attributes) );
 
+	switch ( self->TypeTag )
+	{
+		case Tag_Class  : string_append_strc( result, txt("class "));  break;
+		case Tag_Enum   : string_append_strc( result, txt("enum "));   break;
+		case Tag_Struct : string_append_strc( result, txt("struct ")); break;
+		case Tag_Union  : string_append_strc( result, txt("union "));  break;
+		default:
+			break;
+	}
+
 	if ( self->Specs )
 		string_append_fmt( result, "%SC %S", self->Name, specifiers_to_string(self->Specs) );
 	else

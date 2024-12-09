@@ -1303,6 +1303,8 @@ CodeTypename def_type( StrC name, Opts_def_type p )
 	if ( arrayexpr )
 		result->ArrExpr = arrayexpr;
 
+	result->TypeTag = p.type_tag;
+
 	return result;
 }
 
