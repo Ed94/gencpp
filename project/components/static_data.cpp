@@ -7,22 +7,22 @@
 
 // TODO : Convert global allocation strategy to use a slab allocation strategy.
 global AllocatorInfo  GlobalAllocator;
-global Array<Arena>   Global_AllocatorBuckets;
+global Array( Arena )   Global_AllocatorBuckets;
 
 // TODO(Ed) : Make the code pool a dynamic arena
-global Array< Pool >  CodePools         = { nullptr };
-global Array< Arena > StringArenas      = { nullptr };
+global Array( Pool )  CodePools         = { nullptr };
+global Array( Arena ) StringArenas      = { nullptr };
 
 global StringTable StringCache;
 
 global Arena LexArena;
 
-global AllocatorInfo Allocator_DataArrays  = heap();
-global AllocatorInfo Allocator_CodePool    = heap();
-global AllocatorInfo Allocator_Lexer       = heap();
-global AllocatorInfo Allocator_StringArena = heap();
-global AllocatorInfo Allocator_StringTable = heap();
-global AllocatorInfo Allocator_TypeTable   = heap();
+global AllocatorInfo Allocator_DataArrays  = {0};
+global AllocatorInfo Allocator_CodePool    = {0};
+global AllocatorInfo Allocator_Lexer       = {0};
+global AllocatorInfo Allocator_StringArena = {0};
+global AllocatorInfo Allocator_StringTable = {0};
+global AllocatorInfo Allocator_TypeTable   = {0};
 
 #pragma endregion StaticData
 

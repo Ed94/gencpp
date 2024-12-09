@@ -302,7 +302,7 @@ Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
 
 	/*
 	Takes a format string (char const*) and a list of tokens (StrC) and returns a StrC of the formatted string.
-	Tokens are provided in '<'identifier'>' format where '<' '>' are just angle brakcets (you can change it in token_fmt_va)
+	Tokens are provided in '<'identifier'>' format where '<' '>' are just angle brackets (you can change it in token_fmt_va)
 	---------------------------------------------------------
 		Example - A string with:
 			typedef <type> <name> <name>;
@@ -310,7 +310,7 @@ Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
 			"type", strc_for_type,
 			"name", strc_for_name,
 		and:
-			stringize( typedef <type> <name> <name>; ) )
+			stringize( typedef <type> <name> <name>; )
 	-----------------------------------------------------------
 	So the full call for this example would be:
 		token_fmt(

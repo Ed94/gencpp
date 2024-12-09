@@ -317,10 +317,11 @@
 // The slot won't exist if that comma is not found.                                                                                                                                                  |
 
 // For the occastion where an expression didn't resolve to a selection option the "default: <value>" wilbe set to:
-struct NO_RESOLVED_GENERIC_SELECTION {
-	unsigned long long failure;
+typedef struct GENCPP_NO_RESOLVED_GENERIC_SELECTION GENCPP_NO_RESOLVED_GENERIC_SELECTION;
+struct GENCPP_NO_RESOLVED_GENERIC_SELECTION {
+	void* _THE_VOID_SLOT_;
 };
-struct NO_RESOLVED_GENERIC_SELECTION const gen_generic_selection_fail = {};
+GENCPP_NO_RESOLVED_GENERIC_SELECTION const gen_generic_selection_fail = {0};
 // Which will provide the message:  error: called object type 'struct NO_RESOLVED_GENERIC_SELECTION' is not a function or function pointer
 // ----------------------------------------------------------------------------------------------------------------------------------
 

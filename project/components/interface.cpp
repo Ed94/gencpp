@@ -252,6 +252,25 @@ void init()
 		array_append( Global_AllocatorBuckets, bucket );
 	}
 
+	if (Allocator_DataArrays.Proc == nullptr) {
+		Allocator_DataArrays = heap();
+	}
+	if (Allocator_CodePool.Proc == nullptr ) {
+		Allocator_CodePool = heap();
+	}
+	if (Allocator_Lexer.Proc == nullptr) {
+		Allocator_Lexer = heap();
+	}
+	if (Allocator_StringArena.Proc == nullptr) {
+		Allocator_StringArena = heap();
+	}
+	if (Allocator_StringTable.Proc == nullptr) {
+		Allocator_StringTable = heap();
+	}
+	if (Allocator_TypeTable.Proc == nullptr) {
+		Allocator_TypeTable = heap();
+	}
+
 	// Setup the arrays
 	{
 		CodePools = array_init_reserve<Pool>( Allocator_DataArrays, InitSize_DataArrays );

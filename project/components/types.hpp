@@ -44,18 +44,19 @@ enum AccessSpec : u32
 static_assert( size_of(AccessSpec) == size_of(u32), "AccessSpec not u32 size" );
 
 inline
-char const* access_spec_to_str( AccessSpec type )
+StrC access_spec_to_str( AccessSpec type )
 {
 	local_persist
-	char const* lookup[ (u32)AccessSpec_Num_AccessSpec ] = {
-		"",
-		"private",
-		"protected",
-		"public",
+	StrC lookup[ (u32)AccessSpec_Num_AccessSpec ] = {
+		{ sizeof("") - 1,          "" },
+		{ sizeof("prviate") - 1,   "private" },
+		{ sizeof("protected") - 1, "private" },
+		{ sizeof("public") - 1,    "public" },
 	};
 
+	StrC invalid = { sizeof("Invalid") - 1, "Invalid" };
 	if ( type > AccessSpec_Public )
-		return "Invalid";
+		return invalid;
 
 	return lookup[ (u32)type ];
 }

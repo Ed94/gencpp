@@ -373,7 +373,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 #pragma pop_macro( "forceinline" )
 
 	++ HashTable_DefinitionCounter;
-	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", Array_DefinitionCounter).to_strc();
+	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", HashTable_DefinitionCounter).to_strc();
 
 	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "tbl_type", (StrC)tbl_type, "slot", (StrC)slot_str,
 R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_init

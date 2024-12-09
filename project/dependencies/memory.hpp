@@ -208,7 +208,7 @@ struct Arena
 // This id is defined by Unreal for asserts
 #pragma push_macro("check")
 #undef check
-	forceinline void check() { GEN_NS arena_check(this); }
+	forceinline void check() { arena_check(this); }
 #pragma pop_macro("check")
 
 #pragma endregion Member Mapping
@@ -335,7 +335,7 @@ struct FixedArena
 
 #if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 #pragma region Member Mapping
-	forceinline operator AllocatorInfo() { return GEN_NS allocator_info(this); }
+	forceinline operator AllocatorInfo() { return fixed_arena_allocator_info(this); }
 
 	forceinline static FixedArena init()                          { FixedArena result; fixed_arena_init<Size>(result); return result; }
 	forceinline ssize             size_remaining(ssize alignment) { fixed_arena_size_remaining(this, alignment); }

@@ -5042,7 +5042,6 @@ CodeTypedef parse_typedef()
 			Token pre_foward_tok = currtok;
 			if ( (idx - 3 ) == tokens.Idx )
 			{
-				log_fmt("Identified forward typedef\n");
 				// Its a forward declaration only
 				type = parse_forward_or_definition( which, from_typedef );
 				// <ModuleFalgs> typedef <UnderlyingType: Forward Decl>

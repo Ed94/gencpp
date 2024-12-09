@@ -7,20 +7,20 @@ global Code Code_Global;
 global Code Code_Invalid;
 
 // This serializes all the data-members in a "debug" format, where each member is printed with its associated value.
-char const* code_debug_str(Code self)
+StrC code_debug_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
 	String  result_stack = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String* result       = & result_stack;
 
 	if ( self->Parent )
-		string_append_fmt( result, "\n\tParent       : %S %S", code_type_str(self->Parent), self->Name ? self->Name : "" );
+		string_append_fmt( result, "\n\tParent       : %SC %SC", code_type_str(self->Parent), self->Name.Len ? self->Name : txt("Null") );
 	else
-		string_append_fmt( result, "\n\tParent       : %S", "Null" );
+		string_append_fmt( result, "\n\tParent       : %SC", txt("Null") );
 
-	string_append_fmt( result, "\n\tName         : %S", self->Name ? self->Name : "Null" );
-	string_append_fmt( result, "\n\tType         : %S", code_type_str(self) );
-	string_append_fmt( result, "\n\tModule Flags : %S", module_flag_to_str( self->ModuleFlags ) );
+	string_append_fmt( result, "\n\tName         : %SC", self->Name.Len ? self->Name : txt("Null") );
+	string_append_fmt( result, "\n\tType         : %SC", code_type_str(self) );
+	string_append_fmt( result, "\n\tModule Flags : %SC", module_flag_to_str( self->ModuleFlags ) );
 
 	switch ( self->Type )
 	{
@@ -30,9 +30,9 @@ char const* code_debug_str(Code self)
 		case CT_Access_Protected:
 		case CT_Access_Public:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 		break;
 
 		case CT_Untyped:
@@ -48,74 +48,74 @@ char const* code_debug_str(Code self)
 		case CT_Preprocess_IfDef:
 		case CT_Preprocess_IfNotDef:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tContent: %S", self->Content );
+			string_append_fmt( result, "\n\tContent: %SC", self->Content );
 		break;
 
 		case CT_Class:
 		case CT_Struct:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt   : %S", self->InlineCmt  ? self->InlineCmt->Content     : "Null" );
-			string_append_fmt( result, "\n\tAttributes  : %S", self->Attributes ? code_to_string(self->Attributes)  : "Null" );
-			string_append_fmt( result, "\n\tParentAccess: %s", self->ParentType ? access_spec_to_str( self->ParentAccess ) : "No Parent" );
-			string_append_fmt( result, "\n\tParentType  : %s", self->ParentType ? code_type_str(self->ParentType)   : "Null" );
-			string_append_fmt( result, "\n\tBody        : %S", self->Body       ? code_debug_str(self->Body)        : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt   : %SC", self->InlineCmt  ? self->InlineCmt->Content                           : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes  : %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tParentAccess: %SC", self->ParentType ? access_spec_to_str( self->ParentAccess )           : txt("No Parent") );
+			string_append_fmt( result, "\n\tParentType  : %SC", self->ParentType ? code_type_str(self->ParentType)                    : txt("Null") );
+			string_append_fmt( result, "\n\tBody        : %SC", self->Body       ? code_debug_str(self->Body)                         : txt("Null") );
 		break;
 
 		case CT_Class_Fwd:
 		case CT_Struct_Fwd:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt   : %S", self->InlineCmt  ? self->InlineCmt->Content     : "Null" );
-			string_append_fmt( result, "\n\tAttributes  : %S", self->Attributes ? code_to_string(self->Attributes)  : "Null" );
-			string_append_fmt( result, "\n\tParentAccess: %s", self->ParentType ? access_spec_to_str( self->ParentAccess ) : "No Parent" );
-			string_append_fmt( result, "\n\tParentType  : %s", self->ParentType ? code_type_str(self->ParentType)   : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt   : %SC", self->InlineCmt  ? self->InlineCmt->Content                           : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes  : %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tParentAccess: %SC", self->ParentType ? access_spec_to_str( self->ParentAccess )           : txt("No Parent") );
+			string_append_fmt( result, "\n\tParentType  : %SC", self->ParentType ? code_type_str(self->ParentType)                    : txt("Null") );
 		break;
 
 		case CT_Constructor:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt      : %S", self->InlineCmt       ? self->InlineCmt->Content         : "Null" );
-			string_append_fmt( result, "\n\tSpecs          : %S", self->Specs           ? code_to_string(self->Specs)           : "Null" );
-			string_append_fmt( result, "\n\tInitializerList: %S", self->InitializerList ? code_to_string(self->InitializerList) : "Null" );
-			string_append_fmt( result, "\n\tParams         : %S", self->Params          ? code_to_string(self->Params)          : "Null" );
-			string_append_fmt( result, "\n\tBody           : %S", self->Body            ? code_debug_str(self->Body)            : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt      : %SC", self->InlineCmt       ? self->InlineCmt->Content                                : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs          : %SC", self->Specs           ? string_to_strc( code_to_string(self->Specs) )           : txt("Null") );
+			string_append_fmt( result, "\n\tInitializerList: %SC", self->InitializerList ? string_to_strc( code_to_string(self->InitializerList) ) : txt("Null") );
+			string_append_fmt( result, "\n\tParams         : %SC", self->Params          ? string_to_strc( code_to_string(self->Params) )          : txt("Null") );
+			string_append_fmt( result, "\n\tBody           : %SC", self->Body            ? code_debug_str(self->Body)                              : txt("Null") );
 		break;
 
 		case CT_Constructor_Fwd:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt      : %S", self->InlineCmt       ? self->InlineCmt->Content         : "Null" );
-			string_append_fmt( result, "\n\tSpecs          : %S", self->Specs           ? code_to_string(self->Specs)           : "Null" );
-			string_append_fmt( result, "\n\tInitializerList: %S", self->InitializerList ? code_to_string(self->InitializerList) : "Null" );
-			string_append_fmt( result, "\n\tParams         : %S", self->Params          ? code_to_string(self->Params)          : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt      : %SC", self->InlineCmt       ? self->InlineCmt->Content                                : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs          : %SC", self->Specs           ? string_to_strc( code_to_string(self->Specs) )           : txt("Null") );
+			string_append_fmt( result, "\n\tInitializerList: %SC", self->InitializerList ? string_to_strc( code_to_string(self->InitializerList) ) : txt("Null") );
+			string_append_fmt( result, "\n\tParams         : %SC", self->Params          ? string_to_strc( code_to_string(self->Params) )          : txt("Null") );
 		break;
 
 		case CT_Destructor:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt      : %S", self->InlineCmt       ? self->InlineCmt->Content         : "Null" );
-			string_append_fmt( result, "\n\tSpecs          : %S", self->Specs           ? code_to_string(self->Specs)           : "Null" );
-			string_append_fmt( result, "\n\tBody           : %S", self->Body            ? code_debug_str(self->Body)            : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt      : %SC", self->InlineCmt       ? self->InlineCmt->Content                      : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs          : %SC", self->Specs           ? string_to_strc( code_to_string(self->Specs) ) : txt("Null") );
+			string_append_fmt( result, "\n\tBody           : %SC", self->Body            ? code_debug_str(self->Body)                    : txt("Null") );
 		break;
 
 		case CT_Destructor_Fwd:
@@ -124,142 +124,142 @@ char const* code_debug_str(Code self)
 		case CT_Enum:
 		case CT_Enum_Class:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt       : %S", self->InlineCmt      ? self->InlineCmt->Content        : "Null" );
-			string_append_fmt( result, "\n\tAttributes      : %S", self->Attributes     ? code_to_string(self->Attributes)     : "Null" );
-			string_append_fmt( result, "\n\tUnderlying Type : %S", self->UnderlyingType ? code_to_string(self->UnderlyingType) : "Null" );
-			string_append_fmt( result, "\n\tBody            : %S", self->Body           ? code_debug_str(self->Body)           : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt       : %SC", self->InlineCmt      ? self->InlineCmt->Content                              : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes      : %SC", self->Attributes     ? string_to_strc( code_to_string(self->Attributes) )    : txt("Null") );
+			string_append_fmt( result, "\n\tUnderlying Type : %SC", self->UnderlyingType ? string_to_strc( code_to_string(self->UnderlyingType)) : txt("Null") );
+			string_append_fmt( result, "\n\tBody            : %SC", self->Body           ? code_debug_str(self->Body)                            : txt("Null") );
 		break;
 
 		case CT_Enum_Fwd:
 		case CT_Enum_Class_Fwd:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt       : %S", self->InlineCmt      ? self->InlineCmt->Content        : "Null" );
-			string_append_fmt( result, "\n\tAttributes      : %S", self->Attributes     ? code_to_string(self->Attributes)     : "Null" );
-			string_append_fmt( result, "\n\tUnderlying Type : %S", self->UnderlyingType ? code_to_string(self->UnderlyingType) : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt       : %SC", self->InlineCmt      ? self->InlineCmt->Content                              : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes      : %SC", self->Attributes     ? string_to_strc( code_to_string(self->Attributes) )    : txt("Null") );
+			string_append_fmt( result, "\n\tUnderlying Type : %SC", self->UnderlyingType ? string_to_strc( code_to_string(self->UnderlyingType)) : txt("Null") );
 		break;
 
 		case CT_Extern_Linkage:
 		case CT_Namespace:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tBody: %S", self->Body ? code_debug_str(self->Body) : "Null" );
+			string_append_fmt( result, "\n\tBody: %SC", self->Body ? code_debug_str(self->Body) : txt("Null") );
 		break;
 
 		case CT_Friend:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt  : %S", self->InlineCmt   ? self->InlineCmt->Content     : "Null" );
-			string_append_fmt( result, "\n\tDeclaration: %S", self->Declaration ? code_to_string(self->Declaration) : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt  : %SC", self->InlineCmt   ? self->InlineCmt->Content                           : txt("Null") );
+			string_append_fmt( result, "\n\tDeclaration: %SC", self->Declaration ? string_to_strc( code_to_string(self->Declaration)) : txt("Null") );
 		break;
 
 		case CT_Function:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt : %S", self->InlineCmt  ? self->InlineCmt->Content    : "Null" );
-			string_append_fmt( result, "\n\tAttributes: %S", self->Attributes ? code_to_string(self->Attributes) : "Null" );
-			string_append_fmt( result, "\n\tSpecs     : %S", self->Specs      ? code_to_string(self->Specs)      : "Null" );
-			string_append_fmt( result, "\n\tReturnType: %S", self->ReturnType ? code_to_string(self->ReturnType) : "Null" );
-			string_append_fmt( result, "\n\tParams    : %S", self->Params     ? code_to_string(self->Params)     : "Null" );
-			string_append_fmt( result, "\n\tBody      : %S", self->Body       ? code_debug_str(self->Body)       : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt : %SC", self->InlineCmt  ? self->InlineCmt->Content                           : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes: %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs     : %SC", self->Specs      ? string_to_strc( code_to_string(self->Specs))       : txt("Null") );
+			string_append_fmt( result, "\n\tReturnType: %SC", self->ReturnType ? string_to_strc( code_to_string(self->ReturnType))  : txt("Null") );
+			string_append_fmt( result, "\n\tParams    : %SC", self->Params     ? string_to_strc( code_to_string(self->Params))      : txt("Null") );
+			string_append_fmt( result, "\n\tBody      : %SC", self->Body       ? code_debug_str(self->Body)                         : txt("Null") );
 		break;
 
 		case CT_Function_Fwd:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt : %S", self->InlineCmt  ? self->InlineCmt->Content    : "Null" );
-			string_append_fmt( result, "\n\tAttributes: %S", self->Attributes ? code_to_string(self->Attributes) : "Null" );
-			string_append_fmt( result, "\n\tSpecs     : %S", self->Specs      ? code_to_string(self->Specs)      : "Null" );
-			string_append_fmt( result, "\n\tReturnType: %S", self->ReturnType ? code_to_string(self->ReturnType) : "Null" );
-			string_append_fmt( result, "\n\tParams    : %S", self->Params     ? code_to_string(self->Params)     : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt : %SC", self->InlineCmt  ? self->InlineCmt->Content                           : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes: %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs     : %SC", self->Specs      ? string_to_strc( code_to_string(self->Specs))       : txt("Null") );
+			string_append_fmt( result, "\n\tReturnType: %SC", self->ReturnType ? string_to_strc( code_to_string(self->ReturnType))  : txt("Null") );
+			string_append_fmt( result, "\n\tParams    : %SC", self->Params     ? string_to_strc( code_to_string(self->Params))      : txt("Null") );
 		break;
 
 		case CT_Module:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 		break;
 
 		case CT_Operator:
 		case CT_Operator_Member:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt : %S", self->InlineCmt  ? self->InlineCmt->Content    : "Null" );
-			string_append_fmt( result, "\n\tAttributes: %S", self->Attributes ? code_to_string(self->Attributes) : "Null" );
-			string_append_fmt( result, "\n\tSpecs     : %S", self->Specs      ? code_to_string(self->Specs)      : "Null" );
-			string_append_fmt( result, "\n\tReturnType: %S", self->ReturnType ? code_to_string(self->ReturnType) : "Null" );
-			string_append_fmt( result, "\n\tParams    : %S", self->Params     ? code_to_string(self->Params)     : "Null" );
-			string_append_fmt( result, "\n\tBody      : %S", self->Body       ? code_debug_str(self->Body)       : "Null" );
-			string_append_fmt( result, "\n\tOp        : %S", operator_to_str( self->Op ) );
+			string_append_fmt( result, "\n\tInlineCmt : %SC", self->InlineCmt  ? self->InlineCmt->Content                           : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes: %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs     : %SC", self->Specs      ? string_to_strc( code_to_string(self->Specs))       : txt("Null") );
+			string_append_fmt( result, "\n\tReturnType: %SC", self->ReturnType ? string_to_strc( code_to_string(self->ReturnType))  : txt("Null") );
+			string_append_fmt( result, "\n\tParams    : %SC", self->Params     ? string_to_strc( code_to_string(self->Params))      : txt("Null") );
+			string_append_fmt( result, "\n\tBody      : %SC", self->Body       ? code_debug_str(self->Body)                         : txt("Null") );
+			string_append_fmt( result, "\n\tOp        : %SC", operator_to_str( self->Op ) );
 		break;
 
 		case CT_Operator_Fwd:
 		case CT_Operator_Member_Fwd:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt : %S", self->InlineCmt  ? self->InlineCmt->Content    : "Null" );
-			string_append_fmt( result, "\n\tAttributes: %S", self->Attributes ? code_to_string(self->Attributes) : "Null" );
-			string_append_fmt( result, "\n\tSpecs     : %S", self->Specs      ? code_to_string(self->Specs)      : "Null" );
-			string_append_fmt( result, "\n\tReturnType: %S", self->ReturnType ? code_to_string(self->ReturnType) : "Null" );
-			string_append_fmt( result, "\n\tParams    : %S", self->Params     ? code_to_string(self->Params)     : "Null" );
-			string_append_fmt( result, "\n\tOp        : %S", operator_to_str( self->Op ) );
+			string_append_fmt( result, "\n\tInlineCmt : %SC", self->InlineCmt  ? self->InlineCmt->Content                           : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes: %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs     : %SC", self->Specs      ? string_to_strc( code_to_string(self->Specs) )      : txt("Null") );
+			string_append_fmt( result, "\n\tReturnType: %SC", self->ReturnType ? string_to_strc( code_to_string(self->ReturnType) ) : txt("Null") );
+			string_append_fmt( result, "\n\tParams    : %SC", self->Params     ? string_to_strc( code_to_string(self->Params) )     : txt("Null") );
+			string_append_fmt( result, "\n\tOp        : %SC", operator_to_str( self->Op ) );
 		break;
 
 		case CT_Operator_Cast:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt : %S", self->InlineCmt  ? self->InlineCmt->Content   : "Null" );
-			string_append_fmt( result, "\n\tSpecs     : %S", self->Specs      ? code_to_string(self->Specs)     : "Null" );
-			string_append_fmt( result, "\n\tValueType : %S", self->ValueType  ? code_to_string(self->ValueType) : "Null" );
-			string_append_fmt( result, "\n\tBody      : %S", self->Body       ? code_debug_str(self->Body)      : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt : %SC", self->InlineCmt  ? self->InlineCmt->Content                         : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs     : %SC", self->Specs      ? string_to_strc( code_to_string(self->Specs))     : txt("Null") );
+			string_append_fmt( result, "\n\tValueType : %SC", self->ValueType  ? string_to_strc( code_to_string(self->ValueType)) : txt("Null") );
+			string_append_fmt( result, "\n\tBody      : %SC", self->Body       ? code_debug_str(self->Body)                       : txt("Null") );
 		break;
 
 		case CT_Operator_Cast_Fwd:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt : %S", self->InlineCmt  ? self->InlineCmt->Content   : "Null" );
-			string_append_fmt( result, "\n\tSpecs     : %S", self->Specs      ? code_to_string(self->Specs)     : "Null" );
-			string_append_fmt( result, "\n\tValueType : %S", self->ValueType  ? code_to_string(self->ValueType) : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt : %SC", self->InlineCmt  ? self->InlineCmt->Content                         : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs     : %SC", self->Specs      ? string_to_strc( code_to_string(self->Specs))     : txt("Null") );
+			string_append_fmt( result, "\n\tValueType : %SC", self->ValueType  ? string_to_strc( code_to_string(self->ValueType)) : txt("Null") );
 		break;
 
 		case CT_Parameters:
 			string_append_fmt( result, "\n\tNumEntries: %d", self->NumEntries );
-			string_append_fmt( result, "\n\tLast      : %S", self->Last->Name );
-			string_append_fmt( result, "\n\tNext      : %S", self->Next->Name );
-			string_append_fmt( result, "\n\tValueType : %S", self->ValueType ? code_to_string(self->ValueType) : "Null" );
-			string_append_fmt( result, "\n\tValue     : %S", self->Value     ? code_to_string(self->Value)     : "Null" );
+			string_append_fmt( result, "\n\tLast      : %SC", self->Last->Name );
+			string_append_fmt( result, "\n\tNext      : %SC", self->Next->Name );
+			string_append_fmt( result, "\n\tValueType : %SC", self->ValueType ? string_to_strc( code_to_string(self->ValueType)) : txt("Null") );
+			string_append_fmt( result, "\n\tValue     : %SC", self->Value     ? string_to_strc( code_to_string(self->Value))     : txt("Null") );
 		break;
 
 		case CT_Specifiers:
@@ -275,57 +275,57 @@ char const* code_debug_str(Code self)
 				string_append_fmt( result, "%.*s, ", spec.Len, spec.Ptr );
 				idx++;
 			}
-			string_append_fmt( result, "\n\tNextSpecs: %S", self->NextSpecs ? code_debug_str(self->NextSpecs) : "Null" );
+			string_append_fmt( result, "\n\tNextSpecs: %SC", self->NextSpecs ? code_debug_str(self->NextSpecs) : txt("Null") );
 		}
 		break;
 
 		case CT_Template:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tParams     : %S", self->Params      ? code_to_string(self->Params)      : "Null" );
-			string_append_fmt( result, "\n\tDeclaration: %S", self->Declaration ? code_to_string(self->Declaration) : "Null" );
+			string_append_fmt( result, "\n\tParams     : %SC", self->Params      ? string_to_strc( code_to_string(self->Params))      : txt("Null") );
+			string_append_fmt( result, "\n\tDeclaration: %SC", self->Declaration ? string_to_strc( code_to_string(self->Declaration)) : txt("Null") );
 		break;
 
 		case CT_Typedef:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt     : %S", self->InlineCmt      ? self->InlineCmt->Content        : "Null" );
-			string_append_fmt( result, "\n\tUnderlyingType: %S", self->UnderlyingType ? code_to_string(self->UnderlyingType) : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt     : %SC", self->InlineCmt      ? self->InlineCmt->Content                              : txt("Null") );
+			string_append_fmt( result, "\n\tUnderlyingType: %SC", self->UnderlyingType ? string_to_strc( code_to_string(self->UnderlyingType)) : txt("Null") );
 		break;
 
 		case CT_Typename:
-			string_append_fmt( result, "\n\tAttributes     : %S", self->Attributes ? code_to_string(self->Attributes) : "Null" );
-			string_append_fmt( result, "\n\tSpecs          : %S", self->Specs      ? code_to_string(self->Specs)      : "Null" );
-			string_append_fmt( result, "\n\tReturnType     : %S", self->ReturnType ? code_to_string(self->ReturnType) : "Null" );
-			string_append_fmt( result, "\n\tParams         : %S", self->Params     ? code_to_string(self->Params)     : "Null" );
-			string_append_fmt( result, "\n\tArrExpr        : %S", self->ArrExpr    ? code_to_string(self->ArrExpr)    : "Null" );
+			string_append_fmt( result, "\n\tAttributes     : %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs          : %SC", self->Specs      ? string_to_strc( code_to_string(self->Specs))       : txt("Null") );
+			string_append_fmt( result, "\n\tReturnType     : %SC", self->ReturnType ? string_to_strc( code_to_string(self->ReturnType))  : txt("Null") );
+			string_append_fmt( result, "\n\tParams         : %SC", self->Params     ? string_to_strc( code_to_string(self->Params))      : txt("Null") );
+			string_append_fmt( result, "\n\tArrExpr        : %SC", self->ArrExpr    ? string_to_strc( code_to_string(self->ArrExpr))     : txt("Null") );
 		break;
 
 		case CT_Union:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tAttributes: %S", self->Attributes ? code_to_string(self->Attributes) : "Null" );
-			string_append_fmt( result, "\n\tBody      : %S", self->Body       ? code_debug_str(self->Body)       : "Null" );
+			string_append_fmt( result, "\n\tAttributes: %SC", self->Attributes ? string_to_strc( code_to_string(self->Attributes) ) : txt("Null") );
+			string_append_fmt( result, "\n\tBody      : %SC", self->Body       ? code_debug_str(self->Body)       : txt("Null") );
 		break;
 
 		case CT_Using:
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt     : %S", self->InlineCmt      ? self->InlineCmt->Content        : "Null" );
-			string_append_fmt( result, "\n\tAttributes    : %S", self->Attributes     ? code_to_string(self->Attributes)     : "Null" );
-			string_append_fmt( result, "\n\tUnderlyingType: %S", self->UnderlyingType ? code_to_string(self->UnderlyingType) : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt     : %SC", self->InlineCmt      ? self->InlineCmt->Content                               : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes    : %SC", self->Attributes     ? string_to_strc( code_to_string(self->Attributes) )     : txt("Null") );
+			string_append_fmt( result, "\n\tUnderlyingType: %SC", self->UnderlyingType ? string_to_strc( code_to_string(self->UnderlyingType))  : txt("Null") );
 		break;
 
 		case CT_Variable:
@@ -333,29 +333,29 @@ char const* code_debug_str(Code self)
 			if ( self->Parent && self->Parent->Type == CT_Variable )
 			{
 				// Its a NextVar
-				string_append_fmt( result, "\n\tSpecs       : %S", self->Specs        ? code_to_string(self->Specs)        : "Null" );
-				string_append_fmt( result, "\n\tValue       : %S", self->Value        ? code_to_string(self->Value)        : "Null" );
-				string_append_fmt( result, "\n\tBitfieldSize: %S", self->BitfieldSize ? code_to_string(self->BitfieldSize) : "Null" );
-				string_append_fmt( result, "\n\tNextVar     : %S", self->NextVar      ? code_debug_str(self->NextVar)      : "Null" );
+				string_append_fmt( result, "\n\tSpecs       : %SC", self->Specs        ? string_to_strc( code_to_string(self->Specs))        : txt("Null") );
+				string_append_fmt( result, "\n\tValue       : %SC", self->Value        ? string_to_strc( code_to_string(self->Value))        : txt("Null") );
+				string_append_fmt( result, "\n\tBitfieldSize: %SC", self->BitfieldSize ? string_to_strc( code_to_string(self->BitfieldSize)) : txt("Null") );
+				string_append_fmt( result, "\n\tNextVar     : %SC", self->NextVar      ? code_debug_str(self->NextVar)                       : txt("Null") );
 				break;
 			}
 
 			if ( self->Prev )
-				string_append_fmt( result, "\n\tPrev: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tPrev: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 			if ( self->Next )
-				string_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name ? self->Prev->Name : "Null" );
+				string_append_fmt( result, "\n\tNext: %SC %SC", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
-			string_append_fmt( result, "\n\tInlineCmt   : %S", self->InlineCmt    ? self->InlineCmt->Content      : "Null" );
-			string_append_fmt( result, "\n\tAttributes  : %S", self->Attributes   ? code_to_string(self->Attributes)   : "Null" );
-			string_append_fmt( result, "\n\tSpecs       : %S", self->Specs        ? code_to_string(self->Specs)        : "Null" );
-			string_append_fmt( result, "\n\tValueType   : %S", self->ValueType    ? code_to_string(self->ValueType)    : "Null" );
-			string_append_fmt( result, "\n\tBitfieldSize: %S", self->BitfieldSize ? code_to_string(self->BitfieldSize) : "Null" );
-			string_append_fmt( result, "\n\tValue       : %S", self->Value        ? code_to_string(self->Value)        : "Null" );
-			string_append_fmt( result, "\n\tNextVar     : %S", self->NextVar      ? code_debug_str(self->NextVar)      : "Null" );
+			string_append_fmt( result, "\n\tInlineCmt   : %SC", self->InlineCmt    ? self->InlineCmt->Content                             : txt("Null") );
+			string_append_fmt( result, "\n\tAttributes  : %SC", self->Attributes   ? string_to_strc( code_to_string(self->Attributes) )   : txt("Null") );
+			string_append_fmt( result, "\n\tSpecs       : %SC", self->Specs        ? string_to_strc( code_to_string(self->Specs))         : txt("Null") );
+			string_append_fmt( result, "\n\tValueType   : %SC", self->ValueType    ? string_to_strc( code_to_string(self->ValueType))     : txt("Null") );
+			string_append_fmt( result, "\n\tBitfieldSize: %SC", self->BitfieldSize ? string_to_strc( code_to_string(self->BitfieldSize))  : txt("Null") );
+			string_append_fmt( result, "\n\tValue       : %SC", self->Value        ? string_to_strc( code_to_string(self->Value))         : txt("Null") );
+			string_append_fmt( result, "\n\tNextVar     : %SC", self->NextVar      ? code_debug_str(self->NextVar)                        : txt("Null") );
 		break;
 	}
 
-	return * result;
+	return string_to_strc( * result );
 }
 
 Code code_duplicate(Code self)
@@ -366,7 +366,7 @@ Code code_duplicate(Code self)
 	void* mem_self   = rcast(void*, cast(AST*, self));
 	mem_copy( mem_result, mem_self, sizeof( AST ) );
 
-	result->Parent = { nullptr };
+	result->Parent = NullCode;
 	return result;
 }
 
@@ -387,7 +387,7 @@ void code_to_string_ptr( Code self, String* result )
 	{
 		case CT_Invalid:
 		#ifdef GEN_DONT_ALLOW_INVALID_CODE
-			log_failure("Attempted to serialize invalid code! - %S", Parent ? Parent->code_debug_str() : Name );
+			log_failure("Attempted to serialize invalid code! - %SC", Parent ? Parent->code_debug_str() : Name );
 		#else
 			string_append_fmt( result, "Invalid Code!" );
 		#endif
@@ -604,13 +604,13 @@ bool code_is_equal( Code self, Code other )
 */
 	if ( other == nullptr )
 	{
-		log_fmt( "AST::is_equal: other is null\nAST: %S", code_debug_str(self) );
+		log_fmt( "AST::is_equal: other is null\nAST: %SC", code_debug_str(self) );
 		return false;
 	}
 
 	if ( self->Type != other->Type )
 	{
-		log_fmt("AST::is_equal: Type check failure with other\nAST: %S\nOther: %S"
+		log_fmt("AST::is_equal: Type check failure with other\nAST: %SC\nOther: %SC"
 			, code_debug_str(self)
 			,code_debug_str(other)
 		);
@@ -624,8 +624,8 @@ bool code_is_equal( Code self, Code other )
 	if ( self->val != other->val )                            \
 	{                                                         \
 		log_fmt("\nAST::is_equal: Member - " #val " failed\n" \
-		        "AST  : %S\n"                                 \
-		        "Other: %S\n"                                 \
+		        "AST  : %SC\n"                                \
+		        "Other: %SC\n"                                \
 		    , code_debug_str(self)                            \
 		    ,code_debug_str(other)                            \
 		);                                                    \
@@ -634,11 +634,11 @@ bool code_is_equal( Code self, Code other )
 	}
 
 	#define check_member_str( str )                                 \
-	if ( self->str != other->str )                                  \
+	if ( ! strc_are_equal( self->str, other->str ) )                \
 	{                                                               \
 		log_fmt("\nAST::is_equal: Member string - "#str " failed\n" \
-				"AST  : %S\n"                                       \
-				"Other: %S\n"                                       \
+				"AST  : %SC\n"                                      \
+				"Other: %SC\n"                                      \
 			, code_debug_str(self)                                  \
 			,code_debug_str(other)                                  \
 		);                                                          \
@@ -647,19 +647,19 @@ bool code_is_equal( Code self, Code other )
 	}
 
 	#define check_member_content( content )                                \
-	if ( self->content != other->content )                                 \
+	if ( ! strc_are_equal( self->content, other->content ))                \
 	{                                                                      \
 		log_fmt("\nAST::is_equal: Member content - "#content " failed\n"   \
-				"AST  : %S\n"                                              \
-				"Other: %S\n"                                              \
+				"AST  : %SC\n"                                             \
+				"Other: %SC\n"                                             \
 			, code_debug_str(self)                                         \
 			, code_debug_str(other)                                        \
 		);                                                                 \
                                                                            \
 		log_fmt("Content cannot be trusted to be unique with this check "  \
 			"so it must be verified by eye for now\n"                      \
-			"AST   Content:\n%S\n"                                         \
-			"Other Content:\n%S\n"                                         \
+			"AST   Content:\n%SC\n"                                        \
+			"Other Content:\n%SC\n"                                        \
 			, strc_visualize_whitespace(self->content, GlobalAllocator)    \
 			, strc_visualize_whitespace(other->content, GlobalAllocator)   \
 		);                                                                 \
@@ -671,9 +671,9 @@ bool code_is_equal( Code self, Code other )
 		if ( other->ast == nullptr )                                                               \
 		{                                                                                          \
 			log_fmt("\nAST::is_equal: Failed for member " #ast " other equivalent param is null\n" \
-					"AST  : %s\n"                                                                  \
-					"Other: %s\n"                                                                  \
-					"For ast member: %s\n"                                                         \
+					"AST  : %SC\n"                                                                 \
+					"Other: %SC\n"                                                                 \
+					"For ast member: %SC\n"                                                        \
 				, code_debug_str(self)                                                             \
 				, code_debug_str(other)                                                            \
 				, code_debug_str(self->ast)                                                        \
@@ -685,10 +685,10 @@ bool code_is_equal( Code self, Code other )
 		if ( ! code_is_equal(self->ast, other->ast ) )                                             \
 		{                                                                                          \
 			log_fmt( "\nAST::is_equal: Failed for " #ast"\n"                                       \
-					"AST  : %S\n"                                                                  \
-					"Other: %S\n"                                                                  \
-					"For     ast member: %S\n"                                                     \
-					"other's ast member: %S\n"                                                     \
+					"AST  : %SC\n"                                                                 \
+					"Other: %SC\n"                                                                 \
+					"For     ast member: %SC\n"                                                    \
+					"other's ast member: %SC\n"                                                    \
 				, code_debug_str(self)                                                             \
 				, code_debug_str(other)                                                            \
 				, code_debug_str(self->ast)                                                        \
@@ -918,22 +918,22 @@ bool code_is_equal( Code self, Code other )
 						if ( curr_other == nullptr )
 						{
 							log_fmt("\nAST::is_equal: Failed for parameter, other equivalent param is null\n"
-									"AST  : %S\n"
-									"Other: %S\n"
-									"For ast member: %S\n"
+									"AST  : %SC\n"
+									"Other: %SC\n"
+									"For ast member: %SC\n"
 								, code_debug_str(curr)
 							);
 
 							return false;
 						}
 
-						if ( curr->Name != curr_other->Name )
+						if ( strc_are_equal(curr->Name, curr_other->Name) )
 						{
 							log_fmt( "\nAST::is_equal: Failed for parameter name check\n"
-									"AST  : %S\n"
-									"Other: %S\n"
-									"For     ast member: %S\n"
-									"other's ast member: %S\n"
+									"AST  : %SC\n"
+									"Other: %SC\n"
+									"For     ast member: %SC\n"
+									"other's ast member: %SC\n"
 								, code_debug_str(self)
 								, code_debug_str(other)
 								, code_debug_str(curr)
@@ -945,10 +945,10 @@ bool code_is_equal( Code self, Code other )
 						if ( curr->ValueType && ! code_is_equal(curr->ValueType, curr_other->ValueType) )
 						{
 							log_fmt( "\nAST::is_equal: Failed for parameter value type check\n"
-									"AST  : %S\n"
-									"Other: %S\n"
-									"For     ast member: %S\n"
-									"other's ast member: %S\n"
+									"AST  : %SC\n"
+									"Other: %SC\n"
+									"For     ast member: %SC\n"
+									"other's ast member: %SC\n"
 								, code_debug_str(self)
 								, code_debug_str(other)
 								, code_debug_str(curr)
@@ -960,10 +960,10 @@ bool code_is_equal( Code self, Code other )
 						if ( curr->Value && ! code_is_equal(curr->Value, curr_other->Value) )
 						{
 							log_fmt( "\nAST::is_equal: Failed for parameter value check\n"
-									"AST  : %S\n"
-									"Other: %S\n"
-									"For     ast member: %S\n"
-									"other's ast member: %S\n"
+									"AST  : %SC\n"
+									"Other: %SC\n"
+									"For     ast member: %SC\n"
+									"other's ast member: %SC\n"
 								, code_debug_str(self)
 								, code_debug_str(other)
 								, code_debug_str(curr)
@@ -1117,10 +1117,10 @@ bool code_is_equal( Code self, Code other )
 				if ( curr_other == nullptr )
 				{
 					log_fmt("\nAST::is_equal: Failed for body, other equivalent param is null\n"
-							"AST  : %S\n"
-							"Other: %S\n"
-							"For ast member: %S\n"
+							"AST  : %SC\n"
+							"Other: %SC\n"
 						, code_debug_str(curr)
+						, code_debug_str(other)
 					);
 
 					return false;
@@ -1129,10 +1129,10 @@ bool code_is_equal( Code self, Code other )
 				if ( ! code_is_equal( curr, curr_other ) )
 				{
 					log_fmt( "\nAST::is_equal: Failed for body\n"
-							"AST  : %S\n"
-							"Other: %S\n"
-							"For     ast member: %S\n"
-							"other's ast member: %S\n"
+							"AST  : %SC\n"
+							"Other: %SC\n"
+							"For     ast member: %SC\n"
+							"other's ast member: %SC\n"
 						, code_debug_str(self)
 						, code_debug_str(other)
 						, code_debug_str(curr)
@@ -1170,7 +1170,7 @@ bool code_validate_body(Code self)
 			switch ( code_entry->Type )                                                                                   \
 			{                                                                                                             \
 				Unallowed_Types                                                                                           \
-					log_failure( "AST::validate_body: Invalid entry in body %s", code_debug_str(code_entry) );            \
+					log_failure( "AST::validate_body: Invalid entry in body %SC", code_debug_str(code_entry) );           \
 					return false;                                                                                         \
 			}                                                                                                             \
 		}                                                                                                                 \
@@ -1191,7 +1191,7 @@ bool code_validate_body(Code self)
 			{
 				if ( entry->Type != CT_Untyped )
 				{
-					log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %s", GEN_NS code_debug_str(entry) );
+					log_failure( "AST::validate_body: Invalid entry in enum body (needs to be untyped or comment) %SC", code_debug_str(entry) );
 					return false;
 				}
 			}
@@ -1236,7 +1236,7 @@ bool code_validate_body(Code self)
 					case CT_Specifiers:
 					case CT_Struct_Body:
 					case CT_Typename:
-						log_failure("AST::validate_body: Invalid entry in body %s", GEN_NS code_debug_str(entry));
+						log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(entry));
 					return false;
 				}
 			}
@@ -1259,7 +1259,7 @@ bool code_validate_body(Code self)
 			{
 				if ( entry->Type != CT_Untyped )
 				{
-					log_failure( "AST::validate_body: Invalid entry in union body (needs to be untyped or comment) %s", GEN_NS code_debug_str(entry) );
+					log_failure( "AST::validate_body: Invalid entry in union body (needs to be untyped or comment) %SC", code_debug_str(entry) );
 					return false;
 				}
 			}
@@ -1267,7 +1267,7 @@ bool code_validate_body(Code self)
 		break;
 
 		default:
-			log_failure( "AST::validate_body: Invalid this AST does not have a body %s", code_debug_str(self) );
+			log_failure( "AST::validate_body: Invalid this AST does not have a body %SC", code_debug_str(self) );
 			return false;
 	}
 

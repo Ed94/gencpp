@@ -101,10 +101,10 @@ Code& Code::operator ++()
 }
 #endif
 forceinline
-char const* code_type_str(Code self)
+StrC code_type_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
-	return codetype_to_str( self->Type ).Ptr;
+	return codetype_to_str( self->Type );
 }
 #pragma endregion Code
 

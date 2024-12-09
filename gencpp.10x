@@ -48,6 +48,7 @@
 			<Define>GEN_EXECUTION_EXPRESSION_SUPPORT</Define>
 			<Define>GEN_BENCHMARK</Define>
 			<Define>GEN_COMPILER_MSVC</Define>
+			<Define>GEN_IMPLEMENTATION</Define>
 		</Defines>
 		<ConfigProperties>
 			<ConfigAndPlatform>
