@@ -246,9 +246,7 @@ int gen_main()
 		CodeBody etoktype         = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
 		//CodeNS   nspaced_etoktype = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
 		CodeBody nspaced_etoktype = def_global_body( args(
-			untyped_str(txt("GEN_NS_PARSER_BEGIN\n")),
-			etoktype,
-			untyped_str(txt("GEN_NS_PARSER_END\n"))
+			etoktype
 		));
 
 		Builder

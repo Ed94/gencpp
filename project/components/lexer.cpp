@@ -35,62 +35,62 @@ struct Token
 
 constexpr Token NullToken { nullptr, 0, Tok_Invalid, false, 0, TF_Null };
 
-AccessSpec to_access_specifier(Token tok)
+AccessSpec tok_to_access_specifier(Token tok)
 {
 	return scast(AccessSpec, tok.Type);
 }
 
-StrC to_str(Token tok)
+StrC tok_to_str(Token tok)
 {
 	return { tok.Length, tok.Text };
 }
 
-bool is_valid( Token tok )
+bool tok_is_valid( Token tok )
 {
 	return tok.Text && tok.Length && tok.Type != Tok_Invalid;
 }
 
-bool is_access_operator(Token tok)
+bool tok_is_access_operator(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_AccessOperator );
 }
 
-bool is_access_specifier(Token tok)
+bool tok_is_access_specifier(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_AccessSpecifier );
 }
 
-bool is_attribute(Token tok)
+bool tok_is_attribute(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_Attribute );
 }
 
-bool is_operator(Token tok)
+bool tok_is_operator(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_Operator );
 }
 
-bool is_preprocessor(Token tok)
+bool tok_is_preprocessor(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess );
 }
 
-bool is_preprocess_cond(Token tok)
+bool tok_is_preprocess_cond(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess_Cond );
 }
 
-bool is_specifier(Token tok)
+bool tok_is_specifier(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_Specifier );
 }
 
-bool is_end_definition(Token tok)
+bool tok_is_end_definition(Token tok)
 {
 	return bitfield_is_equal( u32, tok.Flags, TF_EndDefinition );
 }
 
-String to_string(Token tok)
+String tok_to_string(Token tok)
 {
 	String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
 
@@ -111,9 +111,9 @@ struct TokArray
 	s32          Idx;
 };
 
-bool __eat( TokType type );
+bool lex__eat( TokType type );
 
-Token* current(TokArray* self, bool skip_formatting )
+Token* lex_current(TokArray* self, bool skip_formatting )
 {
 	if ( skip_formatting )
 	{
@@ -124,7 +124,7 @@ Token* current(TokArray* self, bool skip_formatting )
 	return & self->Arr[self->Idx];
 }
 
-Token* peek(TokArray self, bool skip_formatting)
+Token* lex_peek(TokArray self, bool skip_formatting)
 {
 	s32 idx = self.Idx;
 
@@ -139,7 +139,7 @@ Token* peek(TokArray self, bool skip_formatting)
 	return & self.Arr[idx];
 }
 
-Token* previous(TokArray self, bool skip_formatting)
+Token* lex_previous(TokArray self, bool skip_formatting)
 {
 	s32 idx = self.Idx;
 
@@ -154,7 +154,7 @@ Token* previous(TokArray self, bool skip_formatting)
 	return & self.Arr[idx - 1];
 }
 
-Token* next(TokArray self, bool skip_formatting)
+Token* lex_next(TokArray self, bool skip_formatting)
 {
 	s32 idx = self.Idx;
 
@@ -169,9 +169,9 @@ Token* next(TokArray self, bool skip_formatting)
 	return & self.Arr[idx + 1];
 }
 
-global Arena_256KB     defines_map_arena;
-global HashTable(StrC) defines;
-global Array(Token)    Tokens;
+global Arena_256KB     Lexer_defines_map_arena;
+global HashTable(StrC) Lexer_defines;
+global Array(Token)    Lexer_Tokens;
 
 #define current ( * ctx->scanner )
 
@@ -190,7 +190,7 @@ global Array(Token)    Tokens;
 		ctx->scanner++;         \
 	}
 
-#define SkipWhitespace()                             \
+#define skip_whitespace()                            \
 	while ( ctx->left && char_is_space( current ) )  \
 	{                                                \
 		move_forward();                              \
@@ -237,10 +237,10 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 {
 	char const* hash = ctx->scanner;
 	Token hash_tok = { hash, 1, Tok_Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess };
-	array_append( Tokens, hash_tok  );
+	array_append( Lexer_Tokens, hash_tok  );
 
 	move_forward();
-	SkipWhitespace();
+	skip_whitespace();
 
 	ctx->token.Text = ctx->scanner;
 	while (ctx->left && ! char_is_space(current) )
@@ -249,7 +249,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Length++;
 	}
 
-	ctx->token.Type = strc_to_toktype( to_str(ctx->token) );
+	ctx->token.Type = strc_to_toktype( tok_to_str(ctx->token) );
 
 	bool   is_preprocessor = ctx->token.Type >= Tok_Preprocess_Define && ctx->token.Type <= Tok_Preprocess_Pragma;
 	if ( ! is_preprocessor )
@@ -313,14 +313,14 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		ctx->token.Length = ctx->token.Length + ctx->token.Text - hash;
 		ctx->token.Text   = hash;
-		array_append( Tokens, ctx->token );
+		array_append( Lexer_Tokens, ctx->token );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
 	if ( ctx->token.Type == Tok_Preprocess_Else || ctx->token.Type == Tok_Preprocess_EndIf )
 	{
 		ctx->token.Flags |= TF_Preprocess_Cond;
-		array_append( Tokens, ctx->token );
+		array_append( Lexer_Tokens, ctx->token );
 		end_line();
 		return Lex_Continue;
 	}
@@ -329,9 +329,9 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Flags |= TF_Preprocess_Cond;
 	}
 
-	array_append( Tokens, ctx->token );
+	array_append( Lexer_Tokens, ctx->token );
 
-	SkipWhitespace();
+	skip_whitespace();
 
 	if ( ctx->token.Type == Tok_Preprocess_Define )
 	{
@@ -353,10 +353,10 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			name.Length++;
 		}
 
-		array_append( Tokens, name );
+		array_append( Lexer_Tokens, name );
 
 		u64 key = crc32( name.Text, name.Length );
-		hashtable_set(ctx->defines, key, to_str(name) );
+		hashtable_set(ctx->defines, key, tok_to_str(name) );
 	}
 
 	Token preprocess_content = { ctx->scanner, 0, Tok_Preprocess_Content, ctx->line, ctx->column, TF_Preprocess };
@@ -399,7 +399,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			move_forward();
 		}
 
-		array_append( Tokens, preprocess_content );
+		array_append( Lexer_Tokens, preprocess_content );
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
@@ -462,7 +462,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		preprocess_content.Length++;
 	}
 
-	array_append( Tokens, preprocess_content );
+	array_append( Lexer_Tokens, preprocess_content );
 	return Lex_Continue; // Skip found token, its all handled here.
 }
 
@@ -471,11 +471,11 @@ void lex_found_token( LexContext* ctx )
 {
 	if ( ctx->token.Type != Tok_Invalid )
 	{
-		array_append( Tokens, ctx->token );
+		array_append( Lexer_Tokens, ctx->token );
 		return;
 	}
 
-	TokType type = strc_to_toktype( to_str(ctx->token) );
+	TokType type = strc_to_toktype( tok_to_str(ctx->token) );
 
 	if (type <= Tok_Access_Public && type >= Tok_Access_Private )
 	{
@@ -489,7 +489,7 @@ void lex_found_token( LexContext* ctx )
 
 	if ( type == Tok_Decl_Extern_Linkage )
 	{
-		SkipWhitespace();
+		skip_whitespace();
 
 		if ( current != '"' )
 		{
@@ -498,7 +498,7 @@ void lex_found_token( LexContext* ctx )
 		}
 
 		ctx->token.Type = type;
-		array_append( Tokens, ctx->token );
+		array_append( Lexer_Tokens, ctx->token );
 		return;
 	}
 
@@ -508,7 +508,7 @@ void lex_found_token( LexContext* ctx )
 	{
 		ctx->token.Type   = type;
 		ctx->token.Flags |= TF_Specifier;
-		array_append( Tokens, ctx->token );
+		array_append( Lexer_Tokens, ctx->token );
 		return;
 	}
 
@@ -516,7 +516,7 @@ void lex_found_token( LexContext* ctx )
 	if ( type != Tok_Invalid )
 	{
 		ctx->token.Type = type;
-		array_append( Tokens, ctx->token );
+		array_append( Lexer_Tokens, ctx->token );
 		return;
 	}
 
@@ -570,7 +570,7 @@ void lex_found_token( LexContext* ctx )
 		ctx->token.Type = Tok_Identifier;
 	}
 
-	array_append( Tokens, ctx->token );
+	array_append( Lexer_Tokens, ctx->token );
 }
 
 neverinline
@@ -581,7 +581,7 @@ TokArray lex( StrC content )
 	c.content = content;
 	c.left    = content.Len;
 	c.scanner = content.Ptr;
-	c.defines = defines;
+	c.defines = Lexer_defines;
 
 	char const* word        = c.scanner;
 	s32         word_length = 0;
@@ -589,7 +589,7 @@ TokArray lex( StrC content )
 	c.line   = 1;
 	c.column = 1;
 
-	SkipWhitespace();
+	skip_whitespace();
 	if ( c.left <= 0 )
 	{
 		log_failure( "gen::lex: no tokens found (only whitespace provided)" );
@@ -614,7 +614,7 @@ TokArray lex( StrC content )
 		hashtable_set(c.defines, key, (StrC) * entry );
 	}
 
-	array_clear(Tokens);
+	array_clear(Lexer_Tokens);
 
 	while (c.left )
 	{
@@ -644,14 +644,14 @@ TokArray lex( StrC content )
 				c.token.Type = Tok_NewLine;
 				c.token.Length++;
 
-				array_append( Tokens, c.token );
+				array_append( Lexer_Tokens, c.token );
 				continue;
 			}
 		}
 
 		c.token.Length = 0;
 
-		SkipWhitespace();
+		skip_whitespace();
 		if ( c.left <= 0 )
 			break;
 
@@ -680,7 +680,7 @@ TokArray lex( StrC content )
 								c.token.Length++;
 								move_forward();
 
-								array_append( Tokens, c.token );
+								array_append( Lexer_Tokens, c.token );
 							}
 						}
 
@@ -1135,7 +1135,7 @@ TokArray lex( StrC content )
 							move_forward();
 							c.token.Length++;
 						}
-						array_append( Tokens, c.token );
+						array_append( Lexer_Tokens, c.token );
 						continue;
 					}
 					else if ( current == '*' )
@@ -1171,7 +1171,7 @@ TokArray lex( StrC content )
 							move_forward();
 							c.token.Length++;
 						}
-						array_append( Tokens, c.token );
+						array_append( Lexer_Tokens, c.token );
 						// end_line();
 						continue;
 					}
@@ -1264,14 +1264,14 @@ TokArray lex( StrC content )
 		}
 		else
 		{
-			s32 start = max( 0, array_num(Tokens) - 100 );
+			s32 start = max( 0, array_num(Lexer_Tokens) - 100 );
 			log_fmt("\n%d\n", start);
-			for ( s32 idx = start; idx < array_num(Tokens); idx++ )
+			for ( s32 idx = start; idx < array_num(Lexer_Tokens); idx++ )
 			{
 				log_fmt( "Token %d Type: %s : %.*s\n"
 					, idx
-					, toktype_to_str( Tokens[ idx ].Type ).Ptr
-					, Tokens[ idx ].Length, Tokens[ idx ].Text
+					, toktype_to_str( Lexer_Tokens[ idx ].Type ).Ptr
+					, Lexer_Tokens[ idx ].Length, Lexer_Tokens[ idx ].Text
 				);
 			}
 
@@ -1288,7 +1288,7 @@ TokArray lex( StrC content )
 		FoundToken:
 		{
 			lex_found_token( ctx );
-			TokType last_type = array_back(Tokens)->Type;
+			TokType last_type = array_back(Lexer_Tokens)->Type;
 			if ( last_type == Tok_Preprocess_Macro )
 			{
 				c.token = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
@@ -1304,22 +1304,23 @@ TokArray lex( StrC content )
 					c.token.Length++;
 					move_forward();
 
-					array_append( Tokens, c.token );
+					array_append( Lexer_Tokens, c.token );
 					continue;
 				}
 			}
 		}
 	}
 
-	if ( array_num(Tokens) == 0 )
+	if ( array_num(Lexer_Tokens) == 0 )
 	{
 		log_failure( "Failed to lex any tokens" );
 		return { {}, 0 };
 	}
 
-	hashtable_clear(defines);
+	hashtable_clear(Lexer_defines);
 	// defines_map_arena.free();
-	return { Tokens, 0 };
+	TokArray result = { Lexer_Tokens, 0 };
+	return result;
 }
 #undef current
 #undef move_forward

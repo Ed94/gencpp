@@ -12,7 +12,7 @@ CodeClass parse_class( StrC def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
-	
+
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
@@ -20,7 +20,7 @@ CodeClass parse_class( StrC def )
 	Context.Tokens = toks;
 	push_scope();
 	CodeClass result = (CodeClass) parse_class_struct( Tok_Decl_Class );
-	pop(& Context);
+	parser_pop(& Context);
 	return result;
 }
 
@@ -39,9 +39,9 @@ CodeConstructor parse_constructor( StrC def )
 	Specifier      specs_found[ 16 ] { Spec_NumSpecifiers };
 	s32            NumSpecifiers = 0;
 
-	while ( left && is_specifier(currtok) )
+	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = strc_to_specifier( to_str(currtok) );
+		Specifier spec = strc_to_specifier( tok_to_str(currtok) );
 
 		b32 ignore_spec = false;
 
@@ -59,8 +59,8 @@ CodeConstructor parse_constructor( StrC def )
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%s", spec_to_str( spec ), to_string(Context) );
-				pop(& Context);
+				log_failure( "Invalid specifier %s for variable\n%s", spec_to_str( spec ), parser_to_string(Context) );
+				parser_pop(& Context);
 				return InvalidCode;
 		}
 
@@ -109,7 +109,7 @@ CodeEnum parse_enum( StrC def )
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 	{
-		pop(& Context);
+		parser_pop(& Context);
 		return InvalidCode;
 	}
 
@@ -181,7 +181,7 @@ CodeBody parse_global_body( StrC def )
 	Context.Tokens = toks;
 	push_scope();
 	CodeBody result = parse_global_nspace( CT_Global_Body );
-	pop(& Context);
+	parser_pop(& Context);
 	return result;
 }
 
@@ -236,7 +236,7 @@ CodeStruct parse_struct( StrC def )
 	Context.Tokens = toks;
 	push_scope();
 	CodeStruct result = (CodeStruct) parse_class_struct( Tok_Decl_Struct );
-	pop(& Context);
+	parser_pop(& Context);
 	return result;
 }
 

@@ -456,6 +456,12 @@ do                          \
 	CodeBody header_parsing        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_parsing.begin(); entry != parsed_header_parsing.end(); ++ entry ) switch (entry->Type)
 	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
 		case CT_Preprocess_Pragma:
 		{
 			if ( entry->Content.contains(txt("ADT")) )
@@ -546,6 +552,12 @@ do                          \
 	CodeBody types        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_types.begin(); entry != parsed_types.end(); ++ entry ) switch(entry->Type)
 	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
 		case CT_Using:
 		{
 			CodeUsing using_ver = cast(CodeUsing, entry);
@@ -600,6 +612,12 @@ do                          \
 	CodeBody ast        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_ast.begin(); entry != parsed_ast.end(); ++ entry ) switch (entry->Type)
 	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
 		case CT_Preprocess_If:
 		{
 			CodePreprocessCond cond = cast(CodePreprocessCond, entry);
@@ -992,6 +1010,12 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody inlines        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_inlines.begin(); entry != parsed_inlines.end(); ++ entry ) switch( entry->Type )
 	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
 		case CT_Function:
 		{
 			// Were going to wrap usage of these procedures into generic selectors in code_types.hpp section,
@@ -1019,6 +1043,12 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody header_end        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_end.begin(); entry != parsed_header_end.end(); ++ entry, ++ idx ) switch( entry->Type )
 	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
@@ -1058,13 +1088,14 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 #pragma region Resolve Components
 	CodeBody array_arena = gen_array(txt("Arena"), txt("Array_Arena"));
 	CodeBody array_pool  = gen_array(txt("Pool"), txt("Array_Pool"));
+	CodeBody array_token = gen_array(txt("Token"), txt("Array_Token"));
 
 	Code src_static_data 	    = scan_file( project_dir "components/static_data.cpp" );
 	Code src_ast_case_macros    = scan_file( project_dir "components/ast_case_macros.cpp" );
 	Code src_code_serialization = scan_file( project_dir "components/code_serialization.cpp" );
 	Code src_interface          = scan_file( project_dir "components/interface.cpp" );
-	Code src_lexer              = scan_file( project_dir "components/lexer.cpp" );
-	Code src_parser             = scan_file( project_dir "components/parser.cpp" );
+	// Code src_lexer              = scan_file( project_dir "components/lexer.cpp" );
+	// Code src_parser             = scan_file( project_dir "components/parser.cpp" );
 	Code src_parsing_interface  = scan_file( project_dir "components/interface.parsing.cpp" );
 	Code src_untyped            = scan_file( project_dir "components/interface.untyped.cpp" );
 
@@ -1072,6 +1103,12 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody src_ast        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_src_ast.begin(); entry != parsed_src_ast.end(); ++ entry ) switch( entry ->Type )
 	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
 		case CT_Function:
 		{
 			// Were going to wrap usage of these procedures into generic selectors in code_types.hpp section,
@@ -1098,6 +1135,12 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody src_upfront        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_src_upfront.begin(); entry != parsed_src_upfront.end(); ++ entry ) switch( entry ->Type )
 	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
 		case CT_Enum: {
 			convert_cpp_enum_to_c(cast(CodeEnum, entry), src_upfront);
 		}
@@ -1135,6 +1178,97 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 		default:
 			src_upfront.append(entry);
+		break;
+	}
+
+	CodeBody parsed_src_lexer = parse_file( project_dir "components/lexer.cpp" );
+	CodeBody src_lexer        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_src_ast.begin(); entry != parsed_src_ast.end(); ++ entry ) switch( entry ->Type )
+	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
+		CT_Enum:
+		{
+			if (entry->Name.Len)
+			{
+				convert_cpp_enum_to_c()
+			}
+		}
+		break;
+
+		CT_Struct:
+		{
+			if ( entry->Name.is_equal(txt("Token")))
+			{
+				// Add struct Token forward and typedef early.
+				CodeStruct  token_fwd     = parse_struct(code( struct Token; ));
+				CodeTypedef token_typedef = parse_typedef(code( typedef struct Token Token; ));
+				header_parsing.append(token_fwd);
+				header_parsing.append(token_typedef);
+
+				// Skip typedef since we added it
+				b32 continue_for = true;
+				for (Code array_entry = array_token.begin(); continue_for && array_entry != array_token.end(); ++ array_entry) switch (array_entry->Type)
+				{
+					case CT_Typedef:
+					{
+						// pop the array entry
+						array_token->NumEntries -= 1;
+						Code next                   = array_entry->Next;
+						Code prev                   = array_entry->Prev;
+						next->Prev                  = array_entry->Prev;
+						prev->Next                  = next;
+						if ( array_token->Front == array_entry )
+							array_token->Front = next;
+
+						src_lexer.append(array_entry);
+						continue_for = false;
+					}
+					break;
+				}
+
+				// Append the struct
+				src_lexer.append(entry);
+
+				// Append the token array
+				src_lexer.append(array_token);
+				continue;
+			}
+
+			CodeTypedef struct_tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )))
+			src_lexer.append(entry);
+			src_lexer.append(struct_tdef);
+		}
+		break;
+
+		default:
+			src_lexer.append(entry);
+		break;
+	}
+
+	CodeBody parsed_src_parser = parse_file( project_dir "components/parser.cpp" );
+	CodeBody src_parser        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_src_parser.begin(); entry != parsed_src_parser.end(); ++ entry ) switch( entry ->Type )
+	{
+		case CT_Preprocess_IfDef:
+		{
+			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+		}
+		break;
+
+		case CT_Struct:
+		{
+			CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+			header_memory.append(entry);
+			header_memory.append(tdef);
+		}
+
+		default:
+			src_parser.append(entry);
 		break;
 	}
 #pragma endregion Resolve Components
@@ -1285,7 +1419,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( format_code_to_untyped(src_upfront) );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
 		header.print( format_code_to_untyped(etoktype) );
-		// header.print( lexer );
+		header.print( lexer );
 		// header.print( parser );
 		// header.print( parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
