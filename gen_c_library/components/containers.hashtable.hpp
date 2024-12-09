@@ -107,7 +107,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 		HT_FindResult <fn>__find     ( <tbl_type>  self, u64 key );
 		b32           <fn>__full     ( <tbl_type>  self );
 
-		<tbl_type> <fn>init( AllocatorInfo allocator )
+		<tbl_type> <fn>_init( AllocatorInfo allocator )
 		{
 			<tbl_type> result = hashtable_init_reserve(<type>, allocator, 8);
 			return result;
@@ -379,7 +379,7 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_init
 #define GENERIC_SLOT_<slot>__hashtable_init_reserve     <type>,      <tbl_type>_init_reserve
 #define GENERIC_SLOT_<slot>__hashtable_clear            <tbl_type>,  <tbl_type>_clear
-#define GENERIC_SLOT_<slot>__hashtable_destroy          <tbl_type>*, <tbl_type>_destroy
+#define GENERIC_SLOT_<slot>__hashtable_destroy          <tbl_type>,  <tbl_type>_destroy
 #define GENERIC_SLOT_<slot>__hashtable_get              <tbl_type>,  <tbl_type>_get
 #define GENERIC_SLOT_<slot>__hashtable_map              <tbl_type>,  <tbl_type>_map
 #define GENERIC_SLOT_<slot>__hashtable_map_mut          <tbl_type>,  <tbl_type>_map_mut
@@ -387,7 +387,7 @@ R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_
 #define GENERIC_SLOT_<slot>__hashtable_rehash           <tbl_type>*, <tbl_type>_rehash
 #define GENERIC_SLOT_<slot>__hashtable_rehash_fast      <tbl_type>,  <tbl_type>_rehash_fast
 #define GENERIC_SLOT_<slot>__hashtable_remove_entry     <tbl_type>,  <tbl_type>_remove_entry
-#define GENERIC_SLOT_<slot>__hashtable_set              <tbl_type>*, <tbl_type>_set
+#define GENERIC_SLOT_<slot>__hashtable_set              <tbl_type>,  <tbl_type>_set
 #define GENERIC_SLOT_<slot>__hashtable_slot             <tbl_type>,  <tbl_type>_slot
 
 #define GENERIC_SLOT_<slot>__hashtable__add_entry       <tbl_type>*, <tbl_type>__add_entry

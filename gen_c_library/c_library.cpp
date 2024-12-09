@@ -836,16 +836,16 @@ R"(#define AST_ArrSpecs_Cap \
 	CodeBody array_arena = gen_array(txt("Arena"), txt("Array_Arena"));
 	CodeBody array_pool  = gen_array(txt("Pool"), txt("Array_Pool"));
 
-	Code src_static_data 	   = scan_file( project_dir "components/static_data.cpp" );
-	Code src_ast_case_macros   = scan_file( project_dir "components/ast_case_macros.cpp" );
-	Code src_ast               = scan_file( project_dir "components/ast.cpp" );
-	Code src_code              = scan_file( project_dir "components/code_serialization.cpp" );
-	Code src_interface         = scan_file( project_dir "components/interface.cpp" );
-	Code src_upfront           = scan_file( project_dir "components/interface.upfront.cpp" );
-	Code src_lexer             = scan_file( project_dir "components/lexer.cpp" );
-	Code src_parser            = scan_file( project_dir "components/parser.cpp" );
-	Code src_parsing_interface = scan_file( project_dir "components/interface.parsing.cpp" );
-	Code src_untyped           = scan_file( project_dir "components/interface.untyped.cpp" );
+	Code src_static_data 	    = scan_file( project_dir "components/static_data.cpp" );
+	Code src_ast_case_macros    = scan_file( project_dir "components/ast_case_macros.cpp" );
+	Code src_ast                = scan_file( project_dir "components/ast.cpp" );
+	Code src_code_serialization = scan_file( project_dir "components/code_serialization.cpp" );
+	Code src_interface          = scan_file( project_dir "components/interface.cpp" );
+	Code src_upfront            = scan_file( project_dir "components/interface.upfront.cpp" );
+	Code src_lexer              = scan_file( project_dir "components/lexer.cpp" );
+	Code src_parser             = scan_file( project_dir "components/parser.cpp" );
+	Code src_parsing_interface  = scan_file( project_dir "components/interface.parsing.cpp" );
+	Code src_untyped            = scan_file( project_dir "components/interface.untyped.cpp" );
 #pragma endregion Resolve Components
 
 	// THERE SHOULD BE NO NEW GENERIC CONTAINER DEFINTIONS PAST THIS POINT (It will not have slots for the generic selection generated macros)
@@ -985,12 +985,12 @@ R"(#define AST_ArrSpecs_Cap \
 
 		header.print_fmt( "#pragma region AST\n\n" );
 		header.print( src_ast_case_macros );
-		 header.print( src_ast );
-		// header.print( src_code );
+		header.print( src_ast );
+		header.print( src_code_serialization );
 		header.print_fmt( "#pragma endregion AST\n\n" );
 
-		// header.print_fmt( "#pragma region Interface\n" );
-		// header.print( src_interface );
+		 header.print_fmt( "#pragma region Interface\n" );
+		 header.print( src_interface );
 		// header.print( src_upfront );
 		// header.print_fmt( "\n#pragma region Parsing\n\n" );
 		// header.print( format_code_to_untyped(parser_nspace) );
@@ -999,7 +999,7 @@ R"(#define AST_ArrSpecs_Cap \
 		// header.print( parsing_interface );
 		// header.print_fmt( "\n#pragma endregion Parsing\n" );
 		// header.print( untyped );
-		// header.print_fmt( "\n#pragma endregion Interface\n\n");
+		 header.print_fmt( "\n#pragma endregion Interface\n\n");
 
 		// header.print_fmt( "#pragma region Builder\n" );
 		// header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );

@@ -101,10 +101,12 @@ void define_constants()
 	access_public->Name = get_cached_string( txt("public:\n") );
 	code_set_global(access_public);
 
-	attrib_api_export = def_attributes( code(GEN_API_Export_Code));
+	StrC api_export_str = code(GEN_API_Export_Code);
+	attrib_api_export = def_attributes( api_export_str );
 	code_set_global(cast(Code, attrib_api_export));
 
-	attrib_api_import = def_attributes( code(GEN_API_Import_Code));
+	StrC api_import_str = code(GEN_API_Import_Code);
+	attrib_api_import = def_attributes( api_import_str );
 	code_set_global(cast(Code, attrib_api_import));
 
 	module_global_fragment          = make_code();
@@ -143,9 +145,14 @@ void define_constants()
 	preprocess_endif->Type = CT_Preprocess_EndIf;
 	code_set_global((Code)preprocess_endif);
 
-#	define def_constant_code_type( Type_ )   \
-		t_##Type_ = def_type( name(Type_) ); \
-		code_set_global( cast(Code, t_##Type_));
+#	define def_constant_code_type( Type_ )           \
+		do                                           \
+		{                                            \
+		    Opts_def_type ops = {};                  \
+			StrC name_str = name(Type_);             \
+			t_##Type_ = def_type( name_str, ops );   \
+			code_set_global( cast(Code, t_##Type_)); \
+		} while(0)
 
 	def_constant_code_type( auto );
 	def_constant_code_type( void );
@@ -237,9 +244,10 @@ void init()
 {
 	// Setup global allocator
 	{
-		GlobalAllocator = AllocatorInfo { & Global_Allocator_Proc, nullptr };
+		AllocatorInfo becasue_C = { & Global_Allocator_Proc, nullptr };
+		GlobalAllocator = becasue_C;
 
-		Global_AllocatorBuckets = array_init_reserve<Arena>( heap(), 128 );
+		Global_AllocatorBuckets = array_init_reserve(Arena, heap(), 128 );
 
 		if ( Global_AllocatorBuckets == nullptr )
 			GEN_FATAL( "Failed to reserve memory for Global_AllocatorBuckets");
@@ -273,12 +281,12 @@ void init()
 
 	// Setup the arrays
 	{
-		CodePools = array_init_reserve<Pool>( Allocator_DataArrays, InitSize_DataArrays );
+		CodePools = array_init_reserve(Pool, Allocator_DataArrays, InitSize_DataArrays );
 
 		if ( CodePools == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the CodePools array" );
 
-		StringArenas = array_init_reserve<Arena>( Allocator_DataArrays, InitSize_DataArrays );
+		StringArenas = array_init_reserve(Arena, Allocator_DataArrays, InitSize_DataArrays );
 
 		if ( StringArenas == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringArenas array" );
@@ -305,14 +313,14 @@ void init()
 
 	// Setup the hash tables
 	{
-		StringCache = hashtable_init<StringCached>(Allocator_StringTable);
+		StringCache = hashtable_init(StringCached, Allocator_StringTable);
 
 		if ( StringCache.Entries == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
 	}
 
 	// Preprocessor Defines
-	PreprocessorDefines = array_init_reserve<StringCached>( GlobalAllocator, kilobytes(1) );
+	PreprocessorDefines = array_init_reserve(StringCached, GlobalAllocator, kilobytes(1) );
 
 	define_constants();
 	GEN_NS_PARSER init();
@@ -396,7 +404,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 
 	usize size_req = str_length + sizeof(StringHeader) + sizeof(char*);
 
-	if ( last->TotalUsed + ssize(size_req) > last->TotalSize )
+	if ( last->TotalUsed + scast(ssize, size_req) > last->TotalSize )
 	{
 		Arena new_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
@@ -424,7 +432,7 @@ StringCached get_cached_string( StrC str )
 	StrC result = string_to_strc( string_make_strc( get_string_allocator( str.Len ), str ));
 	hashtable_set(StringCache, key, result );
 
-	return { str.Len, result };
+	return result;
 }
 
 // Used internally to retireve a Code object form the CodePool.
@@ -444,20 +452,8 @@ Code make_code()
 		allocator = array_back( CodePools);
 	}
 
-	Code result { rcast( AST*, alloc( pool_allocator_info(allocator), sizeof(AST) )) };
+	Code result = { rcast( AST*, alloc( pool_allocator_info(allocator), sizeof(AST) )) };
 	mem_set( rcast(void*, cast(AST*, result)), 0, sizeof(AST) );
-	// result->Type = ECode::Invalid;
-
-	// result->Content     = { nullptr };
-	// result->Prev        = { nullptr };
-	// result->Next        = { nullptr };
-	// result->Token		= nullptr;
-	// result->Parent      = { nullptr };
-	// result->Name        = { nullptr };
-	// result->Type        = ECode::Invalid;
-	// result->ModuleFlags = ModuleFlag::Invalid;
-	// result->NumEntries  = 0;
-
 	return result;
 }
 

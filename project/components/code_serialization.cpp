@@ -3,13 +3,15 @@
 #include "ast.cpp"
 #endif
 
-forceinline
+inline
 String attributes_to_string(CodeAttributes attributes) {
 	GEN_ASSERT(attributes);
-	return {(char*) strc_duplicate( attributes->Content, GlobalAllocator ).Ptr};
+	char* raw = ccast(char*, strc_duplicate( attributes->Content, GlobalAllocator ).Ptr);
+	String result = { raw };
+	return result;
 }
 
-forceinline
+inline
 void attributes_to_string_ref(CodeAttributes attributes, String* result) {
 	GEN_ASSERT(attributes);
 	GEN_ASSERT(result);
@@ -77,13 +79,15 @@ void body_to_string_export( CodeBody body, String* result )
 	string_append_fmt( result, "};\n" );
 }
 
-forceinline
+inline
 String comment_to_string(CodeComment comment) {
 	GEN_ASSERT(comment);
-	return {(char*) strc_duplicate( comment->Content, GlobalAllocator ).Ptr};
+	char* raw = ccast(char*, strc_duplicate( comment->Content, GlobalAllocator ).Ptr);
+	String result = { raw };
+	return result;
 }
 
-forceinline
+inline
 void comment_to_string_ref(CodeComment comment, String* result) {
 	GEN_ASSERT(comment);
 	GEN_ASSERT(result);
@@ -184,9 +188,8 @@ void class_to_string_def( CodeClass self, String* result )
 
 	if ( self->ParentType )
 	{
-		char const* access_level = access_spec_to_str( self->ParentAccess );
-
-		string_append_fmt( result, "%SC : %s %S", self->Name, access_level, typename_to_string(self->ParentType) );
+		StrC access_level = access_spec_to_str( self->ParentAccess );
+		string_append_fmt( result, "%SC : %SC %S", self->Name, access_level, typename_to_string(self->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, self->ParentType->Next);
 		if ( interface )
@@ -195,10 +198,10 @@ void class_to_string_def( CodeClass self, String* result )
 		while ( interface )
 		{
 			string_append_fmt( result, ", %S", typename_to_string(interface) );
-			interface = interface->Next ? cast(CodeTypename, interface->Next) : CodeTypename { nullptr };
+			interface = interface->Next ? cast(CodeTypename, interface->Next) : NullCode;
 		}
 	}
-	else if ( self->Name )
+	else if ( self->Name.Len )
 	{
 		string_append_strc( result, self->Name );
 	}
@@ -263,7 +266,7 @@ String destructor_to_string(CodeDestructor self)
 
 void destructor_to_string_def(CodeDestructor self, String* result )
 {
-	if ( self->Name )
+	if ( self->Name.Len )
 	{
 		string_append_fmt( result, "%SC()", self->Name );
 	}
@@ -439,7 +442,10 @@ void enum_to_string_class_fwd(CodeEnum self, String* result )
 
 String exec_to_string(CodeExec exec)
 {
-	return {(char*) strc_duplicate( exec->Content, GlobalAllocator ).Ptr};
+	GEN_ASSERT(exec);
+	char* raw = ccast(char*, strc_duplicate( exec->Content, GlobalAllocator ).Ptr);
+	String result = { raw };
+	return result;
 }
 
 void extern_to_string(CodeExtern self, String* result )
@@ -622,10 +628,10 @@ String module_to_string(CodeModule self)
 
 void module_to_string_ref(CodeModule self, String* result )
 {
-	if (((u32(ModuleFlag_Export) & u32(self->ModuleFlags)) == u32(ModuleFlag_Export)))
+	if (((scast(u32, ModuleFlag_Export) & scast(u32, self->ModuleFlags)) == scast(u32, ModuleFlag_Export)))
 		string_append_strc( result, txt("export "));
 
-	if (((u32(ModuleFlag_Import) & u32(self->ModuleFlags)) == u32(ModuleFlag_Import)))
+	if (((scast(u32, ModuleFlag_Import) & scast(u32, self->ModuleFlags)) == scast(u32, ModuleFlag_Import)))
 		string_append_strc( result, txt("import "));
 
 	string_append_fmt( result, "%SC;\n", self->Name );
@@ -796,7 +802,7 @@ void opcast_to_string_def(CodeOpCast self, String* result )
 			}
 		}
 
-		if ( self->Name && self->Name.Len )
+		if ( self->Name.Ptr && self->Name.Len )
 			string_append_fmt( result, "%SC operator %S()", self->Name, typename_to_string(self->ValueType) );
 		else
 			string_append_fmt( result, "operator %S()", typename_to_string(self->ValueType) );
@@ -814,7 +820,7 @@ void opcast_to_string_def(CodeOpCast self, String* result )
 		return;
 	}
 
-	if ( self->Name && self->Name.Len )
+	if ( self->Name.Ptr && self->Name.Len )
 		string_append_fmt( result, "%SC operator %S()\n{\n%S\n}\n", self->Name, typename_to_string(self->ValueType), body_to_string(self->Body) );
 	else
 		string_append_fmt( result, "operator %S()\n{\n%S\n}\n", typename_to_string(self->ValueType), body_to_string(self->Body) );
@@ -877,7 +883,7 @@ void params_to_string_ref( CodeParam self, String* result )
 		// Could also be: ( <macro> <type <name>, ... )
 	}
 
-	if ( self->Name )
+	if ( self->Name.Ptr && self->Name.Len )
 	{
 		if ( self->ValueType == nullptr )
 			string_append_fmt( result, " %SC", self->Name );
@@ -1036,9 +1042,9 @@ void struct_to_string_def( CodeStruct self, String* result )
 
 	if ( self->ParentType )
 	{
-		char const* access_level = access_spec_to_str( self->ParentAccess );
+		StrC access_level = access_spec_to_str( self->ParentAccess );
 
-		string_append_fmt( result, "%SC : %s %S", self->Name, access_level, typename_to_string(self->ParentType) );
+		string_append_fmt( result, "%SC : %SC %S", self->Name, access_level, typename_to_string(self->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, self->ParentType->Next);
 		if ( interface )
@@ -1047,10 +1053,10 @@ void struct_to_string_def( CodeStruct self, String* result )
 		while ( interface )
 		{
 			string_append_fmt( result, ", %S", typename_to_string(interface) );
-			interface = interface->Next ? cast( CodeTypename, interface->Next) : CodeTypename { nullptr };
+			interface = interface->Next ? cast( CodeTypename, interface->Next) : NullCode;
 		}
 	}
-	else if ( self->Name )
+	else if ( self->Name.Len )
 	{
 		string_append_strc( result, self->Name );
 	}
@@ -1238,7 +1244,7 @@ void union_to_string_def(CodeUnion self, String* result )
 	if ( self->Attributes )
 		string_append_fmt( result, "%S ", attributes_to_string(self->Attributes) );
 
-	if ( self->Name )
+	if ( self->Name.Len )
 	{
 		string_append_fmt( result, "%SC\n{\n%S\n}"
 			, self->Name
@@ -1269,7 +1275,7 @@ void union_to_string_fwd(CodeUnion self, String* result )
 	if ( self->Attributes )
 		string_append_fmt( result, "%S ", attributes_to_string(self->Attributes) );
 
-	if ( self->Name )
+	if ( self->Name.Len )
 	{
 		string_append_fmt( result, "%SC", self->Name);
 	}
@@ -1331,7 +1337,7 @@ void using_to_string_ref(CodeUsing self, String* result )
 		string_append_strc( result, txt("\n"));
 }
 
-forceinline
+inline
 void using_to_string_ns(CodeUsing self, String* result )
 {
 	GEN_ASSERT(self);
@@ -1342,7 +1348,7 @@ void using_to_string_ns(CodeUsing self, String* result )
 		string_append_fmt( result, "using namespace %SC;\n", self->Name );
 }
 
-forceinline
+inline
 String var_to_string(CodeVar self)
 {
 	GEN_ASSERT(self);
