@@ -19,7 +19,7 @@ CodeClass parse_class( StrC def )
 
 	Context.Tokens = toks;
 	push_scope();
-	CodeClass result = (CodeClass) parse_class_struct( Tok_Decl_Class );
+	CodeClass result = (CodeClass) parse_class_struct( Tok_Decl_Class, parser_not_inplace_def );
 	parser_pop(& Context);
 	return result;
 }
@@ -80,7 +80,7 @@ CodeConstructor parse_constructor( StrC def )
 	}
 
 	Context.Tokens         = toks;
-	CodeConstructor result = parse_constructor( specifiers );
+	CodeConstructor result = parser_parse_constructor( specifiers );
 	return result;
 }
 
@@ -97,7 +97,7 @@ CodeDestructor parse_destructor( StrC def )
 	// TODO(Ed): Destructors can have virtual
 
 	Context.Tokens        = toks;
-	CodeDestructor result = parse_destructor();
+	CodeDestructor result = parser_parse_destructor(NullCode);
 	return result;
 }
 
@@ -114,7 +114,7 @@ CodeEnum parse_enum( StrC def )
 	}
 
 	Context.Tokens = toks;
-	return parse_enum( parser_not_inplace_def);
+	return parser_parse_enum( parser_not_inplace_def);
 }
 
 CodeBody parse_export_body( StrC def )
@@ -127,7 +127,7 @@ CodeBody parse_export_body( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_export_body();
+	return parser_parse_export_body();
 }
 
 CodeExtern parse_extern_link( StrC def )
@@ -140,7 +140,7 @@ CodeExtern parse_extern_link( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_extern_link();
+	return parser_parse_extern_link();
 }
 
 CodeFriend parse_friend( StrC def )
@@ -153,7 +153,7 @@ CodeFriend parse_friend( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_friend();
+	return parser_parse_friend();
 }
 
 CodeFn parse_function( StrC def )
@@ -166,7 +166,7 @@ CodeFn parse_function( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return (CodeFn) parse_function();
+	return (CodeFn) parser_parse_function();
 }
 
 CodeBody parse_global_body( StrC def )
@@ -195,7 +195,7 @@ CodeNS parse_namespace( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_namespace();
+	return parser_parse_namespace();
 }
 
 CodeOperator parse_operator( StrC def )
@@ -208,7 +208,7 @@ CodeOperator parse_operator( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return (CodeOperator) parse_operator();
+	return (CodeOperator) parser_parse_operator();
 }
 
 CodeOpCast parse_operator_cast( StrC def )
@@ -221,7 +221,7 @@ CodeOpCast parse_operator_cast( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_operator_cast();
+	return parser_parse_operator_cast(NullCode);
 }
 
 CodeStruct parse_struct( StrC def )
@@ -235,7 +235,7 @@ CodeStruct parse_struct( StrC def )
 
 	Context.Tokens = toks;
 	push_scope();
-	CodeStruct result = (CodeStruct) parse_class_struct( Tok_Decl_Struct );
+	CodeStruct result = (CodeStruct) parse_class_struct( Tok_Decl_Struct, parser_not_inplace_def );
 	parser_pop(& Context);
 	return result;
 }
@@ -250,7 +250,7 @@ CodeTemplate parse_template( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_template();
+	return parser_parse_template();
 }
 
 CodeTypename parse_type( StrC def )
@@ -263,7 +263,7 @@ CodeTypename parse_type( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_type( parser_not_from_template, nullptr);
+	return parser_parse_type( parser_not_from_template, nullptr);
 }
 
 CodeTypedef parse_typedef( StrC def )
@@ -276,7 +276,7 @@ CodeTypedef parse_typedef( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_typedef();
+	return parser_parse_typedef();
 }
 
 CodeUnion parse_union( StrC def )
@@ -289,7 +289,7 @@ CodeUnion parse_union( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_union( parser_not_inplace_def);
+	return parser_parse_union( parser_not_inplace_def);
 }
 
 CodeUsing parse_using( StrC def )
@@ -302,7 +302,7 @@ CodeUsing parse_using( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_using();
+	return parser_parse_using();
 }
 
 CodeVar parse_variable( StrC def )
@@ -315,15 +315,19 @@ CodeVar parse_variable( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_variable();
+	return parser_parse_variable();
 }
 
 // Undef helper macros
 #	undef check_parse_args
+#	undef currtok_noskip
 #	undef currtok
+#	undef peektok
 #	undef prevtok
 #   undef nexttok
+#	undef nexttok_noskip
 #	undef eat
 #	undef left
 #	undef check
 #	undef push_scope
+#	undef def_assign

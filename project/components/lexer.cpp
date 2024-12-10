@@ -113,7 +113,7 @@ struct TokArray
 	s32          Idx;
 };
 
-bool lex__eat( TokType type );
+bool lex__eat( TokArray* self, TokType type );
 
 Token* lex_current(TokArray* self, bool skip_formatting )
 {

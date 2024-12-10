@@ -84,7 +84,7 @@ CodeBody gen_fixed_arenas()
 	result.append(arena_interface_2mb);
 	result.append(arena_interface_4mb);
 
-	CodeDefine def = def_define(txt("fixed_arena_allocator_info(fixed_arena)"), code({ arena_allocator_proc, & fixed_arena.arena }) );
+	CodeDefine def = def_define(txt("fixed_arena_allocator_info(fixed_arena)"), txt("( (AllocatorInfo) { arena_allocator_proc, & (fixed_arena)->arena } )"));
 	result.append(def);
 	result.append(fmt_newline);
 
@@ -103,7 +103,7 @@ CodeBody gen_fixed_arenas()
     FixedArena_2MB*   : fixed_arena_init_2MB,      \
     FixedArena_4MB*   : fixed_arena_init_4MB,      \
 	default           : gen_generic_selection_fail \
-) GEN_RESOLVED_FUNCTION_CALL(& expr)
+) GEN_RESOLVED_FUNCTION_CALL(expr)
 
 #define fixed_arena_size_remaining(expr, alignment) _Generic((expr), \
     FixedArena_1KB*   : fixed_arena_size_remaining_1KB,              \
@@ -119,7 +119,7 @@ CodeBody gen_fixed_arenas()
     FixedArena_2MB*   : fixed_arena_size_remaining_2MB,              \
     FixedArena_4MB*   : fixed_arena_size_remaining_4MB,              \
 	default           : gen_generic_selection_fail                   \
-)	GEN_RESOLVED_FUNCTION_CALL(& expr, alignment)
+)	GEN_RESOLVED_FUNCTION_CALL(expr, alignment)
 )"
 	)));
 

@@ -1311,6 +1311,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
+	CodeBody array_code_typename = gen_array(txt("CodeTypename"), txt("Array_CodeTypename"));
+
 	CodeBody parsed_src_parser = parse_file( project_dir "components/parser.cpp" );
 	CodeBody src_parser        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_src_parser.begin(); entry != parsed_src_parser.end(); ++ entry ) switch( entry ->Type )
@@ -1327,9 +1329,27 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Struct:
 		{
 			CodeTypedef tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
-			src_parser.append(entry);
 			src_parser.append(tdef);
+			src_parser.append(entry);
 		}
+		break;
+
+		case CT_Variable:
+		{
+			CodeVar var = cast(CodeVar, entry);
+			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+				Code define_ver = untyped_str(token_fmt(
+						"name",  var->Name
+					,	"value", var->Value->Content
+					,	"type",  var->ValueType.to_string().to_strc()
+					,	"#define <name> (<type>) <value>\n"
+				));
+				src_parser.append(define_ver);
+				continue;
+			}
+			src_parser.append(entry);
+		}
+		break;
 
 		default:
 			src_parser.append(entry);
@@ -1484,6 +1504,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
 		header.print( format_code_to_untyped(etoktype) );
 		header.print( format_code_to_untyped(src_lexer) );
+		header.print( fmt_newline);
+		header.print( format_code_to_untyped(array_code_typename));
+		header.print( fmt_newline);
 		header.print( format_code_to_untyped(src_parser) );
 		// header.print( parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
