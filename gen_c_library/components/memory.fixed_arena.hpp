@@ -9,12 +9,12 @@ CodeBody gen_fixed_arenas()
 	result.append(def_pragma(txt("region FixedArena")));
 
 	char const* template_struct = stringize(
-		struct FixedArena_<Name>_Def
+		struct FixedArena_<Name>
 		{
 			char  memory[<Size>];
 			Arena arena;
 		};
-		typedef struct FixedArena_<Name>_Def FixedArena_<Name>;
+		typedef struct FixedArena_<Name> FixedArena_<Name>;
 	);
 
 	char const* template_interface = stringize(

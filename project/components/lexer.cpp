@@ -21,6 +21,7 @@ enum TokFlags : u32
 	TF_Literal         = bit( 12 ),
 
 	TF_Null = 0,
+	TF_UnderlyingType = GEN_U32_MAX,
 };
 
 struct Token
@@ -42,7 +43,8 @@ AccessSpec tok_to_access_specifier(Token tok)
 
 StrC tok_to_str(Token tok)
 {
-	return { tok.Length, tok.Text };
+	StrC str = { tok.Length, tok.Text };
+	return str;
 }
 
 bool tok_is_valid( Token tok )
@@ -169,9 +171,9 @@ Token* lex_next(TokArray self, bool skip_formatting)
 	return & self.Arr[idx + 1];
 }
 
-global Arena_256KB     Lexer_defines_map_arena;
-global HashTable(StrC) Lexer_defines;
-global Array(Token)    Lexer_Tokens;
+global FixedArena_256KB Lexer_defines_map_arena;
+global StringTable      Lexer_defines;
+global Array(Token)     Lexer_Tokens;
 
 #define current ( * ctx->scanner )
 
@@ -228,7 +230,7 @@ struct LexContext
 	char const*     scanner;
 	s32             line;
 	s32             column;
-	HashTable(StrC) defines;
+	StringTable     defines;
 	Token           token;
 };
 
@@ -593,13 +595,14 @@ TokArray lex( StrC content )
 	if ( c.left <= 0 )
 	{
 		log_failure( "gen::lex: no tokens found (only whitespace provided)" );
-		return { {}, 0 };
+		TokArray null_array = {};
+		return null_array;
 	}
 
 	for ( StringCached* entry = array_begin(PreprocessorDefines); entry != array_end(PreprocessorDefines); entry = array_next(PreprocessorDefines, entry))
 	{
 		s32         length  = 0;
-		char const* entry_scanner = * entry;
+		char const* entry_scanner = (*entry).Ptr;
 		while ( entry->Len > length && (char_is_alphanumeric( *entry_scanner ) || *entry_scanner == '_') )
 		{
 			entry_scanner++;
@@ -610,8 +613,8 @@ TokArray lex( StrC content )
 			length++;
 		}
 
-		u64 key = crc32( * entry, length );
-		hashtable_set(c.defines, key, (StrC) * entry );
+		u64 key = crc32( entry->Ptr, length );
+		hashtable_set(c.defines, key, * entry );
 	}
 
 	array_clear(Lexer_Tokens);
@@ -625,7 +628,10 @@ TokArray lex( StrC content )
 		}
 		#endif
 
-		c.token = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+		{
+			Token thanks_c = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+			c.token = thanks_c;
+		}
 
 		bool is_define = false;
 
@@ -667,7 +673,10 @@ TokArray lex( StrC content )
 						//TokType last_type = Tokens[array_get_header(Tokens)->Num - 2].Type;
 						//if ( last_type == Tok_Preprocess_Pragma )
 						{
-							c.token = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+							{
+								Token thanks_c = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+								c.token = thanks_c;
+							}
 							if ( current == '\r')
 							{
 								move_forward();
@@ -688,7 +697,10 @@ TokArray lex( StrC content )
 					}
 
 					case Lex_ReturnNull:
-						return { {}, 0 };
+					{
+						TokArray tok_array =  {};
+						return tok_array;
+					}
 				}
 			}
 			case '.':
@@ -1291,7 +1303,8 @@ TokArray lex( StrC content )
 			TokType last_type = array_back(Lexer_Tokens)->Type;
 			if ( last_type == Tok_Preprocess_Macro )
 			{
-				c.token = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+				Token thanks_c = { c.scanner, 0, Tok_Invalid, c.line, c.column, TF_Null };
+				c.token = thanks_c;
 				if ( current == '\r')
 				{
 					move_forward();
@@ -1314,7 +1327,10 @@ TokArray lex( StrC content )
 	if ( array_num(Lexer_Tokens) == 0 )
 	{
 		log_failure( "Failed to lex any tokens" );
-		return { {}, 0 };
+		{
+			TokArray tok_array =  {};
+			return tok_array;
+		}
 	}
 
 	hashtable_clear(Lexer_defines);

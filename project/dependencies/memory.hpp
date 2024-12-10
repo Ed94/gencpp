@@ -365,18 +365,18 @@ ssize fixed_arena_size_remaining(FixedArena<Size>* fixed_arena, ssize alignment)
     return size_remaining(fixed_arena->arena, alignment);
 }
 
-using Arena_1KB   = FixedArena< kilobytes( 1 ) >;
-using Arena_4KB   = FixedArena< kilobytes( 4 ) >;
-using Arena_8KB   = FixedArena< kilobytes( 8 ) >;
-using Arena_16KB  = FixedArena< kilobytes( 16 ) >;
-using Arena_32KB  = FixedArena< kilobytes( 32 ) >;
-using Arena_64KB  = FixedArena< kilobytes( 64 ) >;
-using Arena_128KB = FixedArena< kilobytes( 128 ) >;
-using Arena_256KB = FixedArena< kilobytes( 256 ) >;
-using Arena_512KB = FixedArena< kilobytes( 512 ) >;
-using Arena_1MB   = FixedArena< megabytes( 1 ) >;
-using Arena_2MB   = FixedArena< megabytes( 2 ) >;
-using Arena_4MB   = FixedArena< megabytes( 4 ) >;
+using FixedArena_1KB   = FixedArena< kilobytes( 1 ) >;
+using FixedArena_4KB   = FixedArena< kilobytes( 4 ) >;
+using FixedArena_8KB   = FixedArena< kilobytes( 8 ) >;
+using FixedArena_16KB  = FixedArena< kilobytes( 16 ) >;
+using FixedArena_32KB  = FixedArena< kilobytes( 32 ) >;
+using FixedArena_64KB  = FixedArena< kilobytes( 64 ) >;
+using FixedArena_128KB = FixedArena< kilobytes( 128 ) >;
+using FixedArena_256KB = FixedArena< kilobytes( 256 ) >;
+using FixedArena_512KB = FixedArena< kilobytes( 512 ) >;
+using FixedArena_1MB   = FixedArena< megabytes( 1 ) >;
+using FixedArena_2MB   = FixedArena< megabytes( 2 ) >;
+using FixedArena_4MB   = FixedArena< megabytes( 4 ) >;
 #pragma endregion FixedArena
 
 #pragma region Pool

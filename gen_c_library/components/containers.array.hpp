@@ -23,7 +23,22 @@ CodeBody gen_array_base()
 	Code get_header   = untyped_str( txt( "#define array_get_header( self ) ( (ArrayHeader*)( self ) - 1)\n" ));
 	Code type_define  = untyped_str( txt( "#define Array(Type) Array_##Type\n"));
 
-	return def_global_body( args( fmt_newline, td_header, header, type_define, grow_formula, get_header, fmt_newline ) );
+	Code array_begin = def_define(txt("array_begin(array)"),       code( (array) ));
+	Code array_end   = def_define(txt("array_end(array)"),         code( (array + array_get_header(array)->Num ) ));
+	Code array_next  = def_define(txt("array_next(array, entry)"), code( (entry + 1) ));
+
+	return def_global_body( args(
+		fmt_newline,
+		td_header,
+		header,
+		type_define,
+		grow_formula,
+		get_header,
+		array_begin,
+		array_end,
+		array_next,
+		fmt_newline
+	));
 };
 
 CodeBody gen_array( StrC type, StrC array_name )

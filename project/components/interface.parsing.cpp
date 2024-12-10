@@ -114,7 +114,7 @@ CodeEnum parse_enum( StrC def )
 	}
 
 	Context.Tokens = toks;
-	return parse_enum();
+	return parse_enum( parser_not_inplace_def);
 }
 
 CodeBody parse_export_body( StrC def )
@@ -263,7 +263,7 @@ CodeTypename parse_type( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_type();
+	return parse_type( parser_not_from_template, nullptr);
 }
 
 CodeTypedef parse_typedef( StrC def )
@@ -289,7 +289,7 @@ CodeUnion parse_union( StrC def )
 		return InvalidCode;
 
 	Context.Tokens = toks;
-	return parse_union();
+	return parse_union( parser_not_inplace_def);
 }
 
 CodeUsing parse_using( StrC def )
