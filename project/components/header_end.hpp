@@ -24,8 +24,8 @@
 #ifndef GEN_MAX_UNTYPED_STR_LENGTH
 #	define GEN_MAX_UNTYPED_STR_LENGTH megabytes(1)
 #endif
-#ifndef GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE
-#	define GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE kilobytes(8)
+#ifndef TokenMap_FixedArena
+#	define TokenMap_FixedArena FixedArena_8KB
 #endif
 #ifndef GEN_LEX_ALLOCATOR_SIZE
 #	define GEN_LEX_ALLOCATOR_SIZE megabytes(4)
@@ -49,7 +49,7 @@ constexpr s32 SizePer_StringArena       = GEN_SIZE_PER_STRING_ARENA;
 constexpr s32 MaxCommentLineLength      = GEN_MAX_COMMENT_LINE_LENGTH;
 constexpr s32 MaxNameLength             = GEN_MAX_NAME_LENGTH;
 constexpr s32 MaxUntypedStrLength       = GEN_MAX_UNTYPED_STR_LENGTH;
-constexpr s32 TokenFmt_TokenMap_MemSize	= GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE;
+// constexpr s32 TokenFmt_TokenMap_MemSize	= GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE;
 constexpr s32 LexAllocator_Size         = GEN_LEX_ALLOCATOR_SIZE;
 constexpr s32 Builder_StrBufferReserve  = GEN_BUILDER_STR_BUFFER_RESERVE;
 

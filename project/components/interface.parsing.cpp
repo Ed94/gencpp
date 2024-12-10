@@ -35,8 +35,8 @@ CodeConstructor parse_constructor( StrC def )
 
 	// TODO(Ed): Constructors can have prefix attributes
 
-	CodeSpecifiers specifiers;
-	Specifier      specs_found[ 16 ] { Spec_NumSpecifiers };
+	CodeSpecifiers specifiers = NullCode;
+	Specifier      specs_found[ 16 ] = { Spec_NumSpecifiers };
 	s32            NumSpecifiers = 0;
 
 	while ( left && tok_is_specifier(currtok) )

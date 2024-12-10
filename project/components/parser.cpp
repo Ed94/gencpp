@@ -150,7 +150,7 @@ void parser_init()
 internal
 void parser_deinit()
 {
-	Array(Token) null_array = {};
+	Array(Token) null_array = { nullptr };
 	Lexer_Tokens = null_array;
 }
 

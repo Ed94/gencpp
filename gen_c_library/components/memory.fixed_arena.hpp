@@ -29,6 +29,11 @@ CodeBody gen_fixed_arenas()
 		{
 			return arena_size_remaining( & fixed_arena->arena, alignment);
 		}
+
+		inline
+		void fixed_arena_free_<Name>(FixedArena_<Name>* fixed_arena) {
+			arena_free( & fixed_arena->arena);
+		}
 	);
 
 	CodeBody arena_struct_1kb   = parse_global_body( token_fmt_impl( 3, "Name", txt("1KB"),   "Size", txt("kilobytes(1)"),   template_struct ));
@@ -104,6 +109,22 @@ CodeBody gen_fixed_arenas()
     FixedArena_4MB*   : fixed_arena_init_4MB,      \
 	default           : gen_generic_selection_fail \
 ) GEN_RESOLVED_FUNCTION_CALL(expr)
+
+#define fixed_arena_free(expr) _Generic((expr),    \
+    FixedArena_1KB*   : fixed_arena_free_1KB,      \
+    FixedArena_4KB*   : fixed_arena_free_4KB,      \
+    FixedArena_8KB*   : fixed_arena_free_8KB,      \
+    FixedArena_16KB*  : fixed_arena_free_16KB,     \
+    FixedArena_32KB*  : fixed_arena_free_32KB,     \
+    FixedArena_64KB*  : fixed_arena_free_64KB,     \
+    FixedArena_128KB* : fixed_arena_free_128KB,    \
+    FixedArena_256KB* : fixed_arena_free_256KB,    \
+    FixedArena_512KB* : fixed_arena_free_512KB,    \
+    FixedArena_1MB*   : fixed_arena_free_1MB,      \
+    FixedArena_2MB*   : fixed_arena_free_2MB,      \
+    FixedArena_4MB*   : fixed_arena_free_4MB,      \
+	default           : gen_generic_selection_fail \
+)	GEN_RESOLVED_FUNCTION_CALL(expr)
 
 #define fixed_arena_size_remaining(expr, alignment) _Generic((expr), \
     FixedArena_1KB*   : fixed_arena_size_remaining_1KB,              \

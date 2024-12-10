@@ -272,7 +272,7 @@ StrC token_fmt_impl( ssize, ... );
 
 Code untyped_str      ( StrC content);
 Code untyped_fmt      ( char const* fmt, ... );
-Code untyped_token_fmt( char const* fmt, s32 num_tokens, ... );
+Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
 
 #pragma endregion Untyped text
 

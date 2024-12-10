@@ -1189,7 +1189,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 			for ( CodeParam arr_param : fn->Params )
 				if (	fn->Name.starts_with(txt("def_"))
-					&&	(		arr_param->ValueType->Name.starts_with(txt("Specifier"))
+					&&	(		(arr_param->ValueType->Name.starts_with(txt("Specifier")) && fn->Params->NumEntries > 1)
 							||	arr_param->ValueType->Name.starts_with(txt("Code")) )
 				)
 				{
@@ -1508,9 +1508,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( format_code_to_untyped(array_code_typename));
 		header.print( fmt_newline);
 		header.print( format_code_to_untyped(src_parser) );
-		// header.print( parsing_interface );
+		header.print( src_parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
-		// header.print( untyped );
+		header.print( src_untyped );
 		 header.print_fmt( "\n#pragma endregion Interface\n\n");
 
 		// header.print_fmt( "#pragma region Builder\n" );

@@ -319,6 +319,7 @@ struct FixedArena;
 template<s32 Size> FixedArena<Size> fixed_arena_init();
 template<s32 Size> AllocatorInfo    fixed_arena_allocator_info(FixedArena<Size>* fixed_arena );
 template<s32 Size> ssize            fixed_arena_size_remaining(FixedArena<Size>* fixed_arena, ssize alignment);
+template<s32 Size> void             fixed_arena_free(FixedArena<Size>* fixed_arena);
 
 #if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 template<s32 Size> AllocatorInfo    allocator_info( FixedArena<Size>& fixed_arena )                { return allocator_info(& fixed_arena); }
