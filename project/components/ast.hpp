@@ -86,83 +86,148 @@ struct AST_Using;
 struct AST_Var;
 
 #if GEN_COMPILER_C
-#define Define_Code(Type) typedef AST_##Type* Code##Type
-#else
-#define Define_Code(Type) struct Code##Type
-#endif
-
-#if GEN_COMPILER_C
 typedef AST* Code;
 #else
 struct Code;
 #endif
 
-Define_Code(Body);
-// These are to offer ease of use and optionally strong type safety for the AST.
-Define_Code(Attributes);
-// struct CodeBaseClass;
-Define_Code(Comment);
-Define_Code(Class);
-Define_Code(Constructor);
-Define_Code(Define);
-Define_Code(Destructor);
-Define_Code(Enum);
-Define_Code(Exec);
-Define_Code(Extern);
-Define_Code(Include);
-Define_Code(Friend);
-Define_Code(Fn);
-Define_Code(Module);
-Define_Code(NS);
-Define_Code(Operator);
-Define_Code(OpCast);
-Define_Code(Param);
-Define_Code(PreprocessCond);
-Define_Code(Pragma);
-Define_Code(Specifiers);
-
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
-Define_Code(Expr);
-Define_Code(Expr_Assign);
-Define_Code(Expr_Alignof);
-Define_Code(Expr_Binary);
-Define_Code(Expr_CStyleCast);
-Define_Code(Expr_FunctionalCast);
-Define_Code(Expr_CppCast);
-Define_Code(Expr_Element);
-Define_Code(Expr_ProcCall);
-Define_Code(Expr_Decltype);
-Define_Code(Expr_Comma);
-Define_Code(Expr_AMS); // Access Member Symbol
-Define_Code(Expr_Sizeof);
-Define_Code(Expr_Subscript);
-Define_Code(Expr_Ternary);
-Define_Code(Expr_UnaryPrefix);
-Define_Code(Expr_UnaryPostfix);
-
-Define_Code(Stmt);
-Define_Code(Stmt_Break);
-Define_Code(Stmt_Case);
-Define_Code(Stmt_Continue);
-Define_Code(Stmt_Decl);
-Define_Code(Stmt_Do);
-Define_Code(Stmt_Expr);
-Define_Code(Stmt_Else);
-Define_Code(Stmt_If);
-Define_Code(Stmt_For);
-Define_Code(Stmt_Goto);
-Define_Code(Stmt_Label);
-Define_Code(Stmt_Switch);
-Define_Code(Stmt_While);
+#if GEN_COMPILER_C
+typdef AST_Body*           CodeBody;
+typdef AST_Attributes*     CodeAttributes;
+typdef AST_Comment*        CodeComment;
+typdef AST_Class*          CodeClass;
+typdef AST_Constructor*    CodeConstructor;
+typdef AST_Define*         CodeDefine;
+typdef AST_Destructor*     CodeDestructor;
+typdef AST_Enum*           CodeEnum;
+typdef AST_Exec*           CodeExec;
+typdef AST_Extern*         CodeExtern;
+typdef AST_Include*        CodeInclude;
+typdef AST_Friend*         CodeFriend;
+typdef AST_Fn*             CodeFn;
+typdef AST_Module*         CodeModule;
+typdef AST_NS*             CodeNS;
+typdef AST_Operator*       CodeOperator;
+typdef AST_OpCast*         CodeOpCast;
+typdef AST_Param*          CodeParam;
+typdef AST_PreprocessCond* CodePreprocessCond;
+typdef AST_Pragma*         CodePragma;
+typdef AST_Specifiers*     CodeSpecifiers;
+#else
+struct CodeBody;
+struct CodeAttributes;
+struct CodeComment;
+struct CodeClass;
+struct CodeConstructor;
+struct CodeDefine;
+struct CodeDestructor;
+struct CodeEnum;
+struct CodeExec;
+struct CodeExtern;
+struct CodeInclude;
+struct CodeFriend;
+struct CodeFn;
+struct CodeModule;
+struct CodeNS;
+struct CodeOperator;
+struct CodeOpCast;
+struct CodeParam;
+struct CodePreprocessCond;
+struct CodePragma;
+struct CodeSpecifiers;
 #endif
 
-Define_Code(Struct);
-Define_Code(Template);
-Define_Code(Typename);
-Define_Code(Typedef);
-Define_Code(Union);
-Define_Code(Using);
-Define_Code(Var);
+#if GEN_EXECUTION_EXPRESSION_SUPPORT
+
+#if GEN_COMPILER_C
+typedef AST_Expr*                CodeExpr;
+typedef AST_Expr_Assign*         CodeExpr_Assign;
+typedef AST_Expr_Alignof*        CodeExpr_Alignof;
+typedef AST_Expr_Binary*         CodeExpr_Binary;
+typedef AST_Expr_CStyleCast*     CodeExpr_CStyleCast;
+typedef AST_Expr_FunctionalCast* CodeExpr_FunctionalCast;
+typedef AST_Expr_CppCast*        CodeExpr_CppCast;
+typedef AST_Expr_Element*        CodeExpr_Element;
+typedef AST_Expr_ProcCall*       CodeExpr_ProcCall;
+typedef AST_Expr_Decltype*       CodeExpr_Decltype;
+typedef AST_Expr_Comma*          CodeExpr_Comma;
+typedef AST_Expr_AMS*            CodeExpr_AMS; // Access Member Symbol
+typedef AST_Expr_Sizeof*         CodeExpr_Sizeof;
+typedef AST_Expr_Subscript*      CodeExpr_Subscript;
+typedef AST_Expr_Ternary*        CodeExpr_Ternary;
+typedef AST_Expr_UnaryPrefix*    CodeExpr_UnaryPrefix;
+typedef AST_Expr_UnaryPostfix*   CodeExpr_UnaryPostfix;
+#else
+struct CodeExpr;
+struct CodeExpr_Assign;
+struct CodeExpr_Alignof;
+struct CodeExpr_Binary;
+struct CodeExpr_CStyleCast;
+struct CodeExpr_FunctionalCast;
+struct CodeExpr_CppCast;
+struct CodeExpr_Element;
+struct CodeExpr_ProcCall;
+struct CodeExpr_Decltype;
+struct CodeExpr_Comma;
+struct CodeExpr_AMS; // Access Member Symbol
+struct CodeExpr_Sizeof;
+struct CodeExpr_Subscript;
+struct CodeExpr_Ternary;
+struct CodeExpr_UnaryPrefix;
+struct CodeExpr_UnaryPostfix;
+#endif
+
+#if GEN_COMPILER_C
+typedef AST_Stmt*          CodeStmt;
+typedef AST_Stmt_Break*    CodeStmt_Break;
+typedef AST_Stmt_Case*     CodeStmt_Case;
+typedef AST_Stmt_Continue* CodeStmt_Continue;
+typedef AST_Stmt_Decl*     CodeStmt_Decl;
+typedef AST_Stmt_Do*       CodeStmt_Do;
+typedef AST_Stmt_Expr*     CodeStmt_Expr;
+typedef AST_Stmt_Else*     CodeStmt_Else;
+typedef AST_Stmt_If*       CodeStmt_If;
+typedef AST_Stmt_For*      CodeStmt_For;
+typedef AST_Stmt_Goto*     CodeStmt_Goto;
+typedef AST_Stmt_Label*    CodeStmt_Label;
+typedef AST_Stmt_Switch*   CodeStmt_Switch;
+typedef AST_Stmt_While*    CodeStmt_While;
+#else
+struct CodeStmt;
+struct CodeStmt_Break;
+struct CodeStmt_Case;
+struct CodeStmt_Continue;
+struct CodeStmt_Decl;
+struct CodeStmt_Do;
+struct CodeStmt_Expr;
+struct CodeStmt_Else;
+struct CodeStmt_If;
+struct CodeStmt_For;
+struct CodeStmt_Goto;
+struct CodeStmt_Label;
+struct CodeStmt_Switch;
+struct CodeStmt_While;
+#endif
+
+#endif
+
+#if GEN_COMPILER_C
+typedef AST_Struct*   CodeStruct;
+typedef AST_Template* CodeTemplate;
+typedef AST_Typename* CodeTypename;
+typedef AST_Typedef*  CodeTypedef;
+typedef AST_Union*    CodeUnion;
+typedef AST_Using*    CodeUsing;
+typedef AST_Var*      CodeVar;
+#else
+struct CodeStruct;
+struct CodeTemplate;
+struct CodeTypename;
+struct CodeTypedef;
+struct CodeUnion;
+struct CodeUsing;
+struct CodeVar;
+#endif
 
 #undef Define_Code
 
