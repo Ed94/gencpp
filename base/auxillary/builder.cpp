@@ -2,6 +2,8 @@
 #	include "builder.hpp"
 #endif
 
+#pragma region Builder
+
 Builder builder_open( char const* path )
 {
 	Builder result;
@@ -54,3 +56,4 @@ void builder_write(Builder* builder)
 	string_free(& builder->Buffer);
 }
 
+#pragma endregion Builder

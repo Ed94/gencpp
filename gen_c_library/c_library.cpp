@@ -52,7 +52,7 @@ constexpr StrC implementation_guard_end = txt(R"(
 #pragma endregion GENCPP IMPLEMENTATION GUARD
 )");
 
-void format_file( char const* path )
+void CHANGE_format_file( char const* path )
 {
 	String resolved_path = String::make(GlobalAllocator, to_strc_from_c_str(path));
 
@@ -77,7 +77,7 @@ void format_file( char const* path )
 	#undef cf_verbse
 }
 
-Code format_code_to_untyped( Code code )
+Code CHANGE_format_code_to_untyped( Code code )
 {
 	Builder ecode_file_temp = Builder::open("gen/scratch.hpp");
 	ecode_file_temp.print(code);
@@ -88,17 +88,7 @@ Code format_code_to_untyped( Code code )
 	return result;
 }
 
-CodeBody parse_file( const char* path )
-{
-	FileContents file = file_read_contents( GlobalAllocator, true, path );
-	CodeBody     code = parse_global_body( { file.size, (char const*)file.data } );
-	log_fmt("\nParsed: %s\n", path);
-	return code;
-}
-
 constexpr bool helper_use_c_definition = true;
-
-constexpr bool will_refactor_to_gen_namespace = true;
 
 int gen_main()
 {
@@ -116,8 +106,8 @@ int gen_main()
 	PreprocessorDefines.append(txt("Using_CodeOps("));
 	PreprocessorDefines.append(txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"));
 	PreprocessorDefines.append(txt("GEN_OPITMIZE_MAPPINGS_END"));
-	//PreprocessorDefines.append(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"));
 	PreprocessorDefines.append(txt("GEN_PARAM_DEFAULT"));
+	//PreprocessorDefines.append(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"));
 
 	Code push_ignores           = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores            = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
@@ -1181,10 +1171,10 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 #pragma region Resolve Components
 	CodeBody array_arena = gen_array(txt("gen_Arena"), txt("Array_gen_Arena"));
-	CodeBody array_pool  = gen_array(txt("gen_Pool"), txt("Array_gen_Pool"));
+	CodeBody array_pool  = gen_array(txt("gen_Pool"),  txt("Array_gen_Pool"));
 	CodeBody array_token = gen_array(txt("gen_Token"), txt("Array_gen_Token"));
 
-	Code src_static_data 	    = scan_file( project_dir "components/static_data.cpp" );
+	Code src_static_data 	      = scan_file( project_dir "components/static_data.cpp" );
 	Code src_ast_case_macros    = scan_file( project_dir "components/ast_case_macros.cpp" );
 	Code src_code_serialization = scan_file( project_dir "components/code_serialization.cpp" );
 	Code src_interface          = scan_file( project_dir "components/interface.cpp" );

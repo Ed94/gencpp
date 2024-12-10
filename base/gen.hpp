@@ -31,6 +31,9 @@ GEN_NS_BEGIN
 #include "components/gen/ast_inlines.hpp"
 #include "components/header_end.hpp"
 
+#include "auxillary/builder.hpp"
+#include "auxillary/scanner.hpp"
+
 GEN_NS_END
 
 #include "helpers/pop_container_defines.inline.hpp"

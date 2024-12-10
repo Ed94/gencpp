@@ -2,50 +2,35 @@
 
 #include "gen.hpp"
 
-GEN_NS_BEGIN
-#include "dependencies/parsing.hpp"
-GEN_NS_END
-
 using namespace gen;
+
+#include "dependencies/parsing.hpp"
+#include "misc.hpp"
 
 CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 {
-	char  scratch_mem[kilobytes(4)];
-	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
-
-	file_read_contents( arena_allocator_info( & scratch), file_zero_terminate, path );
-
-	CSV_Object csv_nodes;
-	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
-
-	Array<ADT_Node> enum_strs    = csv_nodes.nodes[0].nodes;
-	Array<ADT_Node> keyword_strs = csv_nodes.nodes[1].nodes;
+	CSV_Columns2 csv_enum = parse_csv_two_columns(GlobalAllocator, path );
 
 	String enum_entries           = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries         = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_keyword_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for ( ssize idx = 0; idx < array_num(enum_strs); ++ idx )
-	{
-		char const* code    = enum_strs   [idx].string;
-		char const* keyword = keyword_strs[idx].string;
-
+	for ( ssize idx = 0; idx < array_num(csv_enum.Col_1); ++ idx ) 	{
+		char const* code    = csv_enum.Col_1[idx].string;
+		char const* keyword = csv_enum.Col_2[idx].string;
 		// TODO(Ed): to_str_entries and the others in here didn't have proper sizing of the StrC slice.
-
 		string_append_fmt( & enum_entries,           "CT_%s,\n", code );
 		string_append_fmt( & to_str_entries,         "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
 		string_append_fmt( & to_keyword_str_entries, "{ sizeof(\"%s\") - 1, \"%s\" },\n", keyword, keyword );
 	}
 
 	CodeEnum enum_code;
-	if (use_c_definition)
-	{
+	if (use_c_definition) {
 		enum_code = parse_enum(token_fmt_impl((3 + 1) / 2, "entries", string_to_strc(enum_entries),
 			"enum CodeType enum_underlying(u32) { <entries> CT_NumTypes, CT_UnderlyingType = GEN_U32_MAX };"
 		));
 	}
-	else
-	{
+	else {
 		enum_code = parse_enum(token_fmt_impl((3 + 1) / 2, "entries", string_to_strc(enum_entries),
 			"enum CodeType : u32 { <entries> CT_NumTypes, CT_UnderlyingType = GEN_U32_MAX };"
 		));
@@ -53,7 +38,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
+	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
 	CodeBody to_str_fns = parse_global_body( token_fmt(
 		"entries",  string_to_strc(to_str_entries)
 	,	"keywords", string_to_strc(to_keyword_str_entries)
@@ -84,16 +69,14 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 	CodeBody result = def_body(CT_Global_Body);
 	body_append(result, enum_code);
 
-	if (use_c_definition)
-	{
+	if (use_c_definition) {
 		CodeTypedef code_t = parse_typedef(code(typedef enum CodeType CodeType; ));
 		body_append(result, code_t);
 	}
 
 	body_append(result, to_str_fns);
 
-	if (! use_c_definition)
-	{
+	if (! use_c_definition) {
 		#pragma push_macro("forceinline")
 		#undef forceinline
 		CodeBody alias_mappings = parse_global_body(code(
@@ -108,24 +91,14 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 
 CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 {
-	char scratch_mem[kilobytes(4)];
-	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
-
-	file_read_contents( arena_allocator_info(& scratch), file_zero_terminate, path );
-
-	CSV_Object csv_nodes;
-	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
-
-	Array<ADT_Node> enum_strs = csv_nodes.nodes[0].nodes;
-	Array<ADT_Node> str_strs  = csv_nodes.nodes[1].nodes;
+	CSV_Columns2 csv_enum = parse_csv_two_columns(GlobalAllocator, path);
 
 	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for (usize idx = 0; idx < array_num(enum_strs); idx++)
-	{
-		char const* enum_str     = enum_strs[idx].string;
-		char const* entry_to_str = str_strs [idx].string;
+	for (usize idx = 0; idx < array_num(csv_enum.Col_1); idx++) {
+		char const* enum_str     = csv_enum.Col_1[idx].string;
+		char const* entry_to_str = csv_enum.Col_2[idx].string;
 
 		string_append_fmt( & enum_entries, "Op_%s,\n", enum_str );
 		string_append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
@@ -160,7 +133,7 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
+	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
 	CodeFn to_str   = parse_function(token_fmt(
 		"entries", string_to_strc(to_str_entries)
 	,	"num",     lookup_size
@@ -180,8 +153,7 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 
 	CodeBody result = def_body(CT_Global_Body);
 	body_append(result, enum_code);
-	if ( use_c_definition )
-	{
+	if ( use_c_definition ) {
 		CodeTypedef operator_t = parse_typedef(code( typedef enum Operator Operator; ));
 		body_append(result, operator_t);
 	}
@@ -203,21 +175,12 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 
 CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 {
-	char scratch_mem[kilobytes(4)];
-	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
-
-	file_read_contents( arena_allocator_info(& scratch), file_zero_terminate, path );
-
-	CSV_Object csv_nodes;
-	csv_parse( &csv_nodes, scratch_mem, GlobalAllocator, false );
-
-	Array<ADT_Node> enum_strs = csv_nodes.nodes[0].nodes;
-	Array<ADT_Node> str_strs  = csv_nodes.nodes[1].nodes;
+	CSV_Columns2 csv_enum = parse_csv_two_columns(GlobalAllocator, path);
 
 	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
 
-	for (usize idx = 0; idx < array_num(enum_strs); idx++)
+	for (usize idx = 0; idx < array_num(csv_enum.Col_1); idx++)
 	{
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = str_strs [idx].string;
@@ -271,7 +234,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 #undef do_once_end
 #undef forceinline
 #undef neverinline
-	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(enum_strs) ));
+	StrC lookup_size = string_to_strc(string_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
 	CodeFn to_str   = parse_function(token_fmt(
 		"entries", string_to_strc(to_str_entries)
 	,	"num",     lookup_size

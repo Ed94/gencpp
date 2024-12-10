@@ -40,7 +40,7 @@ Push-Location $path_root
        $vendor       = $null
        $release      = $null
 	   $verbose      = $false
-[bool] $bootstrap    = $false
+[bool] $segemented   = $false
 [bool] $singleheader = $false
 [bool] $c_library    = $false
 [bool] $unreal       = $false
@@ -56,7 +56,7 @@ if ( $args ) { $args | ForEach-Object {
 		"verbose"			  { $verbose      = $true }
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
-		"bootstrap"           { $bootstrap    = $true }
+		"segemented"          { $segemented   = $true }
 		"singleheader"        { $singleheader = $true }
 		"c_library"           { $c_library    = $true }
 		"unreal"              { $unreal       = $true }
@@ -88,7 +88,7 @@ else {
 	$optimize = $true
 }
 
-if ( $bootstrap -eq $false -and $singleheader -eq $false -and $c_library -eq $false -and $unreal -eq $false -and $test -eq $false ) {
+if ( $segmented -eq $false -and $singleheader -eq $false -and $c_library -eq $false -and $unreal -eq $false -and $test -eq $false ) {
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
 
@@ -100,24 +100,22 @@ write-host "Build Type: $(if ($release) {"Release"} else {"Debug"} )"
 
 #region Building
 $path_build        = Join-Path $path_root build
-$path_project      = Join-Path $path_root project
-$path_scripts      = Join-Path $path_root scripts
+$path_base         = Join-Path $path_root base
 $path_c_library    = join-Path $path_root gen_c_library
+$path_segmented    = Join-Path $path_root gen_segmented
 $path_singleheader = Join-Path $path_root gen_singleheader
+$path_scripts      = Join-Path $path_root scripts
 $path_unreal       = Join-Path $path_root gen_unreal_engine
 $path_test         = Join-Path $path_root test
 
-if ( $bootstrap )
+if ( $base )
 {
-	$path_build    = join-path $path_project build
-	$path_gen      = join-path $path_project gen
-	$path_comp_gen = join-path $path_project components/gen
+	$path_build    = join-path $path_base      build
+	$path_comp     = join-path $path_segmented 'components'
+	$path_comp_gen = join-path $path_comp      'gen'
 
 	if ( -not(Test-Path($path_build) )) {
 		New-Item -ItemType Directory -Path $path_build
-	}
-	if ( -not(Test-Path($path_gen) )) {
-		New-Item -ItemType Directory -Path $path_gen
 	}
 	if ( -not(Test-Path($path_comp_gen) )) {
 		New-Item -ItemType Directory -Path $path_comp_gen
@@ -131,8 +129,46 @@ if ( $bootstrap )
 	)
 
 	$includes   = @( $path_project)
-	$unit       = join-path $path_project "bootstrap.cpp"
-	$executable = join-path $path_build   "bootstrap.exe"
+	$unit       = join-path $path_base  "base.cpp"
+	$executable = join-path $path_build "base.exe"
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_project
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning bootstrap"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nBootstrap completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
+if ( $segmented )
+{
+	$path_build = join-path $path_segmented build
+	$path_gen   = join-path $path_segmented gen
+
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+
+	$linker_args   = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$includes   = @( $path_project)
+	$unit       = join-path $path_segmented "segmented.cpp"
+	$executable = join-path $path_build     "segmented.exe"
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
@@ -294,7 +330,8 @@ if ( $unreal )
 	. $refactor_unreal
 }
 
-if ( $test )
+# TODO(Ed): The unit testing needs a full rewrite
+if ( $test -and $false )
 {
 	$path_gen          = join-path $path_test gen
 	$path_gen_build    = join-path $path_gen  build
@@ -355,56 +392,5 @@ if ( $test )
 	Pop-Location
 }
 #endregion Building
-
-#region Formatting
-push-location $path_scripts
-if ( $false -and $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
-{
-	$path_gen      = join-path $path_project gen
-	$include  = @(
-		'gen.hpp', 'gen.cpp',
-		'gen.dep.hpp', 'gen.dep.cpp',
-		'gen.builder.hpp', 'gen.builder.cpp'
-		'gen.scanner.hpp', 'gen.scanner.cpp'
-	)
-	$exclude  = $null
-	# format-cpp $path_gen $include $exclude
-	format-cpp $path_comp_gen @( 'ast_inlines.hpp', 'ecode.hpp', 'especifier.hpp', 'eoperator.hpp', 'etoktype.cpp' ) $null
-}
-
-if ( $false -and $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp")) )
-{
-	$path_gen = join-path $path_singleheader gen
-	$include  = @(
-		'gen.hpp'
-	)
-	$exclude  = $null
-	format-cpp $path_gen $include $exclude
-}
-
-if ( $false -and $unreal -and (Test-Path( Join-Path $path_unreal "gen/gen.hpp")) )
-{
-	$path_gen = join-path $path_unreal gen
-	$include  = @(
-		'gen.hpp', 'gen.cpp',
-		'gen.dep.hpp', 'gen.dep.cpp',
-		'gen.builder.hpp', 'gen.builder.cpp'
-		'gen.scanner.hpp', 'gen.scanner.cpp'
-	)
-	$exclude  = $null
-	format-cpp $path_gen $include $exclude
-}
-
-if ( $test -and $false )
-{
-	$path_gen = join-path $path_test gen
-	$include  = @(
-		'*.gen.hpp'
-	)
-	$exclude  = $null
-	format-cpp $path_gen $include $exclude
-}
-pop-location
-#endregion Formatting
 
 Pop-Location # $path_root

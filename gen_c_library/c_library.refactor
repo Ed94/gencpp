@@ -1,14 +1,5 @@
  __VERSION 1
 
-// This is a example template to be used with the refactor program
-// Use it to refactor the naming convention of this library to your own.
-// Can be used as an aid to help use use your project's implementation if it fullfills the dependencies of this project.
-// Example: Most likely have a memory and string library already, just rename the functions and make sure the args are the same.
-// Program: https://github.com/Ed94/refactor
-
-// NOTE: Due to the current limitations of the program, not every symbol in the library can be renamed.
-// This is due to the program not actually parsing C/C++.
-
 // not       : Ignore
 // include   : #includes
 // word      : Alphanumeric or underscore
@@ -20,6 +11,9 @@
 
 // Gen Macro namespace
 // namespace GEN_, new_namespace_
+
+// c_library.refactor
+// Used to prefix all exposed identifiers with the gen_namespace by c_library.cpp using ./gencpp/scripts/helpers/refactor.exe
 
 // Macros
 

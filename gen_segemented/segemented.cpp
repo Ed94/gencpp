@@ -16,6 +16,7 @@ GEN_NS_END
 #include "auxillary/builder.hpp"
 #include "auxillary/builder.cpp"
 #include "auxillary/scanner.hpp"
+#include "auxillary/misc.hpp"
 
 using namespace gen;
 
@@ -25,50 +26,20 @@ constexpr char const* generation_notice =
 
 #include <cstdlib>   // for system()
 
-void format_file( char const* path )
-{
-	String resolved_path = string_make_strc(GlobalAllocator, to_strc_from_c_str(path));
+constexpr char const* path_format_style = "../scripts/.clang-format ";
+constexpr char const* scratch_file      = "gen/scratch.hpp";
+constexpr char const* path_base         = "../base/";
 
-	String style_arg = string_make_strc(GlobalAllocator, txt("-style=file:"));
-	string_append_strc( & style_arg, txt("../scripts/.clang-format "));
-
-	// Need to execute clang format on the generated file to get it to match the original.
-	#define clang_format      txt("clang-format ")
-	#define cf_format_inplace txt("-i ")
-	#define cf_verbose        txt("-verbose ")
-	String command = string_make_strc( GlobalAllocator, clang_format );
-	string_append_strc( & command, cf_format_inplace );
-	string_append_strc( & command, cf_verbose );
-	string_append_string( & command, style_arg );
-	string_append_string( & command, resolved_path );
-		log_fmt("\tRunning clang-format on file:\n");
-		system( command );
-		log_fmt("\tclang-format finished reformatting.\n");
-	#undef cf_cmd
-	#undef cf_format_inplace
-	#undef cf_style
-	#undef cf_verbse
-}
-
-Code dump_to_scratch_and_retireve( Code code )
-{
-	Builder ecode_file_temp = builder_open("gen/scratch.hpp");
-	builder_print( & ecode_file_temp, code);
-	builder_write(& ecode_file_temp);
-	format_file("gen/scratch.hpp");
-	Code result = scan_file( "gen/scratch.hpp" );
-	remove("gen/scratch.hpp");
-	return result;
+Code format( Code code ) {
+	return code_refactor_and_format(code, scratch_file, nullptr, path_format_style );
 }
 
 int gen_main()
 {
 	gen::init();
 
-	// PreprocessorDefines.append("GEN_NS");
-
-	Code push_ignores = scan_file( "helpers/push_ignores.inline.hpp" );
-	Code pop_ignores  = scan_file( "helpers/pop_ignores.inline.hpp" );
+	Code push_ignores = scan_file( path_base "helpers/push_ignores.inline.hpp" );
+	Code pop_ignores  = scan_file( path_base "helpers/pop_ignores.inline.hpp" );
 
 	// gen_dep.hpp
 	{
@@ -176,11 +147,11 @@ int gen_main()
 		builder_print_fmt(header, "#pragma region Types\n" );
 		builder_print( header, types );
 		builder_print( header, fmt_newline);
-		builder_print( header, dump_to_scratch_and_retireve(ecode) );
+		builder_print( header, format(ecode) );
 		builder_print( header, fmt_newline);
-		builder_print( header, dump_to_scratch_and_retireve(eoperator) );
+		builder_print( header, format(eoperator) );
 		builder_print( header, fmt_newline);
-		builder_print( header, dump_to_scratch_and_retireve(especifier) );
+		builder_print( header, format(especifier) );
 		builder_print( header, fmt_newline);
 		builder_print_fmt( header, "#pragma endregion Types\n\n" );
 
@@ -195,7 +166,7 @@ int gen_main()
 		builder_print_fmt( header, "\n#pragma region Inlines\n" );
 		builder_print( header, inlines );
 		builder_print( header, fmt_newline );
-		builder_print( header, dump_to_scratch_and_retireve(ast_inlines) );
+		builder_print( header, format(ast_inlines) );
 		builder_print( header, fmt_newline );
 		builder_print_fmt( header, "#pragma endregion Inlines\n" );
 
@@ -206,22 +177,22 @@ int gen_main()
 
 		Builder header_ecode = builder_open( "components/gen/ecode.hpp" );
 		builder_print( & header_ecode, gen_component_header );
-		builder_print( & header_ecode, dump_to_scratch_and_retireve(ecode) );
+		builder_print( & header_ecode, format(ecode) );
 		builder_write( & header_ecode);
 
 		Builder header_eoperator = builder_open( "components/gen/eoperator.hpp" );
 		builder_print( & header_eoperator, gen_component_header );
-		builder_print( & header_eoperator, dump_to_scratch_and_retireve(eoperator) );
+		builder_print( & header_eoperator, format(eoperator) );
 		builder_write( & header_eoperator );
 
 		Builder header_especifier = builder_open( "components/gen/especifier.hpp" );
 		builder_print( & header_especifier, gen_component_header );
-		builder_print( & header_especifier, dump_to_scratch_and_retireve(especifier) );
+		builder_print( & header_especifier, format(especifier) );
 		builder_write( & header_especifier);
 
 		Builder header_ast_inlines = builder_open( "components/gen/ast_inlines.hpp" );
 		builder_print( & header_ast_inlines, gen_component_header );
-		builder_print( & header_ast_inlines, dump_to_scratch_and_retireve(ast_inlines) );
+		builder_print( & header_ast_inlines, format(ast_inlines) );
 		builder_write( & header_ast_inlines);
 	}
 
@@ -240,11 +211,10 @@ int gen_main()
 		Code        untyped 	       = scan_file( "components/interface.untyped.cpp" );
 
 		CodeBody etoktype         = gen_etoktype( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
-		//CodeNS   nspaced_etoktype = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
 		CodeBody nspaced_etoktype = def_global_body( args(
 			etoktype
 		));
-		Code formatted_toktype = dump_to_scratch_and_retireve(nspaced_etoktype);
+		Code formatted_toktype = format(nspaced_etoktype);
 
 		Builder _src = builder_open( "gen/gen.cpp" );
 		Builder* src = & _src;
