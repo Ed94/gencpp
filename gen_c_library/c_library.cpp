@@ -1067,6 +1067,64 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
+	CodeBody parsed_header_builder = parse_file( project_dir "auxillary/builder.hpp" );
+	CodeBody header_builder        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_header_builder.begin(); entry != parsed_header_builder.end(); ++ entry ) switch( entry->Type )
+	{
+		case CT_Preprocess_IfDef:
+		{
+			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_builder, header_builder );
+			if (found) break;
+
+			header_builder.append(entry);
+		}
+		break;
+
+		case CT_Preprocess_If:
+		{
+			b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_header_builder, header_builder );
+			if (found) break;
+
+			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), entry, parsed_header_builder, header_builder );
+			if (found) break;
+
+			header_builder.append(entry);
+		}
+		break;
+
+		case CT_Struct:
+		{
+			CodeBody body     = cast(CodeBody, entry->Body);
+			CodeBody new_body = def_body(CT_Struct_Body);
+			for ( Code body_entry = body.begin(); body.end(); ++ body_entry ) switch(body_entry->Type)
+			{
+				case CT_Preprocess_If:
+				{
+					b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), body_entry, body, new_body );
+					if (found) break;
+
+					new_body.append(body_entry);
+				}
+				break;
+
+				default:
+					new_body.append(body_entry);
+				break;
+			}
+			if ( new_body->NumEntries > 0 ) {
+				entry->Body = new_body;
+			}
+
+			header_builder.append(entry);
+		}
+		break;
+
+		default:
+			header_builder.append(entry);
+		break;
+	}
+
+
 	s32 idx = 0;
 	CodeBody parsed_header_end = parse_file( project_dir "components/header_end.hpp" );
 	CodeBody header_end        = def_body(CT_Global_Body);
@@ -1216,8 +1274,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			src_upfront.append(entry);
 		break;
 	}
-
-	// CodeBody hashtable_strc = gen_hashtable(txt("StrC"), txt("HashTable_StrC"));
 
 	CodeBody parsed_src_lexer = parse_file( project_dir "components/lexer.cpp" );
 	CodeBody src_lexer        = def_body(CT_Global_Body);
@@ -1448,6 +1504,10 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 		header.print( format_code_to_untyped(header_end) );
 
+		header.print_fmt( "\n#pragma region Builder\n" );
+		header.print( format_code_to_untyped(header_builder) );
+		header.print_fmt( "#pragma endregion Builder\n" );
+
 		header.print_fmt( "\nGEN_API_C_END\n" );
 
 		header.print_fmt( "GEN_NS_END\n\n" );
@@ -1461,6 +1521,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	#pragma region Print Dependencies
 		header.print_fmt( roll_own_dependencies_guard_start );
 		header.print_fmt( "GEN_NS_BEGIN\n\n");
+		header.print_fmt( "GEN_API_C_BEGIN\n\n" );
 
 		header.print( src_impl_start );
 		header.print( src_debug );
@@ -1513,13 +1574,15 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( src_untyped );
 		 header.print_fmt( "\n#pragma endregion Interface\n\n");
 
-		// header.print_fmt( "#pragma region Builder\n" );
-		// header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
-		// header.print_fmt( "\n#pragma endregion Builder\n\n" );
+		header.print_fmt( "#pragma region Builder\n" );
+		header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
+		header.print_fmt( "\n#pragma endregion Builder\n\n" );
 
 		// header.print_fmt( "\n#pragma region Scanner\n" );
 		// header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
 		// header.print_fmt( "#pragma endregion Scanner\n\n" );
+
+		header.print_fmt( "\nGEN_API_C_END\n" );
 	#pragma endregion Print Components
 
 		header.print_fmt( implementation_guard_end );

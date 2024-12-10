@@ -2,7 +2,7 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_C_LIKE_CPP 1
-#include "gen.cpp"
+#include "../project/gen.cpp"
 
 #include "helpers/push_ignores.inline.hpp"
 #include "helpers/helper.hpp"
@@ -52,9 +52,9 @@ void format_file( char const* path )
 
 Code dump_to_scratch_and_retireve( Code code )
 {
-	Builder ecode_file_temp = Builder::open("gen/scratch.hpp");
-	ecode_file_temp.print(code);
-	ecode_file_temp.write();
+	Builder ecode_file_temp = builder_open("gen/scratch.hpp");
+	builder_print( & ecode_file_temp, code);
+	builder_write(& ecode_file_temp);
 	format_file("gen/scratch.hpp");
 	Code result = scan_file( "gen/scratch.hpp" );
 	remove("gen/scratch.hpp");
@@ -85,27 +85,27 @@ int gen_main()
 		Code filesystem   = scan_file( "dependencies/filesystem.hpp" );
 		Code timing       = scan_file( "dependencies/timing.hpp" );
 
-		Builder
-		header = Builder::open("gen/gen.dep.hpp");
-		header.print_fmt( generation_notice );
-		header.print_fmt( "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n" );
-		header.print( platform );
-		header.print_fmt( "\nGEN_NS_BEGIN\n" );
+		Builder _header = builder_open("gen/gen.dep.hpp");
+		Builder* header = & _header;
+		builder_print_fmt( header, generation_notice );
+		builder_print_fmt( header, "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n" );
+		builder_print( header, platform );
+		builder_print_fmt( header, "\nGEN_NS_BEGIN\n" );
 
-		header.print( macros );
-		header.print( basic_types );
-		header.print( debug );
-		header.print( memory );
-		header.print( string_ops );
-		header.print( printing );
-		header.print( containers );
-		header.print( hashing );
-		header.print( strings );
-		header.print( filesystem );
-		header.print( timing );
+		builder_print( header, macros );
+		builder_print( header, basic_types );
+		builder_print( header, debug );
+		builder_print( header, memory );
+		builder_print( header, string_ops );
+		builder_print( header, printing );
+		builder_print( header, containers );
+		builder_print( header, hashing );
+		builder_print( header, strings );
+		builder_print( header, filesystem );
+		builder_print( header, timing );
 
-		header.print_fmt( "\nGEN_NS_END\n" );
-		header.write();
+		builder_print_fmt( header, "\nGEN_NS_END\n" );
+		builder_write(header);
 	}
 
 	// gen_dep.cpp
@@ -120,24 +120,24 @@ int gen_main()
 		Code filesystem = scan_file( "dependencies/filesystem.cpp" );
 		Code timing     = scan_file( "dependencies/timing.cpp" );
 
-		Builder
-		src = Builder::open( "gen/gen.dep.cpp" );
-		src.print_fmt( generation_notice );
-		src.print_fmt( "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n" );
-		src.print( src_start );
-		src.print_fmt( "\nGEN_NS_BEGIN\n" );
+		Builder _src = builder_open( "gen/gen.dep.cpp" );
+		Builder* src = & _src;
+		builder_print_fmt(src, generation_notice );
+		builder_print_fmt( src, "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n" );
+		builder_print( src, src_start );
+		builder_print_fmt( src, "\nGEN_NS_BEGIN\n" );
 
-		src.print( debug );
-		src.print( string_ops );
-		src.print( printing );
-		src.print( hashing );
-		src.print( memory );
-		src.print( strings );
-		src.print( filesystem );
-		src.print( timing );
+		builder_print( src, debug );
+		builder_print( src, string_ops );
+		builder_print( src, printing );
+		builder_print( src, hashing );
+		builder_print( src, memory );
+		builder_print( src, strings );
+		builder_print( src, filesystem );
+		builder_print( src, timing );
 
-		src.print_fmt( "\nGEN_NS_END\n" );
-		src.write();
+		builder_print_fmt( src, "\nGEN_NS_END\n" );
+		builder_write(src);
 	}
 
 	CodeBody gen_component_header = def_global_body( args(
@@ -165,68 +165,64 @@ int gen_main()
 		CodeBody especifier  = gen_especifier( "enums/ESpecifier.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
 
-		Builder
-		header = Builder::open( "gen/gen.hpp" );
-		header.print_fmt( generation_notice );
-		header.print_fmt( "#pragma once\n\n" );
-		header.print( push_ignores );
-		header.print( header_start );
-		header.print_fmt( "\nGEN_NS_BEGIN\n\n" );
+		Builder _header = builder_open( "gen/gen.hpp" );
+		Builder* header = & _header;
+		builder_print_fmt( header, generation_notice );
+		builder_print_fmt( header, "#pragma once\n\n" );
+		builder_print( header, push_ignores );
+		builder_print( header, header_start );
+		builder_print_fmt( header, "\nGEN_NS_BEGIN\n\n" );
 
-		header.print_fmt( "#pragma region Types\n" );
-		header.print( types );
-		header.print( fmt_newline);
-		header.print( dump_to_scratch_and_retireve(ecode) );
-		header.print( fmt_newline);
-		header.print( dump_to_scratch_and_retireve(eoperator) );
-		header.print( fmt_newline);
-		header.print( dump_to_scratch_and_retireve(especifier) );
-		header.print( fmt_newline);
-		header.print_fmt( "#pragma endregion Types\n\n" );
+		builder_print_fmt(header, "#pragma region Types\n" );
+		builder_print( header, types );
+		builder_print( header, fmt_newline);
+		builder_print( header, dump_to_scratch_and_retireve(ecode) );
+		builder_print( header, fmt_newline);
+		builder_print( header, dump_to_scratch_and_retireve(eoperator) );
+		builder_print( header, fmt_newline);
+		builder_print( header, dump_to_scratch_and_retireve(especifier) );
+		builder_print( header, fmt_newline);
+		builder_print_fmt( header, "#pragma endregion Types\n\n" );
 
-		header.print_fmt( "#pragma region AST\n" );
-		header.print( ast );
-		header.print( code_types );
-		header.print( ast_types );
-		header.print_fmt( "\n#pragma endregion AST\n" );
+		builder_print_fmt( header, "#pragma region AST\n" );
+		builder_print( header, ast );
+		builder_print( header, code_types );
+		builder_print( header, ast_types );
+		builder_print_fmt( header, "\n#pragma endregion AST\n" );
 
-		header.print( interface );
+		builder_print( header, interface );
 
-		header.print_fmt( "\n#pragma region Inlines\n" );
-		header.print( inlines );
-		header.print( fmt_newline );
-		header.print( dump_to_scratch_and_retireve(ast_inlines) );
-		header.print( fmt_newline );
-		header.print_fmt( "#pragma endregion Inlines\n" );
+		builder_print_fmt( header, "\n#pragma region Inlines\n" );
+		builder_print( header, inlines );
+		builder_print( header, fmt_newline );
+		builder_print( header, dump_to_scratch_and_retireve(ast_inlines) );
+		builder_print( header, fmt_newline );
+		builder_print_fmt( header, "#pragma endregion Inlines\n" );
 
-		header.print( header_end );
-		header.print_fmt( "GEN_NS_END\n\n" );
-		header.print( pop_ignores );
-		header.write();
+		builder_print( header, header_end );
+		builder_print_fmt( header, "GEN_NS_END\n\n" );
+		builder_print( header, pop_ignores );
+		builder_write(header);
 
-		Builder
-		header_ecode = Builder::open( "components/gen/ecode.hpp" );
-		header_ecode.print( gen_component_header );
-		header_ecode.print( ecode );
-		header_ecode.write();
+		Builder header_ecode = builder_open( "components/gen/ecode.hpp" );
+		builder_print( & header_ecode, gen_component_header );
+		builder_print( & header_ecode, ecode );
+		builder_write( & header_ecode);
 
-		Builder
-		header_eoperator = Builder::open( "components/gen/eoperator.hpp" );
-		header_eoperator.print( gen_component_header );
-		header_eoperator.print( eoperator );
-		header_eoperator.write();
+		Builder header_eoperator = builder_open( "components/gen/eoperator.hpp" );
+		builder_print( & header_eoperator, gen_component_header );
+		builder_print( & header_eoperator, eoperator );
+		builder_write( & header_eoperator );
 
-		Builder
-		header_especifier = Builder::open( "components/gen/especifier.hpp" );
-		header_especifier.print( gen_component_header );
-		header_especifier.print( especifier );
-		header_especifier.write();
+		Builder header_especifier = builder_open( "components/gen/especifier.hpp" );
+		builder_print( & header_especifier, gen_component_header );
+		builder_print( & header_especifier, especifier );
+		builder_write( & header_especifier);
 
-		Builder
-		header_ast_inlines = Builder::open( "components/gen/ast_inlines.hpp" );
-		header_ast_inlines.print( gen_component_header );
-		header_ast_inlines.print( ast_inlines );
-		header_ast_inlines.write();
+		Builder header_ast_inlines = builder_open( "components/gen/ast_inlines.hpp" );
+		builder_print( & header_ast_inlines, gen_component_header );
+		builder_print( & header_ast_inlines, ast_inlines );
+		builder_write( & header_ast_inlines);
 	}
 
 	// gen.cpp
@@ -249,88 +245,84 @@ int gen_main()
 			etoktype
 		));
 
-		Builder
-		src = Builder::open( "gen/gen.cpp" );
-		src.print_fmt( generation_notice );
-		src.print( push_ignores );
-		src.print( src_start );
-		src.print_fmt( "\nGEN_NS_BEGIN\n");
+		Builder _src = builder_open( "gen/gen.cpp" );
+		Builder* src = & _src;
+		builder_print_fmt( src, generation_notice );
+		builder_print( src, push_ignores );
+		builder_print( src, src_start );
+		builder_print_fmt( src, "\nGEN_NS_BEGIN\n");
 
-		src.print( static_data );
+		builder_print( src, static_data );
 
-		src.print_fmt( "\n#pragma region AST\n\n" );
-		src.print( ast_case_macros );
-		src.print( ast );
-		src.print( code_serialization );
-		src.print_fmt( "\n#pragma endregion AST\n" );
+		builder_print_fmt( src, "\n#pragma region AST\n\n" );
+		builder_print( src, ast_case_macros );
+		builder_print( src, ast );
+		builder_print( src, code_serialization );
+		builder_print_fmt( src, "\n#pragma endregion AST\n" );
 
-		src.print_fmt( "\n#pragma region Interface\n" );
-		src.print( interface );
-		src.print( upfront );
-		src.print_fmt( "\n#pragma region Parsing\n\n" );
-		src.print( dump_to_scratch_and_retireve(nspaced_etoktype) );
-		src.print( lexer );
-		src.print( parser );
-		src.print( parsing_interface );
-		src.print( untyped );
-		src.print_fmt( "\n#pragma endregion Parsing\n\n" );
-		src.print_fmt( "#pragma endregion Interface\n\n" );
+		builder_print_fmt( src, "\n#pragma region Interface\n" );
+		builder_print( src, interface );
+		builder_print( src, upfront );
+		builder_print_fmt( src, "\n#pragma region Parsing\n\n" );
+		builder_print( src, dump_to_scratch_and_retireve(nspaced_etoktype) );
+		builder_print( src, lexer );
+		builder_print( src, parser );
+		builder_print( src, parsing_interface );
+		builder_print( src, untyped );
+		builder_print_fmt( src, "\n#pragma endregion Parsing\n\n" );
+		builder_print_fmt( src, "#pragma endregion Interface\n\n" );
 
-		src.print_fmt( "GEN_NS_END\n\n");
-		src.print( pop_ignores );
-		src.write();
+		builder_print_fmt( src, "GEN_NS_END\n\n");
+		builder_print( src, pop_ignores );
+		builder_write(src);
 
-		Builder
-		src_etoktype = Builder::open( "components/gen/etoktype.cpp" );
-		src_etoktype.print( gen_component_header );
-		src_etoktype.print( nspaced_etoktype );
-		src_etoktype.write();
+		Builder src_etoktype = builder_open( "components/gen/etoktype.cpp" );
+		builder_print( & src_etoktype, gen_component_header );
+		builder_print( & src_etoktype, nspaced_etoktype );
+		builder_write( & src_etoktype);
 	}
 
 	// gen_builder.hpp
 	{
 		Code builder = scan_file( "auxillary/builder.hpp" );
 
-		Builder
-		header = Builder::open( "gen/gen.builder.hpp" );
-		header.print_fmt( generation_notice );
-		header.print_fmt( "#pragma once\n\n" );
-		header.print( def_include( txt("gen.hpp") ));
-		header.print_fmt( "\nGEN_NS_BEGIN\n" );
-		header.print( builder );
-		header.print_fmt( "GEN_NS_END\n" );
-		header.write();
+		Builder header = builder_open( "gen/gen.builder.hpp" );
+		builder_print_fmt( & header, generation_notice );
+		builder_print_fmt( & header, "#pragma once\n\n" );
+		builder_print( & header, def_include( txt("gen.hpp") ));
+		builder_print_fmt( & header, "\nGEN_NS_BEGIN\n" );
+		builder_print( & header, builder );
+		builder_print_fmt( & header, "GEN_NS_END\n" );
+		builder_write( & header);
 	}
 
 	// gen_builder.cpp
-	{
+
 		Code builder = scan_file( "auxillary/builder.cpp" );
 
-		Builder
-		src = Builder::open( "gen/gen.builder.cpp" );
-		src.print_fmt( generation_notice );
-		src.print( def_include( txt("gen.builder.hpp") ) );
-		src.print_fmt( "\nGEN_NS_BEGIN\n" );
-		src.print( builder );
-		src.print_fmt( "\nGEN_NS_END\n" );
-		src.write();
-	}
+		Builder src = builder_open( "gen/gen.builder.cpp" );
+		builder_print_fmt( & src, generation_notice );
+		builder_print( & src, def_include( txt("gen.builder.hpp") ) );
+		builder_print_fmt( & src, "\nGEN_NS_BEGIN\n" );
+		builder_print( & src,  builder );
+		builder_print_fmt( & src, "\nGEN_NS_END\n" );
+		builder_write( & src);
+
 
 	// gen_scanner.hpp
 	{
 		Code parsing = scan_file( "dependencies/parsing.hpp" );
 		Code scanner = scan_file( "auxillary/scanner.hpp" );
 
-		Builder
-		header = Builder::open( "gen/gen.scanner.hpp" );
-		header.print_fmt( generation_notice );
-		header.print_fmt( "#pragma once\n\n" );
-		header.print( def_include( txt("gen.hpp") ) );
-		header.print_fmt( "\nGEN_NS_BEGIN\n" );
-		header.print( parsing );
-		header.print( scanner );
-		header.print_fmt( "\nGEN_NS_END\n" );
-		header.write();
+		Builder header = builder_open( "gen/gen.scanner.hpp" );
+		builder_print_fmt( & header, generation_notice );
+		builder_print_fmt( & header, "#pragma once\n\n" );
+		builder_print( & header, def_include( txt("gen.hpp") ) );
+		builder_print_fmt( & header, "\nGEN_NS_BEGIN\n" );
+		builder_print( & header, parsing );
+		builder_print( & header, scanner );
+		builder_print_fmt( & header, "\nGEN_NS_END\n" );
+		builder_write(& header);
 	}
 
 	// gen_scanner.cpp
@@ -338,15 +330,14 @@ int gen_main()
 		Code parsing = scan_file( "dependencies/parsing.cpp" );
 		Code scanner = scan_file( "auxillary/scanner.cpp" );
 
-		Builder
-		src = Builder::open( "gen/gen.scanner.cpp" );
-		src.print_fmt( generation_notice );
-		src.print( def_include( txt("gen.scanner.hpp") ) );
-		src.print_fmt( "\nGEN_NS_BEGIN\n" );
-		src.print( parsing );
-		// src.print( scanner );
-		src.print_fmt( "GEN_NS_END\n" );
-		src.write();
+		Builder src = builder_open( "gen/gen.scanner.cpp" );
+		builder_print_fmt( & src, generation_notice );
+		builder_print( & src, def_include( txt("gen.scanner.hpp") ) );
+		builder_print_fmt( & src, "\nGEN_NS_BEGIN\n" );
+		builder_print( & src, parsing );
+		builder_print( & src, scanner );
+		builder_print_fmt( & src, "GEN_NS_END\n" );
+		builder_write( & src);
 	}
 
 	gen::deinit();
