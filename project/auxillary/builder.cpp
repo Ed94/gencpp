@@ -39,7 +39,7 @@ void builder_print_fmt_va( Builder* builder, char const* fmt, va_list va )
 
 	res = str_fmt_va( buf, count_of( buf ) - 1, fmt, va ) - 1;
 
-	string_append_c_str_len( (String*) & builder->Buffer, (char const*)buf, res);
+	string_append_c_str_len( (String*) & (builder->Buffer), (char const*)buf, res);
 }
 
 void builder_write(Builder* builder)

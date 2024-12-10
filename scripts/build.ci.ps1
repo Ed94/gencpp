@@ -4,6 +4,7 @@
 
 $devshell           = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 $format_cpp	        = Join-Path $PSScriptRoot 'helpers/format_cpp.psm1'
+$refactor_c_library = Join-Path $PSScriptRoot 'refactor_c_library.ps1'
 $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
@@ -223,6 +224,8 @@ if ( $c_library )
 		}
 	Pop-Location
 
+	. $refactor_c_library
+
 	$unit       = join-path $path_c_library "gen.c"
 	$executable = join-path $path_build     "gen_c_library_test.exe"
 
@@ -355,7 +358,7 @@ if ( $test )
 
 #region Formatting
 push-location $path_scripts
-if ( $true -and $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
+if ( $false -and $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
 {
 	$path_gen      = join-path $path_project gen
 	$include  = @(
@@ -367,7 +370,6 @@ if ( $true -and $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp
 	$exclude  = $null
 	# format-cpp $path_gen $include $exclude
 	format-cpp $path_comp_gen @( 'ast_inlines.hpp', 'ecode.hpp', 'especifier.hpp', 'eoperator.hpp', 'etoktype.cpp' ) $null
-
 }
 
 if ( $false -and $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp")) )

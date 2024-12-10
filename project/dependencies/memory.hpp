@@ -215,7 +215,7 @@ struct Arena
 #endif
 };
 
-#if GEN_COMPILER_CPP && ! GEN_C_LIKECPP
+#if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 forceinline AllocatorInfo allocator_info(Arena& arena )                 { return arena_allocator_info(& arena); }
 forceinline Arena         init_sub      (Arena& parent, ssize size)     { return arena_init_sub( & parent, size); }
 forceinline ssize         alignment_of  (Arena& arena, ssize alignment) { return arena_alignment_of( & arena, alignment); }

@@ -355,7 +355,7 @@ size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761u
 
 // If using an Editor with support for syntax hightlighting macros: HASH__ARGS_SIG_1 and HASH_ARGS_SIG_2 should show color highlighting indicating the slot is enabled,
 // or, "defined" for usage during the compilation pass that handles the _Generic instrinsic.
-#define hash( function_arguments ) _Generic(                   \
+#define gen_hash_example( function_arguments ) _Generic(       \
 (function_arguments), /* Select Via Expression*/               \
   /* Extendibility slots: */                                   \
 	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_1 ) \

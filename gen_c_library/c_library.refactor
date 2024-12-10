@@ -1,0 +1,545 @@
+ __VERSION 1
+
+// This is a example template to be used with the refactor program
+// Use it to refactor the naming convention of this library to your own.
+// Can be used as an aid to help use use your project's implementation if it fullfills the dependencies of this project.
+// Example: Most likely have a memory and string library already, just rename the functions and make sure the args are the same.
+// Program: https://github.com/Ed94/refactor
+
+// NOTE: Due to the current limitations of the program, not every symbol in the library can be renamed.
+// This is due to the program not actually parsing C/C++.
+
+// not       : Ignore
+// include   : #includes
+// word      : Alphanumeric or underscore
+// namespace : Prefix search and replace (c-namspaces).
+// regex     : Unavailable in __VERSION 1.
+
+// Precedence (highest to lowest):
+// word, namespace, regex
+
+// Gen Macro namespace
+// namespace GEN_, new_namespace_
+
+// Macros
+
+word global,                       gen_global
+word internal,                     gen_internal
+word local_persist,                gen_local_persist
+word bit,                          gen_bit
+word bitfield_is_equal,            gen_bitfield_is_equal
+word cast,                         gen_cast
+word ccast,                        gen_ccast
+word pcast,                        gen_pcast
+word rcast,                        gen_rcast
+word scast,                        gen_scast
+word stringize_va,                 gen_stringize_va
+word stringize,                    gen_stringize
+word do_once,                      gen_do_once
+word do_once_start,                gen_do_once_start
+word do_once_end,                  gen_do_once_end
+word labeled_scope_start,          gen_labeled_scope_start
+word labeled_scope_end,            gen_labeled_scope_end
+word compiler_decorated_func_name, gen_compiler_decorated_func_name
+word num_args_impl,                gen_num_args_impl
+word num_args,                     gen_num_args
+word clamp,                        gen_clamp
+word count_of,                     gen_count_of
+word is_between,                   gen_is_between
+word size_of,                      gen_size_of
+word max,                          gen_max
+word min,                          gen_min
+word offset_of,                    gen_offset_of
+word forceinline,                  gen_forceinline
+word neverinline,                  gen_neverinline
+word static_assert,                gen_static_assert
+word thread_local,                 gen_thread_local
+word typeof,                       gen_typeof
+word enum_underlying,              gen_enum_underlying
+word nullptr,                      gen_nullptr
+word struct_init,                  gen_struct_init
+word hash,                         gen_hash
+
+// Basic Types
+
+word u8,            gen_u8
+word s8,            gen_s8
+word u16,           gen_u16
+word s16,           gen_s16
+word u32,           gen_u32
+word s32,           gen_s32
+word u64,           gen_u64
+word s64,           gen_s64
+word usize,         gen_usize
+word ssize,         gen_ssize
+word sptr,          gen_sptr
+word uptr,          gen_uptr
+word f32,           gen_f32
+word f64,           gen_f64
+word b8,            gen_b8
+word b16,           gen_b16
+word b32,           gen_b32
+word mem_ptr,       gen_mem_ptr
+word mem_ptr_const, gen_mem_ptr_cnst
+
+// Debug
+
+word assert_handler, gen_assert_handler
+word assert_crash,   gen_assert_crash
+word process_exit,   gen_process_exit
+
+// Memory
+
+word kilobytes, gen_kilobytes
+word megabytes, gen_megabytes
+word gigabytes, gen_gigabytes
+word terabytes, gen_terabytes
+
+word swap, gen_swap
+
+word is_power_of_two,        gen_is_power_of_two
+word align_forward,          gen_align_forward
+word align_forward_by_value, gen_align_forward_by_value
+word pointer_add,            gen_pointer_add
+word pointer_add_const,      gen_pointer_add_const
+word pointer_diff,           gen_pointer_diff
+word mem_copy,               gen_mem_copy
+word mem_find,               gen_mem_find
+word mem_move,               gen_mem_move
+word mem_set,                gen_mem_set
+word zero_size,              gen_zero_size
+word zero_item,              gen_zero_item
+word zero_array,             gen_zero_array
+
+word AllocType,     gen_AllocType
+word AllocatorProc, gen_AllocatorProc
+word AllocatorInfo, gen_AllocatorInfo
+word AllocFlag,     gen_AllocFlag
+
+word alloc,          gen_alloc
+word alloc_align,    gen_alloc_align
+word allocator_free, gen_allocator_free
+word free_all,       gen_free_all
+word resize,         gen_resize
+word resize_align,   gen_resize_align
+word alloc_item,     gen_alloc_item
+word alloc_array,    gen_alloc_array
+
+word heap_stats_init,        gen_heap_stats_init
+word heap_stats_used_memory, gen_heap_stats_used_memory
+word heap_stats_alloc_count, gen_heap_stats_alloc_count
+word heap_stats_check,       gen_heap_stats_check
+word default_resize_align,   gen_default_resize_align
+
+word heap_allocator_proc, gen_heap_allocator_proc
+word heap,                gen_heap
+word malloc,              gen_malloc
+word mfree,               gen_mfree
+
+word VirtualMemory,            gen_VirtualMemory
+word vm_from_memory,           gen_vm_from_memory
+word vm_alloc,                 gen_vm_alloc
+word vm_free,                  gen_vm_free
+word vm_trim,                  gen_vm_trim
+word vm_purge,                 gen_vm_purge
+word virtual_memory_page_size, gen_virtual_memory_page_size
+
+// Memory: Arena
+
+word Arena, gen_Arena
+namespace arena_, gen_arena_
+
+// word arena_allocator_info
+// word arena_init_from_memory
+// word arena_init_from_allocator
+// word arena_init_sub
+// word arena_alignment_of
+// word arena_check
+// word arena_size_remaining
+
+// Memory: FixedArena
+
+namespace FixedArena_,  gen_FixedArena_
+namespace fixed_arena_, gen_fixed_arena_
+
+// Memory: Pool
+
+word Pool, gen_Pool
+namespace pool_, gen_pool_
+
+// Printing
+
+namespace str_, gen_str_
+
+word PrintF_Buffer,     gen_PrintF_Buffer
+word Msg_Invalid_Value, gen_Msg_Invalid_Value
+word log_fmt,           gen_log_fmt
+
+// String Ops
+
+namespace char_, gen_char_
+
+word digit_to_int,      gen_digit_to_int
+word hex_digit_to_init, gen_hex_digit_to_init
+word i64_to_str,        gen_i64_to_str
+word u64_to_str,        gen_u64_to_str
+
+// Containers
+
+namespace GENERIC_SLOT_, GEN_GENERIC_SLOT_
+
+word Array, gen_Array
+word Array_ssize, gen_Array_gen_ssize
+
+word ArrayHeader, gen_ArrayHeader
+
+namespace Array_, gen_Array_
+namespace array_, gen_array_
+
+word HashTable, gen_HashTable
+
+namespace HashTable_, gen_HashTable_
+namespace hashtable_, gen_hashtable_
+
+namespace HT_,      gen_HT_
+namespace HTE_,     gen_HTE_
+namespace arr_hte_, gen_arr_hte_
+namespace Arr_HTE_, gen_Arr_HTE_
+
+// Hashing
+
+word crc32, gen_crc32
+word crc64, gen_crc64
+
+// Strings
+
+word StrC, gen_StrC
+
+word to_strc_from_c_str, gen_to_strc_from_c_str
+
+namespace strc_, gen_strc_
+
+word cast_to_strc, gen_cast_to_strc
+
+word StringHeader, gen_StringHeader
+word String,       gen_String
+
+namespace string_, gen_string_
+
+word StringCached, gen_StringCached
+
+word StringTable, gen_StringTable
+
+namespace StringTable_, gen_StringTable_
+
+// File Handling
+
+word FileModeFlag,   gen_FileModeFlag
+word SeekWhenceType, gen_SeekWhenceType
+word FileError,      gen_FileError
+word FileDescriptor, gen_FileDescriptor
+word FileMode,       gen_FileMode
+word FileOperations, gen_FileOperations
+word FileOperations, gen_FileOperations
+
+default_file_operations
+
+word FileTime, word FileTime
+
+word DirType,          gen_DirType
+word DirInfo,          gen_DirInfo
+word DirEntry,         gen_DirEntry
+word DirInfo,          gen_DirInfo
+word FileInfo,         gen_FileInfo
+word FileStandardType, gen_FileStandardType
+
+namespace file_, gen_file_
+
+word gen_FileContents, gen_FileContents
+
+// Timing
+
+word read_cpu_time_stamp_counter, gen_read_cpu_time_stamp_counter
+word time_rel,                    gen_time_rel
+word time_rel_ms,                 gen_time_rel_ms
+
+// Parsing
+
+// Parsing: ADT
+
+word ADT_Node,        gen_ADT_Node
+word ADT_Type,        gen_ADT_Type
+word ADT_Props,       gen_ADT_Props
+word ADT_NamingStyle, gen_ADT_NamingStyle
+word ADT_AssignStyle, gen_ADT_AssignStyle
+word ADT_DelimStyle,  gen_ADT_DelimStyle
+word ADT_Error,       gen_ADT_Error
+word ADT_Node,        gen_ADT_Node
+
+namespace adt_, gen_adt_
+
+word CSV_Error,  gen_CSV_Error
+word CSV_Object, gen_CSV_Object
+
+namespace csv_, gen_csv_
+
+// Types.hpp
+
+word log_failure, gen_log_failure
+
+word AccessSpec,         gen_AccessSpec
+word access_spec_to_str, gen_access_spec_to_str
+
+word CodeFlag, gen_CodeFlag
+word EnumDecl, gen_EnumDecl
+
+word ModuleFlag,         gen_ModuleFlag
+word module_flag_to_str, gen_module_flag_to_str
+
+word EPreprocessCond, gen_EPreprocessCOnd
+word ETypenameTag,    gen_ETypenameTag
+
+word CodeType, gen_CodeType
+
+word codetype_to_str,         gen_codetype_to_str
+word codetype_to_keyword_str, gen_codetype_to_keyword_str
+
+word Operator,        gen_Operator
+word operator_to_str, gen_operator_to_str
+
+word Specifier,        gen_Specifier
+word spec_to_str,      gen_spec_to_str
+word spec_is_trailing, gen_spec_is_trailing
+// word strc_to_specifier, gen_strc_to_specifier
+
+// AST
+
+word AST, gen_AST
+
+namespace AST_, gen_AST_
+
+word Code,  gen_Code
+word Token, gen_Token
+
+word CodeBody,         gen_CodeBody
+word CodeAttributes,   gen_CodeAttributes
+word CodeComment,      gen_CodeComment
+word CodeClass,        gen_CodeClass
+word CodeConstructor,  gen_CodeConstructor
+word CodeDefine,       gen_CodeDefine
+word CodeDestructor,   gen_CodeDestructor
+word CodeEnum,         gen_CodeEnum
+word CodeExec,         gen_CodeExec
+word CodeExtern,       gen_CodeExtern
+word CodeInclude,      gen_CodeInclude
+word CodeFriend,       gen_CodeFriend
+word CodeFn,           gen_CodeFn
+word CodeModule,       gen_CodeModule
+word CodeNS,           gen_CodeNS
+word CodeOperator,     gen_CodeOperator
+word CodeOpCast,       gen_CodeOpCast
+word CodePragma,       gen_CodePragma
+word CodeParam,        gen_CodeParam
+word CodePreprocessCo, gen_CodePreprocessCo
+word CodeSpecifiers,   gen_CodeSpecifiers
+word CodeTemplate,     gen_CodeTemplate
+word CodeTypename,     gen_CodeTypename
+word CodeTypedef,      gen_CodeTypedef
+word CodeUnion,        gen_CodeUnion
+word CodeUsing,        gen_CodeUsing
+word CodeVar,          gen_CodeVar
+
+// Code Interface
+
+namespace code_, gen_code_
+
+word Code_Global,  gen_Code_Global
+word Code_Invalid, gen_Code_Invalid
+
+word Code_POD, gen_Code_POD
+
+word AST_POD_Size,     gen_AST_POD_Size
+word AST_ArrSpecs_Cap, gen_AST_ArrSpecs_Cap
+
+word InvalidCode, gen_InvalidCode
+word NullCode,    gen_NullCode
+
+namespace begin_, gen_begin_
+namespace end_,   gen_end_
+namespace next_,  gen_next_
+
+namespace body_,       gen_body_
+namespace class_,      gen_class_
+namespace params_,     gen_params_
+namespace specifiers_, gen_specifiers_
+namespace struct_,     gen_struct_
+namespace attributes_, gen_attributes_
+namespace comment_,    gen_comment_
+namespace constructor, gen_constructor_
+namespace define_,     gen_define_
+namespace destructor,  gen_destructor_
+namespace enum_,       gen_enum_
+namespace exec_,       gen_exec_
+namespace extern_,     gen_extern_
+namespace include_,    gen_include_
+namespace friend_,     gen_friend_
+namespace fn_,         gen_fn_
+namespace module_,     gen_module_
+namespace code_op,     gen_code_op_
+namespace opcast_,     gen_opcast_
+namespace pragma_,     gen_pragma_
+namespace preprocess_, gen_preprocess_
+namespace template_,   gen_template_
+namespace typename_,   gen_typename_
+namespace typedef_,    gen_typedef_
+namesapce union_,      gen_union_
+namespace using_,      gen_using_
+namespace var_,        gen_var_
+
+// Gen Interface
+
+word init,   gen_init
+word deinit, gen_deinit
+word reset,  gen_reset
+
+word get_cached_string, gen_get_cached_string
+
+word make_code, gen_make_code
+
+namespace set_allocator_, gen_set_allocator_
+
+namespace def_,     gen_def_
+namespace parse_,   gen_parse_
+namespace token_,   gen_token_
+namespace untyped_, gen_untyped_
+
+// Constants
+
+word TokenMap_FixedArena, gen_TokenMap_FixedArena
+word InitSize_DataArrays, gen_InitSize_DataArrays
+
+word Global_BucketSize,   gen_Global_BucketSize
+word CodePool_NumBlocks,  gen_CodePool_NumBlocks
+word SizePer_StringArena, gen_SizePer_StringArena
+
+word MaxCommentLineLength, gen_MaxCommentLineLength
+word MaxNameLength,        gen_MaxNameLength
+word MaxUntypedStrLength,  gen_MaxUntypedStrLength
+
+word LexAllocator_Size,        gen_LexAllocator_Size
+word Builder_StrBufferReserve, gen_Builder_StrBufferReserve
+
+word access_public,    gen_access_public
+word access_protected, gen_access_protected
+word access_private,   gen_access_private
+
+word attrib_api_export, gen_attrib_api_export
+word attrib_api_import, gen_attrib_api_import
+
+word module_global_fragment,  gen_module_global_fragment
+word module_private_fragment, gen_module_private_fragment
+
+word fmt_newline,     gen_fmt_newline
+word pragma_once,     gen_pragma_once
+word param_varadic,   gen_param_varadic
+word preprocess_else, gen_preprocess_else
+
+namespace spec_, gen_spec_
+namespace t_,    gen_t_
+
+word PreprocessorDefines, gen_PreprocessorDefines
+
+// Backend
+
+word GlobalAllocator,         gen_GlobalAllocator
+word Global_AllocatorBuckets, gen_Global_AllocatorBuckets
+word CodePools,               gen_CodePools
+word StringArenas,            gen_StringArenas
+word StringCache,             gen_StringCache
+word LexArena,                gen_LexArena
+word Allocator_DataArrays,    gen_Allocator_DataArrays
+word Allocator_CodePool,      gen_Allocator_CodePool
+word Allocator_Lexer,         gen_Allocator_Lexer
+word Allocator_StringArena,   gen_Allocator_StringArena
+word Allocator_StringTable,   gen_Allocator_StringTable
+word Allocator_TypeTable,     gen_Allocator_TypeTable
+
+// Builder
+
+word      Builder,  gen_Builder
+namespace builder_, gen_builder_
+
+// Implementation (prviate)
+
+word _format_info, gen__format_info
+
+namespace _print_,          gen__print_
+word      _heap_stats,      gen__heap_stats
+word      _heap_alloc_info, gen__heap_alloc_info
+
+word _crc32_table, gen__crc32_table
+word _crc64_table, gen__crc64_table
+
+word _alloc_utf8_to_ucs2, gen__alloc_utf8_to_ucs2
+
+word _win32_file_seek,  gen__win32_file_seek
+word _win32_file_read,  gen__win32_file_read
+word _win32_file_write, gen__win32_file_write
+word _win32_file_close, gen__win32_file_close
+word _win32_file_open,  gen__win32_file_open
+
+word _posix_file_seek,  gen__posix_file_seek
+word _posix_file_read,  gen__posix_file_read
+word _posix_file_write, gen__posix_file_write
+word _posix_file_close, gen__posix_file_close
+word _posix_file_open,  gen__posix_file_open
+
+word _dirinfo_free_entry, gen__dirinfo_free_entry
+word _std_file_set,       gen__std_file_set
+
+word _memory_fd, gen__memory_fd
+
+word _file_stream_fd_make, gen__file_stream_fd_make
+word _file_stream_from_fd, gen__file_stream_from_fd
+word _memory_file_seek,    gen__memory_file_seek
+word _memory_file_read,    gen__memory_file_read
+word _memory_file_write,   gen__memory_file_write
+word _memory_file_close,   gen__memory_file_close
+
+word _unix_gettime, gen__unix_gettime
+word _adt_fprintf,  gen__adt_fprintf
+
+word _adt_get_value, gen__adt_get_value
+word _adt_get_field, gen__adt_get_field
+
+word _csv_write_record, gen__csv_write_record
+word _csv_write_header, gen__csv_write_header
+
+word Global_Allocator_Proc, gen_Global_Allocator_Proc
+word define_constants,      gen_define_constants
+word operator__validate,    gen_operator__validate
+
+word parser_init,   gen_parser_init
+word parser_deinit, gen_parser_deinit
+
+word TokType,         gen_TokType
+word toktype_to_str,  gen_toktype_to_str
+// word strc_to_toktype, gen_strc_to_toktype
+word NullToken,       gen_NullToken
+
+namespace tok_, gen_tok_
+
+word TokArray, gen_TokArray
+
+namespace lex_,   gen_lex_
+namespace Lexer_, gen_Lexer_
+
+word LexContext, gen_LexContext
+word lex,        gen_lex
+
+word StackNode,    gen_StackNode
+word ParseContext, gen_ParseContext
+
+// namespace parse_, gen_parse_
+
+namespace parser_, gen_parser_

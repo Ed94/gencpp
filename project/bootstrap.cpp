@@ -206,22 +206,22 @@ int gen_main()
 
 		Builder header_ecode = builder_open( "components/gen/ecode.hpp" );
 		builder_print( & header_ecode, gen_component_header );
-		builder_print( & header_ecode, ecode );
+		builder_print( & header_ecode, dump_to_scratch_and_retireve(ecode) );
 		builder_write( & header_ecode);
 
 		Builder header_eoperator = builder_open( "components/gen/eoperator.hpp" );
 		builder_print( & header_eoperator, gen_component_header );
-		builder_print( & header_eoperator, eoperator );
+		builder_print( & header_eoperator, dump_to_scratch_and_retireve(eoperator) );
 		builder_write( & header_eoperator );
 
 		Builder header_especifier = builder_open( "components/gen/especifier.hpp" );
 		builder_print( & header_especifier, gen_component_header );
-		builder_print( & header_especifier, especifier );
+		builder_print( & header_especifier, dump_to_scratch_and_retireve(especifier) );
 		builder_write( & header_especifier);
 
 		Builder header_ast_inlines = builder_open( "components/gen/ast_inlines.hpp" );
 		builder_print( & header_ast_inlines, gen_component_header );
-		builder_print( & header_ast_inlines, ast_inlines );
+		builder_print( & header_ast_inlines, dump_to_scratch_and_retireve(ast_inlines) );
 		builder_write( & header_ast_inlines);
 	}
 
@@ -244,6 +244,7 @@ int gen_main()
 		CodeBody nspaced_etoktype = def_global_body( args(
 			etoktype
 		));
+		Code formatted_toktype = dump_to_scratch_and_retireve(nspaced_etoktype);
 
 		Builder _src = builder_open( "gen/gen.cpp" );
 		Builder* src = & _src;
@@ -264,7 +265,7 @@ int gen_main()
 		builder_print( src, interface );
 		builder_print( src, upfront );
 		builder_print_fmt( src, "\n#pragma region Parsing\n\n" );
-		builder_print( src, dump_to_scratch_and_retireve(nspaced_etoktype) );
+		builder_print( src, formatted_toktype );
 		builder_print( src, lexer );
 		builder_print( src, parser );
 		builder_print( src, parsing_interface );
@@ -278,7 +279,7 @@ int gen_main()
 
 		Builder src_etoktype = builder_open( "components/gen/etoktype.cpp" );
 		builder_print( & src_etoktype, gen_component_header );
-		builder_print( & src_etoktype, nspaced_etoktype );
+		builder_print( & src_etoktype, formatted_toktype );
 		builder_write( & src_etoktype);
 	}
 

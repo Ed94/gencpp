@@ -92,27 +92,27 @@ struct Code;
 #endif
 
 #if GEN_COMPILER_C
-typdef AST_Body*           CodeBody;
-typdef AST_Attributes*     CodeAttributes;
-typdef AST_Comment*        CodeComment;
-typdef AST_Class*          CodeClass;
-typdef AST_Constructor*    CodeConstructor;
-typdef AST_Define*         CodeDefine;
-typdef AST_Destructor*     CodeDestructor;
-typdef AST_Enum*           CodeEnum;
-typdef AST_Exec*           CodeExec;
-typdef AST_Extern*         CodeExtern;
-typdef AST_Include*        CodeInclude;
-typdef AST_Friend*         CodeFriend;
-typdef AST_Fn*             CodeFn;
-typdef AST_Module*         CodeModule;
-typdef AST_NS*             CodeNS;
-typdef AST_Operator*       CodeOperator;
-typdef AST_OpCast*         CodeOpCast;
-typdef AST_Param*          CodeParam;
-typdef AST_PreprocessCond* CodePreprocessCond;
-typdef AST_Pragma*         CodePragma;
-typdef AST_Specifiers*     CodeSpecifiers;
+typedef AST_Body*           CodeBody;
+typedef AST_Attributes*     CodeAttributes;
+typedef AST_Comment*        CodeComment;
+typedef AST_Class*          CodeClass;
+typedef AST_Constructor*    CodeConstructor;
+typedef AST_Define*         CodeDefine;
+typedef AST_Destructor*     CodeDestructor;
+typedef AST_Enum*           CodeEnum;
+typedef AST_Exec*           CodeExec;
+typedef AST_Extern*         CodeExtern;
+typedef AST_Include*        CodeInclude;
+typedef AST_Friend*         CodeFriend;
+typedef AST_Fn*             CodeFn;
+typedef AST_Module*         CodeModule;
+typedef AST_NS*             CodeNS;
+typedef AST_Operator*       CodeOperator;
+typedef AST_OpCast*         CodeOpCast;
+typedef AST_Param*          CodeParam;
+typedef AST_PreprocessCond* CodePreprocessCond;
+typedef AST_Pragma*         CodePragma;
+typedef AST_Specifiers*     CodeSpecifiers;
 #else
 struct CodeBody;
 struct CodeAttributes;

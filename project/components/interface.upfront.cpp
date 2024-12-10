@@ -12,6 +12,7 @@ enum OpValidateResult : u32
 	OpValResult_Member
 };
 
+internal neverinline
 OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTypename ret_type, CodeSpecifiers specifier )
 {
 	if ( op == Op_Invalid )

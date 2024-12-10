@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <N10X>
 	<Workspace>
-		<IncludeFilter>*.*,</IncludeFilter>
-		<ExcludeFilter>*.obj,*.lib,*.pch,*.dll,*.pdb,.vs,Debug,Release,x64,obj,*.user,Intermediate,**/sanity.gen.hpp,</ExcludeFilter>
+		<IncludeFilter>&amp;apos;.&amp;apos;,**/project/**,</IncludeFilter>
+		<ExcludeFilter>*.obj,*.lib,*.pch,*.dll,*.pdb,.vs,Debug,Release,x64,obj,*.user,Intermediate,**/sanity.gen.hpp,**/gen_c_library,**/gen_segmented,**/gen_singlheader,**/test,**/gen_unreal_engine,**/scripts,**/docs,</ExcludeFilter>
 		<SyncFiles>true</SyncFiles>
 		<Recursive>true</Recursive>
 		<ShowEmptyFolders>true</ShowEmptyFolders>

@@ -319,15 +319,27 @@ CodeVar parse_variable( StrC def )
 }
 
 // Undef helper macros
-#	undef check_parse_args
-#	undef currtok_noskip
-#	undef currtok
-#	undef peektok
-#	undef prevtok
-#   undef nexttok
-#	undef nexttok_noskip
-#	undef eat
-#	undef left
-#	undef check
-#	undef push_scope
-#	undef def_assign
+#undef check_parse_args
+#undef currtok_noskip
+#undef currtok
+#undef peektok
+#undef prevtok
+#undef nexttok
+#undef nexttok_noskip
+#undef eat
+#undef left
+#undef check
+#undef push_scope
+#undef def_assign
+
+// Here for C Variant
+#undef lex_dont_skip_formatting
+#undef lex_skip_formatting
+
+#undef parser_inplace_def
+#undef parser_not_inplace_def
+#undef parser_dont_consume_braces
+#undef parser_consume_braces
+#undef parser_not_from_template
+#undef parser_use_parenthesis
+#undef parser_strip_formatting_dont_preserve_newlines

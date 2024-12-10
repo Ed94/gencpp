@@ -626,7 +626,7 @@ StrC string_to_strc(String str) {
 }
 
 inline
-void trim(String str, char const* cut_set)
+void string_trim(String str, char const* cut_set)
 {
 	ssize len = 0;
 
@@ -650,12 +650,12 @@ void trim(String str, char const* cut_set)
 }
 
 forceinline
-void trim_space(String str) {
-	trim(str, " \t\r\n\v\f");
+void string_trim_space(String str) {
+	string_trim(str, " \t\r\n\v\f");
 }
 
 inline
-String visualize_whitespace(String const str)
+String string_visualize_whitespace(String const str)
 {
 	StringHeader* header = (StringHeader*)(scast(char const*, str) - sizeof(StringHeader));
 	String        result = string_make_reserve(header->Allocator, string_length(str) * 2); // Assume worst case for space requirements.

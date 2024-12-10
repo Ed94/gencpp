@@ -30,7 +30,10 @@ struct Builder
 
 	forceinline void print( Code code )                { return builder_print(this, code); }
 	forceinline void print_fmt( char const* fmt, ... ) {
-
+		va_list va;
+		va_start( va, fmt );
+		builder_print_fmt_va( this, fmt, va );
+		va_end( va );
 	}
 
 	forceinline void write() { return builder_write(this); }

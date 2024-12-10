@@ -184,53 +184,33 @@ void define_constants()
 #	undef def_constant_code_type
 
 
-#	define def_constant_spec( Type_, ... )                                  \
-		spec_##Type_ = def_specifiers( num_args(__VA_ARGS__), __VA_ARGS__); \
-		code_set_global( cast(Code, spec_##Type_));
-
-#	pragma push_macro("forceinline")
-#	pragma push_macro("global")
-#	pragma push_macro("internal")
-#	pragma push_macro("local_persist")
-#	pragma push_macro("neverinline")
-#	undef forceinline
-#	undef global
-#	undef internal
-#	undef local_persist
-#	undef neverinline
-	def_constant_spec( const,            Spec_Const );
-	def_constant_spec( consteval,        Spec_Consteval );
-	def_constant_spec( constexpr,        Spec_Constexpr );
-	def_constant_spec( constinit,        Spec_Constinit );
-	def_constant_spec( extern_linkage,   Spec_External_Linkage );
-	def_constant_spec( final, 		     Spec_Final );
-	def_constant_spec( forceinline,      Spec_ForceInline );
-	def_constant_spec( global,           Spec_Global );
-	def_constant_spec( inline,           Spec_Inline );
-	def_constant_spec( internal_linkage, Spec_Internal_Linkage );
-	def_constant_spec( local_persist,    Spec_Local_Persist );
-	def_constant_spec( mutable,          Spec_Mutable );
-	def_constant_spec( neverinline,      Spec_NeverInline );
-	def_constant_spec( noexcept,         Spec_NoExceptions );
-	def_constant_spec( override,         Spec_Override );
-	def_constant_spec( ptr,              Spec_Ptr );
-	def_constant_spec( pure,             Spec_Pure )
-	def_constant_spec( ref,              Spec_Ref );
-	def_constant_spec( register,         Spec_Register );
-	def_constant_spec( rvalue,           Spec_RValue );
-	def_constant_spec( static_member,    Spec_Static );
-	def_constant_spec( thread_local,     Spec_Thread_Local );
-	def_constant_spec( virtual, 		 Spec_Virtual );
-	def_constant_spec( volatile, 	     Spec_Volatile)
+	spec_const            = def_specifier( Spec_Const);            code_set_global( cast(Code, spec_const ));
+	spec_consteval        = def_specifier( Spec_Consteval);        code_set_global( cast(Code, spec_consteval ));;
+	spec_constexpr        = def_specifier( Spec_Constexpr);        code_set_global( cast(Code, spec_constexpr ));;
+	spec_constinit        = def_specifier( Spec_Constinit);        code_set_global( cast(Code, spec_constinit ));;
+	spec_extern_linkage   = def_specifier( Spec_External_Linkage); code_set_global( cast(Code, spec_extern_linkage ));;
+	spec_final            = def_specifier( Spec_Final);            code_set_global( cast(Code, spec_final ));;
+	spec_forceinline      = def_specifier( Spec_ForceInline);      code_set_global( cast(Code, spec_forceinline ));;
+	spec_global           = def_specifier( Spec_Global);           code_set_global( cast(Code, spec_global ));;
+	spec_inline           = def_specifier( Spec_Inline);           code_set_global( cast(Code, spec_inline ));;
+	spec_internal_linkage = def_specifier( Spec_Internal_Linkage); code_set_global( cast(Code, spec_internal_linkage ));;
+	spec_local_persist    = def_specifier( Spec_Local_Persist);    code_set_global( cast(Code, spec_local_persist ));;
+	spec_mutable          = def_specifier( Spec_Mutable);          code_set_global( cast(Code, spec_mutable ));;
+	spec_neverinline      = def_specifier( Spec_NeverInline);      code_set_global( cast(Code, spec_neverinline ));;
+	spec_noexcept         = def_specifier( Spec_NoExceptions);     code_set_global( cast(Code, spec_noexcept ));;
+	spec_override         = def_specifier( Spec_Override);         code_set_global( cast(Code, spec_override ));;
+	spec_ptr              = def_specifier( Spec_Ptr);              code_set_global( cast(Code, spec_ptr ));;
+	spec_pure             = def_specifier( Spec_Pure);             code_set_global( cast(Code, spec_pure ));
+	spec_ref              = def_specifier( Spec_Ref);              code_set_global( cast(Code, spec_ref ));;
+	spec_register         = def_specifier( Spec_Register);         code_set_global( cast(Code, spec_register ));;
+	spec_rvalue           = def_specifier( Spec_RValue);           code_set_global( cast(Code, spec_rvalue ));;
+	spec_static_member    = def_specifier( Spec_Static);           code_set_global( cast(Code, spec_static_member ));;
+	spec_thread_local     = def_specifier( Spec_Thread_Local);     code_set_global( cast(Code, spec_thread_local ));;
+	spec_virtual          = def_specifier( Spec_Virtual);          code_set_global( cast(Code, spec_virtual ));;
+	spec_volatile         = def_specifier( Spec_Volatile);         code_set_global( cast(Code, spec_volatile ));
 
 	spec_local_persist = def_specifiers( 1, Spec_Local_Persist );
 	code_set_global(cast(Code, spec_local_persist));
-
-#	pragma pop_macro("forceinline")
-#	pragma pop_macro("global")
-#	pragma pop_macro("internal")
-#	pragma pop_macro("local_persist")
-#	pragma pop_macro("neverinline")
 
 #	pragma push_macro("enum_underlying")
 	array_append(PreprocessorDefines, txt("enum_underlying("));
