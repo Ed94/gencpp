@@ -25,19 +25,6 @@ Standard formats:
 
 Code not making up the core library is located in `auxiliary/<auxiliary_name>.<hpp/cpp>`. These are optional extensions or tools for the library.
 
-Feature Macros:
-
-* `GEN_DEFINE_ATTRIBUTE_TOKENS` : Allows user to define their own attribute macros for use in parsing.
-  * This is auto-generated if using the bootstrap or single-header generation
-  * *Note: The user will use the `AttributeTokens.csv` when the library is fully self-hosting.*
-* `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
-* `GEN_DONT_ENFORCE_GEN_TIME_GUARD` : By default, the library ( gen.hpp/ gen.cpp ) expects the macro `GEN_TIME` to be defined, this disables that.
-* `GEN_ENFORCE_STRONG_CODE_TYPES` : Enforces casts to filtered code types.
-* `GEN_EXPOSE_BACKEND` : Will expose symbols meant for internal use only.
-* `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
-* `GEN_DONT_ALLOW_INVALID_CODE` (Not implemented yet) : Will fail when an invalid code is constructed, parsed, or serialized.
-* `GEN_C_LIKE_PP` : Will prevent usage of function defnitions using references and structs with member functions.
-Structs will still have user-defined operator conversions, for-range support, and other operator overloads
 
 *Note: A variant of the C++ library could be generated where those additonal support features are removed (see gen_c_library implementation for an idea of how)*
 

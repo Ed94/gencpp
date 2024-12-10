@@ -3,36 +3,15 @@
 # That or just rewrite it in an sh script and call it a day.
 
 $devshell           = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
-$format_cpp	        = Join-Path $PSScriptRoot 'helpers/format_cpp.psm1'
+$misc               = Join-Path $PSScriptRoot 'helpers/misc.psm1'
 $refactor_c_library = Join-Path $PSScriptRoot 'refactor_c_library.ps1'
 $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
 
-function Get-ScriptRepoRoot {
-    $currentPath = $PSScriptRoot
-    while ($currentPath -ne $null -and $currentPath -ne "")
-	{
-        if (Test-Path (Join-Path $currentPath ".git")) {
-            return $currentPath
-        }
-        # Also check for .git file which indicates a submodule
-        $gitFile = Join-Path $currentPath ".git"
-        if (Test-Path $gitFile -PathType Leaf)
-		{
-            $gitContent = Get-Content $gitFile
-            if ($gitContent -match "gitdir: (.+)") {
-                return $currentPath
-            }
-        }
-        $currentPath = Split-Path $currentPath -Parent
-    }
-    throw "Unable to find repository root"
-}
-$path_root = Get-ScriptRepoRoot
+Import-Module $misc
 
-# Import-Module $target_arch
-Import-Module $format_cpp
+$path_root = Get-ScriptRepoRoot
 
 Push-Location $path_root
 

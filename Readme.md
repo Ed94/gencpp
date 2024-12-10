@@ -5,25 +5,25 @@ An attempt at simple staged metaprogramming for C/C++.
 The library API is a composition of code element constructors, and a non-standards-compliant single-pass C/C++ parser.
 These build up a code AST to then serialize with a file builder, or can be traversed for staged-reflection of C/C++ code.
 
-This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).  
-Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.  
+This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).
+Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.
+
+# Documentation
+
+[]
 
 ## Notes
 
-**On Partial Hiatus: Life has got me tackling other issues..**  
-I will be passively updating the library with bug fixes and minor improvements as I use it for my personal projects.  
+**On Partial Hiatus: Life has got me tackling other issues..**
+I will be passively updating the library with bug fixes and minor improvements as I use it for my personal projects.
 There won't be any major reworks or features to this thing for a while.
 
-This project is still in development (very much an alpha state), so expect bugs and missing features.  
+This project is still in development (very much an alpha state), so expect bugs and missing features.
 See [issues](https://github.com/Ed94/gencpp/issues) for a list of known bugs or todos.
 
 The library can already be used to generate code just fine, but the parser is where the most work is needed. If your C++ isn't "down to earth" expect issues.
 
 A `natvis` and `natstepfilter` are provided in the scripts directory (its outdated, I'll update this readme when its not).
-
-***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
-
-A C variant is hosted [here](https://github.com/Ed94/genc); I will complete it when this library is feature complete, it should be easier to make than this...
 
 ## Usage
 
@@ -56,7 +56,7 @@ u32 gen_main()
 #endif
 ```
 
-The design uses a constructive builder API for the code to generate.  
+The design uses a constructive builder API for the code to generate.
 The user is provided `Code` objects that are used to build up the AST.
 
 Example using each construction interface:
@@ -112,8 +112,8 @@ Code header = code_str(
 );
 ```
 
-`name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.  
-`code` is a helper macro for providing a string literal with its size, but intended for code string parameters.  
+`name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.
+`code` is a helper macro for providing a string literal with its size, but intended for code string parameters.
 `args` is a helper macro for providing the number of arguments to varadic constructors.
 `code_str` is a helper macro for writting `untyped_str( code( <content> ))`
 

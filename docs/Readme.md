@@ -14,7 +14,7 @@ The project has no external dependencies beyond:
 * `io.h`       (Windows with gcc)
 * `windows.h`  (Windows)
 
-Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
+Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).
 The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
 
 This library was written in a subset of C++ where the following are not used at all:
@@ -24,10 +24,10 @@ This library was written in a subset of C++ where the following are not used at 
 * Object-Oriented Inheritance
 * Exceptions
 
-Polymorphic & Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.  
+Polymorphic & Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.
 The base library itself does not use anything but C-like features to allow for generating a derviative compatiable with C (WIP).
 
-There are only 4 template definitions in the entire library. (`Array<Type>`, `Hashtable<Type>`, `swap<Type>`, and `AST/Code::cast<Type>`)
+There are only 4 template definitions in the entire library (C++ versions). (`Array<Type>`, `Hashtable<Type>`, `swap<Type>`, and `AST/Code::cast<Type>`)
 
 Two generic templated containers are used throughout the library:
 
@@ -43,94 +43,46 @@ Otherwise the library is free of any templates.
 ### *WHAT IS NOT PROVIDED*
 
 **There is no support for validating expressions.**  
-Its difficult to parse without enough benefits (At the metaprogramming level).  
-I plan to add this only at the tail of the project parsing milestone.
+Its a [todo](https://github.com/Ed94/gencpp/issues/49)
 
-**Only trivial template support is provided.**  
-The intention is for only simple, non-recursive substitution.  
-The parameters of the template are treated like regular parameter AST entries.  
+**Only trivial template support is provided.**
+The intention is for only simple, non-recursive substitution.
+The parameters of the template are treated like regular parameter AST entries.
 This means that the typename entry for the parameter AST would be either:
 
 * `class`
 * `typename`
 * A fundamental type, function, or pointer type.
 
-Anything beyond this usage is not supported by parse_template for arguments (at least not intentionally).  
-Use at your own mental peril.
+***Concepts and Constraints are not supported***  
+Its a [todo](https://github.com/Ed94/gencpp/issues/21)
 
-*Concepts and Constraints are not supported, its usage is non-trivial substitution.*
+### Feature Macros:
+
+* `GEN_DEFINE_ATTRIBUTE_TOKENS` : Allows user to define their own attribute macros for use in parsing.
+  * This is auto-generated if using the bootstrap or single-header generation
+  * *Note: The user will use the `AttributeTokens.csv` when the library is fully self-hosting.*
+* `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
+* `GEN_DONT_ENFORCE_GEN_TIME_GUARD` : By default, the library ( gen.hpp/ gen.cpp ) expects the macro `GEN_TIME` to be defined, this disables that.
+* `GEN_ENFORCE_STRONG_CODE_TYPES` : Enforces casts to filtered code types.
+* `GEN_EXPOSE_BACKEND` : Will expose symbols meant for internal use only.
+* `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
+* `GEN_DONT_ALLOW_INVALID_CODE` (Not implemented yet) : Will fail when an invalid code is constructed, parsed, or serialized.
+* `GEN_C_LIKE_PP` : Will prevent usage of function defnitions using references and structs with member functions.
+Structs will still have user-defined operator conversions, for-range support, and other operator overloads
 
 ### The Data & Interface
 
 As mentioned in root readme, the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
-The AST is managed by the library and provided to the user via its interface.  
+The AST is managed by the library and provided to the user via its interface.
 However, the user may specifiy memory configuration.
 
-Data layout of AST struct (Subject to heavily change with upcoming redesign):
+[Data layout of AST struct (Subject to heavily change with upcoming todos)](C:\projects\gencpp\base\components\ast.hpp#L396-462)
 
-```cpp
-union {
-    struct
-    {
-        AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-        AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-        AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
-        union {
-            AST*  InitializerList; // Constructor
-            AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
-            AST*  ReturnType;      // Function, Operator, Typename
-            AST*  UnderlyingType;  // Enum, Typedef
-            AST*  ValueType;       // Parameter, Variable
-        };
-        union {
-            AST*  Macro;           // Parameters
-            AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
-            AST*  Params;          // Constructor, Function, Operator, Template, Typename
-        };
-        union {
-            AST*  ArrExpr;          // Typename
-            AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-            AST*  Declaration;      // Friend, Template
-            AST*  Value;            // Parameter, Variable
-        };
-        union {
-            AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-            AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
-        };
-    };
-    StringCached  Content;          // Attributes, Comment, Execution, Include
-    struct {
-        SpecifierT ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
-        AST*       NextSpecs;                   // Specifiers
-    };
-};
-union {
-    AST* Prev;
-    AST* Front;
-    AST* Last;
-};
-union {
-    AST* Next;
-    AST* Back;
-};
-AST*              Parent;
-StringCached      Name;
-CodeT             Type;
-ModuleFlag        ModuleFlags;
-union {
-    b32           IsFunction;  // Used by typedef to not serialize the name field.
-    b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
-    OperatorT     Op;
-    AccessSpec    ParentAccess;
-    s32           NumEntries;
-};
-s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
-```
-
-*`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
-*`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
-*`StringCahced` is a typedef for `String const`, to denote it is an interned string*  
+*`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*
+*`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*
+*`StringCahced` is a typedef for `String const`, to denote it is an interned string*
 *`String` is the dynamically allocated string type for the library*
 
 AST widths are setup to be AST_POD_Size.
@@ -302,7 +254,7 @@ def_global_body( args( ht_entry, array_ht_entry, hashtable ));
 def_global_body( 3, ht_entry, array_ht_entry, hashtable );
 ```
 
-If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty body.  
+If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty body.
 When the members have been populated use: `AST::validate_body` to verify that the members are valid entires for that type.
 
 ### Parse construction
@@ -354,7 +306,7 @@ Interface :
 * untyped_fmt
 * untyped_token_fmt
 
-During serialization any untyped Code AST has its string value directly injected inline of whatever context the content existed as an entry within.  
+During serialization any untyped Code AST has its string value directly injected inline of whatever context the content existed as an entry within.
 Even though these are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that Untyped code can be added as any component of a Code AST:
 
 * Untyped code cannot have children, thus there cannot be recursive injection this way.
@@ -474,10 +426,7 @@ and have the desired specifiers assigned to them beforehand.
 There are three provided auxillary interfaces:
 
 * Builder
-* Editor
 * Scanner
-
-Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FEATURE_SCANNER` to enable them.
 
 ### Builder is a similar object to the jai language's string_builder
 
