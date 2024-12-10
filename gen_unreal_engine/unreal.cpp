@@ -7,7 +7,9 @@
 #include "helpers/helper.hpp"
 
 GEN_NS_BEGIN
+#include "helpers/push_container_defines.inline.hpp"
 #include "dependencies/parsing.cpp"
+#include "helpers/pop_container_defines.inline.hpp"
 GEN_NS_END
 
 #include "auxillary/builder.hpp"
@@ -52,7 +54,7 @@ global bool generate_scanner = true;
 
 void format_file( char const* path )
 {
-	String resolved_path = String::make(GlobalAllocator, to_str(path));
+	String resolved_path = String::make(GlobalAllocator, to_strc_from_c_str(path));
 
 	String style_arg = String::make(GlobalAllocator, txt("-style=file:"));
 	style_arg.append("../scripts/.clang-format ");
@@ -99,7 +101,7 @@ int gen_main()
 
 	// gen_dep.hpp
 	{
-		CodeBody macros = def_body( CodeT::Global_Body );
+		CodeBody macros = def_body( CT_Global_Body );
 		{
 			FileContents content    = file_read_contents( GlobalAllocator, true, project_dir "dependencies/macros.hpp" );
 			CodeBody     ori_macros = parse_global_body( StrC { content.size, (char const*)content.data });
@@ -110,10 +112,9 @@ int gen_main()
 			{
 				switch (code->Type)
 				{
-					using namespace ECode;
-					case Preprocess_Define:
+					case CT_Preprocess_Define:
 					{
-						CodeDefine define = code.cast<CodeDefine>();
+						CodeDefine define = cast(CodeDefine, code);
 						if ( define->Name.starts_with(txt("global")) )
 						{
 							macros.append(parse_global_body(txt("#define global // Global variables")));

@@ -18,6 +18,8 @@
 // Precedence (highest to lowest):
 // word, namespace, regex
 
+// TODO(ED): THIS IS VERY OUTDATED
+
 // Gen Macro namespace
 // namespace GEN_, new_namespace_
 
