@@ -78,7 +78,7 @@ As mentioned in root readme, the user is provided Code objects by calling the co
 The AST is managed by the library and provided to the user via its interface.
 However, the user may specifiy memory configuration.
 
-[Data layout of AST struct (Subject to heavily change with upcoming todos)](C:\projects\gencpp\base\components\ast.hpp#L396-462)
+[Data layout of AST struct (Subject to heavily change with upcoming todos)](../base/components/ast.hpp#L396-461)
 
 *`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*
