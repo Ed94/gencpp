@@ -346,7 +346,7 @@ void enum_to_string_def(CodeEnum self, String* result )
 				, body_to_string(self->Body)
 			);
 		else if ( self->UnderlyingTypeMacro )
-			string_append_fmt( result, "%SC %S\n\n{\n%S\n}"
+			string_append_fmt( result, "%SC %S\n{\n%S\n}"
 				, self->Name
 				, code_to_string(self->UnderlyingTypeMacro)
 				, body_to_string(self->Body)

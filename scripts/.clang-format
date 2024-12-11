@@ -1,9 +1,23 @@
 # Format Style Options - Created with Clang Power Tools
 ---
-AttributeMacros: [enum_underlying]
-StatementMacros: [GEN_NS_BEGIN, GEN_NS_END, GEN_NS_PARSER_BEGIN, GEN_NS_PARSER_END, GEN_API_C_BEGIN, GEN_API_C_END]
+
+# AttributeMacros: [
+# ]
+StatementMacros: [
+  GEN_NS_BEGIN, 
+  GEN_NS_END, 
+  GEN_NS_PARSER_BEGIN, 
+  GEN_NS_PARSER_END, 
+  GEN_API_C_BEGIN, 
+  GEN_API_C_END,
+  GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT
+]
+Macros:
+- enum_underlying(type)=type
+- gen_enum_underlying(type)=type
+
 TypenameMacros: [Array, Hashtable]
-SkipMacroDefinitionBody: true
+SkipMacroDefinitionBody: false
 
 AccessModifierOffset: -4
 

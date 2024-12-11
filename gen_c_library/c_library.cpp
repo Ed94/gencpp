@@ -891,7 +891,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 						StrC cpp_size = to_strc_from_c_str(conversion_buf);
 						union_entry->ValueType->ArrExpr = untyped_str( cpp_size );
 						union_entry->InlineCmt          = untyped_str(token_fmt("arr_exp", arr_exp,
-							"// Had to hardcode _PAD_ because (<arr_exp>) was 67 bytes in C (Injected C++ size_of(AST_<Type>::_PAD_) from C++ side)\n"
+							"// Had to hardcode _PAD_ because (<arr_exp>) was 67 bytes in C\n"
 						));
 					}
 				}
