@@ -8,7 +8,7 @@
 
 The library features a naive single-pass parser tailored for only what the library needs to construct the supported syntax of C++ into its AST for *"front-end"* meta-programming purposes.
 
-This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around ~5600 loc. I hope to keep it under 10k loc worst case.
+This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around ~7000 loc. I hope to keep it under 10k loc worst case.
 
 You can think of this parser as *frontend parser* vs a *semantic parser*. Its intuitively similar to WYSIWYG. What you ***precerive*** as the syntax from the user-side before the compiler gets a hold of it, is what you get.
 

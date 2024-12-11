@@ -173,7 +173,7 @@ int gen_main()
 
 	// gen.hpp
 	{
-		Code header_start = scan_file(             "components/header_start.hpp" );
+		Code header_start = scan_file(           "components/header_start.hpp" );
 		Code types        = scan_file( path_base "components/types.hpp" );
 		Code ast          = scan_file( path_base "components/ast.hpp" );
 		Code ast_types    = scan_file( path_base "components/ast_types.hpp" );

@@ -63,7 +63,7 @@ struct Opts_def_struct {
 CodeClass def_class( StrC name, Opts_def_struct opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_constructor {
-	CodeParam params;
+	CodeParams params;
 	Code      initializer_list;
 	Code      body;
 };
@@ -86,6 +86,7 @@ struct Opts_def_enum {
 	EnumT          specifier;
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
+	Code           type_macro;
 };
 CodeEnum def_enum( StrC name, Opts_def_enum opts GEN_PARAM_DEFAULT );
 
@@ -94,7 +95,7 @@ CodeExtern def_extern_link( StrC name, CodeBody body );
 CodeFriend def_friend     ( Code symbol );
 
 struct Opts_def_function {
-	CodeParam       params;
+	CodeParams      params;
 	CodeTypename    ret_type;
 	CodeBody        body;
 	CodeSpecifiers  specs;
@@ -111,7 +112,7 @@ CodeModule  def_module   ( StrC name,                Opts_def_module    opts GEN
 CodeNS      def_namespace( StrC name, CodeBody body, Opts_def_namespace opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_operator {
-	CodeParam       params;
+	CodeParams      params;
 	CodeTypename    ret_type;
 	CodeBody        body;
 	CodeSpecifiers  specifiers;
@@ -127,7 +128,7 @@ struct Opts_def_operator_cast {
 CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_param { Code value; };
-CodeParam  def_param ( CodeTypename type, StrC name, Opts_def_param opts GEN_PARAM_DEFAULT );
+CodeParams  def_param ( CodeTypename type, StrC name, Opts_def_param opts GEN_PARAM_DEFAULT );
 CodePragma def_pragma( StrC directive );
 
 CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC content );
@@ -137,7 +138,7 @@ CodeSpecifiers def_specifier( Specifier specifier );
 CodeStruct def_struct( StrC name, Opts_def_struct opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_template { ModuleFlag mflags; };
-CodeTemplate def_template( CodeParam params, Code definition, Opts_def_template opts GEN_PARAM_DEFAULT );
+CodeTemplate def_template( CodeParams params, Code definition, Opts_def_template opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_type {
 	ETypenameTag   type_tag;
@@ -196,8 +197,8 @@ CodeBody       def_global_body     ( s32 num, ... );
 CodeBody       def_global_body     ( s32 num, Code* codes );
 CodeBody       def_namespace_body  ( s32 num, ... );
 CodeBody       def_namespace_body  ( s32 num, Code* codes );
-CodeParam      def_params          ( s32 num, ... );
-CodeParam      def_params          ( s32 num, CodeParam* params );
+CodeParams     def_params          ( s32 num, ... );
+CodeParams     def_params          ( s32 num, CodeParams* params );
 CodeSpecifiers def_specifiers      ( s32 num, ... );
 CodeSpecifiers def_specifiers      ( s32 num, Specifier* specs );
 CodeBody       def_struct_body     ( s32 num, ... );

@@ -39,6 +39,8 @@ The full definitions of all asts are within:
 * [`ast_types.hpp`](../base/components/ast_types.hpp)
 * [`code_types.hpp`](../base/components/ast_types.hpp)
 
+The C/C++ interface procedures are located with `ast.hpp` (for the Code type), and `code_types.hpp` for all others.
+
 ## Serialization
 
 All code types can either serialize using a function of the pattern:
@@ -51,8 +53,6 @@ String <prefix>_to_string(Code code);
 
 Where the first generates strings allocated using Allocator_StringArena and the other appends an existing strings with their backed allocator.
 
-Serialization of for the AST is defined for `Code` in [`ast.chpp`](../base/components/ast.cpp) with `code_to_string_ptr` & `code_to_string`.
-
-Serializtion for the rest of the code types is within [`code_serialization.cpp`](../base/components/code_serialization.cpp).
-
-gencpp's serialization does not provide coherent formatting of the code. The user should use a formatter after.
+Serialization of for the AST is defined for `Code` in [`ast.chpp`](../base/components/ast.cpp) with `code_to_string_ptr` & `code_to_string`.  
+Serializtion for the rest of the code types is within [`code_serialization.cpp`](../base/components/code_serialization.cpp).  
+Gencpp's serialization does not provide coherent formatting of the code. The user should use a formatter after serializing.

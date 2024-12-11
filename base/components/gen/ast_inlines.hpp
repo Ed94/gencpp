@@ -520,7 +520,7 @@ inline AST_OpCast* CodeOpCast::operator->()
 	return ast;
 }
 
-inline CodeParam& CodeParam::operator=( Code other )
+inline CodeParams& CodeParams::operator=( Code other )
 {
 	if ( other.ast != nullptr && other->Parent != nullptr )
 	{
@@ -531,7 +531,7 @@ inline CodeParam& CodeParam::operator=( Code other )
 	return *this;
 }
 
-inline CodeParam::operator bool()
+inline CodeParams::operator bool()
 {
 	return ast != nullptr;
 }
@@ -906,9 +906,9 @@ forceinline Code::operator CodeOpCast() const
 	return { (AST_OpCast*)ast };
 }
 
-forceinline Code::operator CodeParam() const
+forceinline Code::operator CodeParams() const
 {
-	return { (AST_Param*)ast };
+	return { (AST_Params*)ast };
 }
 
 forceinline Code::operator CodePragma() const

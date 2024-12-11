@@ -337,7 +337,7 @@ word CodeNS,           gen_CodeNS
 word CodeOperator,     gen_CodeOperator
 word CodeOpCast,       gen_CodeOpCast
 word CodePragma,       gen_CodePragma
-word CodeParam,        gen_CodeParam
+word CodeParams,       gen_CodeParams
 word CodePreprocessCo, gen_CodePreprocessCo
 word CodeSpecifiers,   gen_CodeSpecifiers
 word CodeTemplate,     gen_CodeTemplate

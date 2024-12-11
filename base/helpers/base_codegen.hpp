@@ -536,7 +536,7 @@ CodeBody gen_ast_inlines()
 	CodeBody impl_code_ns       = parse_global_body( token_fmt( "typename", StrC name(CodeNS),             code_impl_tmpl ));
 	CodeBody impl_code_op       = parse_global_body( token_fmt( "typename", StrC name(CodeOperator),       code_impl_tmpl ));
 	CodeBody impl_code_opcast   = parse_global_body( token_fmt( "typename", StrC name(CodeOpCast),         code_impl_tmpl ));
-	CodeBody impl_code_param    = parse_global_body( token_fmt( "typename", StrC name(CodeParam),          code_impl_tmpl ));
+	CodeBody impl_code_params   = parse_global_body( token_fmt( "typename", StrC name(CodeParams),         code_impl_tmpl ));
 	CodeBody impl_code_pragma   = parse_global_body( token_fmt( "typename", StrC name(CodePragma),         code_impl_tmpl ));
 	CodeBody impl_code_precond  = parse_global_body( token_fmt( "typename", StrC name(CodePreprocessCond), code_impl_tmpl ));
 	CodeBody impl_code_specs    = parse_global_body( token_fmt( "typename", StrC name(CodeSpecifiers),     code_impl_tmpl ));
@@ -599,7 +599,7 @@ CodeBody gen_ast_inlines()
 	CodeBody impl_cast_ns        = parse_global_body( token_fmt( "typename", StrC name(NS),             cast_tmpl ));
 	CodeBody impl_cast_op        = parse_global_body( token_fmt( "typename", StrC name(Operator),       cast_tmpl ));
 	CodeBody impl_cast_opcast    = parse_global_body( token_fmt( "typename", StrC name(OpCast),         cast_tmpl ));
-	CodeBody impl_cast_param     = parse_global_body( token_fmt( "typename", StrC name(Param),          cast_tmpl ));
+	CodeBody impl_cast_params    = parse_global_body( token_fmt( "typename", StrC name(Params),         cast_tmpl ));
 	CodeBody impl_cast_pragma    = parse_global_body( token_fmt( "typename", StrC name(Pragma),         cast_tmpl ));
 	CodeBody impl_cast_precond   = parse_global_body( token_fmt( "typename", StrC name(PreprocessCond), cast_tmpl ));
 	CodeBody impl_cast_specs     = parse_global_body( token_fmt( "typename", StrC name(Specifiers),     cast_tmpl ));
@@ -632,7 +632,7 @@ CodeBody gen_ast_inlines()
 		impl_code_ns,
 		impl_code_op,
 		impl_code_opcast,
-		impl_code_param,
+		impl_code_params,
 		impl_code_pragma,
 		impl_code_precond,
 		impl_code_specs,
@@ -666,7 +666,7 @@ CodeBody gen_ast_inlines()
 		impl_cast_ns,
 		impl_cast_op,
 		impl_cast_opcast,
-		impl_cast_param,
+		impl_cast_params,
 		impl_cast_pragma,
 		impl_cast_precond,
 		impl_cast_specs,

@@ -37,7 +37,7 @@ struct AST_Module;
 struct AST_NS;
 struct AST_Operator;
 struct AST_OpCast;
-struct AST_Param;
+struct AST_Params;
 struct AST_Pragma;
 struct AST_PreprocessCond;
 struct AST_Specifiers;
@@ -109,7 +109,7 @@ typedef AST_Module*         CodeModule;
 typedef AST_NS*             CodeNS;
 typedef AST_Operator*       CodeOperator;
 typedef AST_OpCast*         CodeOpCast;
-typedef AST_Param*          CodeParam;
+typedef AST_Params*         CodeParams;
 typedef AST_PreprocessCond* CodePreprocessCond;
 typedef AST_Pragma*         CodePragma;
 typedef AST_Specifiers*     CodeSpecifiers;
@@ -131,7 +131,7 @@ struct CodeModule;
 struct CodeNS;
 struct CodeOperator;
 struct CodeOpCast;
-struct CodeParam;
+struct CodeParams;
 struct CodePreprocessCond;
 struct CodePragma;
 struct CodeSpecifiers;
@@ -209,6 +209,7 @@ struct CodeStmt_Switch;
 struct CodeStmt_While;
 #endif
 
+// GEN_EXECUTION_EXPRESSION_SUPPORT
 #endif
 
 #if GEN_COMPILER_C
@@ -228,8 +229,6 @@ struct CodeUnion;
 struct CodeUsing;
 struct CodeVar;
 #endif
-
-#undef Define_Code
 
 GEN_NS_PARSER_BEGIN
 
@@ -343,7 +342,7 @@ struct Code
 	operator CodeNS() const;
 	operator CodeOperator() const;
 	operator CodeOpCast() const;
-	operator CodeParam() const;
+	operator CodeParams() const;
 	operator CodePragma() const;
 	operator CodePreprocessCond() const;
 	operator CodeSpecifiers() const;
@@ -423,7 +422,7 @@ struct AST
 			union {
 				Code  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
 				Code  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
-				Code  PostNameMacro;     // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
+				Code  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
 		};
 		StringCached  Content;          // Attributes, Comment, Execution, Include
@@ -456,7 +455,7 @@ struct AST
 		Operator      Op;
 		AccessSpec    ParentAccess;
 		s32           NumEntries;
-		s32           VarConstructorInit;  // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
+		s32           VarParenthesizedInit;  // Used by variables to know that initialization is using a constructor expression instead of an assignment expression.
 	};
 };
 static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST is not size of AST_POD_Size" );

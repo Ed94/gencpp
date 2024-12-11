@@ -10,18 +10,16 @@ Its not meant to be a black box metaprogramming utility, it should be easy to in
 
 ## Documentation
 
-If your going to metaprogram, you can never have enough docs on your tooling...
-
 * [docs - General](./docs/Readme.md): Overview and additional docs
   * [AST_Design](./docs/AST_Design.md): Overvie of ASTs
   * [AST Types](./docs/AST_Types.md): Listing of all AST types along with their Code type interface.
   * [Parsing](./docs/Parsing.md): Overview of the parsing interface.
   * [Parser Algo](./docs/Parser_Algo.md): In-depth breakdown of the parser's implementation.
 * [base](./base/Readme.md): Essential (base) library.
-* [gen_c_library](./gen_c_library/Readme.md): C11 library variant generation (single header and segmeented).
-* [gen_segmented](./gen_segmented/Readme.md): Segemented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
-* [gen_singleheader](./gen_singleheader/Readme.md): Singlehader C++ generation `gen.hpp`
-* [gen_unreal_engine](./gen_unreal_engine/Readme.md): Unreal Engine thirdparty code generation.
+* [gen_c_library](./gen_c_library/): C11 library variant generation (single header and segmeented).
+* [gen_segmented](./gen_segmented/): Segemented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
+* [gen_singleheader](./gen_singleheader/): Singlehader C++ generation `gen.hpp`
+* [gen_unreal_engine](./gen_unreal_engine/): Unreal Engine thirdparty code generation.
 
 ## Notes
 

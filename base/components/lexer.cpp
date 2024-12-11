@@ -663,6 +663,10 @@ TokArray lex( StrC content )
 
 		switch ( current )
 		{
+			if (array_back(Lexer_Tokens)->Length > 100 ) {
+				__debugbreak();
+			}
+
 			case '#':
 			{
 				s32 result = lex_preprocessor_directive( ctx );

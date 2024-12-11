@@ -225,7 +225,7 @@ internal CodeInclude        parse_include                      ();
 internal CodeOperator       parse_operator_after_ret_type      ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type );
 internal Code               parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers );
 internal CodePragma         parse_pragma                       ();
-internal CodeParam          parse_params                       ( bool use_template_capture );
+internal CodeParams         parse_params                       ( bool use_template_capture );
 internal CodePreprocessCond parse_preprocess_cond              ();
 internal Code               parse_simple_preprocess            ( TokType which, bool dont_consume_braces );
 internal Code               parse_static_assert                ();
@@ -797,11 +797,10 @@ Code parse_class_struct( TokType which, bool inplace_def )
 	}
 
 	if ( which == Tok_Decl_Class )
-		result = cast(Code, def_class( tok_to_str(name), def_assign( body, parent, access, attributes, nullptr, 0, mflags ) ));
+		result = cast(Code, def_class( tok_to_str(name), def_assign( body, parent, access, attributes, interfaces, scast(s32, array_num(interfaces)), mflags ) ));
 
 	else
-		result = cast(Code, def_struct( tok_to_str(name), def_assign( body, (CodeTypename)parent, access, attributes, nullptr, 0, mflags ) ));
-
+		result = cast(Code, def_struct( tok_to_str(name), def_assign( body, (CodeTypename)parent, access, attributes, interfaces, scast(s32, array_num(interfaces)), mflags ) ));
 
 	if ( inline_cmt )
 		result->InlineCmt = cast(Code, inline_cmt);
@@ -1479,7 +1478,7 @@ CodeFn parse_function_after_name(
 )
 {
 	push_scope();
-	CodeParam params = parse_params(parser_use_parenthesis);
+	CodeParams params = parse_params(parser_use_parenthesis);
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Parameters> )
 
 	// TODO(Ed), Review old comment : These have to be kept separate from the return type's specifiers.
@@ -2516,7 +2515,7 @@ CodeOperator parse_operator_after_ret_type(
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op>
 
 	// Parse Params
-	CodeParam params = parse_params(parser_use_parenthesis);
+	CodeParams params = parse_params(parser_use_parenthesis);
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> )
 
 	if ( params == nullptr && op == Op_Multiply )
@@ -2694,7 +2693,7 @@ CodePragma parse_pragma()
 }
 
 internal inline
-CodeParam parse_params( bool use_template_capture )
+CodeParams parse_params( bool use_template_capture )
 {
 	push_scope();
 
@@ -2823,7 +2822,7 @@ CodeParam parse_params( bool use_template_capture )
 		}
 	}
 
-	CodeParam result = ( CodeParam )make_code();
+	CodeParams result = ( CodeParams )make_code();
 	result->Type     = CT_Parameters;
 
 	result->Macro = macro;
@@ -2940,7 +2939,7 @@ CodeParam parse_params( bool use_template_capture )
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, ..
 		}
 
-		CodeParam param = ( CodeParam )make_code();
+		CodeParams param = ( CodeParams )make_code();
 		param->Type     = CT_Parameters;
 
 		param->Macro = macro;
@@ -3372,7 +3371,7 @@ CodeVar parse_variable_after_name(
 		result->NextVar->Parent = cast(Code, result);
 	}
 
-	result->VarConstructorInit = using_constructor_initializer;
+	result->VarParenthesizedInit = using_constructor_initializer;
 
 	parser_pop(& Context);
 	return result;
@@ -3476,7 +3475,7 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 	push_scope();
 
 	Token     identifier = parse_identifier(nullptr);
-	CodeParam params     = parse_params(parser_not_from_template);
+	CodeParams params     = parse_params(parser_not_from_template);
 	// <Name> ( <Parameters> )
 
 	Code        initializer_list = NullCode;
@@ -3731,8 +3730,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 	else if ( currtok.Type == Tok_Preprocess_Macro )
 	{
 		// We'll support the enum_underlying macro
-		StrC sig = txt("enum_underlying(");
-		if ( strc_contains( tok_to_str(currtok), sig) )
+		if ( strc_contains( tok_to_str(currtok), enum_underlying_sig) )
 		{
 			use_macro_underlying = true;
 			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro, parser_dont_consume_braces );
@@ -4040,7 +4038,7 @@ CodeFriend parser_parse_friend()
 		function = parse_function_after_name( ModuleFlag_None, NullCode, specifiers, type, name );
 
 		// Parameter list
-		// CodeParam params = parse_params();
+		// CodeParams params = parse_params();
 		// friend <ReturnType> <Name> ( <Parameters> )
 
 		// function             = make_code();
@@ -4410,7 +4408,7 @@ CodeTemplate parser_parse_template()
 	eat( Tok_Decl_Template );
 	// <export> template
 
-	CodeParam params = parse_params( UseTemplateCapture );
+	CodeParams params = parse_params( UseTemplateCapture );
 	if ( cast(Code, params) == Code_Invalid )
 	{
 		parser_pop(& Context);
@@ -4775,10 +4773,10 @@ else if ( currtok.Type == Tok_DeclType )
 
 	// For function type signatures
 	CodeTypename return_type = NullCode;
-	CodeParam    params      = NullCode;
+	CodeParams    params      = NullCode;
 
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
-	CodeParam params_nested = NullCode;
+	CodeParams params_nested = NullCode;
 #endif
 
 	bool   is_function_typename = false;
@@ -5582,6 +5580,12 @@ CodeVar parser_parse_variable()
 	return result;
 }
 
+
+internal
+CodeTypename parser_parse_type_alt( bool from_template, bool* typedef_is_functon )
+{
+
+}
 
 GEN_NS_PARSER_END
 

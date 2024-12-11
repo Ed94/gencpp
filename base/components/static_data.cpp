@@ -28,6 +28,8 @@ global AllocatorInfo Allocator_TypeTable   = {0};
 
 #pragma region Constants
 
+global StrC enum_underlying_sig;
+
 global Code access_public;
 global Code access_protected;
 global Code access_private;
@@ -40,7 +42,7 @@ global Code module_private_fragment;
 
 global Code fmt_newline;
 
-global CodeParam param_varadic;
+global CodeParams param_varadic;
 
 global CodePragma pragma_once;
 

@@ -32,15 +32,15 @@ String class_to_string    ( CodeClass self );
 void   class_to_string_def( CodeClass self, String* result );
 void   class_to_string_fwd( CodeClass self, String* result );
 
-void      params_append       (CodeParam params, CodeParam param );
-CodeParam params_get          (CodeParam params, s32 idx);
-bool      params_has_entries  (CodeParam params );
-String    params_to_string    (CodeParam params );
-void      params_to_string_ref(CodeParam params, String* result );
+void       params_append       (CodeParams params, CodeParams param );
+CodeParams params_get          (CodeParams params, s32 idx);
+bool       params_has_entries  (CodeParams params );
+String     params_to_string    (CodeParams params );
+void       params_to_string_ref(CodeParams params, String* result );
 
-CodeParam begin_CodeParam(CodeParam params);
-CodeParam end_CodeParam  (CodeParam params);
-CodeParam next_CodeParam (CodeParam params, CodeParam entry_iter);
+CodeParams begin_CodeParams(CodeParams params);
+CodeParams end_CodeParams  (CodeParams params);
+CodeParams next_CodeParams (CodeParams params, CodeParams entry_iter);
 
 bool   specifiers_append       (CodeSpecifiers specifiers, Specifier spec);
 s32    specifiers_has          (CodeSpecifiers specifiers, Specifier spec);
@@ -188,28 +188,28 @@ struct CodeClass
 	AST_Class* ast;
 };
 
-struct CodeParam
+struct CodeParams
 {
 #if ! GEN_C_LIKE_CPP
-	Using_Code( CodeParam );
-	forceinline void      append( CodeParam other );
-	forceinline CodeParam get( s32 idx );
+	Using_Code( CodeParams );
+	forceinline void      append( CodeParams other );
+	forceinline CodeParams get( s32 idx );
 	forceinline bool      has_entries();
 	forceinline String    to_string();
 	forceinline void      to_string( String& result );
 
-	forceinline CodeParam begin() { return begin_CodeParam(* this); }
-	forceinline CodeParam end()   { return end_CodeParam(* this); }
+	forceinline CodeParams begin() { return begin_CodeParams(* this); }
+	forceinline CodeParams end()   { return end_CodeParams(* this); }
 #endif
-	Using_CodeOps( CodeParam );
+	Using_CodeOps( CodeParams );
 	forceinline operator Code()       { return { (AST*)ast }; }
-	forceinline CodeParam operator*() { return * this; }
-	forceinline AST_Param* operator->() {
+	forceinline CodeParams operator*() { return * this; }
+	forceinline AST_Params* operator->() {
 		GEN_ASSERT(ast);
 		return ast;
 	}
-	CodeParam& operator++();
-	AST_Param* ast;
+	CodeParams& operator++();
+	AST_Params* ast;
 };
 
 struct CodeSpecifiers
@@ -951,7 +951,7 @@ struct InvalidCode_ImplictCaster
     operator CodeNS            () const { return cast(CodeNS,             Code_Invalid); }
     operator CodeOperator      () const { return cast(CodeOperator,       Code_Invalid); }
     operator CodeOpCast        () const { return cast(CodeOpCast,         Code_Invalid); }
-    operator CodeParam         () const { return cast(CodeParam,          Code_Invalid); }
+    operator CodeParams        () const { return cast(CodeParams,          Code_Invalid); }
     operator CodePragma        () const { return cast(CodePragma,         Code_Invalid); }
     operator CodePreprocessCond() const { return cast(CodePreprocessCond, Code_Invalid); }
     operator CodeSpecifiers    () const { return cast(CodeSpecifiers,     Code_Invalid); }
@@ -984,7 +984,7 @@ struct NullCode_ImplicitCaster
     operator CodeNS            () const { return {nullptr}; }
     operator CodeOperator      () const { return {nullptr}; }
     operator CodeOpCast        () const { return {nullptr}; }
-    operator CodeParam         () const { return {nullptr}; }
+    operator CodeParams        () const { return {nullptr}; }
     operator CodePragma        () const { return {nullptr}; }
     operator CodePreprocessCond() const { return {nullptr}; }
     operator CodeSpecifiers    () const { return {nullptr}; }
@@ -1011,19 +1011,19 @@ forceinline Code end  ( CodeBody body )                  { return end_CodeBody(b
 forceinline Code next ( CodeBody body, Code entry_iter ) { return next_CodeBody(body, entry_iter); }
 
 forceinline void   add_interface( CodeClass self, CodeTypename interface ) { return class_add_interface(self, interface); }
-forceinline String to_string    ( CodeClass self )                     { return class_to_string(self); }
-forceinline void   to_string_def( CodeClass self, String& result )     { return class_to_string_def(self, & result); }
-forceinline void   to_string_fwd( CodeClass self, String& result )     { return class_to_string_fwd(self, & result); }
+forceinline String to_string    ( CodeClass self )                         { return class_to_string(self); }
+forceinline void   to_string_def( CodeClass self, String& result )         { return class_to_string_def(self, & result); }
+forceinline void   to_string_fwd( CodeClass self, String& result )         { return class_to_string_fwd(self, & result); }
 
-forceinline void      append     (CodeParam params, CodeParam param ) { return params_append(params, param); }
-forceinline CodeParam get        (CodeParam params, s32 idx)          { return params_get(params, idx); }
-forceinline bool      has_entries(CodeParam params )                  { return params_has_entries(params); }
-forceinline String    to_string  (CodeParam params )                  { return params_to_string(params); }
-forceinline void      to_string  (CodeParam params, String& result )  { return params_to_string_ref(params, & result); }
-
-forceinline CodeParam begin(CodeParam params)                       { return begin_CodeParam(params); }
-forceinline CodeParam end  (CodeParam params)                       { return end_CodeParam(params); }
-forceinline CodeParam next (CodeParam params, CodeParam entry_iter) { return next_CodeParam(params, entry_iter); }
+forceinline void      append     (CodeParams params, CodeParams param ) { return params_append(params, param); }
+forceinline CodeParams get        (CodeParams params, s32 idx)          { return params_get(params, idx); }
+forceinline bool      has_entries(CodeParams params )                   { return params_has_entries(params); }
+forceinline String    to_string  (CodeParams params )                   { return params_to_string(params); }
+forceinline void      to_string  (CodeParams params, String& result )   { return params_to_string_ref(params, & result); }
+  
+forceinline CodeParams begin(CodeParams params)                        { return begin_CodeParams(params); }
+forceinline CodeParams end  (CodeParams params)                        { return end_CodeParams(params); }
+forceinline CodeParams next (CodeParams params, CodeParams entry_iter) { return next_CodeParams(params, entry_iter); }
 
 forceinline bool   append   (CodeSpecifiers specifiers, Specifier spec)       { return specifiers_append(specifiers, spec); }
 forceinline s32    has      (CodeSpecifiers specifiers, Specifier spec)       { return specifiers_has(specifiers, spec); }

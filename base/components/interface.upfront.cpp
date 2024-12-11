@@ -13,7 +13,7 @@ enum OpValidateResult : u32
 };
 
 internal neverinline
-OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTypename ret_type, CodeSpecifiers specifier )
+OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTypename ret_type, CodeSpecifiers specifier )
 {
 	if ( op == Op_Invalid )
 	{
@@ -497,7 +497,7 @@ CodeComment def_comment( StrC content )
 
 CodeConstructor def_constructor( Opts_def_constructor p )
 {
-	CodeParam params           = p.params;
+	CodeParams params          = p.params;
 	Code      initializer_list = p.initializer_list;
 	Code      body             = p.body;
 
@@ -700,6 +700,7 @@ CodeEnum def_enum( StrC name, Opts_def_enum p )
 	EnumT          specifier  = p.specifier;
 	CodeAttributes attributes = p.attributes;
 	ModuleFlag     mflags     = p.mflags;
+	Code           type_macro = p.type_macro;
 
 	name_check( def_enum, name );
 
@@ -750,6 +751,10 @@ CodeEnum def_enum( StrC name, Opts_def_enum p )
 	if ( type )
 	{
 		result->UnderlyingType = type;
+	}
+	else if ( type_macro )
+	{
+		result->UnderlyingTypeMacro = type_macro;
 	}
 	else if ( result->Type != CT_Enum_Class_Fwd && result->Type != CT_Enum_Fwd )
 	{
@@ -829,7 +834,7 @@ CodeFriend def_friend( Code declaration )
 
 CodeFn def_function( StrC name, Opts_def_function p )
 {
-	CodeParam       params     = p.params;
+	CodeParams      params     = p.params;
 	CodeTypename    ret_type   = p.ret_type;
 	CodeBody        body       = p.body;
 	CodeSpecifiers  specifiers = p.specs;
@@ -969,7 +974,7 @@ CodeNS def_namespace( StrC name, CodeBody body, Opts_def_namespace p )
 
 CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 {
-	CodeParam       params_code = p.params;
+	CodeParams      params_code = p.params;
 	CodeTypename    ret_type    = p.ret_type;
 	CodeBody        body        = p.body;
 	CodeSpecifiers  specifiers  = p.specifiers;
@@ -1093,7 +1098,7 @@ CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast p )
 	return result;
 }
 
-CodeParam def_param( CodeTypename type, StrC name, Opts_def_param p )
+CodeParams def_param( CodeTypename type, StrC name, Opts_def_param p )
 {
 	name_check( def_param, name );
 	null_check( def_param, type );
@@ -1110,8 +1115,8 @@ CodeParam def_param( CodeTypename type, StrC name, Opts_def_param p )
 		return InvalidCode;
 	}
 
-	CodeParam
-	result       = (CodeParam) make_code();
+	CodeParams
+	result       = (CodeParams) make_code();
 	result->Type = CT_Parameters;
 	result->Name = get_cached_string( name );
 
@@ -1247,7 +1252,7 @@ CodeStruct def_struct( StrC name, Opts_def_struct p )
 	return result;
 }
 
-CodeTemplate def_template( CodeParam params, Code declaration, Opts_def_template p )
+CodeTemplate def_template( CodeParams params, Code declaration, Opts_def_template p )
 {
 	null_check( def_template, declaration );
 
@@ -2064,7 +2069,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 	return result;
 }
 
-CodeParam def_params( s32 num, ... )
+CodeParams def_params( s32 num, ... )
 {
 	def_body_start( def_params );
 
@@ -2072,7 +2077,7 @@ CodeParam def_params( s32 num, ... )
 	va_start(va, num);
 
 	Code_POD  pod   = va_arg(va, Code_POD);
-	CodeParam param = pcast( CodeParam, pod );
+	CodeParams param = pcast( CodeParams, pod );
 
 	null_check( def_params, param );
 
@@ -2082,12 +2087,12 @@ CodeParam def_params( s32 num, ... )
 		return InvalidCode;
 	}
 
-	CodeParam result = (CodeParam) code_duplicate(param);
+	CodeParams result = (CodeParams) code_duplicate(param);
 
 	while ( -- num )
 	{
 		pod   = va_arg(va, Code_POD);
-		param = pcast( CodeParam, pod );
+		param = pcast( CodeParams, pod );
 
 		if ( param->Type != CT_Parameters )
 		{
@@ -2102,7 +2107,7 @@ CodeParam def_params( s32 num, ... )
 	return result;
 }
 
-CodeParam def_params( s32 num, CodeParam* codes )
+CodeParams def_params( s32 num, CodeParams* codes )
 {
 	def_body_code_array_start( def_params );
 
@@ -2119,11 +2124,11 @@ CodeParam def_params( s32 num, CodeParam* codes )
 		return InvalidCode;                                                                                            \
 	}
 
-	CodeParam current = (CodeParam)code_duplicate(* codes);
+	CodeParams current = (CodeParams)code_duplicate(* codes);
 	check_current(current);
 
-	CodeParam
-	result            = (CodeParam) make_code();
+	CodeParams
+	result            = (CodeParams) make_code();
 	result->Name      = current->Name;
 	result->Type      = current->Type;
 	result->ValueType = current->ValueType;

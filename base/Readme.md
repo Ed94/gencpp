@@ -31,8 +31,6 @@ Standard formats:
 
 Code not making up the core library is located in `auxiliary/<auxiliary_name>.<hpp/cpp>`. These are optional extensions or tools for the library.
 
-*Note: A variant of the C++ library could be generated where those additonal support features are removed (see gen_c_library implementation for an idea of how)*
-
 ## Dependencies
 
 The project has no external dependencies beyond:
@@ -71,7 +69,11 @@ This library was written in a subset of C++ where the following are not used at 
 * Exceptions
 
 Polymorphic & Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.
-The base library itself does not use anything but C-like features to allow for generating a derviative compatiable with C (WIP).
+The base library itself does not use anything but C-like features to allow for generating a derviative compatiable with C.
+
+Member function support or free-functions with reference object passing are wrapped in `! GEN_C_LIKE CPP` preprocess conditionals.
+
+
 
 ## C++ template usage
 
@@ -117,7 +119,7 @@ The vast majority of macros should be single-line subsitutions that either add:
 
 There are ***five*** header files which are automatically generated using [base_codegen.hpp](./helpers/base_codegen.hpp) by [base.cpp](./base.cpp). They are all located in [components/gen](./components/gen/).
 
-* [`ecode.hpp`](./components/gen/ecode.hpp): `CodeType` enum definition and related implementaiton. Generation is based off of [`ECodeType.csv](./enums/ECodeTypes.csv).
+* [`ecodetypes.hpp`](./components/gen/ecode.hpp): `CodeType` enum definition and related implementaiton. Generation is based off of [`ECodeType.csv](./enums/ECodeTypes.csv).
 * [`especifier.hpp`](./components/gen/especifier.hpp): `Specifier` enum definition, etc. Generated using [`ESpecifier.csv`](./enums/ESpecifier.csv).
 * [`eoperator.hpp`](./components/gen/eoperator.hpp): `Operator` enum definition, etc. Generated using [`EOperator.hpp`](./enums/EOperator.csv).
 * [`etoktype.cpp`](./components/gen/etoktype.cpp): `TokType` enum defininition, etc. Used by the lexer and parser backend. Uses two csvs:
@@ -135,7 +137,7 @@ Currently unsupported. I want the library to be *stable* and *correct*, with the
 
 This library is relatively very small (for parsing C++), and can be extended without much hassle.
 
-The convention you'll see used throughout the interface of the library is as follows:
+The convention you'll see used throughout the upfront interface of the library is as follows:
 
 1. Check name or parameters to make sure they are valid for the construction requested
 2. Create a code object using `make_code`.
@@ -146,7 +148,7 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 `def_operator` is the most sophisticated upfront constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
-The parser is documented under `docs/Parsing.md` and `docs/Parser_Algo.md`. Extending it is more serious, but resolution of a parse for a given internal parse procedure is well documented.
+The parser is documented under [`docs/Parsing.md`](../docs/Parsing.md) and [`docs/Parser_Algo.md`](../docs/Parser_Algo.md). Extending it is more serious.
 
 ## A note on compilation and runtime generation speed
 

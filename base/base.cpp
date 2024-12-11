@@ -43,7 +43,7 @@ int gen_main()
 	CodeBody especifier  = gen_especifier( "enums/ESpecifier.csv" );
 	CodeBody ast_inlines = gen_ast_inlines();
 
-	Builder header_ecode = builder_open( "components/gen/ecode.hpp" );
+	Builder header_ecode = builder_open( "components/gen/ecodetypes.hpp" );
 	builder_print( & header_ecode, gen_component_header );
 	builder_print( & header_ecode, format(ecode) );
 	builder_write( & header_ecode);

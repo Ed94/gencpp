@@ -174,7 +174,7 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
 
     // Add parameter types to create a unique signature
     bool first_param = true;
-    for (CodeParam param = fn->Params; param.ast; param = param->Next)
+    for (CodeParams param = fn->Params; param.ast; param = param->Next)
     {
         if (param->ValueType)
         {

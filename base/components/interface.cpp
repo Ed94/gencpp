@@ -131,7 +131,7 @@ void define_constants()
 	pragma_once->Content = pragma_once->Name;
 	code_set_global((Code)pragma_once);
 
-	param_varadic            = (CodeParam) make_code();
+	param_varadic            = (CodeParams) make_code();
 	param_varadic->Type      = CT_Parameters;
 	param_varadic->Name      = get_cached_string( txt("...") );
 	param_varadic->ValueType = t_empty;
@@ -183,7 +183,6 @@ void define_constants()
 #endif
 #	undef def_constant_code_type
 
-
 	spec_const            = def_specifier( Spec_Const);            code_set_global( cast(Code, spec_const ));
 	spec_consteval        = def_specifier( Spec_Consteval);        code_set_global( cast(Code, spec_consteval ));;
 	spec_constexpr        = def_specifier( Spec_Constexpr);        code_set_global( cast(Code, spec_constexpr ));;
@@ -212,9 +211,10 @@ void define_constants()
 	spec_local_persist = def_specifiers( 1, Spec_Local_Persist );
 	code_set_global(cast(Code, spec_local_persist));
 
-#	pragma push_macro("enum_underlying")
-	array_append(PreprocessorDefines, txt("enum_underlying("));
-#	pragma pop_macro("enum_underlying")
+	if (enum_underlying_sig.Len == 0) {
+		enum_underlying_sig = txt("enum_underlying(");
+	}
+	array_append(PreprocessorDefines, enum_underlying_sig);
 
 #	undef def_constant_spec
 }

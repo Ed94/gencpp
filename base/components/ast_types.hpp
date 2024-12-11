@@ -127,7 +127,7 @@ struct AST_Constructor
 			char           _PAD_PROPERTIES_ [ sizeof(AST*) * 1 ];
 			CodeSpecifiers Specs;
 			Code           InitializerList;
-			CodeParam      Params;
+			CodeParams     Params;
 			Code           Body;
 			char 		   _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
 		};
@@ -550,7 +550,7 @@ struct AST_Fn
 			CodeAttributes  Attributes;
 			CodeSpecifiers  Specs;
 			CodeTypename    ReturnType;
-			CodeParam 	    Params;
+			CodeParams 	    Params;
 			CodeBody        Body;
 			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
@@ -613,7 +613,7 @@ struct AST_Operator
 			CodeAttributes  Attributes;
 			CodeSpecifiers  Specs;
 			CodeTypename    ReturnType;
-			CodeParam 	    Params;
+			CodeParams 	    Params;
 			CodeBody        Body;
 			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
@@ -639,9 +639,9 @@ struct AST_OpCast
 			char 	        _PAD_PROPERTIES_[ sizeof(AST*)  ];
 			CodeSpecifiers  Specs;
 			CodeTypename    ValueType;
-			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
-			CodeBody       Body;
-			char 	       _PAD_PROPERTIES_3_[ sizeof(AST*) ];
+			char 	        _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			CodeBody        Body;
+			char 	        _PAD_PROPERTIES_3_[ sizeof(AST*) ];
 		};
 	};
 	StringCached      Name;
@@ -654,7 +654,7 @@ struct AST_OpCast
 };
 static_assert( sizeof(AST_OpCast) == sizeof(AST), "ERROR: AST_OpCast is not the same size as AST");
 
-struct AST_Param
+struct AST_Params
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
@@ -669,15 +669,15 @@ struct AST_Param
 		};
 	};
 	StringCached      Name;
-	CodeParam         Last;
-	CodeParam         Next;
+	CodeParams        Last;
+	CodeParams        Next;
 	Token*            Tok;
 	Code              Parent;
 	CodeType          Type;
 	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
 	s32               NumEntries;
 };
-static_assert( sizeof(AST_Param) == sizeof(AST), "ERROR: AST_Param is not the same size as AST");
+static_assert( sizeof(AST_Params) == sizeof(AST), "ERROR: AST_Params is not the same size as AST");
 
 struct AST_Pragma
 {
@@ -971,7 +971,7 @@ struct AST_Template
 		struct
 		{
 			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
-			CodeParam 	   Params;
+			CodeParams 	   Params;
 			Code           Declaration;
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
@@ -1000,7 +1000,7 @@ struct AST_Type
 			CodeSpecifiers  Specs;
 			Code            QualifierID;
 			// CodeTypename ReturnType;      // Only used for function signatures
-			// CodeParam    Params;          // Only used for function signatures
+			// CodeParams    Params;          // Only used for function signatures
 			Code            ArrExpr;
 			// CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 		};
@@ -1017,7 +1017,6 @@ struct AST_Type
 static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same size as AST");
 #endif
 
-// TODO(Ed): Add support for preserving the typename's keyword qualifier (struct, class, enum, etc), mostly needed for C.
 struct AST_Typename
 {
 	union {
@@ -1028,7 +1027,7 @@ struct AST_Typename
 			CodeAttributes Attributes;
 			CodeSpecifiers Specs;
 			CodeTypename   ReturnType;      // Only used for function signatures
-			CodeParam      Params;          // Only used for function signatures
+			CodeParams     Params;          // Only used for function signatures
 			Code           ArrExpr;
 			CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 		};
@@ -1140,7 +1139,7 @@ struct AST_Var
 	Code                   Parent;
 	CodeType               Type;
 	ModuleFlag             ModuleFlags;
-	s32                    VarConstructorInit;
+	s32                    VarParenthesizedInit;
 };
 static_assert( sizeof(AST_Var) == sizeof(AST), "ERROR: AST_Var is not the same size as AST");
 

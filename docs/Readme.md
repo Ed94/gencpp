@@ -128,7 +128,7 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeNS
 * CodeOperator
 * CodeOpCast
-* CodeParam : Has support for `for : range` iterating across parameters.
+* CodeParams : Has support for `for : range` iterating across parameters.
 * CodePreprocessCond
 * CodePragma
 * CodeSpecifiers : Has support for `for : range` iterating across specifiers.
@@ -412,4 +412,8 @@ There are two provided auxillary interfaces:
 
 ### Scanner Auxillary Interface
 
-
+* The purpose is to scan or parse files
+* Some with two basic functions to convert a fil to code: `scan_file` and `parse_file`
+  * `scan_file`: Merely grabs the file and stores it in an untyped Code.
+  * `parse_file`: Will parse the file using `parse_global_body` and return a `CodeBody`.
+* Two basic functions for grabbing columns from a CSV: `parse_csv_one_column` and `parse_csv_two_columns`

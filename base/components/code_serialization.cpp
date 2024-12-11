@@ -197,7 +197,7 @@ void class_to_string_def( CodeClass self, String* result )
 
 		while ( interface )
 		{
-			string_append_fmt( result, ", %S", typename_to_string(interface) );
+			string_append_fmt( result, ", public %S", typename_to_string(interface) );
 			interface = interface->Next ? cast(CodeTypename, interface->Next) : NullCode;
 		}
 	}
@@ -863,7 +863,7 @@ void opcast_to_string_fwd(CodeOpCast self, String* result )
 		string_append_fmt( result, "operator %S();\n", typename_to_string(self->ValueType) );
 }
 
-String params_to_string(CodeParam self)
+String params_to_string(CodeParams self)
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(self);
@@ -872,7 +872,7 @@ String params_to_string(CodeParam self)
 	return result;
 }
 
-void params_to_string_ref( CodeParam self, String* result )
+void params_to_string_ref( CodeParams self, String* result )
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(result);
@@ -904,7 +904,7 @@ void params_to_string_ref( CodeParam self, String* result )
 
 	if ( self->NumEntries - 1 > 0 )
 	{
-		for ( CodeParam param = begin_CodeParam(self->Next); param != end_CodeParam(self->Next); param = next_CodeParam(self->Next, param) )
+		for ( CodeParams param = begin_CodeParams(self->Next); param != end_CodeParams(self->Next); param = next_CodeParams(self->Next, param) )
 		{
 			string_append_fmt( result, ", %S", params_to_string(param) );
 		}
@@ -1385,7 +1385,7 @@ void var_to_string_ref(CodeVar self, String* result )
 
 		if ( self->Value )
 		{
-			if ( self->VarConstructorInit )
+			if ( self->VarParenthesizedInit )
 				string_append_fmt( result, "( %S ", code_to_string(self->Value) );
 			else
 				string_append_fmt( result, " = %S", code_to_string(self->Value) );
@@ -1395,7 +1395,7 @@ void var_to_string_ref(CodeVar self, String* result )
 		if ( self->NextVar )
 			string_append_fmt( result, ", %S", var_to_string(self->NextVar) );
 
-		if ( self->VarConstructorInit )
+		if ( self->VarParenthesizedInit )
 			string_append_strc( result, txt(" )"));
 
 		return;
@@ -1431,7 +1431,7 @@ void var_to_string_ref(CodeVar self, String* result )
 
 		if ( self->Value )
 		{
-			if ( self->VarConstructorInit )
+			if ( self->VarParenthesizedInit )
 				string_append_fmt( result, "( %S ", code_to_string(self->Value) );
 			else
 				string_append_fmt( result, " = %S", code_to_string(self->Value) );
@@ -1440,7 +1440,7 @@ void var_to_string_ref(CodeVar self, String* result )
 		if ( self->NextVar )
 			string_append_fmt( result, ", %S", var_to_string(self->NextVar) );
 
-		if ( self->VarConstructorInit )
+		if ( self->VarParenthesizedInit )
 			string_append_strc( result, txt(" )"));
 
 		if ( self->InlineCmt )
@@ -1471,7 +1471,7 @@ void var_to_string_ref(CodeVar self, String* result )
 
 	if ( self->Value )
 	{
-		if ( self->VarConstructorInit )
+		if ( self->VarParenthesizedInit )
 			string_append_fmt( result, "( %S ", code_to_string(self->Value) );
 		else
 			string_append_fmt( result, " = %S", code_to_string(self->Value) );
@@ -1480,7 +1480,7 @@ void var_to_string_ref(CodeVar self, String* result )
 	if ( self->NextVar )
 		string_append_fmt( result, ", %S", var_to_string( self->NextVar) );
 
-	if ( self->VarConstructorInit )
+	if ( self->VarParenthesizedInit )
 		string_append_strc( result, txt(" )"));
 
 	string_append_strc( result, txt(";") );

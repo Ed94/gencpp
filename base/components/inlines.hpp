@@ -178,9 +178,9 @@ void class_add_interface( CodeClass self, CodeTypename type )
 }
 #pragma endregion CodeClass
 
-#pragma region CodeParam
+#pragma region CodeParams
 inline
-void params_append( CodeParam appendee, CodeParam other )
+void params_append( CodeParams appendee, CodeParams other )
 {
 	GEN_ASSERT(appendee);
 	GEN_ASSERT(other);
@@ -206,37 +206,37 @@ void params_append( CodeParam appendee, CodeParam other )
 	self->NumEntries++;
 }
 inline
-CodeParam params_get(CodeParam self, s32 idx )
+CodeParams params_get(CodeParams self, s32 idx )
 {
 	GEN_ASSERT(self);
-	CodeParam param = self;
+	CodeParams param = self;
 	do
 	{
 		if ( ++ param != nullptr )
 			return NullCode;
 
-		param = cast(CodeParam, cast(Code, param)->Next);
+		param = cast(CodeParams, cast(Code, param)->Next);
 	}
 	while ( --idx );
 
 	return param;
 }
 forceinline
-bool params_has_entries(CodeParam self)
+bool params_has_entries(CodeParams self)
 {
 	GEN_ASSERT(self);
 	return self->NumEntries > 0;
 }
 #if GEN_COMPILER_CPP
 forceinline
-CodeParam& CodeParam::operator ++()
+CodeParams& CodeParams::operator ++()
 {
 	* this = ast->Next;
 	return * this;
 }
 #endif
 forceinline
-CodeParam begin_CodeParam(CodeParam params)
+CodeParams begin_CodeParams(CodeParams params)
 {
 	if ( params != nullptr )
 		return params;
@@ -244,18 +244,18 @@ CodeParam begin_CodeParam(CodeParam params)
 	return NullCode;
 }
 forceinline
-CodeParam end_CodeParam(CodeParam params)
+CodeParams end_CodeParams(CodeParams params)
 {
-	// return { (AST_Param*) rcast( AST*, ast)->Last };
+	// return { (AST_Params*) rcast( AST*, ast)->Last };
 	return NullCode;
 }
 forceinline
-CodeParam next_CodeParam(CodeParam params, CodeParam param_iter)
+CodeParams next_CodeParams(CodeParams params, CodeParams param_iter)
 {
 	GEN_ASSERT(param_iter);
 	return param_iter->Next;
 }
-#pragma endregion CodeParam
+#pragma endregion CodeParams
 
 #pragma region CodeSpecifiers
 inline

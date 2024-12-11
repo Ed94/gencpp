@@ -497,7 +497,7 @@ void code_to_string_ptr( Code self, String* result )
 		break;
 
 		case CT_Parameters:
-			params_to_string_ref(cast(CodeParam, self), result );
+			params_to_string_ref(cast(CodeParams, self), result );
 		break;
 
 		case CT_Preprocess_Define:

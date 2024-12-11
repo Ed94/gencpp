@@ -749,7 +749,7 @@ R"(#define AST_ArrSpecs_Cap \
 		txt("CodeOperator"),
 		txt("CodeOpCast"),
 		txt("CodePragma"),
-		txt("CodeParam"),
+		txt("CodeParams"),
 		txt("CodePreprocessCond"),
 		txt("CodeSpecifiers"),
 		txt("CodeTemplate"),
@@ -801,7 +801,7 @@ R"(#define AST_ArrSpecs_Cap \
 				// Resolve generic's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
 				String params_str = String::make_reserve(GlobalAllocator, 32);
-				for (CodeParam param = fn->Params->Next; param != fn->Params.end(); ++ param) {
+				for (CodeParams param = fn->Params->Next; param != fn->Params.end(); ++ param) {
 					// We skip the first parameter as its always going to be the code for selection
 					if (param->Next == nullptr) {
 						params_str.append_fmt( "%SC", param->Name );
@@ -936,7 +936,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			}
 
 			b32 handled= false;
-			for ( CodeParam opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
+			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
 				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
 				StrC prefix      = txt("def_");
@@ -946,7 +946,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				// Resolve define's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
 				String params_str = String::make_reserve(GlobalAllocator, 32);
-				for (CodeParam other_param = fn->Params; other_param != opt_param; ++ other_param) {
+				for (CodeParams other_param = fn->Params; other_param != opt_param; ++ other_param) {
 					if ( other_param == opt_param ) {
 						params_str.append_fmt( "%SC", other_param->Name );
 						break;
@@ -1211,7 +1211,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			CodeFn fn = cast(CodeFn, entry);
 			Code prev = entry->Prev;
 
-			for ( CodeParam arr_param : fn->Params )
+			for ( CodeParams arr_param : fn->Params )
 				if (	fn->Name.starts_with(txt("def_"))
 					&&	(		(arr_param->ValueType->Name.starts_with(txt("Specifier")) && fn->Params->NumEntries > 1)
 							||	arr_param->ValueType->Name.starts_with(txt("Code")) )
@@ -1223,7 +1223,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 					postfix_arr.free();
 				}
 
-			for ( CodeParam opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
+			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
 				StrC prefix      = txt("def_");
 				StrC actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
