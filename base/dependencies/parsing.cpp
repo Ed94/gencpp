@@ -1111,4 +1111,6 @@ String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimi
 	return output;
 }
 
+#undef _adt_fprintf
+
 #pragma endregion CSV

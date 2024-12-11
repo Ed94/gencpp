@@ -29,12 +29,6 @@
 #	ifndef GEN_SYSTEM_MACOS
 #		define GEN_SYSTEM_MACOS 1
 #	endif
-#	include <TargetConditionals.h>
-#	if TARGET_IPHONE_SIMULATOR == 1 || TARGET_OS_IPHONE == 1
-#		ifndef GEN_SYSTEM_IOS
-#			define GEN_SYSTEM_IOS 1
-#		endif
-#	endif
 #elif defined( __unix__ )
 #	ifndef GEN_SYSTEM_UNIX
 #		define GEN_SYSTEM_UNIX 1
