@@ -1,62 +1,42 @@
-## Documentation
+# General Docs
 
-The project has no external dependencies beyond:
+[Top](../Readme.md)
 
-* `errno.h`
-* `stat.h`
-* `stdarg.h`
-* `stddef.h`
-* `stdio.h`
-* `copyfile.h` (Mac)
-* `types.h`    (Linux)
-* `unistd.h`   (Linux/Mac)
-* `intrin.h`   (Windows)
-* `io.h`       (Windows with gcc)
-* `windows.h`  (Windows)
+Contains:
 
-Dependencies for the project are wrapped within `GENCPP_ROLL_OWN_DEPENDENCIES` (Defining it will disable them).  
-The majority of the dependency's implementation was derived from the [c-zpl library](https://github.com/zpl-c/zpl).
+* [AST_Design](./AST_Design.md): Overvie of ASTs
+* [AST Types](./AST_Types.md): Listing of all AST types along with their Code type interface.
+* [Parsing](./Parsing.md): Overview of the parsing interface.
+* [Parser Algo](./Parser_Algo.md): In-depth breakdown of the parser's implementation.
 
-This library was written in a subset of C++ where the following are not used at all:
-
-* RAII (Constructors/Destructors), lifetimes are managed using named static or regular functions.
-* Language provide dynamic dispatch, RTTI
-* Object-Oriented Inheritance
-* Exceptions
-
-Polymorphic & Member-functions are used as an ergonomic choice, along with a conserative use of operator overloads.  
-There are only 4 template definitions in the entire library. (`Array<Type>`, `Hashtable<Type>`, `swap<Type>`, and `AST/Code::cast<Type>`)
-
-Two generic templated containers are used throughout the library:
-
-* `template< class Type> struct Array`
-* `template< class Type> struct HashTable`
-
-Both Code and AST definitions have a `template< class Type> Code/AST :: cast()`. Its just an alternative way to explicitly cast to each other.
-
-`template< class Type> swap( Type& a, Type& b)` is used over a macro.
-
-Otherwise the library is free of any templates.
-
-### *WHAT IS NOT PROVIDED*
+### *CURRENTLY UNSUPPORTED*
 
 **There is no support for validating expressions.**  
-Its difficult to parse without enough benefits (At the metaprogramming level).  
-I plan to add this only at the tail of the project parsing milestone.
+Its a [todo](https://github.com/Ed94/gencpp/issues/49)
 
-**Only trivial template support is provided.**  
-The intention is for only simple, non-recursive substitution.  
-The parameters of the template are treated like regular parameter AST entries.  
+**Only trivial template support is provided.**
+The intention is for only simple, non-recursive substitution.
+The parameters of the template are treated like regular parameter AST entries.
 This means that the typename entry for the parameter AST would be either:
 
 * `class`
 * `typename`
 * A fundamental type, function, or pointer type.
 
-Anything beyond this usage is not supported by parse_template for arguments (at least not intentionally).  
-Use at your own mental peril.
+***Concepts and Constraints are not supported***  
+Its a [todo](https://github.com/Ed94/gencpp/issues/21)
 
-*Concepts and Constraints are not supported, its usage is non-trivial substitution.*
+### Feature Macros:
+
+* `GEN_DEFINE_ATTRIBUTE_TOKENS` : Allows user to define their own attribute macros for use in parsing.
+  * This can be generated using base.cpp.
+* `GEN_DEFINE_LIBRARY_CORE_CONSTANTS` : Optional typename codes as they are non-standard to C/C++ and not necessary to library usage
+* `GEN_DONT_ENFORCE_GEN_TIME_GUARD` : By default, the library ( gen.hpp/ gen.cpp ) expects the macro `GEN_TIME` to be defined, this disables that.
+* `GEN_ENFORCE_STRONG_CODE_TYPES` : Enforces casts to filtered code types.
+* `GEN_EXPOSE_BACKEND` : Will expose symbols meant for internal use only.
+* `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
+* `GEN_DONT_ALLOW_INVALID_CODE` (Not implemented yet) : Will fail when an invalid code is constructed, parsed, or serialized.
+* `GEN_C_LIKE_PP` : Setting to `<true or 1>` Will prevent usage of function defnitions using references and structs with member functions. Structs will still have user-defined operator conversions, for-range support, and other operator overloads
 
 ### The Data & Interface
 
@@ -65,87 +45,33 @@ As mentioned in root readme, the user is provided Code objects by calling the co
 The AST is managed by the library and provided to the user via its interface.  
 However, the user may specifiy memory configuration.
 
-Data layout of AST struct (Subject to heavily change with upcoming redesign):
+[Data layout of AST struct (Subject to heavily change with upcoming todos)](../base/components/ast.hpp#L396-461)  
 
-```cpp
-union {
-    struct
-    {
-        AST*      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-        AST*      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
-        AST*      Specs;           // Destructor, Function, Operator, Typename, Variable
-        union {
-            AST*  InitializerList; // Constructor
-            AST*  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.
-            AST*  ReturnType;      // Function, Operator, Typename
-            AST*  UnderlyingType;  // Enum, Typedef
-            AST*  ValueType;       // Parameter, Variable
-        };
-        union {
-            AST*  Macro;           // Parameters
-            AST*  BitfieldSize;    // Variable (Class/Struct Data Member)
-            AST*  Params;          // Constructor, Function, Operator, Template, Typename
-        };
-        union {
-            AST*  ArrExpr;          // Typename
-            AST*  Body;             // Class, Constructr, Destructor, Enum, Function, Namespace, Struct, Union
-            AST*  Declaration;      // Friend, Template
-            AST*  Value;            // Parameter, Variable
-        };
-        union {
-            AST*  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-            AST*  SpecsFuncSuffix;  // Only used with typenames, to store the function suffix if typename is function signature.
-        };
-    };
-    StringCached  Content;          // Attributes, Comment, Execution, Include
-    struct {
-        SpecifierT ArrSpecs[AST::ArrSpecs_Cap]; // Specifiers
-        AST*       NextSpecs;                   // Specifiers
-    };
-};
-union {
-    AST* Prev;
-    AST* Front;
-    AST* Last;
-};
-union {
-    AST* Next;
-    AST* Back;
-};
-AST*              Parent;
-StringCached      Name;
-CodeT             Type;
-ModuleFlag        ModuleFlags;
-union {
-    b32           IsFunction;  // Used by typedef to not serialize the name field.
-    b32           IsParamPack; // Used by typename to know if type should be considered a parameter pack.
-    OperatorT     Op;
-    AccessSpec    ParentAccess;
-    s32           NumEntries;
-};
-s32               Token;       // Handle to the token, stored in the CodeFile (Otherwise unretrivable)
-```
+https://github.com/Ed94/gencpp/blob/eea4ebf5c40d5d87baa465abfb1be30845b2377e/base/components/ast.hpp#L396-L461
 
-*`CodeT` is a typedef for `ECode::Type` which has an underlying type of `u32`*  
+*`CodeType` is enum taggin the type of code. Has an underlying type of `u32`*  
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
 *`StringCahced` is a typedef for `String const`, to denote it is an interned string*  
-*`String` is the dynamically allocated string type for the library*
+*`String` is the dynamically allocated string type for the library*  
 
-AST widths are setup to be AST_POD_Size.
+AST widths are setup to be AST_POD_Size.  
 The width dictates how much the static array can hold before it must give way to using an allocated array:
 
 ```cpp
 constexpr static
-usize ArrSpecs_Cap =
+int AST_ArrSpecs_Cap =
 (
     AST_POD_Size
-    - sizeof(AST*) * 3
+    - sizeof(Code)
     - sizeof(StringCached)
-    - sizeof(CodeT)
+    - sizeof(Code) * 2
+    - sizeof(Token*)
+    - sizeof(Code)
+    - sizeof(CodeType)
     - sizeof(ModuleFlag)
     - sizeof(u32)
 )
-/ sizeof(SpecifierT) -1; // -1 for 4 extra bytes (Odd num of AST*)
+/ sizeof(Specifier) - 1;
 ```
 
 *Ex: If the AST_POD_Size is 128 the capacity of the static array is 20.*
@@ -154,7 +80,7 @@ Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
   * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_string_allocator`, `get_cached_string`, `make_code`.
-  * Allocators are defined with the `AllocatorInfo` structure found in `dependencies\memory.hpp`
+  * Allocators are defined with the `AllocatorInfo` structure found in [`memory.hpp`](../base/dependencies/memory.hpp)
   * Most of the work is just defining the allocation procedure:
 
 ```cpp
@@ -162,30 +88,30 @@ Data Notes:
 ```
 
 * ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.
-* Both AST and Code have member symbols but their data layout is enforced to be POD types.
+* Code types have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
 * Cached Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
   * `StringArenas`, `StringCache`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
 * Strings used for serialization and file buffers are not contained by those used for cached strings.
   * They are currently using `GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
   * Memory within the buckets is not reused, so its inherently wasteful.
-  * I will be augmenting the single arena with a simple slag allocator.
-* Linked lists used children nodes on bodies, and parameters.
+  * I will be augmenting the default allocator with virtual memory & a slab allocator in the [future](https://github.com/Ed94/gencpp/issues/12)
+* Intrusive linked lists used children nodes on bodies, and parameters.
 * Its intended to generate the AST in one go and serialize after. The constructors and serializer are designed to be a "one pass, front to back" setup.
-* Allocations can be tuned by defining the folloiwng macros:
+* Allocations can be tuned by defining the folloiwng macros (will be moved to runtime configuration in the future):
   * `GEN_GLOBAL_BUCKET_SIZE` : Size of each bucket area for the global allocator
   * `GEN_CODEPOOL_NUM_BLOCKS` : Number of blocks per code pool in the code allocator
   * `GEN_SIZE_PER_STRING_ARENA` : Size per arena used with string caching.
   * `GEN_MAX_COMMENT_LINE_LENGTH` : Longest length a comment can have per line.
   * `GEN_MAX_NAME_LENGTH` : Max length of any identifier.
   * `GEN_MAX_UNTYPED_STR_LENGTH` : Max content length for any untyped code.
-  * `GEN_TOKEN_FMT_TOKEN_MAP_MEM_SIZE` : token_fmt_va uses local_persit memory of this size for the hashtable.
+  * `TokenMap_FixedArena` : token_fmt_va uses local_persit memory of this arena type for the hashtable.
   * `GEN_LEX_ALLOCATOR_SIZE`
   * `GEN_BUILDER_STR_BUFFER_RESERVE`
 
 The following CodeTypes are used which the user may optionally use strong typing with if they enable: `GEN_ENFORCE_STRONG_CODE_TYPES`
 
-* CodeBody : Has support for `for-range` iterating across Code objects.
+* CodeBody : Has support for `for : range` iterating across Code objects.
 * CodeAttributes
 * CodeComment
 * CodeClass
@@ -202,13 +128,13 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeNS
 * CodeOperator
 * CodeOpCast
-* CodeParam : Has support for `for-range` iterating across parameters.
+* CodeParams : Has support for `for : range` iterating across parameters.
 * CodePreprocessCond
 * CodePragma
-* CodeSpecifiers : Has support for `for-range` iterating across specifiers.
+* CodeSpecifiers : Has support for `for : range` iterating across specifiers.
 * CodeStruct
 * CodeTemplate
-* CodeType
+* CodeTypename
 * CodeTypedef
 * CodeUnion
 * CodeUsing
@@ -293,6 +219,7 @@ Code <name>
 ```
 
 When using the body functions, its recommended to use the args macro to auto determine the number of arguments for the varadic:
+
 ```cpp
 def_global_body( args( ht_entry, array_ht_entry, hashtable ));
 
@@ -300,7 +227,7 @@ def_global_body( args( ht_entry, array_ht_entry, hashtable ));
 def_global_body( 3, ht_entry, array_ht_entry, hashtable );
 ```
 
-If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty body.  
+If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty body.
 When the members have been populated use: `AST::validate_body` to verify that the members are valid entires for that type.
 
 ### Parse construction
@@ -352,7 +279,7 @@ Interface :
 * untyped_fmt
 * untyped_token_fmt
 
-During serialization any untyped Code AST has its string value directly injected inline of whatever context the content existed as an entry within.  
+During serialization any untyped Code AST has its string value directly injected inline of whatever context the content existed as an entry within.
 Even though these are not validated from somewhat correct c/c++ syntax or components, it doesn't mean that Untyped code can be added as any component of a Code AST:
 
 * Untyped code cannot have children, thus there cannot be recursive injection this way.
@@ -373,6 +300,7 @@ Code <name> = untyped_str( code(
 ```
 
 Optionally, `code_str`, and `code_fmt` macros can be used so that the code macro doesn't have to be used:
+
 ```cpp
 Code <name> = code_str( <some code without "" quotes > )
 ```
@@ -402,8 +330,8 @@ The following are provided predefined by the library as they are commonly used:
 * `module_global_fragment`
 * `module_private_fragment`
 * `fmt_newline`
-* `param_varaidc` (Used for varadic definitions)
 * `pragma_once`
+* `param_varaidc` (Used for varadic definitions)
 * `preprocess_else`
 * `preprocess_endif`
 * `spec_const`
@@ -419,6 +347,7 @@ The following are provided predefined by the library as they are commonly used:
 * `spec_local_persist` (local_persist macro)
 * `spec_mutable`
 * `spec_neverinline`
+* `spec_noexcept`
 * `spec_override`
 * `spec_ptr`
 * `spec_pure`
@@ -450,8 +379,8 @@ Optionally the following may be defined if `GEN_DEFINE_LIBRARY_CODE_CONSTANTS` i
 * `t_u16`
 * `t_u32`
 * `t_u64`
-* `t_sw` (ssize_t)
-* `t_uw` (size_t)
+* `t_ssize` (ssize_t)
+* `t_usize` (size_t)
 * `t_f32`
 * `t_f64`
 
@@ -469,13 +398,10 @@ and have the desired specifiers assigned to them beforehand.
 
 ## Code generation and modification
 
-There are three provided auxillary interfaces:
+There are two provided auxillary interfaces:
 
 * Builder
-* Editor
 * Scanner
-
-Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FEATURE_SCANNER` to enable them.
 
 ### Builder is a similar object to the jai language's string_builder
 
@@ -486,4 +412,8 @@ Editor and Scanner are disabled by default, use `GEN_FEATURE_EDITOR` and `GEN_FE
 
 ### Scanner Auxillary Interface
 
-Provides *(eventually)* `scan_file` to automatically populate a CodeFile which contains a parsed AST (`Code`) of the file, with any contextual failures that are reported from the parser.
+* The purpose is to scan or parse files
+* Some with two basic functions to convert a fil to code: `scan_file` and `parse_file`
+  * `scan_file`: Merely grabs the file and stores it in an untyped Code.
+  * `parse_file`: Will parse the file using `parse_global_body` and return a `CodeBody`.
+* Two basic functions for grabbing columns from a CSV: `parse_csv_one_column` and `parse_csv_two_columns`

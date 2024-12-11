@@ -1,0 +1,423 @@
+ __VERSION 1
+
+// This is a example template to be used with the refactor program
+// Use it to refactor the naming convention of this library to your own.
+// Can be used as an aid to help use use your project's implementation if it fullfills the dependencies of this project.
+// Example: Most likely have a memory and string library already, just rename the functions and make sure the args are the same.
+// Program: https://github.com/Ed94/refactor
+
+// NOTE: Due to the current limitations of the program, not every symbol in the library can be renamed.
+// This is due to the program not actually parsing C/C++.
+
+// not       : Ignore
+// include   : #includes
+// word      : Alphanumeric or underscore
+// namespace : Prefix search and replace (c-namspaces).
+// regex     : Unavailable in __VERSION 1.
+
+// Precedence (highest to lowest):
+// word, namespace, regex
+
+// TODO(ED): THIS IS VERY OUTDATED
+
+// Gen Macro namespace
+// namespace GEN_, new_namespace_
+
+// ---------- Dependency Macros
+    // Platform
+// word GEN_ARCH_64_BIT, new_name
+// word GEN_ARCH_32_BIT, new_name
+
+// word GEN_SYSTEM_ANDROID,    new_name
+// word GEN_SYSTEM_CYGWIN,     new_name
+// word GEN_SYSTEM_EMSCRIPTEN, new_name
+// word GEN_SYSTEM_FREEBSD,    new_name
+// word GEN_SYSTEM_IOS,	       new_name
+// word GEN_SYSTEM_LINUX,      new_name
+// word GEN_SYSTEM_MACOS,      new_name
+// word GEN_SYSTEM_OPENBSD,    new_name
+// word GEN_SYSTEM_OSX,        new_name
+// word GEN_SYSTEM_UNIX,       new_name
+// word GEN_SYSTEM_WINDOWS,    new_name
+
+// word GEN_COMPILER_CLANG, new_name
+// word GEN_COMPILER_GCC,   new_name
+// word GEN_COMPILER_MINGW, new_name
+// word GEN_COMPILER_MSVC,  new_name
+
+// word global,        new_name
+// word internal,      new_name
+// word local_persist, new_name
+// word forceinline,   new_name
+// word neverinline,   new_name
+
+// word bit,               new_name
+// word bitfield_is_equal, new_name
+
+// word ccast, new_name
+// word pcast, new_name
+// word rcast, new_name
+// word scast, new_name
+
+// word num_args,      new_name
+// word num_args_impl, new_name
+
+// word stringize,    new_name
+// word stringize_va, new_name
+
+// word do_once,           new_name
+// word do_once_start,     new_name
+// word do_once_end,       new_name
+// word label_scope_start, new_name
+// word label_scope_end,   new_name
+
+// word count_of,   new_name
+// word is_between, new_name
+// word min,        new_name
+// word size_of,    new_name
+// word offset_of,  new_name
+// word swap,       new_name
+
+    // Basic Types
+// word GEN_U8_MIN, new_name
+// word GEN_U8_MAX, new_name
+// word GEN_I8_MIN, new_name
+// word GEN_I8_MAX, new_name
+
+// word GEN_U16_MIN, new_name
+// word GEN_U16_MAX, new_name
+// word GEN_I16_MIN, new_name
+// word GEN_I16_MAX, new_name
+
+// word GEN_U32_MIN, new_name
+// word GEN_U32_MAX, new_name
+// word GEN_I32_MIN, new_name
+// word GEN_I32_MAX, new_name
+
+// word GEN_U64_MIN, new_name
+// word GEN_U64_MAX, new_name
+// word GEN_I64_MIN, new_name
+// word GEN_I64_MAX, new_name
+
+// word GEN_USIZE_MIN, new_name
+// word GEN_USIZE_MAX, new_name
+// word GEN_ISIZE_MIN, new_name
+// word GEN_ISIZE_MAX, new_name
+
+// word GEN_F32_MIN, new_name
+// word GEN_F32_MAX, new_name
+// word GEN_F64_MIN, new_name
+// word GEN_F64_MAX, new_name
+
+    // Debug
+// word GEN_DEBUG_TRAP,      new_name
+// word GEN_ASSERT,          new_name
+// word GEN_ASSERT_MSG,      new_name
+// word GEN_ASSERT_NOT_NULL, new_name
+// word GEN_PANIC,           new_name
+// word GEN_FATAL,           new_name
+
+    // Memory
+// word kilobytes, new_name
+// word megabytes, new_name
+// word gigabytes, new_name
+// word terabytes, new_name
+
+// word zero_item,  new_name
+// word zero_array, new_name
+
+// word alloc_item,  new_name
+// word alloc_array, new_name
+
+// word malloc, new_name
+// word mfree,  new_name
+
+    // Strings
+// word txt, new_name
+// word cast_to_strc, new_name
+
+// ---------- Dependency Types
+
+// word b8,   new_name
+// word b16,  new_name
+// word b32,  new_name
+// word s8,   new_name
+// word s16,  new_name
+// word s32,  new_name
+// word s64,  new_name
+// word u8,   new_name
+// word u16,  new_name
+// word u32,  new_name
+// word u64,  new_name
+// word usize,   new_name
+// word ssize,   new_name
+// word sptr, new_name
+// word uptr, new_name
+// word f32,  new_name
+// word f64,  new_name
+
+// namespace EAllocator_, new_namespace_
+// namespace EFileMode_,  new_namespace_
+// namespace EFileError_, new_namespace_
+
+// word AllocatorInfo,    new_name
+// word AllocatorProc,    new_name
+// word AllocFlag,        new_name
+// word AllocType,        new_name
+// word ArrayHeader,      new_name
+// word DirEntry,         new_name
+// word DirInfo,          new_name
+// word DirType,          new_name
+// word FileDescriptor,   new_name
+// word FileError,        new_name
+// word FileInfo,         new_name
+// word FileTime,         new_name
+// word FileModeFlag,     new_name
+// word FileOperations,   new_name
+// word FileStandardType, new_name
+// word SeekWhenceType,   new_name
+
+// ---------- Dependency Data
+
+// word default_file_operations, new_name
+
+// ---------- Dependency Procedures
+
+// word align_forward,          new_name
+// word align_fordward_i64,     new_name
+// word alloc,                  new_name
+// word alloc_align,            new_name
+// word assert_handler,         new_name
+// word assert_crash,           new_name
+// word char_first_occurence,   new_name
+// word char_is_alpha,          new_name
+// word char_is_alphanumeric,   new_name
+// word char_is_digit,          new_name
+// word char_is_hex_digit,      new_name
+// word char_is_space,          new_name
+// word char_to_lower,		    new_name
+// word char_to_upper,		    new_name
+// word crc32,                  new_name
+// word default_resize_align,   new_name
+// word digit_to_int,		    new_name
+// word file_close,  		    new_name
+// word file_get_standard,      new_name
+// word file_name,              new_name
+// word file_open,              new_name
+// word file_open_mode,         new_name
+// word file_seek, 			    new_name
+// word file_tell, 			    new_name
+// word file_write, 		    new_name
+// word file_write_at, 		    new_name
+// word file_write_at_check,    new_name
+// word free,                   new_name
+// word free_all,               new_name
+// word heap,                   new_name
+// word heap_allocator_proc,    new_name
+// word heap_stats_check,       new_name
+// word heap_stats_alloc_count, new_name
+// word heap_stats_init,        new_name
+// word heap_stats_used_memory, new_name
+// word hex_digit_to_int,	    new_name
+// word i64_to_str,			    new_name
+// word is_power_of_two,        new_name
+// word log_fmt,                new_name
+// word mem_copy,               new_name
+// word mem_move,               new_name
+// word mem_set,                new_name
+// word pointer_add,            new_name
+// word mem_copy,               new_name
+// word mem_find,               new_name
+// word mem_move,               new_name
+// word mem_set,                new_name
+// word resize,                 new_name
+// word resize_align,           new_name
+// word process_exit,           new_name
+// word str_compare,            new_name
+// word str_copy,               new_name
+// word str_copy_nulpad, 	    new_name
+// word str_fmt_buf,            new_name
+// word str_fmt_buf_va,	        new_name
+// word str_fmt_file_va,        new_name
+// word str_fmt_out_va,         new_name
+// word str_fmt_out_err,        new_name
+// word str_fmt_out_err_va,	    new_name
+// word str_fmt_va,             new_name
+// word str_len,                new_name
+// word str_reverse, 		    new_name
+// word str_to_i64, 		    new_name
+// word str_to_lower, 		    new_name
+// word str_to_upper,  	        new_name
+// word u64_to_str, 		    new_name
+// word zero_size,              new_name
+
+// ---------- gencpp Macros
+
+// word log_failure, new_name
+
+// word NullCode,      new_name
+// word CodeInvalid, new_name
+
+// ------------ gencpp common
+
+// word Arena,     new_name
+// word Array,     new_name
+// word HashTable, new_name
+// word Pool,      new_name
+// word StrC,      new_name
+// word String,    new_name
+
+// word to_str,  new_name
+// word to_str,  new_name
+// word to_type, new_name
+
+// ------------ gencpp Types & Constants
+
+// word LogFailType, new_name
+
+// word AccessSpec,     new_name
+// word ECode,          new_name
+// word EnumClass,      new_name
+// word EnumRegular,    new_name
+// word EnumT,          new_name
+// word EOperator,      new_name
+// word ESpecifier,     new_name
+// word OperatorT,      new_name
+// word ModuleFlag,     new_name
+// word SpecifierT,     new_name
+// word StringCached,   new_name
+// word StringTable,    new_name
+// word UsingRegular,   new_name
+// word UsingNamespace, new_name
+
+// ------------ gencpp Data
+
+// word API_Export,   new_name
+// word API_Import,   new_name
+// word AST_POD_Size, new_name
+// word AST,          new_name
+// word AST_POD,      new_name
+// word Code,         new_name
+// word Code_POD,     new_name
+// word Keyword,      new_name
+
+// ------------ gencpp API
+
+// word init,                             new_name
+// word deinit,                           new_name
+
+// word get_cached_string,                new_name
+// word make_code,                        new_name
+// word make_code_entries,                new_name
+
+// word set_allocator_data_arrays,        new_name
+// word set_allocator_code_pool,          new_name
+// word set_allocator_code_entries_arena, new_name
+// word set_allocator_string_arena,       new_name
+// word set_allocator_string_table,       new_name
+// word set_allocator_type_table,         new_name
+
+// ------------ upfront constructor namespace
+// namespace def_ new_namespace_
+
+// ------------ upfront constructor individual
+
+// word def_attributes,      new_name
+// word def_comment,         new_name
+// word def_class,           new_name
+// word def_constructor,     new_name
+// word def_destructor,      new_name
+// word def_define,          new_name
+// word def_enum,            new_name
+// word def_execution,       new_name
+// word def_extern_link,     new_name
+// word def_friend,          new_name
+// word def_function,        new_name
+// word def_include,         new_name
+// word def_module,          new_name
+// word def_namespace,       new_name
+// word def_operator,        new_name
+// word def_operator_cast,   new_name
+// word def_param,           new_name
+// word def_pargma,          new_name
+// word def_preprocess_cond, new_name
+// word def_specifier,       new_name
+// word def_struct,          new_name
+// word def_template,        new_name
+// word def_type,            new_name
+// word def_typedef,         new_name
+// word def_union,           new_name
+// word def_using,           new_name
+// word def_using_namespace, new_name
+// word def_variable,        new_name
+
+// word def_body,             new_name
+// word def_class_body,       new_name
+// word def_enum_body,        new_name
+// word def_export_body,      new_name
+// word def_extern_link_body, new_name
+// word def_function_body,    new_name
+// word def_global_body,      new_name
+// word def_namespace_body,   new_name
+// word def_params,           new_name
+// word def_specifiers,       new_name
+// word def_struct_body,      new_name
+// word def_union_body,       new_name
+
+// ------------ parse constructor namespace
+// namespace parse_, new_namespace_
+
+// ------------ parse constructor individual
+
+// word parse_class,       new_name
+// word parse_enum,        new_name
+// word parse_export_body, new_name
+// word parse_extern_link, new_name
+// word parse_friend,      new_name
+// word parse_function,    new_name
+// word parse_global_body, new_name
+// word parse_namespace,   new_name
+// word parse_operator,    new_name
+// word parse_struct,      new_name
+// word parse_template,    new_name
+// word parse_type,        new_name
+// word parse_typedef,     new_name
+// word parse_union,       new_name
+// word parse_using,       new_name
+// word parse_variable,    new_name
+
+// ------------ untyped constructor namespace
+// namespace untyped_, new_namespace_
+
+// ------------ untyped constructor individual
+
+// word token_fmt_impl,    new_name
+// word token_fmt_va,      new_name
+// word untyped_str,       new_name
+// word untyped_fmt,       new_name
+// word untyped_token_fmt, new_name
+
+// ------------ File Ops
+
+// word Builder, new_name
+// word Editor,  new_name
+// word Scanner, new_name
+
+// ------------ gencpp user macros
+
+// word gen_main,     new_name
+// word GEN_TIME,     new_name
+
+// word __,        new_name
+// word name,      new_name
+// word code,      new_name
+// word args,      new_name
+// word code_str,  new_name
+// word code_fmt,  new_name
+// word token_fmt, new_name
+
+// ------------ Type AST namespace
+// namespace t_, new_namespace_
+
+// ------------ Specifier AST namespace
+// namespace spec_, new_namespace_

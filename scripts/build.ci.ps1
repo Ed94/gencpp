@@ -2,39 +2,15 @@
 # It will most likely need a partial rewrite to segment the build process into separate script invocations based on the OS.
 # That or just rewrite it in an sh script and call it a day.
 
-$target_arch        = Join-Path $PSScriptRoot 'helpers/target_arch.psm1'
 $devshell           = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
-$format_cpp	        = Join-Path $PSScriptRoot 'helpers/format_cpp.psm1'
+$misc               = Join-Path $PSScriptRoot 'helpers/misc.psm1'
 $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
 
-Import-Module $target_arch
+Import-Module $misc
 
-function Get-ScriptRepoRoot {
-    $currentPath = $PSScriptRoot
-    while ($currentPath -ne $null -and $currentPath -ne "")
-	{
-        if (Test-Path (Join-Path $currentPath ".git")) {
-            return $currentPath
-        }
-        # Also check for .git file which indicates a submodule
-        $gitFile = Join-Path $currentPath ".git"
-        if (Test-Path $gitFile -PathType Leaf)
-		{
-            $gitContent = Get-Content $gitFile
-            if ($gitContent -match "gitdir: (.+)") {
-                return $currentPath
-            }
-        }
-        $currentPath = Split-Path $currentPath -Parent
-    }
-    throw "Unable to find repository root"
-}
 $path_root = Get-ScriptRepoRoot
-
-Import-Module $target_arch
-Import-Module $format_cpp
 
 Push-Location $path_root
 
@@ -42,8 +18,10 @@ Push-Location $path_root
        $vendor       = $null
        $release      = $null
 	   $verbose      = $false
-[bool] $bootstrap    = $false
+	   $base         = $false
+[bool] $segmented    = $false
 [bool] $singleheader = $false
+[bool] $c_library    = $false
 [bool] $unreal       = $false
 [bool] $test         = $false
 
@@ -57,8 +35,10 @@ if ( $args ) { $args | ForEach-Object {
 		"verbose"			  { $verbose      = $true }
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
-		"bootstrap"           { $bootstrap    = $true }
+		"base"                { $base         = $true }
+		"segmented"          { $segmented     = $true }
 		"singleheader"        { $singleheader = $true }
+		"c_library"           { $c_library    = $true }
 		"unreal"              { $unreal       = $true }
 		"test"                { $test         = $true }
 	}
@@ -88,10 +68,15 @@ else {
 	$optimize = $true
 }
 
-if ( $bootstrap -eq $false -and $singleheader -eq $false -and $unreal -eq $false -and $test -eq $false ) {
+$cannot_build =                     $base         -eq $false
+$cannot_build = $cannot_build -and  $segmented    -eq $false
+$cannot_build = $cannot_build -and  $singleheader -eq $false
+$cannot_build = $cannot_build -and  $c_library    -eq $false
+$cannot_build = $cannot_build -and  $unreal       -eq $false
+$cannot_build = $cannot_build -and  $test         -eq $false
+if ( $cannot_build ) {
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
-
 
 . $vendor_toolchain
 . $incremental_checks
@@ -101,23 +86,22 @@ write-host "Build Type: $(if ($release) {"Release"} else {"Debug"} )"
 
 #region Building
 $path_build        = Join-Path $path_root build
-$path_project      = Join-Path $path_root project
-$path_scripts      = Join-Path $path_root scripts
-$path_singleheader = Join-Path $path_root singleheader
-$path_unreal       = Join-Path $path_root unreal_engine
+$path_base         = Join-Path $path_root base
+$path_c_library    = join-Path $path_root gen_c_library
+$path_segmented    = Join-Path $path_root gen_segmented
+$path_singleheader = Join-Path $path_root gen_singleheader
+$path_unreal       = Join-Path $path_root gen_unreal_engine
 $path_test         = Join-Path $path_root test
+$path_scripts      = Join-Path $path_root scripts
 
-if ( $bootstrap )
+if ( $base )
 {
-	$path_build    = join-path $path_project build
-	$path_gen      = join-path $path_project gen
-	$path_comp_gen = join-path $path_project components/gen
+	$path_build    = join-path $path_base      build
+	$path_comp     = join-path $path_segmented 'components'
+	$path_comp_gen = join-path $path_comp      'gen'
 
 	if ( -not(Test-Path($path_build) )) {
 		New-Item -ItemType Directory -Path $path_build
-	}
-	if ( -not(Test-Path($path_gen) )) {
-		New-Item -ItemType Directory -Path $path_gen
 	}
 	if ( -not(Test-Path($path_comp_gen) )) {
 		New-Item -ItemType Directory -Path $path_comp_gen
@@ -130,15 +114,53 @@ if ( $bootstrap )
 		$flag_link_win_subsystem_console
 	)
 
-	$includes   = @( $path_project)
-	$unit       = join-path $path_project "bootstrap.cpp"
-	$executable = join-path $path_build   "bootstrap.exe"
+	$includes   = @( $path_base)
+	$unit       = join-path $path_base  "base.cpp"
+	$executable = join-path $path_build "base.exe"
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
-	Push-Location $path_project
+	Push-Location $path_base
 		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning bootstrap"
+			write-host "`nRunning base"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nbase completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
+if ( $segmented )
+{
+	$path_build = join-path $path_segmented build
+	$path_gen   = join-path $path_segmented gen
+
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+
+	$linker_args   = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$includes   = @( $path_base)
+	$unit       = join-path $path_segmented "segmented.cpp"
+	$executable = join-path $path_build     "segmented.exe"
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_segmented
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning segmented"
 			$time_taken = Measure-Command { & $executable
 					| ForEach-Object {
 						write-host `t $_ -ForegroundColor Green
@@ -161,7 +183,7 @@ if ( $singleheader )
 		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	$includes    = @( $path_project )
+	$includes    = @( $path_base )
 	$unit       = join-path $path_singleheader "singleheader.cpp"
 	$executable = join-path $path_build        "singleheader.exe"
 
@@ -172,7 +194,7 @@ if ( $singleheader )
 		$flag_link_win_subsystem_console
 	)
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_singleheader
 		if ( Test-Path( $executable ) ) {
@@ -183,6 +205,72 @@ if ( $singleheader )
 					}
 				}
 			write-host "`nSingleheader generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
+if ( $c_library )
+{
+	$path_build = join-path $path_c_library build
+	$path_gen   = join-path $path_c_library gen
+
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+
+	$includes    = @( $path_base )
+	$unit       = join-path $path_c_library "c_library.cpp"
+	$executable = join-path $path_build     "c_library.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+
+	$linker_args   = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_c_library
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning c_library generator"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+
+	$includes    = @( $path_c_library )
+	$unit       = join-path $path_c_library "gen.c"
+	$executable = join-path $path_build     "gen_c_library_test.exe"
+
+	if ($vendor -eq "clang") {
+		$compiler_args += '-x'
+		$compiler_args += 'c'
+		$compiler_args += '-std=c11'
+	} elseif ($vendor -eq "msvc") {
+		$compiler_args += "/TC"       # Compile as C
+		$compiler_args += "/Zc:__cplusplus" # Fix __cplusplus macro
+		$compiler_args += "/std:c11"
+	}
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_c_library
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning c_library test"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
 }
@@ -199,7 +287,7 @@ if ( $unreal )
 		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	$includes    = @( $path_project )
+	$includes    = @( $path_base )
 	$unit       = join-path $path_unreal "unreal.cpp"
 	$executable = join-path $path_build  "unreal.exe"
 
@@ -210,7 +298,7 @@ if ( $unreal )
 		$flag_link_win_subsystem_console
 	)
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_unreal
 		if ( Test-Path( $executable ) ) {
@@ -227,7 +315,8 @@ if ( $unreal )
 	. $refactor_unreal
 }
 
-if ( $test )
+# TODO(Ed): The unit testing needs a full rewrite
+if ( $test -and $false )
 {
 	$path_gen          = join-path $path_test gen
 	$path_gen_build    = join-path $path_gen  build
@@ -272,7 +361,7 @@ if ( $test )
 		$flag_link_win_subsystem_console
 	)
 
-	build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
 	Push-Location $path_test
 		Write-Host $path_test
@@ -288,57 +377,5 @@ if ( $test )
 	Pop-Location
 }
 #endregion Building
-
-#region Formatting
-push-location $path_scripts
-if ( $true -and $bootstrap -and (Test-Path (Join-Path $path_project "gen/gen.hpp")) )
-{
-	$path_gen      = join-path $path_project gen
-	$include  = @(
-		'gen.hpp', 'gen.cpp',
-		'gen.dep.hpp', 'gen.dep.cpp',
-		'gen.builder.hpp', 'gen.builder.cpp'
-		'gen.scanner.hpp', 'gen.scanner.cpp'
-	)
-	$exclude  = $null
-	# format-cpp $path_gen $include $exclude
-	format-cpp $path_comp_gen @( 'ast_inlines.hpp', 'ecode.hpp', 'especifier.hpp', 'eoperator.hpp', 'etoktype.cpp' ) $null
-
-}
-
-if ( $false -and $singleheader -and (Test-Path (Join-Path $path_singleheader "gen/gen.hpp")) )
-{
-	$path_gen = join-path $path_singleheader gen
-	$include  = @(
-		'gen.hpp'
-	)
-	$exclude  = $null
-	format-cpp $path_gen $include $exclude
-}
-
-if ( $false -and $unreal -and (Test-Path( Join-Path $path_unreal "gen/gen.hpp")) )
-{
-	$path_gen = join-path $path_unreal gen
-	$include  = @(
-		'gen.hpp', 'gen.cpp',
-		'gen.dep.hpp', 'gen.dep.cpp',
-		'gen.builder.hpp', 'gen.builder.cpp'
-		'gen.scanner.hpp', 'gen.scanner.cpp'
-	)
-	$exclude  = $null
-	format-cpp $path_gen $include $exclude
-}
-
-if ( $test -and $false )
-{
-	$path_gen = join-path $path_test gen
-	$include  = @(
-		'*.gen.hpp'
-	)
-	$exclude  = $null
-	format-cpp $path_gen $include $exclude
-}
-pop-location
-#endregion Formatting
 
 Pop-Location # $path_root

@@ -1,4 +1,7 @@
 # This is meant to be used with build.ps1, and is not a standalone script.
+  $target_arch = Join-Path $PSScriptRoot 'target_arch.psm1'
+
+  import-module $target_arch
 
 if ($IsWindows) {
 	# This HandmadeHero implementation is only designed for 64-bit systems
@@ -188,7 +191,7 @@ if ( $vendor -match "clang" )
 			# $compiler_args += $flag_time_trace
 		}
 		if ( $optimize ) {
-			$compiler_args += $flag_optimize_fast
+			$compiler_args += $flag_optimize_size
 		}
 		else {
 			$compiler_args += $flag_no_optimization
@@ -268,7 +271,7 @@ if ( $vendor -match "clang" )
 			# $compiler_args += $flag_time_trace
 		}
 		if ( $optimize ) {
-			$compiler_args += $flag_optimize_fast
+			$compiler_args += $flag_optimize_size
 		}
 		else {
 			$compiler_args += $flag_no_optimization
@@ -316,48 +319,50 @@ if ( $vendor -match "clang" )
 if ( $vendor -match "msvc" )
 {
 	# https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170
-	$flag_all_c 					 = '/TC'
-	$flag_all_cpp                    = '/TP'
-	$flag_compile			         = '/c'
-	$flag_debug                      = '/Zi'
-	$flag_define		             = '/D'
-	$flag_exceptions_disabled		 = '/EHsc-'
-	$flag_RTTI_disabled				 = '/GR-'
-	$flag_include                    = '/I'
-	$flag_full_src_path              = '/FC'
-	$flag_nologo                     = '/nologo'
-	$flag_dll 				         = '/LD'
-	$flag_dll_debug 			     = '/LDd'
-	$flag_linker 		             = '/link'
-	$flag_link_dll                   = '/DLL'
-	$flag_link_no_incremental 	     = '/INCREMENTAL:NO'
-	$flag_link_mapfile 				 = '/MAP:'
-	$flag_link_optimize_references   = '/OPT:REF'
-	$flag_link_win_debug 	         = '/DEBUG'
-	$flag_link_win_pdb 		         = '/PDB:'
-	$flag_link_win_machine_32        = '/MACHINE:X86'
-	$flag_link_win_machine_64        = '/MACHINE:X64'
-	$flag_link_win_path_output       = '/OUT:'
-	$flag_link_win_rt_dll            = '/MD'
-	$flag_link_win_rt_dll_debug      = '/MDd'
-	$flag_link_win_rt_static         = '/MT'
-	$flag_link_win_rt_static_debug   = '/MTd'
-	$flag_link_win_subsystem_console = '/SUBSYSTEM:CONSOLE'
-	$flag_link_win_subsystem_windows = '/SUBSYSTEM:WINDOWS'
-	$flag_no_optimization		     = '/Od'
-	$flag_optimize_fast 		     = '/O2'
-	$flag_optimize_size 		     = '/O1'
-	$flag_optimize_intrinsics		 = '/Oi'
-	$flag_optimized_debug			 = '/Zo'
-	$flag_out_name                   = '/OUT:'
-	$flag_path_interm                = '/Fo'
-	$flag_path_debug                 = '/Fd'
-	$flag_path_output                = '/Fe'
-	$flag_preprocess_conform         = '/Zc:preprocessor'
-	$flag_set_stack_size			 = '/F'
-	$flag_syntax_only				 = '/Zs'
-	$flag_wall 					     = '/Wall'
-	$flag_warnings_as_errors 		 = '/WX'
+	$flag_all_c 					  = '/TC'
+	$flag_all_cpp                     = '/TP'
+	$flag_compile			          = '/c'
+	$flag_debug                       = '/Zi'
+	$flag_define		              = '/D'
+	$flag_exceptions_disabled		  = '/EHsc-'
+	$flag_RTTI_disabled				  = '/GR-'
+	$flag_include                     = '/I'
+	$flag_full_src_path               = '/FC'
+	$flag_nologo                      = '/nologo'
+	$flag_dll 				          = '/LD'
+	$flag_dll_debug 			      = '/LDd'
+	$flag_linker 		              = '/link'
+	$flag_link_dll                    = '/DLL'
+	$flag_link_no_incremental 	      = '/INCREMENTAL:NO'
+	$flag_link_mapfile 				  = '/MAP:'
+	$flag_link_optimize_references    = '/OPT:REF'
+	$flag_link_win_debug 	          = '/DEBUG'
+	$flag_link_win_pdb 		          = '/PDB:'
+	$flag_link_win_machine_32         = '/MACHINE:X86'
+	$flag_link_win_machine_64         = '/MACHINE:X64'
+	$flag_link_win_path_output        = '/OUT:'
+	$flag_link_win_rt_dll             = '/MD'
+	$flag_link_win_rt_dll_debug       = '/MDd'
+	$flag_link_win_rt_static          = '/MT'
+	$flag_link_win_rt_static_debug    = '/MTd'
+	$flag_link_win_subsystem_console  = '/SUBSYSTEM:CONSOLE'
+	$flag_link_win_subsystem_windows  = '/SUBSYSTEM:WINDOWS'
+	$flag_no_optimization		      = '/Od'
+	$flag_optimize_fast 		      = '/O2'
+	$flag_optimize_size 		      = '/O1'
+	$flag_optimize_intrinsics		  = '/Oi'
+	$flag_optimized_debug_forceinline = '/d2Obforceinline'
+	$flag_optimized_debug			  = '/Zo'
+	$flag_
+	$flag_out_name                    = '/OUT:'
+	$flag_path_interm                 = '/Fo'
+	$flag_path_debug                  = '/Fd'
+	$flag_path_output                 = '/Fe'
+	$flag_preprocess_conform          = '/Zc:preprocessor'
+	$flag_set_stack_size			  = '/F'
+	$flag_syntax_only				  = '/Zs'
+	$flag_wall 					      = '/Wall'
+	$flag_warnings_as_errors 		  = '/WX'
 
 	function build
 	{
@@ -388,7 +393,7 @@ if ( $vendor -match "msvc" )
 		}
 
 		if ( $optimize ) {
-			$compiler_args += $flag_optimize_fast
+			$compiler_args += $flag_optimize_size
 		}
 		else {
 			$compiler_args += $flag_no_optimization
@@ -403,6 +408,7 @@ if ( $vendor -match "msvc" )
 
 			if ( $optimize ) {
 				$compiler_args += $flag_optimized_debug
+				$compiler_args += $flag_optimized_debug_forceinline
 			}
 		}
 		else {
@@ -474,7 +480,7 @@ if ( $vendor -match "msvc" )
 		}
 
 		if ( $optimize ) {
-			$compiler_args += $flag_optimize_fast
+			$compiler_args += $flag_optimize_size
 		}
 		else {
 			$compiler_args += $flag_no_optimization

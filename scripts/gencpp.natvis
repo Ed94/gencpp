@@ -266,7 +266,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::AST_Param">
+	<Type Name="gen::AST_Params">
 		<DisplayString>{Name} Type: {Type}</DisplayString>
 		<Expand>
 			<Item Name="ValueType">ValueType</Item>
@@ -553,7 +553,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::CodeParam">
+	<Type Name="gen::CodeParams">
 		<DisplayString Condition="ast == nullptr">Null</DisplayString>
 		<DisplayString Condition="ast != nullptr">{ast->Name} {ast->Type}</DisplayString>
 		<Expand>

@@ -1,24 +1,28 @@
-cls
+$misc = Join-Path $PSScriptRoot 'helpers/misc.psm1'
+Import-Module $misc
 
 $build = Join-Path $PSScriptRoot 'build.ci.ps1'
 
 if ( $IsWindows ) {
-	& $build release msvc bootstrap singleheader unreal msvc debug
+	& $build release msvc base segmented singleheader unreal c_library msvc debug
 }
 else {
-	& $build release clang bootstrap singleheader unreal msvc debug
+	& $build release clang base segmented singleheader unreal c_library msvc debug
 }
 
-$path_root             = git rev-parse --show-toplevel
-$path_docs			   = Join-Path $path_root         docs
-$path_project          = Join-Path $path_root         project
-$path_project_gen      = Join-Path $path_project      gen
-$path_singleheader	   = Join-Path $path_root         singleheader
-$path_singleheader_gen = Join-Path $path_singleheader gen
-$path_unreal           = Join-Path $path_root         unreal_engine
-$path_unreal_gen       = Join-Path $path_unreal       gen
-$path_release          = Join-Path $path_root         release
-$path_release_content  = Join-Path $path_release      content
+$path_root             = Get-ScriptRepoRoot
+$path_docs			   = Join-Path $path_root          docs
+$path_base             = Join-Path $path_root          base
+$path_c_library        = Join-Path $path_root          gen_c_library
+$path_c_library_gen    = Join-Path $path_c_library     gen
+$path_segmented        = Join-Path $path_root          gen_segmented
+$path_segmented_gen    = Join-Path $path_segmented     gen
+$path_singleheader	   = Join-Path $path_root          gen_singleheader
+$path_singleheader_gen = Join-Path $path_singleheader  gen
+$path_unreal           = Join-Path $path_root          gen_unreal_engine
+$path_unreal_gen       = Join-Path $path_unreal        gen
+$path_release          = Join-Path $path_root          release
+$path_release_content  = Join-Path $path_release       content
 
 if ( -not(Test-Path $path_release) ) {
 	New-Item -ItemType Directory -Path $path_release
@@ -47,33 +51,53 @@ function prep-ReleaseContent()
 
 # Singleheader
 prep-ReleaseContent
-Copy-Item        -Path $path_singleheader_gen\gen.hpp -Destination $path_release_content\gen.hpp
+Copy-Item        -Verbose -Path $path_singleheader\Readme.md   -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_singleheader_gen\gen.hpp -Destination $path_release_content
 Compress-Archive -Path $path_release_content\*        -DestinationPath $path_release\gencpp_singleheader.zip -Force
 Remove-Item -Path $path_release_content -Recurse
 
 # Segmented
 prep-ReleaseContent
-Copy-Item        -Path $path_project_gen\*     -Destination $path_release_content
-Compress-Archive -Path $path_release_content\* -DestinationPath $path_release\gencpp_segmented.zip -Force
+Copy-Item        -Verbose -Path $path_segmented\Readme.md   -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_segmented_gen\*       -Destination $path_release_content
+Compress-Archive -Path $path_release_content\*     -DestinationPath $path_release\gencpp_segmented.zip -Force
 Remove-Item -Path $path_release_content -Recurse
 
 # Unreal
 prep-ReleaseContent
-Copy-Item        -Path $path_unreal_gen\*      -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_unreal\Readme.md  -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_unreal_gen\*      -Destination $path_release_content
 Compress-Archive -Path $path_release_content\* -DestinationPath $path_release\gencpp_unreal.zip -Force
 Remove-Item -Path $path_release_content -Recurse
 
-# As Is
+# C Library Singleheader
+prep-ReleaseContent
+Copy-Item        -Verbose -Path $path_c_library\Readme.md              -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen_singleheader.h -Destination $path_release_content\gen.h
+Compress-Archive -Path $path_release_content\*                -DestinationPath $path_release\gencpp_c11_singleheader.zip -Force
+Remove-Item -Path $path_release_content -Recurse
+
+# C Library Segmented
+prep-ReleaseContent
+Copy-Item        -Verbose -Path $path_c_library\Readme.md     -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.dep.c -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.dep.h -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.c     -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.h     -Destination $path_release_content
+Compress-Archive -Path $path_release_content\*       -DestinationPath $path_release\gencpp_c11_segmented.zip -Force
+Remove-Item -Path $path_release_content -Recurse
+
+# Base
 
 prep-ReleaseContent
-Copy-Item        -Verbose -Path $path_project\gen.hpp               -Destination $path_release_content
-Copy-Item        -Verbose -Path $path_project\gen.cpp               -Destination $path_release_content
-Copy-Item        -Verbose -Path $path_project\gen.dep.hpp           -Destination $path_release_content
-Copy-Item        -Verbose -Path $path_project\gen.dep.cpp           -Destination $path_release_content
-Copy-Item        -Verbose -Path $path_project\auxillary\builder.hpp -Destination $path_release_content\auxillary
-Copy-Item        -Verbose -Path $path_project\auxillary\builder.cpp -Destination $path_release_content\auxillary
-Copy-Item        -Verbose -Path $path_project\auxillary\scanner.hpp -Destination $path_release_content\auxillary
-Copy-Item        -Verbose -Path $path_project\auxillary\scanner.cpp -Destination $path_release_content\auxillary
+Copy-Item -Verbose -Path $path_base\gen.hpp               -Destination $path_release_content
+Copy-Item -Verbose -Path $path_base\gen.cpp               -Destination $path_release_content
+Copy-Item -Verbose -Path $path_base\gen.dep.hpp           -Destination $path_release_content
+Copy-Item -Verbose -Path $path_base\gen.dep.cpp           -Destination $path_release_content
+Copy-Item -Verbose -Path $path_base\auxillary\builder.hpp -Destination $path_release_content\auxillary
+Copy-Item -Verbose -Path $path_base\auxillary\builder.cpp -Destination $path_release_content\auxillary
+Copy-Item -Verbose -Path $path_base\auxillary\scanner.hpp -Destination $path_release_content\auxillary
+Copy-Item -Verbose -Path $path_base\auxillary\scanner.cpp -Destination $path_release_content\auxillary
 
 New-Item -ItemType Directory -Force -Path "$path_release_content\components"
 New-Item -ItemType Directory -Force -Path "$path_release_content\components\gen"
@@ -81,11 +105,11 @@ New-Item -ItemType Directory -Force -Path "$path_release_content\dependencies"
 New-Item -ItemType Directory -Force -Path "$path_release_content\enums"
 New-Item -ItemType Directory -Force -Path "$path_release_content\helpers"
 
-Get-ChildItem -Verbose -Path "$path_project\components\*"     -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\components"
-Get-ChildItem -Verbose -Path "$path_project\components\gen\*" -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\components\gen"
-Get-ChildItem -Verbose -Path "$path_project\dependencies\*"   -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\dependencies"
-Get-ChildItem -Verbose -Path "$path_project\enums\*"          -Include *.csv       | Copy-Item -Destination "$path_release_content\enums"
-Get-ChildItem -Verbose -Path "$path_project\helpers\*"        -Include *.cpp,*.hpp | Copy-Item -Destination "$path_release_content\helpers"
+Get-ChildItem -Verbose -Path "$path_base\components\*"     -Include *.cpp,*.hpp | Copy-Item -Verbose -Destination "$path_release_content\components"
+Get-ChildItem -Verbose -Path "$path_base\components\gen\*" -Include *.cpp,*.hpp | Copy-Item -Verbose -Destination "$path_release_content\components\gen"
+Get-ChildItem -Verbose -Path "$path_base\dependencies\*"   -Include *.cpp,*.hpp | Copy-Item -Verbose -Destination "$path_release_content\dependencies"
+Get-ChildItem -Verbose -Path "$path_base\enums\*"          -Include *.csv       | Copy-Item -Verbose -Destination "$path_release_content\enums"
+Get-ChildItem -Verbose -Path "$path_base\helpers\*"        -Include *.cpp,*.hpp | Copy-Item -Verbose -Destination "$path_release_content\helpers"
 
-Compress-Archive -Path $path_release_content\** -DestinationPath $path_release\gencpp_as_is.zip -Force
+Compress-Archive -Path $path_release_content\** -DestinationPath $path_release\gencpp_base.zip -Force
 Remove-Item -Path $path_release_content -Recurse

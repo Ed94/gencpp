@@ -1,16 +1,29 @@
 # gencpp
 
-An attempt at simple staged metaprogramming for c/c++.
+An attempt at simple staged metaprogramming for C/C++.
 
-The library API is a composition of code element constructors.  
-These build up a code AST to then serialize with a file builder.
+The library API is a composition of code element constructors, and a non-standards-compliant single-pass C/C++ parser.  
+These build up a code AST to then serialize with a file builder, or can be traversed for staged-reflection of C/C++ code.
 
-This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).  
-Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.  
+This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).
+Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.
+
+## Documentation
+
+* [docs - General](./docs/Readme.md): Overview and additional docs
+  * [AST_Design](./docs/AST_Design.md): Overvie of ASTs
+  * [AST Types](./docs/AST_Types.md): Listing of all AST types along with their Code type interface.
+  * [Parsing](./docs/Parsing.md): Overview of the parsing interface.
+  * [Parser Algo](./docs/Parser_Algo.md): In-depth breakdown of the parser's implementation.
+* [base](./base/Readme.md): Essential (base) library.
+* [gen_c_library](./gen_c_library/): C11 library variant generation (single header and segmeented).
+* [gen_segmented](./gen_segmented/): Segemented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
+* [gen_singleheader](./gen_singleheader/): Singlehader C++ generation `gen.hpp`
+* [gen_unreal_engine](./gen_unreal_engine/): Unreal Engine thirdparty code generation.
 
 ## Notes
 
-**On Partial Hiatus: Life has got me tackling other issues..**  
+**On Partial Hiatus: Life has got me tackling other issues..**
 I will be passively updating the library with bug fixes and minor improvements as I use it for my personal projects.  
 There won't be any major reworks or features to this thing for a while.
 
@@ -21,17 +34,13 @@ The library can already be used to generate code just fine, but the parser is wh
 
 A `natvis` and `natstepfilter` are provided in the scripts directory (its outdated, I'll update this readme when its not).
 
-***The editor and scanner have not been implemented yet. The scanner will come first, then the editor.***
-
-A C variant is hosted [here](https://github.com/Ed94/genc); I will complete it when this library is feature complete, it should be easier to make than this...
-
 ## Usage
 
 A metaprogram is built to generate files before the main program is built. We'll term runtime for this program as `GEN_TIME`. The metaprogram's core implementation are within `gen.hpp` and `gen.cpp` in the project directory.
 
 `gen.cpp` \`s  `main()` is defined as `gen_main()` which the user will have to define once for their program. There they will dictate everything that should be generated.
 
-In order to keep the locality of this code within the same files the following pattern may be used (although this pattern isn't required at all):
+In order to keep the locality of this code within the same files the following pattern may be used (although this pattern isn't the best to use):
 
 Within `program.cpp` :
 
@@ -54,7 +63,6 @@ u32 gen_main()
 
     // Regular runtime dependent on the generated code here.
 #endif
-
 ```
 
 The design uses a constructive builder API for the code to generate.  
@@ -115,7 +123,7 @@ Code header = code_str(
 
 `name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.  
 `code` is a helper macro for providing a string literal with its size, but intended for code string parameters.  
-`args` is a helper macro for providing the number of arguments to varadic constructors.
+`args` is a helper macro for providing the number of arguments to varadic constructors.  
 `code_str` is a helper macro for writting `untyped_str( code( <content> ))`
 
 All three constrcuton interfaces will generate the following C code:
@@ -129,7 +137,7 @@ struct ArrayHeader
 };
 ```
 
-**Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**
+**Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**  
 *(The library currently uses clang-format for formatting, beware its pretty slow...)*
 
 ## Building

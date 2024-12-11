@@ -14,12 +14,11 @@ foreach ( $arg in $args )
 $path_root               = git rev-parse --show-toplevel
 $path_project            = Join-Path $path_root        project
 $path_scripts            = Join-Path $path_root        scripts
-$path_singlheader        = Join-Path $path_root        singleheader
-$path_singleheader_comp  = Join-Path $path_singlheader components
-$path_unreal             = Join-Path $path_root        unreal_engine
+$path_helpers            = Join-Path $path_scripts     helpers
+$path_unreal             = Join-Path $path_root        gen_unreal_engine
 $path_unreal_gen         = Join-Path $path_unreal      gen
 
-$file_spec = Join-Path $path_scripts unreal.refactor
+$file_spec = Join-Path $path_unreal unreal.refactor
 
 # Gather the files to be formatted.
 $targetFiles = @()
@@ -43,7 +42,8 @@ $refactorParams = @(
     "-spec=$($file_spec)"
 )
 
-& refactor $refactorParams
+$refactor = join-path $path_helpers refactor.exe
+& $refactor $refactorParams
 
 Write-Host "`nRefactoring complete`n`n"
 

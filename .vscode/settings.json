@@ -37,7 +37,26 @@
 		"propidl.h": "c",
 		"android_native_app_glue.h": "c",
 		"raylib.h": "c",
-		"*.m": "cpp"
+		"*.m": "cpp",
+		"atomic": "cpp",
+		"gen.h": "c",
+		"string_ops.hpp": "c",
+		"assert.h": "c",
+		"intrin.h": "c",
+		"bit": "cpp",
+		"cmath": "cpp",
+		"cstddef": "cpp",
+		"cstdint": "cpp",
+		"cstdio": "cpp",
+		"cstdlib": "cpp",
+		"cstring": "cpp",
+		"ctime": "cpp",
+		"cwchar": "cpp",
+		"iosfwd": "cpp",
+		"new": "cpp",
+		"typeinfo": "cpp",
+		"unordered_map": "cpp",
+		"xstddef": "cpp"
 	},
 	"C_Cpp.intelliSenseEngineFallback": "disabled",
 	"mesonbuild.configureOnOpen": true,
@@ -48,8 +67,10 @@
 	"C_Cpp.files.exclude": {
 		"**/.vscode": true,
 		"**/.vs": true,
-		"**/sanity.gen.hpp": true
+		"**/sanity.gen.hpp": true,
+		"test/**":true,
 	},
 	"autoHide.autoHidePanel": false,
-	"autoHide.autoHideSideBar": false
+	"autoHide.autoHideSideBar": false,
+	"dimmer.enabled": false
 }

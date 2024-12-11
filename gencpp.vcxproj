@@ -257,6 +257,7 @@
     <None Include="test\Readme.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gen_c_library\gen\gen.h" />
     <ClInclude Include="project\auxillary\builder.hpp" />
     <ClInclude Include="project\auxillary\editor.hpp" />
     <ClInclude Include="project\auxillary\scanner.hpp" />

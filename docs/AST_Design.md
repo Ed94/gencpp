@@ -1,44 +1,58 @@
+## Navigation
+
+[Top](../Readme.md)
+
+<- [docs - General](Readme.md)
+
 ## Current Design
 
 `AST` is the actual managed node object for the library.  
 Its raw and really not meant to be used directly.
 
 All user interaction must be with its pointer so the type they deal with is `AST*`.  
-For user-facing code, they should never be giveen a nullptr. Instead, they should be given a designated `Invalid` AST node.
+In order to abstract away constant use of `AST*` its wrapped in a Code type which can be either:
 
-In order to abstract away constant use of `AST*`, I wanted to provide a wrapper for it.
-
-The simpliest being just a type alias.
-
-```cpp
-using Code = AST*;
+When its the [C generated variant of the library](../gen_c_library/)
+```c
+typedef AST* Code;
+tyepdef AST_<name>* Code<name>;
+...
 ```
 
-This is what the genc library would have to use due to its constraints of a langauge.  
-The actual content per type of AST is covered within [AST_Types.md](AST_Types.md).
+**or**
 
-These are pure PODS that just have the lay members relevant to the type of AST node they represent.  
-Each of them has a Code type alias specific to it.
-
-Again, the simpliest case for these would be a type alias.
-
+For C++:
 ```cpp
-using struct AST_Typedef CodeTypedef;
+struct Code {
+    AST* ast;
+};
+struct Code<name> {
+    ...
+
+    AST_<name>* ast;
+};
 ```
 
-As of November 21st, 2023, the AST has had a strict layout for how its content is laid out.  
-This will be abandoned during its redesign that will occur starting with support for statments & expressions for either execution and type declarations.  
-Having a strict layout is too resctrictive vs allowing each AST type to have maximum control over the layout.
+The full definitions of all asts are within:
 
-The redesign will occur after the following todos are addressed:
+* [`ast.hpp`](../base/components/ast.hpp)
+* [`ast_types.hpp`](../base/components/ast_types.hpp)
+* [`code_types.hpp`](../base/components/ast_types.hpp)
 
-* [Improvements Lexer & Token struct#27](https://github.com/Ed94/gencpp/issues/27)
-* [Generalize AST Flags to a single 4-byte flag#42](https://github.com/Ed94/gencpp/issues/42)
-* [AST-Code Object Redesign.#38](https://github.com/Ed94/gencpp/issues/38)
-* [Code-AST Documentation#40](https://github.com/Ed94/gencpp/issues/40)
-* [AST::debug_str() improvements#33](https://github.com/Ed94/gencpp/issues/33)
-* [AST::is_equal implemented and works with singleheader-test#31](https://github.com/Ed94/gencpp/issues/31)
-* [Parser : Add ability to have a parse failure and continue with errors recorded.#35](https://github.com/Ed94/gencpp/issues/35)
-* [Scanner : Add CodeFile#29](https://github.com/Ed94/gencpp/issues/29)
-* [Auxiliary : AST visual debugger#36](https://github.com/Ed94/gencpp/issues/36)
+The C/C++ interface procedures are located with `ast.hpp` (for the Code type), and `code_types.hpp` for all others.
 
+## Serialization
+
+All code types can either serialize using a function of the pattern:
+
+```c
+String <prefix>_to_string(Code code);
+// or
+<prefix>_to_string(Code code, String& result);
+```
+
+Where the first generates strings allocated using Allocator_StringArena and the other appends an existing strings with their backed allocator.
+
+Serialization of for the AST is defined for `Code` in [`ast.chpp`](../base/components/ast.cpp) with `code_to_string_ptr` & `code_to_string`.  
+Serializtion for the rest of the code types is within [`code_serialization.cpp`](../base/components/code_serialization.cpp).  
+Gencpp's serialization does not provide coherent formatting of the code. The user should use a formatter after serializing.
