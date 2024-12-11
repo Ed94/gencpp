@@ -87,7 +87,7 @@ int gen_main()
 #pragma region Resolve Dependencies
 	Code header_platform       = scan_file( path_base "dependencies/platform.hpp" );
 	Code header_macros         = scan_file( path_base "dependencies/macros.hpp" );
-	Code header_generic_macros = scan_file(           "components/gneric_macros.hpp" );
+	Code header_generic_macros = scan_file(           "components/generic_macros.hpp" );
 	Code header_basic_types    = scan_file( path_base "dependencies/basic_types.hpp" );
 	Code header_debug          = scan_file( path_base "dependencies/debug.hpp" );
 	Code header_string_ops     = scan_file( path_base "dependencies/string_ops.hpp" );
