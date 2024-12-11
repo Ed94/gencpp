@@ -752,6 +752,7 @@ R"(#define AST_ArrSpecs_Cap \
 		txt("CodeParams"),
 		txt("CodePreprocessCond"),
 		txt("CodeSpecifiers"),
+		txt("CodeStruct"),
 		txt("CodeTemplate"),
 		txt("CodeTypename"),
 		txt("CodeTypedef"),

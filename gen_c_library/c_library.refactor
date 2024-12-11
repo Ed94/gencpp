@@ -340,6 +340,7 @@ word CodePragma,         gen_CodePragma
 word CodeParams,         gen_CodeParams
 word CodePreprocessCond, gen_CodePreprocessCond
 word CodeSpecifiers,     gen_CodeSpecifiers
+word CodeStruct,         gen_CodeStruct
 word CodeTemplate,       gen_CodeTemplate
 word CodeTypename,       gen_CodeTypename
 word CodeTypedef,        gen_CodeTypedef
