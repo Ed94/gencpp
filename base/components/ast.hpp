@@ -309,18 +309,6 @@ struct Code
 
 	Code& operator ++();
 
-	// TODO(Ed) : Remove this overload.
-	auto& operator*()
-	{
-		local_persist thread_local
-		Code NullRef = { nullptr };
-
-		if ( ast == nullptr )
-			return NullRef;
-
-		return *this;
-	}
-
 #ifdef GEN_ENFORCE_STRONG_CODE_TYPES
 #	define operator explicit operator
 #endif

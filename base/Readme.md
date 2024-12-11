@@ -73,8 +73,6 @@ The base library itself does not use anything but C-like features to allow for g
 
 Member function support or free-functions with reference object passing are wrapped in `! GEN_C_LIKE CPP` preprocess conditionals.
 
-
-
 ## C++ template usage
 
 There are only 4 template definitions in the entire library (C++ versions). (`Array<Type>`, `Hashtable<Type>`, `swap<Type>`, and `tmpl_cast<CodeT>(CodeT code)`)
