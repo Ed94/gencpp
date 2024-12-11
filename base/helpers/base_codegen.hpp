@@ -1,11 +1,11 @@
 #pragma once
 
-#include "gen.hpp"
+#if GEN_INTELLISENSE_DIRECTIVES
+#	include "../gen.hpp"
+#	include "misc.hpp"
 
 using namespace gen;
-
-#include "dependencies/parsing.hpp"
-#include "misc.hpp"
+#endif
 
 CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 {
@@ -182,8 +182,8 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 
 	for (usize idx = 0; idx < array_num(csv_enum.Col_1); idx++)
 	{
-		char const* enum_str     = enum_strs[idx].string;
-		char const* entry_to_str = str_strs [idx].string;
+		char const* enum_str     = csv_enum.Col_1[idx].string;
+		char const* entry_to_str = csv_enum.Col_2[idx].string;
 
 		string_append_fmt( & enum_entries, "Spec_%s,\n", enum_str );
 		string_append_fmt( & to_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);

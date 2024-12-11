@@ -644,7 +644,7 @@ CodeDefine def_define( StrC name, StrC content, Opts_def_define p )
 		// Add the define to PreprocessorDefines for usage in parsing
 		s32 lex_id_len = 0;
 		for (; lex_id_len < result->Name.Len; ++ lex_id_len ) {
-			if ( reuslt->Name.Ptr[lex_id_len] == '(' )
+			if ( result->Name.Ptr[lex_id_len] == '(' )
 				break;
 		}
 		StrC lex_id = { lex_id_len, result->Name.Ptr };

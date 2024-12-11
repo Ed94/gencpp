@@ -16,5 +16,6 @@ GEN_NS_BEGIN
 #include "dependencies/strings.hpp"
 #include "dependencies/filesystem.hpp"
 #include "dependencies/timing.hpp"
+#include "dependencies/parsing.hpp"
 
 GEN_NS_END

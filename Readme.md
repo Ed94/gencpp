@@ -19,7 +19,7 @@ If your going to metaprogram, you can never have enough docs on your tooling...
   * [Parser Algo](./docs/Parser_Algo.md): In-depth breakdown of the parser's implementation.
 * [base](./base/Readme.md): Essential (base) library.
 * [gen_c_library](./gen_c_library/Readme.md): C11 library variant generation (single header and segmeented).
-* [gen_segmented](./gen_segemented/Readme.md): Segemented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
+* [gen_segmented](./gen_segmented/Readme.md): Segemented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
 * [gen_singleheader](./gen_singleheader/Readme.md): Singlehader C++ generation `gen.hpp`
 * [gen_unreal_engine](./gen_unreal_engine/Readme.md): Unreal Engine thirdparty code generation.
 

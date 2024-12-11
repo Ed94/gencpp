@@ -2,21 +2,16 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_C_LIKE_CPP 1
-#include "../project/gen.cpp"
+#include "gen.cpp"
 
 #include "helpers/push_ignores.inline.hpp"
-#include "helpers/helper.hpp"
+
+#include <stdlib.h>
 
 GEN_NS_BEGIN
-#include "helpers/push_container_defines.inline.hpp"
-#include "dependencies/parsing.cpp"
-#include "helpers/pop_container_defines.inline.hpp"
+#include "helpers/base_codegen.hpp"
+#include "helpers/misc.hpp"
 GEN_NS_END
-
-#include "auxillary/builder.hpp"
-#include "auxillary/builder.cpp"
-#include "auxillary/scanner.hpp"
-#include "auxillary/misc.hpp"
 
 using namespace gen;
 
@@ -27,8 +22,25 @@ Code format( Code code ) {
 	return code_refactor_and_format(code, scratch_file, nullptr, path_format_style );
 }
 
+constexpr char const* generation_notice =
+"// This file was generated automatially by gencpp's bootstrap.cpp "
+"(See: https://github.com/Ed94/gencpp)\n\n";
+
+CodeBody gen_component_header = def_global_body( args(
+	def_preprocess_cond( PreprocessCond_IfDef, txt("GEN_INTELLISENSE_DIRECTIVES") ),
+	pragma_once,
+	def_include(txt("components/types.hpp")),
+	preprocess_endif,
+	fmt_newline,
+	untyped_str( to_strc_from_c_str(generation_notice) )
+));
+
 int gen_main()
 {
+	gen::init();
+
+	__debugbreak();
+
 	CodeBody ecode       = gen_ecode     ( "enums/ECodeTypes.csv" );
 	CodeBody eoperator   = gen_eoperator ( "enums/EOperator.csv" );
 	CodeBody especifier  = gen_especifier( "enums/ESpecifier.csv" );
@@ -53,4 +65,7 @@ int gen_main()
 	builder_print( & header_ast_inlines, gen_component_header );
 	builder_print( & header_ast_inlines, format(ast_inlines) );
 	builder_write( & header_ast_inlines);
+
+	gen::deinit();
+	return 0;
 }

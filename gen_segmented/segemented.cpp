@@ -2,21 +2,14 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #define GEN_C_LIKE_CPP 1
-#include "../project/gen.cpp"
+#include "../base/gen.cpp"
 
 #include "helpers/push_ignores.inline.hpp"
-#include "helpers/helper.hpp"
 
 GEN_NS_BEGIN
-#include "helpers/push_container_defines.inline.hpp"
-#include "dependencies/parsing.cpp"
-#include "helpers/pop_container_defines.inline.hpp"
+#include "helpers/base_codegen.hpp"
+#include "helpers/misc.hpp"
 GEN_NS_END
-
-#include "auxillary/builder.hpp"
-#include "auxillary/builder.cpp"
-#include "auxillary/scanner.hpp"
-#include "auxillary/misc.hpp"
 
 using namespace gen;
 

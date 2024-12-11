@@ -13,5 +13,6 @@ GEN_NS_BEGIN
 #include "dependencies/strings.cpp"
 #include "dependencies/filesystem.cpp"
 #include "dependencies/timing.cpp"
+#include "dependencies/parsing.cpp"
 
 GEN_NS_END

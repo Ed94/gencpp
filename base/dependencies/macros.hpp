@@ -1,5 +1,6 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #   pragma once
+#	include "platform.hpp"
 #endif
 
 #pragma region Macros

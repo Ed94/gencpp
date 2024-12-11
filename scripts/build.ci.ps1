@@ -19,6 +19,7 @@ Push-Location $path_root
        $vendor       = $null
        $release      = $null
 	   $verbose      = $false
+	   $base         = $false
 [bool] $segemented   = $false
 [bool] $singleheader = $false
 [bool] $c_library    = $false
@@ -35,6 +36,7 @@ if ( $args ) { $args | ForEach-Object {
 		"verbose"			  { $verbose      = $true }
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
+		"base"                { $base         = $true }
 		"segemented"          { $segemented   = $true }
 		"singleheader"        { $singleheader = $true }
 		"c_library"           { $c_library    = $true }
@@ -67,7 +69,13 @@ else {
 	$optimize = $true
 }
 
-if ( $segmented -eq $false -and $singleheader -eq $false -and $c_library -eq $false -and $unreal -eq $false -and $test -eq $false ) {
+$cannot_build =                     $base         -eq $false
+$cannot_build = $cannot_build -and  $segmented    -eq $false
+$cannot_build = $cannot_build -and  $singleheader -eq $false
+$cannot_build = $cannot_build -and  $c_library    -eq $false
+$cannot_build = $cannot_build -and  $unreal       -eq $false
+$cannot_build = $cannot_build -and  $test         -eq $false
+if ( $cannot_build ) {
 	throw "No build target specified. One must be specified, this script will not assume one"
 }
 
@@ -83,9 +91,9 @@ $path_base         = Join-Path $path_root base
 $path_c_library    = join-Path $path_root gen_c_library
 $path_segmented    = Join-Path $path_root gen_segmented
 $path_singleheader = Join-Path $path_root gen_singleheader
-$path_scripts      = Join-Path $path_root scripts
 $path_unreal       = Join-Path $path_root gen_unreal_engine
 $path_test         = Join-Path $path_root test
+$path_scripts      = Join-Path $path_root scripts
 
 if ( $base )
 {
@@ -115,13 +123,13 @@ if ( $base )
 
 	Push-Location $path_project
 		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning bootstrap"
+			write-host "`nRunning base"
 			$time_taken = Measure-Command { & $executable
 					| ForEach-Object {
 						write-host `t $_ -ForegroundColor Green
 					}
 				}
-			write-host "`nBootstrap completed in $($time_taken.TotalMilliseconds) ms"
+			write-host "`bbase completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
 }
@@ -153,7 +161,7 @@ if ( $segmented )
 
 	Push-Location $path_project
 		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning bootstrap"
+			write-host "`nRunning segmented"
 			$time_taken = Measure-Command { & $executable
 					| ForEach-Object {
 						write-host `t $_ -ForegroundColor Green

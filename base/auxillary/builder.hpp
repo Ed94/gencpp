@@ -13,6 +13,7 @@
 #	include "components/inlines.hpp"
 #	include "components/gen/ast_inlines.hpp"
 #	include "components/header_end.hpp"
+using namespace gen;
 #endif
 
 #pragma region Builder
