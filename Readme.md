@@ -2,23 +2,34 @@
 
 An attempt at simple staged metaprogramming for C/C++.
 
-The library API is a composition of code element constructors, and a non-standards-compliant single-pass C/C++ parser.
+The library API is a composition of code element constructors, and a non-standards-compliant single-pass C/C++ parser.  
 These build up a code AST to then serialize with a file builder, or can be traversed for staged-reflection of C/C++ code.
 
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).
 Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.
 
-# Documentation
+## Documentation
 
-[]
+If your going to metaprogram, you can never have enough docs on your tooling...
+
+* [docs - General](./docs/Readme.md): Overview and additional docs
+  * [AST_Design](./docs/AST_Design.md): Overvie of ASTs
+  * [AST Types](./docs/AST_Types.md): Listing of all AST types along with their Code type interface.
+  * [Parsing](./docs/Parsing.md): Overview of the parsing interface.
+  * [Parser Algo](./docs/Parser_Algo.md): In-depth breakdown of the parser's implementation.
+* [base](./base/Readme.md): Essential (base) library.
+* [gen_c_library](./gen_c_library/Readme.md): C11 library variant generation (single header and segmeented).
+* [gen_segmented](./gen_segemented/Readme.md): Segemented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
+* [gen_singleheader](./gen_singleheader/Readme.md): Singlehader C++ generation `gen.hpp`
+* [gen_unreal_engine](./gen_unreal_engine/Readme.md): Unreal Engine thirdparty code generation.
 
 ## Notes
 
 **On Partial Hiatus: Life has got me tackling other issues..**
-I will be passively updating the library with bug fixes and minor improvements as I use it for my personal projects.
+I will be passively updating the library with bug fixes and minor improvements as I use it for my personal projects.  
 There won't be any major reworks or features to this thing for a while.
 
-This project is still in development (very much an alpha state), so expect bugs and missing features.
+This project is still in development (very much an alpha state), so expect bugs and missing features.  
 See [issues](https://github.com/Ed94/gencpp/issues) for a list of known bugs or todos.
 
 The library can already be used to generate code just fine, but the parser is where the most work is needed. If your C++ isn't "down to earth" expect issues.
@@ -56,7 +67,7 @@ u32 gen_main()
 #endif
 ```
 
-The design uses a constructive builder API for the code to generate.
+The design uses a constructive builder API for the code to generate.  
 The user is provided `Code` objects that are used to build up the AST.
 
 Example using each construction interface:
@@ -112,9 +123,9 @@ Code header = code_str(
 );
 ```
 
-`name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.
-`code` is a helper macro for providing a string literal with its size, but intended for code string parameters.
-`args` is a helper macro for providing the number of arguments to varadic constructors.
+`name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.  
+`code` is a helper macro for providing a string literal with its size, but intended for code string parameters.  
+`args` is a helper macro for providing the number of arguments to varadic constructors.  
 `code_str` is a helper macro for writting `untyped_str( code( <content> ))`
 
 All three constrcuton interfaces will generate the following C code:
@@ -128,7 +139,7 @@ struct ArrayHeader
 };
 ```
 
-**Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**
+**Note: The formatting shown here is not how it will look. For your desired formatting its recommended to run a pass through the files with an auto-formatter.**  
 *(The library currently uses clang-format for formatting, beware its pretty slow...)*
 
 ## Building

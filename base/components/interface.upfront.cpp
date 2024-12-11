@@ -417,7 +417,6 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 	return InvalidCode;
 #pragma endregion Helper Marcos
 
-
 /*
 The implementaiton of the upfront constructors involves doing three things:
 * Validate the arguments given to construct the intended type of AST is valid.
@@ -616,7 +615,7 @@ CodeClass def_class( StrC name, Opts_def_struct p )
 	return result;
 }
 
-CodeDefine def_define( StrC name, StrC content )
+CodeDefine def_define( StrC name, StrC content, Opts_def_define p )
 {
 	name_check( def_define, name );
 
@@ -640,6 +639,17 @@ CodeDefine def_define( StrC name, StrC content )
 	else
 		result->Content = get_cached_string( string_to_strc(string_fmt_buf(GlobalAllocator, "%SC\n", content)) );
 
+	b32 append_preprocess_defines = ! p.dont_append_preprocess_defines;
+	if ( append_preprocess_defines ) { 
+		// Add the define to PreprocessorDefines for usage in parsing
+		s32 lex_id_len = 0;
+		for (; lex_id_len < result->Name.Len; ++ lex_id_len ) {
+			if ( reuslt->Name.Ptr[lex_id_len] == '(' )
+				break;
+		}
+		StrC lex_id = { lex_id_len, result->Name.Ptr };
+		array_append(PreprocessorDefines, lex_id );
+	}
 	return result;
 }
 

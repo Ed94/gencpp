@@ -5,38 +5,19 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"type": "lldb",
-			"request": "launch",
-			"name": "Debug gentime lldb",
-			"program": "${workspaceFolder}/test/test.exe",
-			"args": [],
-			"cwd": "${workspaceFolder}/test/",
-			"postRunCommands": [
-			]
-		},
-		{
 			"type": "cppvsdbg",
 			"request": "launch",
-			"name": "Debug gentime vsdbg",
-			"program": "${workspaceFolder}/test/build/test.exe",
+			"name": "Debug base vsdbg",
+			"program": "${workspaceFolder}/base/build/base.exe",
 			"args": [],
-			"cwd": "${workspaceFolder}/test/",
-			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
-		},
-		{
-			"type": "cppvsdbg",
-			"request": "launch",
-			"name": "Debug bootstrap vsdbg",
-			"program": "${workspaceFolder}/project/build/bootstrap.exe",
-			"args": [],
-			"cwd": "${workspaceFolder}/project/",
+			"cwd": "${workspaceFolder}/base/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		},
 		{
 			"type": "cppvsdbg",
 			"request": "launch",
 			"name": "Debug singleheader vsdbg",
-			"program": "${workspaceFolder}/singleheader/build/gencpp_singleheader.exe",
+			"program": "${workspaceFolder}/singleheader/build/singleheader.exe",
 			"args": [],
 			"cwd": "${workspaceFolder}/singleheader/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
@@ -48,24 +29,6 @@
 			"program": "${workspaceFolder}/unreal_engine/build/unreal.exe",
 			"args": [],
 			"cwd": "${workspaceFolder}/unreal_engine/",
-			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
-		},
-		{
-			"type": "cppvsdbg",
-			"request": "launch",
-			"name": "Debug raylib refactor vsdbg",
-			"program": "${workspaceFolder}/project/auxillary/vis_ast/dependencies/raylib/build/raylib_refactor.exe",
-			"args": [],
-			"cwd": "${workspaceFolder}/project/auxillary/vis_ast/dependencies/temp/raylib-master/src/",
-			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
-		},
-		{
-			"type": "cppvsdbg",
-			"request": "launch",
-			"name": "Debug VIS AST",
-			"program": "${workspaceFolder}/project/auxillary/vis_ast/binaries/vis_ast.exe",
-			"args": [],
-			"cwd": "${workspaceFolder}/project/auxillary/vis_ast/binaries/",
 			"visualizerFile": "${workspaceFolder}/scripts/gencpp.natvis"
 		}
 	]

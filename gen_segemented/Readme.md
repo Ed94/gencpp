@@ -1,4 +1,12 @@
-# Generate Segemented Library
+## Navigation
+
+# base
+
+[Top](../Readme.md)
+
+* [docs](../docs/Readme.md)
+
+# Segemented Library Generation
 
 The principal (user) files are `gen.hpp` and `gen.cpp`.
 They contain includes for its various components: `components/<component_name>.<hpp/cpp>`
@@ -6,10 +14,8 @@ They contain includes for its various components: `components/<component_name>.<
 Dependencies are bundled into `gen.dep.<hpp/cpp>`. They are included in `gen.<hpp/cpp>` before component includes.
 Just like the `gen.<hpp/cpp>` they include their components: `dependencies/<dependency_name>.<hpp/cpp>`
 
+If using the library's provided build scripts:
 
-Both libraries use *pre-generated* (self-hosting I guess) version of the library to then generate the latest version of itself.
-
-They dedicated header and source files. Dependencies included at the top of the file and each header starting with a pragma once.
-The output will be in the `project/gen` directory (if the directory does not exist, it will create it).
-
-Use those to get a general idea of how to make your own tailored version.
+```ps1
+.\build.ps1 <compiler> <debug or omit> segmented
+```

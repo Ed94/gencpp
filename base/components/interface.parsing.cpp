@@ -8,6 +8,8 @@
 
 // Publically Exposed Interface
 
+void parser_define_macro( StrC )
+
 CodeClass parse_class( StrC def )
 {
 	GEN_USING_NS_PARSER;

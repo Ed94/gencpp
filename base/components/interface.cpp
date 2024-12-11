@@ -240,22 +240,22 @@ void init()
 	}
 
 	if (Allocator_DataArrays.Proc == nullptr) {
-		Allocator_DataArrays = heap();
+		Allocator_DataArrays = GlobalAllocator;
 	}
 	if (Allocator_CodePool.Proc == nullptr ) {
-		Allocator_CodePool = heap();
+		Allocator_CodePool = GlobalAllocator;
 	}
 	if (Allocator_Lexer.Proc == nullptr) {
-		Allocator_Lexer = heap();
+		Allocator_Lexer = GlobalAllocator;
 	}
 	if (Allocator_StringArena.Proc == nullptr) {
-		Allocator_StringArena = heap();
+		Allocator_StringArena = GlobalAllocator;
 	}
 	if (Allocator_StringTable.Proc == nullptr) {
-		Allocator_StringTable = heap();
+		Allocator_StringTable = GlobalAllocator;
 	}
 	if (Allocator_TypeTable.Proc == nullptr) {
-		Allocator_TypeTable = heap();
+		Allocator_TypeTable = GlobalAllocator;
 	}
 
 	// Setup the arrays

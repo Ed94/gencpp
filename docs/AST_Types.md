@@ -1,10 +1,16 @@
+## Navigation
+
+[Top](../Readme.md)
+
+<- [docs - General](Readme.md)
+
 # AST Types Documentation
 
 While the Readme for docs covers the data layout per AST, this will focus on the AST types avaialble, and their nuances.
 
 ## Body
 
-These are containers representing a scope body of a definition that can be of the following `ECode` type:
+These are containers representing a scope body of a definition that can be of the following `CodeType` type:
 
 * Class_Body
 * Enum_Body

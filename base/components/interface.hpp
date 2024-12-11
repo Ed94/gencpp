@@ -60,7 +60,7 @@ struct Opts_def_struct {
 	s32            num_interfaces;
 	ModuleFlag     mflags;
 };
-CodeClass def_class( StrC name, Opts_def_struct otps GEN_PARAM_DEFAULT );
+CodeClass def_class( StrC name, Opts_def_struct opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_constructor {
 	CodeParam params;
@@ -69,7 +69,10 @@ struct Opts_def_constructor {
 };
 CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEFAULT );
 
-CodeDefine def_define( StrC name, StrC content );
+struct Opts_def_define {
+	b32 dont_append_preprocess_defines;
+};
+CodeDefine def_define( StrC name, StrC content, Opts_def_define opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_destructor {
 	Code           body;

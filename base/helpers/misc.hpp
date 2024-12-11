@@ -47,6 +47,7 @@ void clang_format_file( char const* path, char const* style_path )
 	system( command );
 	log_fmt("\tclang-format finished formatting.\n");
 }
+
 // Will refactor a file with the given script at the provided path.
 // Assumes refactor is defined in an user-exposed or system enviornment PATH.
 // (See: ./gencpp/scripts/build.ci.ps1 for how)
@@ -65,6 +66,8 @@ void refactor_file( char const* path, char const* refactor_script )
 	#undef refactor
 }
 
+// Does either of the above or both to the provided code.
+// Code returned will be untyped content (its be serialized)
 Code code_refactor_and_format( Code code, char const* scratch_path, char const* refactor_script, char_const* clang_format_sytle_path )
 {
 	GEN_ASSERT_NOT_NULL(code);

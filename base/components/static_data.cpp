@@ -1,6 +1,6 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
-#include "gen.hpp"
+#include "../gen.hpp"
 #endif
 
 #pragma region StaticData

@@ -1,3 +1,9 @@
+## Navigation
+
+[Top](../Readme.md)
+
+<- [docs - General](Readme.md)
+
 # Parser's Algorithim
 
 gencpp uses a hand-written recursive descent parser. Both the lexer and parser currently handle a full C/C++ file in a single pass.
@@ -7,7 +13,7 @@ gencpp uses a hand-written recursive descent parser. Both the lexer and parser c
 ### Lexer
 
 The lex procedure does the lexical pass of content provided as a `StrC` type.
-The tokens are stored (for now) in `gen::parser::Tokens`.
+The tokens are stored (for now) in `gen::parser::Lexer_Tokens`.
 
 Fields:
 
@@ -16,7 +22,7 @@ Array<Token> Arr;
 s32          Idx;
 ```
 
-What token types are supported can be found in [ETokType.csv](../project/enums/ETokType.csv) you can also find the token types in [ETokType.h](../project/components/gen/etoktype.cpp) , which is the generated enum from the csv file.
+What token types are supported can be found in [ETokType.csv](../base/enums/ETokType.csv) you can also find the token types in [ETokType.h](../base/components/gen/etoktype.cpp) , which is the generated enum from the csv file.
 
 Tokens are defined with the struct `gen::parser::Token`:
 
