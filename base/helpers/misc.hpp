@@ -83,6 +83,6 @@ Code code_refactor_and_format( Code code, char const* scratch_path, char const* 
 	}
 
 	Code result = scan_file( scratch_path );
-	remove("gen/scratch.hpp");
+	::remove(scratch_path);
 	return result;
 }

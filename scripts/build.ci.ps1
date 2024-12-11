@@ -184,7 +184,7 @@ if ( $singleheader )
 		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	$includes    = @( $path_project )
+	$includes    = @( $path_base )
 	$unit       = join-path $path_singleheader "singleheader.cpp"
 	$executable = join-path $path_build        "singleheader.exe"
 

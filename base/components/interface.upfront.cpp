@@ -391,7 +391,7 @@ OpValidateResult operator__validate( Operator op, CodeParam params_code, CodeTyp
 }
 
 #define null_check( Context_, Code_ )                                                         \
-	if ( Code_ != nullptr )                                                                   \
+	if ( Code_ == nullptr )                                                                   \
 	{                                                                                         \
 		log_failure( "gen::" stringize(Context_) ": " stringize(Code_) " provided is null" ); \
 		return InvalidCode;                                                                   \

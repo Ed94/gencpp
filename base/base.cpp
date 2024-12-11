@@ -3,7 +3,6 @@
 #define GEN_EXPOSE_BACKEND
 #define GEN_C_LIKE_CPP 1
 #include "gen.cpp"
-
 #include "helpers/push_ignores.inline.hpp"
 
 #include <stdlib.h>

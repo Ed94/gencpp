@@ -2,19 +2,14 @@
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
 #include "gen.cpp"
-
 #include "helpers/push_ignores.inline.hpp"
-#include "helpers/helper.hpp"
+
+#include <stdlib.h>
 
 GEN_NS_BEGIN
-#include "dependencies/parsing.cpp"
+#include "helpers/base_codegen.hpp"
+#include "helpers/misc.hpp"
 GEN_NS_END
-
-#include "auxillary/builder.hpp"
-#include "auxillary/builder.cpp"
-#include "auxillary/scanner.hpp"
-
-#include <cstdlib>   // for system()
 
 using namespace gen;
 
@@ -49,49 +44,20 @@ global bool generate_builder = true;
 global bool generate_editor  = true;
 global bool generate_scanner = true;
 
-void format_file( char const* path )
-{
-	String resolved_path = String::make(GlobalAllocator, to_str(path));
+#define path_format_style "../scripts/.clang-format "
+#define scratch_file      "gen/scratch.hpp"
+#define path_base         "../base/"
 
-	String style_arg = String::make(GlobalAllocator, txt("-style=file:"));
-	style_arg.append("../scripts/.clang-format ");
-
-	// Need to execute clang format on the generated file to get it to match the original.
-	#define clang_format      "clang-format "
-	#define cf_format_inplace "-i "
-	#define cf_verbose        "-verbose "
-	String command = String::make( GlobalAllocator, clang_format );
-	command.append( cf_format_inplace );
-	command.append( cf_verbose );
-	command.append( style_arg );
-	command.append( resolved_path );
-		log_fmt("\tRunning clang-format on file:\n");
-		system( command );
-		log_fmt("\tclang-format finished reformatting.\n");
-	#undef cf_cmd
-	#undef cf_format_inplace
-	#undef cf_style
-	#undef cf_verbse
-}
-
-Code dump_to_scratch_and_retireve( Code code )
-{
-	Builder ecode_file_temp = Builder::open("gen/scratch.hpp");
-	ecode_file_temp.print(code);
-	ecode_file_temp.write();
-	format_file("gen/scratch.hpp");
-	Code result = scan_file( "gen/scratch.hpp" );
-	remove("gen/scratch.hpp");
-	return result;
+Code format( Code code ) {
+	return code_refactor_and_format(code, scratch_file, nullptr, path_format_style );
 }
 
 int gen_main()
 {
-#define project_dir "../project/"
 	gen::init();
 
-	Code push_ignores        = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
-	Code pop_ignores         = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
+	Code push_ignores        = scan_file( path_base "helpers/push_ignores.inline.hpp" );
+	Code pop_ignores         = scan_file( path_base "helpers/pop_ignores.inline.hpp" );
 	Code single_header_start = scan_file( "components/header_start.hpp" );
 
 	Builder
@@ -106,18 +72,18 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code platform     = scan_file( project_dir "dependencies/platform.hpp" );
-			Code macros       = scan_file( project_dir "dependencies/macros.hpp" );
-			Code basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
-			Code debug        = scan_file( project_dir "dependencies/debug.hpp" );
-			Code memory	      = scan_file( project_dir "dependencies/memory.hpp" );
-			Code string_ops   = scan_file( project_dir "dependencies/string_ops.hpp" );
-			Code printing     = scan_file( project_dir "dependencies/printing.hpp" );
-			Code containers   = scan_file( project_dir "dependencies/containers.hpp" );
-			Code hashing 	  = scan_file( project_dir "dependencies/hashing.hpp" );
-			Code strings      = scan_file( project_dir "dependencies/strings.hpp" );
-			Code filesystem   = scan_file( project_dir "dependencies/filesystem.hpp" );
-			Code timing       = scan_file( project_dir "dependencies/timing.hpp" );
+			Code platform     = scan_file( path_base "dependencies/platform.hpp" );
+			Code macros       = scan_file( path_base "dependencies/macros.hpp" );
+			Code basic_types  = scan_file( path_base "dependencies/basic_types.hpp" );
+			Code debug        = scan_file( path_base "dependencies/debug.hpp" );
+			Code memory	      = scan_file( path_base "dependencies/memory.hpp" );
+			Code string_ops   = scan_file( path_base "dependencies/string_ops.hpp" );
+			Code printing     = scan_file( path_base "dependencies/printing.hpp" );
+			Code containers   = scan_file( path_base "dependencies/containers.hpp" );
+			Code hashing 	  = scan_file( path_base "dependencies/hashing.hpp" );
+			Code strings      = scan_file( path_base "dependencies/strings.hpp" );
+			Code filesystem   = scan_file( path_base "dependencies/filesystem.hpp" );
+			Code timing       = scan_file( path_base "dependencies/timing.hpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print( platform );
@@ -135,11 +101,8 @@ int gen_main()
 			header.print( filesystem );
 			header.print( timing );
 
-			if ( generate_scanner )
-			{
-				header.print_fmt( "\n#pragma region Parsing\n" );
-				header.print( scan_file( project_dir "dependencies/parsing.hpp" ) );
-				header.print_fmt( "#pragma endregion Parsing\n\n" );
+			if ( generate_scanner ) {
+				header.print( scan_file( path_base "dependencies/parsing.hpp" ) );
 			}
 
 			header.print_fmt( "GEN_NS_END\n" );
@@ -147,17 +110,17 @@ int gen_main()
 			header.print( fmt_newline );
 		}
 
-		Code types      = scan_file( project_dir "components/types.hpp" );
-		Code ast        = scan_file( project_dir "components/ast.hpp" );
-		Code ast_types  = scan_file( project_dir "components/ast_types.hpp" );
-		Code code_types = scan_file( project_dir "components/code_types.hpp" );
-		Code interface  = scan_file( project_dir "components/interface.hpp" );
-		Code inlines 	= scan_file( project_dir "components/inlines.hpp" );
-		Code header_end = scan_file( project_dir "components/header_end.hpp" );
+		Code types      = scan_file( path_base "components/types.hpp" );
+		Code ast        = scan_file( path_base "components/ast.hpp" );
+		Code ast_types  = scan_file( path_base "components/ast_types.hpp" );
+		Code code_types = scan_file( path_base "components/code_types.hpp" );
+		Code interface  = scan_file( path_base "components/interface.hpp" );
+		Code inlines 	= scan_file( path_base "components/inlines.hpp" );
+		Code header_end = scan_file( path_base "components/header_end.hpp" );
 
-		CodeBody ecode       = gen_ecode     ( project_dir "enums/ECodeTypes.csv" );
-		CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv" );
-		CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv" );
+		CodeBody ecode       = gen_ecode     ( path_base "enums/ECodeTypes.csv" );
+		CodeBody eoperator   = gen_eoperator ( path_base "enums/EOperator.csv" );
+		CodeBody especifier  = gen_especifier( path_base "enums/ESpecifier.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n" );
@@ -165,11 +128,11 @@ int gen_main()
 		header.print_fmt("#pragma region Types\n");
 		header.print( types );
 		header.print( fmt_newline );
-		header.print( dump_to_scratch_and_retireve( ecode ));
+		header.print( format( ecode ));
 		header.print( fmt_newline );
-		header.print( dump_to_scratch_and_retireve( eoperator ));
+		header.print( format( eoperator ));
 		header.print( fmt_newline );
-		header.print( dump_to_scratch_and_retireve( especifier ));
+		header.print( format( especifier ));
 		header.print( fmt_newline );
 		header.print_fmt("#pragma endregion Types\n\n");
 
@@ -183,17 +146,14 @@ int gen_main()
 
 		header.print_fmt( "\n#pragma region Inlines\n" );
 		header.print( inlines );
-		header.print( dump_to_scratch_and_retireve( ast_inlines ));
+		header.print( format( ast_inlines ));
 		header.print( fmt_newline );
 		header.print_fmt( "#pragma endregion Inlines\n" );
 
 		header.print( header_end );
 
-		if ( generate_builder )
-		{
-			header.print_fmt( "\n#pragma region Builder\n" );
-			header.print( scan_file( project_dir "auxillary/builder.hpp" ) );
-			header.print_fmt( "#pragma endregion Builder\n" );
+		if ( generate_builder ) {
+			header.print( scan_file( path_base "auxillary/builder.hpp" ) );
 		}
 
 		header.print_fmt( "GEN_NS_END\n" );
@@ -205,15 +165,15 @@ int gen_main()
 
 		if ( generate_gen_dep )
 		{
-			Code impl_start = scan_file( project_dir "dependencies/src_start.cpp" );
-			Code debug      = scan_file( project_dir "dependencies/debug.cpp" );
-			Code string_ops = scan_file( project_dir "dependencies/string_ops.cpp" );
-			Code printing   = scan_file( project_dir "dependencies/printing.cpp" );
-			Code memory     = scan_file( project_dir "dependencies/memory.cpp" );
-			Code hashing    = scan_file( project_dir "dependencies/hashing.cpp" );
-			Code strings    = scan_file( project_dir "dependencies/strings.cpp" );
-			Code filesystem = scan_file( project_dir "dependencies/filesystem.cpp" );
-			Code timing     = scan_file( project_dir "dependencies/timing.cpp" );
+			Code impl_start = scan_file( path_base "dependencies/src_start.cpp" );
+			Code debug      = scan_file( path_base "dependencies/debug.cpp" );
+			Code string_ops = scan_file( path_base "dependencies/string_ops.cpp" );
+			Code printing   = scan_file( path_base "dependencies/printing.cpp" );
+			Code memory     = scan_file( path_base "dependencies/memory.cpp" );
+			Code hashing    = scan_file( path_base "dependencies/hashing.cpp" );
+			Code strings    = scan_file( path_base "dependencies/strings.cpp" );
+			Code filesystem = scan_file( path_base "dependencies/filesystem.cpp" );
+			Code timing     = scan_file( path_base "dependencies/timing.cpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print_fmt( "GEN_NS_BEGIN\n\n");
@@ -228,10 +188,9 @@ int gen_main()
 			header.print( filesystem );
 			header.print( timing );
 
-			if ( generate_scanner )
-			{
+			if ( generate_scanner ) {
 				header.print_fmt( "\n#pragma region Parsing\n" );
-				header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
+				header.print( scan_file( path_base "dependencies/parsing.cpp" ) );
 				header.print_fmt( "#pragma endregion Parsing\n\n" );
 			}
 
@@ -239,18 +198,18 @@ int gen_main()
 			header.print_fmt( roll_own_dependencies_guard_end );
 		}
 
-		Code static_data 	   = scan_file( project_dir "components/static_data.cpp" );
-		Code ast_case_macros   = scan_file( project_dir "components/ast_case_macros.cpp" );
-		Code ast               = scan_file( project_dir "components/ast.cpp" );
-		Code code              = scan_file( project_dir "components/code_serialization.cpp" );
-		Code interface         = scan_file( project_dir "components/interface.cpp" );
-		Code upfront           = scan_file( project_dir "components/interface.upfront.cpp" );
-		Code lexer             = scan_file( project_dir "components/lexer.cpp" );
-		Code parser            = scan_file( project_dir "components/parser.cpp" );
-		Code parsing_interface = scan_file( project_dir "components/interface.parsing.cpp" );
-		Code untyped           = scan_file( project_dir "components/interface.untyped.cpp" );
+		Code static_data 	   = scan_file( path_base "components/static_data.cpp" );
+		Code ast_case_macros   = scan_file( path_base "components/ast_case_macros.cpp" );
+		Code ast               = scan_file( path_base "components/ast.cpp" );
+		Code code              = scan_file( path_base "components/code_serialization.cpp" );
+		Code interface         = scan_file( path_base "components/interface.cpp" );
+		Code upfront           = scan_file( path_base "components/interface.upfront.cpp" );
+		Code lexer             = scan_file( path_base "components/lexer.cpp" );
+		Code parser            = scan_file( path_base "components/parser.cpp" );
+		Code parsing_interface = scan_file( path_base "components/interface.parsing.cpp" );
+		Code untyped           = scan_file( path_base "components/interface.untyped.cpp" );
 
-		CodeBody etoktype      = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv" );
+		CodeBody etoktype      = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
 		CodeNS   parser_nspace = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
@@ -266,7 +225,7 @@ int gen_main()
 		header.print( interface );
 		header.print( upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
-		header.print( dump_to_scratch_and_retireve(parser_nspace) );
+		header.print( format(parser_nspace) );
 		header.print( lexer );
 		header.print( parser );
 		header.print( parsing_interface );
@@ -274,29 +233,18 @@ int gen_main()
 		header.print( untyped );
 		header.print_fmt( "\n#pragma endregion Interface\n\n");
 
-		if ( generate_builder )
-		{
-			header.print_fmt( "#pragma region Builder\n" );
-			header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
-			header.print_fmt( "\n#pragma endregion Builder\n\n" );
+		if ( generate_builder ) {
+			header.print( scan_file( path_base "auxillary/builder.cpp"  ) );
 		}
 
 		// Scanner header depends on implementation
-		if ( generate_scanner )
-		{
-			header.print_fmt( "\n#pragma region Scanner\n" );
-			header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
-			header.print_fmt( "#pragma endregion Scanner\n\n" );
+		if ( generate_scanner ) {
+			header.print( scan_file( path_base "auxillary/scanner.hpp" ) );
 		}
 
-#if 0
-		if ( generate_scanner )
-		{
-			header.print_fmt( "#pragma region Scanner\n\n" );
-			header.print( scan_file( project_dir "auxillary/scanner.cpp" ) );
-			header.print_fmt( "#pragma endregion Scanner\n\n" );
+		if ( generate_scanner ) {
+			header.print( scan_file( path_base "auxillary/scanner.cpp" ) );
 		}
-#endif
 
 		header.print_fmt( "GEN_NS_END\n");
 
@@ -308,5 +256,4 @@ int gen_main()
 
 	gen::deinit();
 	return 0;
-#undef project_dir
 }
