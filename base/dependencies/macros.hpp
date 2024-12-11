@@ -317,7 +317,7 @@
 //                                                          ^ Selects the comma                              ^ is the type                             ^ is the function                             ^ Insert a comma
 // The slot won't exist if that comma is not found.                                                                                                                                                  |
 
-// For the occastion where an expression didn't resolve to a selection option the "default: <value>" wilbe set to:
+// For the occastion where an expression didn't resolve to a selection option the "default: <value>" will be set to:
 typedef struct GENCPP_NO_RESOLVED_GENERIC_SELECTION GENCPP_NO_RESOLVED_GENERIC_SELECTION;
 struct GENCPP_NO_RESOLVED_GENERIC_SELECTION {
 	void* _THE_VOID_SLOT_;
@@ -327,7 +327,7 @@ GENCPP_NO_RESOLVED_GENERIC_SELECTION const gen_generic_selection_fail = {0};
 // ----------------------------------------------------------------------------------------------------------------------------------
 
 // Below are generated on demand for an overlaod depdendent on a type:
-// -----------------------------------------------------------------------------------------------------#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg ) _Generic(       k
+// ----------------------------------------------------------------------------------------------------------------------------------
 #define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg ) _Generic(       \
 (selector_arg), /* Select Via Expression*/                           \
   /* Extendibility slots: */                                         \
@@ -338,8 +338,7 @@ GENCPP_NO_RESOLVED_GENERIC_SELECTION const gen_generic_selection_fail = {0};
 // ----------------------------------------------------------------------------------------------------------------------------------
 
 // Then each definiton of a function has an associated define:
-// #define <function_id_macro> GEN_GENERIC_FUNCTION_ARG_SIGNATURE( <function_id>, <arguments> )
-#define GEN_GENERIC_FUNCTION_ARG_SIGNATURE( name_of_function, type_delimiter ) type_delimiter name_of_function
+#// #define GENERIC_SLOT_<#>_<generic identifier> <typename>, <function_to_resolve>
 
 // Then somehwere later on
 // <etc> <return_type> <function_id> ( <arguments> ) { <implementation> }
@@ -347,11 +346,11 @@ GENCPP_NO_RESOLVED_GENERIC_SELECTION const gen_generic_selection_fail = {0};
 // Concrete example:
 
 // To add support for long:
-#define GEN_EXAMPLE_HASH__ARGS_SIG_1 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long, long long )
+#define GENERIC_SLOT_1_gen_example_hash long, gen_example_hash__P_long
 size_t gen_example_hash__P_long( long val ) { return val * 2654435761ull; }
 
 // To add support for long long:
-#define GEN_EXAMPLE_HASH__ARGS_SIG_2 GEN_GENERIC_FUNCTION_ARG_SIGNATURE( hash__P_long_long, long long )
+#define GENERIC_SLOT_2_gen_example_hash  long long, gen_example_hash__P_long_long
 size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761ull; }
 
 // If using an Editor with support for syntax hightlighting macros: HASH__ARGS_SIG_1 and HASH_ARGS_SIG_2 should show color highlighting indicating the slot is enabled,
@@ -394,6 +393,7 @@ size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761u
 
 // Used to keep the _Generic keyword happy as bare types are not considered "expressions"
 #define GEN_TYPE_TO_EXP(type) (* (type*)NULL)
+// Instead of using this macro, you'll see it directly expanded by the code generation.
 
 // typedef void* GEN_GenericExampleType;
 // GEN_FUNCTION_GENERIC_EXAMPLE_DIRECT_TYPE( GEN_GenericExampleType );

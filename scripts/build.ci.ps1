@@ -246,6 +246,7 @@ if ( $c_library )
 		}
 	Pop-Location
 
+	$includes    = @( $path_c_library )
 	$unit       = join-path $path_c_library "gen.c"
 	$executable = join-path $path_build     "gen_c_library_test.exe"
 

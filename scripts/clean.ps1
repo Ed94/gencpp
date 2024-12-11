@@ -5,8 +5,8 @@ $path_root               = Get-ScriptRepoRoot
 $path_base               = Join-Path $path_root         base
 $path_base_build         = Join-Path $path_base         build
 $path_c_library          = Join-Path $path_root         gen_c_library
-$path_c_library_build    = Join-Path $gen_c_library     build
-$path_c_library_gen      = Join-Path $gen_c_library     gen
+$path_c_library_build    = Join-Path $path_c_library    build
+$path_c_library_gen      = Join-Path $path_c_library    gen
 $path_segmented          = Join-Path $path_root         gen_segmented
 $path_segmented_build    = Join-Path $path_segmented    build
 $path_segmented_gen      = Join-Path $path_segmented    gen
@@ -28,8 +28,11 @@ if ( Test-Path $path_base_build) {
 if ( Test-Path $path_segmented_build) {
 	Remove-Item $path_segmented_build -Recurse -Verbose
 }
+if ( Test-Path $path_c_library_build ) {
+	Remove-Item $path_c_library_build -Recurse -Verbose
+}
 if ( Test-Path $path_c_library_gen ) {
-	Remove-Item $path_segmented_gen -Recurse -Verbose
+	Remove-Item $path_c_library_gen -Recurse -Verbose
 }
 if ( Test-Path $path_segmented_build) {
 	Remove-Item $path_segmented_build -Recurse -Verbose

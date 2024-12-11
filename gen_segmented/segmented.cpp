@@ -219,8 +219,8 @@ int gen_main()
 		builder_print( src, lexer );
 		builder_print( src, parser );
 		builder_print( src, parsing_interface );
-		builder_print( src, untyped );
 		builder_print_fmt( src, "\n#pragma endregion Parsing\n\n" );
+		builder_print( src, untyped );
 		builder_print_fmt( src, "#pragma endregion Interface\n\n" );
 
 		builder_print_fmt( src, "GEN_NS_END\n\n");
@@ -243,7 +243,7 @@ int gen_main()
 	}
 
 	// gen_builder.cpp
-
+	{
 		Code builder = scan_file( path_base "auxillary/builder.cpp" );
 
 		Builder src = builder_open( "gen/gen.builder.cpp" );
@@ -253,7 +253,7 @@ int gen_main()
 		builder_print( & src,  builder );
 		builder_print_fmt( & src, "\nGEN_NS_END\n" );
 		builder_write( & src);
-
+	}
 
 	// gen_scanner.hpp
 	{

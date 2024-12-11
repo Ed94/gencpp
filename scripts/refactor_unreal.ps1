@@ -36,7 +36,7 @@ $formatParams = @(
 write-host "Beginning refactor...`n"
 
 $refactorParams = @(
-    "-debug",
+    # "-debug",
     "-num=$($targetFiles.Count)"
     "-src=$($targetFiles)",
     "-spec=$($file_spec)"

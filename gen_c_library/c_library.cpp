@@ -137,6 +137,7 @@ int gen_main()
 			CodeTemplate tmpl = cast(CodeTemplate, entry);
 			if ( tmpl->Declaration->Name.contains(txt("swap")))
 			{
+				log_fmt("SWAPPED");
 				CodeBody macro_swap = parse_global_body( txt(R"(
 #define swap( a, b )        \
 do                          \
@@ -1127,7 +1128,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 // Source Content : Reflection and Generation
 
 #pragma region Resolve Dependencies
-	Code src_impl_start = scan_file( path_base "dependencies/src_start.cpp" );
+	Code src_dep_start  = scan_file( path_base "dependencies/src_start.cpp" );
 	Code src_debug      = scan_file( path_base "dependencies/debug.cpp" );
 	Code src_string_ops = scan_file( path_base "dependencies/string_ops.cpp" );
 	Code src_printing   = scan_file( path_base "dependencies/printing.cpp" );
@@ -1143,6 +1144,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody array_pool  = gen_array(txt("gen_Pool"),  txt("Array_gen_Pool"));
 	CodeBody array_token = gen_array(txt("gen_Token"), txt("Array_gen_Token"));
 
+	Code src_start              = scan_file(           "components/src_start.c" );
 	Code src_static_data 	      = scan_file( path_base "components/static_data.cpp" );
 	Code src_ast_case_macros    = scan_file( path_base "components/ast_case_macros.cpp" );
 	Code src_code_serialization = scan_file( path_base "components/code_serialization.cpp" );
@@ -1395,8 +1397,74 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		containers.append( fmt_newline);
 	}
 
-// Printing : Everything below is jsut serialization & formatting ot a single-file.
+// Printing : Everything below is jsut serialization & formatting to a singleheader file & segmented set of files
 
+#pragma region Refactored / Formatted
+ 	Code r_header_platform     = refactor(header_platform);
+	Code r_header_macros       = refactor(header_macros);
+	Code r_header_basic_types  = refactor(header_basic_types);
+	Code r_header_debug        = refactor(header_debug);
+	Code rf_header_memory      = refactor_and_format(header_memory);
+	Code rf_header_printing    = refactor_and_format(header_printing);
+	Code r_header_string_ops   = refactor(header_string_ops);
+	Code rf_containers         = refactor_and_format(containers);
+	Code r_header_hashing      = refactor(header_hashing);
+	Code rf_header_strings     = refactor_and_format(header_strings);
+	Code rf_header_filesystem  = refactor_and_format(header_filesystem);
+	Code r_header_timing       = refactor(header_timing);
+	Code rf_header_parsing     = refactor_and_format(header_parsing);
+
+	Code rf_types      = refactor_and_format(types);
+	Code rf_ecode      = refactor_and_format(ecode);
+	Code rf_eoperator  = refactor_and_format(eoperator);
+	Code rf_especifier = refactor_and_format(especifier);
+	Code rf_ast        = refactor_and_format(ast);
+	Code rf_code_types = refactor_and_format(code_types);
+	Code rf_ast_types  = refactor_and_format(ast_types);
+
+	Code rf_interface = refactor_and_format(interface);
+	Code rf_inlines   = refactor_and_format(inlines);
+
+	Code rf_array_string_cached = refactor_and_format(array_string_cached);
+	Code rf_header_end          = refactor_and_format(header_end);
+	Code rf_header_builder      = refactor_and_format(header_builder);
+	Code rf_header_scanner      = refactor_and_format( scan_file( path_base "auxillary/scanner.hpp" ));
+
+	Code r_src_dep_start  = refactor(src_dep_start);
+	Code r_src_debug      = refactor(src_debug);
+	Code r_src_string_ops = refactor(src_string_ops);
+	Code r_src_printing   = refactor(src_printing);
+	Code r_src_memory     = refactor(src_memory);
+	Code r_src_hashing    = refactor(src_hashing);
+	Code r_src_strings    = refactor(src_strings);
+	Code r_src_filesystem = refactor(src_filesystem);
+	Code r_src_timing     = refactor(src_timing);
+
+	Code rf_src_parsing = refactor_and_format( scan_file( path_base "dependencies/parsing.cpp" ));
+
+	Code rf_array_arena           = refactor_and_format(array_arena);
+	Code rf_array_pool            = refactor_and_format(array_pool);
+	Code r_src_static_data        = refactor(src_static_data);
+	Code r_src_ast_case_macros    = refactor(src_ast_case_macros);
+	Code r_src_ast                = refactor(src_ast);
+	Code r_src_code_serialization = refactor(src_code_serialization);
+
+	Code r_src_interface        = refactor(src_interface);
+	Code r_src_upfront          = refactor_and_format(src_upfront);
+	Code r_src_lexer            = refactor_and_format(src_lexer);
+	Code rf_array_code_typename = refactor_and_format(array_code_typename);
+ 	Code rf_src_parser          = refactor_and_format(src_parser);
+	Code r_src_parsing          = refactor(src_parsing_interface);
+	Code r_src_untyped          = refactor(src_untyped);
+	
+	CodeBody etoktype    = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv", helper_use_c_definition );
+	Code     rf_etoktype = refactor_and_format(etoktype);
+
+	Code rf_src_builder = refactor_and_format( scan_file( path_base "auxillary/builder.cpp" ));
+	Code rf_src_scanner = refactor_and_format( scan_file( path_base "auxillary/scanner.cpp" ));
+#pragma endregion Refactored / Formatted
+
+#pragma region Singleheader
 	Builder
 	header = Builder::open( "gen/gen_singleheader.h" );
 	header.print_fmt( generation_notice );
@@ -1409,25 +1477,22 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 	#pragma region Print Dependencies
 		header.print_fmt( roll_own_dependencies_guard_start );
-		header.print( refactor(header_platform) );
+		header.print( r_header_platform );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
-		header.print( refactor(header_macros) );
-		header.print( refactor(header_basic_types) );
-		header.print( refactor(header_debug) );
-		header.print( refactor_and_format(header_memory) );
-		header.print( refactor_and_format(header_printing));
-		header.print( refactor(header_string_ops) );
+		header.print( r_header_macros );
+		header.print( r_header_basic_types );
+		header.print( r_header_debug );
+		header.print( rf_header_memory );
+		header.print( rf_header_printing);
+		header.print( r_header_string_ops );
 		header.print( fmt_newline);
-		header.print( refactor_and_format(containers));
-		header.print( refactor(header_hashing) );
-		header.print( refactor_and_format(header_strings));
-		header.print( refactor_and_format(header_filesystem));
-		header.print( refactor(header_timing) );
-
-		header.print_fmt( "\n#pragma region Parsing\n" );
-		header.print( refactor_and_format(header_parsing) );
-		header.print_fmt( "#pragma endregion Parsing\n" );
+		header.print( rf_containers);
+		header.print( r_header_hashing );
+		header.print( rf_header_strings);
+		header.print( rf_header_filesystem);
+		header.print( r_header_timing );
+		header.print(rf_header_parsing );
 
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print_fmt( roll_own_dependencies_guard_end );
@@ -1440,35 +1505,34 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "GEN_API_C_BEGIN\n\n" );
 
 		header.print_fmt("#pragma region Types\n");
-		header.print( refactor_and_format(types) );
+		header.print( rf_types );
 		header.print( fmt_newline );
-		header.print( refactor_and_format( ecode ));
+		header.print( rf_ecode );
 		header.print( fmt_newline );
-		header.print( refactor_and_format( eoperator ));
+		header.print( rf_eoperator );
 		header.print( fmt_newline );
-		header.print( refactor_and_format( especifier ));
+		header.print( rf_especifier );
 		header.print_fmt("#pragma endregion Types\n\n");
 
 		header.print_fmt("#pragma region AST\n");
-		header.print( refactor_and_format(ast) );
-		header.print( refactor_and_format(code_types) );
-		header.print( refactor_and_format(ast_types) );
+		header.print( rf_ast );
+		header.print( rf_code_types );
+		header.print( rf_ast_types );
 		header.print_fmt("\n#pragma endregion AST\n");
 
-		header.print( refactor_and_format(interface) );
+		header.print( rf_interface );
 		header.print(fmt_newline);
 
 		header.print_fmt("#pragma region Inlines\n");
-		header.print( refactor_and_format(inlines) );
+		header.print( rf_inlines );
 		header.print_fmt("#pragma endregion Inlines\n");
 
 		header.print(fmt_newline);
-		header.print( refactor_and_format(array_string_cached));
+		header.print( rf_array_string_cached );
 
-		header.print( refactor_and_format(header_end) );
-
-		header.print( refactor_and_format(header_builder) );
-		header.print( refactor_and_format( scan_file( path_base "auxillary/scanner.hpp" )) );
+		header.print( rf_header_end );
+		header.print( rf_header_builder );
+		header.print( rf_header_scanner );
 
 		header.print_fmt( "\nGEN_API_C_END\n" );
 		header.print_fmt( "GEN_NS_END\n\n" );
@@ -1484,60 +1548,55 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "GEN_NS_BEGIN\n");
 		header.print_fmt( "GEN_API_C_BEGIN\n" );
 
-		header.print( refactor(src_impl_start) );
-		header.print( refactor(src_debug) );
-		header.print( refactor(src_string_ops) );
-		header.print( refactor(src_printing) );
-		header.print( refactor(src_memory) );
-		header.print( refactor(src_hashing) );
-		header.print( refactor(src_strings) );
-		header.print( refactor(src_filesystem) );
-		header.print( refactor(src_timing) );
-
-		header.print_fmt( "\n#pragma region Parsing\n" );
-		header.print( refactor_and_format( scan_file( path_base "dependencies/parsing.cpp" )) );
-		header.print_fmt( "\n#pragma endregion Parsing\n\n" );
+		header.print( r_src_dep_start );
+		header.print( r_src_debug );
+		header.print( r_src_string_ops );
+		header.print( r_src_printing );
+		header.print( r_src_memory );
+		header.print( r_src_hashing );
+		header.print( r_src_strings );
+		header.print( r_src_filesystem );
+		header.print( r_src_timing );
+		header.print( rf_src_parsing );
 
 		header.print_fmt( "GEN_NS_END\n");
 		header.print_fmt( roll_own_dependencies_guard_end );
 	#pragma endregion Print Dependencies
 
 	#pragma region Print Components
-		CodeBody etoktype = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv", helper_use_c_definition );
-
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 
 		header.print( fmt_newline);
-		header.print( refactor_and_format(array_arena));
+		header.print( rf_array_arena );
 		header.print( fmt_newline);
-		header.print( refactor_and_format(array_pool));
+		header.print( rf_array_pool);
 
-		header.print( refactor(src_static_data) );
+		header.print( r_src_static_data );
 		header.print( fmt_newline);
 
 		header.print_fmt( "#pragma region AST\n\n" );
-		header.print( refactor(src_ast_case_macros) );
-		header.print( refactor(src_ast) );
-		header.print( refactor(src_code_serialization) );
+		header.print( r_src_ast_case_macros );
+		header.print( r_src_ast );
+		header.print( r_src_code_serialization );
 		header.print_fmt( "#pragma endregion AST\n\n" );
 
 		header.print_fmt( "#pragma region Interface\n" );
-		header.print( refactor(src_interface) );
-		header.print( refactor_and_format(src_upfront) );
+		header.print( r_src_interface );
+		header.print( r_src_upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
-		header.print( refactor_and_format(etoktype) );
-		header.print( refactor_and_format(src_lexer) );
+		header.print( rf_etoktype );
+		header.print( r_src_lexer );
 		header.print( fmt_newline);
-		header.print( refactor_and_format(array_code_typename));
+		header.print( rf_array_code_typename );
 		header.print( fmt_newline);
-		header.print( refactor_and_format(src_parser) );
-		header.print( refactor(src_parsing_interface) );
+		header.print( rf_src_parser );
+		header.print( r_src_parsing );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
-		header.print( refactor(src_untyped) );
+		header.print( r_src_untyped );
 		header.print_fmt( "\n#pragma endregion Interface\n\n");
 
-		header.print( refactor_and_format( scan_file( path_base "auxillary/builder.cpp"  )) );
-	header.print( refactor_and_format( scan_file( path_base "auxillary/scanner.cpp"  )) );
+		header.print( rf_src_builder );
+		header.print( rf_src_scanner );
 
 		header.print_fmt( "GEN_API_C_END\n" );
 	#pragma endregion Print Components
@@ -1546,8 +1605,148 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	}
 	header.print( pop_ignores );
 	header.write();
+#pragma endregion Singleheader
+
+#pragma region Segmented
+	// gen_dep.h
+	{
+		Builder header = Builder::open( "gen/gen.dep.h");
+		builder_print_fmt( header, generation_notice );
+		builder_print_fmt( header, "// This file is intended to be included within gen.hpp (There is no pragma diagnostic ignores)\n" );
+		header.print( r_header_platform );
+		header.print_fmt( "\nGEN_NS_BEGIN\n" );
+
+		header.print( r_header_macros );
+		header.print( r_header_basic_types );
+		header.print( r_header_debug );
+		header.print( rf_header_memory );
+		header.print( rf_header_printing);
+		header.print( r_header_string_ops );
+		header.print( fmt_newline);
+		header.print( rf_containers);
+		header.print( r_header_hashing );
+		header.print( rf_header_strings);
+		header.print( rf_header_filesystem);
+		header.print( r_header_timing );
+		header.print(rf_header_parsing );
+
+		header.print_fmt( "\nGEN_NS_END\n" );
+		header.write();
+	}
+	// gen_dep.c
+	{
+		Builder src = Builder::open( "gen/gen.dep.c" );
+		src.print_fmt( "GEN_NS_BEGIN\n");
+		src.print_fmt( "GEN_API_C_BEGIN\n" );
+
+		builder_print_fmt(src, generation_notice );
+		builder_print_fmt( src, "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n" );
+		src.print( r_src_dep_start );
+		src.print( r_src_debug );
+		src.print( r_src_string_ops );
+		src.print( r_src_printing );
+		src.print( r_src_memory );
+		src.print( r_src_hashing );
+		src.print( r_src_strings );
+		src.print( r_src_filesystem );
+		src.print( r_src_timing );
+		src.print( rf_src_parsing );
+
+		src.print_fmt( "GEN_NS_END\n");
+		src.write();
+	}
+	// gen.h
+	{
+		Builder header = builder_open( "gen/gen.h" );
+		builder_print_fmt( header, generation_notice );
+		builder_print_fmt( header, "#pragma once\n\n" );
+		builder_print( header, push_ignores );
+		header.print( c_library_header_start );
+		header.print( scan_file( "components/header_seg_includes.h" ));
+		header.print( fmt_newline );
+		header.print_fmt( "GEN_NS_BEGIN\n" );
+		header.print_fmt( "GEN_API_C_BEGIN\n\n" );
+
+		header.print_fmt("#pragma region Types\n");
+		header.print( rf_types );
+		header.print( fmt_newline );
+		header.print( rf_ecode );
+		header.print( fmt_newline );
+		header.print( rf_eoperator );
+		header.print( fmt_newline );
+		header.print( rf_especifier );
+		header.print_fmt("#pragma endregion Types\n\n");
+
+		header.print_fmt("#pragma region AST\n");
+		header.print( rf_ast );
+		header.print( rf_code_types );
+		header.print( rf_ast_types );
+		header.print_fmt("\n#pragma endregion AST\n");
+
+		header.print( rf_interface );
+		header.print(fmt_newline);
+
+		header.print_fmt("#pragma region Inlines\n");
+		header.print( rf_inlines );
+		header.print_fmt("#pragma endregion Inlines\n");
+
+		header.print(fmt_newline);
+		header.print( rf_array_string_cached );
+
+		header.print( rf_header_end );
+		header.print( rf_header_builder );
+		header.print( rf_header_scanner );
+
+		header.print_fmt( "\nGEN_API_C_END\n" );
+		header.print_fmt( "GEN_NS_END\n\n" );
+		builder_print( header, pop_ignores );
+		builder_write(header);
+	}
+	// gen.c
+	{
+		Builder src = Builder::open( "gen/gen.c" );
+		builder_print_fmt( src, generation_notice );
+		builder_print( src, push_ignores );
+		builder_print( src, src_start );
+		src.print_fmt( "\nGEN_NS_BEGIN\n");
+
+		src.print( fmt_newline);
+		src.print( rf_array_arena );
+		src.print( fmt_newline);
+		src.print( rf_array_pool);
+
+		src.print( r_src_static_data );
+		src.print( fmt_newline);
+
+		src.print_fmt( "#pragma region AST\n\n" );
+		src.print( r_src_ast_case_macros );
+		src.print( r_src_ast );
+		src.print( r_src_code_serialization );
+		src.print_fmt( "#pragma endregion AST\n\n" );
+
+		src.print_fmt( "#pragma region Interface\n" );
+		src.print( r_src_interface );
+		src.print( r_src_upfront );
+		src.print_fmt( "\n#pragma region Parsing\n\n" );
+		src.print( rf_etoktype );
+		src.print( r_src_lexer );
+		src.print( fmt_newline);
+		src.print( rf_array_code_typename );
+		src.print( fmt_newline);
+		src.print( rf_src_parser );
+		src.print( r_src_parsing );
+		src.print_fmt( "\n#pragma endregion Parsing\n" );
+		src.print( r_src_untyped );
+		src.print_fmt( "\n#pragma endregion Interface\n\n");
+
+		src.print( rf_src_builder );
+		src.print( rf_src_scanner );
+
+		src.print_fmt( "GEN_API_C_END\n" );
+		src.write();
+	}
+#pragma endregion Segmented
 
 	gen::deinit();
 	return 0;
-#undef project_dir
 }
