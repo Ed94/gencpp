@@ -440,8 +440,6 @@ bool array_set_capacity(Array<Type>* array, usize new_capacity)
 
 #pragma endregion Array
 
-// TODO(Ed) : This thing needs ALOT of work.
-
 #pragma region HashTable
 #define HashTable(Type) HashTable<Type>
 
