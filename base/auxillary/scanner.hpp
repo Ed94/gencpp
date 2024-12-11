@@ -49,26 +49,22 @@ struct CSV_Columns2 {
 
 inline
 CSV_Column parse_csv_one_column(AllocatorInfo allocator, char const* path) {
-	char scratch_mem[kilobytes(32)];
-	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
-
-	file_read_contents( arena_allocator_info( & scratch), file_zero_terminate, path );
+	FileContents content   = file_read_contents( allocator, file_zero_terminate, path );
+	Arena        csv_arena = arena_init_from_memory(content.data, content.size);
 
 	CSV_Column result;
-	csv_parse( & result.ADT, scratch_mem, allocator, false );
+	csv_parse( & result.ADT, rcast(char*, content.data), allocator, false );
 	result.Content = result.ADT.nodes[0].nodes;
 	return result;
 }
 
 inline
 CSV_Columns2 parse_csv_two_columns(AllocatorInfo allocator, char const* path) {
-	char scratch_mem[kilobytes(32)];
-	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
-
-	file_read_contents( arena_allocator_info( & scratch), file_zero_terminate, path );
+	FileContents content   = file_read_contents( allocator, file_zero_terminate, path );
+	Arena        csv_arena = arena_init_from_memory(content.data, content.size);
 
 	CSV_Columns2 result;
-	csv_parse( & result.ADT, scratch_mem, allocator, false );
+	csv_parse( & result.ADT, rcast(char*, content.data), allocator, false );
 	result.Col_1 = result.ADT.nodes[0].nodes;
 	result.Col_2 = result.ADT.nodes[1].nodes;
 	return result;

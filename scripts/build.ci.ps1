@@ -115,13 +115,13 @@ if ( $base )
 		$flag_link_win_subsystem_console
 	)
 
-	$includes   = @( $path_project)
+	$includes   = @( $path_base)
 	$unit       = join-path $path_base  "base.cpp"
 	$executable = join-path $path_build "base.exe"
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
-	Push-Location $path_project
+	Push-Location $path_base
 		if ( Test-Path( $executable ) ) {
 			write-host "`nRunning base"
 			$time_taken = Measure-Command { & $executable
@@ -129,7 +129,7 @@ if ( $base )
 						write-host `t $_ -ForegroundColor Green
 					}
 				}
-			write-host "`bbase completed in $($time_taken.TotalMilliseconds) ms"
+			write-host "`nbase completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
 }

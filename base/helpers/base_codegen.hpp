@@ -9,8 +9,10 @@ using namespace gen;
 
 CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 {
-	CSV_Columns2 csv_enum = parse_csv_two_columns(GlobalAllocator, path );
+	FixedArena_32KB scratch; fixed_arena_init(& scratch);
+	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
+	CSV_Columns2 csv_enum         = parse_csv_two_columns( scratch_info, path );
 	String enum_entries           = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_str_entries         = string_make_reserve( GlobalAllocator, kilobytes(1) );
 	String to_keyword_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
@@ -91,10 +93,12 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 
 CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 {
-	CSV_Columns2 csv_enum = parse_csv_two_columns(GlobalAllocator, path);
+	FixedArena_16KB scratch; fixed_arena_init(& scratch);
+	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
-	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
-	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	CSV_Columns2 csv_enum = parse_csv_two_columns( scratch_info, path );
+	String enum_entries   = string_make_reserve( GlobalAllocator, 32 );
+	String to_str_entries = string_make_reserve( GlobalAllocator, 32 );
 
 	for (usize idx = 0; idx < array_num(csv_enum.Col_1); idx++) {
 		char const* enum_str     = csv_enum.Col_1[idx].string;
@@ -175,10 +179,12 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 
 CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 {
-	CSV_Columns2 csv_enum = parse_csv_two_columns(GlobalAllocator, path);
+	FixedArena_16KB scratch; fixed_arena_init(& scratch);
+	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
-	String enum_entries   = string_make_reserve( GlobalAllocator, kilobytes(1) );
-	String to_str_entries = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	CSV_Columns2 csv_enum = parse_csv_two_columns( scratch_info, path );
+	String enum_entries   = string_make_reserve( scratch_info, kilobytes(1) );
+	String to_str_entries = string_make_reserve( scratch_info, kilobytes(1) );
 
 	for (usize idx = 0; idx < array_num(csv_enum.Col_1); idx++)
 	{
@@ -314,31 +320,29 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_definition = false )
 {
-	char  scratch_mem[kilobytes(16)];
-	Arena scratch = arena_init_from_memory( scratch_mem, sizeof(scratch_mem) );
-
-	AllocatorInfo scratch_info = arena_allocator_info(& scratch);
+	FixedArena_32KB scratch; fixed_arena_init(& scratch);
+	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
 	FileContents enum_content = file_read_contents( scratch_info, file_zero_terminate, etok_path );
 
 	CSV_Object csv_enum_nodes;
-	csv_parse( &csv_enum_nodes, rcast(char*, enum_content.data), GlobalAllocator, false );
+	csv_parse( &csv_enum_nodes, rcast(char*, enum_content.data), scratch_info, false );
 
 	FileContents attrib_content = file_read_contents( scratch_info, file_zero_terminate, attr_path );
 
 	CSV_Object csv_attr_nodes;
-	csv_parse( &csv_attr_nodes, rcast(char*, attrib_content.data), GlobalAllocator, false );
+	csv_parse( &csv_attr_nodes, rcast(char*, attrib_content.data), scratch_info, false );
 
 	Array<ADT_Node> enum_strs          = csv_enum_nodes.nodes[0].nodes;
 	Array<ADT_Node> enum_str_strs      = csv_enum_nodes.nodes[1].nodes;
 	Array<ADT_Node> attribute_strs     = csv_attr_nodes.nodes[0].nodes;
 	Array<ADT_Node> attribute_str_strs = csv_attr_nodes.nodes[1].nodes;
 
-	String enum_entries             = string_make_reserve( GlobalAllocator, kilobytes(2) );
-	String to_str_entries           = string_make_reserve( GlobalAllocator, kilobytes(4) );
-	String attribute_entries        = string_make_reserve( GlobalAllocator, kilobytes(2) );
-	String to_str_attributes        = string_make_reserve( GlobalAllocator, kilobytes(4) );
-	String attribute_define_entries = string_make_reserve( GlobalAllocator, kilobytes(4) );
+	String enum_entries             = string_make_reserve( scratch_info, kilobytes(2) );
+	String to_str_entries           = string_make_reserve( scratch_info, kilobytes(4) );
+	String attribute_entries        = string_make_reserve( scratch_info, kilobytes(2) );
+	String to_str_attributes        = string_make_reserve( scratch_info, kilobytes(4) );
+	String attribute_define_entries = string_make_reserve( scratch_info, kilobytes(4) );
 
 	for (usize idx = 0; idx < array_num(enum_strs); idx++)
 	{

@@ -71,7 +71,7 @@ Code code_refactor_and_format( Code code, char const* scratch_path, char const* 
 {
 	GEN_ASSERT(code);
 	GEN_ASSERT_NOT_NULL(scratch_path);
-	Builder scratch_file = builder_open("gen/scratch.hpp");
+	Builder scratch_file = builder_open( scratch_path );
 	builder_print( & scratch_file, code);
 	builder_write(& scratch_file);
 
