@@ -1,6 +1,5 @@
 #pragma once
-
-#include "../project/gen.hpp"
+#include "gen.hpp"
 #include "containers.array.hpp"
 
 using namespace gen;

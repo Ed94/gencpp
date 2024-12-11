@@ -56,25 +56,29 @@ word hash,                         gen_hash
 
 // Basic Types
 
-word u8,            gen_u8
-word s8,            gen_s8
-word u16,           gen_u16
-word s16,           gen_s16
-word u32,           gen_u32
-word s32,           gen_s32
-word u64,           gen_u64
-word s64,           gen_s64
-word usize,         gen_usize
-word ssize,         gen_ssize
-word sptr,          gen_sptr
-word uptr,          gen_uptr
-word f32,           gen_f32
-word f64,           gen_f64
-word b8,            gen_b8
-word b16,           gen_b16
-word b32,           gen_b32
-word mem_ptr,       gen_mem_ptr
-word mem_ptr_const, gen_mem_ptr_cnst
+word u8,               gen_u8
+word s8,               gen_s8
+word u16,              gen_u16
+word s16,              gen_s16
+word u32,              gen_u32
+word s32,              gen_s32
+word u64,              gen_u64
+word s64,              gen_s64
+word usize,            gen_usize
+word ssize,            gen_ssize
+word sptr,             gen_sptr
+word uptr,             gen_uptr
+word f32,              gen_f32
+word f64,              gen_f64
+word b8,               gen_b8
+word b16,              gen_b16
+word b32,              gen_b32
+word mem_ptr,          gen_mem_ptr
+word mem_ptr_const,    gen_mem_ptr_const
+word to_uptr,          gen_to_uptr
+word to_sptr,          gen_to_sptr
+word to_mem_ptr,       gen_to_mem_ptr
+word to_mem_ptr_const, gen_to_mem_ptr_const
 
 // Debug
 

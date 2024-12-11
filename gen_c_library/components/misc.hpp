@@ -1,5 +1,5 @@
 #pragma once
-#include "../project/gen.hpp"
+#include "gen.hpp"
 
 using namespace gen;
 

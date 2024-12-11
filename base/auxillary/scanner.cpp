@@ -116,4 +116,33 @@ Code scan_file( char const* path )
 	return untyped_str( string_to_strc(str) );
 }
 
+CodeBody parse_file( const char* path ) {
+	FileContents file    = file_read_contents( GlobalAllocator, true, path );
+	StrC         content = { file.size, (char const*)file.data };
+	CodeBody     code    = parse_global_body( content );
+	log_fmt("\nParsed: %s\n", path);
+	return code;
+}
+
+CSV_Column parse_csv_one_column(AllocatorInfo allocator, char const* path) {
+	FileContents content   = file_read_contents( allocator, file_zero_terminate, path );
+	Arena        csv_arena = arena_init_from_memory(content.data, content.size);
+
+	CSV_Column result;
+	csv_parse( & result.ADT, rcast(char*, content.data), allocator, false );
+	result.Content = result.ADT.nodes[0].nodes;
+	return result;
+}
+
+CSV_Columns2 parse_csv_two_columns(AllocatorInfo allocator, char const* path) {
+	FileContents content   = file_read_contents( allocator, file_zero_terminate, path );
+	Arena        csv_arena = arena_init_from_memory(content.data, content.size);
+
+	CSV_Columns2 result;
+	csv_parse( & result.ADT, rcast(char*, content.data), allocator, false );
+	result.Col_1 = result.ADT.nodes[0].nodes;
+	result.Col_2 = result.ADT.nodes[1].nodes;
+	return result;
+}
+
 #pragma endregion Scanner

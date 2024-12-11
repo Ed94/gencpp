@@ -4,7 +4,6 @@
 
 $devshell           = Join-Path $PSScriptRoot 'helpers/devshell.ps1'
 $misc               = Join-Path $PSScriptRoot 'helpers/misc.psm1'
-$refactor_c_library = Join-Path $PSScriptRoot 'refactor_c_library.ps1'
 $refactor_unreal    = Join-Path $PSScriptRoot 'refactor_unreal.ps1'
 $incremental_checks = Join-Path $PSScriptRoot 'helpers/incremental_checks.ps1'
 $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
@@ -222,7 +221,7 @@ if ( $c_library )
 		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	$includes    = @( $path_project )
+	$includes    = @( $path_base )
 	$unit       = join-path $path_c_library "c_library.cpp"
 	$executable = join-path $path_build     "c_library.exe"
 
@@ -246,8 +245,6 @@ if ( $c_library )
 			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
-
-	. $refactor_c_library
 
 	$unit       = join-path $path_c_library "gen.c"
 	$executable = join-path $path_build     "gen_c_library_test.exe"
@@ -289,7 +286,7 @@ if ( $unreal )
 		New-Item -ItemType Directory -Path $path_gen
 	}
 
-	$includes    = @( $path_project )
+	$includes    = @( $path_base )
 	$unit       = join-path $path_unreal "unreal.cpp"
 	$executable = join-path $path_build  "unreal.exe"
 

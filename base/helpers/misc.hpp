@@ -22,7 +22,6 @@ void clang_format_file( char const* path, char const* style_path )
 {
 	GEN_ASSERT_NOT_NULL(path);
 	String resolved_path = string_make_strc(GlobalAllocator, to_strc_from_c_str(path));
-
 	String style_arg;
 	if (style_path) {
 		style_arg = string_make_strc(GlobalAllocator, txt("-style=file:"));
@@ -38,10 +37,7 @@ void clang_format_file( char const* path, char const* style_path )
 	string_append_strc( & command, cf_verbose );
 	string_append_string( & command, style_arg );
 	string_append_string( & command, resolved_path );
-
-	log_fmt("\tRunning clang-format:\n");
 	system( command );
-	log_fmt("\tclang-format finished formatting.\n");
 }
 
 // Will refactor a file with the given script at the provided path.
@@ -53,16 +49,12 @@ void refactor_file( char const* path, char const* refactor_script )
 	GEN_ASSERT_NOT_NULL(refactor_script);
 
 	String command = string_make_strc(GlobalAllocator, txt("refactor "));
-	string_append_strc( & command, txt("-debug ") );
+	// string_append_strc( & command, txt("-debug ") );
 	string_append_strc( & command, txt("-num=1 ") );
 	string_append_fmt( & command, "-src=%s ", path );
 	string_append_fmt( & command,"-spec=%s ", refactor_script );
-
-	log_fmt("\tBeginning refactor:\n");
 	system(command);
-	log_fmt("\nRefactoring complete.\n");
-
-	#undef refactor
+	log_fmt("\n");
 }
 
 // Does either of the above or both to the provided code.

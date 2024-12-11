@@ -3,21 +3,15 @@
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #define GEN_ENFORCE_STRONG_CODE_TYPES
 #define GEN_EXPOSE_BACKEND
-#include "../project/gen.cpp"
-
+#include "gen.cpp"
 #include "helpers/push_ignores.inline.hpp"
-#include "helpers/helper.hpp"
+
+#include <stdlib.h>
 
 GEN_NS_BEGIN
-#include "helpers/push_container_defines.inline.hpp"
-#include "dependencies/parsing.cpp"
-#include "helpers/pop_container_defines.inline.hpp"
+#include "helpers/base_codegen.hpp"
+#include "helpers/misc.hpp"
 GEN_NS_END
-
-#include "auxillary/builder.hpp"
-#include "auxillary/builder.cpp"
-#include "auxillary/scanner.hpp"
-
 
 #include "components/memory.fixed_arena.hpp"
 #include "components/misc.hpp"
@@ -52,47 +46,22 @@ constexpr StrC implementation_guard_end = txt(R"(
 #pragma endregion GENCPP IMPLEMENTATION GUARD
 )");
 
-void CHANGE_format_file( char const* path )
-{
-	String resolved_path = String::make(GlobalAllocator, to_strc_from_c_str(path));
+#define path_refactor_script "./c_library.refactor"
+#define path_format_style    "../scripts/.clang-format "
+#define scratch_file         "gen/scratch.hpp"
+#define path_base            "../base/"
 
-	String style_arg = String::make(GlobalAllocator, txt("-style=file:"));
-	style_arg.append("../scripts/.clang-format ");
-
-	// Need to execute clang format on the generated file to get it to match the original.
-	#define clang_format      "clang-format "
-	#define cf_format_inplace "-i "
-	#define cf_verbose        "-verbose "
-	String command = String::make( GlobalAllocator, clang_format );
-	command.append( cf_format_inplace );
-	command.append( cf_verbose );
-	command.append( style_arg );
-	command.append( resolved_path );
-		log_fmt("\tRunning clang-format on file:\n");
-		system( command );
-		log_fmt("\tclang-format finished reformatting.\n");
-	#undef cf_cmd
-	#undef cf_format_inplace
-	#undef cf_style
-	#undef cf_verbse
+Code refactor( Code code ) {
+	return code_refactor_and_format(code, scratch_file, path_refactor_script, nullptr );
 }
-
-Code CHANGE_format_code_to_untyped( Code code )
-{
-	Builder ecode_file_temp = Builder::open("gen/scratch.hpp");
-	ecode_file_temp.print(code);
-	ecode_file_temp.write();
-	format_file("gen/scratch.hpp");
-	Code result = scan_file( "gen/scratch.hpp" );
-	remove("gen/scratch.hpp");
-	return result;
+Code refactor_and_format( Code code ) {
+	return code_refactor_and_format(code, scratch_file, path_refactor_script, path_format_style );
 }
 
 constexpr bool helper_use_c_definition = true;
 
 int gen_main()
 {
-#define project_dir "../project/"
 	gen::init();
 
 	PreprocessorDefines.append(txt("GEN_API_C_BEGIN"));
@@ -109,22 +78,22 @@ int gen_main()
 	PreprocessorDefines.append(txt("GEN_PARAM_DEFAULT"));
 	//PreprocessorDefines.append(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"));
 
-	Code push_ignores           = scan_file( project_dir "helpers/push_ignores.inline.hpp" );
-	Code pop_ignores            = scan_file( project_dir "helpers/pop_ignores.inline.hpp" );
+	Code push_ignores           = scan_file( path_base "helpers/push_ignores.inline.hpp" );
+	Code pop_ignores            = scan_file( path_base "helpers/pop_ignores.inline.hpp" );
 	Code c_library_header_start = scan_file( "components/header_start.hpp" );
 
 // Header Content: Reflection and Generation
 
 #pragma region Resolve Dependencies
-	Code header_platform     = scan_file( project_dir "dependencies/platform.hpp" );
-	Code header_macros       = scan_file( project_dir "dependencies/macros.hpp" );
-	Code header_basic_types  = scan_file( project_dir "dependencies/basic_types.hpp" );
-	Code header_debug        = scan_file( project_dir "dependencies/debug.hpp" );
-	Code header_string_ops   = scan_file( project_dir "dependencies/string_ops.hpp" );
-	Code header_hashing      = scan_file( project_dir "dependencies/hashing.hpp" );
-	Code header_timing       = scan_file( project_dir "dependencies/timing.hpp" );
+	Code header_platform     = scan_file( path_base "dependencies/platform.hpp" );
+	Code header_macros       = scan_file( path_base "dependencies/macros.hpp" );
+	Code header_basic_types  = scan_file( path_base "dependencies/basic_types.hpp" );
+	Code header_debug        = scan_file( path_base "dependencies/debug.hpp" );
+	Code header_string_ops   = scan_file( path_base "dependencies/string_ops.hpp" );
+	Code header_hashing      = scan_file( path_base "dependencies/hashing.hpp" );
+	Code header_timing       = scan_file( path_base "dependencies/timing.hpp" );
 
-	CodeBody parsed_header_memory = parse_file( project_dir "dependencies/memory.hpp" );
+	CodeBody parsed_header_memory = parse_file( path_base "dependencies/memory.hpp" );
 	CodeBody header_memory        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_memory.begin(); entry != parsed_header_memory.end(); ++ entry ) switch (entry->Type)
 	{
@@ -253,7 +222,7 @@ do                          \
 		break;
 	}
 
-	CodeBody parsed_header_printing = parse_file( project_dir "dependencies/printing.hpp" );
+	CodeBody parsed_header_printing = parse_file( path_base "dependencies/printing.hpp" );
 	CodeBody header_printing        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_printing.begin(); entry != parsed_header_printing.end(); ++ entry ) switch (entry->Type)
 	{
@@ -284,7 +253,7 @@ do                          \
 	Code array_ssize         = gen_array(txt("gen_ssize"), txt("Array_gen_ssize"));
 	Code array_string_cached = gen_array(txt("gen_StringCached"), txt("Array_gen_StringCached"));
 
-	CodeBody parsed_header_strings = parse_file( project_dir "dependencies/strings.hpp" );
+	CodeBody parsed_header_strings = parse_file( path_base "dependencies/strings.hpp" );
 	CodeBody header_strings        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_strings.begin(); entry != parsed_header_strings.end(); ++ entry ) switch (entry->Type)
 	{
@@ -390,7 +359,7 @@ do                          \
 
 	CodeBody array_u8 = gen_array(txt("gen_u8"), txt("Array_gen_u8"));
 
-	CodeBody parsed_header_filesystem = parse_file( project_dir "dependencies/filesystem.hpp" );
+	CodeBody parsed_header_filesystem = parse_file( path_base "dependencies/filesystem.hpp" );
 	CodeBody header_filesystem        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_filesystem.begin(); entry != parsed_header_filesystem.end(); ++ entry ) switch (entry->Type)
 	{
@@ -449,7 +418,7 @@ do                          \
 
 	CodeBody array_adt_node = gen_array(txt("gen_ADT_Node"), txt("Array_gen_ADT_Node"));
 
-	CodeBody parsed_header_parsing = parse_file( project_dir "dependencies/parsing.hpp" );
+	CodeBody parsed_header_parsing = parse_file( path_base "dependencies/parsing.hpp" );
 	CodeBody header_parsing        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_parsing.begin(); entry != parsed_header_parsing.end(); ++ entry ) switch (entry->Type)
 	{
@@ -544,11 +513,11 @@ do                          \
 	// Only has operator overload definitions that C doesn't need.
 	// CodeBody ast_inlines = gen_ast_inlines();
 
-	CodeBody ecode       = gen_ecode     ( project_dir "enums/ECodeTypes.csv", helper_use_c_definition );
-	CodeBody eoperator   = gen_eoperator ( project_dir "enums/EOperator.csv",  helper_use_c_definition );
-	CodeBody especifier  = gen_especifier( project_dir "enums/ESpecifier.csv", helper_use_c_definition );
+	CodeBody ecode       = gen_ecode     ( path_base "enums/ECodeTypes.csv", helper_use_c_definition );
+	CodeBody eoperator   = gen_eoperator ( path_base "enums/EOperator.csv",  helper_use_c_definition );
+	CodeBody especifier  = gen_especifier( path_base "enums/ESpecifier.csv", helper_use_c_definition );
 
-	CodeBody parsed_types = parse_file( project_dir "components/types.hpp" );
+	CodeBody parsed_types = parse_file( path_base "components/types.hpp" );
 	CodeBody types        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_types.begin(); entry != parsed_types.end(); ++ entry ) switch(entry->Type)
 	{
@@ -620,7 +589,7 @@ do                          \
 	// Used to track which functions need generic selectors.
 	Array(CodeFn) code_c_interface = array_init_reserve<CodeFn>(GlobalAllocator, 16);
 
-	CodeBody parsed_ast = parse_file( project_dir "components/ast.hpp" );
+	CodeBody parsed_ast = parse_file( path_base "components/ast.hpp" );
 	CodeBody ast        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_ast.begin(); entry != parsed_ast.end(); ++ entry ) switch (entry->Type)
 	{
@@ -789,7 +758,7 @@ R"(#define AST_ArrSpecs_Cap \
 		txt("CodeVar"),
 	};
 
-	CodeBody parsed_code_types = parse_file( project_dir "components/code_types.hpp" );
+	CodeBody parsed_code_types = parse_file( path_base "components/code_types.hpp" );
 	CodeBody code_types        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_code_types.begin(); entry != parsed_code_types.end(); ++ entry ) switch( entry->Type )
 	{
@@ -891,7 +860,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_ast_types = parse_file( project_dir "components/ast_types.hpp" );
+	CodeBody parsed_ast_types = parse_file( path_base "components/ast_types.hpp" );
 	CodeBody ast_types        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_ast_types.begin(); entry != parsed_ast_types.end(); ++ entry ) switch( entry->Type )
 	{
@@ -938,7 +907,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_interface = parse_file( project_dir "components/interface.hpp" );
+	CodeBody parsed_interface = parse_file( path_base "components/interface.hpp" );
 	CodeBody interface        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_interface.begin(); entry != parsed_interface.end(); ++ entry ) switch( entry->Type )
 	{
@@ -1027,7 +996,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_inlines = parse_file( project_dir "components/inlines.hpp" );
+	CodeBody parsed_inlines = parse_file( path_base "components/inlines.hpp" );
 	CodeBody inlines        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_inlines.begin(); entry != parsed_inlines.end(); ++ entry ) switch( entry->Type )
 	{
@@ -1062,7 +1031,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_header_builder = parse_file( project_dir "auxillary/builder.hpp" );
+	CodeBody parsed_header_builder = parse_file( path_base "auxillary/builder.hpp" );
 	CodeBody header_builder        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_builder.begin(); entry != parsed_header_builder.end(); ++ entry ) switch( entry->Type )
 	{
@@ -1120,7 +1089,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	}
 
 	s32 idx = 0;
-	CodeBody parsed_header_end = parse_file( project_dir "components/header_end.hpp" );
+	CodeBody parsed_header_end = parse_file( path_base "components/header_end.hpp" );
 	CodeBody header_end        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_end.begin(); entry != parsed_header_end.end(); ++ entry, ++ idx ) switch( entry->Type )
 	{
@@ -1158,15 +1127,15 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 // Source Content : Reflection and Generation
 
 #pragma region Resolve Dependencies
-	Code src_impl_start = scan_file( project_dir "dependencies/src_start.cpp" );
-	Code src_debug      = scan_file( project_dir "dependencies/debug.cpp" );
-	Code src_string_ops = scan_file( project_dir "dependencies/string_ops.cpp" );
-	Code src_printing   = scan_file( project_dir "dependencies/printing.cpp" );
-	Code src_memory     = scan_file( project_dir "dependencies/memory.cpp" );
-	Code src_hashing    = scan_file( project_dir "dependencies/hashing.cpp" );
-	Code src_strings    = scan_file( project_dir "dependencies/strings.cpp" );
-	Code src_filesystem = scan_file( project_dir "dependencies/filesystem.cpp" );
-	Code src_timing     = scan_file( project_dir "dependencies/timing.cpp" );
+	Code src_impl_start = scan_file( path_base "dependencies/src_start.cpp" );
+	Code src_debug      = scan_file( path_base "dependencies/debug.cpp" );
+	Code src_string_ops = scan_file( path_base "dependencies/string_ops.cpp" );
+	Code src_printing   = scan_file( path_base "dependencies/printing.cpp" );
+	Code src_memory     = scan_file( path_base "dependencies/memory.cpp" );
+	Code src_hashing    = scan_file( path_base "dependencies/hashing.cpp" );
+	Code src_strings    = scan_file( path_base "dependencies/strings.cpp" );
+	Code src_filesystem = scan_file( path_base "dependencies/filesystem.cpp" );
+	Code src_timing     = scan_file( path_base "dependencies/timing.cpp" );
 #pragma endregion Resolve Dependencies
 
 #pragma region Resolve Components
@@ -1174,14 +1143,14 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody array_pool  = gen_array(txt("gen_Pool"),  txt("Array_gen_Pool"));
 	CodeBody array_token = gen_array(txt("gen_Token"), txt("Array_gen_Token"));
 
-	Code src_static_data 	      = scan_file( project_dir "components/static_data.cpp" );
-	Code src_ast_case_macros    = scan_file( project_dir "components/ast_case_macros.cpp" );
-	Code src_code_serialization = scan_file( project_dir "components/code_serialization.cpp" );
-	Code src_interface          = scan_file( project_dir "components/interface.cpp" );
-	Code src_parsing_interface  = scan_file( project_dir "components/interface.parsing.cpp" );
-	Code src_untyped            = scan_file( project_dir "components/interface.untyped.cpp" );
+	Code src_static_data 	      = scan_file( path_base "components/static_data.cpp" );
+	Code src_ast_case_macros    = scan_file( path_base "components/ast_case_macros.cpp" );
+	Code src_code_serialization = scan_file( path_base "components/code_serialization.cpp" );
+	Code src_interface          = scan_file( path_base "components/interface.cpp" );
+	Code src_parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
+	Code src_untyped            = scan_file( path_base "components/interface.untyped.cpp" );
 
-	CodeBody parsed_src_ast = parse_file( project_dir "components/ast.cpp" );
+	CodeBody parsed_src_ast = parse_file( path_base "components/ast.cpp" );
 	CodeBody src_ast        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_src_ast.begin(); entry != parsed_src_ast.end(); ++ entry ) switch( entry ->Type )
 	{
@@ -1216,7 +1185,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_src_upfront = parse_file( project_dir "components/interface.upfront.cpp" );
+	CodeBody parsed_src_upfront = parse_file( path_base "components/interface.upfront.cpp" );
 	CodeBody src_upfront        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_src_upfront.begin(); entry != parsed_src_upfront.end(); ++ entry ) switch( entry ->Type )
 	{
@@ -1269,7 +1238,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_src_lexer = parse_file( project_dir "components/lexer.cpp" );
+	CodeBody parsed_src_lexer = parse_file( path_base "components/lexer.cpp" );
 	CodeBody src_lexer        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_src_lexer.begin(); entry != parsed_src_lexer.end(); ++ entry ) switch( entry ->Type )
 	{
@@ -1363,7 +1332,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 	CodeBody array_code_typename = gen_array(txt("gen_CodeTypename"), txt("Array_gen_CodeTypename"));
 
-	CodeBody parsed_src_parser = parse_file( project_dir "components/parser.cpp" );
+	CodeBody parsed_src_parser = parse_file( path_base "components/parser.cpp" );
 	CodeBody src_parser        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_src_parser.begin(); entry != parsed_src_parser.end(); ++ entry ) switch( entry ->Type )
 	{
@@ -1429,7 +1398,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 // Printing : Everything below is jsut serialization & formatting ot a single-file.
 
 	Builder
-	header = Builder::open( "gen/gen.h" );
+	header = Builder::open( "gen/gen_singleheader.h" );
 	header.print_fmt( generation_notice );
 	header.print_fmt("#pragma once\n\n");
 	header.print( push_ignores );
@@ -1440,24 +1409,24 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 	#pragma region Print Dependencies
 		header.print_fmt( roll_own_dependencies_guard_start );
-		header.print( header_platform );
+		header.print( refactor(header_platform) );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
-		header.print( header_macros );
-		header.print( header_basic_types );
-		header.print( header_debug );
-		header.print( format_code_to_untyped(header_memory) );
-		header.print( format_code_to_untyped(header_printing));
-		header.print( header_string_ops );
+		header.print( refactor(header_macros) );
+		header.print( refactor(header_basic_types) );
+		header.print( refactor(header_debug) );
+		header.print( refactor_and_format(header_memory) );
+		header.print( refactor_and_format(header_printing));
+		header.print( refactor(header_string_ops) );
 		header.print( fmt_newline);
-		header.print( format_code_to_untyped(containers));
-		header.print( header_hashing );
-		header.print( format_code_to_untyped(header_strings));
-		header.print( format_code_to_untyped(header_filesystem));
-		header.print( header_timing );
+		header.print( refactor_and_format(containers));
+		header.print( refactor(header_hashing) );
+		header.print( refactor_and_format(header_strings));
+		header.print( refactor_and_format(header_filesystem));
+		header.print( refactor(header_timing) );
 
 		header.print_fmt( "\n#pragma region Parsing\n" );
-		header.print( format_code_to_untyped(header_parsing) );
+		header.print( refactor_and_format(header_parsing) );
 		header.print_fmt( "#pragma endregion Parsing\n" );
 
 		header.print_fmt( "\nGEN_NS_END\n" );
@@ -1471,36 +1440,35 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "GEN_API_C_BEGIN\n\n" );
 
 		header.print_fmt("#pragma region Types\n");
-		header.print( format_code_to_untyped(types) );
+		header.print( refactor_and_format(types) );
 		header.print( fmt_newline );
-		header.print( format_code_to_untyped( ecode ));
+		header.print( refactor_and_format( ecode ));
 		header.print( fmt_newline );
-		header.print( format_code_to_untyped( eoperator ));
+		header.print( refactor_and_format( eoperator ));
 		header.print( fmt_newline );
-		header.print( format_code_to_untyped( especifier ));
+		header.print( refactor_and_format( especifier ));
 		header.print_fmt("#pragma endregion Types\n\n");
 
 		header.print_fmt("#pragma region AST\n");
-		header.print( format_code_to_untyped(ast) );
-		header.print( format_code_to_untyped(code_types) );
-		header.print( format_code_to_untyped(ast_types) );
+		header.print( refactor_and_format(ast) );
+		header.print( refactor_and_format(code_types) );
+		header.print( refactor_and_format(ast_types) );
 		header.print_fmt("\n#pragma endregion AST\n");
 
-		header.print( format_code_to_untyped(interface) );
+		header.print( refactor_and_format(interface) );
 		header.print(fmt_newline);
 
 		header.print_fmt("#pragma region Inlines\n");
-		header.print( format_code_to_untyped(inlines) );
+		header.print( refactor_and_format(inlines) );
 		header.print_fmt("#pragma endregion Inlines\n");
 
 		header.print(fmt_newline);
-		header.print( format_code_to_untyped(array_string_cached));
+		header.print( refactor_and_format(array_string_cached));
 
-		header.print( format_code_to_untyped(header_end) );
+		header.print( refactor_and_format(header_end) );
 
-		header.print_fmt( "\n#pragma region Builder\n" );
-		header.print( format_code_to_untyped(header_builder) );
-		header.print_fmt( "\n#pragma endregion Builder\n" );
+		header.print( refactor_and_format(header_builder) );
+		header.print( refactor_and_format( scan_file( path_base "auxillary/scanner.hpp" )) );
 
 		header.print_fmt( "\nGEN_API_C_END\n" );
 		header.print_fmt( "GEN_NS_END\n\n" );
@@ -1516,18 +1484,18 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "GEN_NS_BEGIN\n");
 		header.print_fmt( "GEN_API_C_BEGIN\n" );
 
-		header.print( src_impl_start );
-		header.print( src_debug );
-		header.print( src_string_ops );
-		header.print( src_printing );
-		header.print( src_memory );
-		header.print( src_hashing );
-		header.print( src_strings );
-		header.print( src_filesystem );
-		header.print( src_timing );
+		header.print( refactor(src_impl_start) );
+		header.print( refactor(src_debug) );
+		header.print( refactor(src_string_ops) );
+		header.print( refactor(src_printing) );
+		header.print( refactor(src_memory) );
+		header.print( refactor(src_hashing) );
+		header.print( refactor(src_strings) );
+		header.print( refactor(src_filesystem) );
+		header.print( refactor(src_timing) );
 
 		header.print_fmt( "\n#pragma region Parsing\n" );
-		header.print( scan_file( project_dir "dependencies/parsing.cpp" ) );
+		header.print( refactor_and_format( scan_file( path_base "dependencies/parsing.cpp" )) );
 		header.print_fmt( "\n#pragma endregion Parsing\n\n" );
 
 		header.print_fmt( "GEN_NS_END\n");
@@ -1535,46 +1503,41 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	#pragma endregion Print Dependencies
 
 	#pragma region Print Components
-		CodeBody etoktype = gen_etoktype( project_dir "enums/ETokType.csv", project_dir "enums/AttributeTokens.csv", helper_use_c_definition );
+		CodeBody etoktype = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv", helper_use_c_definition );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 
 		header.print( fmt_newline);
-		header.print( format_code_to_untyped(array_arena));
+		header.print( refactor_and_format(array_arena));
 		header.print( fmt_newline);
-		header.print( format_code_to_untyped(array_pool));
+		header.print( refactor_and_format(array_pool));
 
-		header.print( src_static_data );
+		header.print( refactor(src_static_data) );
 		header.print( fmt_newline);
 
 		header.print_fmt( "#pragma region AST\n\n" );
-		header.print( src_ast_case_macros );
-		header.print( src_ast );
-		header.print( src_code_serialization );
+		header.print( refactor(src_ast_case_macros) );
+		header.print( refactor(src_ast) );
+		header.print( refactor(src_code_serialization) );
 		header.print_fmt( "#pragma endregion AST\n\n" );
 
 		header.print_fmt( "#pragma region Interface\n" );
-		header.print( src_interface );
-		header.print( format_code_to_untyped(src_upfront) );
+		header.print( refactor(src_interface) );
+		header.print( refactor_and_format(src_upfront) );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
-		header.print( format_code_to_untyped(etoktype) );
-		header.print( format_code_to_untyped(src_lexer) );
+		header.print( refactor_and_format(etoktype) );
+		header.print( refactor_and_format(src_lexer) );
 		header.print( fmt_newline);
-		header.print( format_code_to_untyped(array_code_typename));
+		header.print( refactor_and_format(array_code_typename));
 		header.print( fmt_newline);
-		header.print( format_code_to_untyped(src_parser) );
-		header.print( src_parsing_interface );
+		header.print( refactor_and_format(src_parser) );
+		header.print( refactor(src_parsing_interface) );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
-		header.print( src_untyped );
+		header.print( refactor(src_untyped) );
 		header.print_fmt( "\n#pragma endregion Interface\n\n");
 
-		header.print_fmt( "#pragma region Builder\n" );
-		header.print( scan_file( project_dir "auxillary/builder.cpp"  ) );
-		header.print_fmt( "#pragma endregion Builder\n\n" );
-
-		header.print_fmt( "\n#pragma region Scanner\n" );
-		header.print( scan_file( project_dir "auxillary/scanner.hpp" ) );
-		header.print_fmt( "#pragma endregion Scanner\n\n" );
+		header.print( refactor_and_format( scan_file( path_base "auxillary/builder.cpp"  )) );
+	header.print( refactor_and_format( scan_file( path_base "auxillary/scanner.cpp"  )) );
 
 		header.print_fmt( "GEN_API_C_END\n" );
 	#pragma endregion Print Components
