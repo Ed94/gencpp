@@ -85,13 +85,14 @@ int gen_main()
 // Header Content: Reflection and Generation
 
 #pragma region Resolve Dependencies
-	Code header_platform     = scan_file( path_base "dependencies/platform.hpp" );
-	Code header_macros       = scan_file( path_base "dependencies/macros.hpp" );
-	Code header_basic_types  = scan_file( path_base "dependencies/basic_types.hpp" );
-	Code header_debug        = scan_file( path_base "dependencies/debug.hpp" );
-	Code header_string_ops   = scan_file( path_base "dependencies/string_ops.hpp" );
-	Code header_hashing      = scan_file( path_base "dependencies/hashing.hpp" );
-	Code header_timing       = scan_file( path_base "dependencies/timing.hpp" );
+	Code header_platform       = scan_file( path_base "dependencies/platform.hpp" );
+	Code header_macros         = scan_file( path_base "dependencies/macros.hpp" );
+	Code header_generic_macros = scan_file(           "components/gneric_macros.hpp" );
+	Code header_basic_types    = scan_file( path_base "dependencies/basic_types.hpp" );
+	Code header_debug          = scan_file( path_base "dependencies/debug.hpp" );
+	Code header_string_ops     = scan_file( path_base "dependencies/string_ops.hpp" );
+	Code header_hashing        = scan_file( path_base "dependencies/hashing.hpp" );
+	Code header_timing         = scan_file( path_base "dependencies/timing.hpp" );
 
 	CodeBody parsed_header_memory = parse_file( path_base "dependencies/memory.hpp" );
 	CodeBody header_memory        = def_body(CT_Global_Body);
@@ -1481,6 +1482,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
 		header.print( r_header_macros );
+		header.print( header_generic_macros );
 		header.print( r_header_basic_types );
 		header.print( r_header_debug );
 		header.print( rf_header_memory );
@@ -1617,6 +1619,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 
 		header.print( r_header_macros );
+		header.print( header_generic_macros );
 		header.print( r_header_basic_types );
 		header.print( r_header_debug );
 		header.print( rf_header_memory );
