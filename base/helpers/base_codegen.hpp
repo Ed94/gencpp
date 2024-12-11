@@ -320,7 +320,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_definition = false )
 {
-	FixedArena_32KB scratch; fixed_arena_init(& scratch);
+	FixedArena_64KB scratch; fixed_arena_init(& scratch);
 	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
 	FileContents enum_content = file_read_contents( scratch_info, file_zero_terminate, etok_path );

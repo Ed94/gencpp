@@ -20,7 +20,7 @@ Push-Location $path_root
        $release      = $null
 	   $verbose      = $false
 	   $base         = $false
-[bool] $segemented   = $false
+[bool] $segmented    = $false
 [bool] $singleheader = $false
 [bool] $c_library    = $false
 [bool] $unreal       = $false
@@ -37,7 +37,7 @@ if ( $args ) { $args | ForEach-Object {
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
 		"base"                { $base         = $true }
-		"segemented"          { $segemented   = $true }
+		"segmented"          { $segmented     = $true }
 		"singleheader"        { $singleheader = $true }
 		"c_library"           { $c_library    = $true }
 		"unreal"              { $unreal       = $true }
@@ -153,13 +153,13 @@ if ( $segmented )
 		$flag_link_win_subsystem_console
 	)
 
-	$includes   = @( $path_project)
+	$includes   = @( $path_base)
 	$unit       = join-path $path_segmented "segmented.cpp"
 	$executable = join-path $path_build     "segmented.exe"
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
-	Push-Location $path_project
+	Push-Location $path_segmented
 		if ( Test-Path( $executable ) ) {
 			write-host "`nRunning segmented"
 			$time_taken = Measure-Command { & $executable
