@@ -12,7 +12,7 @@ gencpp uses a hand-written recursive descent parser. Both the lexer and parser c
 
 ### Lexer
 
-The lex procedure does the lexical pass of content provided as a `StrC` type.  
+The lex procedure does the lexical pass of content provided as a `Str` type.  
 The tokens are stored (for now) in `Lexer_Tokens`.
 
 Fields:
@@ -75,7 +75,7 @@ The parser has a limited user interface, only specific types of definitions or s
 Each public user interface procedure has the following format:
 
 ```cpp
-<code type> parse_<definition type>( StrC def )
+<code type> parse_<definition type>( Str def )
 {
     check_parse_args( def );
     using namespace Parser;
@@ -287,7 +287,7 @@ In the future statements and expressions will be parsed.
         1. Attributes ( Standard, GNU, MSVC, Macro ) : `parse_attributes`
         2. Specifiers ( consteval, constexpr, constinit, extern, forceinline, global, inline, internal_linkage, neverinline, static )
         3. Is either ( identifier, const specifier, long, short, signed, unsigned, bool, char, double, int)
-            1. Attempt to parse as constrcutor or destructor : `parse_global_nspace_constructor_destructor`
+            1. Attempt to parse as construtor or destructor : `parse_global_nspace_constructor_destructor`
             2. If its an operator cast (definition outside class) : `parse_operator_cast`
             3. Its an operator, function, or varaible : `parse_operator_function_or_varaible`
 4. If its not a global body, consume the closing curly brace

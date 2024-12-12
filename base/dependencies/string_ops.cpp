@@ -3,7 +3,7 @@
 #	include "debug.cpp"
 #endif
 
-#pragma region String Ops
+#pragma region StrBuilder Ops
 
 internal
 ssize _scan_zpl_i64( const char* text, s32 base, s64* value )
@@ -18,7 +18,7 @@ ssize _scan_zpl_i64( const char* text, s32 base, s64* value )
 		text++;
 	}
 
-	if ( base == 16 && str_compare_len( text, "0x", 2 ) == 0 )
+	if ( base == 16 && c_str_compare_len( text, "0x", 2 ) == 0 )
 		text += 2;
 
 	for ( ;; )
@@ -53,14 +53,14 @@ global const char _num_to_char_table[] =
 	"abcdefghijklmnopqrstuvwxyz"
 	"@$";
 
-s64 str_to_i64( const char* str, char** end_ptr, s32 base )
+s64 c_str_to_i64( const char* str, char** end_ptr, s32 base )
 {
 	ssize  len;
 	s64 value;
 
 	if ( ! base )
 	{
-		if ( ( str_len( str ) > 2 ) && ( str_compare_len( str, "0x", 2 ) == 0 ) )
+		if ( ( c_str_len( str ) > 2 ) && ( c_str_compare_len( str, "0x", 2 ) == 0 ) )
 			base = 16;
 		else
 			base = 10;
@@ -100,7 +100,7 @@ void i64_to_str( s64 value, char* string, s32 base )
 	if ( negative )
 		*buf++ = '-';
 	*buf = '\0';
-	str_reverse( string );
+	c_str_reverse( string );
 }
 
 void u64_to_str( u64 value, char* string, s32 base )
@@ -121,10 +121,10 @@ void u64_to_str( u64 value, char* string, s32 base )
 	}
 	*buf = '\0';
 
-	str_reverse( string );
+	c_str_reverse( string );
 }
 
-f64 str_to_f64( const char* str, char** end_ptr )
+f64 c_str_to_f64( const char* str, char** end_ptr )
 {
 	f64 result, value, sign, scale;
 	s32 frac;
@@ -211,4 +211,4 @@ f64 str_to_f64( const char* str, char** end_ptr )
 	return result;
 }
 
-#pragma endregion String Ops
+#pragma endregion StrBuilder Ops

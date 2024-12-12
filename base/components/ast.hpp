@@ -252,7 +252,7 @@ template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( 
 #pragma region Code C-Interface
 
 void   code_append       (Code code, Code other );
-StrC   code_debug_str    (Code code);
+Str   code_debug_str    (Code code);
 Code   code_duplicate    (Code code);
 Code*  code_entry        (Code code, u32 idx );
 bool   code_has_entries  (Code code);
@@ -260,9 +260,9 @@ bool   code_is_body      (Code code);
 bool   code_is_equal     (Code code, Code other);
 bool   code_is_valid     (Code code);
 void   code_set_global   (Code code);
-String code_to_string    (Code self );
-void   code_to_string_ptr(Code self, String* result );
-StrC   code_type_str     (Code self );
+StrBuilder code_to_string    (Code self );
+void   code_to_strbuilder_ptr(Code self, StrBuilder* result );
+Str   code_type_str     (Code self );
 bool   code_validate_body(Code self );
 
 #pragma endregion Code C-Interface
@@ -278,7 +278,7 @@ struct Code
 	AST* ast;
 
 #	define Using_Code( Typename )                                                        \
-	forceinline StrC debug_str()                { return code_debug_str(* this); }       \
+	forceinline Str debug_str()                { return code_debug_str(* this); }       \
 	forceinline Code duplicate()                { return code_duplicate(* this); }	     \
 	forceinline bool is_equal( Code other )     { return code_is_equal(* this, other); } \
 	forceinline bool is_body()                  { return code_is_body(* this); }         \
@@ -298,9 +298,9 @@ struct Code
 	forceinline void   append(Code other)        { return code_append(* this, other); }
 	forceinline Code*  entry(u32 idx)            { return code_entry(* this, idx); }
 	forceinline bool   has_entries()             { return code_has_entries(* this); }
-	forceinline String to_string()               { return code_to_string(* this); }
-	forceinline void   to_string(String& result) { return code_to_string_ptr(* this, & result); }
-	forceinline StrC   type_str()                { return code_type_str(* this); }
+	forceinline StrBuilder to_string()               { return code_to_string(* this); }
+	forceinline void   to_string(StrBuilder& result) { return code_to_strbuilder_ptr(* this, & result); }
+	forceinline Str   type_str()                { return code_type_str(* this); }
 	forceinline bool   validate_body()           { return code_validate_body(*this); }
 #endif
 

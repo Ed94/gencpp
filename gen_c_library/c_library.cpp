@@ -24,24 +24,24 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gencpp's c_library.cpp  "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
-constexpr StrC roll_own_dependencies_guard_start = txt(R"(
+constexpr Str roll_own_dependencies_guard_start = txt(R"(
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
 )");
 
-constexpr StrC roll_own_dependencies_guard_end = txt(R"(
+constexpr Str roll_own_dependencies_guard_end = txt(R"(
 // GEN_ROLL_OWN_DEPENDENCIES
 #endif
 )");
 
-constexpr StrC implementation_guard_start = txt(R"(
+constexpr Str implementation_guard_start = txt(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
 #if defined(GEN_IMPLEMENTATION) && ! defined(GEN_IMPLEMENTED)
 #	define GEN_IMPLEMENTED
 )");
 
-constexpr StrC implementation_guard_end = txt(R"(
+constexpr Str implementation_guard_end = txt(R"(
 #endif
 #pragma endregion GENCPP IMPLEMENTATION GUARD
 )");
@@ -87,7 +87,7 @@ int gen_main()
 #pragma region Resolve Dependencies
 	Code header_platform       = scan_file( path_base "dependencies/platform.hpp" );
 	Code header_macros         = scan_file( path_base "dependencies/macros.hpp" );
-	Code header_generic_macros = scan_file(           "components/generic_macros.hpp" );
+	Code header_generic_macros = scan_file(           "components/generic_macros.h" );
 	Code header_basic_types    = scan_file( path_base "dependencies/basic_types.hpp" );
 	Code header_debug          = scan_file( path_base "dependencies/debug.hpp" );
 	Code header_string_ops     = scan_file( path_base "dependencies/string_ops.hpp" );
@@ -100,7 +100,7 @@ int gen_main()
 	{
 		case CT_Using:
 		{
-			log_fmt("REPLACE THIS MANUALLY: %SC\n", entry->Name);
+			log_fmt("REPLACE THIS MANUALLY: %S\n", entry->Name);
 			CodeUsing   using_ver   = cast(CodeUsing, entry);
 			CodeTypedef typedef_ver = def_typedef(using_ver->Name, using_ver->UnderlyingType);
 
@@ -126,7 +126,7 @@ int gen_main()
 			if (fn->Specs) {
 				s32 constexpr_found = fn->Specs.remove( Spec_Constexpr );
 				if (constexpr_found > -1) {
-					//log_fmt("Found constexpr: %S\n", entry.to_string());
+					//log_fmt("Found constexpr: %SB\n", entry.to_string());
 					fn->Specs.append(Spec_Inline);
 				}
 			}
@@ -238,7 +238,7 @@ do                          \
 		break;
 		case CT_Variable:
 		{
-			if ( strc_contains(entry->Name, txt("Msg_Invalid_Value")))
+			if ( str_contains(entry->Name, txt("Msg_Invalid_Value")))
 			{
 				CodeDefine define = def_define(entry->Name, entry->Value->Content);
 				header_printing.append(define);
@@ -292,16 +292,16 @@ do                          \
 
 		case CT_Preprocess_IfNotDef:
 		{
-			//log_fmt("\nIFNDEF: %SC\n", entry->Content);
+			//log_fmt("\nIFNDEF: %S\n", entry->Content);
 			header_strings.append(entry);
 		}
 		break;
 
 		case CT_Struct_Fwd:
 		{
-			if ( entry->Name.is_equal(txt("String")) )
+			if ( entry->Name.is_equal(txt("StrBuilder")) )
 			{
-				CodeTypedef c_def = parse_typedef(code( typedef char* String; ));
+				CodeTypedef c_def = parse_typedef(code( typedef char* StrBuilder; ));
 				header_strings.append(c_def);
 				header_strings.append(fmt_newline);
 				++ entry;
@@ -341,12 +341,12 @@ do                          \
 
 		case CT_Typedef:
 		{
-			StrC name_string_table = txt("StringTable");
+			Str name_string_table = txt("StringTable");
 
 			CodeTypedef td = cast(CodeTypedef, entry);
 			if (td->Name.contains(name_string_table))
 			{
-				CodeBody ht = gen_hashtable(txt("gen_StrC"), name_string_table);
+				CodeBody ht = gen_hashtable(txt("gen_Str"), name_string_table);
 				header_strings.append(ht);
 				break;
 			}
@@ -388,8 +388,8 @@ do                          \
 		case CT_Union:
 		case CT_Union_Fwd:
 		{
-			StrC type_str      = codetype_to_keyword_str(entry->Type);
-			StrC formated_tmpl = token_fmt_impl( 3,
+			Str type_str      = codetype_to_keyword_str(entry->Type);
+			Str formated_tmpl = token_fmt_impl( 3,
 				"type", type_str
 			,	"name", entry->Name,
 			stringize(
@@ -490,8 +490,8 @@ do                          \
 				continue;
 			}
 
-			StrC type_str      = codetype_to_keyword_str(entry->Type);
-			StrC formated_tmpl = token_fmt_impl( 3,
+			Str type_str      = codetype_to_keyword_str(entry->Type);
+			Str formated_tmpl = token_fmt_impl( 3,
 				"type", type_str
 			,	"name", entry->Name,
 			stringize(
@@ -549,9 +549,9 @@ do                          \
 			{
 				CodeTypename type       = using_ver->UnderlyingType;
 				CodeTypedef typedef_ver = parse_typedef(token_fmt(
-					"ReturnType", to_string(type->ReturnType).to_strc()
+					"ReturnType", to_string(type->ReturnType).to_str()
 				,	"Name"      , using_ver->Name
-				,	"Parameters", to_string(type->Params).to_strc()
+				,	"Parameters", to_string(type->Params).to_str()
 				,	stringize(
 						typedef <ReturnType>( * <Name>)(<Parameters>);
 				)));
@@ -578,7 +578,7 @@ do                          \
 				types.append(entry_td);
 				continue;
 			}
-			//log_fmt("Detected ENUM: %S", entry->Name);
+			//log_fmt("Detected ENUM: %SB", entry->Name);
 			convert_cpp_enum_to_c(cast(CodeEnum, entry), types);
 		}
 		break;
@@ -645,9 +645,9 @@ do                          \
 					CodeFn fn = cast(CodeFn, entry);
 					if (fn->Name.starts_with(txt("code_")))
 					{
-						StrC   old_prefix  = txt("code_");
-						StrC   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
-						String new_name    = String::fmt_buf(GlobalAllocator, "code__%SC", actual_name );
+						Str   old_prefix  = txt("code_");
+						Str   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+						StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
 
 						fn->Name = get_cached_string(new_name);
 						code_c_interface.append(fn);
@@ -694,21 +694,21 @@ do                          \
 
 			s32 constexpr_found = var->Specs ? var->Specs.remove( Spec_Constexpr ) : - 1;
 			if (constexpr_found > -1) {
-				//log_fmt("Found constexpr: %S\n", entry.to_string());
+				//log_fmt("Found constexpr: %SB\n", entry.to_string());
 				if (var->Name.contains(txt("AST_ArrSpecs_Cap")))
 				{
 					Code def = untyped_str(txt(
 R"(#define AST_ArrSpecs_Cap \
 (                           \
-	AST_POD_Size            \
-	- sizeof(Code)          \
-	- sizeof(StringCached)  \
-	- sizeof(Code) * 2      \
-	- sizeof(Token*)        \
-	- sizeof(Code)          \
-	- sizeof(CodeType)      \
-	- sizeof(ModuleFlag)    \
-	- sizeof(u32)           \
+	AST_POD_Size              \
+	- sizeof(Code)            \
+	- sizeof(StringCached)    \
+	- sizeof(Code) * 2        \
+	- sizeof(Token*)          \
+	- sizeof(Code)            \
+	- sizeof(CodeType)        \
+	- sizeof(ModuleFlag)      \
+	- sizeof(u32)             \
 )                           \
 / sizeof(Specifier) - 1
 )"
@@ -729,7 +729,7 @@ R"(#define AST_ArrSpecs_Cap \
 		break;
 	}
 
-	StrC code_typenames[] = {
+	Str code_typenames[] = {
 		txt("Code"),
 		txt("CodeBody"),
 		txt("CodeAttributes"),
@@ -791,24 +791,24 @@ R"(#define AST_ArrSpecs_Cap \
 				default: gen_generic_selection (Fail case)                                    \
 			) GEN_RESOLVED_FUNCTION_CALL( code, ... )                                       \
 			*/
-			String generic_selector = String::make_reserve(GlobalAllocator, kilobytes(2));
+			StrBuilder generic_selector = StrBuilder::make_reserve(GlobalAllocator, kilobytes(2));
 			for ( CodeFn fn : code_c_interface )
 			{
 				generic_selector.clear();
-				StrC   private_prefix  = txt("code__");
-				StrC   actual_name     = { fn->Name.Len - private_prefix.Len, fn->Name.Ptr + private_prefix.Len };
-				String interface_name  = String::fmt_buf(GlobalAllocator, "code_%SC", actual_name );
+				Str   private_prefix  = txt("code__");
+				Str   actual_name     = { fn->Name.Len - private_prefix.Len, fn->Name.Ptr + private_prefix.Len };
+				StrBuilder interface_name  = StrBuilder::fmt_buf(GlobalAllocator, "code_%S", actual_name );
 
 				// Resolve generic's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
-				String params_str = String::make_reserve(GlobalAllocator, 32);
+				StrBuilder params_str = StrBuilder::make_reserve(GlobalAllocator, 32);
 				for (CodeParams param = fn->Params->Next; param != fn->Params.end(); ++ param) {
 					// We skip the first parameter as its always going to be the code for selection
 					if (param->Next == nullptr) {
-						params_str.append_fmt( "%SC", param->Name );
+						params_str.append_fmt( "%S", param->Name );
 						continue;
 					}
-					params_str.append_fmt( "%SC, ", param->Name );
+					params_str.append_fmt( "%S, ", param->Name );
 				}
 
 				char const* tmpl_def_start = nullptr;
@@ -824,14 +824,14 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				}
 				// Definition start
 				generic_selector.append( token_fmt(
-							"interface_name", interface_name.to_strc()
-					,		"params",         params_str.to_strc() // Only used if has_args
+							"interface_name", interface_name.to_str()
+					,		"params",         params_str.to_str() // Only used if has_args
 					, tmpl_def_start
 				));
 
 				// Append slots
-				for(StrC type : code_typenames ) {
-					generic_selector.append_fmt("%SC : %SC,\\\n", type, fn->Name );
+				for(Str type : code_typenames ) {
+					generic_selector.append_fmt("%S : %S,\\\n", type, fn->Name );
 				}
 				generic_selector.append(txt("default: gen_generic_selection_fail \\\n"));
 
@@ -844,7 +844,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				}
 				// Definition end
 				generic_selector.append( token_fmt(
-						"params", params_str.to_strc()
+						"params", params_str.to_str()
 				, 	"type",   fn->Params->ValueType->Name
 				,		tmpl_def_end ) );
 
@@ -890,8 +890,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 						char conversion_buf[32] = {};
 						u64_to_str(size_of(AST_Body::_PAD_), conversion_buf, 10);
 
-						StrC arr_exp  = union_entry->ValueType->ArrExpr->Content;
-						StrC cpp_size = to_strc_from_c_str(conversion_buf);
+						Str arr_exp  = union_entry->ValueType->ArrExpr->Content;
+						Str cpp_size = to_str_from_c_str(conversion_buf);
 						union_entry->ValueType->ArrExpr = untyped_str( cpp_size );
 						union_entry->InlineCmt          = untyped_str(token_fmt("arr_exp", arr_exp,
 							"// Had to hardcode _PAD_ because (<arr_exp>) was 67 bytes in C\n"
@@ -931,8 +931,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 			if (prev && prev->Name.is_equal(entry->Name)) {
 				// rename second definition so there isn't a symbol conflict
-				String postfix_arr = String::fmt_buf(GlobalAllocator, "%SC_arr", entry->Name);
-				entry->Name = get_cached_string(postfix_arr.to_strc());
+				StrBuilder postfix_arr = StrBuilder::fmt_buf(GlobalAllocator, "%S_arr", entry->Name);
+				entry->Name = get_cached_string(postfix_arr.to_str());
 				postfix_arr.free();
 			}
 
@@ -940,20 +940,20 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
 				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
-				StrC prefix      = txt("def_");
-				StrC actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
-				StrC new_name    = String::fmt_buf(GlobalAllocator, "def__%SC", actual_name ).to_strc();
+				Str prefix      = txt("def_");
+				Str actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
+				Str new_name    = StrBuilder::fmt_buf(GlobalAllocator, "def__%S", actual_name ).to_str();
 
 				// Resolve define's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
-				String params_str = String::make_reserve(GlobalAllocator, 32);
+				StrBuilder params_str = StrBuilder::make_reserve(GlobalAllocator, 32);
 				for (CodeParams other_param = fn->Params; other_param != opt_param; ++ other_param) {
 					if ( other_param == opt_param ) {
-						params_str.append_fmt( "%SC", other_param->Name );
+						params_str.append_fmt( "%S", other_param->Name );
 						break;
 					}
 					// If there are arguments before the optional, prepare them here.
-					params_str.append_fmt( "%SC, ", other_param->Name );
+					params_str.append_fmt( "%S, ", other_param->Name );
 				}
 				char const* tmpl_fn_macro = nullptr;
 				if (params_str.length() > 0 ) {
@@ -965,7 +965,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				Code fn_macro = untyped_str(token_fmt(
 						"def_name",  fn->Name
 				,		"def__name", new_name
-				,		"params",    params_str.to_strc()
+				,		"params",    params_str.to_str()
 				,		"opts_type", opt_param->ValueType->Name
 				,	tmpl_fn_macro
 				));
@@ -1019,9 +1019,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			CodeFn fn = cast(CodeFn, entry);
 			if (fn->Name.starts_with(txt("code_")))
 			{
-				StrC   old_prefix  = txt("code_");
-				StrC   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
-				String new_name    = String::fmt_buf(GlobalAllocator, "code__%SC", actual_name );
+				Str   old_prefix  = txt("code_");
+				Str   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+				StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
 
 				fn->Name = get_cached_string(new_name);
 			}
@@ -1174,9 +1174,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			CodeFn fn = cast(CodeFn, entry);
 			if (fn->Name.starts_with(txt("code_")))
 			{
-				StrC   old_prefix  = txt("code_");
-				StrC   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
-				String new_name    = String::fmt_buf(GlobalAllocator, "code__%SC", actual_name );
+				Str   old_prefix  = txt("code_");
+				Str   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+				StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
 
 				fn->Name = get_cached_string(new_name);
 			}
@@ -1219,16 +1219,16 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				)
 				{
 					// rename second definition so there isn't a symbol conflict
-					String postfix_arr = String::fmt_buf(GlobalAllocator, "%SC_arr", fn->Name);
-					fn->Name = get_cached_string(postfix_arr.to_strc());
+					StrBuilder postfix_arr = StrBuilder::fmt_buf(GlobalAllocator, "%S_arr", fn->Name);
+					fn->Name = get_cached_string(postfix_arr.to_str());
 					postfix_arr.free();
 				}
 
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
-				StrC prefix      = txt("def_");
-				StrC actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
-				StrC new_name    = String::fmt_buf(GlobalAllocator, "def__%SC", actual_name ).to_strc();
+				Str prefix      = txt("def_");
+				Str actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
+				Str new_name    = StrBuilder::fmt_buf(GlobalAllocator, "def__%S", actual_name ).to_str();
 
 				fn->Name = get_cached_string(new_name);
 			}
@@ -1319,7 +1319,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
-					,	"type",  var->ValueType.to_string().to_strc()
+					,	"type",  var->ValueType.to_string().to_str()
 					,	"#define <name> (<type>) <value>\n"
 				));
 				src_lexer.append(define_ver);
@@ -1364,7 +1364,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
-					,	"type",  var->ValueType.to_string().to_strc()
+					,	"type",  var->ValueType.to_string().to_str()
 					,	"#define <name> (<type>) <value>\n"
 				));
 				src_parser.append(define_ver);
@@ -1458,7 +1458,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
  	Code rf_src_parser          = refactor_and_format(src_parser);
 	Code r_src_parsing          = refactor(src_parsing_interface);
 	Code r_src_untyped          = refactor(src_untyped);
-	
+
 	CodeBody etoktype    = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv", helper_use_c_definition );
 	Code     rf_etoktype = refactor_and_format(etoktype);
 

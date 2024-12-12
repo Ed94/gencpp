@@ -20,9 +20,9 @@ Code scan_file( char const* path )
 		GEN_FATAL("scan_file: %s is empty", path );
 	}
 
-	String str = string_make_reserve( GlobalAllocator, fsize );
+	StrBuilder str = strbuilder_make_reserve( GlobalAllocator, fsize );
 		file_read( & file, str, fsize );
-		string_get_header(str)->Length = fsize;
+		strbuilder_get_header(str)->Length = fsize;
 
 	// Skip GEN_INTELLISENSE_DIRECTIVES preprocessor blocks
 	// Its designed so that the directive should be the first thing in the file.
@@ -31,9 +31,9 @@ Code scan_file( char const* path )
 	#define current (*scanner)
 	#define matched    0
 	#define move_fwd() do { ++ scanner; -- left; } while (0)
-		const StrC directive_start = txt( "ifdef" );
-		const StrC directive_end   = txt( "endif" );
-		const StrC def_intellisense = txt("GEN_INTELLISENSE_DIRECTIVES" );
+		const Str directive_start = txt( "ifdef" );
+		const Str directive_end   = txt( "endif" );
+		const Str def_intellisense = txt("GEN_INTELLISENSE_DIRECTIVES" );
 
 		bool        found_directive = false;
 		char const* scanner         = (char const*)str;
@@ -49,7 +49,7 @@ Code scan_file( char const* path )
 
 				if ( ! found_directive )
 				{
-					if ( left && str_compare_len( scanner, directive_start.Ptr, directive_start.Len ) == matched )
+					if ( left && c_str_compare_len( scanner, directive_start.Ptr, directive_start.Len ) == matched )
 					{
 						scanner += directive_start.Len;
 						left    -= directive_start.Len;
@@ -57,7 +57,7 @@ Code scan_file( char const* path )
 						while ( left && char_is_space( current ) )
 							move_fwd();
 
-						if ( left && str_compare_len( scanner, def_intellisense.Ptr, def_intellisense.Len ) == matched )
+						if ( left && c_str_compare_len( scanner, def_intellisense.Ptr, def_intellisense.Len ) == matched )
 						{
 							scanner += def_intellisense.Len;
 							left    -= def_intellisense.Len;
@@ -77,7 +77,7 @@ Code scan_file( char const* path )
 					continue;
 				}
 
-				if ( left && str_compare_len( scanner, directive_end.Ptr, directive_end.Len ) == matched )
+				if ( left && c_str_compare_len( scanner, directive_end.Ptr, directive_end.Len ) == matched )
 				{
 					scanner += directive_end.Len;
 					left    -= directive_end.Len;
@@ -94,12 +94,12 @@ Code scan_file( char const* path )
 					if ( (scanner + 2) >= ( (char const*) str + fsize ) )
 					{
 						mem_move( str, scanner, left );
-						string_get_header(str)->Length = left;
+						strbuilder_get_header(str)->Length = left;
 						break;
 					}
 
 					mem_move( str, scanner, left );
-					string_get_header(str)->Length = left;
+					strbuilder_get_header(str)->Length = left;
 
 					break;
 				}
@@ -113,12 +113,12 @@ Code scan_file( char const* path )
 	}
 
 	file_close( & file );
-	return untyped_str( string_to_strc(str) );
+	return untyped_str( strbuilder_to_str(str) );
 }
 
 CodeBody parse_file( const char* path ) {
 	FileContents file    = file_read_contents( GlobalAllocator, true, path );
-	StrC         content = { file.size, (char const*)file.data };
+	Str         content = { file.size, (char const*)file.data };
 	CodeBody     code    = parse_global_body( content );
 	log_fmt("\nParsed: %s\n", path);
 	return code;

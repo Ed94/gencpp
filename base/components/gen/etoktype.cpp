@@ -111,9 +111,9 @@ enum TokType : u32
 	Tok_NumTokens
 };
 
-inline StrC toktype_to_str( TokType type )
+inline Str toktype_to_str( TokType type )
 {
-	local_persist StrC lookup[] = {
+	local_persist Str lookup[] = {
 		{ sizeof( "__invalid__" ),         "__invalid__"         },
 		{ sizeof( "private" ),             "private"             },
 		{ sizeof( "protected" ),           "protected"           },
@@ -192,7 +192,7 @@ inline StrC toktype_to_str( TokType type )
 		{ sizeof( "*" ),                   "*"                   },
 		{ sizeof( ";" ),                   ";"                   },
 		{ sizeof( "static_assert" ),       "static_assert"       },
-		{ sizeof( "__string__" ),          "__string__"          },
+		{ sizeof( "__strbuilder__" ),          "__strbuilder__"          },
 		{ sizeof( "typename" ),            "typename"            },
 		{ sizeof( "unsigned" ),            "unsigned"            },
 		{ sizeof( "signed" ),              "signed"              },
@@ -215,12 +215,12 @@ inline StrC toktype_to_str( TokType type )
 	return lookup[type];
 }
 
-inline TokType strc_to_toktype( StrC str )
+inline TokType str_to_toktype( Str str )
 {
 	local_persist u32 keymap[Tok_NumTokens];
 	do_once_start for ( u32 index = 0; index < Tok_NumTokens; index++ )
 	{
-		StrC enum_str = toktype_to_str( (TokType)index );
+		Str enum_str = toktype_to_str( (TokType)index );
 		keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1 );
 	}
 	do_once_end u32 hash = crc32( str.Ptr, str.Len );

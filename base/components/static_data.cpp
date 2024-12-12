@@ -28,7 +28,7 @@ global AllocatorInfo Allocator_TypeTable   = {0};
 
 #pragma region Constants
 
-global StrC enum_underlying_sig;
+global Str enum_underlying_sig;
 
 global Code access_public;
 global Code access_protected;

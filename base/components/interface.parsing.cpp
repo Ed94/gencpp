@@ -8,7 +8,7 @@
 
 // Publically Exposed Interface
 
-CodeClass parse_class( StrC def )
+CodeClass parse_class( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -24,7 +24,7 @@ CodeClass parse_class( StrC def )
 	return result;
 }
 
-CodeConstructor parse_constructor( StrC def )
+CodeConstructor parse_constructor( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -41,7 +41,7 @@ CodeConstructor parse_constructor( StrC def )
 
 	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 		b32 ignore_spec = false;
 
@@ -84,7 +84,7 @@ CodeConstructor parse_constructor( StrC def )
 	return result;
 }
 
-CodeDestructor parse_destructor( StrC def )
+CodeDestructor parse_destructor( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -101,7 +101,7 @@ CodeDestructor parse_destructor( StrC def )
 	return result;
 }
 
-CodeEnum parse_enum( StrC def )
+CodeEnum parse_enum( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -117,7 +117,7 @@ CodeEnum parse_enum( StrC def )
 	return parser_parse_enum( parser_not_inplace_def);
 }
 
-CodeBody parse_export_body( StrC def )
+CodeBody parse_export_body( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -130,7 +130,7 @@ CodeBody parse_export_body( StrC def )
 	return parser_parse_export_body();
 }
 
-CodeExtern parse_extern_link( StrC def )
+CodeExtern parse_extern_link( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -143,7 +143,7 @@ CodeExtern parse_extern_link( StrC def )
 	return parser_parse_extern_link();
 }
 
-CodeFriend parse_friend( StrC def )
+CodeFriend parse_friend( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -156,7 +156,7 @@ CodeFriend parse_friend( StrC def )
 	return parser_parse_friend();
 }
 
-CodeFn parse_function( StrC def )
+CodeFn parse_function( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -169,7 +169,7 @@ CodeFn parse_function( StrC def )
 	return (CodeFn) parser_parse_function();
 }
 
-CodeBody parse_global_body( StrC def )
+CodeBody parse_global_body( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -185,7 +185,7 @@ CodeBody parse_global_body( StrC def )
 	return result;
 }
 
-CodeNS parse_namespace( StrC def )
+CodeNS parse_namespace( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -198,7 +198,7 @@ CodeNS parse_namespace( StrC def )
 	return parser_parse_namespace();
 }
 
-CodeOperator parse_operator( StrC def )
+CodeOperator parse_operator( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -211,7 +211,7 @@ CodeOperator parse_operator( StrC def )
 	return (CodeOperator) parser_parse_operator();
 }
 
-CodeOpCast parse_operator_cast( StrC def )
+CodeOpCast parse_operator_cast( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -224,7 +224,7 @@ CodeOpCast parse_operator_cast( StrC def )
 	return parser_parse_operator_cast(NullCode);
 }
 
-CodeStruct parse_struct( StrC def )
+CodeStruct parse_struct( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -240,7 +240,7 @@ CodeStruct parse_struct( StrC def )
 	return result;
 }
 
-CodeTemplate parse_template( StrC def )
+CodeTemplate parse_template( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -253,7 +253,7 @@ CodeTemplate parse_template( StrC def )
 	return parser_parse_template();
 }
 
-CodeTypename parse_type( StrC def )
+CodeTypename parse_type( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -266,7 +266,7 @@ CodeTypename parse_type( StrC def )
 	return parser_parse_type( parser_not_from_template, nullptr);
 }
 
-CodeTypedef parse_typedef( StrC def )
+CodeTypedef parse_typedef( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -279,7 +279,7 @@ CodeTypedef parse_typedef( StrC def )
 	return parser_parse_typedef();
 }
 
-CodeUnion parse_union( StrC def )
+CodeUnion parse_union( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -292,7 +292,7 @@ CodeUnion parse_union( StrC def )
 	return parser_parse_union( parser_not_inplace_def);
 }
 
-CodeUsing parse_using( StrC def )
+CodeUsing parse_using( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );
@@ -305,7 +305,7 @@ CodeUsing parse_using( StrC def )
 	return parser_parse_using();
 }
 
-CodeVar parse_variable( StrC def )
+CodeVar parse_variable( Str def )
 {
 	GEN_USING_NS_PARSER;
 	check_parse_args( def );

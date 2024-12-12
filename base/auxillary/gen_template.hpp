@@ -32,4 +32,4 @@ CodeFn       gen_func_template( CodeTemplate template, ...  );
 Code         gen_class_struct_template( CodeTemplate template, ... );
 
 Code gen_template( CodeTemplate template, ... );
-Code gen_template( StrC template, StrC instantiation );
+Code gen_template( Str template, Str instantiation );

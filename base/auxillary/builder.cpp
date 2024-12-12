@@ -15,7 +15,7 @@ Builder builder_open( char const* path )
 		return result;
 	}
 
-	result.Buffer = string_make_reserve( GlobalAllocator, Builder_StrBufferReserve );
+	result.Buffer = strbuilder_make_reserve( GlobalAllocator, Builder_StrBufferReserve );
 
 	// log_fmt("$Builder - Opened file: %s\n", result.File.filename );
 	return result;
@@ -23,15 +23,15 @@ Builder builder_open( char const* path )
 
 void builder_pad_lines( Builder* builder, s32 num )
 {
-	string_append_strc( & builder->Buffer, txt("\n") );
+	strbuilder_append_str( & builder->Buffer, txt("\n") );
 }
 
 void builder_print( Builder* builder, Code code )
 {
-	String   str = code_to_string(code);
+	StrBuilder   str = code_to_string(code);
 	// const ssize len = str.length();
 	// log_fmt( "%s - print: %.*s\n", File.filename, len > 80 ? 80 : len, str.Data );
-	string_append_string( & builder->Buffer, str );
+	strbuilder_append_string( & builder->Buffer, str );
 }
 
 void builder_print_fmt_va( Builder* builder, char const* fmt, va_list va )
@@ -39,21 +39,21 @@ void builder_print_fmt_va( Builder* builder, char const* fmt, va_list va )
 	ssize   res;
 	char buf[ GEN_PRINTF_MAXLEN ] = { 0 };
 
-	res = str_fmt_va( buf, count_of( buf ) - 1, fmt, va ) - 1;
+	res = c_str_fmt_va( buf, count_of( buf ) - 1, fmt, va ) - 1;
 
-	string_append_c_str_len( (String*) & (builder->Buffer), (char const*)buf, res);
+	strbuilder_append_c_str_len( (StrBuilder*) & (builder->Buffer), (char const*)buf, res);
 }
 
 void builder_write(Builder* builder)
 {
-	b32 result = file_write( & builder->File, builder->Buffer, string_length(builder->Buffer) );
+	b32 result = file_write( & builder->File, builder->Buffer, strbuilder_length(builder->Buffer) );
 
 	if ( result == false )
 		log_failure("gen::File::write - Failed to write to file: %s\n", file_name( & builder->File ) );
 
 	log_fmt( "Generated: %s\n", builder->File.filename );
 	file_close( & builder->File );
-	string_free(& builder->Buffer);
+	strbuilder_free(& builder->Buffer);
 }
 
 #pragma endregion Builder

@@ -117,7 +117,7 @@ int gen_main()
 		def_include(txt("components/types.hpp")),
 		preprocess_endif,
 		fmt_newline,
-		untyped_str( to_strc_from_c_str(generation_notice) )
+		untyped_str( to_str_from_c_str(generation_notice) )
 	));
 
 	// gen.hpp

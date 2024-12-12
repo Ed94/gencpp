@@ -41,9 +41,9 @@ AccessSpec tok_to_access_specifier(Token tok)
 	return scast(AccessSpec, tok.Type);
 }
 
-StrC tok_to_str(Token tok)
+Str tok_to_str(Token tok)
 {
-	StrC str = { tok.Length, tok.Text };
+	Str str = { tok.Length, tok.Text };
 	return str;
 }
 
@@ -92,13 +92,13 @@ bool tok_is_end_definition(Token tok)
 	return bitfield_is_equal( u32, tok.Flags, TF_EndDefinition );
 }
 
-String tok_to_string(Token tok)
+StrBuilder tok_to_string(Token tok)
 {
-	String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
+	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, kilobytes(4) );
 
-	StrC type_str = toktype_to_str( tok.Type );
+	Str type_str = toktype_to_str( tok.Type );
 
-	string_append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
+	strbuilder_append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
 		, tok.Line, tok.Column
 		, type_str.Len, type_str.Ptr
 		, tok.Length, tok.Text
@@ -183,7 +183,7 @@ enum
 
 struct LexContext
 {
-	StrC            content;
+	Str            content;
 	s32             left;
 	char const*     scanner;
 	s32             line;
@@ -247,7 +247,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Length++;
 	}
 
-	ctx->token.Type = strc_to_toktype( tok_to_str(ctx->token) );
+	ctx->token.Type = str_to_toktype( tok_to_str(ctx->token) );
 
 	bool   is_preprocessor = ctx->token.Type >= Tok_Preprocess_Define && ctx->token.Type <= Tok_Preprocess_Pragma;
 	if ( ! is_preprocessor )
@@ -365,7 +365,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		if ( (* ctx->scanner) != '"' && (* ctx->scanner) != '<' )
 		{
-			String directive_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 80, ctx->left + preprocess_content.Length ), ctx->token.Text );
+			StrBuilder directive_str = strbuilder_fmt_buf( GlobalAllocator, "%.*s", min( 80, ctx->left + preprocess_content.Length ), ctx->token.Text );
 
 			log_failure( "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
 				, (* ctx->scanner)
@@ -432,8 +432,8 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			}
 			else
 			{
-				String directive_str = string_make_length( GlobalAllocator, ctx->token.Text, ctx->token.Length );
-				String content_str   = string_fmt_buf( GlobalAllocator, "%.*s", min( 400, ctx->left + preprocess_content.Length ), preprocess_content.Text );
+				StrBuilder directive_str = strbuilder_make_length( GlobalAllocator, ctx->token.Text, ctx->token.Length );
+				StrBuilder content_str   = strbuilder_fmt_buf( GlobalAllocator, "%.*s", min( 400, ctx->left + preprocess_content.Length ), preprocess_content.Text );
 
 				log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 							" in preprocessor directive '%s' (%d, %d)\n%s"
@@ -473,7 +473,7 @@ void lex_found_token( LexContext* ctx )
 		return;
 	}
 
-	TokType type = strc_to_toktype( tok_to_str(ctx->token) );
+	TokType type = str_to_toktype( tok_to_str(ctx->token) );
 
 	if (type <= Tok_Access_Public && type >= Tok_Access_Private )
 	{
@@ -524,7 +524,7 @@ void lex_found_token( LexContext* ctx )
 	else
 		key = crc32( ctx->token.Text, ctx->token.Length );
 
-	StrC* define = hashtable_get(ctx->defines, key );
+	Str* define = hashtable_get(ctx->defines, key );
 	if ( define )
 	{
 		ctx->token.Type = Tok_Preprocess_Macro;
@@ -572,8 +572,8 @@ void lex_found_token( LexContext* ctx )
 }
 
 neverinline
-// TokArray lex( Array<Token> tokens, StrC content )
-TokArray lex( StrC content )
+// TokArray lex( Array<Token> tokens, Str content )
+TokArray lex( Str content )
 {
 	LexContext c; LexContext* ctx = & c;
 	c.content = content;
@@ -620,7 +620,7 @@ TokArray lex( StrC content )
 		#if 0
 		if (Tokens.num())
 		{
-			log_fmt("\nLastTok: %S", Tokens.back().to_string());
+			log_fmt("\nLastTok: %SB", Tokens.back().to_string());
 		}
 		#endif
 
@@ -721,7 +721,7 @@ TokArray lex( StrC content )
 					}
 					else
 					{
-						String context_str = string_fmt_buf( GlobalAllocator, "%s", c.scanner, min( 100, c.left ) );
+						StrBuilder context_str = strbuilder_fmt_buf( GlobalAllocator, "%s", c.scanner, min( 100, c.left ) );
 
 						log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 					}
@@ -1282,7 +1282,7 @@ TokArray lex( StrC content )
 				);
 			}
 
-			String context_str = string_fmt_buf( GlobalAllocator, "%.*s", min( 100, c.left ), c.scanner );
+			StrBuilder context_str = strbuilder_fmt_buf( GlobalAllocator, "%.*s", min( 100, c.left ), c.scanner );
 			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 
 			// Skip to next whitespace since we can't know if anything else is valid until then.

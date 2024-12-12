@@ -58,9 +58,9 @@ enum Operator : u32
 	Op_UnderlyingType = 0xffffffffu
 };
 
-inline StrC operator_to_str( Operator op )
+inline Str operator_to_str( Operator op )
 {
-	local_persist StrC lookup[47] = {
+	local_persist Str lookup[47] = {
 		{ sizeof( "INVALID" ),  "INVALID"  },
 		{ sizeof( "=" ),        "="        },
 		{ sizeof( "+=" ),       "+="       },
@@ -112,7 +112,7 @@ inline StrC operator_to_str( Operator op )
 	return lookup[op];
 }
 
-forceinline StrC to_str( Operator op )
+forceinline Str to_str( Operator op )
 {
 	return operator_to_str( op );
 }

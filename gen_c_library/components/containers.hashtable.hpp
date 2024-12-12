@@ -27,24 +27,24 @@ R"(#define HashTable(_type) struct _type
 	return def_global_body(args(struct_def, define_type, define_critical_load_scale));
 }
 
-CodeBody gen_hashtable( StrC type, StrC hashtable_name )
+CodeBody gen_hashtable( Str type, Str hashtable_name )
 {
 
-	String tbl_type = {(char*) hashtable_name.duplicate(GlobalAllocator).Ptr};
-	String fn       = tbl_type.duplicate(GlobalAllocator);
-	// str_to_lower(fn.Data);
+	StrBuilder tbl_type = {(char*) hashtable_name.duplicate(GlobalAllocator).Ptr};
+	StrBuilder fn       = tbl_type.duplicate(GlobalAllocator);
+	// c_str_to_lower(fn.Data);
 
-	String name_lower = String::make( GlobalAllocator, hashtable_name );
-	// str_to_lower( name_lower.Data );
+	StrBuilder name_lower = StrBuilder::make( GlobalAllocator, hashtable_name );
+	// c_str_to_lower( name_lower.Data );
 
-	String hashtable_entry   = String::fmt_buf( GlobalAllocator, "HTE_%.*s",     hashtable_name.Len, hashtable_name.Ptr );
-	String entry_array_name  = String::fmt_buf( GlobalAllocator, "Arr_HTE_%.*s", hashtable_name.Len, hashtable_name.Ptr );
-	String entry_array_fn_ns = String::fmt_buf( GlobalAllocator, "arr_hte_%.*s", name_lower.length(), name_lower.Data );
+	StrBuilder hashtable_entry   = StrBuilder::fmt_buf( GlobalAllocator, "HTE_%.*s",     hashtable_name.Len, hashtable_name.Ptr );
+	StrBuilder entry_array_name  = StrBuilder::fmt_buf( GlobalAllocator, "Arr_HTE_%.*s", hashtable_name.Len, hashtable_name.Ptr );
+	StrBuilder entry_array_fn_ns = StrBuilder::fmt_buf( GlobalAllocator, "arr_hte_%.*s", name_lower.length(), name_lower.Data );
 
 	CodeBody hashtable_types = parse_global_body( token_fmt(
-		"type",        (StrC) type,
-		"tbl_name",    (StrC) hashtable_name,
-		"tbl_type",    (StrC) tbl_type,
+		"type",        (Str) type,
+		"tbl_name",    (Str) hashtable_name,
+		"tbl_type",    (Str) tbl_type,
 	stringize(
 		typedef struct HashTable_<type> <tbl_type>;
 		typedef struct HTE_<tbl_name> HTE_<tbl_name>;
@@ -74,13 +74,13 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 #undef typeof
 #undef forceinline
 	CodeBody hashtable_def = parse_global_body( token_fmt(
-		"type",           (StrC) type,
-		"tbl_name",       (StrC) hashtable_name,
-		"tbl_type",       (StrC) tbl_type,
-		"fn",             (StrC) fn,
-		"entry_type",     (StrC) hashtable_entry,
-		"array_entry",    (StrC) entry_array_name,
-		"fn_array",       (StrC) entry_array_fn_ns,
+		"type",           (Str) type,
+		"tbl_name",       (Str) hashtable_name,
+		"tbl_type",       (Str) tbl_type,
+		"fn",             (Str) fn,
+		"entry_type",     (Str) hashtable_entry,
+		"array_entry",    (Str) entry_array_name,
+		"fn_array",       (Str) entry_array_fn_ns,
 	stringize(
 		struct HashTable_<type> {
 			Array_ssize   Hashes;
@@ -372,9 +372,9 @@ CodeBody gen_hashtable( StrC type, StrC hashtable_name )
 #pragma pop_macro( "forceinline" )
 
 	++ HashTable_DefinitionCounter;
-	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", HashTable_DefinitionCounter).to_strc();
+	Str slot_str = StrBuilder::fmt_buf(GlobalAllocator, "%d", HashTable_DefinitionCounter).to_str();
 
-	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "tbl_type", (StrC)tbl_type, "slot", (StrC)slot_str,
+	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "tbl_type", (Str)tbl_type, "slot", (Str)slot_str,
 R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_init
 #define GENERIC_SLOT_<slot>__hashtable_init_reserve     <type>,      <tbl_type>_init_reserve
 #define GENERIC_SLOT_<slot>__hashtable_clear            <tbl_type>,  <tbl_type>_clear
@@ -395,12 +395,12 @@ R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_
 )"
 	));
 
-	char const* cmt_str = str_fmt_buf( "Name: %.*s Type: %.*s"
+	char const* cmt_str = c_str_fmt_buf( "Name: %.*s Type: %.*s"
 		, tbl_type.length(), tbl_type.Data
 		, type.Len, type.Ptr );
 
 	return def_global_body(args(
-		def_pragma( string_to_strc( string_fmt_buf( GlobalAllocator, "region %S", tbl_type ))),
+		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( GlobalAllocator, "region %SB", tbl_type ))),
 		fmt_newline,
 		generic_interface_slot,
 		fmt_newline,
@@ -409,7 +409,7 @@ R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_
 		entry_array,
 		hashtable_def,
 		fmt_newline,
-		def_pragma( string_to_strc( string_fmt_buf( GlobalAllocator, "endregion %S", tbl_type ))),
+		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( GlobalAllocator, "endregion %SB", tbl_type ))),
 		fmt_newline
 	));
 }

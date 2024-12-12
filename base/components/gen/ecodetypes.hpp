@@ -72,9 +72,9 @@ enum CodeType : u32
 	CT_UnderlyingType = GEN_U32_MAX
 };
 
-inline StrC codetype_to_str( CodeType type )
+inline Str codetype_to_str( CodeType type )
 {
-	local_persist StrC lookup[61] = {
+	local_persist Str lookup[61] = {
 		{ sizeof( "Invalid" ),             "Invalid"             },
 		{ sizeof( "Untyped" ),             "Untyped"             },
 		{ sizeof( "NewLine" ),             "NewLine"             },
@@ -140,9 +140,9 @@ inline StrC codetype_to_str( CodeType type )
 	return lookup[type];
 }
 
-inline StrC codetype_to_keyword_str( CodeType type )
+inline Str codetype_to_keyword_str( CodeType type )
 {
-	local_persist StrC lookup[61] = {
+	local_persist Str lookup[61] = {
 		{ sizeof( "__NA__" ) - 1,          "__NA__"          },
 		{ sizeof( "__NA__" ) - 1,          "__NA__"          },
 		{ sizeof( "__NA__" ) - 1,          "__NA__"          },
@@ -208,12 +208,12 @@ inline StrC codetype_to_keyword_str( CodeType type )
 	return lookup[type];
 }
 
-forceinline StrC to_str( CodeType type )
+forceinline Str to_str( CodeType type )
 {
 	return codetype_to_str( type );
 }
 
-forceinline StrC to_keyword_str( CodeType type )
+forceinline Str to_keyword_str( CodeType type )
 {
 	return codetype_to_keyword_str( type );
 }

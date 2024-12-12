@@ -21,22 +21,22 @@ using namespace gen;
 void clang_format_file( char const* path, char const* style_path )
 {
 	GEN_ASSERT_NOT_NULL(path);
-	String resolved_path = string_make_strc(GlobalAllocator, to_strc_from_c_str(path));
-	String style_arg;
+	StrBuilder resolved_path = strbuilder_make_str(GlobalAllocator, to_str_from_c_str(path));
+	StrBuilder style_arg;
 	if (style_path) {
-		style_arg = string_make_strc(GlobalAllocator, txt("-style=file:"));
-		string_append_fmt( & style_arg, "%s ", style_path );
+		style_arg = strbuilder_make_str(GlobalAllocator, txt("-style=file:"));
+		strbuilder_append_fmt( & style_arg, "%s ", style_path );
 	}
 
-	StrC clang_format      = txt("clang-format ");
-	StrC cf_format_inplace = txt("-i ");
-	StrC cf_verbose        = txt("-verbose ");
+	Str clang_format      = txt("clang-format ");
+	Str cf_format_inplace = txt("-i ");
+	Str cf_verbose        = txt("-verbose ");
 
-	String command = string_make_strc( GlobalAllocator, clang_format );
-	string_append_strc( & command, cf_format_inplace );
-	string_append_strc( & command, cf_verbose );
-	string_append_string( & command, style_arg );
-	string_append_string( & command, resolved_path );
+	StrBuilder command = strbuilder_make_str( GlobalAllocator, clang_format );
+	strbuilder_append_str( & command, cf_format_inplace );
+	strbuilder_append_str( & command, cf_verbose );
+	strbuilder_append_string( & command, style_arg );
+	strbuilder_append_string( & command, resolved_path );
 	system( command );
 }
 
@@ -48,11 +48,11 @@ void refactor_file( char const* path, char const* refactor_script )
 	GEN_ASSERT_NOT_NULL(path);
 	GEN_ASSERT_NOT_NULL(refactor_script);
 
-	String command = string_make_strc(GlobalAllocator, txt("refactor "));
-	// string_append_strc( & command, txt("-debug ") );
-	string_append_strc( & command, txt("-num=1 ") );
-	string_append_fmt( & command, "-src=%s ", path );
-	string_append_fmt( & command,"-spec=%s ", refactor_script );
+	StrBuilder command = strbuilder_make_str(GlobalAllocator, txt("refactor "));
+	// strbuilder_append_str( & command, txt("-debug ") );
+	strbuilder_append_str( & command, txt("-num=1 ") );
+	strbuilder_append_fmt( & command, "-src=%s ", path );
+	strbuilder_append_fmt( & command,"-spec=%s ", refactor_script );
 	system(command);
 	log_fmt("\n");
 }

@@ -49,10 +49,10 @@ However, the user may specifiy memory configuration.
 
 https://github.com/Ed94/gencpp/blob/eea4ebf5c40d5d87baa465abfb1be30845b2377e/base/components/ast.hpp#L396-L461
 
-*`StringCahced` is a typedef for `StrC` (a string slice), to denote it is an interned string*  
+*`StringCahced` is a typedef for `Str` (a string slice), to denote it is an interned string*  
 *`CodeType` is enum taggin the type of code. Has an underlying type of `u32`*  
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
-*`String` is the dynamically allocated string type for the library*  
+*`StrBuilder` is the dynamically allocated string type for the library*  
 
 AST widths are setup to be AST_POD_Size.  
 The width dictates how much the static array can hold before it must give way to using an allocated array:
@@ -79,7 +79,7 @@ int AST_ArrSpecs_Cap =
 Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
-  * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_string_allocator`, `get_cached_string`, `make_code`.
+  * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_strbuilder_allocator`, `get_cached_string`, `make_code`.
   * Allocators are defined with the `AllocatorInfo` structure found in [`memory.hpp`](../base/dependencies/memory.hpp)
   * Most of the work is just defining the allocation procedure:
 
@@ -308,7 +308,7 @@ Code <name> = code_str( <some code without "" quotes > )
 Template metaprogramming in the traditional sense becomes possible with the use of `token_fmt` and parse constructors:
 
 ```cpp
-StrC value = txt("Something");
+Str value = txt("Something");
 
 char const* template_str = txt(
     Code with <key> to replace with token_values
@@ -403,7 +403,7 @@ There are two provided auxillary interfaces:
 * Builder
 * Scanner
 
-### Builder is a similar object to the jai language's string_builder
+### Builder is a similar object to the jai language's strbuilder_builder
 
 * The purpose of it is to generate a file.
 * A file is specified and opened for writing using the open( file_path) function.

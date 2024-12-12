@@ -93,7 +93,7 @@ struct DirInfo
 
 	// Internals
 	char** filenames;    // zpl_array
-	String buf;
+	StrBuilder buf;
 };
 
 struct FileInfo

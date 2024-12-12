@@ -3,7 +3,7 @@
 #	include "memory.hpp"
 #endif
 
-#pragma region String Ops
+#pragma region StrBuilder Ops
 
 const char* char_first_occurence( const char* str, char c );
 
@@ -18,25 +18,25 @@ char  char_to_upper( char c );
 s32  digit_to_int( char c );
 s32  hex_digit_to_int( char c );
 
-s32         str_compare( const char* s1, const char* s2 );
-s32         str_compare_len( const char* s1, const char* s2, ssize len );
-char*       str_copy( char* dest, const char* source, ssize len );
-ssize       str_copy_nulpad( char* dest, const char* source, ssize len );
-ssize       str_len( const char* str );
-ssize       str_len_capped( const char* str, ssize max_len );
-char*       str_reverse( char* str );    // NOTE: ASCII only
-char const* str_skip( char const* str, char c );
-char const* str_skip_any( char const* str, char const* char_list );
-char const* str_trim( char const* str, b32 catch_newline );
+s32         c_str_compare( const char* s1, const char* s2 );
+s32         c_str_compare_len( const char* s1, const char* s2, ssize len );
+char*       c_str_copy( char* dest, const char* source, ssize len );
+ssize       c_str_copy_nulpad( char* dest, const char* source, ssize len );
+ssize       c_str_len( const char* str );
+ssize       c_str_len_capped( const char* str, ssize max_len );
+char*       c_str_reverse( char* str );    // NOTE: ASCII only
+char const* c_str_skip( char const* str, char c );
+char const* c_str_skip_any( char const* str, char const* char_list );
+char const* c_str_trim( char const* str, b32 catch_newline );
 
 // NOTE: ASCII only
-void str_to_lower( char* str );
-void str_to_upper( char* str );
+void c_str_to_lower( char* str );
+void c_str_to_upper( char* str );
 
-s64  str_to_i64( const char* str, char** end_ptr, s32 base );
+s64  c_str_to_i64( const char* str, char** end_ptr, s32 base );
 void i64_to_str( s64 value, char* string, s32 base );
 void u64_to_str( u64 value, char* string, s32 base );
-f64  str_to_f64( const char* str, char** end_ptr );
+f64  c_str_to_f64( const char* str, char** end_ptr );
 
 inline
 const char* char_first_occurence( const char* s, char c )
@@ -122,7 +122,7 @@ s32 hex_digit_to_int( char c )
 }
 
 inline
-s32 str_compare( const char* s1, const char* s2 )
+s32 c_str_compare( const char* s1, const char* s2 )
 {
 	while ( *s1 && ( *s1 == *s2 ) )
 	{
@@ -132,7 +132,7 @@ s32 str_compare( const char* s1, const char* s2 )
 }
 
 inline
-s32 str_compare_len( const char* s1, const char* s2, ssize len )
+s32 c_str_compare_len( const char* s1, const char* s2, ssize len )
 {
 	for ( ; len > 0; s1++, s2++, len-- )
 	{
@@ -145,7 +145,7 @@ s32 str_compare_len( const char* s1, const char* s2, ssize len )
 }
 
 inline
-char* str_copy( char* dest, const char* source, ssize len )
+char* c_str_copy( char* dest, const char* source, ssize len )
 {
 	GEN_ASSERT_NOT_NULL( dest );
 	if ( source )
@@ -166,7 +166,7 @@ char* str_copy( char* dest, const char* source, ssize len )
 }
 
 inline
-ssize str_copy_nulpad( char* dest, const char* source, ssize len )
+ssize c_str_copy_nulpad( char* dest, const char* source, ssize len )
 {
 	ssize result = 0;
 	GEN_ASSERT_NOT_NULL( dest );
@@ -191,7 +191,7 @@ ssize str_copy_nulpad( char* dest, const char* source, ssize len )
 }
 
 inline
-ssize str_len( const char* str )
+ssize c_str_len( const char* str )
 {
 	if ( str == NULL )
 	{
@@ -204,7 +204,7 @@ ssize str_len( const char* str )
 }
 
 inline
-ssize str_len_capped( const char* str, ssize max_len )
+ssize c_str_len_capped( const char* str, ssize max_len )
 {
 	const char* end = rcast(const char*, mem_find( str, 0, max_len ));
 	if ( end )
@@ -213,9 +213,9 @@ ssize str_len_capped( const char* str, ssize max_len )
 }
 
 inline
-char* str_reverse( char* str )
+char* c_str_reverse( char* str )
 {
-	ssize    len  = str_len( str );
+	ssize    len  = c_str_len( str );
 	char* a    = str + 0;
 	char* b    = str + len - 1;
 	len       /= 2;
@@ -228,7 +228,7 @@ char* str_reverse( char* str )
 }
 
 inline
-char const* str_skip( char const* str, char c )
+char const* c_str_skip( char const* str, char c )
 {
 	while ( *str && *str != c )
 	{
@@ -238,20 +238,20 @@ char const* str_skip( char const* str, char c )
 }
 
 inline
-char const* str_skip_any( char const* str, char const* char_list )
+char const* c_str_skip_any( char const* str, char const* char_list )
 {
-	char const* closest_ptr     = rcast( char const*, pointer_add_const( rcast(mem_ptr_const, str), str_len( str ) ));
-	ssize       char_list_count = str_len( char_list );
+	char const* closest_ptr     = rcast( char const*, pointer_add_const( rcast(mem_ptr_const, str), c_str_len( str ) ));
+	ssize       char_list_count = c_str_len( char_list );
 	for ( ssize i = 0; i < char_list_count; i++ )
 	{
-		char const* p = str_skip( str, char_list[ i ] );
+		char const* p = c_str_skip( str, char_list[ i ] );
 		closest_ptr   = min( closest_ptr, p );
 	}
 	return closest_ptr;
 }
 
 inline
-char const* str_trim( char const* str, b32 catch_newline )
+char const* c_str_trim( char const* str, b32 catch_newline )
 {
 	while ( *str && char_is_space( *str ) && ( ! catch_newline || ( catch_newline && *str != '\n' ) ) )
 	{
@@ -261,7 +261,7 @@ char const* str_trim( char const* str, b32 catch_newline )
 }
 
 inline
-void str_to_lower( char* str )
+void c_str_to_lower( char* str )
 {
 	if ( ! str )
 		return;
@@ -273,7 +273,7 @@ void str_to_lower( char* str )
 }
 
 inline
-void str_to_upper( char* str )
+void c_str_to_upper( char* str )
 {
 	if ( ! str )
 		return;
@@ -284,4 +284,4 @@ void str_to_upper( char* str )
 	}
 }
 
-#pragma endregion String Ops
+#pragma endregion StrBuilder Ops

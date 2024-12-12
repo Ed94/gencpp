@@ -18,7 +18,7 @@ struct StackNode
 
 	Token Start;
 	Token Name;        // The name of the AST node (if parsed)
-	StrC  ProcName;    // The name of the procedure
+	Str  ProcName;    // The name of the procedure
 };
 
 struct ParseContext
@@ -45,9 +45,9 @@ void parser_pop(ParseContext* ctx)
 	ctx->Scope = ctx->Scope->Prev;
 }
 
-String parser_to_string(ParseContext ctx)
+StrBuilder parser_to_string(ParseContext ctx)
 {
-	String result = string_make_reserve( GlobalAllocator, kilobytes(4) );
+	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, kilobytes(4) );
 
 	Token scope_start = ctx.Scope->Start;
 	Token last_valid  = ctx.Tokens.Idx >= array_num(ctx.Tokens.Arr) ? ctx.Tokens.Arr[array_num(ctx.Tokens.Arr) -1] : (* lex_current(& ctx.Tokens, true));
@@ -60,21 +60,21 @@ String parser_to_string(ParseContext ctx)
 		length++;
 	}
 
-	StrC scope_strc = { length, scope_start.Text };
-	String line = string_make_strc( GlobalAllocator, scope_strc );
-	string_append_fmt( & result, "\tScope    : %s\n", line );
-	string_free(& line);
+	Str scope_str = { length, scope_start.Text };
+	StrBuilder line = strbuilder_make_str( GlobalAllocator, scope_str );
+	strbuilder_append_fmt( & result, "\tScope    : %s\n", line );
+	strbuilder_free(& line);
 
 	sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
 	sptr   length_from_err = dist;
 
-	StrC err_strc        = { length_from_err, last_valid.Text };
-	String line_from_err = string_make_strc( GlobalAllocator, err_strc );
+	Str err_str        = { length_from_err, last_valid.Text };
+	StrBuilder line_from_err = strbuilder_make_str( GlobalAllocator, err_str );
 
 	if ( length_from_err < 100 )
-		string_append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
+		strbuilder_append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
 	else
-		string_append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
+		strbuilder_append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
 
 	StackNode* curr_scope = ctx.Scope;
 	s32 level = 0;
@@ -82,11 +82,11 @@ String parser_to_string(ParseContext ctx)
 	{
 		if ( tok_is_valid(curr_scope->Name) )
 		{
-			string_append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
+			strbuilder_append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
 		}
 		else
 		{
-			string_append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
+			strbuilder_append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
 		}
 
 		curr_scope = curr_scope->Prev;
@@ -129,7 +129,7 @@ bool lex__eat(TokArray* self, TokType type )
 	}
 
 #if 0 && GEN_BUILD_DEBUG
-	log_fmt("Ate: %S\n", self->Arr[Idx].to_string() );
+	log_fmt("Ate: %SB\n", self->Arr[Idx].to_string() );
 #endif
 
 	self->Idx ++;
@@ -144,7 +144,7 @@ void parser_init()
 	);
 
 	fixed_arena_init(& Lexer_defines_map_arena);
-	Lexer_defines = hashtable_init_reserve(StrC, fixed_arena_allocator_info( & Lexer_defines_map_arena), 256 );
+	Lexer_defines = hashtable_init_reserve(Str, fixed_arena_allocator_info( & Lexer_defines_map_arena), 256 );
 }
 
 internal
@@ -157,17 +157,17 @@ void parser_deinit()
 #pragma region Helper Macros
 
 #define check_parse_args( def ) _check_parse_args(def, stringize(_func_) )
-bool _check_parse_args( StrC def, char const* func_name )
+bool _check_parse_args( Str def, char const* func_name )
 {
 	if ( def.Len <= 0 )
 	{
-		log_failure( str_fmt_buf("gen::%s: length must greater than 0", func_name) );
+		log_failure( c_str_fmt_buf("gen::%s: length must greater than 0", func_name) );
 		parser_pop(& Context);
 		return false;
 	}
 	if ( def.Ptr == nullptr )
 	{
-		log_failure( str_fmt_buf("gen::%s: def was null", func_name) );
+		log_failure( c_str_fmt_buf("gen::%s: def was null", func_name) );
 		parser_pop(& Context);
 		return false;
 	}
@@ -230,7 +230,7 @@ internal CodePreprocessCond parse_preprocess_cond              ();
 internal Code               parse_simple_preprocess            ( TokType which, bool dont_consume_braces );
 internal Code               parse_static_assert                ();
 internal void               parse_template_args                ( Token* token );
-internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, StrC name );
+internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, Str name );
 internal CodeVar            parse_variable_declaration_list    ();
 
 internal CodeClass       parser_parse_class    ( bool inplace_def );
@@ -268,9 +268,9 @@ constexpr bool parser_strip_formatting_dont_preserve_newlines = false;
 	It has edge case failures that prevent it from being used in function bodies.
 */
 internal
-String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
+StrBuilder parser_strip_formatting( Str raw_text, bool preserve_newlines )
 {
-	String content = string_make_reserve( GlobalAllocator, raw_text.Len );
+	StrBuilder content = strbuilder_make_reserve( GlobalAllocator, raw_text.Len );
 
 	if ( raw_text.Len == 0 )
 		return content;
@@ -317,7 +317,7 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 			if ( tokleft )
 				move_fwd();
 
-			string_append_c_str_len( & content, cut_ptr, cut_length );
+			strbuilder_append_c_str_len( & content, cut_ptr, cut_length );
 			last_cut = rcast(sptr, scanner ) - rcast( sptr, raw_text.Ptr );
 			continue;
 		}
@@ -339,7 +339,7 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 			if ( tokleft )
 				move_fwd();
 
-			string_append_c_str_len( & content, cut_ptr, cut_length );
+			strbuilder_append_c_str_len( & content, cut_ptr, cut_length );
 			last_cut = rcast( sptr, scanner ) - rcast( sptr, raw_text.Ptr );
 			continue;
 		}
@@ -353,7 +353,7 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 			scanner += 2;
 			tokleft -= 2;
 
-			string_append_c_str_len( & content,  cut_ptr, cut_length );
+			strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 			last_cut = rcast( sptr, scanner ) - rcast( sptr, raw_text.Ptr );
 			continue;
 		}
@@ -372,7 +372,7 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 			if (tokleft)
 				move_fwd();
 
-			string_append_c_str_len( & content,  cut_ptr, cut_length );
+			strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 			last_cut = rcast( sptr,  scanner ) - rcast( sptr, raw_text.Ptr );
 			continue;
 		}
@@ -381,10 +381,10 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 		if (scanner[0] == '\t')
 		{
 			if (pos > last_cut)
-				string_append_c_str_len( & content, cut_ptr, cut_length);
+				strbuilder_append_c_str_len( & content, cut_ptr, cut_length);
 
-			if ( * string_back( content ) != ' ' )
-				string_append_char( & content, ' ' );
+			if ( * strbuilder_back( content ) != ' ' )
+				strbuilder_append_char( & content, ' ' );
 
 			move_fwd();
 			last_cut = rcast( sptr, scanner) - rcast( sptr, raw_text.Ptr);
@@ -400,17 +400,17 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 				scanner += 2;
 				tokleft -= 2;
 
-				string_append_c_str_len( & content,  cut_ptr, cut_length );
+				strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 				last_cut = rcast( sptr, scanner ) - rcast( sptr, raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				string_append_c_str_len( & content,  cut_ptr, cut_length );
+				strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( * string_back( content ) != ' ' )
-				string_append_char( & content,  ' ' );
+			if ( * strbuilder_back( content ) != ' ' )
+				strbuilder_append_char( & content,  ' ' );
 
 			scanner += 2;
 			tokleft -= 2;
@@ -427,17 +427,17 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 
 				move_fwd();
 
-				string_append_c_str_len( & content,  cut_ptr, cut_length );
+				strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 				last_cut = rcast( sptr, scanner ) - rcast( sptr, raw_text.Ptr );
 				continue;
 			}
 
 			if ( pos > last_cut )
-				string_append_c_str_len( & content,  cut_ptr, cut_length );
+				strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 
 			// Replace with a space
-			if ( * string_back( content ) != ' ' )
-				string_append_char( & content,  ' ' );
+			if ( * strbuilder_back( content ) != ' ' )
+				strbuilder_append_char( & content,  ' ' );
 
 			move_fwd();
 
@@ -448,7 +448,7 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 		// Escaped newlines
 		if ( scanner[0] == '\\' )
 		{
-			string_append_c_str_len( & content,  cut_ptr, cut_length );
+			strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 
 			s32 amount_to_skip = 1;
 			if ( tokleft > 1 && scanner[1] == '\n' )
@@ -475,7 +475,7 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 		// Consectuive spaces
 		if ( tokleft > 1 && char_is_space( scanner[0] ) && char_is_space( scanner[ 1 ] ) )
 		{
-			string_append_c_str_len( & content,  cut_ptr, cut_length );
+			strbuilder_append_c_str_len( & content,  cut_ptr, cut_length );
 			do
 			{
 				move_fwd();
@@ -485,9 +485,9 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 			last_cut = rcast( sptr, scanner ) - rcast( sptr, raw_text.Ptr );
 
 			// Preserve only 1 space of formattting
-			char* last = string_back(content);
+			char* last = strbuilder_back(content);
 			if ( last == nullptr || * last != ' ' )
-				string_append_char( & content, ' ' );
+				strbuilder_append_char( & content, ' ' );
 
 			continue;
 		}
@@ -497,7 +497,7 @@ String parser_strip_formatting( StrC raw_text, bool preserve_newlines )
 
 	if ( last_cut < raw_text.Len )
 	{
-		string_append_c_str_len( & content,  cut_ptr, raw_text.Len - last_cut );
+		strbuilder_append_c_str_len( & content,  cut_ptr, raw_text.Len - last_cut );
 	}
 
 #undef cut_ptr
@@ -681,14 +681,14 @@ CodeAttributes parse_attributes()
 
 	if ( len > 0 )
 	{
-		StrC attribute_txt = { len, start.Text };
+		Str attribute_txt = { len, start.Text };
 		parser_pop(& Context);
 
-		String name_stripped = parser_strip_formatting( attribute_txt, parser_strip_formatting_dont_preserve_newlines );
+		StrBuilder name_stripped = parser_strip_formatting( attribute_txt, parser_strip_formatting_dont_preserve_newlines );
 
 		Code result     = make_code();
 		result->Type    = CT_PlatformAttributes;
-		result->Name    = get_cached_string( string_to_strc(name_stripped) );
+		result->Name    = get_cached_string( strbuilder_to_str(name_stripped) );
 		result->Content = result->Name;
 		// result->Token   =
 
@@ -846,7 +846,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			case Tok_Statement_End:
 			{
 				// TODO(Ed): Convert this to a general warning procedure
-				log_fmt("Dangling end statement found %S\n", tok_to_string(currtok_noskip));
+				log_fmt("Dangling end statement found %SB\n", tok_to_string(currtok_noskip));
 				eat( Tok_Statement_End );
 				continue;
 			}
@@ -1015,7 +1015,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 				while ( left && tok_is_specifier(currtok) )
 				{
-					Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+					Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 					b32 ignore_spec = false;
 
@@ -1069,10 +1069,10 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 					if ( attributes )
 					{
-						String fused = string_make_reserve( GlobalAllocator, attributes->Content.Len + more_attributes->Content.Len );
-						string_append_fmt( & fused, "%S %S", attributes->Content, more_attributes->Content );
+						StrBuilder fused = strbuilder_make_reserve( GlobalAllocator, attributes->Content.Len + more_attributes->Content.Len );
+						strbuilder_append_fmt( & fused, "%SB %SB", attributes->Content, more_attributes->Content );
 
-						StrC attrib_name = { string_length(fused), fused };
+						Str attrib_name = { strbuilder_length(fused), fused };
 						attributes->Name    = get_cached_string( attrib_name );
 						attributes->Content = attributes->Name;
 						// <Attributes> <Specifiers> <Attributes>
@@ -1109,7 +1109,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			{
 				if ( nexttok.Type == Tok_Capture_Start && name.Length && currtok.Type == Tok_Identifier )
 				{
-					if ( str_compare_len( name.Text, currtok.Text, name.Length ) == 0 )
+					if ( c_str_compare_len( name.Text, currtok.Text, name.Length ) == 0 )
 					{
 						member = cast(Code, parser_parse_constructor( specifiers ));
 						// <Attributes> <Specifiers> <Name>()
@@ -1226,13 +1226,13 @@ Code parse_complicated_definition( TokType which )
 	}
 
 	Token tok = tokens.Arr[ idx - 1 ];
-	if ( tok_is_specifier(tok) && spec_is_trailing( strc_to_specifier( tok_to_str(tok))) )
+	if ( tok_is_specifier(tok) && spec_is_trailing( str_to_specifier( tok_to_str(tok))) )
 	{
 		// <which> <type_identifier>(...) <specifier> ...;
 
 		s32   spec_idx = idx - 1;
 		Token spec     = tokens.Arr[spec_idx];
-		while ( tok_is_specifier(spec) && spec_is_trailing( strc_to_specifier( tok_to_str(spec))) )
+		while ( tok_is_specifier(spec) && spec_is_trailing( str_to_specifier( tok_to_str(spec))) )
 		{
 			-- spec_idx;
 			spec = tokens.Arr[spec_idx];
@@ -1343,7 +1343,7 @@ Code parse_complicated_definition( TokType which )
 	}
 	else
 	{
-		log_failure( "Unsupported or bad member definition after %s declaration\n%S", toktype_to_str(which).Ptr, parser_to_string(Context) );
+		log_failure( "Unsupported or bad member definition after %s declaration\n%SB", toktype_to_str(which).Ptr, parser_to_string(Context) );
 		parser_pop(& Context);
 		return InvalidCode;
 	}
@@ -1389,7 +1389,7 @@ CodeDefine parse_define()
 		return define;
 	}
 
-	define->Content = get_cached_string( string_to_strc( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
+	define->Content = get_cached_string( strbuilder_to_str( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
 	eat( Tok_Preprocess_Content );
 	// #define <Name> <Content>
 
@@ -1486,12 +1486,12 @@ CodeFn parse_function_after_name(
 	{
 		if ( specifiers == nullptr )
 		{
-			specifiers = def_specifier( strc_to_specifier( tok_to_str(currtok)) );
+			specifiers = def_specifier( str_to_specifier( tok_to_str(currtok)) );
 			eat( currtok.Type );
 			continue;
 		}
 
-		specifiers_append(specifiers, strc_to_specifier( tok_to_str(currtok)) );
+		specifiers_append(specifiers, str_to_specifier( tok_to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
@@ -1533,13 +1533,13 @@ CodeFn parse_function_after_name(
 			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>; <InlineCmt>
 	}
 
-	String
-	name_stripped = string_make_strc( GlobalAllocator, tok_to_str(name) );
+	StrBuilder
+	name_stripped = strbuilder_make_str( GlobalAllocator, tok_to_str(name) );
 	strip_space(name_stripped);
 
 	CodeFn
 	result              = (CodeFn) make_code();
-	result->Name        = get_cached_string( string_to_strc(name_stripped) );
+	result->Name        = get_cached_string( strbuilder_to_str(name_stripped) );
 	result->ModuleFlags = mflags;
 
 	if ( body )
@@ -1616,7 +1616,7 @@ Code parse_function_body()
 
 	if ( len > 0 )
 	{
-		StrC str = { len, start.Text };
+		Str str = { len, start.Text };
 		body_append( result, cast(Code, def_execution( str )) );
 	}
 
@@ -1661,7 +1661,7 @@ CodeBody parse_global_nspace( CodeType which )
 		{
 			case Tok_Comma:
 			{
-				log_failure("Dangling comma found: %S\nContext:\n%S", tok_to_string(currtok), parser_to_string(Context));
+				log_failure("Dangling comma found: %SB\nContext:\n%SB", tok_to_string(currtok), parser_to_string(Context));
 				parser_pop( & Context);
 				return InvalidCode;
 			}
@@ -1669,7 +1669,7 @@ CodeBody parse_global_nspace( CodeType which )
 			case Tok_Statement_End:
 			{
 				// TODO(Ed): Convert this to a general warning procedure
-				log_fmt("Dangling end statement found %S\n", tok_to_string(currtok_noskip));
+				log_fmt("Dangling end statement found %SB\n", tok_to_string(currtok_noskip));
 				eat( Tok_Statement_End );
 				continue;
 			}
@@ -1828,7 +1828,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 				while ( left && tok_is_specifier(currtok) )
 				{
-					Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+					Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 					bool ignore_spec = false;
 
@@ -1856,7 +1856,7 @@ CodeBody parse_global_nspace( CodeType which )
 						break;
 
 						default:
-							StrC spec_str = spec_to_str(spec);
+							Str spec_str = spec_to_str(spec);
 
 							log_failure( "Invalid specifier %.*s for variable\n%s", spec_str.Len, spec_str, parser_to_string(Context) );
 							parser_pop(& Context);
@@ -1960,7 +1960,7 @@ CodeBody parse_global_nspace( CodeType which )
 	Member_Resolved_To_Lone_Macro:
 		if ( member == Code_Invalid )
 		{
-			log_failure( "Failed to parse member\nToken: %S\nContext:\n%S", tok_to_string(currtok_noskip), parser_to_string(Context) );
+			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_string(currtok_noskip), parser_to_string(Context) );
 			parser_pop(& Context);
 			return InvalidCode;
 		}
@@ -2087,7 +2087,7 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 		tok_left = tokens.Arr[idx];
 	}
 
-	bool is_same = str_compare_len( tok_right.Text, tok_left.Text, tok_right.Length ) == 0;
+	bool is_same = c_str_compare_len( tok_right.Text, tok_left.Text, tok_right.Length ) == 0;
 	if (tok_left.Type == Tok_Identifier && is_same)
 	{
 		// We have found the pattern we desired
@@ -2136,7 +2136,7 @@ Token parse_identifier( bool* possible_member_function )
 
 		if ( currtok.Type == Tok_Operator && currtok.Text[0] == '~' )
 		{
-			bool is_destructor = strc_are_equal( Context.Scope->Prev->ProcName, txt("parser_parse_destructor"));
+			bool is_destructor = str_are_equal( Context.Scope->Prev->ProcName, txt("parser_parse_destructor"));
 			if (is_destructor)
 			{
 				name.Length = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )name.Text;
@@ -2144,7 +2144,7 @@ Token parse_identifier( bool* possible_member_function )
 				return name;
 			}
 
-			log_failure( "Error, had a ~ operator after %S but not a destructor\n%s", toktype_to_str( prevtok.Type ), parser_to_string(Context) );
+			log_failure( "Error, had a ~ operator after %SB but not a destructor\n%s", toktype_to_str( prevtok.Type ), parser_to_string(Context) );
 			parser_pop(& Context);
 			return invalid;
 		}
@@ -2442,9 +2442,9 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		default:
 		{
-			StrC str_new    = operator_to_str(Op_New);
-			StrC str_delete = operator_to_str(Op_Delete);
-			if ( str_compare_len( currtok.Text, str_new.Ptr, max(str_new.Len - 1, currtok.Length)) == 0)
+			Str c_str_new    = operator_to_str(Op_New);
+			Str c_str_delete = operator_to_str(Op_Delete);
+			if ( c_str_compare_len( currtok.Text, c_str_new.Ptr, max(c_str_new.Len - 1, currtok.Length)) == 0)
 			{
 				op = Op_New;
 				eat( Tok_Identifier );
@@ -2456,7 +2456,7 @@ CodeOperator parse_operator_after_ret_type(
 						idx++;
 				}
 				Token next = Context.Tokens.Arr[idx];
-				if ( currtok.Type == Tok_Operator && str_compare_len(currtok.Text, "[]", 2) == 0)
+				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
 					op = Op_NewArray;
@@ -2468,7 +2468,7 @@ CodeOperator parse_operator_after_ret_type(
 					op = Op_NewArray;
 				}
 			}
-			else if ( str_compare_len( currtok.Text, str_delete.Ptr, max(str_delete.Len - 1, currtok.Length )) == 0)
+			else if ( c_str_compare_len( currtok.Text, c_str_delete.Ptr, max(c_str_delete.Len - 1, currtok.Length )) == 0)
 			{
 				op = Op_Delete;
 				eat(Tok_Identifier);
@@ -2480,7 +2480,7 @@ CodeOperator parse_operator_after_ret_type(
 						idx++;
 				}
 				Token next = Context.Tokens.Arr[idx];
-				if ( currtok.Type == Tok_Operator && str_compare_len(currtok.Text, "[]", 2) == 0)
+				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
 					op = Op_DeleteArray;
@@ -2526,12 +2526,12 @@ CodeOperator parse_operator_after_ret_type(
 	{
 		if ( specifiers == nullptr )
 		{
-			specifiers = def_specifier( strc_to_specifier( tok_to_str(currtok)) );
+			specifiers = def_specifier( str_to_specifier( tok_to_str(currtok)) );
 			eat( currtok.Type );
 			continue;
 		}
 
-		specifiers_append(specifiers, strc_to_specifier( tok_to_str(currtok)) );
+		specifiers_append(specifiers, str_to_specifier( tok_to_str(currtok)) );
 		eat( currtok.Type );
 	}
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>
@@ -2818,7 +2818,7 @@ CodeParams parse_params( bool use_template_capture )
 				eat( currtok.Type );
 			}
 
-			value = untyped_str( string_to_strc(parser_strip_formatting( tok_to_str(value_tok), parser_strip_formatting_dont_preserve_newlines )) );
+			value = untyped_str( strbuilder_to_str(parser_strip_formatting( tok_to_str(value_tok), parser_strip_formatting_dont_preserve_newlines )) );
 			// ( <Macro> <ValueType> <Name> = <Expression>
 		}
 	}
@@ -2934,7 +2934,7 @@ CodeParams parse_params( bool use_template_capture )
 					eat( currtok.Type );
 				}
 
-				value = untyped_str( string_to_strc(parser_strip_formatting( tok_to_str(value_tok), parser_strip_formatting_dont_preserve_newlines )) );
+				value = untyped_str( strbuilder_to_str(parser_strip_formatting( tok_to_str(value_tok), parser_strip_formatting_dont_preserve_newlines )) );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>
 			}
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, ..
@@ -3045,8 +3045,8 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 		eat( Tok_BraceCurly_Close );
 		// <Macro> { <Body> }
 
-		StrC prev_proc = Context.Scope->Prev->ProcName;
-		if ( str_compare_len( prev_proc.Ptr, "parser_parse_typedef", prev_proc.Len ) != 0 )
+		Str prev_proc = Context.Scope->Prev->ProcName;
+		if ( c_str_compare_len( prev_proc.Ptr, "parser_parse_typedef", prev_proc.Len ) != 0 )
 		{
 			if ( check( Tok_Statement_End ))
 			{
@@ -3066,14 +3066,14 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 	{
 		// If the macro is just a macro in the body of an AST it may have a semi-colon for the user to close on purpsoe
 		// (especially for functional macros)
-		StrC calling_proc = Context.Scope->Prev->ProcName;
+		Str calling_proc = Context.Scope->Prev->ProcName;
 
-		if (strc_contains(Context.Scope->Prev->ProcName, txt("parser_parse_enum")))
+		if (str_contains(Context.Scope->Prev->ProcName, txt("parser_parse_enum")))
 		{
 			// Do nothing
 			goto Leave_Scope_Early;
 		}
-		else if (strc_contains(Context.Scope->Prev->ProcName, txt("parser_parse_typedef")))
+		else if (str_contains(Context.Scope->Prev->ProcName, txt("parser_parse_typedef")))
 		{
 			// TODO(Ed): Reveiw the context for this?
 			if ( peektok.Type == Tok_Statement_End )
@@ -3095,8 +3095,8 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 			}
 		}
 		else if (
-				strc_contains(calling_proc, txt("parse_global_nspace"))
-			||	strc_contains(calling_proc, txt("parse_class_struct_body"))
+				str_contains(calling_proc, txt("parse_global_nspace"))
+			||	str_contains(calling_proc, txt("parse_class_struct_body"))
 		)
 		{
 			if (peektok.Type == Tok_Statement_End)
@@ -3113,9 +3113,9 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 
 Leave_Scope_Early:
 
-	char const* content = str_fmt_buf( "%.*s ", tok.Length, tok.Text );
+	char const* content = c_str_fmt_buf( "%.*s ", tok.Length, tok.Text );
 
-	Code result = untyped_str( to_strc_from_c_str(content) );
+	Code result = untyped_str( to_str_from_c_str(content) );
 	Context.Scope->Name = tok;
 
 	parser_pop(& Context);
@@ -3156,8 +3156,8 @@ Code parse_static_assert()
 
 	content.Length  = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
 
-	char const* str  = str_fmt_buf( "%.*s\n", content.Length, content.Text );
-	StrC content_str = { content.Length + 1, str };
+	char const* str  = c_str_fmt_buf( "%.*s\n", content.Length, content.Text );
+	Str content_str = { content.Length + 1, str };
 	assert->Content = get_cached_string( content_str );
 	assert->Name	= assert->Content;
 
@@ -3211,7 +3211,7 @@ CodeVar parse_variable_after_name(
 	, CodeAttributes    attributes
 	, CodeSpecifiers    specifiers
 	, CodeTypename      type
-	, StrC              name
+	, Str              name
 )
 {
 	push_scope();
@@ -3289,7 +3289,7 @@ CodeVar parse_variable_after_name(
 
 		if ( currtok.Type == Tok_Statement_End )
 		{
-			log_failure( "Expected expression after bitfield \n%S", parser_to_string(Context) );
+			log_failure( "Expected expression after bitfield \n%SB", parser_to_string(Context) );
 			parser_pop(& Context);
 			return InvalidCode;
 		}
@@ -3398,7 +3398,7 @@ CodeVar parse_variable_declaration_list()
 
 		while ( left && tok_is_specifier(currtok) )
 		{
-			Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+			Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 			switch ( spec )
 			{
@@ -3406,7 +3406,7 @@ CodeVar parse_variable_declaration_list()
 					if ( specifiers->NumEntries && specifiers->ArrSpecs[ specifiers->NumEntries - 1 ] != Spec_Ptr )
 					{
 						log_failure( "Error, const specifier must come after pointer specifier for variable declaration proceeding comma\n"
-						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%S"
+						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%SB"
 						, parser_to_string(Context) );
 
 						specifiers_append(specifiers, spec );
@@ -3421,7 +3421,7 @@ CodeVar parse_variable_declaration_list()
 				default:
 				{
 					log_failure( "Error, invalid specifier '%s' proceeding comma\n"
-					"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%SC"
+					"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%S"
 					, tok_to_str(currtok), parser_to_string(Context) );
 					continue;
 				}
@@ -3437,7 +3437,7 @@ CodeVar parse_variable_declaration_list()
 		}
 		// , <Specifiers>
 
-		StrC name = tok_to_str(currtok);
+		Str name = tok_to_str(currtok);
 		eat( Tok_Identifier );
 		// , <Specifiers> <Name>
 
@@ -3566,7 +3566,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 	push_scope();
 
 	bool has_context         = Context.Scope && Context.Scope->Prev;
-	bool is_in_global_nspace = has_context && strc_are_equal( Context.Scope->Prev->ProcName, txt("parse_global_nspace") );
+	bool is_in_global_nspace = has_context && str_are_equal( Context.Scope->Prev->ProcName, txt("parse_global_nspace") );
 
 	if ( check( Tok_Spec_Virtual ) )
 	{
@@ -3617,7 +3617,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 			specifiers_append(specifiers, Spec_Pure );
 		}
-		else if ( left && str_compare_len( upcoming.Text, "default", sizeof("default") - 1 ) == 0)
+		else if ( left && c_str_compare_len( upcoming.Text, "default", sizeof("default") - 1 ) == 0)
 		{
 			body = cast(CodeBody, parse_assignment_expression());
 			// <Virtual Specifier> ~<
@@ -3731,7 +3731,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 	else if ( currtok.Type == Tok_Preprocess_Macro )
 	{
 		// We'll support the enum_underlying macro
-		if ( strc_contains( tok_to_str(currtok), enum_underlying_sig) )
+		if ( str_contains( tok_to_str(currtok), enum_underlying_sig) )
 		{
 			use_macro_underlying = true;
 			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro, parser_dont_consume_braces );
@@ -3988,7 +3988,7 @@ CodeFriend parser_parse_friend()
 
 		while ( left && tok_is_specifier(currtok) )
 		{
-			Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+			Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 			switch ( spec )
 			{
@@ -4112,7 +4112,7 @@ CodeFn parser_parse_function()
 
 	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 		switch ( spec )
 		{
@@ -4225,7 +4225,7 @@ CodeOperator parser_parse_operator()
 
 	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 		switch ( spec )
 		{
@@ -4238,7 +4238,7 @@ CodeOperator parser_parse_operator()
 			break;
 
 			default:
-				log_failure( "Invalid specifier " "%SC" " for operator\n%S", spec_to_str(spec), parser_to_string(Context) );
+				log_failure( "Invalid specifier " "%S" " for operator\n%SB", spec_to_str(spec), parser_to_string(Context) );
 				parser_pop(& Context);
 				return InvalidCode;
 		}
@@ -4467,7 +4467,7 @@ CodeTemplate parser_parse_template()
 		{
 			while ( left && tok_is_specifier(currtok) )
 			{
-				Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+				Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 				switch ( spec )
 				{
@@ -4513,7 +4513,7 @@ CodeTemplate parser_parse_template()
 
 
 		bool has_context         = Context.Scope && Context.Scope->Prev;
-		bool is_in_global_nspace = has_context && strc_are_equal( Context.Scope->Prev->ProcName, txt("parse_global_nspace") );
+		bool is_in_global_nspace = has_context && str_are_equal( Context.Scope->Prev->ProcName, txt("parse_global_nspace") );
 		// Possible constructor implemented at global file scope.
 		if (is_in_global_nspace)
 		{
@@ -4610,11 +4610,11 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 	// Prefix specifiers
 	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 		if ( spec != Spec_Const )
 		{
-			log_failure( "Error, invalid specifier used in type definition: %SC\n%S", tok_to_str(currtok), parser_to_string(Context) );
+			log_failure( "Error, invalid specifier used in type definition: %S\n%SB", tok_to_str(currtok), parser_to_string(Context) );
 			parser_pop(& Context);
 			return InvalidCode;
 		}
@@ -4627,7 +4627,7 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 
 	if ( left == 0 )
 	{
-		log_failure( "Error, unexpected end of type definition\n%S", parser_to_string(Context) );
+		log_failure( "Error, unexpected end of type definition\n%SB", parser_to_string(Context) );
 		parser_pop(& Context);
 		return InvalidCode;
 	}
@@ -4749,7 +4749,7 @@ else if ( currtok.Type == Tok_DeclType )
 	// Suffix specifiers for typename.
 	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 		if ( spec != Spec_Const && spec != Spec_Ptr && spec != Spec_Ref && spec != Spec_RValue )
 		{
@@ -4808,7 +4808,7 @@ else if ( currtok.Type == Tok_DeclType )
 		}
 
 		bool has_context   = Context.Scope && Context.Scope->Prev;
-		bool is_for_opcast = has_context && strc_are_equal( Context.Scope->Prev->ProcName, txt("parser_parse_operator_cast") );
+		bool is_for_opcast = has_context && str_are_equal( Context.Scope->Prev->ProcName, txt("parser_parse_operator_cast") );
 		if ( is_for_opcast && is_function_typename && last_capture )
 		{
 			// If we're parsing for an operator cast, having one capture start is not enough
@@ -4832,8 +4832,8 @@ else if ( currtok.Type == Tok_DeclType )
 		return_type       = ( CodeTypename )make_code();
 		return_type->Type = CT_Typename;
 
-		// String
-		// name_stripped = String::make( GlobalAllocator, name );
+		// StrBuilder
+		// name_stripped = StrBuilder::make( GlobalAllocator, name );
 		// name_stripped.strip_space();
 		return_type->Name = get_cached_string( tok_to_str(name) );
 
@@ -4948,14 +4948,14 @@ else if ( currtok.Type == Tok_DeclType )
 		// Look for suffix specifiers for the function
 		while ( left && tok_is_specifier(currtok) )
 		{
-			Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+			Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
 			if ( spec != Spec_Const
 					// TODO : Add support for NoExcept, l-value, volatile, l-value, etc
 					// && spec != Spec_NoExcept
 					&& spec != Spec_RValue )
 			{
-				log_failure( "Error, invalid specifier used in type definition: %SC\n%S", tok_to_str(currtok), parser_to_string(Context) );
+				log_failure( "Error, invalid specifier used in type definition: %S\n%SB", tok_to_str(currtok), parser_to_string(Context) );
 				parser_pop(& Context);
 				return InvalidCode;
 			}
@@ -4989,7 +4989,7 @@ else if ( currtok.Type == Tok_DeclType )
 	// result->Token = Context.Scope->Start;
 
 	// Need to wait until were using the new parsing method to do this.
-	String name_stripped = parser_strip_formatting( tok_to_str(name), parser_strip_formatting_dont_preserve_newlines );
+	StrBuilder name_stripped = parser_strip_formatting( tok_to_str(name), parser_strip_formatting_dont_preserve_newlines );
 
 	// name_stripped.strip_space();
 
@@ -5000,7 +5000,7 @@ else if ( currtok.Type == Tok_DeclType )
 	}
 #endif
 
-	result->Name = get_cached_string( string_to_strc(name_stripped) );
+	result->Name = get_cached_string( strbuilder_to_str(name_stripped) );
 
 	if ( attributes )
 		result->Attributes = attributes;
@@ -5082,7 +5082,7 @@ CodeTypedef parser_parse_typedef()
 
 		if ( currtok.Type == Tok_Identifier )
 		{
-			StrC name_str = { name.Length, name.Text };
+			Str name_str = { name.Length, name.Text };
 			type = untyped_str(name_str);
 			name = currtok;
 			eat(Tok_Identifier);
@@ -5161,7 +5161,7 @@ CodeTypedef parser_parse_typedef()
 
 					if ( ! ok_to_parse )
 					{
-						log_failure( "Unsupported or bad member definition after struct declaration\n%S", parser_to_string(Context) );
+						log_failure( "Unsupported or bad member definition after struct declaration\n%SB", parser_to_string(Context) );
 						parser_pop(& Context);
 						return InvalidCode;
 					}
@@ -5187,7 +5187,7 @@ CodeTypedef parser_parse_typedef()
 				}
 				else
 				{
-					log_failure( "Unsupported or bad member definition after struct declaration\n%S", parser_to_string(Context) );
+					log_failure( "Unsupported or bad member definition after struct declaration\n%SB", parser_to_string(Context) );
 					parser_pop(& Context);
 					return InvalidCode;
 				}
@@ -5208,7 +5208,7 @@ CodeTypedef parser_parse_typedef()
 		}
 		else if ( ! is_function )
 		{
-			log_failure( "Error, expected identifier for typedef\n%S", parser_to_string(Context) );
+			log_failure( "Error, expected identifier for typedef\n%SB", parser_to_string(Context) );
 			parser_pop(& Context);
 			return InvalidCode;
 		}
@@ -5279,7 +5279,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 	CodeAttributes attributes = parse_attributes();
 	// <ModuleFlags> union <Attributes>
 
-	StrC name = { 0, nullptr };
+	Str name = { 0, nullptr };
 	if ( check( Tok_Identifier ) )
 {
 		name = tok_to_str(currtok);
@@ -5527,7 +5527,7 @@ CodeVar parser_parse_variable()
 
 	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = strc_to_specifier( tok_to_str(currtok) );
+		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 		switch  ( spec )
 		{
 			case Spec_Const:

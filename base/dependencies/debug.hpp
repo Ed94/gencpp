@@ -48,7 +48,7 @@
 		local_persist thread_local                         \
 		char buf[GEN_PRINTF_MAXLEN] = { 0 };               \
 		                                                   \
-		str_fmt(buf, GEN_PRINTF_MAXLEN, __VA_ARGS__);      \
+		c_str_fmt(buf, GEN_PRINTF_MAXLEN, __VA_ARGS__);      \
 		GEN_PANIC(buf);                                    \
 	}                                                      \
 	while (0)
@@ -57,7 +57,7 @@
 #	define GEN_FATAL( ... )                  \
 	do                                       \
 	{                                        \
-		str_fmt_out_err( __VA_ARGS__ );      \
+		c_str_fmt_out_err( __VA_ARGS__ );      \
 		process_exit(1);                     \
 	}                                        \
 	while (0)

@@ -13,9 +13,9 @@
 #			define _printf_err( fmt, ... )   fprintf( stderr, fmt, __VA_ARGS__ )
 #			define _printf_err_va( fmt, va ) vfprintf( stderr, fmt, va )
 #		else
-#			define _strlen                   str_len
-#			define _printf_err( fmt, ... )   str_fmt_out_err( fmt, __VA_ARGS__ )
-#			define _printf_err_va( fmt, va ) str_fmt_out_err_va( fmt, va )
+#			define _strlen                   c_str_len
+#			define _printf_err( fmt, ... )   c_str_fmt_out_err( fmt, __VA_ARGS__ )
+#			define _printf_err_va( fmt, va ) c_str_fmt_out_err_va( fmt, va )
 #		endif
 #	endif
 #

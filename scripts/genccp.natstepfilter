@@ -25,6 +25,6 @@
 		<Action>NoStepInto</Action>
 	</Function>
 	<Function>
-		<Name>gen::String::operator .*</Name>
+		<Name>gen::StrBuilder::operator .*</Name>
 	</Function>
 </StepFilter>

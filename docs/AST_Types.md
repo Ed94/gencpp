@@ -248,7 +248,7 @@ ModuleFlag     ModuleFlags;
 ```
 
 UnderlyingTypeMacro is a macro the library natively supports: `enum_underlying(type)` that is meant to behave as a wrapper for underlying type assignment.  
-The `enum_underlying_sig` is a `StrC` global var that can be set which will be defined within `PreprocessorDefines` and used in `parser_parse_enum` to identify a valid macro.
+The `enum_underlying_sig` is a `Str` global var that can be set which will be defined within `PreprocessorDefines` and used in `parser_parse_enum` to identify a valid macro.
 
 Serialization:
 
@@ -637,7 +637,7 @@ Serialization:
 
 `<Name>` currently has the full serialization of anything with
 
-*Note: ArrExpr is not used in serialization by `typename_to_string_ref` its instead handled by a parent AST's serailization (variable, typedef, using).*
+*Note: ArrExpr is not used in serialization by `typename_to_strbuilder_ref` its instead handled by a parent AST's serailization (variable, typedef, using).*
 
 ## Typedef
 

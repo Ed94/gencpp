@@ -101,11 +101,11 @@ void define_constants()
 	access_public->Name = get_cached_string( txt("public:\n") );
 	code_set_global(access_public);
 
-	StrC api_export_str = code(GEN_API_Export_Code);
+	Str api_export_str = code(GEN_API_Export_Code);
 	attrib_api_export = def_attributes( api_export_str );
 	code_set_global(cast(Code, attrib_api_export));
 
-	StrC api_import_str = code(GEN_API_Import_Code);
+	Str api_import_str = code(GEN_API_Import_Code);
 	attrib_api_import = def_attributes( api_import_str );
 	code_set_global(cast(Code, attrib_api_import));
 
@@ -145,33 +145,33 @@ void define_constants()
 	preprocess_endif->Type = CT_Preprocess_EndIf;
 	code_set_global((Code)preprocess_endif);
 
-	StrC auto_str     = txt("auto");     t_auto     = def_type( auto_str );     code_set_global( t_auto );
-	StrC void_str     = txt("void");     t_void     = def_type( void_str );     code_set_global( t_void );
-	StrC int_str      = txt("int");      t_int      = def_type( int_str );      code_set_global( t_int  );
-	StrC bool_str     = txt("bool");     t_bool     = def_type( bool_str );     code_set_global( t_bool );
-	StrC char_str     = txt("char");     t_char     = def_type( char_str );     code_set_global( t_char );
-	StrC wchar_str    = txt("wchar_t");  t_wchar_t  = def_type( wchar_str );    code_set_global( t_wchar_t );
-	StrC class_str    = txt("class");    t_class    = def_type( class_str );    code_set_global( t_class );
-	StrC typename_str = txt("typename"); t_typename = def_type( typename_str ); code_set_global( t_typename );
+	Str auto_str     = txt("auto");     t_auto     = def_type( auto_str );     code_set_global( t_auto );
+	Str void_str     = txt("void");     t_void     = def_type( void_str );     code_set_global( t_void );
+	Str int_str      = txt("int");      t_int      = def_type( int_str );      code_set_global( t_int  );
+	Str bool_str     = txt("bool");     t_bool     = def_type( bool_str );     code_set_global( t_bool );
+	Str char_str     = txt("char");     t_char     = def_type( char_str );     code_set_global( t_char );
+	Str wchar_str    = txt("wchar_t");  t_wchar_t  = def_type( wchar_str );    code_set_global( t_wchar_t );
+	Str class_str    = txt("class");    t_class    = def_type( class_str );    code_set_global( t_class );
+	Str typename_str = txt("typename"); t_typename = def_type( typename_str ); code_set_global( t_typename );
 
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 	t_b32 = def_type( name(b32) ); code_set_global( t_b32 );
 
-	StrC s8_str  = txt("s8");  t_s8  = def_type( s8_str ); code_set_global( t_s8 );
-	StrC s16_str = txt("s16"); t_s16 = def_type( s16_str ); code_set_global( t_s16 );
-	StrC s32_str = txt("s32"); t_s32 = def_type( s32_str ); code_set_global( t_s32 );
-	StrC s64_str = txt("s64"); t_s64 = def_type( s64_str ); code_set_global( t_s64 );
+	Str s8_str  = txt("s8");  t_s8  = def_type( s8_str ); code_set_global( t_s8 );
+	Str s16_str = txt("s16"); t_s16 = def_type( s16_str ); code_set_global( t_s16 );
+	Str s32_str = txt("s32"); t_s32 = def_type( s32_str ); code_set_global( t_s32 );
+	Str s64_str = txt("s64"); t_s64 = def_type( s64_str ); code_set_global( t_s64 );
 
-	StrC u8_str  = txt("u8");  t_u8  = def_type( u8_str );  code_set_global( t_u8 );
-	StrC u16_str = txt("u16"); t_u16 = def_type( u16_str ); code_set_global( t_u16 );
-	StrC u32_str = txt("u32"); t_u32 = def_type( u32_str ); code_set_global( t_u32 );
-	StrC u64_str = txt("u64"); t_u64 = def_type( u64_str ); code_set_global( t_u64 );
+	Str u8_str  = txt("u8");  t_u8  = def_type( u8_str );  code_set_global( t_u8 );
+	Str u16_str = txt("u16"); t_u16 = def_type( u16_str ); code_set_global( t_u16 );
+	Str u32_str = txt("u32"); t_u32 = def_type( u32_str ); code_set_global( t_u32 );
+	Str u64_str = txt("u64"); t_u64 = def_type( u64_str ); code_set_global( t_u64 );
 
-	StrC ssize_str = txt("ssize"); t_ssize = def_type( ssize_str ); code_set_global( t_ssize );
-	StrC usize_str = txt("usize"); t_usize = def_type( usize_str ); code_set_global( t_usize );
+	Str ssize_str = txt("ssize"); t_ssize = def_type( ssize_str ); code_set_global( t_ssize );
+	Str usize_str = txt("usize"); t_usize = def_type( usize_str ); code_set_global( t_usize );
 
-	StrC f32_str = txt("f32"); t_f32 = def_type( f32_str ); code_set_global( t_f32 );
-	StrC f64_str = txt("f64"); t_f64 = def_type( f64_str ); code_set_global( t_f64 );
+	Str f32_str = txt("f32"); t_f32 = def_type( f32_str ); code_set_global( t_f32 );
+	Str f64_str = txt("f64"); t_f64 = def_type( f64_str ); code_set_global( t_f64 );
 #endif
 
 	spec_const            = def_specifier( Spec_Const);            code_set_global( cast(Code, spec_const ));
@@ -273,12 +273,12 @@ void init()
 
 		LexArena = arena_init_from_allocator( Allocator_Lexer, LexAllocator_Size );
 
-		Arena string_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
+		Arena strbuilder_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
-		if ( string_arena.PhysicalStart == nullptr )
+		if ( strbuilder_arena.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the string arena" );
 
-		array_append( StringArenas, string_arena );
+		array_append( StringArenas, strbuilder_arena );
 	}
 
 	// Setup the hash tables
@@ -312,8 +312,8 @@ void deinit()
 	left  = array_num(StringArenas);
 	do
 	{
-		Arena* string_arena = & StringArenas[index];
-		arena_free(string_arena);
+		Arena* strbuilder_arena = & StringArenas[index];
+		arena_free(strbuilder_arena);
 		index++;
 	}
 	while ( left--, left );
@@ -357,8 +357,8 @@ void reset()
 	left  = array_num(StringArenas);
 	do
 	{
-		Arena* string_arena = & StringArenas[index];
-		string_arena->TotalUsed = 0;;
+		Arena* strbuilder_arena = & StringArenas[index];
+		strbuilder_arena->TotalUsed = 0;;
 		index++;
 	}
 	while ( left--, left );
@@ -368,18 +368,18 @@ void reset()
 	define_constants();
 }
 
-AllocatorInfo get_string_allocator( s32 str_length )
+AllocatorInfo get_strbuilder_allocator( s32 c_str_length )
 {
 	Arena* last = array_back(StringArenas);
 
-	usize size_req = str_length + sizeof(StringHeader) + sizeof(char*);
+	usize size_req = c_str_length + sizeof(StrBuilderHeader) + sizeof(char*);
 
 	if ( last->TotalUsed + scast(ssize, size_req) > last->TotalSize )
 	{
 		Arena new_arena = arena_init_from_allocator( Allocator_StringArena, SizePer_StringArena );
 
 		if ( ! array_append( StringArenas, new_arena ) )
-			GEN_FATAL( "gen::get_string_allocator: Failed to allocate a new string arena" );
+			GEN_FATAL( "gen::get_strbuilder_allocator: Failed to allocate a new string arena" );
 
 		last = array_back(StringArenas);
 	}
@@ -388,7 +388,7 @@ AllocatorInfo get_string_allocator( s32 str_length )
 }
 
 // Will either make or retrive a code string.
-StringCached get_cached_string( StrC str )
+StringCached get_cached_string( Str str )
 {
 	s32 hash_length = str.Len > kilobytes(1) ? kilobytes(1) : str.Len;
 	u64 key         = crc32( str.Ptr, hash_length );
@@ -399,7 +399,7 @@ StringCached get_cached_string( StrC str )
 			return * result;
 	}
 
-	StrC result = string_to_strc( string_make_strc( get_string_allocator( str.Len ), str ));
+	Str result = strbuilder_to_str( strbuilder_make_str( get_strbuilder_allocator( str.Len ), str ));
 	hashtable_set(StringCache, key, result );
 
 	return result;
@@ -442,12 +442,12 @@ void set_allocator_lexer( AllocatorInfo allocator )
 	Allocator_Lexer = allocator;
 }
 
-void set_allocator_string_arena( AllocatorInfo allocator )
+void set_allocator_strbuilder_arena( AllocatorInfo allocator )
 {
 	Allocator_StringArena = allocator;
 }
 
-void set_allocator_string_table( AllocatorInfo allocator )
+void set_allocator_strbuilder_table( AllocatorInfo allocator )
 {
 	Allocator_StringArena = allocator;
 }

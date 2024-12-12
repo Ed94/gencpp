@@ -15,25 +15,25 @@ You can think of this parser as *frontend parser* vs a *semantic parser*. Its in
 User exposed interface:
 
 ```cpp
-CodeClass       parse_class        ( StrC class_def       );
-CodeConstructor parse_constructor  ( StrC constructor_def );
-CodeDestructor  parse_destructor   ( StrC destructor_def  );
-CodeEnum        parse_enum         ( StrC enum_def        );
-CodeBody        parse_export_body  ( StrC export_def      );
-CodeExtern      parse_extern_link  ( StrC exten_link_def  );
-CodeFriend      parse_friend       ( StrC friend_def      );
-CodeFn          parse_function     ( StrC fn_def          );
-CodeBody        parse_global_body  ( StrC body_def        );
-CodeNS          parse_namespace    ( StrC namespace_def   );
-CodeOperator    parse_operator     ( StrC operator_def    );
-CodeOpCast      parse_operator_cast( StrC operator_def    );
-CodeStruct      parse_struct       ( StrC struct_def      );
-CodeTemplate    parse_template     ( StrC template_def    );
-CodeType        parse_type         ( StrC type_def        );
-CodeTypedef     parse_typedef      ( StrC typedef_def     );
-CodeUnion       parse_union        ( StrC union_def       );
-CodeUsing       parse_using        ( StrC using_def       );
-CodeVar         parse_variable     ( StrC var_def         );
+CodeClass       parse_class        ( Str class_def       );
+CodeConstructor parse_constructor  ( Str constructor_def );
+CodeDestructor  parse_destructor   ( Str destructor_def  );
+CodeEnum        parse_enum         ( Str enum_def        );
+CodeBody        parse_export_body  ( Str export_def      );
+CodeExtern      parse_extern_link  ( Str exten_link_def  );
+CodeFriend      parse_friend       ( Str friend_def      );
+CodeFn          parse_function     ( Str fn_def          );
+CodeBody        parse_global_body  ( Str body_def        );
+CodeNS          parse_namespace    ( Str namespace_def   );
+CodeOperator    parse_operator     ( Str operator_def    );
+CodeOpCast      parse_operator_cast( Str operator_def    );
+CodeStruct      parse_struct       ( Str struct_def      );
+CodeTemplate    parse_template     ( Str template_def    );
+CodeType        parse_type         ( Str type_def        );
+CodeTypedef     parse_typedef      ( Str typedef_def     );
+CodeUnion       parse_union        ( Str union_def       );
+CodeUsing       parse_using        ( Str using_def       );
+CodeVar         parse_variable     ( Str var_def         );
 ```
 
 To parse file buffers, use the `parse_global_body` function.

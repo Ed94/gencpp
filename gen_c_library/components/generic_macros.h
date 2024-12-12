@@ -3,9 +3,9 @@
 //   ____                       _        ______                _   _                ____                  _                 __ _
 //  / ___}                     (_)      |  ____}              | | (_)              / __ \                | |               | |(_)
 // | | ___  ___ _ __   ___ _ __ _  ___  | |__ _   _ _ __   ___| |_ _  ___  _ __   | |  | |_   _____ _ __ | | ___   __ _  __| | _ _ __   __ _
-// | |{__ |/ _ \ '_ \ / _ \ '__} |/ __| |  __} | | | '_ \ / __} __} |/ _ \| '_ \  | |  | \ \ / / _ \ '_ \| |/ _ \ / _` |/ _` || | '_ \ / _` |
-// | |__j |  __/ | | |  __/ |  | | (__  | |  | |_| | | | | (__| l_| | (_) | | | | | l__| |\ V /  __/ | | | | (_) | (_| | (_| || | | | | (_| |
-//  \____/ \___}_l l_l\___}_l  l_l\___| l_l   \__,_l_l l_l\___}\__}_l\___/l_l l_l  \____/  \_/ \___}_l l_l_l\___/ \__,_l\__,_l|_|_| |_|\__, |
+// | |{__ |/ _ \ '_ \ / _ \ '__} |/ __| |  __} | | | '_ \ / __} __} |/ _ \| '_ \  | |  | \ \ / / _ \ '_ }| |/ _ \ / _` |/ _` || | '_ \ / _` |
+// | |__j |  __/ | | |  __/ |  | | (__  | |  | |_| | | | | (__| l_| | (_) | | | | | l__| |\ V /  __/ |   | | (_) | (_| | (_| || | | | | (_| |
+//  \____/ \___}_l l_l\___}_l  l_l\___| l_l   \__,_l_l l_l\___}\__}_l\___/l_l l_l  \____/  \_/ \___}_l   l_l\___/ \__,_l\__,_l|_|_| |_|\__, |
 // This implemnents macros for utilizing "The Naive Extendible _Generic Macro" explained in:                                            __| |
 // https://github.com/JacksonAllan/CC/blob/main/articles/Better_C_Generics_Part_1_The_Extendible_Generic.md                            {___/
 // Since gencpp is used to generate the c-library, it was choosen over the more novel implementations to keep the macros as easy to understand and unobfuscated as possible.
@@ -30,7 +30,7 @@
 // Where GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER is specifically looking for that <comma> ,
 #define GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( slot_exp ) GEN_GENERIC_SEL_ENTRY_COMMA_DELIMITER( slot_exp, GEN_GENERIC_SEL_ENTRY_TYPE( slot_exp, ): GEN_GENERIC_SEL_ENTRY_FUNCTION( slot_exp, ) GEN_COMMA_OPERATOR, , )
 //                                                          ^ Selects the comma                              ^ is the type                             ^ is the function                             ^ Insert a comma
-// The slot won't exist if that comma is not found.                                                                                                                                                  |
+// The slot won't exist if that comma is not found.
 
 // For the occastion where an expression didn't resolve to a selection option the "default: <value>" will be set to:
 typedef struct GENCPP_NO_RESOLVED_GENERIC_SELECTION GENCPP_NO_RESOLVED_GENERIC_SELECTION;
@@ -43,12 +43,12 @@ GENCPP_NO_RESOLVED_GENERIC_SELECTION const gen_generic_selection_fail = {0};
 
 // Below are generated on demand for an overlaod depdendent on a type:
 // ----------------------------------------------------------------------------------------------------------------------------------
-#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg ) _Generic(       \
-(selector_arg), /* Select Via Expression*/                           \
-  /* Extendibility slots: */                                         \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 ) \
-	default: gen_generic_selection_fail                              \
+#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg ) _Generic(             \
+(selector_arg), /* Select Via Expression*/                                 \
+  /* Extendibility slots: */                                               \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_1__function_sig ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_2__function_sig ) \
+	default: gen_generic_selection_fail                                    \
 ) GEN_RESOLVED_FUNCTION_CALL( selector_arg )
 // ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -68,20 +68,21 @@ size_t gen_example_hash__P_long( long val ) { return val * 2654435761ull; }
 #define GENERIC_SLOT_2_gen_example_hash  long long, gen_example_hash__P_long_long
 size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761ull; }
 
-// If using an Editor with support for syntax hightlighting macros: HASH__ARGS_SIG_1 and HASH_ARGS_SIG_2 should show color highlighting indicating the slot is enabled,
+// If using an Editor with support for syntax hightlighting macros:
+// GENERIC_SLOT_1_gen_example_hash and GENERIC_SLOT_2_gen_example_hash should show color highlighting indicating the slot is enabled,
 // or, "defined" for usage during the compilation pass that handles the _Generic instrinsic.
-#define gen_hash_example( function_arguments ) _Generic(       \
-(function_arguments), /* Select Via Expression*/               \
-  /* Extendibility slots: */                                   \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_1 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_2 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_3 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_4 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_5 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_6 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_7 ) \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( HASH__ARGS_SIG_8 ) \
-	default: gen_generic_selection_fail                        \
+#define gen_hash_example( function_arguments ) _Generic(                      \
+(function_arguments), /* Select Via Expression*/                              \
+  /* Extendibility slots: */                                                  \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_1_gen_example_hash ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_2_gen_example_hash ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_3_gen_example_hash ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_4_gen_example_hash ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_5_gen_example_hash ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_6_gen_example_hash ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_7_gen_example_hash ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_8_gen_example_hash ) \
+	default: gen_generic_selection_fail                                       \
 ) GEN_RESOLVED_FUNCTION_CALL( function_arguments )
 
 // Additional Variations:
@@ -89,20 +90,20 @@ size_t gen_example_hash__P_long_long( long long val ) { return val * 2654435761u
 // If the function takes more than one argument the following is used:
 #define GEN_FUNCTION_GENERIC_EXAMPLE_VARADIC( selector_arg, ... ) _Generic( \
 (selector_arg),                                                             \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )        \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_2 )        \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_1__function_sig )  \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_2__function_sig )  \
 	/* ... */                                                               \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT(FunctionID__ARGS_SIG_N )         \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT(GENERIC_SLOT_N__function_sig )   \
 	default: gen_generic_selection_fail                                     \
 ) GEN_RESOLVED_FUNCTION_CALL( selector_arg, __VA_ARG__ )
 
 // If the function does not take the arugment as a parameter:
 #define GEN_FUNCTION_GENERIC_EXAMPLE_DIRECT_TYPE( selector_arg ) _Generic( \
 ( GEN_TYPE_TO_EXP(selector_arg) ),                                         \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_1 )       \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( FunctionID__ARGS_SIG_2 )       \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_1__function_sig ) \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_2__function_sig ) \
 	/* ... */                                                              \
-	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT(FunctionID__ARGS_SIG_N )        \
+	GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT(GENERIC_SLOT_N__function_sig )  \
 	default: gen_generic_selection_fail                                    \
 ) GEN_RESOLVED_FUNCTION_CALL()
 

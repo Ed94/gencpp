@@ -37,9 +37,9 @@ enum Specifier : u32
 	Spec_UnderlyingType = 0xffffffffu
 };
 
-inline StrC spec_to_str( Specifier type )
+inline Str spec_to_str( Specifier type )
 {
-	local_persist StrC lookup[26] = {
+	local_persist Str lookup[26] = {
 		{ sizeof( "INVALID" ),       "INVALID"       },
 		{ sizeof( "consteval" ),     "consteval"     },
 		{ sizeof( "constexpr" ),     "constexpr"     },
@@ -75,12 +75,12 @@ inline bool spec_is_trailing( Specifier specifier )
 	return specifier > Spec_Virtual;
 }
 
-inline Specifier strc_to_specifier( StrC str )
+inline Specifier str_to_specifier( Str str )
 {
 	local_persist u32 keymap[Spec_NumSpecifiers];
 	do_once_start for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 	{
-		StrC enum_str = spec_to_str( (Specifier)index );
+		Str enum_str  = spec_to_str( (Specifier)index );
 		keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1 );
 	}
 	do_once_end u32 hash = crc32( str.Ptr, str.Len );
@@ -92,14 +92,14 @@ inline Specifier strc_to_specifier( StrC str )
 	return Spec_Invalid;
 }
 
-forceinline StrC to_str( Specifier spec )
+forceinline Str to_str( Specifier spec )
 {
 	return spec_to_str( spec );
 }
 
-forceinline Specifier to_type( StrC str )
+forceinline Specifier to_type( Str str )
 {
-	return strc_to_specifier( str );
+	return str_to_specifier( str );
 }
 
 forceinline bool is_trailing( Specifier specifier )

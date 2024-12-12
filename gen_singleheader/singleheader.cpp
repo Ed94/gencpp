@@ -17,24 +17,24 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gencpp's singleheader.cpp"
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
-constexpr StrC implementation_guard_start = txt(R"(
+constexpr Str implementation_guard_start = txt(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
 #if defined(GEN_IMPLEMENTATION) && ! defined(GEN_IMPLEMENTED)
 #	define GEN_IMPLEMENTED
 )");
 
-constexpr StrC implementation_guard_end = txt(R"(
+constexpr Str implementation_guard_end = txt(R"(
 #endif
 #pragma endregion GENCPP IMPLEMENTATION GUARD
 )");
 
-constexpr StrC roll_own_dependencies_guard_start = txt(R"(
+constexpr Str roll_own_dependencies_guard_start = txt(R"(
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
 )");
 
-constexpr StrC roll_own_dependencies_guard_end = txt(R"(
+constexpr Str roll_own_dependencies_guard_end = txt(R"(
 // GEN_ROLL_OWN_DEPENDENCIES
 #endif
 )");
@@ -77,7 +77,7 @@ int gen_main()
 			Code basic_types  = scan_file( path_base "dependencies/basic_types.hpp" );
 			Code debug        = scan_file( path_base "dependencies/debug.hpp" );
 			Code memory	      = scan_file( path_base "dependencies/memory.hpp" );
-			Code string_ops   = scan_file( path_base "dependencies/string_ops.hpp" );
+			Code stirng_ops   = scan_file( path_base "dependencies/string_ops.hpp" );
 			Code printing     = scan_file( path_base "dependencies/printing.hpp" );
 			Code containers   = scan_file( path_base "dependencies/containers.hpp" );
 			Code hashing 	  = scan_file( path_base "dependencies/hashing.hpp" );
@@ -93,7 +93,7 @@ int gen_main()
 			header.print( basic_types );
 			header.print( debug );
 			header.print( memory );
-			header.print( string_ops );
+			header.print( stirng_ops );
 			header.print( printing );
 			header.print( containers );
 			header.print( hashing );
