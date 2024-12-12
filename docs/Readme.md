@@ -4,7 +4,7 @@
 
 Contains:
 
-* [AST_Design](./AST_Design.md): Overvie of ASTs
+* [AST_Design](./AST_Design.md): Overview of ASTs
 * [AST Types](./AST_Types.md): Listing of all AST types along with their Code type interface.
 * [Parsing](./Parsing.md): Overview of the parsing interface.
 * [Parser Algo](./Parser_Algo.md): In-depth breakdown of the parser's implementation.
@@ -49,9 +49,9 @@ However, the user may specifiy memory configuration.
 
 https://github.com/Ed94/gencpp/blob/eea4ebf5c40d5d87baa465abfb1be30845b2377e/base/components/ast.hpp#L396-L461
 
+*`StringCahced` is a typedef for `StrC` (a string slice), to denote it is an interned string*  
 *`CodeType` is enum taggin the type of code. Has an underlying type of `u32`*  
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
-*`StringCahced` is a typedef for `String const`, to denote it is an interned string*  
 *`String` is the dynamically allocated string type for the library*  
 
 AST widths are setup to be AST_POD_Size.  

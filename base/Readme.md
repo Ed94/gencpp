@@ -13,11 +13,11 @@ Standard formats:
 * **base**: Files are in granular pieces separated into four directories:
   * **dependencies**: Originally from the c-zpl library and modified thereafter.
   * **components**: The essential definitions of the library.
-  * **helpers**: Contains helper functionality used by base and other libraries to regenerate or generate the other library formats.
+  * **helpers**: Contains helper functionality used by base and the variant library generators.
     * `base_codegen.hpp`: Helps with self-hosted code generation of enums, and operator overload inlines of the code types.
-    * `<push/pop>.<name>.inline.<hpp>`: macros that are meant to be injected at specific locations of the library.
+    * `<push/pop>.<name>.inline.<hpp>`: macros that are meant to be injected at specific locations of the library file/s.
     * `misc.hpp`: Misc functionality used by the library generation metaprograms.
-    * `undef.macros.h`: Undefines all macros from library that original were intended to leak into user code.
+    * `undef.macros.h`: Undefines all macros from library.
   * **auxillary**: Non-essential tooling:
     * `Builder`: Similar conceptually to Jai programming language's *builder*, just opens a file and prepares a string buffer to serialize code into (`builder_print`, `builder_print_fmt`). Then write & close the file when completed (`builder_write`).
     * **`Scanner`**: Interface to load up `Code` from files two basic funcctions are currently provided.
@@ -127,6 +127,14 @@ There are ***five*** header files which are automatically generated using [base_
 
 [`misc.hpp`](./helpers/misc.hpp): Has shared functions used by the library generation meta-programs throughout this codebase.
 
+If using the library's provided build scripts:
+
+```ps1
+.\build.ps1 <compiler> <debug or omit> base
+```
+
+Will refresh those files.
+
 ## On multi-threading
 
 Currently unsupported. I want the library to be *stable* and *correct*, with the addition of exhausting all basic single-threaded optimizations before I consider multi-threading.
@@ -146,7 +154,7 @@ Names or Content fields are interned strings and thus showed be cached using `ge
 
 `def_operator` is the most sophisticated upfront constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
-The parser is documented under [`docs/Parsing.md`](../docs/Parsing.md) and [`docs/Parser_Algo.md`](../docs/Parser_Algo.md). Extending it is more serious.
+The parser is documented under [`docs/Parsing.md`](../docs/Parsing.md) and [`docs/Parser_Algo.md`](../docs/Parser_Algo.md).
 
 ## A note on compilation and runtime generation speed
 

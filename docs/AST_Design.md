@@ -37,7 +37,7 @@ The full definitions of all asts are within:
 
 * [`ast.hpp`](../base/components/ast.hpp)
 * [`ast_types.hpp`](../base/components/ast_types.hpp)
-* [`code_types.hpp`](../base/components/ast_types.hpp)
+* [`code_types.hpp`](../base/components/code_types.hpp)
 
 The C/C++ interface procedures are located with `ast.hpp` (for the Code type), and `code_types.hpp` for all others.
 

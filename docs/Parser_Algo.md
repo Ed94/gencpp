@@ -12,8 +12,8 @@ gencpp uses a hand-written recursive descent parser. Both the lexer and parser c
 
 ### Lexer
 
-The lex procedure does the lexical pass of content provided as a `StrC` type.
-The tokens are stored (for now) in `gen::parser::Lexer_Tokens`.
+The lex procedure does the lexical pass of content provided as a `StrC` type.  
+The tokens are stored (for now) in `Lexer_Tokens`.
 
 Fields:
 
