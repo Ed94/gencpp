@@ -1161,27 +1161,20 @@ bool code_is_equal( Code self, Code other )
 
 bool code_validate_body(Code self)
 {
-#define CheckEntries( Unallowed_Types )                                                                                   \
-	do                                                                                                                    \
-	{                                                                                                                     \
-		CodeBody body = cast(CodeBody, self);                                                                             \
-		for ( Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry) ) \
-		{                                                                                                                 \
-			switch ( code_entry->Type )                                                                                   \
-			{                                                                                                             \
-				Unallowed_Types                                                                                           \
-					log_failure( "AST::validate_body: Invalid entry in body %SC", code_debug_str(code_entry) );           \
-					return false;                                                                                         \
-			}                                                                                                             \
-		}                                                                                                                 \
-	}                                                                                                                     \
-	while (0);
-
 	switch ( self->Type )
 	{
 		case CT_Class_Body:
 		{
-			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
+			CodeBody body = cast(CodeBody, self);
+			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
+			{
+				GEN_AST_BODY_CLASS_UNALLOWED_TYPES:
+					log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(code_entry));
+				return false;
+
+				default:
+				continue;
+			}
 		}
 		break;
 		case CT_Enum_Body:
@@ -1199,57 +1192,77 @@ bool code_validate_body(Code self)
 		break;
 		case CT_Export_Body:
 		{
-			CheckEntries( GEN_AST_BODY_CLASS_UNALLOWED_TYPES );
+			CodeBody body = cast(CodeBody, self);
+			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
+			{
+				GEN_AST_BODY_EXPORT_UNALLOWED_TYPES:
+					log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(code_entry));
+				return false;
+
+				default:
+				continue;
+			}
 		}
 		break;
 		case CT_Extern_Linkage:
 		{
-			CheckEntries( GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES );
+			CodeBody body = cast(CodeBody, self);
+			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
+			{
+				GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES:
+					log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(code_entry));
+				return false;
+
+				default:
+				continue;
+			}
 		}
 		break;
 		case CT_Function_Body:
 		{
-			CheckEntries( GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES );
+			CodeBody body = cast(CodeBody, self);
+			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
+			{
+				GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES:
+					log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(code_entry));
+				return false;
+
+				default:
+				continue;
+			}
 		}
 		break;
 		case CT_Global_Body:
 		{
 			CodeBody body = cast(CodeBody, self);
-			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) )
+			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) )switch (entry->Type)
 			{
-				switch (entry->Type)
-				{
-					case CT_Access_Public:
-					case CT_Access_Protected:
-					case CT_Access_Private:
-					case CT_PlatformAttributes:
-					case CT_Class_Body:
-					case CT_Enum_Body:
-					case CT_Execution:
-					case CT_Friend:
-					case CT_Function_Body:
-					case CT_Global_Body:
-					case CT_Namespace_Body:
-					case CT_Operator_Member:
-					case CT_Operator_Member_Fwd:
-					case CT_Parameters:
-					case CT_Specifiers:
-					case CT_Struct_Body:
-					case CT_Typename:
-						log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(entry));
-					return false;
-				}
+				GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES:
+					log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(entry));
+				return false;
 			}
 		}
 		break;
 		case CT_Namespace_Body:
 		{
-			CheckEntries( GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES );
+			CodeBody body = cast(CodeBody, self);
+			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) ) switch (entry->Type)
+			{
+				GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES:
+					log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(entry));
+				return false;
+			}
 		}
 		break;
 		case CT_Struct_Body:
 		{
-			CheckEntries( GEN_AST_BODY_STRUCT_UNALLOWED_TYPES );
+			CodeBody body = cast(CodeBody, self);
+			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) ) switch (entry->Type)
+			{
+				GEN_AST_BODY_STRUCT_UNALLOWED_TYPES:
+					log_failure("AST::validate_body: Invalid entry in body %SC", code_debug_str(entry));
+				return false;
+			}
 		}
 		break;
 		case CT_Union_Body:
@@ -1272,6 +1285,4 @@ bool code_validate_body(Code self)
 	}
 
 	return false;
-
-#undef CheckEntries
 }

@@ -32,14 +32,14 @@ void parser_push( ParseContext* ctx, StackNode* node )
 	node->Prev = ctx->Scope;
 	ctx->Scope = node;
 
-#if 0 && Build_Debug
+#if 0 && GEN_BUILD_DEBUG
 	log_fmt("\tEntering Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
 #endif
 }
 
 void parser_pop(ParseContext* ctx)
 {
-#if 0 && Build_Debug
+#if 0 && GEN_BUILD_DEBUG
 	log_fmt("\tPopping  Context: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
 #endif
 	ctx->Scope = ctx->Scope->Prev;
@@ -128,7 +128,7 @@ bool lex__eat(TokArray* self, TokType type )
 		return false;
 	}
 
-#if 0 && Build_Debug
+#if 0 && GEN_BUILD_DEBUG
 	log_fmt("Ate: %S\n", self->Arr[Idx].to_string() );
 #endif
 
@@ -1796,8 +1796,9 @@ CodeBody parse_global_nspace( CodeType which )
 			break;
 
 			case Tok_Module_Import: {
-				not_implemented( context );
 				// import ...
+				log_failure( "gen::%s: This function is not implemented" );
+				return InvalidCode;
 			}
 			//! Fallthrough intentional
 			case Tok_Attribute_Open:
@@ -5580,11 +5581,10 @@ CodeVar parser_parse_variable()
 	return result;
 }
 
-
 internal
 CodeTypename parser_parse_type_alt( bool from_template, bool* typedef_is_functon )
 {
-
+	return InvalidCode;
 }
 
 GEN_NS_PARSER_END

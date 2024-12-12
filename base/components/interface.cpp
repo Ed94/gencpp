@@ -145,43 +145,34 @@ void define_constants()
 	preprocess_endif->Type = CT_Preprocess_EndIf;
 	code_set_global((Code)preprocess_endif);
 
-#	define def_constant_code_type( Type_ )           \
-		do                                           \
-		{                                            \
-			StrC name_str = name(Type_);             \
-			t_##Type_ = def_type( name_str );        \
-			code_set_global( cast(Code, t_##Type_)); \
-		} while(0)
-
-	def_constant_code_type( auto );
-	def_constant_code_type( void );
-	def_constant_code_type( int );
-	def_constant_code_type( bool );
-	def_constant_code_type( char );
-	def_constant_code_type( wchar_t );
-	def_constant_code_type( class );
-	def_constant_code_type( typename );
+	StrC auto_str     = txt("auto");     t_auto     = def_type( auto_str );     code_set_global( t_auto );
+	StrC void_str     = txt("void");     t_void     = def_type( void_str );     code_set_global( t_void );
+	StrC int_str      = txt("int");      t_int      = def_type( int_str );      code_set_global( t_int  );
+	StrC bool_str     = txt("bool");     t_bool     = def_type( bool_str );     code_set_global( t_bool );
+	StrC char_str     = txt("char");     t_char     = def_type( char_str );     code_set_global( t_char );
+	StrC wchar_str    = txt("wchar_t");  t_wchar_t  = def_type( wchar_str );    code_set_global( t_wchar_t );
+	StrC class_str    = txt("class");    t_class    = def_type( class_str );    code_set_global( t_class );
+	StrC typename_str = txt("typename"); t_typename = def_type( typename_str ); code_set_global( t_typename );
 
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-	t_b32 = def_type( name(b32) );
+	t_b32 = def_type( name(b32) ); code_set_global( t_b32 );
 
-	def_constant_code_type( s8 );
-	def_constant_code_type( s16 );
-	def_constant_code_type( s32 );
-	def_constant_code_type( s64 );
+	StrC s8_str  = txt("s8");  t_s8  = def_type( s8_str ); code_set_global( t_s8 );
+	StrC s16_str = txt("s16"); t_s16 = def_type( s16_str ); code_set_global( t_s16 );
+	StrC s32_str = txt("s32"); t_s32 = def_type( s32_str ); code_set_global( t_s32 );
+	StrC s64_str = txt("s64"); t_s64 = def_type( s64_str ); code_set_global( t_s64 );
 
-	def_constant_code_type( u8 );
-	def_constant_code_type( u16 );
-	def_constant_code_type( u32 );
-	def_constant_code_type( u64 );
+	StrC u8_str  = txt("u8");  t_u8  = def_type( u8_str );  code_set_global( t_u8 );
+	StrC u16_str = txt("u16"); t_u16 = def_type( u16_str ); code_set_global( t_u16 );
+	StrC u32_str = txt("u32"); t_u32 = def_type( u32_str ); code_set_global( t_u32 );
+	StrC u64_str = txt("u64"); t_u64 = def_type( u64_str ); code_set_global( t_u64 );
 
-	def_constant_code_type( ssize );
-	def_constant_code_type( usize );
+	StrC ssize_str = txt("ssize"); t_ssize = def_type( ssize_str ); code_set_global( t_ssize );
+	StrC usize_str = txt("usize"); t_usize = def_type( usize_str ); code_set_global( t_usize );
 
-	def_constant_code_type( f32 );
-	def_constant_code_type( f64 );
+	StrC f32_str = txt("f32"); t_f32 = def_type( f32_str ); code_set_global( t_f32 );
+	StrC f64_str = txt("f64"); t_f64 = def_type( f64_str ); code_set_global( t_f64 );
 #endif
-#	undef def_constant_code_type
 
 	spec_const            = def_specifier( Spec_Const);            code_set_global( cast(Code, spec_const ));
 	spec_consteval        = def_specifier( Spec_Consteval);        code_set_global( cast(Code, spec_consteval ));;

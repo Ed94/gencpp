@@ -8,16 +8,20 @@
 
 #pragma region Debug
 
-#if defined( _MSC_VER )
-#	if _MSC_VER < 1300
-#		define GEN_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
+#if GEN_BUILD_DEBUG
+#	if defined( GEN_COMPILER_MSVC )
+#		if _MSC_VER < 1300
+#			define GEN_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
+#		else
+#			define GEN_DEBUG_TRAP() __debugbreak()
+#		endif
+#	elif defined( GEN_COMPILER_TINYC )
+#		define GEN_DEBUG_TRAP() process_exit( 1 )
 #	else
-#		define GEN_DEBUG_TRAP() __debugbreak()
+#		define GEN_DEBUG_TRAP() __builtin_trap()
 #	endif
-#elif defined( GEN_COMPILER_TINYC )
-#	define GEN_DEBUG_TRAP() process_exit( 1 )
 #else
-#	define GEN_DEBUG_TRAP() __builtin_trap()
+#	define GEN_DEBUG_TRAP()
 #endif
 
 #define GEN_ASSERT( cond ) GEN_ASSERT_MSG( cond, NULL )
@@ -37,7 +41,7 @@
 // NOTE: Things that shouldn't happen with a message!
 #define GEN_PANIC( msg, ... ) GEN_ASSERT_MSG( 0, msg, ##__VA_ARGS__ )
 
-#if Build_Debug
+#if GEN_BULD_DEBUG
 	#define GEN_FATAL( ... )                               \
 	do                                                     \
 	{                                                      \
