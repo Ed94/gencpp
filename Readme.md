@@ -5,13 +5,13 @@ An attempt at simple staged metaprogramming for C/C++.
 The library API is a composition of code element constructors, and a non-standards-compliant single-pass C/C++ parser.  
 These build up a code AST to then serialize with a file builder, or can be traversed for staged-reflection of C/C++ code.
 
-This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).
-Its not meant to be a black box metaprogramming utility, it should be easy to intergrate into a user's project domain.
+This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).  
+Its not meant to be a black box metaprogramming utility, it should be easy to integrate into a user's project domain.
 
 ## Documentation
 
 * [docs - General](./docs/Readme.md): Overview and additional docs
-  * [AST_Design](./docs/AST_Design.md): Overvie of ASTs
+  * [AST_Design](./docs/AST_Design.md): Overview of ASTs
   * [AST Types](./docs/AST_Types.md): Listing of all AST types along with their Code type interface.
   * [Parsing](./docs/Parsing.md): Overview of the parsing interface.
   * [Parser Algo](./docs/Parser_Algo.md): In-depth breakdown of the parser's implementation.
@@ -98,8 +98,8 @@ Validation through ast construction.
 Code header = parse_struct( code(
     struct ArrayHeader
     {
-        usize        Num;
-        usize        Capacity;
+        usize     Num;
+        usize     Capacity;
         allocator Allocator;
     };
 ));
@@ -114,8 +114,8 @@ No validation, just glorified text injection.
 Code header = code_str(
     struct ArrayHeader
     {
-        usize        Num;
-        usize        Capacity;
+        usize     Num;
+        usize     Capacity;
         allocator Allocator;
     };
 );
@@ -131,8 +131,8 @@ All three constrcuton interfaces will generate the following C code:
 ```cpp
 struct ArrayHeader
 {
-    usize        Num;
-    usize        Capacity;
+    usize     Num;
+    usize     Capacity;
     allocator Allocator;
 };
 ```
