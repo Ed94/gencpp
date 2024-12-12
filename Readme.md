@@ -16,29 +16,26 @@ Its not meant to be a black box metaprogramming utility, it should be easy to in
   * [Parsing](./docs/Parsing.md): Overview of the parsing interface.
   * [Parser Algo](./docs/Parser_Algo.md): In-depth breakdown of the parser's implementation.
 * [base](./base/Readme.md): Essential (base) library.
-* [gen_c_library](./gen_c_library/): C11 library variant generation (single header and segmeented).
-* [gen_segmented](./gen_segmented/): Segemented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
+* [gen_c_library](./gen_c_library/): C11 library variant generation (single header and segmented).
+* [gen_segmented](./gen_segmented/): Segmented C++ (`gen.<hpp/cpp>`, `gen.dep.<hpp/cpp>`) generation
 * [gen_singleheader](./gen_singleheader/): Singlehader C++ generation `gen.hpp`
 * [gen_unreal_engine](./gen_unreal_engine/): Unreal Engine thirdparty code generation.
 
 ## Notes
-
-**On Partial Hiatus: Life has got me tackling other issues..**
-I will be passively updating the library with bug fixes and minor improvements as I use it for my personal projects.  
-There won't be any major reworks or features to this thing for a while.
 
 This project is still in development (very much an alpha state), so expect bugs and missing features.  
 See [issues](https://github.com/Ed94/gencpp/issues) for a list of known bugs or todos.
 
 The library can already be used to generate code just fine, but the parser is where the most work is needed. If your C++ isn't "down to earth" expect issues.
 
-A `natvis` and `natstepfilter` are provided in the scripts directory (its outdated, I'll update this readme when its not).
+A `natvis` and `natstepfilter` are provided in the scripts directory (its outdated, I'll update this readme when its not).  
+*Minor update: I've been using [RAD Debugger](https://github.com/EpicGamesExt/raddebugger) with this and the code structures should be easy to debug even without natvis.*
 
 ## Usage
 
 A metaprogram is built to generate files before the main program is built. We'll term runtime for this program as `GEN_TIME`. The metaprogram's core implementation are within `gen.hpp` and `gen.cpp` in the project directory.
 
-`gen.cpp` \`s  `main()` is defined as `gen_main()` which the user will have to define once for their program. There they will dictate everything that should be generated.
+`gen.cpp` \`s  `main()` is defined as `gen_main()` which the user will have to define once for their program. There they may reflect and/or generate code.
 
 In order to keep the locality of this code within the same files the following pattern may be used (although this pattern isn't the best to use):
 
@@ -124,9 +121,9 @@ Code header = code_str(
 `name` is a helper macro for providing a string literal with its size, intended for the name parameter of functions.  
 `code` is a helper macro for providing a string literal with its size, but intended for code string parameters.  
 `args` is a helper macro for providing the number of arguments to varadic constructors.  
-`code_str` is a helper macro for writting `untyped_str( code( <content> ))`
+`code_str` is a helper macro for writing `untyped_str( code( <content> ))`
 
-All three constrcuton interfaces will generate the following C code:
+All three construction interfaces will generate the following C code:
 
 ```cpp
 struct ArrayHeader
