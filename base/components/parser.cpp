@@ -52,23 +52,23 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 	Token scope_start = ctx.Scope->Start;
 	Token last_valid  = ctx.Tokens.Idx >= array_num(ctx.Tokens.Arr) ? ctx.Tokens.Arr[array_num(ctx.Tokens.Arr) -1] : (* lex_current(& ctx.Tokens, true));
 
-	sptr        length  = scope_start.Length;
-	char const* current = scope_start.Text + length;
-	while ( current <= array_back( ctx.Tokens.Arr)->Text && *current != '\n' && length < 74 )
+	sptr        length  = scope_start.Text.Len;
+	char const* current = scope_start.Text.Ptr + length;
+	while ( current <= array_back( ctx.Tokens.Arr)->Text.Ptr && (* current) != '\n' && length < 74 )
 	{
 		current++;
 		length++;
 	}
 
-	Str scope_str = { scope_start.Text, length };
+	Str scope_str = { scope_start.Text.Ptr, length };
 	StrBuilder line = strbuilder_make_str( GlobalAllocator, scope_str );
 	strbuilder_append_fmt( & result, "\tScope    : %s\n", line );
 	strbuilder_free(& line);
 
-	sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
+	sptr   dist            = (sptr)last_valid.Text.Ptr - (sptr)scope_start.Text.Ptr + 2;
 	sptr   length_from_err = dist;
 
-	Str err_str        = { last_valid.Text, length_from_err };
+	Str err_str        = { last_valid.Text.Ptr, length_from_err };
 	StrBuilder line_from_err = strbuilder_make_str( GlobalAllocator, err_str );
 
 	if ( length_from_err < 100 )
@@ -82,7 +82,7 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 	{
 		if ( tok_is_valid(curr_scope->Name) )
 		{
-			strbuilder_append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Length, curr_scope->Name.Text );
+			strbuilder_append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Text.Len, curr_scope->Name.Text.Ptr );
 		}
 		else
 		{
@@ -119,7 +119,7 @@ bool lex__eat(TokArray* self, TokType type )
 		Token tok = * lex_current( self, lex_skip_formatting );
 		log_failure( "Parse Error, TokArray::eat, Expected: ' %s ' not ' %.*s ' (%d, %d)`\n%s"
 			, toktype_to_str(type).Ptr
-			, at_idx.Length, at_idx.Text
+			, at_idx.Text.Len, at_idx.Text.Ptr
 			, tok.Line
 			, tok.Column
 			, parser_to_strbuilder(Context)
@@ -513,7 +513,7 @@ Code parse_array_decl()
 {
 	push_scope();
 
-	if ( check( Tok_Operator ) && currtok.Text[0] == '[' && currtok.Text[1] == ']' )
+	if ( check( Tok_Operator ) && currtok.Text.Ptr[0] == '[' && currtok.Text.Ptr[1] == ']' )
 	{
 		Code array_expr = untyped_str( txt(" ") );
 		eat( Tok_Operator );
@@ -549,7 +549,7 @@ Code parse_array_decl()
 			eat( currtok.Type );
 		}
 
-		untyped_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)untyped_tok.Text;
+		untyped_tok.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)untyped_tok.Text.Ptr;
 
 		Code array_expr = untyped_str( tok_to_str(untyped_tok) );
 		// [ <Content>
@@ -614,7 +614,7 @@ CodeAttributes parse_attributes()
 			eat( Tok_Attribute_Close );
 			// [[ <Content> ]]
 
-			len = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )start.Text;
+			len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )start.Text.Ptr;
 		}
 		else if ( check( Tok_Decl_GNU_Attribute ) )
 		{
@@ -633,7 +633,7 @@ CodeAttributes parse_attributes()
 			eat( Tok_Capture_End );
 			// __attribute__(( <Content> ))
 
-			len = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )start.Text;
+			len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )start.Text.Ptr;
 		}
 		else if ( check( Tok_Decl_MSVC_Attribute ) )
 		{
@@ -650,7 +650,7 @@ CodeAttributes parse_attributes()
 			eat( Tok_Capture_End );
 			// __declspec( <Content> )
 
-			len = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )start.Text;
+			len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )start.Text.Ptr;
 		}
 		else if ( tok_is_attribute(currtok) )
 		{
@@ -674,14 +674,14 @@ CodeAttributes parse_attributes()
 				eat(Tok_Capture_End);
 			}
 
-			len = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )start.Text;
+			len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )start.Text.Ptr;
 			// <Attribute> ( ... )
 		}
 	}
 
 	if ( len > 0 )
 	{
-		Str attribute_txt = { start.Text, len };
+		Str attribute_txt = { start.Text.Ptr, len };
 		parser_pop(& Context);
 
 		StrBuilder name_stripped = parser_strip_formatting( attribute_txt, parser_strip_formatting_dont_preserve_newlines );
@@ -1081,7 +1081,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 					attributes = more_attributes;
 				}
 
-				if ( currtok.Type == Tok_Operator && currtok.Text[0] == '~' )
+				if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[0] == '~' )
 				{
 					member = cast(Code, parser_parse_destructor( specifiers ));
 					// <Attribute> <Specifiers> ~<Name>()
@@ -1107,9 +1107,9 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			case Tok_Type_int:
 			case Tok_Type_double:
 			{
-				if ( nexttok.Type == Tok_Capture_Start && name.Length && currtok.Type == Tok_Identifier )
+				if ( nexttok.Type == Tok_Capture_Start && name.Text.Len && currtok.Type == Tok_Identifier )
 				{
-					if ( c_str_compare_len( name.Text, currtok.Text, name.Length ) == 0 )
+					if ( c_str_compare_len( name.Text.Ptr, currtok.Text.Ptr, name.Text.Len ) == 0 )
 					{
 						member = cast(Code, parser_parse_constructor( specifiers ));
 						// <Attributes> <Specifiers> <Name>()
@@ -1151,7 +1151,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 				while ( left && currtok.Type != Tok_BraceCurly_Close )
 				{
-					untyped_tok.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)untyped_tok.Text;
+					untyped_tok.Text.Len = ( (sptr)currtok.Text.Ptr + currtok.Text.Len ) - (sptr)untyped_tok.Text.Ptr;
 					eat( currtok.Type );
 				}
 
@@ -1379,7 +1379,7 @@ CodeDefine parse_define()
 		return InvalidCode;
 	}
 
-	if ( currtok.Length == 0 )
+	if ( currtok.Text.Len == 0 )
 	{
 		define->Content = get_cached_string( tok_to_str(currtok) );
 		eat( Tok_Preprocess_Content );
@@ -1429,8 +1429,8 @@ Code parse_assignment_expression()
 		eat( currtok.Type );
 	}
 
-	expr_tok.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )expr_tok.Text - 1;
-	expr            = untyped_str( tok_to_str(expr_tok) );
+	expr_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )expr_tok.Text.Ptr - 1;
+	expr              = untyped_str( tok_to_str(expr_tok) );
 	// = <Expression>
 	return expr;
 }
@@ -1508,7 +1508,7 @@ CodeFn parse_function_after_name(
 		}
 		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> { <Body> }
 	}
-	else if ( check(Tok_Operator) && currtok.Text[0] == '=' )
+	else if ( check(Tok_Operator) && currtok.Text.Ptr[0] == '=' )
 	{
 		eat(Tok_Operator);
 		specifiers_append(specifiers, Spec_Pure );
@@ -1612,11 +1612,11 @@ Code parse_function_body()
 
 	Token past = prevtok;
 
-	s32 len = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)start.Text;
+	s32 len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)start.Text.Ptr;
 
 	if ( len > 0 )
 	{
-		Str str = { start.Text, len };
+		Str str = { start.Text.Ptr, len };
 		body_append( result, cast(Code, def_execution( str )) );
 	}
 
@@ -2000,19 +2000,19 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 	Token nav = tokens.Arr[ idx ];
 	for ( ; idx < array_num(tokens.Arr); idx++, nav = tokens.Arr[ idx ] )
 	{
-		if ( nav.Text[0] == '<' )
+		if ( nav.Text.Ptr[0] == '<' )
 		{
 			// Skip templated expressions as they mey have expressions with the () operators
 			s32 capture_level  = 0;
 			s32 template_level = 0;
 			for ( ; idx < array_num(tokens.Arr); idx++, nav = tokens.Arr[idx] )
 			{
-				if (nav.Text[ 0 ] == '<')
+				if (nav.Text.Ptr[ 0 ] == '<')
 					++ template_level;
 
-				if (nav.Text[ 0 ] == '>')
+				if (nav.Text.Ptr[ 0 ] == '>')
 					-- template_level;
-				if (nav.Type == Tok_Operator && nav.Text[1] == '>')
+				if (nav.Type == Tok_Operator && nav.Text.Ptr[1] == '>')
 					-- template_level;
 
 				if ( nav.Type == Tok_Capture_Start)
@@ -2047,7 +2047,7 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 	// <Attributes> <Specifiers> ... <Identifier>
 
 	bool possible_destructor = false;
-	if ( tok_left.Type == Tok_Operator && tok_left.Text[0] == '~')
+	if ( tok_left.Type == Tok_Operator && tok_left.Text.Ptr[0] == '~')
 	{
 		possible_destructor = true;
 		-- idx;
@@ -2066,12 +2066,12 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 	s32 template_level = 0;
 	while ( idx != tokens.Idx )
 	{
-		if (tok_left.Text[ 0 ] == '<')
+		if (tok_left.Text.Ptr[ 0 ] == '<')
 			++ template_level;
 
-		if (tok_left.Text[ 0 ] == '>')
+		if (tok_left.Text.Ptr[ 0 ] == '>')
 			-- template_level;
-		if (tok_left.Type == Tok_Operator && tok_left.Text[1] == '>')
+		if (tok_left.Type == Tok_Operator && tok_left.Text.Ptr[1] == '>')
 			-- template_level;
 
 		if ( template_level != 0 && tok_left.Type == Tok_Capture_Start)
@@ -2087,7 +2087,7 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 		tok_left = tokens.Arr[idx];
 	}
 
-	bool is_same = c_str_compare_len( tok_right.Text, tok_left.Text, tok_right.Length ) == 0;
+	bool is_same = c_str_compare_len( tok_right.Text.Ptr, tok_left.Text.Ptr, tok_right.Text.Len ) == 0;
 	if (tok_left.Type == Tok_Identifier && is_same)
 	{
 		// We have found the pattern we desired
@@ -2134,12 +2134,12 @@ Token parse_identifier( bool* possible_member_function )
 			return invalid;
 		}
 
-		if ( currtok.Type == Tok_Operator && currtok.Text[0] == '~' )
+		if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[0] == '~' )
 		{
 			bool is_destructor = str_are_equal( Context.Scope->Prev->ProcName, txt("parser_parse_destructor"));
 			if (is_destructor)
 			{
-				name.Length = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )name.Text;
+				name.Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;
 				parser_pop(& Context);
 				return name;
 			}
@@ -2149,7 +2149,7 @@ Token parse_identifier( bool* possible_member_function )
 			return invalid;
 		}
 
-		if ( currtok.Type == Tok_Operator && currtok.Text[0] == '*' && currtok.Length == 1 )
+		if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[0] == '*' && currtok.Text.Len == 1 )
 		{
 			if ( possible_member_function )
 				*possible_member_function = true;
@@ -2169,7 +2169,7 @@ Token parse_identifier( bool* possible_member_function )
 			return invalid;
 		}
 
-		name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
+		name.Text.Len = ( (sptr)currtok.Text.Ptr + currtok.Text.Len ) - (sptr)name.Text.Ptr;
 		eat( Tok_Identifier );
 		// <Qualifier Name> <Template Args> :: <Name>
 
@@ -2231,7 +2231,7 @@ CodeOperator parse_operator_after_ret_type(
 				eat( Tok_Access_StaticSymbol );
 		}
 
-		nspace.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)nspace.Text;
+		nspace.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)nspace.Text.Ptr;
 	}
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...>
 
@@ -2253,14 +2253,14 @@ CodeOperator parse_operator_after_ret_type(
 	bool was_new_or_delete = false;
 
 	Operator op = Op_Invalid;
-	switch ( currtok.Text[0] )
+	switch ( currtok.Text.Ptr[0] )
 	{
 		case '+':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_Add;
 
-			else if ( currtok.Text[1] == '+' )
+			else if ( currtok.Text.Ptr[1] == '+' )
 				op = Op_Increment;
 
 			else
@@ -2269,9 +2269,9 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '-':
 		{
-			if ( currtok.Text[1] == '>' )
+			if ( currtok.Text.Ptr[1] == '>' )
 			{
-				if ( currtok.Text[2] == '*' )
+				if ( currtok.Text.Ptr[2] == '*' )
 					op = Op_MemberOfPointer;
 
 				else
@@ -2280,7 +2280,7 @@ CodeOperator parse_operator_after_ret_type(
 				break;
 			}
 
-			else if ( currtok.Text[1] == '=' )
+			else if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_Subtract;
 
 			else
@@ -2289,7 +2289,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '*':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_Multiply;
 
 			else
@@ -2311,7 +2311,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '/':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_Divide;
 
 			else
@@ -2320,7 +2320,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '%':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_Modulo;
 
 			else
@@ -2329,10 +2329,10 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '&':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_BAnd;
 
-			else if ( currtok.Text[1] == '&' )
+			else if ( currtok.Text.Ptr[1] == '&' )
 				op = Op_LAnd;
 
 			else
@@ -2346,10 +2346,10 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '|':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_BOr;
 
-			else if ( currtok.Text[1] == '|' )
+			else if ( currtok.Text.Ptr[1] == '|' )
 				op = Op_LOr;
 
 			else
@@ -2358,7 +2358,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '^':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_Assign_BXOr;
 
 			else
@@ -2372,7 +2372,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '!':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_LNot;
 
 			else
@@ -2381,7 +2381,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '=':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_LEqual;
 
 			else
@@ -2390,12 +2390,12 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '<':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_LesserEqual;
 
-			else if ( currtok.Text[1] == '<' )
+			else if ( currtok.Text.Ptr[1] == '<' )
 			{
-				if ( currtok.Text[2] == '=' )
+				if ( currtok.Text.Ptr[2] == '=' )
 					op = Op_Assign_LShift;
 
 				else
@@ -2407,12 +2407,12 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '>':
 		{
-			if ( currtok.Text[1] == '=' )
+			if ( currtok.Text.Ptr[1] == '=' )
 				op = Op_GreaterEqual;
 
-			else if ( currtok.Text[1] == '>' )
+			else if ( currtok.Text.Ptr[1] == '>' )
 			{
-				if ( currtok.Text[2] == '=' )
+				if ( currtok.Text.Ptr[2] == '=' )
 					op = Op_Assign_RShift;
 
 				else
@@ -2424,7 +2424,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '(':
 		{
-			if ( currtok.Text[1] == ')' )
+			if ( currtok.Text.Ptr[1] == ')' )
 				op = Op_FunctionCall;
 
 			else
@@ -2433,7 +2433,7 @@ CodeOperator parse_operator_after_ret_type(
 		break;
 		case '[':
 		{
-			if ( currtok.Text[1] == ']' )
+			if ( currtok.Text.Ptr[1] == ']' )
 				op = Op_Subscript;
 
 			else
@@ -2444,7 +2444,7 @@ CodeOperator parse_operator_after_ret_type(
 		{
 			Str c_str_new    = operator_to_str(Op_New);
 			Str c_str_delete = operator_to_str(Op_Delete);
-			if ( c_str_compare_len( currtok.Text, c_str_new.Ptr, max(c_str_new.Len - 1, currtok.Length)) == 0)
+			if ( c_str_compare_len( currtok.Text.Ptr, c_str_new.Ptr, max(c_str_new.Len - 1, currtok.Text.Len)) == 0)
 			{
 				op = Op_New;
 				eat( Tok_Identifier );
@@ -2456,7 +2456,7 @@ CodeOperator parse_operator_after_ret_type(
 						idx++;
 				}
 				Token next = Context.Tokens.Arr[idx];
-				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text, "[]", 2) == 0)
+				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text.Ptr, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
 					op = Op_NewArray;
@@ -2468,7 +2468,7 @@ CodeOperator parse_operator_after_ret_type(
 					op = Op_NewArray;
 				}
 			}
-			else if ( c_str_compare_len( currtok.Text, c_str_delete.Ptr, max(c_str_delete.Len - 1, currtok.Length )) == 0)
+			else if ( c_str_compare_len( currtok.Text.Ptr, c_str_delete.Ptr, max(c_str_delete.Len - 1, currtok.Text.Len )) == 0)
 			{
 				op = Op_Delete;
 				eat(Tok_Identifier);
@@ -2480,7 +2480,7 @@ CodeOperator parse_operator_after_ret_type(
 						idx++;
 				}
 				Token next = Context.Tokens.Arr[idx];
-				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text, "[]", 2) == 0)
+				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text.Ptr, "[]", 2) == 0)
 				{
 					eat(Tok_Operator);
 					op = Op_DeleteArray;
@@ -2704,7 +2704,7 @@ CodeParams parse_params( bool use_template_capture )
 
 	else
 	{
-		if ( check( Tok_Operator ) && currtok.Text[ 0 ] == '<' )
+		if ( check( Tok_Operator ) && currtok.Text.Ptr[ 0 ] == '<' )
 			eat( Tok_Operator );
 		// <
 	}
@@ -2716,7 +2716,7 @@ CodeParams parse_params( bool use_template_capture )
 		parser_pop(& Context);
 		return NullCode;
 	}
-	else if ( check( Tok_Operator ) && currtok.Text[ 0 ] == '>' )
+	else if ( check( Tok_Operator ) && currtok.Text.Ptr[ 0 ] == '>' )
 	{
 		eat( Tok_Operator );
 		// >
@@ -2742,7 +2742,7 @@ CodeParams parse_params( bool use_template_capture )
 	}
 
 	#define CheckEndParams() \
-		(use_template_capture ? (currtok.Text[ 0 ] != '>') : (currtok.Type != Tok_Capture_End))
+		(use_template_capture ? (currtok.Text.Ptr[ 0 ] != '>') : (currtok.Type != Tok_Capture_End))
 
 	// Ex: Unreal has this type of macro:                 vvvvvvvvv
 	// COREUOBJECT_API void CallFunction( FFrame& Stack, RESULT_DECL, UFunction* Function );
@@ -2782,7 +2782,7 @@ CodeParams parse_params( bool use_template_capture )
 		// In template captures you can have a typename have direct assignment without a name
 		// typename = typename ...
 		// Which would result in a static value type from a struct expansion (traditionally)
-		if ( ( name.Text || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+		if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
 		{
 			eat( Tok_Operator );
 			// ( <Macro> <ValueType> <Name> =
@@ -2800,12 +2800,12 @@ CodeParams parse_params( bool use_template_capture )
 			s32 template_level = 0;
 			while ( (left && ( currtok.Type != Tok_Comma ) && template_level >= 0 && CheckEndParams()) || (capture_level > 0 || template_level > 0) )
 			{
-				if (currtok.Text[ 0 ] == '<')
+				if (currtok.Text.Ptr[ 0 ] == '<')
 					++ template_level;
 
-				if (currtok.Text[ 0 ] == '>')
+				if (currtok.Text.Ptr[ 0 ] == '>')
 					-- template_level;
-				if (currtok.Type == Tok_Operator && currtok.Text[1] == '>')
+				if (currtok.Type == Tok_Operator && currtok.Text.Ptr[1] == '>')
 					-- template_level;
 
 				if ( currtok.Type == Tok_Capture_Start)
@@ -2814,7 +2814,7 @@ CodeParams parse_params( bool use_template_capture )
 				if ( currtok.Type == Tok_Capture_End)
 					-- capture_level;
 
-				value_tok.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )value_tok.Text;
+				value_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )value_tok.Text.Ptr;
 				eat( currtok.Type );
 			}
 
@@ -2828,7 +2828,7 @@ CodeParams parse_params( bool use_template_capture )
 
 	result->Macro = macro;
 
-	if ( name.Length > 0 )
+	if ( name.Text.Len > 0 )
 		result->Name = get_cached_string( tok_to_str(name) );
 
 	result->ValueType = type;
@@ -2895,7 +2895,7 @@ CodeParams parse_params( bool use_template_capture )
 			// In template captures you can have a typename have direct assignment without a name
 			// typename = typename ...
 			// Which would result in a static value type from a struct expansion (traditionally)
-			if ( ( name.Text || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+			if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
 			{
 				eat( Tok_Operator );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> =
@@ -2916,12 +2916,12 @@ CodeParams parse_params( bool use_template_capture )
 				&& template_level >= 0
 				&& CheckEndParams()) || (capture_level > 0 || template_level > 0) )
 				{
-					if (currtok.Text[ 0 ] == '<')
+					if (currtok.Text.Ptr[ 0 ] == '<')
 						++ template_level;
 
-					if (currtok.Text[ 0 ] == '>')
+					if (currtok.Text.Ptr[ 0 ] == '>')
 						-- template_level;
-					if (currtok.Type == Tok_Operator && currtok.Text[1] == '>')
+					if (currtok.Type == Tok_Operator && currtok.Text.Ptr[1] == '>')
 						-- template_level;
 
 					if ( currtok.Type == Tok_Capture_Start)
@@ -2930,7 +2930,7 @@ CodeParams parse_params( bool use_template_capture )
 					if ( currtok.Type == Tok_Capture_End)
 						-- capture_level;
 
-					value_tok.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )value_tok.Text;
+					value_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )value_tok.Text.Ptr;
 					eat( currtok.Type );
 				}
 
@@ -2945,7 +2945,7 @@ CodeParams parse_params( bool use_template_capture )
 
 		param->Macro = macro;
 
-		if ( name.Length > 0 )
+		if ( name.Text.Len > 0 )
 			param->Name = get_cached_string( tok_to_str(name) );
 
 		param->PostNameMacro = post_name_macro;
@@ -2963,7 +2963,7 @@ CodeParams parse_params( bool use_template_capture )
 
 	else
 	{
-		if ( ! check( Tok_Operator ) || currtok.Text[ 0 ] != '>' )
+		if ( ! check( Tok_Operator ) || currtok.Text.Ptr[ 0 ] != '>' )
 		{
 			log_failure( "Expected '<' after 'template' keyword\n%s", parser_to_strbuilder(Context) );
 			parser_pop(& Context);
@@ -3060,7 +3060,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 			}
 		}
 
-		tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
+		tok.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)tok.Text.Ptr;
 	}
 	else
 	{
@@ -3082,7 +3082,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 				eat( Tok_Statement_End );
 				// <Macro>;
 
-				tok.Length += prevtok.Length;
+				tok.Text.Len += prevtok.Text.Len;
 
 				// TODO(Ed): Reveiw the context for this? (ESPECIALLY THIS)
 				if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
@@ -3090,7 +3090,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 					eat( Tok_Comment );
 					// <Macro>; <InlineCmt>
 
-					tok.Length += prevtok.Length;
+					tok.Text.Len += prevtok.Text.Len;
 				}
 			}
 		}
@@ -3104,7 +3104,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 				Token stmt_end = currtok;
 				eat( Tok_Statement_End );
 				// <Macro>;
-				tok.Length += prevtok.Length;
+				tok.Text.Len += prevtok.Text.Len;
 			}
 
 		}
@@ -3113,7 +3113,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 
 Leave_Scope_Early:
 
-	char const* content = c_str_fmt_buf( "%.*s ", tok.Length, tok.Text );
+	char const* content = c_str_fmt_buf( "%.*s ", tok.Text.Len, tok.Text.Ptr );
 
 	Code result = untyped_str( to_str_from_c_str(content) );
 	Context.Scope->Name = tok;
@@ -3154,10 +3154,10 @@ Code parse_static_assert()
 	eat( Tok_Statement_End );
 	// static_assert( <Content> );
 
-	content.Length  = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
+	content.Text.Len  = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)content.Text.Ptr;
 
-	char const* str  = c_str_fmt_buf( "%.*s\n", content.Length, content.Text );
-	Str content_str = { str, content.Length + 1 };
+	char const* str  = c_str_fmt_buf( "%.*s\n", content.Text.Len, content.Text.Ptr );
+	Str content_str = { str, content.Text.Len + 1 };
 	assert->Content = get_cached_string( content_str );
 	assert->Name	= assert->Content;
 
@@ -3174,20 +3174,20 @@ Code parse_static_assert()
 internal inline
 void parse_template_args( Token* token )
 {
-	if ( currtok.Type == Tok_Operator && currtok.Text[ 0 ] == '<' && currtok.Length == 1 )
+	if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[ 0 ] == '<' && currtok.Text.Len == 1 )
 	{
 		eat( Tok_Operator );
 		// <
 
 		s32 level = 0;
-		while ( left && level >= 0 && ( currtok.Text[ 0 ] != '>' || level > 0 ) )
+		while ( left && level >= 0 && ( currtok.Text.Ptr[ 0 ] != '>' || level > 0 ) )
 		{
-			if ( currtok.Text[ 0 ] == '<' )
+			if ( currtok.Text.Ptr[ 0 ] == '<' )
 				level++;
 
-			if ( currtok.Text[ 0 ] == '>' )
+			if ( currtok.Text.Ptr[ 0 ] == '>' )
 				level--;
-			if ( currtok.Type == Tok_Operator && currtok.Text[1] == '>')
+			if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[1] == '>')
 				level--;
 
 			eat( currtok.Type );
@@ -3200,7 +3200,7 @@ void parse_template_args( Token* token )
 		// < <Content> >
 
 		// Extend length of name to last token
-		token->Length = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )token->Text;
+		token->Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )token->Text.Ptr;
 	}
 }
 
@@ -3248,8 +3248,8 @@ CodeVar parse_variable_after_name(
 		}
 		eat( Tok_BraceCurly_Close );
 
-		expr_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_tok.Text;
-		expr            = untyped_str( tok_to_str(expr_tok) );
+		expr_tok.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)expr_tok.Text.Ptr;
+		expr              = untyped_str( tok_to_str(expr_tok) );
 		// <Attributes> <Specifiers> <ValueType> <Name> = { <Expression> }
 	}
 
@@ -3274,8 +3274,8 @@ CodeVar parse_variable_after_name(
 			eat( currtok.Type );
 		}
 
-		expr_token.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_token.Text;
-		expr              = untyped_str( tok_to_str(expr_token) );
+		expr_token.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)expr_token.Text.Ptr;
+		expr                = untyped_str( tok_to_str(expr_token) );
 		eat( Tok_Capture_End );
 		// <Attributes> <Specifiers> <ValueType> <Name> ( <Expression> )
 	}
@@ -3299,8 +3299,8 @@ CodeVar parse_variable_after_name(
 			eat( currtok.Type );
 		}
 
-		expr_tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)expr_tok.Text;
-		bitfield_expr   = untyped_str( tok_to_str(expr_tok) );
+		expr_tok.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)expr_tok.Text.Ptr;
+		bitfield_expr     = untyped_str( tok_to_str(expr_tok) );
 		// <Attributes> <Specifiers> <ValueType> <Name> : <Expression>
 	}
 
@@ -3503,7 +3503,7 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 			eat( currtok.Type );
 		}
 
-		initializer_list_tok.Length = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )initializer_list_tok.Text;
+		initializer_list_tok.Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )initializer_list_tok.Text.Ptr;
 		// <Name> ( <Parameters> ) : <InitializerList>
 
 		initializer_list = untyped_str( tok_to_str(initializer_list_tok) );
@@ -3518,7 +3518,7 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 		body = cast(CodeBody, parse_function_body());
 		// <Name> ( <Parameters> ) { <Body> }
 	}
-	else if ( check( Tok_Operator) && currtok.Text[ 0 ] == '=' )
+	else if ( check( Tok_Operator) && currtok.Text.Ptr[ 0 ] == '=' )
 	{
 		body = cast(CodeBody, parse_assignment_expression());
 	}
@@ -3582,7 +3582,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 	if (is_in_global_nspace)
 		prefix_identifier = parse_identifier(nullptr);
 
-	if ( left && currtok.Text[ 0 ] == '~' )
+	if ( left && currtok.Text.Ptr[ 0 ] == '~' )
 		eat( Tok_Operator );
 	else
 	{
@@ -3603,13 +3603,13 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 	bool pure_virtual = false;
 
-	if ( check( Tok_Operator ) && currtok.Text[ 0 ] == '=' )
+	if ( check( Tok_Operator ) && currtok.Text.Ptr[ 0 ] == '=' )
 	{
 		// <Virtual Specifier> ~<Name>() =
 
 		bool skip_formatting = true;
 		Token upcoming = nexttok;
-		if ( left && upcoming.Text[ 0 ] == '0' )
+		if ( left && upcoming.Text.Ptr[ 0 ] == '0' )
 		{
 			eat( Tok_Operator );
 			eat( Tok_Number );
@@ -3617,7 +3617,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 			specifiers_append(specifiers, Spec_Pure );
 		}
-		else if ( left && c_str_compare_len( upcoming.Text, "default", sizeof("default") - 1 ) == 0)
+		else if ( left && c_str_compare_len( upcoming.Text.Ptr, "default", sizeof("default") - 1 ) == 0)
 		{
 			body = cast(CodeBody, parse_assignment_expression());
 			// <Virtual Specifier> ~<
@@ -3650,7 +3650,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 	if ( tok_is_valid(prefix_identifier) )
 	{
-		prefix_identifier.Length += 1 + identifier.Length;
+		prefix_identifier.Text.Len += 1 + identifier.Text.Len;
 		result->Name = get_cached_string( tok_to_str(prefix_identifier) );
 	}
 
@@ -3818,7 +3818,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 					eat( Tok_Identifier);
 					// <Name>
 
-					if ( currtok.Type == Tok_Operator && currtok.Text[0] == '=' )
+					if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[0] == '=' )
 					{
 						eat( Tok_Operator );
 						// <Name> =
@@ -3853,8 +3853,8 @@ CodeEnum parser_parse_enum( bool inplace_def )
 						// <Name> = <Expression> <Macro>, // <Inline Comment>
 					// }
 
-					Token prev = * lex_previous(Context.Tokens, lex_dont_skip_formatting);
-					entry.Length = ( (sptr)prev.Text + prev.Length ) - (sptr)entry.Text;
+					Token prev     = * lex_previous(Context.Tokens, lex_dont_skip_formatting);
+					entry.Text.Len = ( (sptr)prev.Text.Ptr + prev.Text.Len ) - (sptr)entry.Text.Ptr;
 
 					member = untyped_str( tok_to_str(entry) );
 				break;
@@ -3946,8 +3946,8 @@ CodeExtern parser_parse_extern_link()
 	eat( Tok_String );
 	// extern "<Name>"
 
-	name.Text   += 1;
-	name.Length -= 1;
+	name.Text.Ptr += 1;
+	name.Text.Len -= 1;
 
 	CodeExtern
 	result       = (CodeExtern) make_code();
@@ -4289,7 +4289,7 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 		}
 		// <Specifiers> <Qualifier> :: ...
 
-		name.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)name.Text;
+		name.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)name.Text.Ptr;
 	}
 
 	eat( Tok_Decl_Operator );
@@ -4339,7 +4339,7 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 
 			eat( currtok.Type );
 		}
-		body_str.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)body_str.Text;
+		body_str.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)body_str.Text.Ptr;
 
 		eat( Tok_BraceCurly_Close );
 		// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>() <const> { <Body> }
@@ -4704,7 +4704,7 @@ else if ( currtok.Type == Tok_DeclType )
 			eat( currtok.Type );
 		}
 
-		name.Length = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )name.Text;
+		name.Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;
 		// <Attributes> <Specifiers> <Compound type expression>
 	}
 	else if ( currtok.Type == Tok_Type_Typename )
@@ -4937,7 +4937,7 @@ else if ( currtok.Type == Tok_DeclType )
 			eat( Tok_Capture_End );
 			// <Attributes> <ReturnType> ( <Expression> )
 
-			name.Length = ( ( sptr )prevtok.Text + prevtok.Length ) - ( sptr )name.Text;
+			name.Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;
 #endif
 		}
 
@@ -5082,8 +5082,7 @@ CodeTypedef parser_parse_typedef()
 
 		if ( currtok.Type == Tok_Identifier )
 		{
-			Str name_str = { name.Text, name.Length };
-			type = untyped_str(name_str);
+			type = untyped_str(name.Text);
 			name = currtok;
 			eat(Tok_Identifier);
 		}
