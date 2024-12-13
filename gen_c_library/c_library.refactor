@@ -468,6 +468,10 @@ word Allocator_TypeTable,     gen_Allocator_TypeTable
 word      Builder,  gen_Builder
 namespace builder_, gen_builder_
 
+// Scanner
+
+word scan_file, gen_scan_file
+
 // Implementation (prviate)
 
 word _format_info, gen__format_info

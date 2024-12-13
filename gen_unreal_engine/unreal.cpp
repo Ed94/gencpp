@@ -223,7 +223,7 @@ int gen_main()
 		header.print_fmt( "#pragma endregion Inlines\n" );
 
 		header.print( header_end );
-		header.print_fmt( "GEN_NS_END\n\n" );
+		header.print_fmt( "\nGEN_NS_END\n\n" );
 		header.print( pop_ignores );
 		header.write();
 	}
@@ -294,7 +294,7 @@ int gen_main()
 		header.print( def_include( txt("gen.hpp") ));
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 		header.print( builder );
-		header.print_fmt( "GEN_NS_END\n" );
+		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
 		header.print( pop_ignores );
 		header.write();
@@ -333,7 +333,7 @@ int gen_main()
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 		header.print( parsing );
 		header.print( scanner );
-		header.print_fmt( "GEN_NS_END\n" );
+		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
 		header.print( pop_ignores );
 		header.write();
@@ -353,7 +353,7 @@ int gen_main()
 		src.print_fmt( "\nGEN_NS_BEGIN\n" );
 		src.print( parsing );
 		// src.print( scanner );
-		src.print_fmt( "GEN_NS_END\n" );
+		src.print_fmt( "\nGEN_NS_END\n" );
 		src.print( fmt_newline );
 		src.print( pop_ignores );
 		src.write();

@@ -1481,6 +1481,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( roll_own_dependencies_guard_start );
 		header.print( r_header_platform );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
+		header.print_fmt( "GEN_API_C_BEGIN\n" );
 
 		header.print( r_header_macros );
 		header.print( header_generic_macros );
@@ -1497,7 +1498,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( r_header_timing );
 		header.print(rf_header_parsing );
 
-		header.print_fmt( "\nGEN_NS_END\n" );
+		header.print_fmt( "\nGEN_API_C_END\n" );
+		header.print_fmt( "GEN_NS_END\n" );
 		header.print_fmt( roll_own_dependencies_guard_end );
 	#pragma endregion Print Dependencies
 
@@ -1548,7 +1550,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 	#pragma region Print Dependencies
 		header.print_fmt( roll_own_dependencies_guard_start );
-		header.print_fmt( "GEN_NS_BEGIN\n");
+		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print_fmt( "GEN_API_C_BEGIN\n" );
 
 		header.print( r_src_dep_start );
@@ -1562,12 +1564,14 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( r_src_timing );
 		header.print( rf_src_parsing );
 
+		header.print_fmt( "\nGEN_API_C_END\n" );
 		header.print_fmt( "GEN_NS_END\n");
 		header.print_fmt( roll_own_dependencies_guard_end );
 	#pragma endregion Print Dependencies
 
 	#pragma region Print Components
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
+		header.print_fmt( "GEN_API_C_BEGIN\n" );
 
 		header.print( fmt_newline);
 		header.print( rf_array_arena );
@@ -1596,12 +1600,13 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( r_src_parsing );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
 		header.print( r_src_untyped );
-		header.print_fmt( "\n#pragma endregion Interface\n\n");
+		header.print_fmt( "\n#pragma endregion Interface\n");
 
 		header.print( rf_src_builder );
 		header.print( rf_src_scanner );
 
-		header.print_fmt( "GEN_API_C_END\n" );
+		header.print_fmt( "\nGEN_API_C_END\n" );
+		header.print_fmt( "GEN_NS_END\n");
 	#pragma endregion Print Components
 
 		header.print_fmt( implementation_guard_end );
