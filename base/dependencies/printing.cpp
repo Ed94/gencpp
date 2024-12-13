@@ -1,6 +1,6 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #	pragma once
-#	include "string_ops.cpp"
+#	include "strbuilder_ops.cpp"
 #endif
 
 #pragma region Printing
@@ -48,7 +48,7 @@ internal ssize _print_string( char* text, ssize max_len, _format_info* info, cha
 
 	if ( str == NULL && max_len >= 6 )
 	{
-		res += str_copy_nulpad( text, "(null)", 6 );
+		res += c_str_copy_nulpad( text, "(null)", 6 );
 		return res;
 	}
 
@@ -56,7 +56,7 @@ internal ssize _print_string( char* text, ssize max_len, _format_info* info, cha
 		// Made the design decision for this library that precision is the length of the string.
 		len = info->precision;
 	else
-		len = str_len( str );
+		len = c_str_len( str );
 
 	if ( info && ( info->width == 0 && info->flags & GEN_FMT_WIDTH ) )
 	{
@@ -69,7 +69,7 @@ internal ssize _print_string( char* text, ssize max_len, _format_info* info, cha
 			len = info->precision < len ? info->precision : len;
 		if ( res + len > max_len )
 			return res;
-		res  += str_copy_nulpad( text, str, len );
+		res  += c_str_copy_nulpad( text, str, len );
 		text += res;
 
 		if ( info->width > res )
@@ -93,15 +93,15 @@ internal ssize _print_string( char* text, ssize max_len, _format_info* info, cha
 
 		if ( res + len > max_len )
 			return res;
-		res += str_copy_nulpad( text, str, len );
+		res += c_str_copy_nulpad( text, str, len );
 	}
 
 	if ( info )
 	{
 		if ( info->flags & GEN_FMT_UPPER )
-			str_to_upper( begin );
+			c_str_to_upper( begin );
 		else if ( info->flags & GEN_FMT_LOWER )
-			str_to_lower( begin );
+			c_str_to_lower( begin );
 	}
 
 	return res;
@@ -238,7 +238,7 @@ internal ssize _print_f64( char* text, ssize max_len, _format_info* info, b32 is
 	return ( text - text_begin );
 }
 
-neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_list va )
+neverinline ssize c_str_fmt_va( char* text, ssize max_len, char const* fmt, va_list va )
 {
 	char const* text_begin = text;
 	ssize          remaining  = max_len, res;
@@ -310,7 +310,7 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 		}
 		else
 		{
-			info.width = scast( s32, str_to_i64( fmt, ccast( char**, & fmt), 10 ));
+			info.width = scast( s32, c_str_to_i64( fmt, ccast( char**, & fmt), 10 ));
 			if ( info.width != 0 )
 			{
 				info.flags |= GEN_FMT_WIDTH;
@@ -328,7 +328,7 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 			}
 			else
 			{
-				info.precision = scast( s32, str_to_i64( fmt, ccast( char**, & fmt), 10 ));
+				info.precision = scast( s32, c_str_to_i64( fmt, ccast( char**, & fmt), 10 ));
 			}
 			info.flags &= ~GEN_FMT_ZERO;
 		}
@@ -419,19 +419,20 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 
 			case 'S':
 			{
-				if ( *(fmt + 1) == 'C' )
+				if ( *(fmt + 1) == 'B' )
 				{
+
 					++ fmt;
-					StrC gen_str   = va_arg( va, StrC);
-					info.precision = gen_str.Len;
-					len            = _print_string( text, remaining, &info, gen_str.Ptr );
+					StrBuilder gen_str = { va_arg( va, char*) };
+
+					info.precision = strbuilder_length(gen_str);
+					len            = _print_string( text, remaining, &info, gen_str );
 					break;
 				}
 
-				String gen_str = { va_arg( va, char*) };
-
-				info.precision = string_length(gen_str);
-				len            = _print_string( text, remaining, &info, gen_str );
+				Str gen_str    = va_arg( va, Str);
+				info.precision = gen_str.Len;
+				len            = _print_string( text, remaining, &info, gen_str.Ptr );
 			}
 			break;
 
@@ -531,67 +532,67 @@ neverinline ssize str_fmt_va( char* text, ssize max_len, char const* fmt, va_lis
 	return ( res >= max_len || res < 0 ) ? -1 : res;
 }
 
-char* str_fmt_buf_va( char const* fmt, va_list va )
+char* c_str_fmt_buf_va( char const* fmt, va_list va )
 {
 	local_persist thread_local char buffer[ GEN_PRINTF_MAXLEN ];
-	str_fmt_va( buffer, size_of( buffer ), fmt, va );
+	c_str_fmt_va( buffer, size_of( buffer ), fmt, va );
 	return buffer;
 }
 
-char* str_fmt_buf( char const* fmt, ... )
+char* c_str_fmt_buf( char const* fmt, ... )
 {
 	va_list va;
 	char*   str;
 	va_start( va, fmt );
-	str = str_fmt_buf_va( fmt, va );
+	str = c_str_fmt_buf_va( fmt, va );
 	va_end( va );
 	return str;
 }
 
-ssize str_fmt_file_va( FileInfo* f, char const* fmt, va_list va )
+ssize c_str_fmt_file_va( FileInfo* f, char const* fmt, va_list va )
 {
 	local_persist thread_local char buf[ GEN_PRINTF_MAXLEN ];
-	ssize                              len = str_fmt_va( buf, size_of( buf ), fmt, va );
+	ssize                              len = c_str_fmt_va( buf, size_of( buf ), fmt, va );
 	b32                             res = file_write( f, buf, len - 1 );    // NOTE: prevent extra whitespace
 	return res ? len : -1;
 }
 
-ssize str_fmt_file( FileInfo* f, char const* fmt, ... )
+ssize c_str_fmt_file( FileInfo* f, char const* fmt, ... )
 {
 	ssize      res;
 	va_list va;
 	va_start( va, fmt );
-	res = str_fmt_file_va( f, fmt, va );
+	res = c_str_fmt_file_va( f, fmt, va );
 	va_end( va );
 	return res;
 }
 
-ssize str_fmt( char* str, ssize n, char const* fmt, ... )
+ssize c_str_fmt( char* str, ssize n, char const* fmt, ... )
 {
 	ssize      res;
 	va_list va;
 	va_start( va, fmt );
-	res = str_fmt_va( str, n, fmt, va );
+	res = c_str_fmt_va( str, n, fmt, va );
 	va_end( va );
 	return res;
 }
 
-ssize str_fmt_out_va( char const* fmt, va_list va )
+ssize c_str_fmt_out_va( char const* fmt, va_list va )
 {
-	return str_fmt_file_va( file_get_standard( EFileStandard_OUTPUT ), fmt, va );
+	return c_str_fmt_file_va( file_get_standard( EFileStandard_OUTPUT ), fmt, va );
 }
 
-ssize str_fmt_out_err_va( char const* fmt, va_list va )
+ssize c_str_fmt_out_err_va( char const* fmt, va_list va )
 {
-	return str_fmt_file_va( file_get_standard( EFileStandard_ERROR ), fmt, va );
+	return c_str_fmt_file_va( file_get_standard( EFileStandard_ERROR ), fmt, va );
 }
 
-ssize str_fmt_out_err( char const* fmt, ... )
+ssize c_str_fmt_out_err( char const* fmt, ... )
 {
 	ssize      res;
 	va_list va;
 	va_start( va, fmt );
-	res = str_fmt_out_err_va( fmt, va );
+	res = c_str_fmt_out_err_va( fmt, va );
 	va_end( va );
 	return res;
 }

@@ -373,7 +373,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 }
 
 forceinline
-bool name__check( char const* context, StrC name )
+bool name__check( char const* context, Str name )
 {
 	if ( name.Len <= 0 ) {
 		log_failure( "gen::%s: Invalid name length provided - %d",  name.Len );
@@ -409,7 +409,7 @@ identify the issue without having to debug too much (at least they can debug tho
 The largest of the functions is related to operator overload definitions.
 The library validates a good protion of their form and thus the argument processing for is quite a bit.
 */
-CodeAttributes def_attributes( StrC content )
+CodeAttributes def_attributes( Str content )
 {
 	if ( content.Len <= 0 || content.Ptr == nullptr ) {
 		log_failure( "gen::def_attributes: Invalid attributes provided" );
@@ -424,7 +424,7 @@ CodeAttributes def_attributes( StrC content )
 	return (CodeAttributes) result;
 }
 
-CodeComment def_comment( StrC content )
+CodeComment def_comment( Str content )
 {
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 	{
@@ -435,7 +435,7 @@ CodeComment def_comment( StrC content )
 
 	static char line[ MaxCommentLineLength ];
 
-	String      cmt_formatted = string_make_reserve( GlobalAllocator, kilobytes(1) );
+	StrBuilder      cmt_formatted = strbuilder_make_reserve( GlobalAllocator, kilobytes(1) );
 	char const* end           = content.Ptr + content.Len;
 	char const* scanner       = content.Ptr;
 	s32         curr          = 0;
@@ -450,18 +450,18 @@ CodeComment def_comment( StrC content )
 		}
 		length++;
 
-		str_copy( line, scanner, length );
-		string_append_fmt(& cmt_formatted, "//%.*s", length, line );
+		c_str_copy( line, scanner, length );
+		strbuilder_append_fmt(& cmt_formatted, "//%.*s", length, line );
 		mem_set( line, 0, MaxCommentLineLength );
 
 		scanner += length;
 	}
 	while ( scanner <= end );
 
-	if ( * string_back(cmt_formatted) != '\n' )
-		string_append_strc( & cmt_formatted, txt("\n") );
+	if ( * strbuilder_back(cmt_formatted) != '\n' )
+		strbuilder_append_str( & cmt_formatted, txt("\n") );
 
-	StrC name = { string_length(cmt_formatted), cmt_formatted };
+	Str name = strbuilder_to_str(cmt_formatted);
 
 	Code
 	result          = make_code();
@@ -469,7 +469,7 @@ CodeComment def_comment( StrC content )
 	result->Name    = get_cached_string( name );
 	result->Content = result->Name;
 
-	string_free(& cmt_formatted);
+	strbuilder_free(& cmt_formatted);
 
 	return (CodeComment) result;
 }
@@ -511,7 +511,7 @@ CodeConstructor def_constructor( Opts_def_constructor p )
 	return result;
 }
 
-CodeClass def_class( StrC name, Opts_def_struct p )
+CodeClass def_class( Str name, Opts_def_struct p )
 {
 	if ( ! name_check( def_class, name ) ) {
 		GEN_DEBUG_TRAP();
@@ -564,7 +564,7 @@ CodeClass def_class( StrC name, Opts_def_struct p )
 	return result;
 }
 
-CodeDefine def_define( StrC name, StrC content, Opts_def_define p )
+CodeDefine def_define( Str name, Str content, Opts_def_define p )
 {
 	if ( ! name_check( def_define, name ) ) {
 		GEN_DEBUG_TRAP();
@@ -579,7 +579,7 @@ CodeDefine def_define( StrC name, StrC content, Opts_def_define p )
 	if ( content.Len <= 0 || content.Ptr == nullptr )
 		result->Content = get_cached_string( txt("") );
 	else
-		result->Content = get_cached_string( string_to_strc(string_fmt_buf(GlobalAllocator, "%SC\n", content)) );
+		result->Content = get_cached_string( strbuilder_to_str(strbuilder_fmt_buf(GlobalAllocator, "%S\n", content)) );
 
 	b32  append_preprocess_defines = ! p.dont_append_preprocess_defines;
 	if ( append_preprocess_defines ) {
@@ -589,7 +589,7 @@ CodeDefine def_define( StrC name, StrC content, Opts_def_define p )
 			if ( result->Name.Ptr[lex_id_len] == '(' )
 				break;
 		}
-		StrC lex_id = { lex_id_len, result->Name.Ptr };
+		Str lex_id = { result->Name.Ptr,  lex_id_len };
 		array_append(PreprocessorDefines, lex_id );
 	}
 	return result;
@@ -629,7 +629,7 @@ CodeDestructor def_destructor( Opts_def_destructor p )
 	return result;
 }
 
-CodeEnum def_enum( StrC name, Opts_def_enum p )
+CodeEnum def_enum( Str name, Opts_def_enum p )
 {
 	if ( ! name_check( def_enum, name ) ) {
 		GEN_DEBUG_TRAP();
@@ -690,7 +690,7 @@ CodeEnum def_enum( StrC name, Opts_def_enum p )
 	return result;
 }
 
-CodeExec def_execution( StrC content )
+CodeExec def_execution( Str content )
 {
 	if ( content.Len <= 0 || content.Ptr == nullptr ) {
 		log_failure( "gen::def_execution: Invalid execution provided" );
@@ -704,7 +704,7 @@ CodeExec def_execution( StrC content )
 	return result;
 }
 
-CodeExtern def_extern_link( StrC name, CodeBody body )
+CodeExtern def_extern_link( Str name, CodeBody body )
 {
 	if ( ! name_check(def_extern_link, name) || ! null_check(def_extern_link, body) ) {
 		GEN_DEBUG_TRAP();
@@ -752,7 +752,7 @@ CodeFriend def_friend( Code declaration )
 	return result;
 }
 
-CodeFn def_function( StrC name, Opts_def_function p )
+CodeFn def_function( Str name, Opts_def_function p )
 {
 	if ( ! name_check( def_function, name )) {
 		GEN_DEBUG_TRAP();
@@ -812,26 +812,26 @@ CodeFn def_function( StrC name, Opts_def_function p )
 	return result;
 }
 
-CodeInclude def_include( StrC path, Opts_def_include p )
+CodeInclude def_include( Str path, Opts_def_include p )
 {
 	if ( path.Len <= 0 || path.Ptr == nullptr ) {
 		log_failure( "gen::def_include: Invalid path provided - %d" );
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
-	String content = p.foreign ?
-			string_fmt_buf( GlobalAllocator, "<%.*s>",   path.Len, path.Ptr )
-		:	string_fmt_buf( GlobalAllocator, "\"%.*s\"", path.Len, path.Ptr );
+	StrBuilder content = p.foreign ?
+			strbuilder_fmt_buf( GlobalAllocator, "<%.*s>",   path.Len, path.Ptr )
+		:	strbuilder_fmt_buf( GlobalAllocator, "\"%.*s\"", path.Len, path.Ptr );
 
 	CodeInclude
 	result          = (CodeInclude) make_code();
 	result->Type    = CT_Preprocess_Include;
-	result->Name    = get_cached_string( string_to_strc(content) );
+	result->Name    = get_cached_string( strbuilder_to_str(content) );
 	result->Content = result->Name;
 	return result;
 }
 
-CodeModule def_module( StrC name, Opts_def_module p )
+CodeModule def_module( Str name, Opts_def_module p )
 {
 	if ( ! name_check( def_module, name )) {
 		GEN_DEBUG_TRAP();
@@ -845,7 +845,7 @@ CodeModule def_module( StrC name, Opts_def_module p )
 	return result;
 }
 
-CodeNS def_namespace( StrC name, CodeBody body, Opts_def_namespace p )
+CodeNS def_namespace( Str name, CodeBody body, Opts_def_namespace p )
 {
 	if ( ! name_check( def_namespace, name )) {
 		GEN_DEBUG_TRAP();
@@ -869,7 +869,7 @@ CodeNS def_namespace( StrC name, CodeBody body, Opts_def_namespace p )
 	return result;
 }
 
-CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
+CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator p )
 {
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes ) {
 		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", code_debug_str(p.attributes) );
@@ -889,13 +889,13 @@ CodeOperator def_operator( Operator op, StrC nspace, Opts_def_operator p )
 
 	char const* name = nullptr;
 
-	StrC op_str = operator_to_str( op );
+	Str op_str = operator_to_str( op );
 	if ( nspace.Len > 0 )
-		name = str_fmt_buf( "%.*soperator %.*s", nspace.Len, nspace.Ptr, op_str.Len, op_str.Ptr );
+		name = c_str_fmt_buf( "%.*soperator %.*s", nspace.Len, nspace.Ptr, op_str.Len, op_str.Ptr );
 	else
-		name = str_fmt_buf( "operator %.*s", op_str.Len, op_str.Ptr );
+		name = c_str_fmt_buf( "operator %.*s", op_str.Len, op_str.Ptr );
 
-	StrC name_resolved = { str_len(name), name };
+	Str name_resolved = { name, c_str_len(name) };
 
 	CodeOperator
 	result              = (CodeOperator) make_code();
@@ -969,7 +969,7 @@ CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast p )
 	return result;
 }
 
-CodeParams def_param( CodeTypename type, StrC name, Opts_def_param p )
+CodeParams def_param( CodeTypename type, Str name, Opts_def_param p )
 {
 	if ( ! name_check( def_param, name ) || ! null_check( def_param, type ) ) {
 		GEN_DEBUG_TRAP();
@@ -993,7 +993,7 @@ CodeParams def_param( CodeTypename type, StrC name, Opts_def_param p )
 	return result;
 }
 
-CodePragma def_pragma( StrC directive )
+CodePragma def_pragma( Str directive )
 {
 	if ( directive.Len <= 0 || directive.Ptr == nullptr ) {
 		log_failure( "gen::def_comment: Invalid comment provided:" );
@@ -1007,7 +1007,7 @@ CodePragma def_pragma( StrC directive )
 	return result;
 }
 
-CodePreprocessCond def_preprocess_cond( EPreprocessCond type, StrC expr )
+CodePreprocessCond def_preprocess_cond( EPreprocessCond type, Str expr )
 {
 	if ( expr.Len <= 0 || expr.Ptr == nullptr ) {
 		log_failure( "gen::def_comment: Invalid comment provided:" );
@@ -1044,7 +1044,7 @@ CodeSpecifiers def_specifier( Specifier spec )
 	return result;
 }
 
-CodeStruct def_struct( StrC name, Opts_def_struct p )
+CodeStruct def_struct( Str name, Opts_def_struct p )
 {
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes ) {
 		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", code_debug_str(cast(Code, p.attributes)) );
@@ -1117,7 +1117,7 @@ CodeTemplate def_template( CodeParams params, Code declaration, Opts_def_templat
 	return result;
 }
 
-CodeTypename def_type( StrC name, Opts_def_type p )
+CodeTypename def_type( Str name, Opts_def_type p )
 {
 	if ( ! name_check( def_type, name )) {
 		GEN_DEBUG_TRAP();
@@ -1152,7 +1152,7 @@ CodeTypename def_type( StrC name, Opts_def_type p )
 	return result;
 }
 
-CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
+CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef p )
 {
 	if ( ! null_check( def_typedef, type ) ) {
 		GEN_DEBUG_TRAP();
@@ -1215,7 +1215,7 @@ CodeTypedef def_typedef( StrC name, Code type, Opts_def_typedef p )
 	return result;
 }
 
-CodeUnion def_union( StrC name, CodeBody body, Opts_def_union p )
+CodeUnion def_union( Str name, CodeBody body, Opts_def_union p )
 {
 	if ( ! null_check( def_union, body ) ) {
 		GEN_DEBUG_TRAP();
@@ -1242,7 +1242,7 @@ CodeUnion def_union( StrC name, CodeBody body, Opts_def_union p )
 	return result;
 }
 
-CodeUsing def_using( StrC name, CodeTypename type, Opts_def_using p )
+CodeUsing def_using( Str name, CodeTypename type, Opts_def_using p )
 {
 	if ( ! name_check( def_using, name ) || null_check( def_using, type ) ) {
 		GEN_DEBUG_TRAP();
@@ -1270,7 +1270,7 @@ CodeUsing def_using( StrC name, CodeTypename type, Opts_def_using p )
 	return result;
 }
 
-CodeUsing def_using_namespace( StrC name )
+CodeUsing def_using_namespace( Str name )
 {
 	if ( ! name_check( def_using_namespace, name ) ) {
 		GEN_DEBUG_TRAP();
@@ -1283,7 +1283,7 @@ CodeUsing def_using_namespace( StrC name )
 	return result;
 }
 
-CodeVar def_variable( CodeTypename type, StrC name, Opts_def_variable p )
+CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable p )
 {
 	if ( ! name_check( def_variable, name ) || null_check( def_variable, type ) ) {
 		GEN_DEBUG_TRAP();

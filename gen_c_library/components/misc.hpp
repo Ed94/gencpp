@@ -18,13 +18,13 @@ void convert_cpp_enum_to_c( CodeEnum to_convert, CodeBody to_append )
 #pragma pop_macro("enum_underlying")
 }
 
-b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& parsed_body, CodeBody& body )
+b32 ignore_preprocess_cond_block( Str cond_sig, Code& entry_iter, CodeBody& parsed_body, CodeBody& body )
 {
 	b32 found = false;
 	CodePreprocessCond cond = cast(CodePreprocessCond, entry_iter);
 	if ( cond->Content.is_equal(cond_sig) )
 	{
-		//log_fmt("Preprocess cond found: %SC\n", cond->Content);
+		//log_fmt("Preprocess cond found: %S\n", cond->Content);
 		found = true;
 
 		s32 depth = 1;
@@ -72,7 +72,7 @@ b32 ignore_preprocess_cond_block( StrC cond_sig, Code& entry_iter, CodeBody& par
 
 constexpr bool GenericSel_One_Arg = true;
 enum GenericSelectionOpts : u32 { GenericSel_Default, GenericSel_By_Ref, GenericSel_Direct_Type };
-Code gen_generic_selection_function_macro( s32 num_slots, StrC macro_name, GenericSelectionOpts opts = GenericSel_Default, bool one_arg = false )
+Code gen_generic_selection_function_macro( s32 num_slots, Str macro_name, GenericSelectionOpts opts = GenericSel_Default, bool one_arg = false )
 {
 /* Implements:
 	#define GEN_FUNCTION_GENERIC_EXAMPLE( selector_arg, ... ) _Generic(      \
@@ -84,18 +84,18 @@ Code gen_generic_selection_function_macro( s32 num_slots, StrC macro_name, Gener
 	) GEN_RESOLVED_FUNCTION_CALL( selector_arg )
 */
 	local_persist
-	String define_builder = String::make_reserve(GlobalAllocator, kilobytes(64));
+	StrBuilder define_builder = StrBuilder::make_reserve(GlobalAllocator, kilobytes(64));
 	define_builder.clear();
 
-	StrC macro_begin;
+	Str macro_begin;
 	if (opts == GenericSel_Direct_Type) {
-		macro_begin = token_fmt( "macro_name", (StrC)macro_name,
+		macro_begin = token_fmt( "macro_name", (Str)macro_name,
 R"(#define <macro_name>(selector_arg, ...) _Generic( (*(selector_arg*)NULL ), \
 )"
 		);
 	}
 	else {
-		macro_begin = token_fmt( "macro_name", (StrC)macro_name,
+		macro_begin = token_fmt( "macro_name", (Str)macro_name,
 R"(#define <macro_name>(selector_arg, ...) _Generic( (selector_arg), \
 )"
 		);
@@ -104,7 +104,7 @@ R"(#define <macro_name>(selector_arg, ...) _Generic( (selector_arg), \
 
 	for ( s32 slot = 1; slot <= num_slots; ++ slot )
 	{
-		StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", slot).to_strc();
+		Str slot_str = StrBuilder::fmt_buf(GlobalAllocator, "%d", slot).to_str();
 		if (slot == num_slots && false)
 		{
 			define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
@@ -152,25 +152,25 @@ R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_<slot>__<macro_name> )
 	// Add gap for next definition
 	define_builder.append(txt("\n\n"));
 
-	Code macro = untyped_str(define_builder.to_strc());
+	Code macro = untyped_str(define_builder.to_str());
 	return macro;
 }
 
-CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""))
+CodeFn rename_function_to_unique_symbol(CodeFn fn, Str optional_prefix = txt(""))
 {
     // Get basic components for the name
-    StrC old_name = fn->Name;
-    String new_name;
+    Str        old_name = fn->Name;
+    StrBuilder new_name;
 
     // Add prefix if provided
     if (optional_prefix.Len)
-        new_name = string_fmt_buf(GlobalAllocator, "%SC_%SC_", optional_prefix, old_name);
+        new_name = strbuilder_fmt_buf(GlobalAllocator, "%S_%S_", optional_prefix, old_name);
     else
-        new_name = string_fmt_buf(GlobalAllocator, "%SC_", old_name);
+        new_name = strbuilder_fmt_buf(GlobalAllocator, "%S_", old_name);
 
     // Add return type to the signature
     if (fn->ReturnType)
-        new_name.append_fmt("_%SC", fn->ReturnType->Name);
+        new_name.append_fmt("_%S", fn->ReturnType->Name);
 
     // Add parameter types to create a unique signature
     bool first_param = true;
@@ -198,11 +198,11 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
 						continue;
 					}
 
-                    new_name.append_fmt("%SC_", spec_to_str(spec));
+                    new_name.append_fmt("%S_", spec_to_str(spec));
                 }
             }
 
-            new_name.append_fmt("%SC", param->ValueType->Name);
+            new_name.append_fmt("%S", param->ValueType->Name);
         }
     }
 
@@ -214,7 +214,7 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
              spec != end(fn->Specs);
              ++spec)
         {
-            new_name.append_fmt("%SC_", spec_to_str(*spec));
+            new_name.append_fmt("%S_", spec_to_str(*spec));
         }
     }
 
@@ -223,13 +223,13 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, StrC optional_prefix = txt(""
 }
 
 using SwapContentProc = CodeBody(void);
-bool swap_pragma_region_implementation( StrC region_name, SwapContentProc* swap_content, Code& entry_iter, CodeBody& body )
+bool swap_pragma_region_implementation( Str region_name, SwapContentProc* swap_content, Code& entry_iter, CodeBody& body )
 {
 	bool found = false;
 	CodePragma possible_region = cast(CodePragma, entry_iter);
 
-	String region_sig    = string_fmt_buf(GlobalAllocator, "region %s",    region_name.Ptr);
-	String endregion_sig = string_fmt_buf(GlobalAllocator, "endregion %s", region_name.Ptr);
+	StrBuilder region_sig    = strbuilder_fmt_buf(GlobalAllocator, "region %s",    region_name.Ptr);
+	StrBuilder endregion_sig = strbuilder_fmt_buf(GlobalAllocator, "endregion %s", region_name.Ptr);
 	if ( possible_region->Content.contains(region_sig))
 	{
 		found = true;

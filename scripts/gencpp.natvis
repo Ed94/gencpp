@@ -36,11 +36,11 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::StrC">
+	<Type Name="gen::Str">
 		<DisplayString>Len:{Len} Ptr:{Ptr, [Len]s}</DisplayString>
 	</Type>
 
-	<Type Name="gen::String">
+	<Type Name="gen::StrBuilder">
 		<DisplayString Condition="Data == nullptr">null</DisplayString>
 		<DisplayString>{Data,na}</DisplayString>
 		<Expand>
@@ -55,7 +55,7 @@
 		</Expand>
 	</Type>
 
-	<Type Name="gen::String::Header">
+	<Type Name="gen::StrBuilder::Header">
 		<DisplayString>Length: {Length}, Capacity: {Capacity}</DisplayString>
 		<Expand>
 			<Item Name="Allocator">Allocator</Item>

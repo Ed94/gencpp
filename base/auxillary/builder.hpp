@@ -36,7 +36,7 @@ void builder_write( Builder* builder );
 struct Builder
 {
 	FileInfo File;
-	String   Buffer;
+	StrBuilder   Buffer;
 
 #if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 	forceinline static Builder open( char const* path ) { return builder_open(path); }

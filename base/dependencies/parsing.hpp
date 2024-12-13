@@ -350,7 +350,7 @@ char* adt_parse_number_strict( ADT_Node* node, char* base_str );
 	* @param node
 	* @return
 	*/
-ADT_Error adt_str_to_number( ADT_Node* node );
+ADT_Error adt_c_str_to_number( ADT_Node* node );
 
 /**
 	* @brief Parses and converts an existing string node into a number.
@@ -359,7 +359,7 @@ ADT_Error adt_str_to_number( ADT_Node* node );
 	* @param node
 	* @return
 	*/
-ADT_Error adt_str_to_number_strict( ADT_Node* node );
+ADT_Error adt_c_str_to_number_strict( ADT_Node* node );
 
 /**
 	* @brief Prints a number into a file stream.
@@ -406,9 +406,9 @@ u8   csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator,
 void csv_free( CSV_Object* obj );
 
 void   csv_write( FileInfo* file, CSV_Object* obj );
-String csv_write_string( AllocatorInfo a, CSV_Object* obj );
+StrBuilder csv_write_string( AllocatorInfo a, CSV_Object* obj );
 void   csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delim );
-String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delim );
+StrBuilder csv_write_strbuilder_delimiter( AllocatorInfo a, CSV_Object* obj, char delim );
 
 /* inline */
 
@@ -425,9 +425,9 @@ void csv_write( FileInfo* file, CSV_Object* obj )
 }
 
 inline
-String csv_write_string( AllocatorInfo a, CSV_Object* obj )
+StrBuilder csv_write_string( AllocatorInfo a, CSV_Object* obj )
 {
-	return csv_write_string_delimiter( a, obj, ',' );
+	return csv_write_strbuilder_delimiter( a, obj, ',' );
 }
 
 #pragma endregion CSV

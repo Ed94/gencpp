@@ -8,7 +8,7 @@
 #define _adt_fprintf( s_, fmt_, ... )                      \
 	do                                                     \
 	{                                                      \
-		if ( str_fmt_file( s_, fmt_, ##__VA_ARGS__ ) < 0 ) \
+		if ( c_str_fmt_file( s_, fmt_, ##__VA_ARGS__ ) < 0 ) \
 			return EADT_ERROR_OUT_OF_MEMORY;               \
 	} while ( 0 )
 
@@ -69,7 +69,7 @@ ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search )
 
 	for ( ssize i = 0; i < scast(ssize, array_num(node->nodes)); i++ )
 	{
-		if ( ! str_compare( node->nodes[ i ].name, name ) )
+		if ( ! c_str_compare( node->nodes[ i ].name, name ) )
 		{
 			return ( node->nodes + i );
 		}
@@ -96,7 +96,7 @@ internal ADT_Node* _adt_get_value( ADT_Node* node, char const* value )
 		case EADT_TYPE_MULTISTRING :
 		case EADT_TYPE_STRING :
 			{
-				if ( node->string && ! str_compare( node->string, value ) )
+				if ( node->string && ! c_str_compare( node->string, value ) )
 				{
 					return node;
 				}
@@ -115,7 +115,7 @@ internal ADT_Node* _adt_get_value( ADT_Node* node, char const* value )
 				ssize  fsize = 0;
 				u8* buf   = file_stream_buf( &tmp, &fsize );
 
-				if ( ! str_compare( ( char const* )buf, value ) )
+				if ( ! c_str_compare( ( char const* )buf, value ) )
 				{
 					file_close( &tmp );
 					return node;
@@ -135,7 +135,7 @@ internal ADT_Node* _adt_get_field( ADT_Node* node, char* name, char* value )
 {
 	for ( ssize i = 0; i < scast(ssize, array_num(node->nodes)); i++ )
 	{
-		if ( ! str_compare( node->nodes[ i ].name, name ) )
+		if ( ! c_str_compare( node->nodes[ i ].name, name ) )
 		{
 			ADT_Node* child = &node->nodes[ i ];
 			if ( _adt_get_value( child, value ) )
@@ -168,22 +168,22 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri )
 	}
 
 #if defined EADT_URI_DEBUG || 0
-	str_fmt_out( "uri: %s\n", uri );
+	c_str_fmt_out( "uri: %s\n", uri );
 #endif
 
 	char *    p = ( char* )uri, *b = p, *e = p;
 	ADT_Node* found_node = NULL;
 
 	b = p;
-	p = e     = ( char* )str_skip( p, '/' );
-	char* buf = str_fmt_buf( "%.*s", ( int )( e - b ), b );
+	p = e     = ( char* )c_str_skip( p, '/' );
+	char* buf = c_str_fmt_buf( "%.*s", ( int )( e - b ), b );
 
 	/* handle field value lookup */
 	if ( *b == '[' )
 	{
 		char *l_p = buf + 1, *l_b = l_p, *l_e = l_p, *l_b2 = l_p, *l_e2 = l_p;
-		l_e  = ( char* )str_skip( l_p, '=' );
-		l_e2 = ( char* )str_skip( l_p, ']' );
+		l_e  = ( char* )c_str_skip( l_p, '=' );
+		l_e2 = ( char* )c_str_skip( l_p, ']' );
 
 		if ( ( ! *l_e && node->type != EADT_TYPE_ARRAY ) || ! *l_e2 )
 		{
@@ -257,7 +257,7 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri )
 	/* handle array index lookup */
 	else
 	{
-		ssize idx = ( ssize )str_to_i64( buf, NULL, 10 );
+		ssize idx = ( ssize )c_str_to_i64( buf, NULL, 10 );
 		if ( idx >= 0 && idx < scast(ssize, array_num(node->nodes)) )
 		{
 			found_node = &node->nodes[ idx ];
@@ -511,7 +511,7 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 	}
 	else
 	{
-		if ( ! str_compare_len( e, "0x", 2 ) || ! str_compare_len( e, "0X", 2 ) )
+		if ( ! c_str_compare_len( e, "0x", 2 ) || ! c_str_compare_len( e, "0X", 2 ) )
 		{
 			node_props = EADT_PROPS_IS_HEX;
 		}
@@ -575,12 +575,12 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 			}
 		}
 
-		orig_exp = exp = ( u8 )str_to_i64( expbuf, NULL, 10 );
+		orig_exp = exp = ( u8 )c_str_to_i64( expbuf, NULL, 10 );
 	}
 
 	if ( node_type == EADT_TYPE_INTEGER )
 	{
-		node->integer = str_to_i64( buf, 0, 0 );
+		node->integer = c_str_to_i64( buf, 0, 0 );
 #ifndef GEN_PARSER_DISABLE_ANALYSIS
 		/* special case: negative zero */
 		if ( node->integer == 0 && buf[ 0 ] == '-' )
@@ -595,19 +595,19 @@ char* adt_parse_number( ADT_Node* node, char* base_str )
 	}
 	else
 	{
-		node->real = str_to_f64( buf, 0 );
+		node->real = c_str_to_f64( buf, 0 );
 
 #ifndef GEN_PARSER_DISABLE_ANALYSIS
 		char *q = buf, *base_string = q, *base_string2 = q;
-		base_string           = ccast( char*, str_skip( base_string, '.' ));
+		base_string           = ccast( char*, c_str_skip( base_string, '.' ));
 		*base_string          = '\0';
 		base_string2          = base_string + 1;
-		char* base_string_off = base_string2;
-		while ( *base_string_off++ == '0' )
+		char* base_strbuilder_off = base_string2;
+		while ( *base_strbuilder_off++ == '0' )
 			base2_offset++;
 
-		base  = ( s32 )str_to_i64( q, 0, 0 );
-		base2 = ( s32 )str_to_i64( base_string2, 0, 0 );
+		base  = ( s32 )c_str_to_i64( q, 0, 0 );
+		base2 = ( s32 )c_str_to_i64( base_string2, 0, 0 );
 		if ( exp )
 		{
 			exp        = exp * ( ! ( eb == 10.0f ) ? -1 : 1 );
@@ -750,7 +750,7 @@ ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_
 
 	do
 	{
-		p = str_skip_any( p, escaped_chars );
+		p = c_str_skip_any( p, escaped_chars );
 		_adt_fprintf( file, "%.*s", pointer_diff( b, p ), b );
 		if ( *p && ! ! char_first_occurence( escaped_chars, *p ) )
 		{
@@ -763,7 +763,7 @@ ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_
 	return EADT_ERROR_NONE;
 }
 
-ADT_Error adt_str_to_number( ADT_Node* node )
+ADT_Error adt_c_str_to_number( ADT_Node* node )
 {
 	GEN_ASSERT( node );
 
@@ -779,7 +779,7 @@ ADT_Error adt_str_to_number( ADT_Node* node )
 	return EADT_ERROR_NONE;
 }
 
-ADT_Error adt_str_to_number_strict( ADT_Node* node )
+ADT_Error adt_c_str_to_number_strict( ADT_Node* node )
 {
 	GEN_ASSERT( node );
 
@@ -826,7 +826,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 	do
 	{
 		char delimiter = 0;
-		currentChar = ccast( char*, str_trim( currentChar, false ));
+		currentChar = ccast( char*, c_str_trim( currentChar, false ));
 
 		if ( *currentChar == 0 )
 			break;
@@ -850,7 +850,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 		#endif
 			do
 			{
-				endChar = ccast( char*, str_skip( endChar, '"' ));
+				endChar = ccast( char*, c_str_skip( endChar, '"' ));
 
 				if ( *endChar && *( endChar + 1 ) == '"' )
 				{
@@ -869,7 +869,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			}
 
 			*endChar    = 0;
-			currentChar = ccast( char*, str_trim( endChar + 1, true ));
+			currentChar = ccast( char*, c_str_trim( endChar + 1, true ));
 			delimiter   = * currentChar;
 
 			/* unescape escaped quotes (so that unescaped text escapes :) */
@@ -879,7 +879,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 				{
 					if ( *escapedChar == '"' && *( escapedChar + 1 ) == '"' )
 					{
-						mem_move( escapedChar, escapedChar + 1, str_len( escapedChar ) );
+						mem_move( escapedChar, escapedChar + 1, c_str_len( escapedChar ) );
 					}
 					escapedChar++;
 				}
@@ -906,7 +906,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 
 			if ( * endChar )
 			{
-				currentChar = ccast( char*, str_trim( endChar, true ));
+				currentChar = ccast( char*, c_str_trim( endChar, true ));
 
 				while ( char_is_space( *( endChar - 1 ) ) )
 				{
@@ -927,7 +927,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 			char* num_p       = beginChar;
 
 			// We only consider hexadecimal values if they start with 0x
-			if ( str_len(num_p) > 2 && num_p[0] == '0' && (num_p[1] == 'x' || num_p[1] == 'X') )
+			if ( c_str_len(num_p) > 2 && num_p[0] == '0' && (num_p[1] == 'x' || num_p[1] == 'X') )
 			{
 				num_p += 2; // skip '0x' prefix
 				do
@@ -946,7 +946,7 @@ u8 csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b
 
 			if (!skip_number)
 			{
-				adt_str_to_number(&rowItem);
+				adt_c_str_to_number(&rowItem);
 			}
 		}
 
@@ -1021,16 +1021,16 @@ void _csv_write_record( FileInfo* file, CSV_Object* node )
 				{
 					case EADT_NAME_STYLE_DOUBLE_QUOTE :
 						{
-							str_fmt_file( file, "\"" );
+							c_str_fmt_file( file, "\"" );
 							adt_print_string( file, node, "\"", "\"" );
-							str_fmt_file( file, "\"" );
+							c_str_fmt_file( file, "\"" );
 						}
 						break;
 
 					case EADT_NAME_STYLE_NO_QUOTES :
 						{
 #endif
-							str_fmt_file( file, "%s", node->string );
+							c_str_fmt_file( file, "%s", node->string );
 #ifndef GEN_PARSER_DISABLE_ANALYSIS
 						}
 						break;
@@ -1078,10 +1078,10 @@ void csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delimiter )
 			_csv_write_header( file, &obj->nodes[ i ] );
 			if ( i + 1 != cols )
 			{
-				str_fmt_file( file, "%c", delimiter );
+				c_str_fmt_file( file, "%c", delimiter );
 			}
 		}
-		str_fmt_file( file, "\n" );
+		c_str_fmt_file( file, "\n" );
 	}
 
 	for ( ssize r = 0; r < rows; r++ )
@@ -1091,14 +1091,14 @@ void csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delimiter )
 			_csv_write_record( file, &obj->nodes[ i ].nodes[ r ] );
 			if ( i + 1 != cols )
 			{
-				str_fmt_file( file, "%c", delimiter );
+				c_str_fmt_file( file, "%c", delimiter );
 			}
 		}
-		str_fmt_file( file, "\n" );
+		c_str_fmt_file( file, "\n" );
 	}
 }
 
-String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimiter )
+StrBuilder csv_write_strbuilder_delimiter( AllocatorInfo a, CSV_Object* obj, char delimiter )
 {
 	FileInfo tmp;
 	file_stream_new( &tmp, a );
@@ -1106,7 +1106,7 @@ String csv_write_string_delimiter( AllocatorInfo a, CSV_Object* obj, char delimi
 
 	ssize  fsize;
 	u8*    buf    = file_stream_buf( &tmp, &fsize );
-	String output = string_make_length( a, ( char* )buf, fsize );
+	StrBuilder output = strbuilder_make_length( a, ( char* )buf, fsize );
 	file_close( &tmp );
 	return output;
 }

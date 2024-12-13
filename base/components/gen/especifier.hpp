@@ -37,35 +37,35 @@ enum Specifier : u32
 	Spec_UnderlyingType = 0xffffffffu
 };
 
-inline StrC spec_to_str( Specifier type )
+inline Str spec_to_str( Specifier type )
 {
-	local_persist StrC lookup[26] = {
-		{ sizeof( "INVALID" ),       "INVALID"       },
-		{ sizeof( "consteval" ),     "consteval"     },
-		{ sizeof( "constexpr" ),     "constexpr"     },
-		{ sizeof( "constinit" ),     "constinit"     },
-		{ sizeof( "explicit" ),      "explicit"      },
-		{ sizeof( "extern" ),        "extern"        },
-		{ sizeof( "forceinline" ),   "forceinline"   },
-		{ sizeof( "global" ),        "global"        },
-		{ sizeof( "inline" ),        "inline"        },
-		{ sizeof( "internal" ),      "internal"      },
-		{ sizeof( "local_persist" ), "local_persist" },
-		{ sizeof( "mutable" ),       "mutable"       },
-		{ sizeof( "neverinline" ),   "neverinline"   },
-		{ sizeof( "*" ),             "*"             },
-		{ sizeof( "&" ),             "&"             },
-		{ sizeof( "register" ),      "register"      },
-		{ sizeof( "&&" ),            "&&"            },
-		{ sizeof( "static" ),        "static"        },
-		{ sizeof( "thread_local" ),  "thread_local"  },
-		{ sizeof( "virtual" ),       "virtual"       },
-		{ sizeof( "const" ),         "const"         },
-		{ sizeof( "final" ),         "final"         },
-		{ sizeof( "noexcept" ),      "noexcept"      },
-		{ sizeof( "override" ),      "override"      },
-		{ sizeof( "= 0" ),           "= 0"           },
-		{ sizeof( "volatile" ),      "volatile"      },
+	local_persist Str lookup[26] = {
+		{ "INVALID",       sizeof( "INVALID" ) - 1       },
+		{ "consteval",     sizeof( "consteval" ) - 1     },
+		{ "constexpr",     sizeof( "constexpr" ) - 1     },
+		{ "constinit",     sizeof( "constinit" ) - 1     },
+		{ "explicit",      sizeof( "explicit" ) - 1      },
+		{ "extern",        sizeof( "extern" ) - 1        },
+		{ "forceinline",   sizeof( "forceinline" ) - 1   },
+		{ "global",        sizeof( "global" ) - 1        },
+		{ "inline",        sizeof( "inline" ) - 1        },
+		{ "internal",      sizeof( "internal" ) - 1      },
+		{ "local_persist", sizeof( "local_persist" ) - 1 },
+		{ "mutable",       sizeof( "mutable" ) - 1       },
+		{ "neverinline",   sizeof( "neverinline" ) - 1   },
+		{ "*",             sizeof( "*" ) - 1             },
+		{ "&",             sizeof( "&" ) - 1             },
+		{ "register",      sizeof( "register" ) - 1      },
+		{ "&&",            sizeof( "&&" ) - 1            },
+		{ "static",        sizeof( "static" ) - 1        },
+		{ "thread_local",  sizeof( "thread_local" ) - 1  },
+		{ "virtual",       sizeof( "virtual" ) - 1       },
+		{ "const",         sizeof( "const" ) - 1         },
+		{ "final",         sizeof( "final" ) - 1         },
+		{ "noexcept",      sizeof( "noexcept" ) - 1      },
+		{ "override",      sizeof( "override" ) - 1      },
+		{ "= 0",           sizeof( "= 0" ) - 1           },
+		{ "volatile",      sizeof( "volatile" ) - 1      },
 	};
 	return lookup[type];
 }
@@ -75,13 +75,13 @@ inline bool spec_is_trailing( Specifier specifier )
 	return specifier > Spec_Virtual;
 }
 
-inline Specifier strc_to_specifier( StrC str )
+inline Specifier str_to_specifier( Str str )
 {
 	local_persist u32 keymap[Spec_NumSpecifiers];
 	do_once_start for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 	{
-		StrC enum_str = spec_to_str( (Specifier)index );
-		keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1 );
+		Str enum_str  = spec_to_str( (Specifier)index );
+		keymap[index] = crc32( enum_str.Ptr, enum_str.Len );
 	}
 	do_once_end u32 hash = crc32( str.Ptr, str.Len );
 	for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
@@ -92,14 +92,14 @@ inline Specifier strc_to_specifier( StrC str )
 	return Spec_Invalid;
 }
 
-forceinline StrC to_str( Specifier spec )
+forceinline Str to_str( Specifier spec )
 {
 	return spec_to_str( spec );
 }
 
-forceinline Specifier to_type( StrC str )
+forceinline Specifier to_type( Str str )
 {
-	return strc_to_specifier( str );
+	return str_to_specifier( str );
 }
 
 forceinline bool is_trailing( Specifier specifier )

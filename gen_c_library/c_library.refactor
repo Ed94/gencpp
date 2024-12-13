@@ -167,7 +167,7 @@ namespace pool_, gen_pool_
 
 // Printing
 
-namespace str_, gen_str_
+namespace c_str_, gen_c_str_
 
 word PrintF_Buffer,     gen_PrintF_Buffer
 word Msg_Invalid_Value, gen_Msg_Invalid_Value
@@ -211,18 +211,18 @@ word crc64, gen_crc64
 
 // Strings
 
-word StrC, gen_StrC
+word Str, gen_Str
 
-word to_strc_from_c_str, gen_to_strc_from_c_str
+word to_str_from_c_str, gen_to_str_from_c_str
 
-namespace strc_, gen_strc_
+namespace str_, gen_str_
 
-word cast_to_strc, gen_cast_to_strc
+word cast_to_str, gen_cast_to_str
 
-word StringHeader, gen_StringHeader
-word String,       gen_String
+word StrBuilderHeader, gen_StrBuilderHeader
+word StrBuilder,       gen_StrBuilder
 
-namespace string_, gen_string_
+namespace strbuilder_, gen_strbuilder_
 
 word StringCached, gen_StringCached
 
@@ -308,7 +308,7 @@ word operator_to_str, gen_operator_to_str
 word Specifier,        gen_Specifier
 word spec_to_str,      gen_spec_to_str
 word spec_is_trailing, gen_spec_is_trailing
-// word strc_to_specifier, gen_strc_to_specifier
+// word str_to_specifier, gen_str_to_specifier
 
 // AST
 
@@ -468,6 +468,10 @@ word Allocator_TypeTable,     gen_Allocator_TypeTable
 word      Builder,  gen_Builder
 namespace builder_, gen_builder_
 
+// Scanner
+
+word scan_file, gen_scan_file
+
 // Implementation (prviate)
 
 word _format_info, gen__format_info
@@ -523,7 +527,7 @@ word parser_deinit, gen_parser_deinit
 
 word TokType,         gen_TokType
 word toktype_to_str,  gen_toktype_to_str
-// word strc_to_toktype, gen_strc_to_toktype
+// word str_to_toktype, gen_str_to_toktype
 word NullToken,       gen_NullToken
 
 namespace tok_, gen_tok_

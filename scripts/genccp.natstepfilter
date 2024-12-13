@@ -21,10 +21,10 @@
 		<Action>NoStepInto</Action>
 	</Function>
 	<Function>
-		<Name>gen::Code.*::to_string</Name>
+		<Name>gen::Code.*::to_strbuilder</Name>
 		<Action>NoStepInto</Action>
 	</Function>
 	<Function>
-		<Name>gen::String::operator .*</Name>
+		<Name>gen::StrBuilder::operator .*</Name>
 	</Function>
 </StepFilter>

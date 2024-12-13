@@ -17,24 +17,24 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gencpp's singleheader.cpp"
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
-constexpr StrC implementation_guard_start = txt(R"(
+constexpr Str implementation_guard_start = txt(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
 #if defined(GEN_IMPLEMENTATION) && ! defined(GEN_IMPLEMENTED)
 #	define GEN_IMPLEMENTED
 )");
 
-constexpr StrC implementation_guard_end = txt(R"(
+constexpr Str implementation_guard_end = txt(R"(
 #endif
 #pragma endregion GENCPP IMPLEMENTATION GUARD
 )");
 
-constexpr StrC roll_own_dependencies_guard_start = txt(R"(
+constexpr Str roll_own_dependencies_guard_start = txt(R"(
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
 )");
 
-constexpr StrC roll_own_dependencies_guard_end = txt(R"(
+constexpr Str roll_own_dependencies_guard_end = txt(R"(
 // GEN_ROLL_OWN_DEPENDENCIES
 #endif
 )");
@@ -77,7 +77,7 @@ int gen_main()
 			Code basic_types  = scan_file( path_base "dependencies/basic_types.hpp" );
 			Code debug        = scan_file( path_base "dependencies/debug.hpp" );
 			Code memory	      = scan_file( path_base "dependencies/memory.hpp" );
-			Code string_ops   = scan_file( path_base "dependencies/string_ops.hpp" );
+			Code stirng_ops   = scan_file( path_base "dependencies/string_ops.hpp" );
 			Code printing     = scan_file( path_base "dependencies/printing.hpp" );
 			Code containers   = scan_file( path_base "dependencies/containers.hpp" );
 			Code hashing 	  = scan_file( path_base "dependencies/hashing.hpp" );
@@ -93,7 +93,7 @@ int gen_main()
 			header.print( basic_types );
 			header.print( debug );
 			header.print( memory );
-			header.print( string_ops );
+			header.print( stirng_ops );
 			header.print( printing );
 			header.print( containers );
 			header.print( hashing );
@@ -105,6 +105,7 @@ int gen_main()
 				header.print( scan_file( path_base "dependencies/parsing.hpp" ) );
 			}
 
+			header.print(fmt_newline);
 			header.print_fmt( "GEN_NS_END\n" );
 			header.print_fmt( roll_own_dependencies_guard_end );
 			header.print( fmt_newline );
@@ -155,7 +156,11 @@ int gen_main()
 		if ( generate_builder ) {
 			header.print( scan_file( path_base "auxillary/builder.hpp" ) );
 		}
+		if ( generate_scanner ) {
+			header.print( scan_file( path_base "auxillary/scanner.hpp" ) );
+		}
 
+		header.print(fmt_newline);
 		header.print_fmt( "GEN_NS_END\n" );
 	}
 
@@ -176,9 +181,10 @@ int gen_main()
 			Code timing     = scan_file( path_base "dependencies/timing.cpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
-			header.print_fmt( "GEN_NS_BEGIN\n\n");
-
 			header.print( impl_start );
+			header.print( fmt_newline );
+			header.print_fmt( "GEN_NS_BEGIN\n");
+
 			header.print( debug );
 			header.print( string_ops );
 			header.print( printing );
@@ -209,8 +215,7 @@ int gen_main()
 		Code parsing_interface = scan_file( path_base "components/interface.parsing.cpp" );
 		Code untyped           = scan_file( path_base "components/interface.untyped.cpp" );
 
-		CodeBody etoktype      = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
-		CodeNS   parser_nspace = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
+		CodeBody etoktype = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
@@ -225,27 +230,23 @@ int gen_main()
 		header.print( interface );
 		header.print( upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
-		header.print( format(parser_nspace) );
+		header.print( format(etoktype) );
 		header.print( lexer );
 		header.print( parser );
 		header.print( parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
 		header.print( untyped );
-		header.print_fmt( "\n#pragma endregion Interface\n\n");
+		header.print_fmt( "\n#pragma endregion Interface\n");
 
 		if ( generate_builder ) {
 			header.print( scan_file( path_base "auxillary/builder.cpp"  ) );
-		}
-
-		// Scanner header depends on implementation
-		if ( generate_scanner ) {
-			header.print( scan_file( path_base "auxillary/scanner.hpp" ) );
 		}
 
 		if ( generate_scanner ) {
 			header.print( scan_file( path_base "auxillary/scanner.cpp" ) );
 		}
 
+		header.print( fmt_newline);
 		header.print_fmt( "GEN_NS_END\n");
 
 		header.print_fmt( "%s\n", (char const*) implementation_guard_end );

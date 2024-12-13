@@ -17,25 +17,25 @@ constexpr char const* generation_notice =
 "// This file was generated automatially by gencpp's unreal.cpp "
 "(See: https://github.com/Ed94/gencpp)\n\n";
 
-constexpr StrC implementation_guard_start = txt(R"(
+constexpr Str implementation_guard_start = txt(R"(
 #pragma region GENCPP IMPLEMENTATION GUARD
 #if defined(GEN_IMPLEMENTATION) && ! defined(GEN_IMPLEMENTED)
 #	define GEN_IMPLEMENTED
 )");
 
-constexpr StrC implementation_guard_end = txt(R"(
+constexpr Str implementation_guard_end = txt(R"(
 #endif
 #pragma endregion GENCPP IMPLEMENTATION GUARD
 )");
 
-constexpr StrC roll_own_dependencies_guard_start = txt(R"(
+constexpr Str roll_own_dependencies_guard_start = txt(R"(
 //! If its desired to roll your own dependencies, define GEN_ROLL_OWN_DEPENDENCIES before including this file.
 // Dependencies are derived from the c-zpl library: https://github.com/zpl-c/zpl
 #ifndef GEN_ROLL_OWN_DEPENDENCIES
 
 )");
 
-constexpr StrC roll_own_dependencies_guard_end = txt(R"(
+constexpr Str roll_own_dependencies_guard_end = txt(R"(
 // GEN_ROLL_OWN_DEPENDENCIES
 #endif
 )");
@@ -68,7 +68,7 @@ int gen_main()
 		CodeBody macros = def_body( CT_Global_Body );
 		{
 			FileContents content    = file_read_contents( GlobalAllocator, true, path_base "dependencies/macros.hpp" );
-			CodeBody     ori_macros = parse_global_body( StrC { content.size, (char const*)content.data });
+			CodeBody     ori_macros = parse_global_body( Str { (char const*)content.data, content.size });
 
 			for (Code	code =  ori_macros.begin();
 						code != ori_macros.end();
@@ -223,7 +223,7 @@ int gen_main()
 		header.print_fmt( "#pragma endregion Inlines\n" );
 
 		header.print( header_end );
-		header.print_fmt( "GEN_NS_END\n\n" );
+		header.print_fmt( "\nGEN_NS_END\n\n" );
 		header.print( pop_ignores );
 		header.write();
 	}
@@ -294,7 +294,7 @@ int gen_main()
 		header.print( def_include( txt("gen.hpp") ));
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 		header.print( builder );
-		header.print_fmt( "GEN_NS_END\n" );
+		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
 		header.print( pop_ignores );
 		header.write();
@@ -333,7 +333,7 @@ int gen_main()
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
 		header.print( parsing );
 		header.print( scanner );
-		header.print_fmt( "GEN_NS_END\n" );
+		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
 		header.print( pop_ignores );
 		header.write();
@@ -353,7 +353,7 @@ int gen_main()
 		src.print_fmt( "\nGEN_NS_BEGIN\n" );
 		src.print( parsing );
 		// src.print( scanner );
-		src.print_fmt( "GEN_NS_END\n" );
+		src.print_fmt( "\nGEN_NS_END\n" );
 		src.print( fmt_newline );
 		src.print( pop_ignores );
 		src.write();

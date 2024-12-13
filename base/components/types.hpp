@@ -44,17 +44,17 @@ enum AccessSpec : u32
 static_assert( size_of(AccessSpec) == size_of(u32), "AccessSpec not u32 size" );
 
 inline
-StrC access_spec_to_str( AccessSpec type )
+Str access_spec_to_str( AccessSpec type )
 {
 	local_persist
-	StrC lookup[ (u32)AccessSpec_Num_AccessSpec ] = {
-		{ sizeof("") - 1,          "" },
-		{ sizeof("prviate") - 1,   "private" },
-		{ sizeof("protected") - 1, "private" },
-		{ sizeof("public") - 1,    "public" },
+	Str lookup[ (u32)AccessSpec_Num_AccessSpec ] = {
+		{ "",        sizeof( "" )        - 1 },
+		{ "private", sizeof("prviate")   - 1 },
+		{ "private", sizeof("protected") - 1 },
+		{ "public",  sizeof("public")    - 1 },
 	};
 
-	StrC invalid = { sizeof("Invalid") - 1, "Invalid" };
+	Str invalid = { "Invalid", sizeof("Invalid") - 1 };
 	if ( type > AccessSpec_Public )
 		return invalid;
 
@@ -97,17 +97,17 @@ enum ModuleFlag : u32
 static_assert( size_of(ModuleFlag) == size_of(u32), "ModuleFlag not u32 size" );
 
 inline
-StrC module_flag_to_str( ModuleFlag flag )
+Str module_flag_to_str( ModuleFlag flag )
 {
 	local_persist
-	StrC lookup[ (u32)Num_ModuleFlags ] = {
-		{ sizeof("__none__"), "__none__" },
-		{ sizeof("export"), "export" },
-		{ sizeof("import"), "import" },
+	Str lookup[ (u32)Num_ModuleFlags ] = {
+		{ "__none__", sizeof("__none__") - 1 },
+		{ "export",   sizeof("export")   - 1 },
+		{ "import",   sizeof("import")   - 1 },
 	};
 
 	local_persist
-	StrC invalid_flag = { sizeof("invalid"), "invalid" };
+	Str invalid_flag = { "invalid", sizeof("invalid") };
 	if ( flag > ModuleFlag_Import )
 		return invalid_flag;
 

@@ -40,11 +40,11 @@ CodeBody gen_array_base()
 	));
 };
 
-CodeBody gen_array( StrC type, StrC array_name )
+CodeBody gen_array( Str type, Str array_name )
 {
-	String array_type = String::fmt_buf( GlobalAllocator, "%.*s", array_name.Len, array_name.Ptr );
-	String fn         = String::fmt_buf( GlobalAllocator, "%.*s", array_name.Len, array_name.Ptr );
-	// str_to_lower(fn.Data);
+	StrBuilder array_type = StrBuilder::fmt_buf( GlobalAllocator, "%.*s", array_name.Len, array_name.Ptr );
+	StrBuilder fn         = StrBuilder::fmt_buf( GlobalAllocator, "%.*s", array_name.Len, array_name.Ptr );
+	// c_str_to_lower(fn.Data);
 
 #pragma push_macro( "GEN_ASSERT" )
 #pragma push_macro( "rcast" )
@@ -56,7 +56,7 @@ CodeBody gen_array( StrC type, StrC array_name )
 #undef cast
 #undef typeof
 #undef forceinline
-	CodeBody result = parse_global_body( token_fmt( "array_type", (StrC)array_type, "fn", (StrC)fn, "type", (StrC)type
+	CodeBody result = parse_global_body( token_fmt( "array_type", (Str)array_type, "fn", (Str)fn, "type", (Str)type
 	, stringize(
 		typedef <type>* <array_type>;
 
@@ -375,9 +375,9 @@ CodeBody gen_array( StrC type, StrC array_name )
 #pragma pop_macro( "forceinline" )
 
 	++ Array_DefinitionCounter;
-	StrC slot_str = String::fmt_buf(GlobalAllocator, "%d", Array_DefinitionCounter).to_strc();
+	Str slot_str = StrBuilder::fmt_buf(GlobalAllocator, "%d", Array_DefinitionCounter).to_str();
 
-	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "array_type", (StrC)array_type, "slot", (StrC)slot_str,
+	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "array_type", (Str)array_type, "slot", (Str)slot_str,
 R"(#define GENERIC_SLOT_<slot>__array_init         <type>,        <array_type>_init
 #define GENERIC_SLOT_<slot>__array_init_reserve    <type>,        <array_type>_init_reserve
 #define GENERIC_SLOT_<slot>__array_append          <array_type>,  <array_type>_append
@@ -399,13 +399,13 @@ R"(#define GENERIC_SLOT_<slot>__array_init         <type>,        <array_type>_i
 	));
 
 	return def_global_body( args(
-		def_pragma( string_to_strc( string_fmt_buf( GlobalAllocator, "region %S", array_type ))),
+		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( GlobalAllocator, "region %SB", array_type ))),
 		fmt_newline,
 		generic_interface_slot,
 		fmt_newline,
 		result,
 		fmt_newline,
-		def_pragma( string_to_strc(string_fmt_buf( GlobalAllocator, "endregion %S", array_type ))),
+		def_pragma( strbuilder_to_str(strbuilder_fmt_buf( GlobalAllocator, "endregion %SB", array_type ))),
 		fmt_newline
 	));
 };

@@ -18,7 +18,7 @@ wchar_t* _alloc_utf8_to_ucs2( AllocatorInfo a, char const* text, ssize* w_len_ )
 			*w_len_ = w_len;
 		return NULL;
 	}
-	len = str_len( text );
+	len = c_str_len( text );
 	if ( len == 0 )
 	{
 		if ( w_len_ )
@@ -375,7 +375,7 @@ FileError file_close( FileInfo* f )
 FileError file_new( FileInfo* f, FileDescriptor fd, FileOperations ops, char const* filename )
 {
 	FileError err = EFileError_NONE;
-	ssize        len = str_len( filename );
+	ssize        len = c_str_len( filename );
 
 	f->ops             = ops;
 	f->fd              = fd;

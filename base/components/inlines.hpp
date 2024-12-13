@@ -101,7 +101,7 @@ Code& Code::operator ++()
 }
 #endif
 forceinline
-StrC code_type_str(Code self)
+Str code_type_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
 	return codetype_to_str( self->Type );
@@ -397,7 +397,7 @@ CodeBody def_body( CodeType type )
 }
 
 inline
-StrC token_fmt_impl( ssize num, ... )
+Str token_fmt_impl( ssize num, ... )
 {
 	local_persist thread_local
 	char buf[GEN_PRINTF_MAXLEN] = { 0 };
@@ -408,7 +408,7 @@ StrC token_fmt_impl( ssize num, ... )
 	ssize result = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num, va);
 	va_end(va);
 
-	StrC str = { result, buf };
+	Str str = { buf, result };
 	return str;
 }
 #pragma endregion Interface

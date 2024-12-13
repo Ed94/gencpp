@@ -53,7 +53,7 @@ constexpr s32 MaxUntypedStrLength       = GEN_MAX_UNTYPED_STR_LENGTH;
 constexpr s32 LexAllocator_Size         = GEN_LEX_ALLOCATOR_SIZE;
 constexpr s32 Builder_StrBufferReserve  = GEN_BUILDER_STR_BUFFER_RESERVE;
 
-extern StrC enum_underlying_sig;
+extern Str enum_underlying_sig;
 
 extern Code access_public;
 extern Code access_protected;

@@ -35,12 +35,13 @@ int gen_main()
 		def_include(txt("components/types.hpp")),
 		preprocess_endif,
 		fmt_newline,
-		untyped_str( to_strc_from_c_str(generation_notice) )
+		untyped_str( to_str_from_c_str(generation_notice) )
 	));
 
 	CodeBody ecode       = gen_ecode     ( "enums/ECodeTypes.csv" );
 	CodeBody eoperator   = gen_eoperator ( "enums/EOperator.csv" );
 	CodeBody especifier  = gen_especifier( "enums/ESpecifier.csv" );
+	CodeBody etoktype    = gen_etoktype  ( "enums/ETokType.csv", "enums/AttributeTokens.csv" );
 	CodeBody ast_inlines = gen_ast_inlines();
 
 	Builder header_ecode = builder_open( "components/gen/ecodetypes.hpp" );
@@ -57,6 +58,11 @@ int gen_main()
 	builder_print( & header_especifier, gen_component_header );
 	builder_print( & header_especifier, format(especifier) );
 	builder_write( & header_especifier);
+	
+	Builder header_etoktype = builder_open( "components/gen/etoktype.cpp" );
+	builder_print( & header_etoktype, gen_component_header );
+	builder_print( & header_etoktype, format(etoktype) );
+	builder_write( & header_etoktype);
 
 	Builder header_ast_inlines = builder_open( "components/gen/ast_inlines.hpp" );
 	builder_print( & header_ast_inlines, gen_component_header );
