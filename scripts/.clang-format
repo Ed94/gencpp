@@ -15,6 +15,8 @@ StatementMacros: [
 Macros:
 - enum_underlying(type)=type
 - gen_enum_underlying(type)=type
+# WhitespaceSensitiveMacros: [
+# ]
 
 TypenameMacros: [Array, Hashtable]
 SkipMacroDefinitionBody: false

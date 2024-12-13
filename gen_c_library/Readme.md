@@ -18,6 +18,6 @@ If using the library's provided build scripts:
 .\build.ps1 <compiler> <debug or omit> c_library
 ```
 
-All free from tag identifiers will be prefixed with `gen_` or `GEN_` as the namespace. This can either be changed after generation with a `.refactor` script (or your preferred subst method), OR by modifying c_library.refactor.
+All free from tag identifiers will be prefixed with `gen_` or `GEN_` as the namespace. This can either be changed after generation with a `.refactor` script (or your preferred subst method), OR by modifying [c_library.refactor](./c_library.refactor).
 
 **If c_library.refactor is modified you may need to modify c_library.cpp and its [components](./components/). As some of the container generation relies on that prefix.**
