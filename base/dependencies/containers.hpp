@@ -102,16 +102,16 @@ struct Array
 #endif
 
 #if GEN_COMPILER_CPP && 0
-template<class Type> bool         append(Array<Type>& array, Array<Type> other)                         { return append( & array, other ); }
-template<class Type> bool         append(Array<Type>& array, Type value)                                { return append( & array, value ); }
-template<class Type> bool         append(Array<Type>& array, Type* items, usize item_num)               { return append( & array, items, item_num ); }
-template<class Type> bool         append_at(Array<Type>& array, Type item, usize idx)                   { return append_at( & array, item, idx ); }
-template<class Type> bool         append_at(Array<Type>& array, Type* items, usize item_num, usize idx) { return append_at( & array, items, item_num, idx ); }
-template<class Type> void         free(Array<Type>& array)                                              { return free( & array ); }
-template<class Type> bool         grow(Array<Type>& array, usize min_capacity)                          { return grow( & array, min_capacity); }
-template<class Type> bool         reserve(Array<Type>& array, usize new_capacity)                       { return reserve( & array, new_capacity); }
-template<class Type> bool         resize(Array<Type>& array, usize num)                                 { return resize( & array, num); }
-template<class Type> bool         set_capacity(Array<Type>& array, usize new_capacity)                  { return set_capacity( & array, new_capacity); }
+template<class Type> bool append(Array<Type>& array, Array<Type> other)                         { return append( & array, other ); }
+template<class Type> bool append(Array<Type>& array, Type value)                                { return append( & array, value ); }
+template<class Type> bool append(Array<Type>& array, Type* items, usize item_num)               { return append( & array, items, item_num ); }
+template<class Type> bool append_at(Array<Type>& array, Type item, usize idx)                   { return append_at( & array, item, idx ); }
+template<class Type> bool append_at(Array<Type>& array, Type* items, usize item_num, usize idx) { return append_at( & array, items, item_num, idx ); }
+template<class Type> void free(Array<Type>& array)                                              { return free( & array ); }
+template<class Type> bool grow(Array<Type>& array, usize min_capacity)                          { return grow( & array, min_capacity); }
+template<class Type> bool reserve(Array<Type>& array, usize new_capacity)                       { return reserve( & array, new_capacity); }
+template<class Type> bool resize(Array<Type>& array, usize num)                                 { return resize( & array, num); }
+template<class Type> bool set_capacity(Array<Type>& array, usize new_capacity)                  { return set_capacity( & array, new_capacity); }
 
 template<class Type> forceinline Type* begin(Array<Type>& array)             { return array;      }
 template<class Type> forceinline Type* end(Array<Type>& array)               { return array + array_get_header(array)->Num; }

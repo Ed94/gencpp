@@ -102,7 +102,7 @@ Str module_flag_to_str( ModuleFlag flag )
 	local_persist
 	Str lookup[ (u32)Num_ModuleFlags ] = {
 		{ "__none__", sizeof("__none__") - 1 },
-		{ "export",   sizeof("export")   - 1  },
+		{ "export",   sizeof("export")   - 1 },
 		{ "import",   sizeof("import")   - 1 },
 	};
 

@@ -222,31 +222,31 @@ struct StrBuilder
 		return strbuilder_make_length(allocator, buf, res);
 	}
 
-	forceinline bool          make_space_for(char const* str, ssize add_len) { return strbuilder_make_space_for(this, str, add_len); }
-	forceinline bool          append(char c)                                 { return strbuilder_append_char(this, c); }
-	forceinline bool          append(char const* str)                        { return strbuilder_append_c_str(this, str); }
-	forceinline bool          append(char const* str, ssize length)          { return strbuilder_append_c_str_len(this, str, length); }
-	forceinline bool          append(Str str)                                { return strbuilder_append_str(this, str); }
-	forceinline bool          append(const StrBuilder other)                 { return strbuilder_append_string(this, other); }
-	forceinline ssize         avail_space() const                            { return strbuilder_avail_space(* this); }
-	forceinline char*         back()                                         { return strbuilder_back(* this); }
-	forceinline bool          contains(Str substring) const                  { return strbuilder_contains_str(* this, substring); }
-	forceinline bool          contains(StrBuilder const& substring) const    { return strbuilder_contains_string(* this, substring); }
-	forceinline ssize         capacity() const                               { return strbuilder_capacity(* this); }
-	forceinline void          clear()                                        {        strbuilder_clear(* this); }
-	forceinline StrBuilder    duplicate(AllocatorInfo allocator) const       { return strbuilder_duplicate(* this, allocator); }
-	forceinline void          free()                                         {        strbuilder_free(this); }
-	forceinline bool          is_equal(StrBuilder const& other) const        { return strbuilder_are_equal(* this, other); }
-	forceinline bool          is_equal(Str other) const                      { return strbuilder_are_equal_str(* this, other); }
-	forceinline ssize         length() const                                 { return strbuilder_length(* this); }
-	forceinline b32           starts_with(Str substring) const               { return strbuilder_starts_with_str(* this, substring); }
-	forceinline b32           starts_with(StrBuilder substring) const        { return strbuilder_starts_with_string(* this, substring); }
-	forceinline void          skip_line()                                    {        strbuilder_skip_line(* this); }
-	forceinline void          strip_space()                                  {        strbuilder_strip_space(* this); }
-	forceinline Str           to_str()                                       { return { Data, strbuilder_length(*this) }; }
-	forceinline void          trim(char const* cut_set)                      {        strbuilder_trim(* this, cut_set); }
-	forceinline void          trim_space()                                   {        strbuilder_trim_space(* this); }
-	forceinline StrBuilder    visualize_whitespace() const                   { return strbuilder_visualize_whitespace(* this); }
+	forceinline bool              make_space_for(char const* str, ssize add_len) { return strbuilder_make_space_for(this, str, add_len); }
+	forceinline bool              append(char c)                                 { return strbuilder_append_char(this, c); }
+	forceinline bool              append(char const* str)                        { return strbuilder_append_c_str(this, str); }
+	forceinline bool              append(char const* str, ssize length)          { return strbuilder_append_c_str_len(this, str, length); }
+	forceinline bool              append(Str str)                                { return strbuilder_append_str(this, str); }
+	forceinline bool              append(const StrBuilder other)                 { return strbuilder_append_string(this, other); }
+	forceinline ssize             avail_space() const                            { return strbuilder_avail_space(* this); }
+	forceinline char*             back()                                         { return strbuilder_back(* this); }
+	forceinline bool              contains(Str substring) const                  { return strbuilder_contains_str(* this, substring); }
+	forceinline bool              contains(StrBuilder const& substring) const    { return strbuilder_contains_string(* this, substring); }
+	forceinline ssize             capacity() const                               { return strbuilder_capacity(* this); }
+	forceinline void              clear()                                        {        strbuilder_clear(* this); }
+	forceinline StrBuilder        duplicate(AllocatorInfo allocator) const       { return strbuilder_duplicate(* this, allocator); }
+	forceinline void              free()                                         {        strbuilder_free(this); }
+	forceinline bool              is_equal(StrBuilder const& other) const        { return strbuilder_are_equal(* this, other); }
+	forceinline bool              is_equal(Str other) const                      { return strbuilder_are_equal_str(* this, other); }
+	forceinline ssize             length() const                                 { return strbuilder_length(* this); }
+	forceinline b32               starts_with(Str substring) const               { return strbuilder_starts_with_str(* this, substring); }
+	forceinline b32               starts_with(StrBuilder substring) const        { return strbuilder_starts_with_string(* this, substring); }
+	forceinline void              skip_line()                                    {        strbuilder_skip_line(* this); }
+	forceinline void              strip_space()                                  {        strbuilder_strip_space(* this); }
+	forceinline Str               to_str()                                       { return { Data, strbuilder_length(*this) }; }
+	forceinline void              trim(char const* cut_set)                      {        strbuilder_trim(* this, cut_set); }
+	forceinline void              trim_space()                                   {        strbuilder_trim_space(* this); }
+	forceinline StrBuilder        visualize_whitespace() const                   { return strbuilder_visualize_whitespace(* this); }
 	forceinline StrBuilderHeader& get_header()                                   { return * strbuilder_get_header(* this); }
 
 	bool append_fmt(char const* fmt, ...) {

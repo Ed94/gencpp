@@ -92,7 +92,7 @@ bool tok_is_end_definition(Token tok)
 	return bitfield_is_equal( u32, tok.Flags, TF_EndDefinition );
 }
 
-StrBuilder tok_to_string(Token tok)
+StrBuilder tok_to_strbuilder(Token tok)
 {
 	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, kilobytes(4) );
 
@@ -183,7 +183,7 @@ enum
 
 struct LexContext
 {
-	Str            content;
+	Str             content;
 	s32             left;
 	char const*     scanner;
 	s32             line;
@@ -620,7 +620,7 @@ TokArray lex( Str content )
 		#if 0
 		if (Tokens.num())
 		{
-			log_fmt("\nLastTok: %SB", Tokens.back().to_string());
+			log_fmt("\nLastTok: %SB", Tokens.back().to_strbuilder());
 		}
 		#endif
 

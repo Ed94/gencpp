@@ -22,7 +22,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 		char const* keyword = csv_enum.Col_2[idx].string;
 		// TODO(Ed): to_c_str_entries and the others in here didn't have proper sizing of the Str slice.
 		strbuilder_append_fmt( & enum_entries,             "CT_%s,\n", code );
-		strbuilder_append_fmt( & to_c_str_entries,         "{ \"%s\",  sizeof(\"%s\") },\n", code, code );
+		strbuilder_append_fmt( & to_c_str_entries,         "{ \"%s\",  sizeof(\"%s\") - 1 },\n", code,    code );
 		strbuilder_append_fmt( & to_keyword_c_str_entries, "{  \"%s\", sizeof(\"%s\") - 1 },\n", keyword, keyword );
 	}
 
@@ -40,7 +40,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	Str lookup_size = strbuilder_to_str(strbuilder_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
+	Str      lookup_size  = strbuilder_to_str(strbuilder_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
 	CodeBody to_c_str_fns = parse_global_body( token_fmt(
 		"entries",  strbuilder_to_str(to_c_str_entries)
 	,	"keywords", strbuilder_to_str(to_keyword_c_str_entries)
@@ -104,7 +104,7 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 		char const* enum_str     = csv_enum.Col_1[idx].string;
 		char const* entry_to_str = csv_enum.Col_2[idx].string;
 		strbuilder_append_fmt( & enum_entries,     "Op_%s,\n", enum_str );
-		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") - 1 },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code;
@@ -181,7 +181,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 	FixedArena_16KB scratch;       fixed_arena_init(& scratch);
 	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
-	CSV_Columns2 csv_enum       = parse_csv_two_columns( scratch_info, path );
+	CSV_Columns2 csv_enum       = parse_csv_two_columns(   scratch_info, path );
 	StrBuilder enum_entries     = strbuilder_make_reserve( scratch_info, kilobytes(1) );
 	StrBuilder to_c_str_entries = strbuilder_make_reserve( scratch_info, kilobytes(1) );
 
@@ -190,7 +190,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 		char const* enum_str     = csv_enum.Col_1[idx].string;
 		char const* entry_to_str = csv_enum.Col_2[idx].string;
 		strbuilder_append_fmt( & enum_entries,     "Spec_%s,\n", enum_str );
-		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") - 1 },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum enum_code;
@@ -267,7 +267,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 
 					// We subtract 1 to remove the null terminator
 					// This is because the tokens lexed are not null terminated.
-					keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1);
+					keymap[index] = crc32( enum_str.Ptr, enum_str.Len  );
 				}
 			do_once_end
 
@@ -317,7 +317,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_definition = false )
 {
-	FixedArena_64KB scratch; fixed_arena_init(& scratch);
+	FixedArena_64KB scratch;       fixed_arena_init(& scratch);
 	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
 	FileContents enum_content = file_read_contents( scratch_info, file_zero_terminate, etok_path );
@@ -330,15 +330,15 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 	CSV_Object csv_attr_nodes;
 	csv_parse( &csv_attr_nodes, rcast(char*, attrib_content.data), scratch_info, false );
 
-	Array<ADT_Node> enum_strs          = csv_enum_nodes.nodes[0].nodes;
+	Array<ADT_Node> enum_strs            = csv_enum_nodes.nodes[0].nodes;
 	Array<ADT_Node> enum_c_str_strs      = csv_enum_nodes.nodes[1].nodes;
-	Array<ADT_Node> attribute_strs     = csv_attr_nodes.nodes[0].nodes;
+	Array<ADT_Node> attribute_strs       = csv_attr_nodes.nodes[0].nodes;
 	Array<ADT_Node> attribute_c_str_strs = csv_attr_nodes.nodes[1].nodes;
 
 	StrBuilder enum_entries             = strbuilder_make_reserve( scratch_info, kilobytes(2) );
-	StrBuilder to_c_str_entries           = strbuilder_make_reserve( scratch_info, kilobytes(4) );
+	StrBuilder to_c_str_entries         = strbuilder_make_reserve( scratch_info, kilobytes(4) );
 	StrBuilder attribute_entries        = strbuilder_make_reserve( scratch_info, kilobytes(2) );
-	StrBuilder to_c_str_attributes        = strbuilder_make_reserve( scratch_info, kilobytes(4) );
+	StrBuilder to_c_str_attributes      = strbuilder_make_reserve( scratch_info, kilobytes(4) );
 	StrBuilder attribute_define_entries = strbuilder_make_reserve( scratch_info, kilobytes(4) );
 
 	for (usize idx = 0; idx < array_num(enum_strs); idx++)
@@ -346,8 +346,8 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 		char const* enum_str     = enum_strs[idx].string;
 		char const* entry_to_str = enum_c_str_strs [idx].string;
 
-		strbuilder_append_fmt( & enum_entries, "Tok_%s,\n", enum_str );
-		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & enum_entries,     "Tok_%s,\n",                         enum_str );
+		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") - 1 },\n", entry_to_str, entry_to_str);
 	}
 
 	for ( usize idx = 0; idx < array_num(attribute_strs); idx++ )
@@ -355,8 +355,8 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 		char const* attribute_str = attribute_strs[idx].string;
 		char const* entry_to_str  = attribute_c_str_strs [idx].string;
 
-		strbuilder_append_fmt( & attribute_entries, "Tok_Attribute_%s,\n", attribute_str );
-		strbuilder_append_fmt( & to_c_str_attributes, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & attribute_entries,        "Tok_Attribute_%s,\n",               attribute_str );
+		strbuilder_append_fmt( & to_c_str_attributes,      "{ \"%s\", sizeof(\"%s\") - 1 },\n", entry_to_str, entry_to_str);
 		strbuilder_append_fmt( & attribute_define_entries, "Entry( Tok_Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
 
 		if ( idx < array_num(attribute_strs) - 1 )
@@ -429,7 +429,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 
 					// We subtract 1 to remove the null terminator
 					// This is because the tokens lexed are not null terminated.
-					keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1);
+					keymap[index] = crc32( enum_str.Ptr, enum_str.Len);
 				}
 			do_once_end
 

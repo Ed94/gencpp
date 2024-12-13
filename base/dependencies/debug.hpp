@@ -11,8 +11,10 @@
 #if GEN_BUILD_DEBUG
 #	if defined( GEN_COMPILER_MSVC )
 #		if _MSC_VER < 1300
+#pragma message("GEN_BUILD_DEBUG: __asm int 3")
 #			define GEN_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
 #		else
+#pragma message("GEN_BUILD_DEBUG: __debugbreak()")
 #			define GEN_DEBUG_TRAP() __debugbreak()
 #		endif
 #	elif defined( GEN_COMPILER_TINYC )
@@ -21,6 +23,7 @@
 #		define GEN_DEBUG_TRAP() __builtin_trap()
 #	endif
 #else
+#pragma message("GEN_BUILD_DEBUG: omitted")
 #	define GEN_DEBUG_TRAP()
 #endif
 
@@ -48,7 +51,7 @@
 		local_persist thread_local                         \
 		char buf[GEN_PRINTF_MAXLEN] = { 0 };               \
 		                                                   \
-		c_str_fmt(buf, GEN_PRINTF_MAXLEN, __VA_ARGS__);      \
+		c_str_fmt(buf, GEN_PRINTF_MAXLEN, __VA_ARGS__);    \
 		GEN_PANIC(buf);                                    \
 	}                                                      \
 	while (0)
@@ -57,7 +60,8 @@
 #	define GEN_FATAL( ... )                  \
 	do                                       \
 	{                                        \
-		c_str_fmt_out_err( __VA_ARGS__ );      \
+		c_str_fmt_out_err( __VA_ARGS__ );    \
+		GEN_DEBUG_TRAP();                    \
 		process_exit(1);                     \
 	}                                        \
 	while (0)

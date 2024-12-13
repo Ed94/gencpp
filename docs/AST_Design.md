@@ -46,13 +46,13 @@ The C/C++ interface procedures are located with `ast.hpp` (for the Code type), a
 All code types can either serialize using a function of the pattern:
 
 ```c
-StrBuilder <prefix>_to_string(Code code);
+StrBuilder <prefix>_to_strbuilder(Code code);
 // or
-<prefix>_to_string(Code code, StrBuilder& result);
+<prefix>_to_strbuilder(Code code, StrBuilder& result);
 ```
 
 Where the first generates strings allocated using Allocator_StringArena and the other appends an existing strings with their backed allocator.
 
-Serialization of for the AST is defined for `Code` in [`ast.chpp`](../base/components/ast.cpp) with `code_to_strbuilder_ptr` & `code_to_string`.  
+Serialization of for the AST is defined for `Code` in [`ast.chpp`](../base/components/ast.cpp) with `code_to_strbuilder_ptr` & `code_to_strbuilder`.  
 Serializtion for the rest of the code types is within [`code_serialization.cpp`](../base/components/code_serialization.cpp).  
 Gencpp's serialization does not provide coherent formatting of the code. The user should use a formatter after serializing.

@@ -59,7 +59,7 @@ CodeConstructor parse_constructor( Str def )
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%s", spec_to_str( spec ), parser_to_string(Context) );
+				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(Context) );
 				parser_pop(& Context);
 				return InvalidCode;
 		}

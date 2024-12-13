@@ -126,7 +126,7 @@ int gen_main()
 			if (fn->Specs) {
 				s32 constexpr_found = fn->Specs.remove( Spec_Constexpr );
 				if (constexpr_found > -1) {
-					//log_fmt("Found constexpr: %SB\n", entry.to_string());
+					//log_fmt("Found constexpr: %SB\n", entry.to_strbuilder());
 					fn->Specs.append(Spec_Inline);
 				}
 			}
@@ -549,9 +549,9 @@ do                          \
 			{
 				CodeTypename type       = using_ver->UnderlyingType;
 				CodeTypedef typedef_ver = parse_typedef(token_fmt(
-					"ReturnType", to_string(type->ReturnType).to_str()
+					"ReturnType", to_strbuilder(type->ReturnType).to_str()
 				,	"Name"      , using_ver->Name
-				,	"Parameters", to_string(type->Params).to_str()
+				,	"Parameters", to_strbuilder(type->Params).to_str()
 				,	stringize(
 						typedef <ReturnType>( * <Name>)(<Parameters>);
 				)));
@@ -694,7 +694,7 @@ do                          \
 
 			s32 constexpr_found = var->Specs ? var->Specs.remove( Spec_Constexpr ) : - 1;
 			if (constexpr_found > -1) {
-				//log_fmt("Found constexpr: %SB\n", entry.to_string());
+				//log_fmt("Found constexpr: %SB\n", entry.to_strbuilder());
 				if (var->Name.contains(txt("AST_ArrSpecs_Cap")))
 				{
 					Code def = untyped_str(txt(
@@ -716,7 +716,7 @@ R"(#define AST_ArrSpecs_Cap \
 					ast.append(def);
 					break;
 				}
-				CodeDefine def = def_define(var->Name, var->Value.to_string());
+				CodeDefine def = def_define(var->Name, var->Value.to_strbuilder());
 				ast.append(def);
 				break;
 			}
@@ -1319,7 +1319,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
-					,	"type",  var->ValueType.to_string().to_str()
+					,	"type",  var->ValueType.to_strbuilder().to_str()
 					,	"#define <name> (<type>) <value>\n"
 				));
 				src_lexer.append(define_ver);
@@ -1364,7 +1364,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
-					,	"type",  var->ValueType.to_string().to_str()
+					,	"type",  var->ValueType.to_strbuilder().to_str()
 					,	"#define <name> (<type>) <value>\n"
 				));
 				src_parser.append(define_ver);

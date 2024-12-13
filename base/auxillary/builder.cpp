@@ -28,7 +28,7 @@ void builder_pad_lines( Builder* builder, s32 num )
 
 void builder_print( Builder* builder, Code code )
 {
-	StrBuilder   str = code_to_string(code);
+	StrBuilder   str = code_to_strbuilder(code);
 	// const ssize len = str.length();
 	// log_fmt( "%s - print: %.*s\n", File.filename, len > 80 ? 80 : len, str.Data );
 	strbuilder_append_string( & builder->Buffer, str );

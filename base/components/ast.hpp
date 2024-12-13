@@ -260,7 +260,7 @@ bool       code_is_body          (Code code);
 bool       code_is_equal         (Code code, Code other);
 bool       code_is_valid         (Code code);
 void       code_set_global       (Code code);
-StrBuilder code_to_string        (Code self );
+StrBuilder code_to_strbuilder    (Code self );
 void       code_to_strbuilder_ptr(Code self, StrBuilder* result );
 Str        code_type_str         (Code self );
 bool       code_validate_body    (Code self );
@@ -295,17 +295,17 @@ struct Code
 
 #if ! GEN_C_LIKE_CPP
 	Using_Code( Code );
-	forceinline void       append(Code other)            { return code_append(* this, other); }
-	forceinline Code*      entry(u32 idx)                { return code_entry(* this, idx); }
-	forceinline bool       has_entries()                 { return code_has_entries(* this); }
-	forceinline StrBuilder to_string()                   { return code_to_string(* this); }
-	forceinline void       to_string(StrBuilder& result) { return code_to_strbuilder_ptr(* this, & result); }
-	forceinline Str        type_str()                    { return code_type_str(* this); }
-	forceinline bool       validate_body()               { return code_validate_body(*this); }
+	forceinline void       append(Code other)                { return code_append(* this, other); }
+	forceinline Code*      entry(u32 idx)                    { return code_entry(* this, idx); }
+	forceinline bool       has_entries()                     { return code_has_entries(* this); }
+	forceinline StrBuilder to_strbuilder()                   { return code_to_strbuilder(* this); }
+	forceinline void       to_strbuilder(StrBuilder& result) { return code_to_strbuilder_ptr(* this, & result); }
+	forceinline Str        type_str()                        { return code_type_str(* this); }
+	forceinline bool       validate_body()                   { return code_validate_body(*this); }
 #endif
 
 	Using_CodeOps( Code );
-	forceinline Code operator *() { return * this; } // Required for for-range iteration.
+	forceinline Code operator *() { return * this; } // Required to support for-range iteration.
 	forceinline AST* operator ->() { return ast; }
 
 	Code& operator ++();

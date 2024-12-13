@@ -40,32 +40,32 @@ enum Specifier : u32
 inline Str spec_to_str( Specifier type )
 {
 	local_persist Str lookup[26] = {
-		{ "INVALID",       sizeof( "INVALID" )       },
-		{ "consteval",     sizeof( "consteval" )     },
-		{ "constexpr",     sizeof( "constexpr" )     },
-		{ "constinit",     sizeof( "constinit" )     },
-		{ "explicit",      sizeof( "explicit" )      },
-		{ "extern",        sizeof( "extern" )        },
-		{ "forceinline",   sizeof( "forceinline" )   },
-		{ "global",        sizeof( "global" )        },
-		{ "inline",        sizeof( "inline" )        },
-		{ "internal",      sizeof( "internal" )      },
-		{ "local_persist", sizeof( "local_persist" ) },
-		{ "mutable",       sizeof( "mutable" )       },
-		{ "neverinline",   sizeof( "neverinline" )   },
-		{ "*",             sizeof( "*" )             },
-		{ "&",             sizeof( "&" )             },
-		{ "register",      sizeof( "register" )      },
-		{ "&&",            sizeof( "&&" )            },
-		{ "static",        sizeof( "static" )        },
-		{ "thread_local",  sizeof( "thread_local" )  },
-		{ "virtual",       sizeof( "virtual" )       },
-		{ "const",         sizeof( "const" )         },
-		{ "final",         sizeof( "final" )         },
-		{ "noexcept",      sizeof( "noexcept" )      },
-		{ "override",      sizeof( "override" )      },
-		{ "= 0",           sizeof( "= 0" )           },
-		{ "volatile",      sizeof( "volatile" )      },
+		{ "INVALID",       sizeof( "INVALID" ) - 1       },
+		{ "consteval",     sizeof( "consteval" ) - 1     },
+		{ "constexpr",     sizeof( "constexpr" ) - 1     },
+		{ "constinit",     sizeof( "constinit" ) - 1     },
+		{ "explicit",      sizeof( "explicit" ) - 1      },
+		{ "extern",        sizeof( "extern" ) - 1        },
+		{ "forceinline",   sizeof( "forceinline" ) - 1   },
+		{ "global",        sizeof( "global" ) - 1        },
+		{ "inline",        sizeof( "inline" ) - 1        },
+		{ "internal",      sizeof( "internal" ) - 1      },
+		{ "local_persist", sizeof( "local_persist" ) - 1 },
+		{ "mutable",       sizeof( "mutable" ) - 1       },
+		{ "neverinline",   sizeof( "neverinline" ) - 1   },
+		{ "*",             sizeof( "*" ) - 1             },
+		{ "&",             sizeof( "&" ) - 1             },
+		{ "register",      sizeof( "register" ) - 1      },
+		{ "&&",            sizeof( "&&" ) - 1            },
+		{ "static",        sizeof( "static" ) - 1        },
+		{ "thread_local",  sizeof( "thread_local" ) - 1  },
+		{ "virtual",       sizeof( "virtual" ) - 1       },
+		{ "const",         sizeof( "const" ) - 1         },
+		{ "final",         sizeof( "final" ) - 1         },
+		{ "noexcept",      sizeof( "noexcept" ) - 1      },
+		{ "override",      sizeof( "override" ) - 1      },
+		{ "= 0",           sizeof( "= 0" ) - 1           },
+		{ "volatile",      sizeof( "volatile" ) - 1      },
 	};
 	return lookup[type];
 }
@@ -81,7 +81,7 @@ inline Specifier str_to_specifier( Str str )
 	do_once_start for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
 	{
 		Str enum_str  = spec_to_str( (Specifier)index );
-		keymap[index] = crc32( enum_str.Ptr, enum_str.Len - 1 );
+		keymap[index] = crc32( enum_str.Ptr, enum_str.Len );
 	}
 	do_once_end u32 hash = crc32( str.Ptr, str.Len );
 	for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )

@@ -148,7 +148,7 @@ The convention you'll see used throughout the upfront interface of the library i
 1. Check name or parameters to make sure they are valid for the construction requested
 2. Create a code object using `make_code`.
 3. Populate immediate fields (Name, Type, ModuleFlags, etc)
-4. Populate sub-entires using `add_entry`. If using the default serialization function `to_string`, follow the order at which entires are expected to appear (there is a strong ordering expected).
+4. Populate sub-entires using `add_entry`. If using the default serialization function `to_strbuilder`, follow the order at which entires are expected to appear (there is a strong ordering expected).
 
 Names or Content fields are interned strings and thus showed be cached using `get_cached_string` if its desired to preserve that behavior.
 

@@ -21,7 +21,7 @@
 		<Action>NoStepInto</Action>
 	</Function>
 	<Function>
-		<Name>gen::Code.*::to_string</Name>
+		<Name>gen::Code.*::to_strbuilder</Name>
 		<Action>NoStepInto</Action>
 	</Function>
 	<Function>

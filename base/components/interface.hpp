@@ -294,7 +294,7 @@ Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
 
 #ifndef code
 //  Same as name just used to indicate intention of literal for code instead of names.
-#define code( ... ) { stringize( __VA_ARGS__ ),  sizeof(stringize(__VA_ARGS__)) - 1 }
+#define code( ... ) { stringize( __VA_ARGS__ ), sizeof(stringize(__VA_ARGS__)) - 1 }
 #endif
 
 #ifndef args
