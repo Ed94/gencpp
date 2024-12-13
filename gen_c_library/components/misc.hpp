@@ -105,48 +105,31 @@ R"(#define <macro_name>(selector_arg, ...) _Generic( (selector_arg), \
 	for ( s32 slot = 1; slot <= num_slots; ++ slot )
 	{
 		Str slot_str = StrBuilder::fmt_buf(GlobalAllocator, "%d", slot).to_str();
-		if (slot == num_slots && false)
-		{
-			define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
-R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT_LAST(  GENERIC_SLOT_<slot>__<macro_name> ) \
-)"
-			));
-			// if ( one_arg )
-			// 	define_builder.append(token_fmt( "macro_name", macro_name, stringize(
-			// 		default: static_assert(false, "<macro_name>: Failed to select correct function signature (Did you pass the type?)")
-			// 	)));
-			// else
-			// 	define_builder.append(token_fmt( "macro_name", macro_name, stringize(
-			// 		default: static_assert(false, "<macro_name>: Failed to select correct function signature")
-			// 	)));
-			continue;
-		}
-
 		define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
-R"(		GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_<slot>__<macro_name> ) \
+R"(GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_<slot>__<macro_name> ) \
 )"
 		));
 	}
 
-	define_builder.append( txt("default: gen_generic_selection_fail") );
+	define_builder.append( txt("default: gen_generic_selection_fail\\\n") );
 
 	if ( ! one_arg )
 	{
 		if (opts == GenericSel_By_Ref)
-			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( & selector_arg, __VA_ARGS__ )"));
+			define_builder.append(txt(")\\\nGEN_RESOLVED_FUNCTION_CALL( & selector_arg, __VA_ARGS__ )"));
 		else if (opts == GenericSel_Direct_Type)
-			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( __VA_ARGS__ )"));
+			define_builder.append(txt(")\\\nGEN_RESOLVED_FUNCTION_CALL( __VA_ARGS__ )"));
 		else
-			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( selector_arg, __VA_ARGS__ )"));
+			define_builder.append(txt(")\\\nGEN_RESOLVED_FUNCTION_CALL( selector_arg, __VA_ARGS__ )"));
 	}
 	else
 	{
 		if (opts == GenericSel_By_Ref)
-			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( & selector_arg )"));
+			define_builder.append(txt(")\\\nGEN_RESOLVED_FUNCTION_CALL( & selector_arg )"));
 		else if (opts == GenericSel_Direct_Type)
-			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL()"));
+			define_builder.append(txt(")\\\nGEN_RESOLVED_FUNCTION_CALL()"));
 		else
-			define_builder.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( selector_arg )"));
+			define_builder.append(txt(")\\\nGEN_RESOLVED_FUNCTION_CALL( selector_arg )"));
 	}
 
 	// Add gap for next definition
