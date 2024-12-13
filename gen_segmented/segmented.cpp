@@ -171,7 +171,7 @@ int gen_main()
 		builder_print_fmt( header, "#pragma endregion Inlines\n" );
 
 		builder_print( header, header_end );
-		builder_print_fmt( header, "GEN_NS_END\n\n" );
+		builder_print_fmt( header, "\nGEN_NS_END\n\n" );
 		builder_print( header, pop_ignores );
 		builder_write(header);
 	}
@@ -238,7 +238,7 @@ int gen_main()
 		builder_print( & header, def_include( txt("gen.hpp") ));
 		builder_print_fmt( & header, "\nGEN_NS_BEGIN\n" );
 		builder_print( & header, builder );
-		builder_print_fmt( & header, "GEN_NS_END\n" );
+		builder_print_fmt( & header, "\nGEN_NS_END\n" );
 		builder_write( & header);
 	}
 
@@ -278,7 +278,7 @@ int gen_main()
 		builder_print( & src, def_include( txt("gen.scanner.hpp") ) );
 		builder_print_fmt( & src, "\nGEN_NS_BEGIN\n" );
 		builder_print( & src, scanner );
-		builder_print_fmt( & src, "GEN_NS_END\n" );
+		builder_print_fmt( & src, "\nGEN_NS_END\n" );
 		builder_write( & src);
 	}
 
