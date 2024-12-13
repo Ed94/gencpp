@@ -1414,7 +1414,7 @@ void var_to_strbuilder_ref(CodeVar self, StrBuilder* result )
 
 		strbuilder_append_fmt( result, "%SB %S", typename_to_string(self->ValueType), self->Name );
 
-		if ( self->ValueType->ArrExpr )
+		if ( self->ValueType && self->ValueType->ArrExpr )
 		{
 			strbuilder_append_fmt( result, "[ %SB ]", code_to_string(self->ValueType->ArrExpr) );
 

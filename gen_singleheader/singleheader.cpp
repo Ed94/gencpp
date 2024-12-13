@@ -176,9 +176,9 @@ int gen_main()
 			Code timing     = scan_file( path_base "dependencies/timing.cpp" );
 
 			header.print_fmt( roll_own_dependencies_guard_start );
+			header.print( impl_start );
 			header.print_fmt( "GEN_NS_BEGIN\n\n");
 
-			header.print( impl_start );
 			header.print( debug );
 			header.print( string_ops );
 			header.print( printing );
@@ -209,8 +209,7 @@ int gen_main()
 		Code parsing_interface = scan_file( path_base "components/interface.parsing.cpp" );
 		Code untyped           = scan_file( path_base "components/interface.untyped.cpp" );
 
-		CodeBody etoktype      = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
-		CodeNS   parser_nspace = def_namespace( name(parser), def_namespace_body( args(etoktype)) );
+		CodeBody etoktype = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
@@ -225,7 +224,7 @@ int gen_main()
 		header.print( interface );
 		header.print( upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
-		header.print( format(parser_nspace) );
+		header.print( format(etoktype) );
 		header.print( lexer );
 		header.print( parser );
 		header.print( parsing_interface );

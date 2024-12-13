@@ -505,7 +505,7 @@ CodeBody gen_ast_inlines()
 		{
 			if ( ast == nullptr )
 			{
-				log_failure( "Attempt to dereference a nullptr!" );
+				log_failure( "Attempt to dereference a nullptr!\n" );
 				return nullptr;
 			}
 			return ast;

@@ -161,9 +161,9 @@ struct CodeBody
 	forceinline void   to_string( StrBuilder& result )        { return body_to_strbuilder_ref(* this, & result ); }
 	forceinline void   to_strbuilder_export( StrBuilder& result ) { return body_to_strbuilder_export(* this, & result); }
 
+#endif
 	forceinline Code begin() { return begin_CodeBody(* this); }
 	forceinline Code end()   { return end_CodeBody(* this); }
-#endif
 	Using_CodeOps( CodeBody );
 	forceinline operator Code() { return * rcast( Code*, this ); }
 	forceinline AST_Body* operator->() { return ast; }

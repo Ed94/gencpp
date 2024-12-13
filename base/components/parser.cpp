@@ -124,7 +124,7 @@ bool lex__eat(TokArray* self, TokType type )
 			, tok.Column
 			, parser_to_string(Context)
 		);
-
+		GEN_DEBUG_TRAP();
 		return false;
 	}
 
@@ -515,7 +515,7 @@ Code parse_array_decl()
 
 	if ( check( Tok_Operator ) && currtok.Text[0] == '[' && currtok.Text[1] == ']' )
 	{
-		Code array_expr = untyped_str( tok_to_str(currtok) );
+		Code array_expr = untyped_str( txt(" ") );
 		eat( Tok_Operator );
 		// []
 
@@ -2391,7 +2391,7 @@ CodeOperator parse_operator_after_ret_type(
 		case '<':
 		{
 			if ( currtok.Text[1] == '=' )
-				op = Op_LEqual;
+				op = Op_LesserEqual;
 
 			else if ( currtok.Text[1] == '<' )
 			{
@@ -3428,12 +3428,12 @@ CodeVar parse_variable_declaration_list()
 				break;
 			}
 
-			// eat(currtok.Type);
-
 			if ( specifiers )
 				specifiers_append(specifiers, spec );
 			else
 				specifiers = def_specifier( spec );
+
+			eat(currtok.Type);
 		}
 		// , <Specifiers>
 

@@ -64,7 +64,7 @@ inline AST_Attributes* CodeAttributes::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -95,7 +95,7 @@ inline AST_Comment* CodeComment::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -126,7 +126,7 @@ inline AST_Constructor* CodeConstructor::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -173,7 +173,7 @@ inline AST_Define* CodeDefine::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -204,7 +204,7 @@ inline AST_Destructor* CodeDestructor::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -235,7 +235,7 @@ inline AST_Enum* CodeEnum::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -266,7 +266,7 @@ inline AST_Exec* CodeExec::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -297,7 +297,7 @@ inline AST_Extern* CodeExtern::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -328,7 +328,7 @@ inline AST_Friend* CodeFriend::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -359,7 +359,7 @@ inline AST_Fn* CodeFn::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -390,7 +390,7 @@ inline AST_Include* CodeInclude::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -421,7 +421,7 @@ inline AST_Module* CodeModule::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -452,7 +452,7 @@ inline AST_NS* CodeNS::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -483,7 +483,7 @@ inline AST_Operator* CodeOperator::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -514,7 +514,7 @@ inline AST_OpCast* CodeOpCast::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -561,7 +561,7 @@ inline AST_Pragma* CodePragma::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -592,7 +592,7 @@ inline AST_PreprocessCond* CodePreprocessCond::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -655,7 +655,7 @@ inline AST_Template* CodeTemplate::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -686,7 +686,7 @@ inline AST_Typename* CodeTypename::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -717,7 +717,7 @@ inline AST_Typedef* CodeTypedef::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -748,7 +748,7 @@ inline AST_Union* CodeUnion::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -779,7 +779,7 @@ inline AST_Using* CodeUsing::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
@@ -810,7 +810,7 @@ inline AST_Var* CodeVar::operator->()
 {
 	if ( ast == nullptr )
 	{
-		log_failure( "Attempt to dereference a nullptr!" );
+		log_failure( "Attempt to dereference a nullptr!\n" );
 		return nullptr;
 	}
 	return ast;
