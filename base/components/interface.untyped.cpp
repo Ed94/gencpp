@@ -138,8 +138,8 @@ Code untyped_fmt( char const* fmt, ...)
 	ssize length = c_str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
 	va_end(va);
 
-	Str buf_str      = { c_str_len_capped(fmt, MaxNameLength), fmt };
-    Str uncapped_str = { length, buf };
+	Str buf_str      = { fmt, c_str_len_capped(fmt, MaxNameLength) };
+    Str uncapped_str = { buf, length };
 
 	Code
 	result          = make_code();
@@ -172,7 +172,7 @@ Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... )
 	ssize length = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num_tokens, va);
 	va_end(va);
 
-	Str buf_str = { length, buf };
+	Str buf_str = { buf, length };
 
 	Code
 	result          = make_code();

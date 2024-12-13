@@ -60,7 +60,7 @@ StrBuilder parser_to_string(ParseContext ctx)
 		length++;
 	}
 
-	Str scope_str = { length, scope_start.Text };
+	Str scope_str = { scope_start.Text, length };
 	StrBuilder line = strbuilder_make_str( GlobalAllocator, scope_str );
 	strbuilder_append_fmt( & result, "\tScope    : %s\n", line );
 	strbuilder_free(& line);
@@ -68,7 +68,7 @@ StrBuilder parser_to_string(ParseContext ctx)
 	sptr   dist            = (sptr)last_valid.Text - (sptr)scope_start.Text + 2;
 	sptr   length_from_err = dist;
 
-	Str err_str        = { length_from_err, last_valid.Text };
+	Str err_str        = { last_valid.Text, length_from_err };
 	StrBuilder line_from_err = strbuilder_make_str( GlobalAllocator, err_str );
 
 	if ( length_from_err < 100 )
@@ -681,7 +681,7 @@ CodeAttributes parse_attributes()
 
 	if ( len > 0 )
 	{
-		Str attribute_txt = { len, start.Text };
+		Str attribute_txt = { start.Text, len };
 		parser_pop(& Context);
 
 		StrBuilder name_stripped = parser_strip_formatting( attribute_txt, parser_strip_formatting_dont_preserve_newlines );
@@ -1072,7 +1072,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 						StrBuilder fused = strbuilder_make_reserve( GlobalAllocator, attributes->Content.Len + more_attributes->Content.Len );
 						strbuilder_append_fmt( & fused, "%SB %SB", attributes->Content, more_attributes->Content );
 
-						Str attrib_name = { strbuilder_length(fused), fused };
+						Str attrib_name     = strbuilder_to_str(fused);
 						attributes->Name    = get_cached_string( attrib_name );
 						attributes->Content = attributes->Name;
 						// <Attributes> <Specifiers> <Attributes>
@@ -1616,7 +1616,7 @@ Code parse_function_body()
 
 	if ( len > 0 )
 	{
-		Str str = { len, start.Text };
+		Str str = { start.Text, len };
 		body_append( result, cast(Code, def_execution( str )) );
 	}
 
@@ -3157,7 +3157,7 @@ Code parse_static_assert()
 	content.Length  = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)content.Text;
 
 	char const* str  = c_str_fmt_buf( "%.*s\n", content.Length, content.Text );
-	Str content_str = { content.Length + 1, str };
+	Str content_str = { str, content.Length + 1 };
 	assert->Content = get_cached_string( content_str );
 	assert->Name	= assert->Content;
 
@@ -5082,7 +5082,7 @@ CodeTypedef parser_parse_typedef()
 
 		if ( currtok.Type == Tok_Identifier )
 		{
-			Str name_str = { name.Length, name.Text };
+			Str name_str = { name.Text, name.Length };
 			type = untyped_str(name_str);
 			name = currtok;
 			eat(Tok_Identifier);
@@ -5279,7 +5279,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 	CodeAttributes attributes = parse_attributes();
 	// <ModuleFlags> union <Attributes>
 
-	Str name = { 0, nullptr };
+	Str name = { nullptr, 0 };
 	if ( check( Tok_Identifier ) )
 {
 		name = tok_to_str(currtok);

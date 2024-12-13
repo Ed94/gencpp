@@ -289,12 +289,12 @@ Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
 #ifndef name
 //	Convienence for defining any name used with the gen api.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
-#define name( Id_ )   { sizeof(stringize( Id_ )) - 1, stringize(Id_) }
+#define name( Id_ )   { stringize(Id_), sizeof(stringize( Id_ )) - 1 }
 #endif
 
 #ifndef code
 //  Same as name just used to indicate intention of literal for code instead of names.
-#define code( ... ) { sizeof(stringize(__VA_ARGS__)) - 1, stringize( __VA_ARGS__ ) }
+#define code( ... ) { stringize( __VA_ARGS__ ),  sizeof(stringize(__VA_ARGS__)) - 1 }
 #endif
 
 #ifndef args

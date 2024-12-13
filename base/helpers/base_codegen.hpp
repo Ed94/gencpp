@@ -22,8 +22,8 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 		char const* keyword = csv_enum.Col_2[idx].string;
 		// TODO(Ed): to_c_str_entries and the others in here didn't have proper sizing of the Str slice.
 		strbuilder_append_fmt( & enum_entries,             "CT_%s,\n", code );
-		strbuilder_append_fmt( & to_c_str_entries,         "{ sizeof(\"%s\"), \"%s\" },\n", code, code );
-		strbuilder_append_fmt( & to_keyword_c_str_entries, "{ sizeof(\"%s\") - 1, \"%s\" },\n", keyword, keyword );
+		strbuilder_append_fmt( & to_c_str_entries,         "{ \"%s\",  sizeof(\"%s\") },\n", code, code );
+		strbuilder_append_fmt( & to_keyword_c_str_entries, "{  \"%s\", sizeof(\"%s\") - 1 },\n", keyword, keyword );
 	}
 
 	CodeEnum enum_code;
@@ -104,7 +104,7 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 		char const* enum_str     = csv_enum.Col_1[idx].string;
 		char const* entry_to_str = csv_enum.Col_2[idx].string;
 		strbuilder_append_fmt( & enum_entries,     "Op_%s,\n", enum_str );
-		strbuilder_append_fmt( & to_c_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum  enum_code;
@@ -190,7 +190,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 		char const* enum_str     = csv_enum.Col_1[idx].string;
 		char const* entry_to_str = csv_enum.Col_2[idx].string;
 		strbuilder_append_fmt( & enum_entries,     "Spec_%s,\n", enum_str );
-		strbuilder_append_fmt( & to_c_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
 	}
 
 	CodeEnum enum_code;
@@ -347,7 +347,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 		char const* entry_to_str = enum_c_str_strs [idx].string;
 
 		strbuilder_append_fmt( & enum_entries, "Tok_%s,\n", enum_str );
-		strbuilder_append_fmt( & to_c_str_entries, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & to_c_str_entries, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
 	}
 
 	for ( usize idx = 0; idx < array_num(attribute_strs); idx++ )
@@ -356,7 +356,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 		char const* entry_to_str  = attribute_c_str_strs [idx].string;
 
 		strbuilder_append_fmt( & attribute_entries, "Tok_Attribute_%s,\n", attribute_str );
-		strbuilder_append_fmt( & to_c_str_attributes, "{ sizeof(\"%s\"), \"%s\" },\n", entry_to_str, entry_to_str);
+		strbuilder_append_fmt( & to_c_str_attributes, "{ \"%s\", sizeof(\"%s\") },\n", entry_to_str, entry_to_str);
 		strbuilder_append_fmt( & attribute_define_entries, "Entry( Tok_Attribute_%s, \"%s\" )", attribute_str, entry_to_str );
 
 		if ( idx < array_num(attribute_strs) - 1 )

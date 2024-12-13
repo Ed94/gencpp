@@ -43,7 +43,7 @@ AccessSpec tok_to_access_specifier(Token tok)
 
 Str tok_to_str(Token tok)
 {
-	Str str = { tok.Length, tok.Text };
+	Str str = { tok.Text, tok.Length };
 	return str;
 }
 

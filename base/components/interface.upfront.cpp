@@ -461,7 +461,7 @@ CodeComment def_comment( Str content )
 	if ( * strbuilder_back(cmt_formatted) != '\n' )
 		strbuilder_append_str( & cmt_formatted, txt("\n") );
 
-	Str name = { strbuilder_length(cmt_formatted), cmt_formatted };
+	Str name = strbuilder_to_str(cmt_formatted);
 
 	Code
 	result          = make_code();
@@ -589,7 +589,7 @@ CodeDefine def_define( Str name, Str content, Opts_def_define p )
 			if ( result->Name.Ptr[lex_id_len] == '(' )
 				break;
 		}
-		Str lex_id = { lex_id_len, result->Name.Ptr };
+		Str lex_id = { result->Name.Ptr,  lex_id_len };
 		array_append(PreprocessorDefines, lex_id );
 	}
 	return result;
@@ -895,7 +895,7 @@ CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator p )
 	else
 		name = c_str_fmt_buf( "operator %.*s", op_str.Len, op_str.Ptr );
 
-	Str name_resolved = { c_str_len(name), name };
+	Str name_resolved = { name, c_str_len(name) };
 
 	CodeOperator
 	result              = (CodeOperator) make_code();

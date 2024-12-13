@@ -18,8 +18,8 @@ Str         str_visualize_whitespace(Str str, AllocatorInfo allocator);
 // Constant string with length.
 struct Str
 {
-	ssize       Len;
 	char const* Ptr;
+	ssize       Len;
 
 #if GEN_COMPILER_CPP
 	forceinline operator char const* ()               const { return Ptr; }
@@ -40,9 +40,9 @@ struct Str
 
 #ifndef txt
 #	if GEN_COMPILER_CPP
-#		define txt( text )          Str { sizeof( text ) - 1, ( text ) }
+#		define txt( text )          Str { ( text ), sizeof( text ) - 1 }
 #	else
-#		define txt( text )         (Str){ sizeof( text ) - 1, ( text ) }
+#		define txt( text )         (Str){ ( text ), sizeof( text ) - 1 }
 #	endif
 #endif
 
@@ -103,7 +103,7 @@ b32 str_starts_with(Str str, Str substring) {
 
 inline
 Str to_str_from_c_str( char const* bad_str ) {
-	Str result = { c_str_len( bad_str ), bad_str };
+	Str result = { bad_str, c_str_len( bad_str ) };
 	return result;
 }
 
@@ -170,7 +170,7 @@ struct StrBuilder
 
 	forceinline operator char*()             { return Data; }
 	forceinline operator char const*() const { return Data; }
-	forceinline operator Str()         const { return { strbuilder_length(* this), Data }; }
+	forceinline operator Str()         const { return { Data, strbuilder_length(* this) }; }
 
 	StrBuilder const& operator=(StrBuilder const& other) const {
 		if (this == &other)
@@ -243,7 +243,7 @@ struct StrBuilder
 	forceinline b32           starts_with(StrBuilder substring) const        { return strbuilder_starts_with_string(* this, substring); }
 	forceinline void          skip_line()                                    {        strbuilder_skip_line(* this); }
 	forceinline void          strip_space()                                  {        strbuilder_strip_space(* this); }
-	forceinline Str           to_str()                                       { return { strbuilder_length(*this), Data}; }
+	forceinline Str           to_str()                                       { return { Data, strbuilder_length(*this) }; }
 	forceinline void          trim(char const* cut_set)                      {        strbuilder_trim(* this, cut_set); }
 	forceinline void          trim_space()                                   {        strbuilder_trim_space(* this); }
 	forceinline StrBuilder    visualize_whitespace() const                   { return strbuilder_visualize_whitespace(* this); }
@@ -621,7 +621,7 @@ void strip_space(StrBuilder str)
 
 forceinline
 Str strbuilder_to_str(StrBuilder str) {
-	Str result = { strbuilder_length(str), (char const*)str };
+	Str result = { (char const*)str, strbuilder_length(str) };
 	return result;
 }
 

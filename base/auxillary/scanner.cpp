@@ -118,7 +118,7 @@ Code scan_file( char const* path )
 
 CodeBody parse_file( const char* path ) {
 	FileContents file    = file_read_contents( GlobalAllocator, true, path );
-	Str         content = { file.size, (char const*)file.data };
+	Str          content = { (char const*)file.data, file.size };
 	CodeBody     code    = parse_global_body( content );
 	log_fmt("\nParsed: %s\n", path);
 	return code;

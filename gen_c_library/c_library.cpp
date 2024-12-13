@@ -646,7 +646,7 @@ do                          \
 					if (fn->Name.starts_with(txt("code_")))
 					{
 						Str   old_prefix  = txt("code_");
-						Str   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+						Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
 						StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
 
 						fn->Name = get_cached_string(new_name);
@@ -796,7 +796,7 @@ R"(#define AST_ArrSpecs_Cap \
 			{
 				generic_selector.clear();
 				Str   private_prefix  = txt("code__");
-				Str   actual_name     = { fn->Name.Len - private_prefix.Len, fn->Name.Ptr + private_prefix.Len };
+				Str   actual_name     = { fn->Name.Ptr + private_prefix.Len, fn->Name.Len - private_prefix.Len };
 				StrBuilder interface_name  = StrBuilder::fmt_buf(GlobalAllocator, "code_%S", actual_name );
 
 				// Resolve generic's arguments
@@ -941,7 +941,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			{
 				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
 				Str prefix      = txt("def_");
-				Str actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
+				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
 				Str new_name    = StrBuilder::fmt_buf(GlobalAllocator, "def__%S", actual_name ).to_str();
 
 				// Resolve define's arguments
@@ -1020,7 +1020,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			if (fn->Name.starts_with(txt("code_")))
 			{
 				Str   old_prefix  = txt("code_");
-				Str   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+				Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
 				StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
 
 				fn->Name = get_cached_string(new_name);
@@ -1175,7 +1175,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			if (fn->Name.starts_with(txt("code_")))
 			{
 				Str   old_prefix  = txt("code_");
-				Str   actual_name = { fn->Name.Len  - old_prefix.Len, fn->Name.Ptr + old_prefix.Len };
+				Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
 				StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
 
 				fn->Name = get_cached_string(new_name);
@@ -1227,7 +1227,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
 				Str prefix      = txt("def_");
-				Str actual_name = { fn->Name.Len  - prefix.Len, fn->Name.Ptr + prefix.Len };
+				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
 				Str new_name    = StrBuilder::fmt_buf(GlobalAllocator, "def__%S", actual_name ).to_str();
 
 				fn->Name = get_cached_string(new_name);

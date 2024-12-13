@@ -408,7 +408,7 @@ Str token_fmt_impl( ssize num, ... )
 	ssize result = token_fmt_va(buf, GEN_PRINTF_MAXLEN, num, va);
 	va_end(va);
 
-	Str str = { result, buf };
+	Str str = { buf, result };
 	return str;
 }
 #pragma endregion Interface
