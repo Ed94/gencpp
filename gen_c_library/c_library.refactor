@@ -173,7 +173,7 @@ word PrintF_Buffer,     gen_PrintF_Buffer
 word Msg_Invalid_Value, gen_Msg_Invalid_Value
 word log_fmt,           gen_log_fmt
 
-// StrBuilder Ops
+// String Ops
 
 namespace char_, gen_char_
 

@@ -3,7 +3,7 @@
 #	include "debug.cpp"
 #endif
 
-#pragma region StrBuilder Ops
+#pragma region String Ops
 
 internal
 ssize _scan_zpl_i64( const char* text, s32 base, s64* value )
@@ -211,4 +211,4 @@ f64 c_str_to_f64( const char* str, char** end_ptr )
 	return result;
 }
 
-#pragma endregion StrBuilder Ops
+#pragma endregion String Ops

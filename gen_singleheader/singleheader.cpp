@@ -105,6 +105,7 @@ int gen_main()
 				header.print( scan_file( path_base "dependencies/parsing.hpp" ) );
 			}
 
+			header.print(fmt_newline);
 			header.print_fmt( "GEN_NS_END\n" );
 			header.print_fmt( roll_own_dependencies_guard_end );
 			header.print( fmt_newline );
@@ -155,7 +156,11 @@ int gen_main()
 		if ( generate_builder ) {
 			header.print( scan_file( path_base "auxillary/builder.hpp" ) );
 		}
+		if ( generate_scanner ) {
+			header.print( scan_file( path_base "auxillary/scanner.hpp" ) );
+		}
 
+		header.print(fmt_newline);
 		header.print_fmt( "GEN_NS_END\n" );
 	}
 
@@ -177,7 +182,8 @@ int gen_main()
 
 			header.print_fmt( roll_own_dependencies_guard_start );
 			header.print( impl_start );
-			header.print_fmt( "GEN_NS_BEGIN\n\n");
+			header.print( fmt_newline );
+			header.print_fmt( "GEN_NS_BEGIN\n");
 
 			header.print( debug );
 			header.print( string_ops );
@@ -230,21 +236,17 @@ int gen_main()
 		header.print( parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
 		header.print( untyped );
-		header.print_fmt( "\n#pragma endregion Interface\n\n");
+		header.print_fmt( "\n#pragma endregion Interface\n");
 
 		if ( generate_builder ) {
 			header.print( scan_file( path_base "auxillary/builder.cpp"  ) );
-		}
-
-		// Scanner header depends on implementation
-		if ( generate_scanner ) {
-			header.print( scan_file( path_base "auxillary/scanner.hpp" ) );
 		}
 
 		if ( generate_scanner ) {
 			header.print( scan_file( path_base "auxillary/scanner.cpp" ) );
 		}
 
+		header.print( fmt_newline);
 		header.print_fmt( "GEN_NS_END\n");
 
 		header.print_fmt( "%s\n", (char const*) implementation_guard_end );

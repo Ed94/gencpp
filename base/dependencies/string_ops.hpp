@@ -3,7 +3,7 @@
 #	include "memory.hpp"
 #endif
 
-#pragma region StrBuilder Ops
+#pragma region String Ops
 
 const char* char_first_occurence( const char* str, char c );
 
@@ -284,4 +284,4 @@ void c_str_to_upper( char* str )
 	}
 }
 
-#pragma endregion StrBuilder Ops
+#pragma endregion String Ops
