@@ -1515,7 +1515,7 @@ CodeFn parse_function_after_name(
 
 	StrBuilder
 	name_stripped = strbuilder_make_str( _ctx->Allocator_Temp, tok_to_str(name) );
-	strip_space(name_stripped);
+	strbuilder_strip_space(name_stripped);
 
 	CodeFn
 	result              = (CodeFn) make_code();

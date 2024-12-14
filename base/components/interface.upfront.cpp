@@ -25,22 +25,22 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 #	define check_params()                                                                                                   \
 	if ( ! params_code )                                                                                                    \
 	{                                                                                                                       \
-		log_failure("gen::def_operator: params is null and operator%s requires it", operator_to_str(op));                   \
+		log_failure("gen::def_operator: params is null and operator %S requires it", operator_to_str(op));                  \
 		return OpValResult_Fail;                                                                                            \
 	}                                                                                                                       \
 	if ( params_code->Type != CT_Parameters )                                                                               \
 	{                                                                                                                       \
-		log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str( cast(Code, params_code)));  \
+		log_failure("gen::def_operator: params is not of Parameters type - %S", code_debug_str( cast(Code, params_code)));  \
 		return OpValResult_Fail;                                                                                            \
 	}
 
 #	define check_param_eq_ret()                                                                            \
 	if ( ! is_member_symbol && ! code_is_equal(cast(Code, params_code->ValueType), cast(Code, ret_type)) ) \
 	{                                                                                                      \
-		log_failure("gen::def_operator: operator%s requires first parameter to equal return type\n"        \
-			"param types: %s\n"                                                                            \
-			"return type: %s",                                                                             \
-			operator_to_str(op).Ptr,                                                                       \
+		log_failure("gen::def_operator: operator %S requires first parameter to equal return type\n"       \
+			"param types: %S\n"                                                                            \
+			"return type: %S",                                                                             \
+			operator_to_str(op),                                                                           \
 			code_debug_str(cast(Code, params_code)),                                                       \
 			code_debug_str(cast(Code, ret_type))                                                           \
 		);                                                                                                 \
@@ -50,12 +50,15 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 
 	if ( ! ret_type )
 	{
-		log_failure("gen::def_operator: ret_type is null but is required by operator%s", operator_to_str(op));
+		log_failure("gen::def_operator: ret_type is null but is required by operator %S", operator_to_str(op));
 	}
 
 	if ( ret_type->Type != CT_Typename )
 	{
-		log_failure("gen::def_operator: ret_type is not of typename type - %s", code_debug_str(cast(Code, ret_type)));
+		log_failure("gen::def_operator: operator %S - ret_type is not of typename type - %S",
+			operator_to_str(op),
+			code_debug_str(cast(Code, ret_type))
+		);
 		return OpValResult_Fail;
 	}
 
@@ -70,7 +73,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 			if ( params_code->NumEntries > 1 )
 			{
 				log_failure("gen::def_operator: "
-					"operator%s does not support non-member definition (more than one parameter provided) - %s",
+					"operator %S does not support non-member definition (more than one parameter provided) - %S",
 					operator_to_str(op),
 					code_debug_str(cast(Code, params_code))
 				);
@@ -100,7 +103,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 
 			if (params_code->NumEntries > 2 )
 			{
-				log_failure("gen::def_operator: operator%s may not be defined with more than two parametes - param count; %d\n%s"
+				log_failure("gen::def_operator: operator %S may not be defined with more than two parametes - param count; %d\n%S"
 					, operator_to_str(op)
 					, params_code->NumEntries
 					, code_debug_str(cast(Code, params_code))
@@ -116,7 +119,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure("gen::def_operator: operator%s params code provided is not of Parameters type - %s"
+					log_failure("gen::def_operator: operator %S params code provided is not of Parameters type - %S"
 						, operator_to_str(op)
 						, code_debug_str(cast(Code, params_code))
 					);
@@ -139,7 +142,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 						if ( ! code_is_equal((Code)params_get(params_code, 1), (Code)t_int ) )
 						{
 							log_failure("gen::def_operator: "
-								"operator%s requires second parameter of non-member definition to be int for post-decrement",
+								"operator %S requires second parameter of non-member definition to be int for post-decrement",
 								operator_to_str(op)
 							);
 							return OpValResult_Fail;
@@ -147,7 +150,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 						break;
 
 					default:
-						log_failure("gen::def_operator: operator%s recieved unexpected number of parameters recived %d instead of 0-2"
+						log_failure("gen::def_operator: operator %S recieved unexpected number of parameters recived %d instead of 0-2"
 							, operator_to_str(op)
 							, params_code->NumEntries
 						);
@@ -165,16 +168,16 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str((Code)params_code));
+					log_failure("gen::def_operator: params is not of Parameters type - %S", code_debug_str((Code)params_code));
 					return OpValResult_Fail;
 				}
 
 				if ( code_is_equal((Code)params_code->ValueType, (Code)ret_type ) )
 				{
 					log_failure("gen::def_operator: "
-						"operator%s is non-member symbol yet first paramter does not equal return type\n"
-						"param type: %s\n"
-						"return type: %s\n"
+						"operator %S is non-member symbol yet first paramter does not equal return type\n"
+						"param type: %S\n"
+						"return type: %S\n"
 						, code_debug_str((Code)params_code)
 						, code_debug_str((Code)ret_type)
 					);
@@ -183,7 +186,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 
 				if ( params_code->NumEntries > 1 )
 				{
-					log_failure("gen::def_operator: operator%s may not have more than one parameter - param count: %d"
+					log_failure("gen::def_operator: operator %S may not have more than one parameter - param count: %d"
 						, operator_to_str(op)
 						, params_code->NumEntries
 					);
@@ -198,7 +201,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 		#if 0
 			if ( ! ret_type.is_equal( t_bool) )
 			{
-				log_failure( "gen::def_operator: return type is not a boolean - %s", code_debug_str(params_code) );
+				log_failure( "gen::def_operator: operator %S return type is not a boolean - %S", operator_to_str(op) code_debug_str(params_code) );
 				return OpValidateResult::Fail;
 			}
 		#endif
@@ -210,14 +213,14 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure( "gen::def_operator: params is not of Parameters type - %s", code_debug_str((Code)params_code) );
+					log_failure( "gen::def_operator: operator %S - params is not of Parameters type - %S", operator_to_str(op), code_debug_str((Code)params_code) );
 					return OpValResult_Fail;
 				}
 
 				if ( params_code->NumEntries > 1 )
 				{
 					log_failure(
-						"gen::def_operator: operator%s may not have more than one parameter - param count: %d",
+						"gen::def_operator: operator %S may not have more than one parameter - param count: %d",
 						operator_to_str( op ),
 						params_code->NumEntries
 					);
@@ -246,21 +249,22 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 					break;
 
 				case 2:
-					if ( ! code_is_equal((Code)params_code->ValueType, (Code)ret_type ) )
-					{
-						log_failure("gen::def_operator: "
-							"operator%s is non-member symbol yet first paramter does not equal return type\n"
-							"param type: %s\n"
-							"return type: %s\n"
-							, code_debug_str((Code)params_code)
-							, code_debug_str((Code)ret_type)
-						);
-						return OpValResult_Fail;
-					}
+					// This is allowed for arithemtic operators
+					// if ( ! code_is_equal((Code)params_code->ValueType, (Code)ret_type ) )
+					// {
+					// 	log_failure("gen::def_operator: "
+					// 		"operator %S is non-member symbol yet first paramter does not equal return type\n"
+					// 		"param type: %S\n"
+					// 		"return type: %S\n"
+					// 		, code_debug_str((Code)params_code)
+					// 		, code_debug_str((Code)ret_type)
+					// 	);
+					// 	return OpValResult_Fail;
+					// }
 					break;
 
 				default:
-					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-2"
+					log_failure("gen::def_operator: operator %S recieved unexpected number of paramters recived %d instead of 0-2"
 						, operator_to_str(op)
 						, params_code->NumEntries
 					);
@@ -276,13 +280,13 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 			{
 				if ( params_code->Type != CT_Parameters )
 				{
-					log_failure("gen::def_operator: params is not of Parameters type - %s", code_debug_str((Code)params_code));
+					log_failure("gen::def_operator: operator %S - params is not of Parameters type - %S", operator_to_str(op), code_debug_str((Code)params_code));
 					return OpValResult_Fail;
 				}
 
 				if ( params_code->NumEntries != 1 )
 				{
-					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
+					log_failure("gen::def_operator: operator %S recieved unexpected number of paramters recived %d instead of 0-1"
 						, operator_to_str(op)
 						, params_code->NumEntries
 					);
@@ -292,7 +296,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 
 			if ( ! code_is_equal((Code)ret_type, (Code)t_bool ))
 			{
-				log_failure("gen::def_operator: operator%s return type must be of type bool - %s"
+				log_failure("gen::def_operator: operator %S return type must be of type bool - %S"
 					, operator_to_str(op)
 					, code_debug_str((Code)ret_type)
 				);
@@ -320,7 +324,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 					break;
 
 				default:
-					log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 1-2"
+					log_failure("gen::def_operator: operator %S recieved unexpected number of paramters recived %d instead of 1-2"
 						, operator_to_str(op)
 						, params_code->NumEntries
 					);
@@ -333,7 +337,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 		case Op_MemberOfPointer:
 			if ( params_code && params_code->NumEntries > 1)
 			{
-				log_failure("gen::def_operator: operator%s recieved unexpected number of paramters recived %d instead of 0-1"
+				log_failure("gen::def_operator: operator %S recieved unexpected number of paramters recived %d instead of 0-1"
 					, operator_to_str(op)
 					, params_code->NumEntries
 				);
@@ -348,7 +352,7 @@ OpValidateResult operator__validate( Operator op, CodeParams params_code, CodeTy
 		case Op_PtrToMemOfPtr:
 			if ( params_code )
 			{
-				log_failure("gen::def_operator: operator%s expects no paramters - %s", operator_to_str(op), code_debug_str((Code)params_code));
+				log_failure("gen::def_operator: operator %S expects no paramters - %S", operator_to_str(op), code_debug_str((Code)params_code));
 				return OpValResult_Fail;
 			}
 			break;
