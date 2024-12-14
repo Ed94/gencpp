@@ -149,7 +149,7 @@ usize array_grow_formula(ssize value) {
 
 template<class Type> inline
 bool array_append_array(Array<Type>* array, Array<Type> other) {
-	return array_append_items(array, (Type*)other, num(other));
+	return array_append_items(array, (Type*)other, array_num(other));
 }
 
 template<class Type> inline
@@ -179,13 +179,13 @@ bool array_append_items(Array<Type>* array, Type* items, usize item_num)
 	GEN_ASSERT(* array != nullptr);
 	GEN_ASSERT(items != nullptr);
 	GEN_ASSERT(item_num > 0);
-	ArrayHeader* header = array_get_header(array);
+	ArrayHeader* header = array_get_header(* array);
 
 	if (header->Num + item_num > header->Capacity)
 	{
-		if ( ! grow(array, header->Capacity + item_num))
+		if ( ! array_grow(array, header->Capacity + item_num))
 			return false;
-		header = array_get_header(array);
+		header = array_get_header(* array);
 	}
 
 	mem_copy((Type*)array + header->Num, items, item_num * sizeof(Type));
