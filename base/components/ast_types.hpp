@@ -146,9 +146,15 @@ struct AST_Define
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StrCached  Content;
+		struct
+		{
+			char              _PAD_PROPERTIES_ [ sizeof(AST*) * 4 ];
+			CodeDefineParams  Params;
+			Code              Body; // Should be completely serialized for now to a: StrCached Content.
+			char              _PAD_PROPERTIES_ [ sizeof(AST*) * 1 ];
+		};
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -157,6 +163,22 @@ struct AST_Define
 	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Define) == sizeof(AST), "ERROR: AST_Define is not the same size as AST");
+
+struct AST_DefineParams
+{
+	union {
+		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+	};
+	StrCached         Name;
+	CodeDefineParams  Last;
+	CodeDefineParams  Next;
+	Token*            Tok;
+	Code              Parent;
+	CodeType          Type;
+	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	s32               NumEntries;
+};
+static_assert( sizeof(AST_DefineParams) == sizeof(AST), "ERROR: AST_DefineParams is not the same size as AST");
 
 struct AST_Destructor
 {
@@ -660,6 +682,7 @@ struct AST_Params
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
+			// TODO(Ed): Support attributes for parameters (Some prefix macros can be converted to that...)
 			char 	     _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 			CodeTypename ValueType;
 			Code         Macro;
@@ -668,7 +691,7 @@ struct AST_Params
 			// char     _PAD_PROPERTIES_3_[sizeof( AST* )];
 		};
 	};
-	StrCached      Name;
+	StrCached         Name;
 	CodeParams        Last;
 	CodeParams        Next;
 	Token*            Tok;

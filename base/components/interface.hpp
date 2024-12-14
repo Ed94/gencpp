@@ -71,7 +71,7 @@ struct Context
 	// Used by the lexer to persistently treat all these identifiers as preprocessor defines.
 	// Populate with strings via gen::cache_str.
 	// Functional defines must have format: id( ;at minimum to indicate that the define is only valid with arguments.
-	Array(StrCached) PreprocessorDefines;
+	HashTable(PreprocessorMacro) PreprocessorMacros;
 
 // Backend
 
@@ -88,8 +88,8 @@ struct Context
 
 	// TODO(Ed): This needs to be just handled by a parser context
 
-	Arena LexArena;
-	StringTable  Lexer_defines;
+	// Arena LexArena;
+	// StringTable  Lexer_defines;
 	Array(Token) Lexer_Tokens;
 
 	// TODO(Ed): Active parse context vs a parse result need to be separated conceptually
@@ -109,9 +109,13 @@ GEN_API void reset(Context* ctx);
 
 GEN_API void set_context(Context* ctx);
 
+// Mostly used to verify a macro entry exists for the given name
+GEN_API PreprocessMacro* lookup_preprocess_macro( Str Name );
+
 // Alternative way to add a preprocess define entry for the lexer & parser to utilize 
 // if the user doesn't want to use def_define
-GEN_API void set_preprocess_define( Str id, b32 is_functional );
+// Macros are tracked by name so if the name already exists the entry will be overwritten.
+GEN_API void register_preprocess_macro( PreprocessorMacro macro );
 
 // Used internally to retrive or make string allocations.
 // Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
@@ -150,9 +154,11 @@ struct Opts_def_constructor {
 GEN_API CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_define {
-	b32 dont_append_preprocess_defines;
+	MacroFlags       flags;
+	CodeDefineParams params;
+	b32              dont_register_to_preprocess_macros;
 };
-GEN_API CodeDefine def_define( Str name, Str content, Opts_def_define opts GEN_PARAM_DEFAULT );
+GEN_API CodeDefine def_define( Str name, MacroType type, Opts_def_define opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_destructor {
 	Code           body;

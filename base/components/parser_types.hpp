@@ -6,37 +6,49 @@
 #include "gen/especifier.hpp"
 #endif
 
-enum MacroFlags : u32
+enum MacroTypes : u16
 {
-	// Can only be one of these at a time (required)
-	MF_Block_Start    = bit(0), // Start of a "block" scope
-	MF_Block_End      = bit(1), // End of a "block" scope
-	MF_Case_Statement = bit(2), // Used as a case statement (not utilized by the parser yet)
-	MF_Expression     = bit(3), // Used as an expresssion (not utilized by the parser yet)
-	MF_Statement      = bit(4), // Used a statement (will expect to be a lone macro)
-	MF_Expects_Body   = bit(5), // Expects to consume a braced scope
-	MF_Typename       = bit(6), // Behaves as a typename
+	MT_Block_Start,    // Not Supported yet
+	MT_Block_End,      // Not Supported yet
+	MT_Case_Statement, // Not Supported yet
+	MT_Expression,
+	MT_Statement,
+	MT_Typename,
 
-	// Optional
-	MF_Functional     = bit(7),
+	MF_UnderlyingType = GEN_U16_Max,
+};
+
+enum MacroFlags : u16
+{
+	MF_Functional     = bit(0), // Macro has parameters (args expected to be passed)
+	MF_Expects_Body   = bit(1), // Expects to assign a braced scope to its body.
 
 	MF_Null           = 0,
-	MF_UnderlyingType = GEN_U32_MAX,
+	MF_UnderlyingType = GEN_U16_Max,
+};
+
+struct PreprocessorMacro
+{
+	StrCached  Name;
+	MacroTypes Type;
+	MacroFlags Flags;
 };
 
 enum TokFlags : u32
 {
-	TF_Operator		   = bit(0),
-	TF_Assign          = bit(1),
-	TF_Preprocess      = bit(2),
-	TF_Preprocess_Cond = bit(3),
-	TF_Attribute       = bit(6),
-	TF_AccessOperator  = bit( 7 ),
-	TF_AccessSpecifier = bit( 8 ),
-	TF_Specifier       = bit( 9 ),
-	TF_EndDefinition   = bit( 10 ),    // Either ; or }
-	TF_Formatting      = bit( 11 ),
-	TF_Literal         = bit( 12 ),
+	TF_Operator		         = bit(0),
+	TF_Assign                = bit(1),
+	TF_Preprocess            = bit(2),
+	TF_Preprocess_Cond       = bit(3),
+	TF_Attribute             = bit(6),
+	TF_AccessOperator        = bit(7),
+	TF_AccessSpecifier       = bit(8),
+	TF_Specifier             = bit(9),
+	TF_EndDefinition         = bit(10),    // Either ; or }
+	TF_Formatting            = bit(11),
+	TF_Literal               = bit(12),
+	TF_Macro_Functional      = bit(13),
+	TF_Macro_Expects_Body    = bit(14),
 
 	TF_Null = 0,
 	TF_UnderlyingType = GEN_U32_MAX,
@@ -123,7 +135,7 @@ struct LexContext
 	char const*     scanner;
 	s32             line;
 	s32             column;
-	StringTable     defines;
+	// StringTable     defines;
 	Token           token;
 };
 

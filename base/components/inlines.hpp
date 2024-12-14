@@ -257,6 +257,16 @@ CodeParams next_CodeParams(CodeParams params, CodeParams param_iter)
 }
 #pragma endregion CodeParams
 
+#pragma region CodeDefineParams
+forceinline void             define_params_append     (CodeDefineParams appendee, CodeDefineParams other ) { params_append( cast(CodeParams, appendee), cast(CodeParams, other) ); }
+forceinline CodeDefineParams define_params_get        (CodeDefineParams self, s32 idx )                    { return params_get( cast(CodeParams, self), idx); }
+forceinline bool             define_params_has_entries(CodeDefineParams self)                              { return params_has_entries( cast(CodeParams, self)); }
+
+CodeDefineParams begin_CodeDefineParams(CodeDefineParams params)                              { return begin_CodeParams( cast(CodeParams, params)); }
+CodeDefineParams end_CodeDefineParams  (CodeDefineParams params)                              { return end_CodeParams  ( cast(CodeParams, params)); }
+CodeDefineParams next_CodeDefineParams (CodeDefineParams params, CodeDefineParams entry_iter) { return next_CodeParams ( cast(CodeParams, params), cast(CoeParams, entry_iter)); }
+#pragma endregion CodeDefineParams
+
 #pragma region CodeSpecifiers
 inline
 bool specifiers_append(CodeSpecifiers self, Specifier spec )

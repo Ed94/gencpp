@@ -221,6 +221,9 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		name.Text.Len = 1;
 		move_forward();
 
+		PreprocessorMacro* registered_macro = lookup_preprocess_macro(name.Text);
+		
+
 		while ( ctx->left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) )
 		{
 			move_forward();
@@ -477,23 +480,24 @@ TokArray lex( Str content )
 		return null_array;
 	}
 
-	for ( StrCached* entry = array_begin(_ctx->PreprocessorDefines); entry != array_end(_ctx->PreprocessorDefines); entry = array_next(_ctx->PreprocessorDefines, entry))
-	{
-		s32         length  = 0;
-		char const* entry_scanner = (*entry).Ptr;
-		while ( entry->Len > length && (char_is_alphanumeric( *entry_scanner ) || *entry_scanner == '_') )
-		{
-			entry_scanner++;
-			length ++;
-		}
-		if ( entry_scanner[0] == '(' )
-		{
-			length++;
-		}
+	// TODO(ED): Remove this when preprocess defines has been converted
+	// for ( StrCached* entry = array_begin(_ctx->PreprocessorDefines); entry != array_end(_ctx->PreprocessorDefines); entry = array_next(_ctx->PreprocessorDefines, entry))
+	// {
+	// 	s32         length  = 0;
+	// 	char const* entry_scanner = (*entry).Ptr;
+	// 	while ( entry->Len > length && (char_is_alphanumeric( *entry_scanner ) || *entry_scanner == '_') )
+	// 	{
+	// 		entry_scanner++;
+	// 		length ++;
+	// 	}
+	// 	if ( entry_scanner[0] == '(' )
+	// 	{
+	// 		length++;
+	// 	}
 
-		u64 key = crc32( entry->Ptr, length );
-		hashtable_set(c.defines, key, * entry );
-	}
+	// 	u64 key = crc32( entry->Ptr, length );
+	// 	hashtable_set(c.defines, key, * entry );
+	// }
 
 	array_clear(_ctx->Lexer_Tokens);
 
@@ -1210,8 +1214,6 @@ TokArray lex( Str content )
 		}
 	}
 
-	hashtable_clear(_ctx->Lexer_defines);
-	// defines_map_arena.free();
 	TokArray result = { _ctx->Lexer_Tokens, 0 };
 	return result;
 }

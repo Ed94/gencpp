@@ -354,7 +354,7 @@ void deinit(Context* ctx)
 	array_free( ctx->CodePools);
 	array_free( ctx->StringArenas);
 
-	arena_free(& ctx->LexArena);
+	// arena_free(& ctx->LexArena);
 
 	array_free(ctx->PreprocessorDefines);
 
@@ -463,10 +463,12 @@ Code make_code()
 	return result;
 }
 
-void set_preprocess_define( Str id, b32 is_functional ) {
-	StrBuilder builder = strbuilder_make_str( _ctx->Allocator_Temp, id );
-	if (is_functional) {
-		strbuilder_append_char( & builder, '(' );
-	}
-	array_append( _ctx->PreprocessorDefines, cache_str( strbuilder_to_str(builder)) ); 
+PreprocessorMacro* lookup_preprocess_macro( Str name ) {
+	u32 key = crc32( name.Ptr, name.Len );
+	return hashtable_get( _ctx->PreprocessorMacros, key );
+}
+
+void register_preprocess_macro( PreprocessorMacro macro ) {
+	u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
+	hashtable_set( _ctx->PreprocessorMacros, key, macro );
 }

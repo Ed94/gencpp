@@ -1774,7 +1774,7 @@ CodeBody parse_global_nspace( CodeType which )
 				// <Attributes>
 			}
 			//! Fallthrough intentional
-			GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_TOK_SPECIFIERS_CASES:
+			GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_TOK_SPECIFIER_CASES:
 			{
 				Specifier specs_found[16] = { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
@@ -1787,7 +1787,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 					switch ( spec )
 					{
-						GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_SPECIFIERS_CASES:
+						GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_SPECIFIER_CASES:
 						break;
 
 						case Spec_Consteval:
@@ -2687,6 +2687,7 @@ CodeParams parse_params( bool use_template_capture )
 	#define CheckEndParams() \
 		(use_template_capture ? (currtok.Text.Ptr[ 0 ] != '>') : (currtok.Type != Tok_Capture_End))
 
+	// TODO(Ed): Use expression macros or this? macro as attribute?
 	// Ex: Unreal has this type of macro:                 vvvvvvvvv
 	// COREUOBJECT_API void CallFunction( FFrame& Stack, RESULT_DECL, UFunction* Function );
 	// and:                 vvvv
@@ -2713,6 +2714,7 @@ CodeParams parse_params( bool use_template_capture )
 			// ( <Macro> <ValueType> <Name>
 		}
 
+		// TODO(Ed): Use expression macro for this?
 		// Unreal has yet another type of macro:
 		// template<class T UE_REQUIRES(TPointerIsConvertibleFromTo<T, UInterface>::Value)>
 		// class T ... and then ^this^ UE_REQUIRES shows up

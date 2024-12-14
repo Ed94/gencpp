@@ -26,6 +26,7 @@ struct AST_Constructor;
 // struct AST_BaseClass;
 struct AST_Class;
 struct AST_Define;
+struct AST_DefineParams;
 struct AST_Destructor;
 struct AST_Enum;
 struct AST_Exec;
@@ -98,6 +99,7 @@ typedef AST_Comment*        CodeComment;
 typedef AST_Class*          CodeClass;
 typedef AST_Constructor*    CodeConstructor;
 typedef AST_Define*         CodeDefine;
+typedef AST_DefineParams*   CodeDefineParams;
 typedef AST_Destructor*     CodeDestructor;
 typedef AST_Enum*           CodeEnum;
 typedef AST_Exec*           CodeExec;
@@ -120,6 +122,7 @@ struct CodeComment;
 struct CodeClass;
 struct CodeConstructor;
 struct CodeDefine;
+struct CodeDefineParams;
 struct CodeDestructor;
 struct CodeEnum;
 struct CodeExec;
@@ -305,6 +308,7 @@ struct Code
 	operator CodeClass() const;
 	operator CodeConstructor() const;
 	operator CodeDefine() const;
+	operator CodeDefineParams() const;
 	operator CodeDestructor() const;
 	operator CodeExec() const;
 	operator CodeEnum() const;
@@ -365,6 +369,7 @@ int AST_ArrSpecs_Cap =
 
 /*
 	Simple AST POD with functionality to seralize into C++ syntax.
+	TODO(Ed): Eventually haven't a transparent AST like this will longer be viable once statements & expressions are in (most likely....)
 */
 struct AST
 {
@@ -372,7 +377,7 @@ struct AST
 		struct
 		{
 			Code      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
-			Code      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable
+			Code      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable // TODO(Ed): Parameters can have attributes
 			Code      Specs;           // Destructor, Function, Operator, Typename, Variable
 			union {
 				Code  InitializerList; // Constructor
@@ -384,12 +389,12 @@ struct AST
 			union {
 				Code  Macro;               // Parameter
 				Code  BitfieldSize;        // Variable (Class/Struct Data Member)
-				Code  Params;              // Constructor, Function, Operator, Template, Typename
+				Code  Params;              // Constructor, Define, Function, Operator, Template, Typename
 				Code  UnderlyingTypeMacro; // Enum
 			};
 			union {
 				Code  ArrExpr;          // Typename
-				Code  Body;             // Class, Constructor, Destructor, Enum, Friend, Function, Namespace, Struct, Union
+				Code  Body;             // Class, Constructor, Define, Destructor, Enum, Friend, Function, Namespace, Struct, Union
 				Code  Declaration;      // Friend, Template
 				Code  Value;            // Parameter, Variable
 			};

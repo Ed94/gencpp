@@ -25,7 +25,7 @@ case Spec_Static:      \
 case Spec_Volatile:    \
 case Spec_Virtual
 
-#define GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_TOK_SPECIFIERS_CASES \
+#define GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_TOK_SPECIFIER_CASES \
 case Tok_Spec_Consteval:        \
 case Tok_Spec_Constexpr:        \
 case Tok_Spec_Constinit:        \
@@ -37,7 +37,7 @@ case Tok_Spec_Internal_Linkage: \
 case Tok_Spec_NeverInline:      \
 case Tok_Spec_Static
 
-#define GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_SPECIFIERS_CASES \
+#define GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_SPECIFIER_CASES \
 case Spec_Constexpr:        \
 case Spec_Constinit:        \
 case Spec_ForceInline:      \
