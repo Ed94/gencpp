@@ -1165,7 +1165,7 @@ bool code_validate_body(Code self)
 			CodeBody body = cast(CodeBody, self);
 			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
 			{
-				GEN_AST_BODY_CLASS_UNALLOWED_TYPES:
+				GEN_AST_BODY_CLASS_UNALLOWED_TYPES_CASES:
 					log_failure("AST::validate_body: Invalid entry in body %S", code_debug_str(code_entry));
 				return false;
 
@@ -1192,7 +1192,7 @@ bool code_validate_body(Code self)
 			CodeBody body = cast(CodeBody, self);
 			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
 			{
-				GEN_AST_BODY_EXPORT_UNALLOWED_TYPES:
+				GEN_AST_BODY_EXPORT_UNALLOWED_TYPES_CASES:
 					log_failure("AST::validate_body: Invalid entry in body %S", code_debug_str(code_entry));
 				return false;
 
@@ -1206,7 +1206,7 @@ bool code_validate_body(Code self)
 			CodeBody body = cast(CodeBody, self);
 			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
 			{
-				GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES:
+				GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES_CASES:
 					log_failure("AST::validate_body: Invalid entry in body %S", code_debug_str(code_entry));
 				return false;
 
@@ -1220,7 +1220,7 @@ bool code_validate_body(Code self)
 			CodeBody body = cast(CodeBody, self);
 			for (Code code_entry = begin_CodeBody(body); code_entry != end_CodeBody(body); next_CodeBody(body, code_entry)) switch (code_entry->Type)
 			{
-				GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES:
+				GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES_CASES:
 					log_failure("AST::validate_body: Invalid entry in body %S", code_debug_str(code_entry));
 				return false;
 
@@ -1234,7 +1234,7 @@ bool code_validate_body(Code self)
 			CodeBody body = cast(CodeBody, self);
 			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) )switch (entry->Type)
 			{
-				GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES:
+				GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES_CASES:
 					log_failure("AST::validate_body: Invalid entry in body %S", code_debug_str(entry));
 				return false;
 			}
@@ -1245,7 +1245,7 @@ bool code_validate_body(Code self)
 			CodeBody body = cast(CodeBody, self);
 			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) ) switch (entry->Type)
 			{
-				GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES:
+				GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES_CASES:
 					log_failure("AST::validate_body: Invalid entry in body %S", code_debug_str(entry));
 				return false;
 			}
@@ -1256,7 +1256,7 @@ bool code_validate_body(Code self)
 			CodeBody body = cast(CodeBody, self);
 			for ( Code entry = begin_CodeBody(body); entry != end_CodeBody(body); next_CodeBody(body, entry) ) switch (entry->Type)
 			{
-				GEN_AST_BODY_STRUCT_UNALLOWED_TYPES:
+				GEN_AST_BODY_STRUCT_UNALLOWED_TYPES_CASES:
 					log_failure("AST::validate_body: Invalid entry in body %S", code_debug_str(entry));
 				return false;
 			}

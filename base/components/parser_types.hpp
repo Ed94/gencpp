@@ -6,6 +6,24 @@
 #include "gen/especifier.hpp"
 #endif
 
+enum MacroFlags : u32
+{
+	// Can only be one of these at a time (required)
+	MF_Block_Start    = bit(0), // Start of a "block" scope
+	MF_Block_End      = bit(1), // End of a "block" scope
+	MF_Case_Statement = bit(2), // Used as a case statement (not utilized by the parser yet)
+	MF_Expression     = bit(3), // Used as an expresssion (not utilized by the parser yet)
+	MF_Statement      = bit(4), // Used a statement (will expect to be a lone macro)
+	MF_Expects_Body   = bit(5), // Expects to consume a braced scope
+	MF_Typename       = bit(6), // Behaves as a typename
+
+	// Optional
+	MF_Functional     = bit(7),
+
+	MF_Null           = 0,
+	MF_UnderlyingType = GEN_U32_MAX,
+};
+
 enum TokFlags : u32
 {
 	TF_Operator		   = bit(0),

@@ -210,16 +210,17 @@ int gen_main()
 			header.print_fmt( roll_own_dependencies_guard_end );
 		}
 
-		Code static_data 	   = scan_file( path_base "components/static_data.cpp" );
-		Code ast_case_macros   = scan_file( path_base "components/ast_case_macros.cpp" );
-		Code ast               = scan_file( path_base "components/ast.cpp" );
-		Code code              = scan_file( path_base "components/code_serialization.cpp" );
-		Code interface         = scan_file( path_base "components/interface.cpp" );
-		Code upfront           = scan_file( path_base "components/interface.upfront.cpp" );
-		Code lexer             = scan_file( path_base "components/lexer.cpp" );
-		Code parser            = scan_file( path_base "components/parser.cpp" );
-		Code parsing_interface = scan_file( path_base "components/interface.parsing.cpp" );
-		Code untyped           = scan_file( path_base "components/interface.untyped.cpp" );
+		Code static_data 	    = scan_file( path_base "components/static_data.cpp" );
+		Code ast_case_macros    = scan_file( path_base "components/ast_case_macros.cpp" );
+		Code ast                = scan_file( path_base "components/ast.cpp" );
+		Code code               = scan_file( path_base "components/code_serialization.cpp" );
+		Code interface          = scan_file( path_base "components/interface.cpp" );
+		Code upfront            = scan_file( path_base "components/interface.upfront.cpp" );
+		Code lexer              = scan_file( path_base "components/lexer.cpp" );
+		Code parser_case_macros = scan_file( path_base "components/parser_case_macros.cpp" );
+		Code parser             = scan_file( path_base "components/parser.cpp" );
+		Code parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
+		Code untyped            = scan_file( path_base "components/interface.untyped.cpp" );
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
@@ -236,6 +237,7 @@ int gen_main()
 		header.print( upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
 		header.print( lexer );
+		header.print( parser_case_macros );
 		header.print( parser );
 		header.print( parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );

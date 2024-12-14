@@ -9,10 +9,7 @@ using namespace gen;
 
 CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 {
-	FixedArena_32KB scratch;       fixed_arena_init(& scratch);
-	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
-
-	CSV_Columns2 csv_enum                 = parse_csv_two_columns( scratch_info, path );
+	CSV_Columns2 csv_enum                 = parse_csv_two_columns( _ctx->Allocator_Temp, path );
 	StrBuilder   enum_entries             = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
 	StrBuilder   to_c_str_entries         = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
 	StrBuilder   to_keyword_c_str_entries = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
@@ -93,10 +90,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 
 CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 {
-	FixedArena_16KB scratch;       fixed_arena_init(& scratch);
-	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
-
-	CSV_Columns2 csv_enum       = parse_csv_two_columns( scratch_info, path );
+	CSV_Columns2 csv_enum       = parse_csv_two_columns( _ctx->Allocator_Temp, path );
 	StrBuilder enum_entries     = strbuilder_make_reserve( _ctx->Allocator_Temp, 32 );
 	StrBuilder to_c_str_entries = strbuilder_make_reserve( _ctx->Allocator_Temp, 32 );
 
@@ -178,12 +172,9 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 
 CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 {
-	FixedArena_16KB scratch;       fixed_arena_init(& scratch);
-	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
-
-	CSV_Columns2 csv_enum       = parse_csv_two_columns(   scratch_info, path );
-	StrBuilder enum_entries     = strbuilder_make_reserve( scratch_info, kilobytes(1) );
-	StrBuilder to_c_str_entries = strbuilder_make_reserve( scratch_info, kilobytes(1) );
+	CSV_Columns2 csv_enum       = parse_csv_two_columns( _ctx->Allocator_Temp, path );
+	StrBuilder enum_entries     = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
+	StrBuilder to_c_str_entries = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
 
 	for (usize idx = 0; idx < array_num(csv_enum.Col_1); idx++)
 	{
@@ -317,29 +308,24 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 
 CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_definition = false )
 {
-	FixedArena_64KB scratch;       fixed_arena_init(& scratch);
-	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
-
-	FileContents enum_content = file_read_contents( scratch_info, file_zero_terminate, etok_path );
-
+	FileContents enum_content = file_read_contents( _ctx->Allocator_Temp, file_zero_terminate, etok_path );
 	CSV_Object csv_enum_nodes;
-	csv_parse( &csv_enum_nodes, rcast(char*, enum_content.data), scratch_info, false );
+	csv_parse( &csv_enum_nodes, rcast(char*, enum_content.data), _ctx->Allocator_Temp, false );
 
-	FileContents attrib_content = file_read_contents( scratch_info, file_zero_terminate, attr_path );
-
+	FileContents attrib_content = file_read_contents( _ctx->Allocator_Temp, file_zero_terminate, attr_path );
 	CSV_Object csv_attr_nodes;
-	csv_parse( &csv_attr_nodes, rcast(char*, attrib_content.data), scratch_info, false );
+	csv_parse( &csv_attr_nodes, rcast(char*, attrib_content.data), _ctx->Allocator_Temp, false );
 
 	Array<ADT_Node> enum_strs            = csv_enum_nodes.nodes[0].nodes;
 	Array<ADT_Node> enum_c_str_strs      = csv_enum_nodes.nodes[1].nodes;
 	Array<ADT_Node> attribute_strs       = csv_attr_nodes.nodes[0].nodes;
 	Array<ADT_Node> attribute_c_str_strs = csv_attr_nodes.nodes[1].nodes;
 
-	StrBuilder enum_entries             = strbuilder_make_reserve( scratch_info, kilobytes(2) );
-	StrBuilder to_c_str_entries         = strbuilder_make_reserve( scratch_info, kilobytes(4) );
-	StrBuilder attribute_entries        = strbuilder_make_reserve( scratch_info, kilobytes(2) );
-	StrBuilder to_c_str_attributes      = strbuilder_make_reserve( scratch_info, kilobytes(4) );
-	StrBuilder attribute_define_entries = strbuilder_make_reserve( scratch_info, kilobytes(4) );
+	StrBuilder enum_entries             = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(2) );
+	StrBuilder to_c_str_entries         = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(4) );
+	StrBuilder attribute_entries        = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(2) );
+	StrBuilder to_c_str_attributes      = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(4) );
+	StrBuilder attribute_define_entries = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(4) );
 
 	for (usize idx = 0; idx < array_num(enum_strs); idx++)
 	{

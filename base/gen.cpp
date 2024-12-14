@@ -32,6 +32,7 @@ GEN_NS_BEGIN
 #include "components/interface.cpp"
 #include "components/interface.upfront.cpp"
 #include "components/lexer.cpp"
+#include "components/parser_case_macros.cpp"
 #include "components/parser.cpp"
 #include "components/interface.parsing.cpp"
 #include "components/interface.untyped.cpp"

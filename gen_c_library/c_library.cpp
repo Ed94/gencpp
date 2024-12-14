@@ -1247,6 +1247,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code src_interface          = scan_file( path_base "components/interface.cpp" );
 	Code src_parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
 	Code src_untyped            = scan_file( path_base "components/interface.untyped.cpp" );
+	Code src_parser_case_macros = scan_file( path_base "components/parser_case_macros.cpp" );
 
 	CodeBody parsed_src_ast = parse_file( path_base "components/ast.cpp" );
 	CodeBody src_ast        = def_body(CT_Global_Body);
@@ -1500,6 +1501,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code r_src_ast_case_macros    = refactor(src_ast_case_macros);
 	Code r_src_ast                = refactor(src_ast);
 	Code r_src_code_serialization = refactor(src_code_serialization);
+	Code r_src_parser_case_macros = refactor(src_parser_case_macros);
 
 	Code r_src_interface        = refactor(src_interface);
 	Code r_src_upfront          = refactor_and_format(src_upfront);
@@ -1649,6 +1651,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( fmt_newline);
 		header.print( rf_array_code_typename );
 		header.print( fmt_newline);
+		header.print( r_src_parser_case_macros );
 		header.print( rf_src_parser );
 		header.print( r_src_parsing );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );

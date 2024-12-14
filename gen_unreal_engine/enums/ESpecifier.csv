@@ -1,0 +1,27 @@
+Invalid,                INVALID
+Consteval,              consteval
+Constexpr,              constexpr
+Constinit,              constinit
+Explicit,               explicit
+External_Linkage,       extern
+ForceInline, 	        FORCEINLINE
+ForceInline_Debuggable, FORCEINLINE_DEBUGGABLE
+Global,                 global
+Inline,                 inline
+Internal_Linkage,       internal
+Local_Persist,          local_persist
+Mutable,                mutable
+NeverInline,            neverinline
+Ptr,                    *
+Ref,                    &
+Register,               register
+RValue,                 &&
+Static,                 static
+Thread_Local,           thread_local
+Virtual,                virtual
+Const,                  const
+Final,                  final
+NoExceptions,           noexcept
+Override,               override
+Pure,                   = 0
+Volatile,               volatile

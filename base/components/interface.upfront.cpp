@@ -1364,7 +1364,7 @@ CodeBody def_class_body( s32 num, ... )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_CLASS_UNALLOWED_TYPES:
+			GEN_AST_BODY_CLASS_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1396,7 +1396,7 @@ CodeBody def_class_body( s32 num, Code* codes )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_CLASS_UNALLOWED_TYPES:
+			GEN_AST_BODY_CLASS_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_class_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1486,7 +1486,7 @@ CodeBody def_export_body( s32 num, ... )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES:
+			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1518,7 +1518,7 @@ CodeBody def_export_body( s32 num, Code* codes )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES:
+			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_export_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1552,7 +1552,7 @@ CodeBody def_extern_link_body( s32 num, ... )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES:
+			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1585,7 +1585,7 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES:
+			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_extern_linkage_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1619,7 +1619,7 @@ CodeBody def_function_body( s32 num, ... )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES:
+			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1651,7 +1651,7 @@ CodeBody def_function_body( s32 num, Code* codes )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES:
+			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_function_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1690,7 +1690,7 @@ CodeBody def_global_body( s32 num, ... )
 				body_append_body( result, cast(CodeBody, entry) );
 				continue;
 
-			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES:
+			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1726,7 +1726,7 @@ CodeBody def_global_body( s32 num, Code* codes )
 				body_append_body(result, cast(CodeBody, entry) );
 				continue;
 
-			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES:
+			GEN_AST_BODY_GLOBAL_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_global_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1761,7 +1761,7 @@ CodeBody def_namespace_body( s32 num, ... )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES:
+			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1793,7 +1793,7 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES:
+			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_namespace_body" ": Entry type is not allowed: %s", code_debug_str(entry) );
 				return InvalidCode;
 
@@ -1938,7 +1938,7 @@ CodeBody def_struct_body( s32 num, ... )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES:
+			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
 
@@ -1970,7 +1970,7 @@ CodeBody def_struct_body( s32 num, Code* codes )
 		}
 		switch (entry->Type)
 		{
-			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES:
+			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES_CASES:
 				log_failure("gen::" "def_struct_body" ": Entry type is not allowed: %s", code_debug_str(entry) );
 				return InvalidCode;
 

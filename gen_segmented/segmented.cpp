@@ -193,6 +193,7 @@ int gen_main()
 		Code        interface	       = scan_file( path_base "components/interface.cpp" );
 		Code        upfront 	       = scan_file( path_base "components/interface.upfront.cpp" );
 		Code        lexer              = scan_file( path_base "components/lexer.cpp" );
+		Code        parser_case_macros = scan_file( path_base "components/parser_case_macros.cpp" );
 		Code        parser             = scan_file( path_base "components/parser.cpp" );
 		Code 	    parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
 		Code        untyped 	       = scan_file( path_base "components/interface.untyped.cpp" );
@@ -217,6 +218,7 @@ int gen_main()
 		builder_print( src, upfront );
 		builder_print_fmt( src, "\n#pragma region Parsing\n\n" );
 		builder_print( src, lexer );
+		builder_print( src, parser_case_macros );
 		builder_print( src, parser );
 		builder_print( src, parsing_interface );
 		builder_print_fmt( src, "\n#pragma endregion Parsing\n\n" );

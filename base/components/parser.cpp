@@ -1,6 +1,7 @@
 #ifdef GEN_INTELLISENSE_DIRECTIVES
 #pragma once
 #include "gen/etoktype.cpp"
+#include "parser_case_macros.cpp"
 #include "interface.upfront.cpp"
 #include "lexer.cpp"
 #endif
@@ -979,17 +980,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				// <Attributes>
 			}
 			//! Fallthrough intended
-			case Tok_Spec_Consteval:
-			case Tok_Spec_Constexpr:
-			case Tok_Spec_Constinit:
-			case Tok_Spec_Explicit:
-			case Tok_Spec_ForceInline:
-			case Tok_Spec_Inline:
-			case Tok_Spec_Mutable:
-			case Tok_Spec_NeverInline:
-			case Tok_Spec_Static:
-			case Tok_Spec_Volatile:
-			case Tok_Spec_Virtual:
+			GEN_PARSER_CLASS_STRUCT_BODY_ALLOWED_MEMBER_TOK_SPECIFIERS_CASES:
 			{
 				Specifier specs_found[16] = { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
@@ -1002,16 +993,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 					switch ( spec )
 					{
-						case Spec_Constexpr:
-						case Spec_Constinit:
-						case Spec_Explicit:
-						case Spec_Inline:
-						case Spec_ForceInline:
-						case Spec_Mutable:
-						case Spec_NeverInline:
-						case Spec_Static:
-						case Spec_Volatile:
-						case Spec_Virtual:
+						GEN_PARSER_CLASS_STRUCT_BODY_ALLOWED_MEMBER_SPECIFIERS_CASES:
 						break;
 
 						case Spec_Consteval:
@@ -1023,7 +1005,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 						break;
 
 						default:
-							log_failure( "Invalid specifier %S for variable\n%S", spec_to_str(spec), strbuilder_to_str( parser_to_strbuilder(_ctx->parser)) );
+							log_failure( "Invalid specifier %S for class/struct member\n%S", spec_to_str(spec), strbuilder_to_str( parser_to_strbuilder(_ctx->parser)) );
 							parser_pop(& _ctx->parser);
 							return InvalidCode;
 					}
@@ -1792,16 +1774,7 @@ CodeBody parse_global_nspace( CodeType which )
 				// <Attributes>
 			}
 			//! Fallthrough intentional
-			case Tok_Spec_Consteval:
-			case Tok_Spec_Constexpr:
-			case Tok_Spec_Constinit:
-			case Tok_Spec_Extern:
-			case Tok_Spec_ForceInline:
-			case Tok_Spec_Global:
-			case Tok_Spec_Inline:
-			case Tok_Spec_Internal_Linkage:
-			case Tok_Spec_NeverInline:
-			case Tok_Spec_Static:
+			GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_TOK_SPECIFIERS_CASES:
 			{
 				Specifier specs_found[16] = { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
@@ -1814,17 +1787,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 					switch ( spec )
 					{
-						case Spec_Constexpr:
-						case Spec_Constinit:
-						case Spec_ForceInline:
-						case Spec_Global:
-						case Spec_External_Linkage:
-						case Spec_Internal_Linkage:
-						case Spec_Inline:
-						case Spec_Mutable:
-						case Spec_NeverInline:
-						case Spec_Static:
-						case Spec_Volatile:
+						GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_SPECIFIERS_CASES:
 						break;
 
 						case Spec_Consteval:
@@ -2560,7 +2523,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 #ifndef GEN_PARSER_DISABLE_MACRO_FUNCTION_SIGNATURES
 	b32 lone_macro = false;
 
-	if ( currtok.Type == Tok_Preprocess_Macro && nexttok.Type == Tok_Statement_End )
+	if ( currtok.Type == Tok_Preprocess_Macro && ( nexttok.Type == Tok_Statement_End || nexttok.Type == Tok_Comment ) )
 	{
 		// Were dealing with a lone macro after attributes/specifiers, there was a end statement ';' after.
 		result = parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces );
@@ -3971,10 +3934,8 @@ CodeFriend parser_parse_friend()
 
 			switch ( spec )
 			{
-				case Spec_Const :
-				case Spec_Inline :
-				case Spec_ForceInline :
-					break;
+				GEN_PARSER_FRIEND_ALLOWED_SPECIFIERS_CASES:
+				break;
 
 				default :
 					log_failure( "Invalid specifier %S for friend definition\n%S", spec_to_str( spec ), strbuilder_to_str( parser_to_strbuilder(_ctx->parser)) );
@@ -4095,14 +4056,7 @@ CodeFn parser_parse_function()
 
 		switch ( spec )
 		{
-			case Spec_Const:
-			case Spec_Consteval:
-			case Spec_Constexpr:
-			case Spec_External_Linkage:
-			case Spec_ForceInline:
-			case Spec_Inline:
-			case Spec_NeverInline:
-			case Spec_Static:
+			GEN_PARSER_FUNCTION_ALLOWED_SPECIFIERS_CASES:
 			break;
 
 			default:
@@ -4208,12 +4162,7 @@ CodeOperator parser_parse_operator()
 
 		switch ( spec )
 		{
-			case Spec_Const:
-			case Spec_Constexpr:
-			case Spec_ForceInline:
-			case Spec_Inline:
-			case Spec_NeverInline:
-			case Spec_Static:
+			GEN_PARSER_OPERATOR_ALLOWED_SPECIFIERS_CASES:
 			break;
 
 			default:
@@ -4451,19 +4400,8 @@ CodeTemplate parser_parse_template()
 
 				switch ( spec )
 				{
-					case Spec_Const :
-					case Spec_Constexpr :
-					case Spec_Constinit :
-					case Spec_External_Linkage :
-					case Spec_Global :
-					case Spec_Inline :
-					case Spec_ForceInline :
-					case Spec_Local_Persist :
-					case Spec_Mutable :
-					case Spec_Static :
-					case Spec_Thread_Local :
-					case Spec_Volatile :
-						break;
+					GEN_PARSER_TEMPLATE_ALLOWED_SPECIFIERS_CASES:
+					break;
 
 					case Spec_Consteval :
 						expects_function = true;
@@ -5509,17 +5447,7 @@ CodeVar parser_parse_variable()
 		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 		switch  ( spec )
 		{
-			case Spec_Const:
-			case Spec_Constexpr:
-			case Spec_Constinit:
-			case Spec_External_Linkage:
-			case Spec_Global:
-			case Spec_Inline:
-			case Spec_Local_Persist:
-			case Spec_Mutable:
-			case Spec_Static:
-			case Spec_Thread_Local:
-			case Spec_Volatile:
+			GEN_PARSER_VARIABLE_ALLOWED_SPECIFIER_CASES:
 			break;
 
 			default:
