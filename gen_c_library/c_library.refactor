@@ -445,6 +445,9 @@ namespace builder_, gen_builder_
 
 word scan_file, gen_scan_file
 
+word CSV_Column,   gen_CSV_Column
+word CSV_Columns2, gen_CSV_Columns2
+
 // Implementation (prviate)
 
 word _format_info, gen__format_info
