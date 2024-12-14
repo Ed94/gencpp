@@ -350,6 +350,8 @@ word CodeVar,            gen_CodeVar
 
 // Code Interface
 
+word Context, gen_Context
+
 namespace code_, gen_code_
 
 word Code_Global,  gen_Code_Global
