@@ -36,6 +36,6 @@ gen_c_library/gen
 **/*.sln
 **/*.sln.DotSettings.user
 **/*.10x
-**/*.vxproj
+**/*.vcxproj
 **/*.vcxproj.filters
 **/*.vcxproj.user
