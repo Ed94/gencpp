@@ -32,3 +32,10 @@ test/gen/original
 singleheader/gen/scratch.hpp
 test/gen/scratch.cpp
 gen_c_library/gen
+
+**/*.sln
+**/*.sln.DotSettings.user
+**/*.10x
+**/*.vxproj
+**/*.vcxproj.filters
+**/*.vcxproj.user
