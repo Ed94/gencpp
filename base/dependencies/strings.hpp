@@ -599,7 +599,7 @@ void strbuilder_skip_line(StrBuilder str)
 }
 
 inline
-void strip_space(StrBuilder str)
+void strbuilder_strip_space(StrBuilder str)
 {
 	char* write_pos = str;
 	char* read_pos  = str;

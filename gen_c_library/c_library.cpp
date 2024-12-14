@@ -1466,7 +1466,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code rf_header_parsing     = refactor_and_format(header_parsing);
 
 	Code rf_types        = refactor_and_format(types);
-	Code rf_parser_types = refactor_and_format(parser_types); 
+	Code rf_parser_types = refactor_and_format(parser_types);
 	Code rf_ecode        = refactor_and_format(ecode);
 	Code rf_eoperator    = refactor_and_format(eoperator);
 	Code rf_especifier   = refactor_and_format(especifier);
@@ -1534,7 +1534,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( r_header_macros );
 		header.print( header_generic_macros );
 
-		header.print_fmt( "GEN_API_C_BEGIN\n" );
+		header.print_fmt( "\nGEN_API_C_BEGIN\n" );
 
 		header.print( r_header_basic_types );
 		header.print( r_header_debug );

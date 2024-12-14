@@ -1371,7 +1371,7 @@ void var_to_strbuilder_ref(CodeVar self, StrBuilder* result )
 
 		strbuilder_append_str( result, self->Name );
 
-		if ( self->ValueType->ArrExpr )
+		if ( self->ValueType && self->ValueType->ArrExpr )
 		{
 			strbuilder_append_fmt( result, "[ %SB ]", code_to_strbuilder(self->ValueType->ArrExpr) );
 
@@ -1454,7 +1454,7 @@ void var_to_strbuilder_ref(CodeVar self, StrBuilder* result )
 	if ( self->BitfieldSize )
 		strbuilder_append_fmt( result, "%SB %S : %SB", typename_to_strbuilder(self->ValueType), self->Name, code_to_strbuilder(self->BitfieldSize) );
 
-	else if ( self->ValueType->ArrExpr )
+	else if ( self->ValueType && self->ValueType->ArrExpr )
 	{
 		strbuilder_append_fmt( result, "%SB %S[ %SB ]", typename_to_strbuilder(self->ValueType), self->Name, code_to_strbuilder(self->ValueType->ArrExpr) );
 
