@@ -641,7 +641,7 @@ do                          \
 						if ( array_token->Front == array_entry )
 							array_token->Front = next;
 
-							parser_types.append(array_entry);
+						parser_types.append(array_entry);
 						continue_for = false;
 					}
 					break;

@@ -22,6 +22,40 @@ if ( $dev ) {
 	}
 }
 
+# Add new function for running lib.exe
+function run-archiver
+{
+    param( $archiver, $library, $lib_args )
+
+    write-host "`Creating library $library"
+    if ( $verbose ) {
+        write-host "Lib manager config:"
+        $lib_args | ForEach-Object {
+            write-host $_ -ForegroundColor Cyan
+        }
+    }
+
+    $time_taken = Measure-Command {
+        & $archiver $lib_args 2>&1 | ForEach-Object {
+            $color = 'White'
+            switch ($_){
+                { $_ -match "error"   } { $color = 'Red'   ; break }
+                { $_ -match "warning" } { $color = 'Yellow'; break }
+            }
+            write-host `t $_ -ForegroundColor $color
+        }
+    }
+
+    if ( $LASTEXITCODE -eq 0 ) {
+        write-host "$library creation finished in $($time_taken.TotalMilliseconds) ms`n"
+        return $true
+    }
+    else {
+        write-host "Library creation failed for $library`n" -ForegroundColor Red
+        return $false
+    }
+}
+
 function run-compiler
 {
 	param( $compiler, $unit, $compiler_args )
@@ -95,7 +129,8 @@ function run-linker
 if ( $vendor -match "clang" )
 {
 	# https://clang.llvm.org/docs/ClangCommandLineReference.html
-	$flag_all_c 					   = '-x c'
+	$flag_all_c 					   = @('-x', 'c')
+	$flag_c11                          = '-std=c11'
 	$flag_all_cpp                      = '-x c++'
 	$flag_compile                      = '-c'
 	$flag_color_diagnostics            = '-fcolor-diagnostics'
@@ -174,8 +209,8 @@ if ( $vendor -match "clang" )
 		$map    = join-path $path_output (split-path $map    -Leaf)
 
 		# This allows dll reloads at runtime to work (jankily, use below if not interested)
-		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
-		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		$pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
 
 		$compiler_args += @(
 			$flag_no_color_diagnostics,
@@ -253,8 +288,8 @@ if ( $vendor -match "clang" )
 		$map    = join-path $path_output (split-path $map    -Leaf)
 
 		# This allows dll reloads at runtime to work (jankily, use below if not interested)
-		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
-		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		$pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
 
 		$compiler_args += @(
 			$flag_no_color_diagnostics,
@@ -308,10 +343,22 @@ if ( $vendor -match "clang" )
 			$linker_args += $_ + '.lib'
 		}
 
+		# Check if output is a static library
+		# if ( $binary -match '\.lib$' )
+		# {
+			# $lib_args  = @()
+			# $lib_args += $flag_nologo
+			# $lib_args += $flag_link_win_machine_64
+			# $lib_args += ( $flag_link_win_path_output + $binary )
+			# $lib_args += $object
+			# return run-archiver $archiver $binary $lib_args
+		# }
+
 		$linker_args += $object
 		return run-linker $linker $binary $linker_args
 	}
 
+	$archiver = 'llvm-ar'
 	$compiler = 'clang++'
 	$linker   = 'lld-link'
 }
@@ -320,6 +367,7 @@ if ( $vendor -match "msvc" )
 {
 	# https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170
 	$flag_all_c 					  = '/TC'
+	$flag_c11                         = '/std:c11'
 	$flag_all_cpp                     = '/TP'
 	$flag_compile			          = '/c'
 	$flag_debug                       = '/Zi'
@@ -332,6 +380,7 @@ if ( $vendor -match "msvc" )
 	$flag_dll 				          = '/LD'
 	$flag_dll_debug 			      = '/LDd'
 	$flag_linker 		              = '/link'
+	# $flag_link_lib                    = '/lib'
 	$flag_link_dll                    = '/DLL'
 	$flag_link_no_incremental 	      = '/INCREMENTAL:NO'
 	$flag_link_mapfile 				  = '/MAP:'
@@ -354,15 +403,17 @@ if ( $vendor -match "msvc" )
 	$flag_optimized_debug_forceinline = '/d2Obforceinline'
 	$flag_optimized_debug			  = '/Zo'
 	$flag_
-	$flag_out_name                    = '/OUT:'
+	# $flag_out_name                    = '/OUT:'
 	$flag_path_interm                 = '/Fo'
 	$flag_path_debug                  = '/Fd'
 	$flag_path_output                 = '/Fe'
 	$flag_preprocess_conform          = '/Zc:preprocessor'
+	$flag_updated_cpp_macro           = "/Zc:__cplusplus"
 	$flag_set_stack_size			  = '/F'
 	$flag_syntax_only				  = '/Zs'
 	$flag_wall 					      = '/Wall'
 	$flag_warnings_as_errors 		  = '/WX'
+	$flag_lib_list                    = '/LIST'
 
 	function build
 	{
@@ -374,8 +425,8 @@ if ( $vendor -match "msvc" )
 		$map    = join-path $path_output (split-path $map    -Leaf)
 
 		# This allows dll reloads at runtime to work (jankily, use below if not interested)
-		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
-		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		$pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
 
 		$compiler_args += @(
 			$flag_nologo,
@@ -461,8 +512,8 @@ if ( $vendor -match "msvc" )
 		$map    = join-path $path_output (split-path $map    -Leaf)
 
 		# This allows dll reloads at runtime to work (jankily, use below if not interested)
-		$pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
-		# $pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
+		# $pdb    = $binary -replace '\.(exe|dll)$', "_$(get-random).pdb"
+		$pdb    = $binary -replace '\.(exe|dll)$', ".pdb"
 
 		$compiler_args += @(
 			$flag_nologo,
@@ -508,6 +559,17 @@ if ( $vendor -match "msvc" )
 			return $false;
 		}
 
+		# Check if output is a static library
+		if ( $binary -match '\.lib$' )
+		{
+			$lib_args  = @()
+			$lib_args += $flag_nologo
+			$lib_args += $flag_link_win_machine_64
+			$lib_args += ( $flag_link_win_path_output + $binary )
+			$lib_args += $object
+			return run-archiver $archiver $binary $lib_args
+		}
+
 		$linker_args += @(
 			$flag_nologo,
 			$flag_link_win_machine_64,
@@ -522,10 +584,19 @@ if ( $vendor -match "msvc" )
 		else {
 		}
 
+		# Check if output is a dynamic library
+		if ( $binary -match '\.dll$' ) {
+			$linker_args += $flag_link_dll
+		}
 		$linker_args += $object
+		# Write-Host "link args:"
+		# $linker_args | ForEach-Object {
+		# 	Write-Host "`t$_" -ForegroundColor Yellow
+		# }
 		return run-linker $linker $binary $linker_args
 	}
 
+	$archiver = 'lib'
 	$compiler = 'cl'
 	$linker   = 'link'
 }

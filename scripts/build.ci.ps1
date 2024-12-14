@@ -18,12 +18,12 @@ Push-Location $path_root
        $vendor       = $null
        $release      = $null
 [bool] $verbose      = $false
-[bool] $shared       = $false
-[bool] $dyn_link     = $false
 [bool] $base         = $false
 [bool] $segmented    = $false
 [bool] $singleheader = $false
-[bool] $c_library    = $false
+[bool] $c_lib        = $false
+[bool] $c_lib_static = $false
+[bool] $c_lib_dyn    = $false
 [bool] $unreal       = $false
 [bool] $test         = $false
 
@@ -37,12 +37,12 @@ if ( $args ) { $args | ForEach-Object {
 		"verbose"			  { $verbose      = $true }
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
-		"shared"              { $shared       = $true }
-		"dyn_link"            { $dyn_link     = $true }
 		"base"                { $base         = $true }
 		"segmented"           { $segmented    = $true }
 		"singleheader"        { $singleheader = $true }
-		"c_library"           { $c_library    = $true }
+		"c_lib"               { $c_lib        = $true }
+		"c_lib_static"        { $c_lib_static = $true }
+		"c_lib_dyn"           { $c_lib_dyn    = $true }
 		"unreal"              { $unreal       = $true }
 		"test"                { $test         = $true }
 	}
@@ -75,7 +75,9 @@ else {
 $cannot_build =                     $base         -eq $false
 $cannot_build = $cannot_build -and  $segmented    -eq $false
 $cannot_build = $cannot_build -and  $singleheader -eq $false
-$cannot_build = $cannot_build -and  $c_library    -eq $false
+$cannot_build = $cannot_build -and  $c_lib        -eq $false
+$cannot_build = $cannot_build -and  $c_lib_static -eq $false
+$cannot_build = $cannot_build -and  $c_lib_dyn    -eq $false
 $cannot_build = $cannot_build -and  $unreal       -eq $false
 $cannot_build = $cannot_build -and  $test         -eq $false
 if ( $cannot_build ) {
@@ -213,7 +215,7 @@ if ( $singleheader )
 	Pop-Location
 }
 
-if ( $c_library )
+if ( $c_lib -or $c_lib_static -or $c_lib_dyn )
 {
 	$path_build = join-path $path_c_library build
 	$path_gen   = join-path $path_c_library gen
@@ -249,34 +251,38 @@ if ( $c_library )
 			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
+}
 
-	$includes    = @( $path_c_library )
-	$unit       = join-path $path_c_library "gen.c"
-	$executable = join-path $path_build     "gen_c_library_test.exe"
+if ( $c_lib_static )
+{
+	$includes = @( $path_c_library )
+	$unit     = join-path $path_c_library "gen_c_lib.c"
+	$path_lib = join-path $path_build     "gencpp_c11.lib"
 
-	if ($vendor -eq "clang") {
-		$compiler_args += '-x'
-		$compiler_args += 'c'
-		$compiler_args += '-std=c11'
-	} elseif ($vendor -eq "msvc") {
-		$compiler_args += "/TC"       # Compile as C
-		$compiler_args += "/Zc:__cplusplus" # Fix __cplusplus macro
-		$compiler_args += "/std:c11"
-	}
+	$compiler_args = @()
+	$compiler_args += $flag_all_c
+	$compiler_args += $flag_updated_cpp_macro
+	$compiler_args += $flag_c11
 
-	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	$linker_args = @()
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $path_lib
+}
 
-	Push-Location $path_c_library
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning c_library test"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+if ( $c_lib_dyn )
+{
+	$includes = @( $path_c_library )
+	$unit     = join-path $path_c_library "gen_c_lib.c"
+	$path_dll = join-path $path_build     "gencpp_c11.dll"
+ 
+	$compiler_args = @()
+	$compiler_args += $flag_all_c
+	$compiler_args += $flag_updated_cpp_macro
+	$compiler_args += $flag_c11
+	$compiler_args += ( $flag_define + 'GEN_DYN_LINK' )
+	$compiler_args += ( $flag_define + 'GEN_DYN_EXPORT' )
+ 
+	$linker_args = @()
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $path_dll
 }
 
 if ( $unreal )
@@ -319,47 +325,24 @@ if ( $unreal )
 	. $refactor_unreal
 }
 
-# TODO(Ed): The unit testing needs a full rewrite
-if ( $test -and $false )
+if ( $test )
 {
-	$path_gen          = join-path $path_test gen
-	$path_gen_build    = join-path $path_gen  build
-	$path_build        = join-path $path_test build
-	$path_original     = join-path $path_gen  original
-	$path_components   = join-path $path_original components
-	$path_dependencies = join-path $path_original dependencies
-	$path_helpers      = join-path $path_original helpers
+	$path_test_c_lib = join-path $path_test       c_library
+	$path_build      = join-path $path_test_c_lib build
 
 	if ( -not(Test-Path($path_build) )) {
 		New-Item -ItemType Directory -Path $path_build
 	}
-	if ( -not(Test-Path($path_gen) )) {
-		New-Item -ItemType Directory -Path $path_gen
-	}
-	if ( -not(Test-Path($path_gen_build) ))  {
-		New-Item -ItemType Directory -Path $path_gen_build
-	}
-	if ( -not(test-path $path_original)) {
-		new-item -ItemType Directory -Path $path_original
-	}
-	if ( -not(test-path $path_components)) {
-		new-item -ItemType Directory -Path $path_components
-	}
-	if ( -not(test-path $path_dependencies)) {
-		new-item -ItemType Directory -Path $path_dependencies
-	}
-	if ( -not(test-path $path_helpers)) {
-		new-item -ItemType Directory -Path $path_helpers
-	}
 
-	$path_bootstrap = join-path $path_project gen
-
-	$includes    = @( $path_bootstrap )
-	$unit       = join-path $path_test  "test.cpp"
-	$executable = join-path $path_build "test.exe"
+	$includes    = @( $path_c_library )
+	$unit       = join-path $path_test_c_lib "gen.c"
+	$executable = join-path $path_build      "gen_c_library_test.exe"
 
 	$compiler_args = @()
 	$compiler_args += ( $flag_define + 'GEN_TIME' )
+	$compiler_args += $flag_all_c
+	$compiler_args += $flag_updated_cpp_macro
+	$compiler_args += $flag_c11
 
 	$linker_args   = @(
 		$flag_link_win_subsystem_console
@@ -367,16 +350,15 @@ if ( $test -and $false )
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
-	Push-Location $path_test
-		Write-Host $path_test
+	Push-Location $path_test_c_lib
 		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning test generator"
+			write-host "`nRunning c_library test"
 			$time_taken = Measure-Command { & $executable
 					| ForEach-Object {
 						write-host `t $_ -ForegroundColor Green
 					}
 				}
-			write-host "`nTest generator completed in $($time_taken.TotalMilliseconds) ms"
+			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
 }

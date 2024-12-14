@@ -1,8 +1,9 @@
 #define GEN_IMPLEMENTATION
 #include "gen/gen_singleheader.h"
 
-int main()
+int gen_main()
 {
 	// init();
 	__debugbreak();
+	return 0;
 }

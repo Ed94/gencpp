@@ -7,7 +7,7 @@
 
 #if GEN_COMPILER_MSVC
     #ifdef GEN_DYN_LINK
-        #ifdef GEN_EXPORTS
+        #ifdef GEN_DYN_EXPORT
             #define GEN_API __declspec(dllexport)
         #else
             #define GEN_API __declspec(dllimport)

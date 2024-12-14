@@ -4,16 +4,14 @@ Import-Module $misc
 $build = Join-Path $PSScriptRoot 'build.ci.ps1'
 
 if ( $IsWindows ) {
-	& $build release msvc base segmented singleheader unreal c_library msvc debug
-}
-else {
-	& $build release clang base segmented singleheader unreal c_library msvc debug
+	& $build release msvc debug base segmented singleheader unreal c_lib c_lib_static c_lib_dyn
 }
 
 $path_root             = Get-ScriptRepoRoot
 $path_docs			   = Join-Path $path_root          docs
 $path_base             = Join-Path $path_root          base
 $path_c_library        = Join-Path $path_root          gen_c_library
+$path_c_library_build  = Join-Path $path_c_library     build
 $path_c_library_gen    = Join-Path $path_c_library     gen
 $path_segmented        = Join-Path $path_root          gen_segmented
 $path_segmented_gen    = Join-Path $path_segmented     gen
@@ -74,7 +72,7 @@ Remove-Item -Path $path_release_content -Recurse
 prep-ReleaseContent
 Copy-Item        -Verbose -Path $path_c_library\Readme.md              -Destination $path_release_content
 Copy-Item        -Verbose -Path $path_c_library_gen\gen_singleheader.h -Destination $path_release_content\gen.h
-Compress-Archive -Path $path_release_content\*                -DestinationPath $path_release\gencpp_c11_singleheader.zip -Force
+Compress-Archive -Path $path_release_content\*                         -DestinationPath $path_release\gencpp_c11_singleheader.zip -Force
 Remove-Item -Path $path_release_content -Recurse
 
 # C Library Segmented
@@ -86,6 +84,20 @@ Copy-Item        -Verbose -Path $path_c_library_gen\gen.c     -Destination $path
 Copy-Item        -Verbose -Path $path_c_library_gen\gen.h     -Destination $path_release_content
 Compress-Archive -Path $path_release_content\*       -DestinationPath $path_release\gencpp_c11_segmented.zip -Force
 Remove-Item -Path $path_release_content -Recurse
+
+# C Library Segmented
+prep-ReleaseContent
+Copy-Item        -Verbose -Path $path_c_library\Readme.md     -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.dep.c -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.dep.h -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.c     -Destination $path_release_content
+Copy-Item        -Verbose -Path $path_c_library_gen\gen.h     -Destination $path_release_content
+Compress-Archive -Path $path_release_content\*                -DestinationPath $path_release\gencpp_c11_segmented.zip -Force
+Remove-Item -Path $path_release_content -Recurse
+
+# C Lib Static & Dyanmic Libs
+Copy-Item -Verbose -Path $path_c_library_build\gencpp_c11.lib -Destination $path_release
+Copy-Item -Verbose -Path $path_c_library_build\gencpp_c11.dll -Destination $path_release
 
 # Base
 
