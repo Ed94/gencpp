@@ -21,10 +21,10 @@ using namespace gen;
 void clang_format_file( char const* path, char const* style_path )
 {
 	GEN_ASSERT_NOT_NULL(path);
-	StrBuilder resolved_path = strbuilder_make_str(GlobalAllocator, to_str_from_c_str(path));
+	StrBuilder resolved_path = strbuilder_make_str(_ctx->Allocator_Temp, to_str_from_c_str(path));
 	StrBuilder style_arg;
 	if (style_path) {
-		style_arg = strbuilder_make_str(GlobalAllocator, txt("-style=file:"));
+		style_arg = strbuilder_make_str(_ctx->Allocator_Temp, txt("-style=file:"));
 		strbuilder_append_fmt( & style_arg, "%s ", style_path );
 	}
 
@@ -32,7 +32,7 @@ void clang_format_file( char const* path, char const* style_path )
 	Str cf_format_inplace = txt("-i ");
 	Str cf_verbose        = txt("-verbose ");
 
-	StrBuilder command = strbuilder_make_str( GlobalAllocator, clang_format );
+	StrBuilder command = strbuilder_make_str( _ctx->Allocator_Temp, clang_format );
 	strbuilder_append_str( & command, cf_format_inplace );
 	strbuilder_append_str( & command, cf_verbose );
 	strbuilder_append_string( & command, style_arg );
@@ -48,7 +48,7 @@ void refactor_file( char const* path, char const* refactor_script )
 	GEN_ASSERT_NOT_NULL(path);
 	GEN_ASSERT_NOT_NULL(refactor_script);
 
-	StrBuilder command = strbuilder_make_str(GlobalAllocator, txt("refactor "));
+	StrBuilder command = strbuilder_make_str(_ctx->Allocator_Temp, txt("refactor "));
 	// strbuilder_append_str( & command, txt("-debug ") );
 	strbuilder_append_str( & command, txt("-num=1 ") );
 	strbuilder_append_fmt( & command, "-src=%s ", path );

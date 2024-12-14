@@ -17,10 +17,10 @@ CodeClass parse_class( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	push_scope();
 	CodeClass result = (CodeClass) parse_class_struct( Tok_Decl_Class, parser_not_inplace_def );
-	parser_pop(& Context);
+	parser_pop(& parser_ctx);
 	return result;
 }
 
@@ -59,8 +59,8 @@ CodeConstructor parse_constructor( Str def )
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(Context) );
-				parser_pop(& Context);
+				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(parser_ctx) );
+				parser_pop(& parser_ctx);
 				return InvalidCode;
 		}
 
@@ -79,7 +79,7 @@ CodeConstructor parse_constructor( Str def )
 		// <specifiers> ...
 	}
 
-	Context.Tokens         = toks;
+	parser_ctx.Tokens         = toks;
 	CodeConstructor result = parser_parse_constructor( specifiers );
 	return result;
 }
@@ -96,7 +96,7 @@ CodeDestructor parse_destructor( Str def )
 	// TODO(Ed): Destructors can have prefix attributes
 	// TODO(Ed): Destructors can have virtual
 
-	Context.Tokens        = toks;
+	parser_ctx.Tokens        = toks;
 	CodeDestructor result = parser_parse_destructor(NullCode);
 	return result;
 }
@@ -109,11 +109,11 @@ CodeEnum parse_enum( Str def )
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 	{
-		parser_pop(& Context);
+		parser_pop(& parser_ctx);
 		return InvalidCode;
 	}
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_enum( parser_not_inplace_def);
 }
 
@@ -126,7 +126,7 @@ CodeBody parse_export_body( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_export_body();
 }
 
@@ -139,7 +139,7 @@ CodeExtern parse_extern_link( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_extern_link();
 }
 
@@ -152,7 +152,7 @@ CodeFriend parse_friend( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_friend();
 }
 
@@ -165,7 +165,7 @@ CodeFn parse_function( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return (CodeFn) parser_parse_function();
 }
 
@@ -178,10 +178,10 @@ CodeBody parse_global_body( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	push_scope();
 	CodeBody result = parse_global_nspace( CT_Global_Body );
-	parser_pop(& Context);
+	parser_pop(& parser_ctx);
 	return result;
 }
 
@@ -194,7 +194,7 @@ CodeNS parse_namespace( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_namespace();
 }
 
@@ -207,7 +207,7 @@ CodeOperator parse_operator( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return (CodeOperator) parser_parse_operator();
 }
 
@@ -220,7 +220,7 @@ CodeOpCast parse_operator_cast( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_operator_cast(NullCode);
 }
 
@@ -233,10 +233,10 @@ CodeStruct parse_struct( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	push_scope();
 	CodeStruct result = (CodeStruct) parse_class_struct( Tok_Decl_Struct, parser_not_inplace_def );
-	parser_pop(& Context);
+	parser_pop(& parser_ctx);
 	return result;
 }
 
@@ -249,7 +249,7 @@ CodeTemplate parse_template( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_template();
 }
 
@@ -262,7 +262,7 @@ CodeTypename parse_type( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_type( parser_not_from_template, nullptr);
 }
 
@@ -275,7 +275,7 @@ CodeTypedef parse_typedef( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_typedef();
 }
 
@@ -288,7 +288,7 @@ CodeUnion parse_union( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_union( parser_not_inplace_def);
 }
 
@@ -301,7 +301,7 @@ CodeUsing parse_using( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_using();
 }
 
@@ -314,7 +314,7 @@ CodeVar parse_variable( Str def )
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	Context.Tokens = toks;
+	parser_ctx.Tokens = toks;
 	return parser_parse_variable();
 }
 

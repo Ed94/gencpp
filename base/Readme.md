@@ -150,7 +150,7 @@ The convention you'll see used throughout the upfront interface of the library i
 3. Populate immediate fields (Name, Type, ModuleFlags, etc)
 4. Populate sub-entires using `add_entry`. If using the default serialization function `to_strbuilder`, follow the order at which entires are expected to appear (there is a strong ordering expected).
 
-Names or Content fields are interned strings and thus showed be cached using `get_cached_string` if its desired to preserve that behavior.
+Names or Content fields are interned strings and thus showed be cached using `cache_str` if its desired to preserve that behavior.
 
 `def_operator` is the most sophisticated upfront constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 

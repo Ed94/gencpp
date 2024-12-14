@@ -32,7 +32,10 @@ Code format( Code code ) {
 
 int gen_main()
 {
-	gen::init();
+	Context ctx {
+		
+	};
+	gen::init(& ctx);
 
 	Code push_ignores = scan_file( (path_base "helpers/push_ignores.inline.hpp") );
 	Code pop_ignores  = scan_file( (path_base "helpers/pop_ignores.inline.hpp") );
@@ -282,6 +285,6 @@ int gen_main()
 		builder_write( & src);
 	}
 
-	gen::deinit();
+	gen::deinit( & ctx);
 	return 0;
 }

@@ -67,7 +67,7 @@ int gen_main()
 	{
 		CodeBody macros = def_body( CT_Global_Body );
 		{
-			FileContents content    = file_read_contents( GlobalAllocator, true, path_base "dependencies/macros.hpp" );
+			FileContents content    = file_read_contents( FallbackAllocator, true, path_base "dependencies/macros.hpp" );
 			CodeBody     ori_macros = parse_global_body( Str { (char const*)content.data, content.size });
 
 			for (Code	code =  ori_macros.begin();

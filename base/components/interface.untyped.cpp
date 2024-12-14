@@ -8,21 +8,18 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 	char const* buf_begin = buf;
 	ssize       remaining = buf_size;
 
-	local_persist
-	TokenMap_FixedArena tok_map_arena;
-	fixed_arena_init( & tok_map_arena);
-
-	local_persist
-	StringTable tok_map;
+	local_persist StringTable tok_map;
+	do_once() {
+		tok_map = hashtable_init(Str, _ctx->Allocator_DyanmicContainers );
+	}
+	// Populate token pairs
 	{
-		tok_map = hashtable_init(Str, fixed_arena_allocator_info(& tok_map_arena) );
-
 		s32 left = num_tokens - 1;
 
 		while ( left-- )
 		{
 			char const* token = va_arg( va, char const* );
-			Str        value = va_arg( va, Str );
+			Str         value = va_arg( va, Str );
 
 			u32 key = crc32( token, c_str_len(token) );
 			hashtable_set( tok_map, key, value );
@@ -90,12 +87,8 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 			current = * fmt;
 		}
 	}
-
 	hashtable_clear(tok_map);
-	fixed_arena_free(& tok_map_arena);
-
 	ssize result = buf_size - remaining;
-
 	return result;
 }
 
@@ -109,7 +102,7 @@ Code untyped_str( Str content )
 
 	Code
 	result          = make_code();
-	result->Name    = get_cached_string( content );
+	result->Name    = cache_str( content );
 	result->Type    = CT_Untyped;
 	result->Content = result->Name;
 
@@ -137,15 +130,12 @@ Code untyped_fmt( char const* fmt, ...)
 	va_start(va, fmt);
 	ssize length = c_str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va);
 	va_end(va);
-
-	Str buf_str      = { fmt, c_str_len_capped(fmt, MaxNameLength) };
-    Str uncapped_str = { buf, length };
+    Str content = { buf, length };
 
 	Code
 	result          = make_code();
-	result->Name    = get_cached_string( buf_str );
 	result->Type    = CT_Untyped;
-	result->Content = get_cached_string( uncapped_str );
+	result->Content = cache_str( content );
 
 	if ( result->Name.Len == 0 )
 	{
@@ -176,9 +166,8 @@ Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... )
 
 	Code
 	result          = make_code();
-	result->Name    = get_cached_string( buf_str );
 	result->Type    = CT_Untyped;
-	result->Content = result->Name;
+	result->Content = cache_str( buf_str );
 
 	if ( result->Name.Len == 0 )
 	{

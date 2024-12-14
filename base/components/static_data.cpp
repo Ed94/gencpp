@@ -4,30 +4,9 @@
 #endif
 
 #pragma region StaticData
-
-// TODO : Convert global allocation strategy to use a slab allocation strategy.
-global AllocatorInfo  GlobalAllocator;
-global Array( Arena )   Global_AllocatorBuckets;
-
-// TODO(Ed) : Make the code pool a dynamic arena
-global Array( Pool )  CodePools         = { nullptr };
-global Array( Arena ) StringArenas      = { nullptr };
-
-global StringTable StringCache;
-
-global Arena LexArena;
-
-global AllocatorInfo Allocator_DataArrays  = {0};
-global AllocatorInfo Allocator_CodePool    = {0};
-global AllocatorInfo Allocator_Lexer       = {0};
-global AllocatorInfo Allocator_StringArena = {0};
-global AllocatorInfo Allocator_StringTable = {0};
-global AllocatorInfo Allocator_TypeTable   = {0};
-
-#pragma endregion StaticData
+global Context* _ctx;
 
 #pragma region Constants
-
 global Str enum_underlying_sig;
 
 global Code access_public;
@@ -84,8 +63,6 @@ global CodeTypename t_wchar_t;
 global CodeTypename t_class;
 global CodeTypename t_typename;
 
-global Array(StringCached) PreprocessorDefines;
-
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 global CodeTypename t_b32;
 
@@ -107,3 +84,5 @@ global CodeTypename t_f64;
 #endif
 
 #pragma endregion Constants
+
+#pragma endregion StaticData

@@ -20,7 +20,7 @@ Code scan_file( char const* path )
 		GEN_FATAL("scan_file: %s is empty", path );
 	}
 
-	StrBuilder str = strbuilder_make_reserve( GlobalAllocator, fsize );
+	StrBuilder str = strbuilder_make_reserve( _ctx->Allocator_Temp, fsize );
 		file_read( & file, str, fsize );
 		strbuilder_get_header(str)->Length = fsize;
 
@@ -117,7 +117,7 @@ Code scan_file( char const* path )
 }
 
 CodeBody parse_file( const char* path ) {
-	FileContents file    = file_read_contents( GlobalAllocator, true, path );
+	FileContents file    = file_read_contents( _ctx->Allocator_Temp, true, path );
 	Str          content = { (char const*)file.data, file.size };
 	CodeBody     code    = parse_global_body( content );
 	log_fmt("\nParsed: %s\n", path);

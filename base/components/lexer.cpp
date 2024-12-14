@@ -92,7 +92,7 @@ bool tok_is_end_definition(Token tok) {
 
 StrBuilder tok_to_strbuilder(Token tok)
 {
-	StrBuilder result   = strbuilder_make_reserve( GlobalAllocator, kilobytes(4) );
+	StrBuilder result   = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(4) );
 	Str        type_str = toktype_to_str( tok.Type );
 
 	strbuilder_append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
@@ -354,7 +354,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		if ( (* ctx->scanner) != '"' && (* ctx->scanner) != '<' )
 		{
-			StrBuilder directive_str = strbuilder_fmt_buf( GlobalAllocator, "%.*s", min( 80, ctx->left + preprocess_content.Text.Len ), ctx->token.Text.Ptr );
+			StrBuilder directive_str = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%.*s", min( 80, ctx->left + preprocess_content.Text.Len ), ctx->token.Text.Ptr );
 
 			log_failure( "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
 				, (* ctx->scanner)
@@ -421,8 +421,8 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			}
 			else
 			{
-				StrBuilder directive_str = strbuilder_make_length( GlobalAllocator, ctx->token.Text.Ptr, ctx->token.Text.Len );
-				StrBuilder content_str   = strbuilder_fmt_buf( GlobalAllocator, "%.*s", min( 400, ctx->left + preprocess_content.Text.Len ), preprocess_content.Text.Ptr );
+				StrBuilder directive_str = strbuilder_make_length( _ctx->Allocator_Temp, ctx->token.Text.Ptr, ctx->token.Text.Len );
+				StrBuilder content_str   = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%.*s", min( 400, ctx->left + preprocess_content.Text.Len ), preprocess_content.Text.Ptr );
 
 				log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 							" in preprocessor directive '%s' (%d, %d)\n%s"
@@ -584,7 +584,7 @@ TokArray lex( Str content )
 		return null_array;
 	}
 
-	for ( StringCached* entry = array_begin(PreprocessorDefines); entry != array_end(PreprocessorDefines); entry = array_next(PreprocessorDefines, entry))
+	for ( StrCached* entry = array_begin(_ctx->PreprocessorDefines); entry != array_end(_ctx->PreprocessorDefines); entry = array_next(_ctx->PreprocessorDefines, entry))
 	{
 		s32         length  = 0;
 		char const* entry_scanner = (*entry).Ptr;
@@ -710,7 +710,7 @@ TokArray lex( Str content )
 					}
 					else
 					{
-						StrBuilder context_str = strbuilder_fmt_buf( GlobalAllocator, "%s", c.scanner, min( 100, c.left ) );
+						StrBuilder context_str = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%s", c.scanner, min( 100, c.left ) );
 
 						log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 					}
@@ -1271,7 +1271,7 @@ TokArray lex( Str content )
 				);
 			}
 
-			StrBuilder context_str = strbuilder_fmt_buf( GlobalAllocator, "%.*s", min( 100, c.left ), c.scanner );
+			StrBuilder context_str = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%.*s", min( 100, c.left ), c.scanner );
 			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 
 			// Skip to next whitespace since we can't know if anything else is valid until then.

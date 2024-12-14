@@ -31,7 +31,7 @@ struct AST_Body
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Front;
 	Code              Back;
 	Token*            Tok;
@@ -46,9 +46,9 @@ struct AST_Attributes
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StringCached  Content;
+		StrCached  Content;
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -64,7 +64,7 @@ struct AST_BaseClass
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -79,9 +79,9 @@ struct AST_Comment
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StringCached  Content;
+		StrCached  Content;
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -106,7 +106,7 @@ struct AST_Class
 			char 	        _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached            Name;
+	StrCached            Name;
 	CodeTypename            Prev;
 	CodeTypename            Next;
 	Token*                  Tok;
@@ -132,7 +132,7 @@ struct AST_Constructor
 			char 		   _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
 		};
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -146,9 +146,9 @@ struct AST_Define
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StringCached  Content;
+		StrCached  Content;
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -172,7 +172,7 @@ struct AST_Destructor
 			char 		   _PAD_PROPERTIES_3_ [ sizeof(AST*) ];
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -197,7 +197,7 @@ struct AST_Enum
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -212,9 +212,9 @@ struct AST_Exec
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StringCached  Content;
+		StrCached  Content;
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -230,7 +230,7 @@ struct AST_Expr
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -245,7 +245,7 @@ struct AST_Expr_Assign
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -260,7 +260,7 @@ struct AST_Expr_Alignof
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -275,7 +275,7 @@ struct AST_Expr_Binary
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -290,7 +290,7 @@ struct AST_Expr_CStyleCast
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -305,7 +305,7 @@ struct AST_Expr_FunctionalCast
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -320,7 +320,7 @@ struct AST_Expr_CppCast
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -335,7 +335,7 @@ struct AST_Expr_ProcCall
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -350,7 +350,7 @@ struct AST_Expr_Decltype
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -365,7 +365,7 @@ struct AST_Expr_Comma
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -380,7 +380,7 @@ struct AST_Expr_AMS
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -395,7 +395,7 @@ struct AST_Expr_Sizeof
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -410,7 +410,7 @@ struct AST_Expr_Subscript
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -425,7 +425,7 @@ struct AST_Expr_Ternary
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -440,7 +440,7 @@ struct AST_Expr_UnaryPrefix
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -455,7 +455,7 @@ struct AST_Expr_UnaryPostfix
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -470,7 +470,7 @@ struct AST_Expr_Element
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -492,7 +492,7 @@ struct AST_Extern
 			char      _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -506,9 +506,9 @@ struct AST_Include
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StringCached  Content;
+		StrCached  Content;
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -530,7 +530,7 @@ struct AST_Friend
 			char 	    _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -555,7 +555,7 @@ struct AST_Fn
 			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
 	};
-	StringCached            Name;
+	StrCached            Name;
 	Code                    Prev;
 	Code                    Next;
 	Token*                  Tok;
@@ -571,7 +571,7 @@ struct AST_Module
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -592,7 +592,7 @@ struct AST_NS
 			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -618,7 +618,7 @@ struct AST_Operator
 			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
 	};
-	StringCached   Name;
+	StrCached   Name;
 	Code           Prev;
 	Code           Next;
 	Token*         Tok;
@@ -644,7 +644,7 @@ struct AST_OpCast
 			char 	        _PAD_PROPERTIES_3_[ sizeof(AST*) ];
 		};
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -668,7 +668,7 @@ struct AST_Params
 			// char     _PAD_PROPERTIES_3_[sizeof( AST* )];
 		};
 	};
-	StringCached      Name;
+	StrCached      Name;
 	CodeParams        Last;
 	CodeParams        Next;
 	Token*            Tok;
@@ -683,9 +683,9 @@ struct AST_Pragma
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StringCached  Content;
+		StrCached  Content;
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -699,9 +699,9 @@ struct AST_PreprocessCond
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StringCached  Content;
+		StrCached  Content;
 	};
-	StringCached      Name;
+	StrCached      Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -714,7 +714,7 @@ static_assert( sizeof(AST_PreprocessCond) == sizeof(AST), "ERROR: AST_Preprocess
 struct AST_Specifiers
 {
 	Specifier         ArrSpecs[ AST_ArrSpecs_Cap ];
-	StringCached      Name;
+	StrCached      Name;
 	CodeSpecifiers    NextSpecs;
 	Code              Prev;
 	Code              Next;
@@ -732,7 +732,7 @@ struct AST_Stmt
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -747,7 +747,7 @@ struct AST_Stmt_Break
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -762,7 +762,7 @@ struct AST_Stmt_Case
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -777,7 +777,7 @@ struct AST_Stmt_Continue
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -792,7 +792,7 @@ struct AST_Stmt_Decl
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -807,7 +807,7 @@ struct AST_Stmt_Do
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -822,7 +822,7 @@ struct AST_Stmt_Expr
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -837,7 +837,7 @@ struct AST_Stmt_Else
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -852,7 +852,7 @@ struct AST_Stmt_If
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -867,7 +867,7 @@ struct AST_Stmt_For
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -882,7 +882,7 @@ struct AST_Stmt_Goto
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -897,7 +897,7 @@ struct AST_Stmt_Label
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -912,7 +912,7 @@ struct AST_Stmt_Switch
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -927,7 +927,7 @@ struct AST_Stmt_While
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StringCached   Name;
+	StrCached   Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -953,7 +953,7 @@ struct AST_Struct
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	CodeTypename           Prev;
 	CodeTypename           Next;
 	Token*                 Tok;
@@ -976,7 +976,7 @@ struct AST_Template
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -1005,7 +1005,7 @@ struct AST_Type
 			// CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                  Tok;
@@ -1032,7 +1032,7 @@ struct AST_Typename
 			CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -1058,7 +1058,7 @@ struct AST_Typedef
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -1082,7 +1082,7 @@ struct AST_Union
 			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -1106,7 +1106,7 @@ struct AST_Using
 			char 	        _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
 		};
 	};
-	StringCached            Name;
+	StrCached            Name;
 	Code                    Prev;
 	Code                    Next;
 	Token*                  Tok;
@@ -1132,7 +1132,7 @@ struct AST_Var
 			CodeVar		   NextVar;
 		};
 	};
-	StringCached           Name;
+	StrCached           Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;

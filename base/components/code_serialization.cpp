@@ -6,7 +6,7 @@
 inline
 StrBuilder attributes_to_strbuilder(CodeAttributes attributes) {
 	GEN_ASSERT(attributes);
-	char* raw = ccast(char*, str_duplicate( attributes->Content, GlobalAllocator ).Ptr);
+	char* raw = ccast(char*, str_duplicate( attributes->Content, _ctx->Allocator_Temp ).Ptr);
 	StrBuilder result = { raw };
 	return result;
 }
@@ -21,7 +21,7 @@ void attributes_to_strbuilder_ref(CodeAttributes attributes, StrBuilder* result)
 StrBuilder body_to_strbuilder(CodeBody body)
 {
 	GEN_ASSERT(body);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 128 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	switch ( body->Type )
 	{
 		case CT_Untyped:
@@ -82,7 +82,7 @@ void body_to_strbuilder_export( CodeBody body, StrBuilder* result )
 inline
 StrBuilder comment_to_strbuilder(CodeComment comment) {
 	GEN_ASSERT(comment);
-	char* raw = ccast(char*, str_duplicate( comment->Content, GlobalAllocator ).Ptr);
+	char* raw = ccast(char*, str_duplicate( comment->Content, _ctx->Allocator_Temp ).Ptr);
 	StrBuilder result = { raw };
 	return result;
 }
@@ -96,7 +96,7 @@ void comment_to_strbuilder_ref(CodeComment comment, StrBuilder* result) {
 
 StrBuilder constructor_to_strbuilder(CodeConstructor self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 128 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	switch (self->Type)
 	{
 		case CT_Constructor:
@@ -159,7 +159,7 @@ void constructor_to_strbuilder_fwd(CodeConstructor self, StrBuilder* result )
 
 StrBuilder class_to_strbuilder( CodeClass self )
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 512 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	switch ( self->Type )
 	{
 		case CT_Class:
@@ -241,7 +241,7 @@ void class_to_strbuilder_fwd( CodeClass self, StrBuilder* result )
 
 StrBuilder define_to_strbuilder(CodeDefine define)
 {
-	return strbuilder_fmt_buf( GlobalAllocator, "#define %S %S", define->Name, define->Content );
+	return strbuilder_fmt_buf( _ctx->Allocator_Temp, "#define %S %S", define->Name, define->Content );
 }
 
 void define_to_strbuilder_ref(CodeDefine define, StrBuilder* result )
@@ -251,7 +251,7 @@ void define_to_strbuilder_ref(CodeDefine define, StrBuilder* result )
 
 StrBuilder destructor_to_strbuilder(CodeDestructor self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 128 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	switch ( self->Type )
 	{
 		case CT_Destructor:
@@ -308,7 +308,7 @@ void destructor_to_strbuilder_fwd(CodeDestructor self, StrBuilder* result )
 
 StrBuilder enum_to_strbuilder(CodeEnum self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 512 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	switch ( self->Type )
 	{
 		case CT_Enum:
@@ -443,7 +443,7 @@ void enum_to_strbuilder_class_fwd(CodeEnum self, StrBuilder* result )
 StrBuilder exec_to_strbuilder(CodeExec exec)
 {
 	GEN_ASSERT(exec);
-	char* raw = ccast(char*, str_duplicate( exec->Content, GlobalAllocator ).Ptr);
+	char* raw = ccast(char*, str_duplicate( exec->Content, _ctx->Allocator_Temp ).Ptr);
 	StrBuilder result = { raw };
 	return result;
 }
@@ -458,7 +458,7 @@ void extern_to_strbuilder(CodeExtern self, StrBuilder* result )
 
 StrBuilder include_to_strbuilder(CodeInclude include)
 {
-	return strbuilder_fmt_buf( GlobalAllocator, "#include %S\n", include->Content );
+	return strbuilder_fmt_buf( _ctx->Allocator_Temp, "#include %S\n", include->Content );
 }
 
 void include_to_strbuilder_ref( CodeInclude include, StrBuilder* result )
@@ -468,7 +468,7 @@ void include_to_strbuilder_ref( CodeInclude include, StrBuilder* result )
 
 StrBuilder friend_to_strbuilder(CodeFriend self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 256 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
 	friend_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -490,7 +490,7 @@ void friend_to_strbuilder_ref(CodeFriend self, StrBuilder* result )
 
 StrBuilder fn_to_strbuilder(CodeFn self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 512 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	switch ( self->Type )
 	{
 		case CT_Function:
@@ -621,7 +621,7 @@ void fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result )
 
 StrBuilder module_to_strbuilder(CodeModule self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 64 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 64 );
 	module_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -639,7 +639,7 @@ void module_to_strbuilder_ref(CodeModule self, StrBuilder* result )
 
 StrBuilder namespace_to_strbuilder(CodeNS self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 512 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	namespace_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -654,7 +654,7 @@ void namespace_to_strbuilder_ref(CodeNS self, StrBuilder* result )
 
 StrBuilder code_op_to_strbuilder(CodeOperator self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 512 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	switch ( self->Type )
 	{
 		case CT_Operator:
@@ -776,7 +776,7 @@ void code_op_to_strbuilder_fwd(CodeOperator self, StrBuilder* result )
 
 StrBuilder opcast_to_strbuilder(CodeOpCast self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 128 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	switch ( self->Type )
 	{
 		case CT_Operator_Cast:
@@ -867,7 +867,7 @@ StrBuilder params_to_strbuilder(CodeParams self)
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 128 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	params_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -914,7 +914,7 @@ void params_to_strbuilder_ref( CodeParams self, StrBuilder* result )
 StrBuilder preprocess_to_strbuilder(CodePreprocessCond self)
 {
 	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 256 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
 	switch ( self->Type )
 	{
 		case CT_Preprocess_If:
@@ -978,7 +978,7 @@ void preprocess_to_strbuilder_endif(CodePreprocessCond cond, StrBuilder* result 
 StrBuilder pragma_to_strbuilder(CodePragma self)
 {
 	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 256 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
 	pragma_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -990,7 +990,7 @@ void pragma_to_strbuilder_ref(CodePragma self, StrBuilder* result )
 
 StrBuilder specifiers_to_strbuilder(CodeSpecifiers self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 64 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 64 );
 	specifiers_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -1013,7 +1013,7 @@ StrBuilder struct_to_strbuilder(CodeStruct self)
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 512 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	switch ( self->Type )
 	{
 		case CT_Struct:
@@ -1096,7 +1096,7 @@ void struct_to_strbuilder_fwd( CodeStruct self, StrBuilder* result )
 StrBuilder template_to_strbuilder(CodeTemplate self)
 {
 	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 1024 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 1024 );
 	template_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -1116,7 +1116,7 @@ void template_to_strbuilder_ref(CodeTemplate self, StrBuilder* result )
 
 StrBuilder typedef_to_strbuilder(CodeTypedef self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 128 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	typedef_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -1158,7 +1158,7 @@ void typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result )
 
 StrBuilder typename_to_strbuilder(CodeTypename self)
 {
-	StrBuilder result = strbuilder_make_str( GlobalAllocator, txt("") );
+	StrBuilder result = strbuilder_make_str( _ctx->Allocator_Temp, txt("") );
 	typename_to_strbuilder_ref( self, & result );
 	return result;
 }
@@ -1221,7 +1221,7 @@ void typename_to_strbuilder_ref(CodeTypename self, StrBuilder* result )
 
 StrBuilder union_to_strbuilder(CodeUnion self)
 {
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 512 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	switch ( self->Type )
 	{
 		case CT_Union:
@@ -1287,7 +1287,7 @@ void union_to_strbuilder_fwd(CodeUnion self, StrBuilder* result )
 StrBuilder using_to_strbuilder(CodeUsing self)
 {
 	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 128 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	switch ( self->Type )
 	{
 		case CT_Using:
@@ -1352,7 +1352,7 @@ inline
 StrBuilder var_to_strbuilder(CodeVar self)
 {
 	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( GlobalAllocator, 256 );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
 	var_to_strbuilder_ref( self, & result );
 	return result;
 }

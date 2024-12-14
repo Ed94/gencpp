@@ -224,7 +224,7 @@ word StrBuilder,       gen_StrBuilder
 
 namespace strbuilder_, gen_strbuilder_
 
-word StringCached, gen_StringCached
+word StrCached, gen_StringCached
 
 word StringTable, gen_StringTable
 
@@ -401,7 +401,7 @@ word init,   gen_init
 word deinit, gen_deinit
 word reset,  gen_reset
 
-word get_cached_string, gen_get_cached_string
+word cache_str, gen_get_cached_string
 
 word make_code, gen_make_code
 
@@ -450,8 +450,8 @@ word PreprocessorDefines, gen_PreprocessorDefines
 
 // Backend
 
-word GlobalAllocator,         gen_GlobalAllocator
-word Global_AllocatorBuckets, gen_Global_AllocatorBuckets
+word FallbackAllocator,         gen_GlobalAllocator
+word Fallback_AllocatorBuckets, gen_Global_AllocatorBuckets
 word CodePools,               gen_CodePools
 word StringArenas,            gen_StringArenas
 word StringCache,             gen_StringCache
@@ -518,7 +518,7 @@ word _adt_get_field, gen__adt_get_field
 word _csv_write_record, gen__csv_write_record
 word _csv_write_header, gen__csv_write_header
 
-word Global_Allocator_Proc, gen_Global_Allocator_Proc
+word fallback_allocator_proc, gen_Global_Allocator_Proc
 word define_constants,      gen_define_constants
 word operator__validate,    gen_operator__validate
 

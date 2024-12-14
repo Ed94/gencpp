@@ -737,8 +737,8 @@ Str str_visualize_whitespace(Str str, AllocatorInfo allocator)
 
 // Represents strings cached with the string table.
 // Should never be modified, if changed string is desired, cache_string( str ) another.
-typedef Str StringCached;
+typedef Str StrCached;
 
 // Implements basic string interning. Data structure is based off the ZPL Hashtable.
-typedef HashTable(StringCached) StringTable;
+typedef HashTable(StrCached) StringTable;
 #pragma endregion Strings

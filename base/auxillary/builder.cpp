@@ -15,7 +15,7 @@ Builder builder_open( char const* path )
 		return result;
 	}
 
-	result.Buffer = strbuilder_make_reserve( GlobalAllocator, Builder_StrBufferReserve );
+	result.Buffer = strbuilder_make_reserve( _ctx->Allocator_Temp, _ctx->InitSize_BuilderBuffer );
 
 	// log_fmt("$Builder - Opened file: %s\n", result.File.filename );
 	return result;

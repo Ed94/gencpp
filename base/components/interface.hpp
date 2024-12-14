@@ -15,20 +15,97 @@
   \▓▓▓▓▓▓  \▓▓▓▓▓▓▓\▓▓   \▓▓     \▓▓▓▓▓▓\▓▓   \▓▓   \▓▓▓▓  \▓▓▓▓▓▓▓\▓▓      \▓▓       \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓
 */
 
+#if 0
+enum LogLevel : u32
+{
+	Info,
+	Warning,
+	Panic,
+};
+
+struct LogEntry
+{
+	Str   msg;
+	u32   line_num;
+	void* data;
+};
+
+typedef void LoggerCallback(LogEntry entry);
+#endif
+
+// Note(Ed): This is subject to heavily change 
+// with upcoming changes to the library's fallback (default) allocations strategy;
+// and major changes to lexer/parser context usage.
+struct Context
+{
+// User Configuration
+
+// Persistent Data Allocation
+	AllocatorInfo Allocator_DyanmicContainers; // By default will use a genral slab allocator (TODO(Ed): Currently does not)
+	AllocatorInfo Allocator_Pool;              // By default will use the growing vmem reserve (TODO(Ed): Currently does not)
+	AllocatorInfo Allocator_StrCache;          // By default will use a dedicated slab allocator (TODO(Ed): Currently does not)
+
+// Temporary Allocation
+	AllocatorInfo Allocator_Temp;
+
+	// LoggerCallaback* log_callback; // TODO(Ed): Impl user logger callback as an option.
+
+// 
+	u32 Max_CommentLineLength; // Used by def_comment
+	u32 Max_StrCacheLength;    // Any cached string longer than this is always allocated again.
+
+	u32 InitSize_BuilderBuffer;
+	u32 InitSize_CodePoolsArray;
+	u32 InitSize_StringArenasArray;
+
+	u32 CodePool_NumBlocks;
+
+	// TODO(Ed): Review these... (No longer needed if using the proper allocation strategy)
+	u32 InitSize_LexArena;
+	u32 SizePer_StringArena;
+
+// Parser
+
+	// Used by the lexer to persistently treat all these identifiers as preprocessor defines.
+	// Populate with strings via gen::cache_str.
+	// Functional defines must have format: id( ;at minimum to indicate that the define is only valid with arguments.
+	Array(StrCached) PreprocessorDefines;
+
+// Backend
+	// The fallback allocator is utilized if any fo the three above allocators is not specified by the user.
+	u32 InitSize_Fallback_Allocator_Bucket_Size;
+	Array(Arena) Fallback_AllocatorBuckets;
+
+	// Array(Token) LexerTokens;
+
+	Array(Pool)  CodePools;
+	Array(Arena) StringArenas;
+
+	Arena LexArena;
+
+	StringTable StrCache;
+};
+
 // Initialize the library.
-void init();
+void init(Context* ctx);
 
 // Currently manually free's the arenas, code for checking for leaks.
 // However on Windows at least, it doesn't need to occur as the OS will clean up after the process.
-void deinit();
+void deinit(Context* ctx);
 
 // Clears the allocations, but doesn't return to the heap, the calls init() again.
 // Ease of use.
-void reset();
+void reset(Context* ctx);
+
+void set_context(Context* ctx);
+
+// Alternative way to add a preprocess define entry for the lexer & parser to utilize 
+// if the user doesn't want to use def_define
+void set_preprocess_define( Str id, b32 is_functional );
 
 // Used internally to retrive or make string allocations.
 // Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
-StringCached get_cached_string( Str str );
+StrCached cache_str( Str str );
 
 /*
 	This provides a fresh Code AST.
@@ -38,13 +115,6 @@ StringCached get_cached_string( Str str );
 Code make_code();
 
 // Set these before calling gen's init() procedure.
-
-void set_allocator_data_arrays ( AllocatorInfo data_array_allocator );
-void set_allocator_code_pool   ( AllocatorInfo pool_allocator );
-void set_allocator_lexer       ( AllocatorInfo lex_allocator );
-void set_allocator_strbuilder_arena( AllocatorInfo strbuilder_allocator );
-void set_allocator_strbuilder_table( AllocatorInfo strbuilder_allocator );
-void set_allocator_type_table  ( AllocatorInfo type_reg_allocator );
 
 #pragma region Upfront
 

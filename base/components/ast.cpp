@@ -10,7 +10,7 @@ global Code Code_Invalid;
 Str code_debug_str(Code self)
 {
 	GEN_ASSERT(self != nullptr);
-	StrBuilder  result_stack = strbuilder_make_reserve( GlobalAllocator, kilobytes(1) );
+	StrBuilder  result_stack = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
 	StrBuilder* result       = & result_stack;
 
 	if ( self->Parent )
@@ -372,7 +372,7 @@ Code code_duplicate(Code self)
 
 StrBuilder code_to_strbuilder(Code self)
 {
-	StrBuilder result = strbuilder_make_str( GlobalAllocator, txt("") );
+	StrBuilder result = strbuilder_make_str( _ctx->Allocator_Temp, txt("") );
 	code_to_strbuilder_ptr( self, & result );
 	return result;
 }
@@ -612,7 +612,7 @@ bool code_is_equal( Code self, Code other )
 	{
 		log_fmt("AST::is_equal: Type check failure with other\nAST: %S\nOther: %S"
 			, code_debug_str(self)
-			,code_debug_str(other)
+			, code_debug_str(other)
 		);
 
 		return false;
@@ -646,23 +646,23 @@ bool code_is_equal( Code self, Code other )
 		return false;                                               \
 	}
 
-	#define check_member_content( content )                                \
-	if ( ! str_are_equal( self->content, other->content ))                 \
-	{                                                                      \
-		log_fmt("\nAST::is_equal: Member content - "#content " failed\n"   \
-				"AST  : %S\n"                                              \
-				"Other: %S\n"                                              \
-			, code_debug_str(self)                                         \
-			, code_debug_str(other)                                        \
-		);                                                                 \
-                                                                           \
-		log_fmt("Content cannot be trusted to be unique with this check "  \
-			"so it must be verified by eye for now\n"                      \
-			"AST   Content:\n%S\n"                                         \
-			"Other Content:\n%S\n"                                         \
-			, str_visualize_whitespace(self->content, GlobalAllocator)     \
-			, str_visualize_whitespace(other->content, GlobalAllocator)    \
-		);                                                                 \
+	#define check_member_content( content )                                  \
+	if ( ! str_are_equal( self->content, other->content ))                   \
+	{                                                                        \
+		log_fmt("\nAST::is_equal: Member content - "#content " failed\n"     \
+				"AST  : %S\n"                                                \
+				"Other: %S\n"                                                \
+			, code_debug_str(self)                                           \
+			, code_debug_str(other)                                          \
+		);                                                                   \
+                                                                             \
+		log_fmt("Content cannot be trusted to be unique with this check "    \
+			"so it must be verified by eye for now\n"                        \
+			"AST   Content:\n%S\n"                                           \
+			"Other Content:\n%S\n"                                           \
+			, str_visualize_whitespace(self->content, _ctx->Allocator_Temp)  \
+			, str_visualize_whitespace(other->content, _ctx->Allocator_Temp) \
+		);                                                                   \
 	}
 
 	#define check_member_ast( ast )                                                                \

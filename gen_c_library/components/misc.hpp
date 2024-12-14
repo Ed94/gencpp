@@ -84,7 +84,7 @@ Code gen_generic_selection_function_macro( s32 num_slots, Str macro_name, Generi
 	) GEN_RESOLVED_FUNCTION_CALL( selector_arg )
 */
 	local_persist
-	StrBuilder define_builder = StrBuilder::make_reserve(GlobalAllocator, kilobytes(64));
+	StrBuilder define_builder = StrBuilder::make_reserve(FallbackAllocator, kilobytes(64));
 	define_builder.clear();
 
 	Str macro_begin;
@@ -104,7 +104,7 @@ R"(#define <macro_name>(selector_arg, ...) _Generic( (selector_arg), \
 
 	for ( s32 slot = 1; slot <= num_slots; ++ slot )
 	{
-		Str slot_str = StrBuilder::fmt_buf(GlobalAllocator, "%d", slot).to_str();
+		Str slot_str = StrBuilder::fmt_buf(FallbackAllocator, "%d", slot).to_str();
 		define_builder.append( token_fmt( "macro_name", macro_name, "slot", slot_str,
 R"(GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_<slot>__<macro_name> ) \
 )"
@@ -147,9 +147,9 @@ CodeFn rename_function_to_unique_symbol(CodeFn fn, Str optional_prefix = txt("")
 
     // Add prefix if provided
     if (optional_prefix.Len)
-        new_name = strbuilder_fmt_buf(GlobalAllocator, "%S_%S_", optional_prefix, old_name);
+        new_name = strbuilder_fmt_buf(FallbackAllocator, "%S_%S_", optional_prefix, old_name);
     else
-        new_name = strbuilder_fmt_buf(GlobalAllocator, "%S_", old_name);
+        new_name = strbuilder_fmt_buf(FallbackAllocator, "%S_", old_name);
 
     // Add return type to the signature
     if (fn->ReturnType)
@@ -211,8 +211,8 @@ bool swap_pragma_region_implementation( Str region_name, SwapContentProc* swap_c
 	bool found = false;
 	CodePragma possible_region = cast(CodePragma, entry_iter);
 
-	StrBuilder region_sig    = strbuilder_fmt_buf(GlobalAllocator, "region %s",    region_name.Ptr);
-	StrBuilder endregion_sig = strbuilder_fmt_buf(GlobalAllocator, "endregion %s", region_name.Ptr);
+	StrBuilder region_sig    = strbuilder_fmt_buf(FallbackAllocator, "region %s",    region_name.Ptr);
+	StrBuilder endregion_sig = strbuilder_fmt_buf(FallbackAllocator, "endregion %s", region_name.Ptr);
 	if ( possible_region->Content.contains(region_sig))
 	{
 		found = true;

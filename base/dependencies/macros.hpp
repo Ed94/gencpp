@@ -69,7 +69,8 @@
 #endif
 
 #ifndef do_once
-#define do_once( statement ) for ( local_persist b32 once = true; once; once = false, (statement) )
+#define do_once() for ( local_persist b32 once = true; once; once = false )
+#define do_once_defer( statement ) for ( local_persist b32 once = true; once; once = false, (statement) )
 
 #define do_once_start      \
 	do                     \

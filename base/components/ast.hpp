@@ -368,7 +368,7 @@ int AST_ArrSpecs_Cap =
 (
 	AST_POD_Size
 	- sizeof(Code)
-	- sizeof(StringCached)
+	- sizeof(StrCached)
 	- sizeof(Code) * 2
 	- sizeof(Token*)
 	- sizeof(Code)
@@ -414,13 +414,13 @@ struct AST
 				Code  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
 		};
-		StringCached  Content;          // Attributes, Comment, Execution, Include
+		StrCached  Content;          // Attributes, Comment, Execution, Include
 		struct {
 			Specifier  ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
 			Code       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
 		};
 	};
-	StringCached      Name;
+	StrCached      Name;
 	union {
 		Code Prev;
 		Code Front;

@@ -27,7 +27,8 @@ constexpr char const* generation_notice =
 
 int gen_main()
 {
-	gen::init();
+	gen::Context ctx {};
+	gen::init( & ctx);
 
 	CodeBody gen_component_header = def_global_body( args(
 		def_preprocess_cond( PreprocessCond_IfDef, txt("GEN_INTELLISENSE_DIRECTIVES") ),
@@ -69,6 +70,6 @@ int gen_main()
 	builder_print( & header_ast_inlines, format(ast_inlines) );
 	builder_write( & header_ast_inlines);
 
-	gen::deinit();
+	gen::deinit(& ctx);
 	return 0;
 }

@@ -419,7 +419,7 @@ CodeAttributes def_attributes( Str content )
 	Code
 	result          = make_code();
 	result->Type    = CT_PlatformAttributes;
-	result->Name    = get_cached_string( content );
+	result->Name    = cache_str( content );
 	result->Content = result->Name;
 	return (CodeAttributes) result;
 }
@@ -433,9 +433,7 @@ CodeComment def_comment( Str content )
 		return InvalidCode;
 	}
 
-	static char line[ MaxCommentLineLength ];
-
-	StrBuilder      cmt_formatted = strbuilder_make_reserve( GlobalAllocator, kilobytes(1) );
+	StrBuilder  cmt_formatted = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
 	char const* end           = content.Ptr + content.Len;
 	char const* scanner       = content.Ptr;
 	s32         curr          = 0;
@@ -450,10 +448,7 @@ CodeComment def_comment( Str content )
 		}
 		length++;
 
-		c_str_copy( line, scanner, length );
-		strbuilder_append_fmt(& cmt_formatted, "//%.*s", length, line );
-		mem_set( line, 0, MaxCommentLineLength );
-
+		strbuilder_append_fmt(& cmt_formatted, "//%.*s", length, scanner );
 		scanner += length;
 	}
 	while ( scanner <= end );
@@ -466,7 +461,7 @@ CodeComment def_comment( Str content )
 	Code
 	result          = make_code();
 	result->Type    = CT_Comment;
-	result->Name    = get_cached_string( name );
+	result->Name    = cache_str( name );
 	result->Content = result->Name;
 
 	strbuilder_free(& cmt_formatted);
@@ -531,7 +526,7 @@ CodeClass def_class( Str name, Opts_def_struct p )
 
 	CodeClass
 	result              = (CodeClass) make_code();
-	result->Name        = get_cached_string( name );
+	result->Name        = cache_str( name );
 	result->ModuleFlags = p.mflags;
 	if ( p.body )
 	{
@@ -574,12 +569,12 @@ CodeDefine def_define( Str name, Str content, Opts_def_define p )
 	CodeDefine
 	result          = (CodeDefine) make_code();
 	result->Type    = CT_Preprocess_Define;
-	result->Name    = get_cached_string( name );
+	result->Name    = cache_str( name );
 
 	if ( content.Len <= 0 || content.Ptr == nullptr )
-		result->Content = get_cached_string( txt("") );
+		result->Content = cache_str( txt("") );
 	else
-		result->Content = get_cached_string( strbuilder_to_str(strbuilder_fmt_buf(GlobalAllocator, "%S\n", content)) );
+		result->Content = cache_str( strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S\n", content)) );
 
 	b32  append_preprocess_defines = ! p.dont_append_preprocess_defines;
 	if ( append_preprocess_defines ) {
@@ -590,7 +585,7 @@ CodeDefine def_define( Str name, Str content, Opts_def_define p )
 				break;
 		}
 		Str lex_id = { result->Name.Ptr,  lex_id_len };
-		array_append(PreprocessorDefines, lex_id );
+		array_append(_ctx->PreprocessorDefines, cache_str(lex_id) );
 	}
 	return result;
 }
@@ -648,7 +643,7 @@ CodeEnum def_enum( Str name, Opts_def_enum p )
 
 	CodeEnum
 	result              = (CodeEnum) make_code();
-	result->Name        = get_cached_string( name );
+	result->Name        = cache_str( name );
 	result->ModuleFlags = p.mflags;
 	if ( p.body )
 	{
@@ -700,7 +695,7 @@ CodeExec def_execution( Str content )
 	CodeExec
 	result          = (CodeExec) make_code();
 	result->Type    = CT_Execution;
-	result->Content = get_cached_string( content );
+	result->Content = cache_str( content );
 	return result;
 }
 
@@ -718,7 +713,7 @@ CodeExtern def_extern_link( Str name, CodeBody body )
 	CodeExtern
 	result        = (CodeExtern)make_code();
 	result->Type  = CT_Extern_Linkage;
-	result->Name  = get_cached_string( name );
+	result->Name  = cache_str( name );
 	result->Body  = body;
 	return result;
 }
@@ -781,7 +776,7 @@ CodeFn def_function( Str name, Opts_def_function p )
 
 	CodeFn
 	result              = (CodeFn) make_code();
-	result->Name        = get_cached_string( name );
+	result->Name        = cache_str( name );
 	result->ModuleFlags = p.mflags;
 	if ( p.body )
 	{
@@ -820,13 +815,13 @@ CodeInclude def_include( Str path, Opts_def_include p )
 		return InvalidCode;
 	}
 	StrBuilder content = p.foreign ?
-			strbuilder_fmt_buf( GlobalAllocator, "<%.*s>",   path.Len, path.Ptr )
-		:	strbuilder_fmt_buf( GlobalAllocator, "\"%.*s\"", path.Len, path.Ptr );
+			strbuilder_fmt_buf( _ctx->Allocator_Temp, "<%.*s>",   path.Len, path.Ptr )
+		:	strbuilder_fmt_buf( _ctx->Allocator_Temp, "\"%.*s\"", path.Len, path.Ptr );
 
 	CodeInclude
 	result          = (CodeInclude) make_code();
 	result->Type    = CT_Preprocess_Include;
-	result->Name    = get_cached_string( strbuilder_to_str(content) );
+	result->Name    = cache_str( strbuilder_to_str(content) );
 	result->Content = result->Name;
 	return result;
 }
@@ -840,7 +835,7 @@ CodeModule def_module( Str name, Opts_def_module p )
 	CodeModule
 	result              = (CodeModule) make_code();
 	result->Type        = CT_Module;
-	result->Name        = get_cached_string( name );
+	result->Name        = cache_str( name );
 	result->ModuleFlags = p.mflags;
 	return result;
 }
@@ -863,7 +858,7 @@ CodeNS def_namespace( Str name, CodeBody body, Opts_def_namespace p )
 	CodeNS
 	result              = (CodeNS) make_code();
 	result->Type        = CT_Namespace;
-	result->Name        = get_cached_string( name );
+	result->Name        = cache_str( name );
 	result->ModuleFlags = p.mflags;
 	result->Body        = body;
 	return result;
@@ -899,7 +894,7 @@ CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator p )
 
 	CodeOperator
 	result              = (CodeOperator) make_code();
-	result->Name        = get_cached_string( name_resolved );
+	result->Name        = cache_str( name_resolved );
 	result->ModuleFlags = p.mflags;
 	result->Op          = op;
 	if ( p.body )
@@ -986,7 +981,7 @@ CodeParams def_param( CodeTypename type, Str name, Opts_def_param p )
 	CodeParams
 	result            = (CodeParams) make_code();
 	result->Type      = CT_Parameters;
-	result->Name      = get_cached_string( name );
+	result->Name      = cache_str( name );
 	result->ValueType = type;
 	result->Value     = p.value;
 	result->NumEntries++;
@@ -1003,7 +998,7 @@ CodePragma def_pragma( Str directive )
 	CodePragma
 	result          = (CodePragma) make_code();
 	result->Type    = CT_Preprocess_Pragma;
-	result->Content = get_cached_string( directive );
+	result->Content = cache_str( directive );
 	return result;
 }
 
@@ -1016,7 +1011,7 @@ CodePreprocessCond def_preprocess_cond( EPreprocessCond type, Str expr )
 	}
 	CodePreprocessCond
 	result          = (CodePreprocessCond) make_code();
-	result->Content = get_cached_string( expr );
+	result->Content = cache_str( expr );
 	switch (type)
 	{
 		case PreprocessCond_If:
@@ -1066,7 +1061,7 @@ CodeStruct def_struct( Str name, Opts_def_struct p )
 	result              = (CodeStruct) make_code();
 	result->ModuleFlags = p.mflags;
 	if ( name.Len )
-		result->Name = get_cached_string( name );
+		result->Name = cache_str( name );
 
 	if ( p.body ) {
 		result->Type = CT_Struct;
@@ -1143,7 +1138,7 @@ CodeTypename def_type( Str name, Opts_def_type p )
 	}
 	CodeTypename
 	result             = (CodeTypename) make_code();
-	result->Name       = get_cached_string( name );
+	result->Name       = cache_str( name );
 	result->Type       = CT_Typename;
 	result->Attributes = p.attributes;
 	result->Specs      = p.specifiers;
@@ -1204,12 +1199,12 @@ CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef p )
 			GEN_DEBUG_TRAP();
 			return InvalidCode;
 		}
-		result->Name       = get_cached_string( type->Name );
+		result->Name       = cache_str( type->Name );
 		result->IsFunction = true;
 	}
 	else
 	{
-		result->Name       = get_cached_string( name );
+		result->Name       = cache_str( name );
 		result->IsFunction = false;
 	}
 	return result;
@@ -1238,7 +1233,7 @@ CodeUnion def_union( Str name, CodeBody body, Opts_def_union p )
 	result->Body        = body;
 	result->Attributes  = p.attributes;
 	if ( name.Ptr )
-		result->Name = get_cached_string( name );
+		result->Name = cache_str( name );
 	return result;
 }
 
@@ -1262,7 +1257,7 @@ CodeUsing def_using( Str name, CodeTypename type, Opts_def_using p )
 	}
 	CodeUsing
 	result                 = (CodeUsing) make_code();
-	result->Name           = get_cached_string( name );
+	result->Name           = cache_str( name );
 	result->ModuleFlags    = p.mflags;
 	result->Type           = CT_Using;
 	result->UnderlyingType = type;
@@ -1278,7 +1273,7 @@ CodeUsing def_using_namespace( Str name )
 	}
 	CodeUsing
 	result          = (CodeUsing) make_code();
-	result->Name    = get_cached_string( name );
+	result->Name    = cache_str( name );
 	result->Type    = CT_Using_Namespace;
 	return result;
 }
@@ -1311,7 +1306,7 @@ CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable p )
 	}
 	CodeVar
 	result              = (CodeVar) make_code();
-	result->Name        = get_cached_string( name );
+	result->Name        = cache_str( name );
 	result->Type        = CT_Variable;
 	result->ModuleFlags = p.mflags;
 	result->ValueType   = type;

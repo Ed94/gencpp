@@ -589,7 +589,7 @@ do                          \
 	}
 
 	// Used to track which functions need generic selectors.
-	Array(CodeFn) code_c_interface = array_init_reserve<CodeFn>(GlobalAllocator, 16);
+	Array(CodeFn) code_c_interface = array_init_reserve<CodeFn>(FallbackAllocator, 16);
 
 	CodeBody parsed_ast = parse_file( path_base "components/ast.hpp" );
 	CodeBody ast        = def_body(CT_Global_Body);
@@ -647,9 +647,9 @@ do                          \
 					{
 						Str   old_prefix  = txt("code_");
 						Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
-						StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
+						StrBuilder new_name    = StrBuilder::fmt_buf(FallbackAllocator, "code__%S", actual_name );
 
-						fn->Name = get_cached_string(new_name);
+						fn->Name = cache_str(new_name);
 						code_c_interface.append(fn);
 					}
 					ast.append(entry);
@@ -702,7 +702,7 @@ R"(#define AST_ArrSpecs_Cap \
 (                           \
 	AST_POD_Size              \
 	- sizeof(Code)            \
-	- sizeof(StringCached)    \
+	- sizeof(StrCached)    \
 	- sizeof(Code) * 2        \
 	- sizeof(Token*)          \
 	- sizeof(Code)            \
@@ -791,17 +791,17 @@ R"(#define AST_ArrSpecs_Cap \
 				default: gen_generic_selection (Fail case)                                    \
 			) GEN_RESOLVED_FUNCTION_CALL( code, ... )                                       \
 			*/
-			StrBuilder generic_selector = StrBuilder::make_reserve(GlobalAllocator, kilobytes(2));
+			StrBuilder generic_selector = StrBuilder::make_reserve(FallbackAllocator, kilobytes(2));
 			for ( CodeFn fn : code_c_interface )
 			{
 				generic_selector.clear();
 				Str   private_prefix  = txt("code__");
 				Str   actual_name     = { fn->Name.Ptr + private_prefix.Len, fn->Name.Len - private_prefix.Len };
-				StrBuilder interface_name  = StrBuilder::fmt_buf(GlobalAllocator, "code_%S", actual_name );
+				StrBuilder interface_name  = StrBuilder::fmt_buf(FallbackAllocator, "code_%S", actual_name );
 
 				// Resolve generic's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
-				StrBuilder params_str = StrBuilder::make_reserve(GlobalAllocator, 32);
+				StrBuilder params_str = StrBuilder::make_reserve(FallbackAllocator, 32);
 				for (CodeParams param = fn->Params->Next; param != fn->Params.end(); ++ param) {
 					// We skip the first parameter as its always going to be the code for selection
 					if (param->Next == nullptr) {
@@ -931,8 +931,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 			if (prev && prev->Name.is_equal(entry->Name)) {
 				// rename second definition so there isn't a symbol conflict
-				StrBuilder postfix_arr = StrBuilder::fmt_buf(GlobalAllocator, "%S_arr", entry->Name);
-				entry->Name = get_cached_string(postfix_arr.to_str());
+				StrBuilder postfix_arr = StrBuilder::fmt_buf(FallbackAllocator, "%S_arr", entry->Name);
+				entry->Name = cache_str(postfix_arr.to_str());
 				postfix_arr.free();
 			}
 
@@ -942,11 +942,11 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
 				Str prefix      = txt("def_");
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
-				Str new_name    = StrBuilder::fmt_buf(GlobalAllocator, "def__%S", actual_name ).to_str();
+				Str new_name    = StrBuilder::fmt_buf(FallbackAllocator, "def__%S", actual_name ).to_str();
 
 				// Resolve define's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
-				StrBuilder params_str = StrBuilder::make_reserve(GlobalAllocator, 32);
+				StrBuilder params_str = StrBuilder::make_reserve(FallbackAllocator, 32);
 				for (CodeParams other_param = fn->Params; other_param != opt_param; ++ other_param) {
 					if ( other_param == opt_param ) {
 						params_str.append_fmt( "%S", other_param->Name );
@@ -970,7 +970,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				,	tmpl_fn_macro
 				));
 
-				fn->Name = get_cached_string(new_name);
+				fn->Name = cache_str(new_name);
 				interface.append(fn);
 				interface.append(fn_macro);
 				if (entry->Next && entry->Next->Type != CT_NewLine) {
@@ -1021,9 +1021,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			{
 				Str   old_prefix  = txt("code_");
 				Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
-				StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
+				StrBuilder new_name    = StrBuilder::fmt_buf(FallbackAllocator, "code__%S", actual_name );
 
-				fn->Name = get_cached_string(new_name);
+				fn->Name = cache_str(new_name);
 			}
 			inlines.append(entry);
 		}
@@ -1176,9 +1176,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			{
 				Str   old_prefix  = txt("code_");
 				Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
-				StrBuilder new_name    = StrBuilder::fmt_buf(GlobalAllocator, "code__%S", actual_name );
+				StrBuilder new_name    = StrBuilder::fmt_buf(FallbackAllocator, "code__%S", actual_name );
 
-				fn->Name = get_cached_string(new_name);
+				fn->Name = cache_str(new_name);
 			}
 			src_ast.append(entry);
 		}
@@ -1219,8 +1219,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				)
 				{
 					// rename second definition so there isn't a symbol conflict
-					StrBuilder postfix_arr = StrBuilder::fmt_buf(GlobalAllocator, "%S_arr", fn->Name);
-					fn->Name = get_cached_string(postfix_arr.to_str());
+					StrBuilder postfix_arr = StrBuilder::fmt_buf(FallbackAllocator, "%S_arr", fn->Name);
+					fn->Name = cache_str(postfix_arr.to_str());
 					postfix_arr.free();
 				}
 
@@ -1228,9 +1228,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			{
 				Str prefix      = txt("def_");
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
-				Str new_name    = StrBuilder::fmt_buf(GlobalAllocator, "def__%S", actual_name ).to_str();
+				Str new_name    = StrBuilder::fmt_buf(FallbackAllocator, "def__%S", actual_name ).to_str();
 
-				fn->Name = get_cached_string(new_name);
+				fn->Name = cache_str(new_name);
 			}
 
 			src_upfront.append(fn);

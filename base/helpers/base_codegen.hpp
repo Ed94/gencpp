@@ -13,9 +13,9 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
 	CSV_Columns2 csv_enum                 = parse_csv_two_columns( scratch_info, path );
-	StrBuilder   enum_entries             = strbuilder_make_reserve( GlobalAllocator, kilobytes(1) );
-	StrBuilder   to_c_str_entries         = strbuilder_make_reserve( GlobalAllocator, kilobytes(1) );
-	StrBuilder   to_keyword_c_str_entries = strbuilder_make_reserve( GlobalAllocator, kilobytes(1) );
+	StrBuilder   enum_entries             = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
+	StrBuilder   to_c_str_entries         = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
+	StrBuilder   to_keyword_c_str_entries = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(1) );
 
 	for ( ssize idx = 0; idx < array_num(csv_enum.Col_1); ++ idx ) 	{
 		char const* code    = csv_enum.Col_1[idx].string;
@@ -40,7 +40,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	Str      lookup_size  = strbuilder_to_str(strbuilder_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
+	Str      lookup_size  = strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%d", array_num(csv_enum.Col_1) ));
 	CodeBody to_c_str_fns = parse_global_body( token_fmt(
 		"entries",  strbuilder_to_str(to_c_str_entries)
 	,	"keywords", strbuilder_to_str(to_keyword_c_str_entries)
@@ -97,8 +97,8 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 	AllocatorInfo   scratch_info = fixed_arena_allocator_info(& scratch);
 
 	CSV_Columns2 csv_enum       = parse_csv_two_columns( scratch_info, path );
-	StrBuilder enum_entries     = strbuilder_make_reserve( GlobalAllocator, 32 );
-	StrBuilder to_c_str_entries = strbuilder_make_reserve( GlobalAllocator, 32 );
+	StrBuilder enum_entries     = strbuilder_make_reserve( _ctx->Allocator_Temp, 32 );
+	StrBuilder to_c_str_entries = strbuilder_make_reserve( _ctx->Allocator_Temp, 32 );
 
 	for (usize idx = 0; idx < array_num(csv_enum.Col_1); idx++) {
 		char const* enum_str     = csv_enum.Col_1[idx].string;
@@ -136,7 +136,7 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 
 #pragma push_macro("local_persist")
 #undef local_persist
-	Str lookup_size = strbuilder_to_str(strbuilder_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
+	Str lookup_size = strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%d", array_num(csv_enum.Col_1) ));
 	CodeFn to_str   = parse_function(token_fmt(
 		"entries", strbuilder_to_str(to_c_str_entries)
 	,	"num",     lookup_size
@@ -237,7 +237,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 #undef do_once_end
 #undef forceinline
 #undef neverinline
-	Str lookup_size = strbuilder_to_str(strbuilder_fmt_buf(GlobalAllocator, "%d", array_num(csv_enum.Col_1) ));
+	Str lookup_size = strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%d", array_num(csv_enum.Col_1) ));
 	CodeFn to_str   = parse_function(token_fmt(
 		"entries", strbuilder_to_str(to_c_str_entries)
 	,	"num",     lookup_size

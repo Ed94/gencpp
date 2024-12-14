@@ -63,7 +63,7 @@ int AST_ArrSpecs_Cap =
 (
     AST_POD_Size
     - sizeof(Code)
-    - sizeof(StringCached)
+    - sizeof(StrCached)
     - sizeof(Code) * 2
     - sizeof(Token*)
     - sizeof(Code)
@@ -79,7 +79,7 @@ int AST_ArrSpecs_Cap =
 Data Notes:
 
 * The allocator definitions used are exposed to the user incase they want to dictate memory usage
-  * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_strbuilder_allocator`, `get_cached_string`, `make_code`.
+  * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_strbuilder_allocator`, `cache_str`, `make_code`.
   * Allocators are defined with the `AllocatorInfo` structure found in [`memory.hpp`](../base/dependencies/memory.hpp)
   * Most of the work is just defining the allocation procedure:
 
@@ -93,7 +93,7 @@ Data Notes:
 * Cached Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
   * `StringArenas`, `StringCache`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
 * Strings used for serialization and file buffers are not contained by those used for cached strings.
-  * They are currently using `GlobalAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
+  * They are currently using `FallbackAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
   * Memory within the buckets is not reused, so its inherently wasteful.
   * I will be augmenting the default allocator with virtual memory & a slab allocator in the [future](https://github.com/Ed94/gencpp/issues/12)
 * Intrusive linked lists used children nodes on bodies, and parameters.
