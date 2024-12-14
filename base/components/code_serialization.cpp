@@ -176,7 +176,7 @@ void class_to_strbuilder_def( CodeClass self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
 
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	strbuilder_append_str( result, txt("class ") );
@@ -221,7 +221,7 @@ void class_to_strbuilder_fwd( CodeClass self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
 
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes )
@@ -241,12 +241,48 @@ void class_to_strbuilder_fwd( CodeClass self, StrBuilder* result )
 
 StrBuilder define_to_strbuilder(CodeDefine define)
 {
-	return strbuilder_fmt_buf( _ctx->Allocator_Temp, "#define %S %S", define->Name, define->Content );
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
+	define_to_strbuilder_ref(define, & result);
+	return result;
 }
 
 void define_to_strbuilder_ref(CodeDefine define, StrBuilder* result )
 {
-	strbuilder_append_fmt( result, "#define %S %S", define->Name, define->Content );
+	GEN_ASSERT(define);
+	GEN_ASSERT(define->Body);
+	GEN_ASSERT(define->Body->Content);
+	if (define->Params) {
+		StrBuilder params_builder = define_params_to_strbuilder(define->Params)
+		strbuilder_append_fmt( result, "#define %S(%S) %S", define->Name, strbuilder_to_str(params_builder), define->Body->Content );
+	}
+	else {
+		strbuilder_append_fmt( result, "#define %S %S", define->Name, define->Body->Content );
+	}
+}
+
+StrBuilder define_params_to_strbuilder(CodeDefineParams params)
+{
+	GEN_ASSERT(params);
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
+	define_params_to_strbuilder_ref( params, & result );
+	return result;
+}
+
+void define_params_to_strbuilder_ref(CodeDefineParams params, StrBuilder* result)
+{
+	GEN_ASSERT(self);
+	GEN_ASSERT(result);
+	if ( self->Name.Ptr && self->Name.Len )
+	{
+		strbuilder_append_fmt( result, " %S", self->Name );
+	}
+	if ( self->NumEntries - 1 > 0 )
+	{
+		for ( CodeParams param = begin_CodeDefineParams(self->Next); param != end_CodeDefineParams(self->Next); param = next_CodeDefineParams(self->Next, param) )
+		{
+			strbuilder_append_fmt( result, ", %SB", params_to_strbuilder(param) );
+		}
+	}
 }
 
 StrBuilder destructor_to_strbuilder(CodeDestructor self)
@@ -329,7 +365,7 @@ StrBuilder enum_to_strbuilder(CodeEnum self)
 
 void enum_to_strbuilder_def(CodeEnum self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes || self->UnderlyingType || self->UnderlyingTypeMacro )
@@ -362,7 +398,7 @@ void enum_to_strbuilder_def(CodeEnum self, StrBuilder* result )
 
 void enum_to_strbuilder_fwd(CodeEnum self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes )
@@ -389,7 +425,7 @@ void enum_to_strbuilder_fwd(CodeEnum self, StrBuilder* result )
 
 void enum_to_strbuilder_class_def(CodeEnum self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes || self->UnderlyingType )
@@ -421,7 +457,7 @@ void enum_to_strbuilder_class_def(CodeEnum self, StrBuilder* result )
 
 void enum_to_strbuilder_class_fwd(CodeEnum self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	strbuilder_append_str( result, txt("enum class ") );
@@ -505,7 +541,7 @@ StrBuilder fn_to_strbuilder(CodeFn self)
 
 void fn_to_strbuilder_def(CodeFn self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export") );
 
 	if ( self->Attributes )
@@ -558,7 +594,7 @@ void fn_to_strbuilder_def(CodeFn self, StrBuilder* result )
 
 void fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes )
@@ -646,7 +682,7 @@ StrBuilder namespace_to_strbuilder(CodeNS self)
 
 void namespace_to_strbuilder_ref(CodeNS self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	strbuilder_append_fmt( result, "namespace %S\n{\n%SB\n}\n", self->Name, body_to_strbuilder(self->Body) );
@@ -671,7 +707,7 @@ StrBuilder code_op_to_strbuilder(CodeOperator self)
 
 void code_op_to_strbuilder_def(CodeOperator self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes )
@@ -725,7 +761,7 @@ void code_op_to_strbuilder_def(CodeOperator self, StrBuilder* result )
 
 void code_op_to_strbuilder_fwd(CodeOperator self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes )
@@ -865,7 +901,6 @@ void opcast_to_strbuilder_fwd(CodeOpCast self, StrBuilder* result )
 
 StrBuilder params_to_strbuilder(CodeParams self)
 {
-	GEN_ASSERT(self);
 	GEN_ASSERT(self);
 	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	params_to_strbuilder_ref( self, & result );
@@ -1030,7 +1065,7 @@ void struct_to_strbuilder_def( CodeStruct self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(result);
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	strbuilder_append_str( result, txt("struct ") );
@@ -1076,7 +1111,7 @@ void struct_to_strbuilder_fwd( CodeStruct self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(result);
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes )
@@ -1105,7 +1140,7 @@ void template_to_strbuilder_ref(CodeTemplate self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(result);
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Params )
@@ -1123,7 +1158,7 @@ StrBuilder typedef_to_strbuilder(CodeTypedef self)
 
 void typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	strbuilder_append_str( result, txt("typedef "));
@@ -1236,7 +1271,7 @@ StrBuilder union_to_strbuilder(CodeUnion self)
 
 void union_to_strbuilder_def(CodeUnion self, StrBuilder* result )
 {
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	strbuilder_append_str( result, txt("union ") );
@@ -1267,7 +1302,7 @@ void union_to_strbuilder_fwd(CodeUnion self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(result);
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	strbuilder_append_str( result, txt("union ") );
@@ -1304,7 +1339,7 @@ void using_to_strbuilder_ref(CodeUsing self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(result);
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes )
@@ -1401,7 +1436,7 @@ void var_to_strbuilder_ref(CodeVar self, StrBuilder* result )
 		return;
 	}
 
-	if ( bitfield_is_equal( u32, self->ModuleFlags, ModuleFlag_Export ))
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
 
 	if ( self->Attributes || self->Specs )

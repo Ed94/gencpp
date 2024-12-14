@@ -21,7 +21,7 @@ word global,                       gen_global
 word internal,                     gen_internal
 word local_persist,                gen_local_persist
 word bit,                          gen_bit
-word bitfield_is_equal,            gen_bitfield_is_equal
+word bitfield_is_set,            gen_bitfield_is_set
 word cast,                         gen_cast
 word ccast,                        gen_ccast
 word pcast,                        gen_pcast

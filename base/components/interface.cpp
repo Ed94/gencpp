@@ -206,10 +206,12 @@ void define_constants()
 	spec_local_persist = def_specifiers( 1, Spec_Local_Persist );
 	code_set_global(cast(Code, spec_local_persist));
 
-	if (enum_underlying_sig.Len == 0) {
-		enum_underlying_sig = txt("enum_underlying(");
+	if (enum_underlying_macro.Name.Len == 0) {
+		enum_underlying_macro.Name  = txt("enum_underlying(");
+		enum_underlying_macro.Type  = MT_Expression;
+		enum_underlying_macro.Flags = MF_Functional;
 	}
-	array_append( _ctx->PreprocessorDefines, enum_underlying_sig);
+	register_preprocess_macro(enum_underlying_macro);
 }
 
 void init(Context* ctx)
@@ -301,9 +303,6 @@ void init(Context* ctx)
 			GEN_FATAL( "gen::init: Failed to initialize the code pool" );
 		array_append( ctx->CodePools, code_pool );
 
-		// TODO(Ed): This is going to be phased out most likely.
-		ctx->LexArena = arena_init_from_allocator( ctx->Allocator_DyanmicContainers, ctx->InitSize_LexArena );
-
 		// TODO(Ed): Eventually the string arenas needs to be phased out for a dedicated string slab allocator
 		Arena strbuilder_arena = arena_init_from_allocator( ctx->Allocator_StrCache, ctx->SizePer_StringArena );
 		if ( strbuilder_arena.PhysicalStart == nullptr )
@@ -315,9 +314,12 @@ void init(Context* ctx)
 		ctx->StrCache = hashtable_init(StrCached, ctx->Allocator_DyanmicContainers);
 		if ( ctx->StrCache.Entries == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
+
+		ctx->PreprocessorMacros = hashtable_init(PreprocessorMacros, ctx->Allocator_DyanmicContainers);
+		if (ctx->PreprocessorMacros.Hashes == nullptr || ctx->PreprocessorMacros.Entries == nullptr) {
+			GEN_FATAL( "gen::init: Failed to initialize the PreprocessMacros table" );
+		}
 	}
-	// Preprocessor Defines
-	ctx->PreprocessorDefines = array_init_reserve(StrCached, ctx->Allocator_DyanmicContainers, kilobytes(1) );
 
 	define_constants();
 	parser_init();
@@ -354,9 +356,7 @@ void deinit(Context* ctx)
 	array_free( ctx->CodePools);
 	array_free( ctx->StringArenas);
 
-	// arena_free(& ctx->LexArena);
-
-	array_free(ctx->PreprocessorDefines);
+	hashtable_destroy(ctx->PreprocessorMacros);
 
 	left  = array_num( ctx->Fallback_AllocatorBuckets);
 	if (left)
@@ -401,6 +401,7 @@ void reset(Context* ctx)
 	while ( left--, left );
 
 	hashtable_clear(ctx->StrCache);
+	hashtable_clear(ctx->PreprocessorMacros);
 	define_constants();
 }
 

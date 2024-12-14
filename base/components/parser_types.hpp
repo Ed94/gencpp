@@ -6,34 +6,6 @@
 #include "gen/especifier.hpp"
 #endif
 
-enum MacroTypes : u16
-{
-	MT_Block_Start,    // Not Supported yet
-	MT_Block_End,      // Not Supported yet
-	MT_Case_Statement, // Not Supported yet
-	MT_Expression,
-	MT_Statement,
-	MT_Typename,
-
-	MF_UnderlyingType = GEN_U16_Max,
-};
-
-enum MacroFlags : u16
-{
-	MF_Functional     = bit(0), // Macro has parameters (args expected to be passed)
-	MF_Expects_Body   = bit(1), // Expects to assign a braced scope to its body.
-
-	MF_Null           = 0,
-	MF_UnderlyingType = GEN_U16_Max,
-};
-
-struct PreprocessorMacro
-{
-	StrCached  Name;
-	MacroTypes Type;
-	MacroFlags Flags;
-};
-
 enum TokFlags : u32
 {
 	TF_Operator		         = bit(0),
@@ -82,42 +54,42 @@ bool tok_is_valid( Token tok ) {
 
 forceinline
 bool tok_is_access_operator(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_AccessOperator );
+	return bitfield_is_set( u32, tok.Flags, TF_AccessOperator );
 }
 
 forceinline
 bool tok_is_access_specifier(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_AccessSpecifier );
+	return bitfield_is_set( u32, tok.Flags, TF_AccessSpecifier );
 }
 
 forceinline
 bool tok_is_attribute(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Attribute );
+	return bitfield_is_set( u32, tok.Flags, TF_Attribute );
 }
 
 forceinline
 bool tok_is_operator(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Operator );
+	return bitfield_is_set( u32, tok.Flags, TF_Operator );
 }
 
 forceinline
 bool tok_is_preprocessor(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess );
+	return bitfield_is_set( u32, tok.Flags, TF_Preprocess );
 }
 
 forceinline
 bool tok_is_preprocess_cond(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess_Cond );
+	return bitfield_is_set( u32, tok.Flags, TF_Preprocess_Cond );
 }
 
 forceinline
 bool tok_is_specifier(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Specifier );
+	return bitfield_is_set( u32, tok.Flags, TF_Specifier );
 }
 
 forceinline
 bool tok_is_end_definition(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_EndDefinition );
+	return bitfield_is_set( u32, tok.Flags, TF_EndDefinition );
 }
 
 StrBuilder tok_to_strbuilder(Token tok);
@@ -153,3 +125,60 @@ struct ParseContext
 	TokArray   Tokens;
 	StackNode* Scope;
 };
+
+enum MacroType : u16
+{
+	MT_Statement,      // A macro is assumed to be a statement if not resolved.
+	MT_Expression,
+	MT_Typename,
+	MT_Block_Start,    // Not Supported yet
+	MT_Block_End,      // Not Supported yet
+	MT_Case_Statement, // Not Supported yet
+
+	MF_UnderlyingType = GEN_U16_Max,
+};
+
+Str macro_type_to_str( MacroType type )
+{
+	local_persist
+	Str lookup[ (u32)Num_ModuleFlags ] = {
+		{ "Statement",      sizeof("Statement")      - 1 },
+		{ "Expression",     sizeof("Expression")     - 1 },
+		{ "Typename",       sizeof("Typename")       - 1 },
+		{ "Block_Start",    sizeof("Block_Start")    - 1 },
+		{ "Block_End",      sizeof("Block_End")      - 1 },
+		{ "Case_Statement", sizeof("Case_Statement") - 1 },
+	};
+	local_persist
+	Str invalid_flag = { "Invalid", sizeof("Invalid") };
+	if ( flag > ModuleFlag_Import )
+		return invalid_flag;
+
+	return lookup[ (u32)flag ];
+}
+
+enum MacroFlags : u16
+{
+	MF_Functional     = bit(0), // Macro has parameters (args expected to be passed)
+	MF_Expects_Body   = bit(1), // Expects to assign a braced scope to its body.
+
+	MF_Null           = 0,
+	MF_UnderlyingType = GEN_U16_Max,
+};
+
+struct PreprocessorMacro
+{
+	StrCached  Name;
+	MacroType  Type;
+	MacroFlags Flags;
+};
+
+forceinine
+b32 macro_is_functional( PreprocessorMacro macro ) {
+	return bitfield_is_set( macro->Flags, MF_Functional );
+}
+
+forceinline
+b32 macro_expects_body( PreprocessorMacro macro ) {
+	return bitfield_is_set( macro->Flags, MF_Expects_Body );
+}

@@ -6,7 +6,7 @@
 
 #pragma region Constants
 
-extern Str enum_underlying_sig;
+extern PreprocessorMacro enum_underlying_macro;
 
 extern Code access_public;
 extern Code access_protected;

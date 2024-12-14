@@ -36,7 +36,6 @@ Str code_debug_str(Code self)
 		case CT_Execution:
 		case CT_Comment:
 		case CT_PlatformAttributes:
-		case CT_Preprocess_Define:
 		case CT_Preprocess_Include:
 		case CT_Preprocess_Pragma:
 		case CT_Preprocess_If:
@@ -50,6 +49,11 @@ Str code_debug_str(Code self)
 				strbuilder_append_fmt( result, "\n\tNext: %S %S", code_type_str(self->Prev), self->Prev->Name.Len ? self->Prev->Name : txt("Null") );
 
 			strbuilder_append_fmt( result, "\n\tContent: %S", self->Content );
+		break;
+
+		case CT_Preprocess_Define:
+			// TODO(ED): Needs implementaton
+			log_failure("code_debug_str: NOT IMPLEMENTED for CT_Preprocess_Define");
 		break;
 
 		case CT_Class:
@@ -257,6 +261,11 @@ Str code_debug_str(Code self)
 			strbuilder_append_fmt( result, "\n\tNext      : %S", self->Next->Name );
 			strbuilder_append_fmt( result, "\n\tValueType : %S", self->ValueType ? strbuilder_to_str( code_to_strbuilder(self->ValueType)) : txt("Null") );
 			strbuilder_append_fmt( result, "\n\tValue     : %S", self->Value     ? strbuilder_to_str( code_to_strbuilder(self->Value))     : txt("Null") );
+		break;
+
+		case CT_Parameters_Define:
+			// TODO(ED): Needs implementaton
+			log_failure("code_debug_str: NOT IMPLEMENTED for CT_Parameters_Define");
 		break;
 
 		case CT_Specifiers:
@@ -495,6 +504,10 @@ void code_to_strbuilder_ptr( Code self, StrBuilder* result )
 
 		case CT_Parameters:
 			params_to_strbuilder_ref(cast(CodeParams, self), result );
+		break;
+
+		case CT_Parameters_Define:
+			define_params_to_strbuilder_ref(cast(CodeDefineParams, self), result);
 		break;
 
 		case CT_Preprocess_Define:
@@ -987,11 +1000,17 @@ bool code_is_equal( Code self, Code other )
 			return true;
 		}
 
+		case CT_Parameters_Define:
+		{
+			// TODO(ED): Needs implementaton
+			log_failure("code_is_equal: NOT IMPLEMENTED for CT_Parameters_Define");
+			return false;
+		}
+
 		case CT_Preprocess_Define:
 		{
 			check_member_str( Name );
-			check_member_content( Content );
-
+			check_member_content( Body->Content );
 			return true;
 		}
 

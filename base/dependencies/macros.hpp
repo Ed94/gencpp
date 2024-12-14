@@ -34,8 +34,8 @@
 #endif
 
 #ifndef bit
-#define bit( Value )                             ( 1 << Value )
-#define bitfield_is_equal( Type, Field, Mask ) ( (scast(Type, Mask) & scast(Type, Field)) == scast(Type, Mask) )
+#define bit( Value )                         ( 1 << Value )
+#define bitfield_is_set( Type, Field, Mask ) ( (scast(Type, Mask) & scast(Type, Field)) == scast(Type, Mask) )
 #endif
 
 // Mainly intended for forcing the base library to utilize only C-valid constructs or type coercion

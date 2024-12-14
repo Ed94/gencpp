@@ -156,6 +156,7 @@ GEN_API CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEF
 struct Opts_def_define {
 	MacroFlags       flags;
 	CodeDefineParams params;
+	Str              content;
 	b32              dont_register_to_preprocess_macros;
 };
 GEN_API CodeDefine def_define( Str name, MacroType type, Opts_def_define opts GEN_PARAM_DEFAULT );
@@ -269,28 +270,30 @@ GEN_API CodeBody def_body( CodeType type );
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
 
-GEN_API CodeBody       def_class_body      ( s32 num, ... );
-GEN_API CodeBody       def_class_body      ( s32 num, Code* codes );
-GEN_API CodeBody       def_enum_body       ( s32 num, ... );
-GEN_API CodeBody       def_enum_body       ( s32 num, Code* codes );
-GEN_API CodeBody       def_export_body     ( s32 num, ... );
-GEN_API CodeBody       def_export_body     ( s32 num, Code* codes);
-GEN_API CodeBody       def_extern_link_body( s32 num, ... );
-GEN_API CodeBody       def_extern_link_body( s32 num, Code* codes );
-GEN_API CodeBody       def_function_body   ( s32 num, ... );
-GEN_API CodeBody       def_function_body   ( s32 num, Code* codes );
-GEN_API CodeBody       def_global_body     ( s32 num, ... );
-GEN_API CodeBody       def_global_body     ( s32 num, Code* codes );
-GEN_API CodeBody       def_namespace_body  ( s32 num, ... );
-GEN_API CodeBody       def_namespace_body  ( s32 num, Code* codes );
-GEN_API CodeParams     def_params          ( s32 num, ... );
-GEN_API CodeParams     def_params          ( s32 num, CodeParams* params );
-GEN_API CodeSpecifiers def_specifiers      ( s32 num, ... );
-GEN_API CodeSpecifiers def_specifiers      ( s32 num, Specifier* specs );
-GEN_API CodeBody       def_struct_body     ( s32 num, ... );
-GEN_API CodeBody       def_struct_body     ( s32 num, Code* codes );
-GEN_API CodeBody       def_union_body      ( s32 num, ... );
-GEN_API CodeBody       def_union_body      ( s32 num, Code* codes );
+GEN_API CodeBody         def_class_body      ( s32 num, ... );
+GEN_API CodeBody         def_class_body      ( s32 num, Code* codes );
+GEN_API CodeDefineParams def_define_params   ( s32 num, ... );
+GEN_API CodeDefineParams def_define_params   ( s32 num, CodeDefineParams* codes )
+GEN_API CodeBody         def_enum_body       ( s32 num, ... );
+GEN_API CodeBody         def_enum_body       ( s32 num, Code* codes );
+GEN_API CodeBody         def_export_body     ( s32 num, ... );
+GEN_API CodeBody         def_export_body     ( s32 num, Code* codes);
+GEN_API CodeBody         def_extern_link_body( s32 num, ... );
+GEN_API CodeBody         def_extern_link_body( s32 num, Code* codes );
+GEN_API CodeBody         def_function_body   ( s32 num, ... );
+GEN_API CodeBody         def_function_body   ( s32 num, Code* codes );
+GEN_API CodeBody         def_global_body     ( s32 num, ... );
+GEN_API CodeBody         def_global_body     ( s32 num, Code* codes );
+GEN_API CodeBody         def_namespace_body  ( s32 num, ... );
+GEN_API CodeBody         def_namespace_body  ( s32 num, Code* codes );
+GEN_API CodeParams       def_params          ( s32 num, ... );
+GEN_API CodeParams       def_params          ( s32 num, CodeParams* params );
+GEN_API CodeSpecifiers   def_specifiers      ( s32 num, ... );
+GEN_API CodeSpecifiers   def_specifiers      ( s32 num, Specifier* specs );
+GEN_API CodeBody         def_struct_body     ( s32 num, ... );
+GEN_API CodeBody         def_struct_body     ( s32 num, Code* codes );
+GEN_API CodeBody         def_union_body      ( s32 num, ... );
+GEN_API CodeBody         def_union_body      ( s32 num, Code* codes );
 
 #pragma endregion Upfront
 

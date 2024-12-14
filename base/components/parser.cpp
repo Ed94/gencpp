@@ -825,22 +825,21 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 		switch ( currtok_noskip.Type )
 		{
-			case Tok_Statement_End:
-			{
+			case Tok_Statement_End: {
 				// TODO(Ed): Convert this to a general warning procedure
 				log_fmt("Dangling end statement found %SB\n", tok_to_strbuilder(currtok_noskip));
 				eat( Tok_Statement_End );
 				continue;
 			}
-			case Tok_NewLine:
+			case Tok_NewLine: {
 				member = fmt_newline;
 				eat( Tok_NewLine );
-			break;
-
-			case Tok_Comment:
+				break;
+			}
+			case Tok_Comment: {
 				member = cast(Code, parse_comment());
-			break;
-
+				break;
+			}
 			case Tok_Access_Public:
 				member = access_public;
 				eat( Tok_Access_Public );
@@ -1727,8 +1726,8 @@ CodeBody parse_global_nspace( CodeType which )
 				// <Macro>
 				macro_found = true;
 				goto Preprocess_Macro_Bare_In_Body;
+				// TODO(Ed): MACRO UPDATE
 			}
-			break;
 
 			case Tok_Preprocess_Pragma: {
 				member = cast(Code, parse_pragma());
@@ -2727,7 +2726,7 @@ CodeParams parse_params( bool use_template_capture )
 		// In template captures you can have a typename have direct assignment without a name
 		// typename = typename ...
 		// Which would result in a static value type from a struct expansion (traditionally)
-		if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+		if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 		{
 			eat( Tok_Operator );
 			// ( <Macro> <ValueType> <Name> =
@@ -2839,7 +2838,7 @@ CodeParams parse_params( bool use_template_capture )
 			// In template captures you can have a typename have direct assignment without a name
 			// typename = typename ...
 			// Which would result in a static value type from a struct expansion (traditionally)
-			if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+			if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 			{
 				eat( Tok_Operator );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> =
@@ -3166,7 +3165,7 @@ CodeVar parse_variable_after_name(
 
 	b32 using_constructor_initializer = false;
 
-	if ( bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+	if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 	{
 		// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>
 		expr = parse_assignment_expression();
@@ -4645,6 +4644,7 @@ else if ( currtok.Type == Tok_DeclType )
 			}
 		}
 	}
+	// TODO(Ed): This needs updating
 	else if ( currtok.Type == Tok_Preprocess_Macro ) {
 		// Typename is a macro
 		name = currtok;
@@ -4988,6 +4988,7 @@ CodeTypedef parser_parse_typedef()
 
 	const bool from_typedef = true;
 
+	// TODO(Ed): UPDATE MACRO USAGE HERE
 #if GEN_PARSER_DISABLE_MACRO_TYPEDEF
 	if ( false )
 #else
@@ -5365,7 +5366,7 @@ CodeUsing parser_parse_using()
 
 	if ( ! is_namespace )
 	{
-		if ( bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+		if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 		{
 			attributes = parse_attributes();
 			// <ModuleFlags> using <Name> <Attributes>
