@@ -284,7 +284,7 @@ GEN_FILE_OPEN_PROC( _posix_file_open )
 
 internal void _dirinfo_free_entry( DirEntry* entry );
 
-// TODO : Is this a bad idea?
+// TODO(zpl) : Is this a bad idea?
 global b32      _std_file_set                     = false;
 global FileInfo _std_files[ EFileStandard_COUNT ] = {
 {

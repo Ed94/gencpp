@@ -3,10 +3,8 @@
 #include "code_serialization.cpp"
 #endif
 
-GEN_NS_PARSER_BEGIN
 internal void parser_init();
 internal void parser_deinit();
-GEN_NS_PARSER_END
 
 internal
 void* fallback_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
@@ -76,6 +74,10 @@ void* fallback_allocator_proc( void* allocator_data, AllocType type, ssize size,
 internal
 void define_constants()
 {
+	// We only initalize these if there is no base context.
+	if ( context_counter > 0 )
+		return;
+
 	Code_Global          = make_code();
 	Code_Global->Name    = cache_str( txt("Global Code") );
 	Code_Global->Content = Code_Global->Name;
@@ -208,12 +210,13 @@ void define_constants()
 		enum_underlying_sig = txt("enum_underlying(");
 	}
 	array_append( _ctx->PreprocessorDefines, enum_underlying_sig);
-
-#	undef def_constant_spec
 }
 
 void init(Context* ctx)
 {
+	do_once() {
+		context_counter = 0;
+	}
 	AllocatorInfo fallback_allocator = { & fallback_allocator_proc, nullptr };
 	
 	b32 using_fallback_allocator = false;
@@ -307,23 +310,25 @@ void init(Context* ctx)
 			GEN_FATAL( "gen::init: Failed to initialize the string arena" );
 		array_append( ctx->StringArenas, strbuilder_arena );
 	}
-
 	// Setup the hash tables
 	{
 		ctx->StrCache = hashtable_init(StrCached, ctx->Allocator_DyanmicContainers);
 		if ( ctx->StrCache.Entries == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
 	}
-
 	// Preprocessor Defines
 	ctx->PreprocessorDefines = array_init_reserve(StrCached, ctx->Allocator_DyanmicContainers, kilobytes(1) );
 
 	define_constants();
-	GEN_NS_PARSER parser_init();
+	parser_init();
+
+	++ context_counter;
 }
 
 void deinit(Context* ctx)
 {
+	GEN_ASSERT(context_counter);
+	GEN_ASSERT_MSG(context_counter > 0, "Attempted to deinit a context that for some reason wan't accounted for!");
 	usize index = 0;
 	usize left  = array_num(ctx->CodePools);
 	do
@@ -353,21 +358,24 @@ void deinit(Context* ctx)
 
 	array_free(ctx->PreprocessorDefines);
 
-	index = 0;
 	left  = array_num( ctx->Fallback_AllocatorBuckets);
-	do
+	if (left)
 	{
-		Arena* bucket = & ctx->Fallback_AllocatorBuckets[ index ];
-		arena_free(bucket);
-		index++;
+		index = 0;
+		do
+		{
+			Arena* bucket = & ctx->Fallback_AllocatorBuckets[ index ];
+			arena_free(bucket);
+			index++;
+		}
+		while ( left--, left );
+		array_free( ctx->Fallback_AllocatorBuckets);
 	}
-	while ( left--, left );
-
-	array_free( ctx->Fallback_AllocatorBuckets);
-	GEN_NS_PARSER parser_deinit();
+	parser_deinit();
 
 	if (_ctx == ctx) 
 		_ctx = nullptr;
+	-- context_counter;
 }
 
 void reset(Context* ctx)
@@ -413,7 +421,6 @@ AllocatorInfo get_cached_str_allocator( s32 str_length )
 
 		last = array_back( _ctx->StringArenas);
 	}
-
 	return arena_allocator_info(last);
 }
 
@@ -451,7 +458,6 @@ Code make_code()
 
 		allocator = array_back( _ctx->CodePools);
 	}
-
 	Code result = { rcast( AST*, alloc( pool_allocator_info(allocator), sizeof(AST) )) };
 	mem_set( rcast(void*, cast(AST*, result)), 0, sizeof(AST) );
 	return result;

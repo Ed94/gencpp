@@ -1352,15 +1352,12 @@ CodeBody def_class_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::"
 						"def_class_body"
 						": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES:
@@ -1370,7 +1367,6 @@ CodeBody def_class_body( s32 num, ... )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1386,18 +1382,14 @@ CodeBody def_class_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Function_Body;
-
 	do
 	{
 		Code entry = *codes;
 		codes++;
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_class_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_CLASS_UNALLOWED_TYPES:
@@ -1407,7 +1399,6 @@ CodeBody def_class_body( s32 num, Code* codes )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1429,19 +1420,14 @@ CodeBody def_enum_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if ( ! entry )
-		{
+		if ( ! entry ) {
 			log_failure("gen::def_enum_body: Provided a null entry");
 			return InvalidCode;
 		}
-
-		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
-		{
+		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment ) {
 			log_failure("gen::def_enum_body: Entry type is not allowed - %s. Must be of untyped or comment type.", code_debug_str(entry) );
 			return InvalidCode;
 		}
-
 		body_append(result, entry );
 	}
 	while ( num--, num > 0 );
@@ -1457,23 +1443,17 @@ CodeBody def_enum_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Enum_Body;
-
 	do
 	{
 		Code entry = *codes;
-
-		if ( ! entry )
-		{
+		if ( ! entry ) {
 			log_failure("gen::def_enum_body: Provided a null entry");
 			return InvalidCode;
 		}
-
-		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
-		{
+		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment ) {
 			log_failure("gen::def_enum_body: Entry type is not allowed: %s", code_debug_str(entry) );
 			return InvalidCode;
 		}
-
 		body_append(result, entry );
 	}
 	while ( codes++, num--, num > 0 );
@@ -1495,13 +1475,11 @@ CodeBody def_export_body( s32 num, ... )
 	{
 		Code_POD pod = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if (!entry)
+		if ( ! entry)
 		{
 			log_failure("gen::" "def_export_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES:
@@ -1511,7 +1489,6 @@ CodeBody def_export_body( s32 num, ... )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1527,18 +1504,14 @@ CodeBody def_export_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Export_Body;
-
 	do
 	{
 		Code entry = *codes;
 		codes++;
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_export_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXPORT_UNALLOWED_TYPES:
@@ -1548,7 +1521,6 @@ CodeBody def_export_body( s32 num, Code* codes )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1570,13 +1542,10 @@ CodeBody def_extern_link_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_extern_linkage_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES:
@@ -1586,7 +1555,6 @@ CodeBody def_extern_link_body( s32 num, ... )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1602,18 +1570,15 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Extern_Linkage_Body;
-
 	do
 	{
 		Code entry = *codes;
 		codes++;
-
 		if (!entry)
 		{
 			log_failure("gen::" "def_extern_linkage_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_EXTERN_LINKAGE_UNALLOWED_TYPES:
@@ -1623,7 +1588,6 @@ CodeBody def_extern_link_body( s32 num, Code* codes )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1645,16 +1609,12 @@ CodeBody def_function_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" stringize(def_function_body) ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
-
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES:
 				log_failure("gen::" stringize(def_function_body) ": Entry type is not allowed: %s", code_debug_str(entry));
 				return InvalidCode;
@@ -1662,7 +1622,6 @@ CodeBody def_function_body( s32 num, ... )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1678,18 +1637,14 @@ CodeBody def_function_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Function_Body;
-
 	do
 	{
 		Code entry = *codes;
 		codes++;
-
-		if (!entry)
-		{
+		if (!entry) {
 			log_failure("gen::" "def_function_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_FUNCTION_UNALLOWED_TYPES:
@@ -1720,13 +1675,10 @@ CodeBody def_global_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_global_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			case CT_Global_Body:
@@ -1741,7 +1693,6 @@ CodeBody def_global_body( s32 num, ... )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1757,18 +1708,14 @@ CodeBody def_global_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Global_Body;
-
 	do
 	{
 		Code entry = *codes;
 		codes++;
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_global_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			case CT_Global_Body:
@@ -1804,13 +1751,10 @@ CodeBody def_namespace_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_namespace_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES:
@@ -1820,7 +1764,6 @@ CodeBody def_namespace_body( s32 num, ... )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1836,18 +1779,14 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Global_Body;
-
 	do
 	{
 		Code entry = *codes;
 		codes++;
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_namespace_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_NAMESPACE_UNALLOWED_TYPES:
@@ -1856,7 +1795,6 @@ CodeBody def_namespace_body( s32 num, Code* codes )
 
 			default: break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -1875,26 +1813,20 @@ CodeParams def_params( s32 num, ... )
 	CodeParams param = pcast( CodeParams, pod );
 
 	null_check( def_params, param );
-
-	if ( param->Type != CT_Parameters )
-	{
+	if ( param->Type != CT_Parameters ) {
 		log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
 		return InvalidCode;
 	}
 
 	CodeParams result = (CodeParams) code_duplicate(param);
-
 	while ( -- num )
 	{
 		pod   = va_arg(va, Code_POD);
 		param = pcast( CodeParams, pod );
-
-		if ( param->Type != CT_Parameters )
-		{
+		if ( param->Type != CT_Parameters ) {
 			log_failure( "gen::def_params: param %d is not a Parameters", num - num + 1 );
 			return InvalidCode;
 		}
-
 		params_append(result, param );
 	}
 	va_end(va);
@@ -1907,18 +1839,14 @@ CodeParams def_params( s32 num, CodeParams* codes )
 	def_body_code_array_start( def_params );
 
 #	define check_current(current)                                                                                      \
-	if ( current == nullptr )                                                                                          \
-	{                                                                                                                  \
+	if ( current == nullptr ) {                                                                                        \
 		log_failure("gen::def_params: Provide a null code in codes array");                                            \
 		return InvalidCode;                                                                                            \
 	}                                                                                                                  \
-																												       \
-	if (current->Type != CT_Parameters )                                                                               \
-	{                                                                                                                  \
+	if (current->Type != CT_Parameters ) {                                                                             \
 		log_failure("gen::def_params: Code in coes array is not of paramter type - %s", code_debug_str(current) );     \
 		return InvalidCode;                                                                                            \
 	}
-
 	CodeParams current = (CodeParams)code_duplicate(* codes);
 	check_current(current);
 
@@ -1927,9 +1855,7 @@ CodeParams def_params( s32 num, CodeParams* codes )
 	result->Name      = current->Name;
 	result->Type      = current->Type;
 	result->ValueType = current->ValueType;
-
-	while( codes++, current = * codes, num--, num > 0 )
-	{
+	while( codes++, current = * codes, num--, num > 0 ) {
 		check_current(current);
 		params_append(result, current );
 	}
@@ -1940,28 +1866,22 @@ CodeParams def_params( s32 num, CodeParams* codes )
 
 CodeSpecifiers def_specifiers( s32 num, ... )
 {
-	if ( num <= 0 )
-	{
+	if ( num <= 0 ) {
 		log_failure("gen::def_specifiers: num cannot be zero or less");
 		return InvalidCode;
 	}
-
-	if ( num > AST_ArrSpecs_Cap )
-	{
+	if ( num > AST_ArrSpecs_Cap ) {
 		log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
 		return InvalidCode;
 	}
-
 	CodeSpecifiers
 	result       = (CodeSpecifiers) make_code();
 	result->Type = CT_Specifiers;
 
 	va_list va;
 	va_start(va, num);
-	do
-	{
+	do {
 		Specifier type = (Specifier)va_arg(va, int);
-
 		specifiers_append(result, type );
 	}
 	while ( --num, num );
@@ -1972,25 +1892,20 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 
 CodeSpecifiers def_specifiers( s32 num, Specifier* specs )
 {
-	if ( num <= 0 )
-	{
+	if ( num <= 0 ) {
 		log_failure("gen::def_specifiers: num cannot be zero or less");
 		return InvalidCode;
 	}
-
-	if ( num > AST_ArrSpecs_Cap )
-	{
+	if ( num > AST_ArrSpecs_Cap ) {
 		log_failure("gen::def_specifiers: num of speciifers to define AST larger than AST specicifier capacity - %d", num);
 		return InvalidCode;
 	}
-
 	CodeSpecifiers
 	result       = (CodeSpecifiers) make_code();
 	result->Type = CT_Specifiers;
 
 	s32 idx = 0;
-	do
-	{
+	do {
 		specifiers_append(result, specs[idx] );
 		idx++;
 	}
@@ -2013,13 +1928,10 @@ CodeBody def_struct_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast(Code, pod);
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_struct_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES:
@@ -2029,7 +1941,6 @@ CodeBody def_struct_body( s32 num, ... )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -2045,18 +1956,14 @@ CodeBody def_struct_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Struct_Body;
-
 	do
 	{
 		Code entry = *codes;
 		codes++;
-
-		if (!entry)
-		{
+		if ( ! entry) {
 			log_failure("gen::" "def_struct_body" ": Provided an null entry");
 			return InvalidCode;
 		}
-
 		switch (entry->Type)
 		{
 			GEN_AST_BODY_STRUCT_UNALLOWED_TYPES:
@@ -2066,7 +1973,6 @@ CodeBody def_struct_body( s32 num, Code* codes )
 			default:
 			break;
 		}
-
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
@@ -2088,19 +1994,14 @@ CodeBody def_union_body( s32 num, ... )
 	{
 		Code_POD pod   = va_arg(va, Code_POD);
 		Code     entry = pcast( Code, pod );
-
-		if ( ! entry )
-		{
+		if ( ! entry ) {
 			log_failure("gen::def_union_body: Provided a null entry");
 			return InvalidCode;
 		}
-
-		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
-		{
+		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment ) {
 			log_failure("gen::def_union_body: Entry type is not allowed - %s. Must be of untyped or comment type.", code_debug_str(entry) );
 			return InvalidCode;
 		}
-
 		body_append(result, entry );
 	}
 	while ( num--, num > 0 );
@@ -2116,23 +2017,17 @@ CodeBody def_union_body( s32 num, Code* codes )
 	CodeBody
 	result       = (CodeBody) make_code();
 	result->Type = CT_Union_Body;
-
 	do
 	{
 		Code entry = *codes;
-
-		if ( ! entry )
-		{
+		if ( ! entry ) {
 			log_failure("gen::def_union_body: Provided a null entry");
 			return InvalidCode;
 		}
-
-		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment )
-		{
+		if ( entry->Type != CT_Untyped && entry->Type != CT_Comment ) {
 			log_failure("gen::def_union_body: Entry type is not allowed: %s", code_debug_str(entry) );
 			return InvalidCode;
 		}
-
 		body_append(result, entry );
 	}
 	while ( codes++, num--, num > 0 );

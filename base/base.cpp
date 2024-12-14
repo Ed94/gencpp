@@ -60,7 +60,7 @@ int gen_main()
 	builder_print( & header_especifier, format(especifier) );
 	builder_write( & header_especifier);
 	
-	Builder header_etoktype = builder_open( "components/gen/etoktype.cpp" );
+	Builder header_etoktype = builder_open( "components/gen/etoktype.hpp" );
 	builder_print( & header_etoktype, gen_component_header );
 	builder_print( & header_etoktype, format(etoktype) );
 	builder_write( & header_etoktype);

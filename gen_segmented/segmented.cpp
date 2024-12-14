@@ -127,6 +127,7 @@ int gen_main()
 	{
 		Code header_start = scan_file( path_base "components/header_start.hpp" );
 		Code types        = scan_file( path_base "components/types.hpp" );
+		Code parser_types = scan_file( path_base "components/parser_types.hpp" );
 		Code ast          = scan_file( path_base "components/ast.hpp" );
 		Code ast_types    = scan_file( path_base "components/ast_types.hpp" );
 		Code code_types   = scan_file( path_base "components/code_types.hpp" );
@@ -137,6 +138,7 @@ int gen_main()
 		CodeBody ecode       = gen_ecode     ( path_base "enums/ECodeTypes.csv" );
 		CodeBody eoperator   = gen_eoperator ( path_base "enums/EOperator.csv" );
 		CodeBody especifier  = gen_especifier( path_base "enums/ESpecifier.csv" );
+		CodeBody etoktype    = gen_etoktype  ( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
 
 		Builder _header = builder_open( "gen/gen.hpp" );
@@ -156,6 +158,8 @@ int gen_main()
 		builder_print( header, fmt_newline);
 		builder_print( header, format(especifier) );
 		builder_print( header, fmt_newline);
+		builder_print( header, format(etoktype));
+		builder_print( header, parser_types);
 		builder_print_fmt( header, "#pragma endregion Types\n\n" );
 
 		builder_print_fmt( header, "#pragma region AST\n" );
@@ -193,12 +197,6 @@ int gen_main()
 		Code 	    parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
 		Code        untyped 	       = scan_file( path_base "components/interface.untyped.cpp" );
 
-		CodeBody etoktype         = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
-		CodeBody nspaced_etoktype = def_global_body( args(
-			etoktype
-		));
-		Code formatted_toktype = format(nspaced_etoktype);
-
 		Builder _src = builder_open( "gen/gen.cpp" );
 		Builder* src = & _src;
 		builder_print_fmt( src, generation_notice );
@@ -218,7 +216,6 @@ int gen_main()
 		builder_print( src, interface );
 		builder_print( src, upfront );
 		builder_print_fmt( src, "\n#pragma region Parsing\n\n" );
-		builder_print( src, formatted_toktype );
 		builder_print( src, lexer );
 		builder_print( src, parser );
 		builder_print( src, parsing_interface );

@@ -230,21 +230,6 @@ struct CodeUsing;
 struct CodeVar;
 #endif
 
-GEN_NS_PARSER_BEGIN
-
-struct Token;
-
-GEN_NS_PARSER_END
-
-#if GEN_COMPILER_CPP
-// Note(Ed): This is to alleviate an edge case with parsing usings or typedefs where I don't really have it setup
-// to parse a 'namespace' macro or a type with a macro.
-// I have ideas for ways to pack that into the typedef/using ast, but for now just keeping it like this
-#define ParserTokenType GEN_NS_PARSER Token
-typedef ParserTokenType Token;
-#undef  ParserTokenType
-#endif
-
 #if GEN_COMPILER_CPP
 template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( Type*, & self ); }
 #endif
@@ -455,7 +440,7 @@ static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST is not size of AST_POD_S
 struct  InvalidCode_ImplictCaster;
 #define InvalidCode (InvalidCode_ImplictCaster{})
 #else
-#define InvalidCode (void*){ (void*)Code_Invalid }
+#define InvalidCode (void*){ (void*)_ctx->Code_Invalid }
 #endif
 
 #if GEN_COMPILER_CPP

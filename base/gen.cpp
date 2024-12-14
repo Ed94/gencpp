@@ -31,7 +31,6 @@ GEN_NS_BEGIN
 
 #include "components/interface.cpp"
 #include "components/interface.upfront.cpp"
-#include "components/gen/etoktype.cpp"
 #include "components/lexer.cpp"
 #include "components/parser.cpp"
 #include "components/interface.parsing.cpp"

@@ -33,6 +33,7 @@ struct LogEntry
 typedef void LoggerCallback(LogEntry entry);
 #endif
 
+
 // Note(Ed): This is subject to heavily change 
 // with upcoming changes to the library's fallback (default) allocations strategy;
 // and major changes to lexer/parser context usage.
@@ -64,6 +65,9 @@ struct Context
 	u32 InitSize_LexArena;
 	u32 SizePer_StringArena;
 
+// TODO(Ed): Symbol Table
+	// Keep track of all resolved symbols (naemspaced identifiers)
+
 // Parser
 
 	// Used by the lexer to persistently treat all these identifiers as preprocessor defines.
@@ -72,6 +76,7 @@ struct Context
 	Array(StrCached) PreprocessorDefines;
 
 // Backend
+
 	// The fallback allocator is utilized if any fo the three above allocators is not specified by the user.
 	u32 InitSize_Fallback_Allocator_Bucket_Size;
 	Array(Arena) Fallback_AllocatorBuckets;
@@ -81,12 +86,19 @@ struct Context
 	Array(Pool)  CodePools;
 	Array(Arena) StringArenas;
 
-	Arena LexArena;
-
 	StringTable StrCache;
+
+	// TODO(Ed): This needs to be just handled by a parser context
+
+	Arena LexArena;
+	StringTable  Lexer_defines;
+	Array(Token) Lexer_Tokens;
+
+	// TODO(Ed): Active parse context vs a parse result need to be separated conceptually
+	ParseContext parser;
 };
 
-// Initialize the library.
+// Initialize the library. There first ctx initialized must exist for lifetime of other contextes that come after as its the one that
 void init(Context* ctx);
 
 // Currently manually free's the arenas, code for checking for leaks.
@@ -283,7 +295,6 @@ CodeBody       def_union_body      ( s32 num, Code* codes );
 // TODO(Ed) : Implmeent the new parser API design.
 
 #if 0
-GEN_NS_PARSER_BEGIN
 struct StackNode
 {
 	StackNode* Prev;
@@ -299,7 +310,6 @@ struct Error
 	StrBuilder     message;
 	StackNode* context_stack;
 };
-GEN_NS_PARSER_END
 
 struct ParseInfo
 {

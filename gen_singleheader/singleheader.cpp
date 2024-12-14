@@ -54,7 +54,8 @@ Code format( Code code ) {
 
 int gen_main()
 {
-	gen::init();
+	Context ctx {};
+	gen::init( & ctx);
 
 	Code push_ignores        = scan_file( path_base "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores         = scan_file( path_base "helpers/pop_ignores.inline.hpp" );
@@ -111,17 +112,19 @@ int gen_main()
 			header.print( fmt_newline );
 		}
 
-		Code types      = scan_file( path_base "components/types.hpp" );
-		Code ast        = scan_file( path_base "components/ast.hpp" );
-		Code ast_types  = scan_file( path_base "components/ast_types.hpp" );
-		Code code_types = scan_file( path_base "components/code_types.hpp" );
-		Code interface  = scan_file( path_base "components/interface.hpp" );
-		Code inlines 	= scan_file( path_base "components/inlines.hpp" );
-		Code header_end = scan_file( path_base "components/header_end.hpp" );
+		Code types        = scan_file( path_base "components/types.hpp" );
+		Code parser_types = scan_file( path_base "components/parser_types.hpp");
+		Code ast          = scan_file( path_base "components/ast.hpp" );
+		Code ast_types    = scan_file( path_base "components/ast_types.hpp" );
+		Code code_types   = scan_file( path_base "components/code_types.hpp" );
+		Code interface    = scan_file( path_base "components/interface.hpp" );
+		Code inlines 	  = scan_file( path_base "components/inlines.hpp" );
+		Code header_end   = scan_file( path_base "components/header_end.hpp" );
 
 		CodeBody ecode       = gen_ecode     ( path_base "enums/ECodeTypes.csv" );
 		CodeBody eoperator   = gen_eoperator ( path_base "enums/EOperator.csv" );
 		CodeBody especifier  = gen_especifier( path_base "enums/ESpecifier.csv" );
+		CodeBody etoktype    = gen_etoktype  ( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
 
 		header.print_fmt( "GEN_NS_BEGIN\n\n" );
@@ -134,6 +137,9 @@ int gen_main()
 		header.print( format( eoperator ));
 		header.print( fmt_newline );
 		header.print( format( especifier ));
+		header.print( fmt_newline );
+		header.print( format( etoktype ));
+		header.print( parser_types );
 		header.print( fmt_newline );
 		header.print_fmt("#pragma endregion Types\n\n");
 
@@ -215,8 +221,6 @@ int gen_main()
 		Code parsing_interface = scan_file( path_base "components/interface.parsing.cpp" );
 		Code untyped           = scan_file( path_base "components/interface.untyped.cpp" );
 
-		CodeBody etoktype = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv" );
-
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
 
@@ -230,7 +234,6 @@ int gen_main()
 		header.print( interface );
 		header.print( upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
-		header.print( format(etoktype) );
 		header.print( lexer );
 		header.print( parser );
 		header.print( parsing_interface );
@@ -255,6 +258,6 @@ int gen_main()
 	header.print( pop_ignores );
 	header.write();
 
-	gen::deinit();
+	gen::deinit( & ctx);
 	return 0;
 }

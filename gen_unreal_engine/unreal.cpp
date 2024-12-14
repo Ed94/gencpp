@@ -55,7 +55,8 @@ Code format( Code code ) {
 
 int gen_main()
 {
-	gen::init();
+	Context ctx {};
+	gen::init( & ctx);
 
 	Code push_ignores        = scan_file( path_base "helpers/push_ignores.inline.hpp" );
 	Code pop_ignores         = scan_file( path_base "helpers/pop_ignores.inline.hpp" );
@@ -67,7 +68,7 @@ int gen_main()
 	{
 		CodeBody macros = def_body( CT_Global_Body );
 		{
-			FileContents content    = file_read_contents( FallbackAllocator, true, path_base "dependencies/macros.hpp" );
+			FileContents content    = file_read_contents( ctx.Allocator_Temp, file_zero_terminate, path_base "dependencies/macros.hpp" );
 			CodeBody     ori_macros = parse_global_body( Str { (char const*)content.data, content.size });
 
 			for (Code	code =  ori_macros.begin();
@@ -175,6 +176,7 @@ int gen_main()
 	{
 		Code header_start = scan_file(           "components/header_start.hpp" );
 		Code types        = scan_file( path_base "components/types.hpp" );
+		Code parser_types = scan_file( path_base "components/parser_types.hpp");
 		Code ast          = scan_file( path_base "components/ast.hpp" );
 		Code ast_types    = scan_file( path_base "components/ast_types.hpp" );
 		Code code_types   = scan_file( path_base "components/code_types.hpp" );
@@ -186,6 +188,11 @@ int gen_main()
 		CodeBody eoperator   = gen_eoperator ( path_base "enums/EOperator.csv" );
 		CodeBody especifier  = gen_especifier( path_base "enums/ESpecifier.csv" );
 		CodeBody ast_inlines = gen_ast_inlines();
+
+		// Note(Ed): The Attribute tokens need to be expanded and regenerated on a per-project/installation of this library for a specific codebase of Unreal.
+		// We can support an arbitrary set of modules or plugin apis for parsing
+		// but its up to the user to define them all (This will just provide whats I've used up till now).
+		CodeBody etoktype = gen_etoktype( path_base "enums/ETokType.csv", "enums/AttributeTokens.csv" );
 
 		Builder
 		header = Builder::open( "gen/gen.hpp" );
@@ -205,6 +212,8 @@ int gen_main()
 		header.print( fmt_newline );
 		header.print( format(especifier) );
 		header.print( fmt_newline );
+		header.print( format(etoktype) );
+		header.print( parser_types );
 		header.print_fmt( "#pragma endregion Types\n\n" );
 
 		header.print_fmt( "#pragma region AST\n" );
@@ -230,7 +239,7 @@ int gen_main()
 
 	// gen.cpp
 	{
-		Code        src_start          = scan_file(             "components/src_start.cpp" );
+		Code        src_start          = scan_file(           "components/src_start.cpp" );
 		Code        static_data 	   = scan_file( path_base "components/static_data.cpp" );
 		Code        ast_case_macros    = scan_file( path_base "components/ast_case_macros.cpp" );
 		Code        ast			       = scan_file( path_base "components/ast.cpp" );
@@ -241,11 +250,6 @@ int gen_main()
 		Code        parser             = scan_file( path_base "components/parser.cpp" );
 		Code 	    parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
 		Code        untyped 	       = scan_file( path_base "components/interface.untyped.cpp" );
-
-		// Note(Ed): The Attribute tokens need to be expanded and regenerated on a per-project/installation of this library for a specific codebase of Unreal.
-		// We can support an arbitrary set of modules or plugin apis for parsing
-		// but its up to the user to define them all (This will just provide whats I've used up till now).
-		CodeBody etoktype = gen_etoktype( path_base "enums/ETokType.csv", "enums/AttributeTokens.csv" );
 
 		Builder
 		src = Builder::open( "gen/gen.cpp" );
@@ -268,7 +272,6 @@ int gen_main()
 		src.print( interface );
 		src.print( upfront );
 		src.print_fmt( "\n#pragma region Parsing\n\n" );
-		src.print( format(etoktype) );
 		src.print( lexer );
 		src.print( parser );
 		src.print( parsing_interface );

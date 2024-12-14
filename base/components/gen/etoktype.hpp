@@ -5,8 +5,6 @@
 
 // This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)
 
-GEN_NS_PARSER_BEGIN
-
 #define GEN_DEFINE_ATTRIBUTE_TOKENS Entry( Tok_Attribute_API_Export, "GEN_API_Export_Code" ) Entry( Tok_Attribute_API_Import, "GEN_API_Import_Code" )
 
 enum TokType : u32
@@ -231,5 +229,3 @@ inline TokType str_to_toktype( Str str )
 	}
 	return Tok_Invalid;
 }
-
-GEN_NS_PARSER_END

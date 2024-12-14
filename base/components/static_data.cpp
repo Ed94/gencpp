@@ -7,7 +7,12 @@
 global Context* _ctx;
 
 #pragma region Constants
+global u32 context_counter;
+
 global Str enum_underlying_sig;
+
+global Code Code_Global;
+global Code Code_Invalid;
 
 global Code access_public;
 global Code access_protected;

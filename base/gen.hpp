@@ -20,6 +20,8 @@ GEN_NS_BEGIN
 #include "components/gen/ecodetypes.hpp"
 #include "components/gen/eoperator.hpp"
 #include "components/gen/especifier.hpp"
+#include "components/gen/etoktype.hpp"
+#include "components/parser_types.hpp"
 
 #include "components/ast.hpp"
 #include "components/code_types.hpp"

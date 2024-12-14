@@ -449,7 +449,6 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 #pragma pop_macro("do_once_end")
 
 	CodeBody result = def_body(CT_Global_Body);
-	body_append(result, untyped_str(txt("GEN_NS_PARSER_BEGIN\n\n")));
 	body_append(result, attribute_entires_def);
 	body_append(result, enum_code);
 	if (use_c_definition)
@@ -459,7 +458,6 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 	}
 	body_append(result, to_str);
 	body_append(result, to_type);
-	body_append(result, untyped_str(txt("\nGEN_NS_PARSER_END\n\n")));
 	return result;
 }
 

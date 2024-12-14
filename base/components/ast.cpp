@@ -3,9 +3,6 @@
 #include "static_data.cpp"
 #endif
 
-global Code Code_Global;
-global Code Code_Invalid;
-
 // This serializes all the data-members in a "debug" format, where each member is printed with its associated value.
 Str code_debug_str(Code self)
 {
@@ -1283,6 +1280,5 @@ bool code_validate_body(Code self)
 			log_failure( "AST::validate_body: Invalid this AST does not have a body %S", code_debug_str(self) );
 			return false;
 	}
-
 	return false;
 }
