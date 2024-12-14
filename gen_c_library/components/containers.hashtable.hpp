@@ -30,16 +30,16 @@ R"(#define HashTable(_type) struct _type
 CodeBody gen_hashtable( Str type, Str hashtable_name )
 {
 
-	StrBuilder tbl_type = {(char*) hashtable_name.duplicate(FallbackAllocator).Ptr};
-	StrBuilder fn       = tbl_type.duplicate(FallbackAllocator);
+	StrBuilder tbl_type = {(char*) hashtable_name.duplicate(_ctx->Allocator_Temp).Ptr};
+	StrBuilder fn       = tbl_type.duplicate(_ctx->Allocator_Temp);
 	// c_str_to_lower(fn.Data);
 
-	StrBuilder name_lower = StrBuilder::make( FallbackAllocator, hashtable_name );
+	StrBuilder name_lower = StrBuilder::make( _ctx->Allocator_Temp, hashtable_name );
 	// c_str_to_lower( name_lower.Data );
 
-	StrBuilder hashtable_entry   = StrBuilder::fmt_buf( FallbackAllocator, "HTE_%.*s",     hashtable_name.Len, hashtable_name.Ptr );
-	StrBuilder entry_array_name  = StrBuilder::fmt_buf( FallbackAllocator, "Arr_HTE_%.*s", hashtable_name.Len, hashtable_name.Ptr );
-	StrBuilder entry_array_fn_ns = StrBuilder::fmt_buf( FallbackAllocator, "arr_hte_%.*s", name_lower.length(), name_lower.Data );
+	StrBuilder hashtable_entry   = StrBuilder::fmt_buf( _ctx->Allocator_Temp, "HTE_%.*s",     hashtable_name.Len, hashtable_name.Ptr );
+	StrBuilder entry_array_name  = StrBuilder::fmt_buf( _ctx->Allocator_Temp, "Arr_HTE_%.*s", hashtable_name.Len, hashtable_name.Ptr );
+	StrBuilder entry_array_fn_ns = StrBuilder::fmt_buf( _ctx->Allocator_Temp, "arr_hte_%.*s", name_lower.length(), name_lower.Data );
 
 	CodeBody hashtable_types = parse_global_body( token_fmt(
 		"type",        (Str) type,
@@ -372,7 +372,7 @@ CodeBody gen_hashtable( Str type, Str hashtable_name )
 #pragma pop_macro( "forceinline" )
 
 	++ HashTable_DefinitionCounter;
-	Str slot_str = StrBuilder::fmt_buf(FallbackAllocator, "%d", HashTable_DefinitionCounter).to_str();
+	Str slot_str = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%d", HashTable_DefinitionCounter).to_str();
 
 	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "tbl_type", (Str)tbl_type, "slot", (Str)slot_str,
 R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_init
@@ -400,7 +400,7 @@ R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_
 		, type.Len, type.Ptr );
 
 	return def_global_body(args(
-		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( FallbackAllocator, "region %SB", tbl_type ))),
+		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( _ctx->Allocator_Temp, "region %SB", tbl_type ))),
 		fmt_newline,
 		generic_interface_slot,
 		fmt_newline,
@@ -409,7 +409,7 @@ R"(#define GENERIC_SLOT_<slot>__hashtable_init          <type>,      <tbl_type>_
 		entry_array,
 		hashtable_def,
 		fmt_newline,
-		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( FallbackAllocator, "endregion %SB", tbl_type ))),
+		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( _ctx->Allocator_Temp, "endregion %SB", tbl_type ))),
 		fmt_newline
 	));
 }

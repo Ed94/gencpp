@@ -236,19 +236,19 @@ template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( 
 
 #pragma region Code C-Interface
 
-void       code_append           (Code code, Code other );
-Str        code_debug_str        (Code code);
-Code       code_duplicate        (Code code);
-Code*      code_entry            (Code code, u32 idx );
-bool       code_has_entries      (Code code);
-bool       code_is_body          (Code code);
-bool       code_is_equal         (Code code, Code other);
-bool       code_is_valid         (Code code);
-void       code_set_global       (Code code);
-StrBuilder code_to_strbuilder    (Code self );
-void       code_to_strbuilder_ptr(Code self, StrBuilder* result );
-Str        code_type_str         (Code self );
-bool       code_validate_body    (Code self );
+GEN_API void       code_append           (Code code, Code other );
+GEN_API Str        code_debug_str        (Code code);
+GEN_API Code       code_duplicate        (Code code);
+GEN_API Code*      code_entry            (Code code, u32 idx );
+GEN_API bool       code_has_entries      (Code code);
+GEN_API bool       code_is_body          (Code code);
+GEN_API bool       code_is_equal         (Code code, Code other);
+GEN_API bool       code_is_valid         (Code code);
+GEN_API void       code_set_global       (Code code);
+GEN_API StrBuilder code_to_strbuilder    (Code self );
+GEN_API void       code_to_strbuilder_ptr(Code self, StrBuilder* result );
+GEN_API Str        code_type_str         (Code self );
+GEN_API bool       code_validate_body    (Code self );
 
 #pragma endregion Code C-Interface
 
@@ -440,7 +440,7 @@ static_assert( sizeof(AST) == AST_POD_Size, "ERROR: AST is not size of AST_POD_S
 struct  InvalidCode_ImplictCaster;
 #define InvalidCode (InvalidCode_ImplictCaster{})
 #else
-#define InvalidCode (void*){ (void*)_ctx->Code_Invalid }
+#define InvalidCode (void*){ (void*)Code_Invalid }
 #endif
 
 #if GEN_COMPILER_CPP

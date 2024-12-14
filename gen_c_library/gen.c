@@ -1,5 +1,5 @@
 #define GEN_IMPLEMENTATION
-#include "gen/gen.c"
+#include "gen/gen_singleheader.h"
 
 int main()
 {

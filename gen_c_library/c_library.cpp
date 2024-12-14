@@ -62,20 +62,21 @@ constexpr bool helper_use_c_definition = true;
 
 int gen_main()
 {
-	gen::init();
+	Context ctx {};
+	gen::init(& ctx);
 
-	PreprocessorDefines.append(txt("GEN_API_C_BEGIN"));
-	PreprocessorDefines.append(txt("GEN_API_C_END"));
-	PreprocessorDefines.append(txt("Array("));
-	PreprocessorDefines.append(txt("HashTable("));
-	PreprocessorDefines.append(txt("GEN_NS_PARSER"));
-	PreprocessorDefines.append(txt("GEN_NS_PARSER_BEGIN"));
-	PreprocessorDefines.append(txt("GEN_NS_PARSER_END"));
-	PreprocessorDefines.append(txt("Using_Code("));
-	PreprocessorDefines.append(txt("Using_CodeOps("));
-	PreprocessorDefines.append(txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"));
-	PreprocessorDefines.append(txt("GEN_OPITMIZE_MAPPINGS_END"));
-	PreprocessorDefines.append(txt("GEN_PARAM_DEFAULT"));
+	ctx.PreprocessorDefines.append(txt("GEN_API_C_BEGIN"));
+	ctx.PreprocessorDefines.append(txt("GEN_API_C_END"));
+	ctx.PreprocessorDefines.append(txt("Array("));
+	ctx.PreprocessorDefines.append(txt("HashTable("));
+	ctx.PreprocessorDefines.append(txt("GEN_NS_PARSER"));
+	ctx.PreprocessorDefines.append(txt("GEN_NS_PARSER_BEGIN"));
+	ctx.PreprocessorDefines.append(txt("GEN_NS_PARSER_END"));
+	ctx.PreprocessorDefines.append(txt("Using_Code("));
+	ctx.PreprocessorDefines.append(txt("Using_CodeOps("));
+	ctx.PreprocessorDefines.append(txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"));
+	ctx.PreprocessorDefines.append(txt("GEN_OPITMIZE_MAPPINGS_END"));
+	ctx.PreprocessorDefines.append(txt("GEN_PARAM_DEFAULT"));
 	//PreprocessorDefines.append(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"));
 
 	Code push_ignores           = scan_file( path_base "helpers/push_ignores.inline.hpp" );
@@ -253,7 +254,7 @@ do                          \
 	}
 
 	Code array_ssize         = gen_array(txt("gen_ssize"), txt("Array_gen_ssize"));
-	Code array_string_cached = gen_array(txt("gen_StringCached"), txt("Array_gen_StringCached"));
+	Code array_string_cached = gen_array(txt("gen_StrCached"), txt("Array_gen_StrCached"));
 
 	CodeBody parsed_header_strings = parse_file( path_base "dependencies/strings.hpp" );
 	CodeBody header_strings        = def_body(CT_Global_Body);
@@ -588,8 +589,102 @@ do                          \
 		break;
 	}
 
+	CodeBody array_token = gen_array(txt("gen_Token"), txt("Array_gen_Token"));
+
+	CodeBody parsed_parser_types = parse_file( path_base "components/parser_types.hpp" );
+	CodeBody parser_types        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_parser_types.begin(); entry != parsed_parser_types.end(); ++ entry ) switch(entry->Type)
+	{
+		case CT_Preprocess_IfDef:
+		{
+			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_parser_types, parser_types );
+			if (found) break;
+
+			parser_types.append(entry);
+		}
+		break;
+
+		case CT_Enum:
+		{
+			if (entry->Name.Len)
+			{
+				convert_cpp_enum_to_c(cast(CodeEnum, entry), parser_types);
+				break;
+			}
+
+			parser_types.append(entry);
+		}
+		break;
+
+		case CT_Struct:
+		{
+			if ( entry->Name.is_equal(txt("Token")))
+			{
+				// Add struct Token forward and typedef early.
+				CodeStruct  token_fwd     = parse_struct(code( struct Token; ));
+				CodeTypedef token_typedef = parse_typedef(code( typedef struct Token Token; ));
+				parser_types.append(token_fwd);
+				parser_types.append(token_typedef);
+
+				// Skip typedef since we added it
+				b32 continue_for = true;
+				for (Code array_entry = array_token.begin(); continue_for && array_entry != array_token.end(); ++ array_entry) switch (array_entry->Type)
+				{
+					case CT_Typedef:
+					{
+						// pop the array entry
+						array_token->NumEntries -= 1;
+						Code next                   = array_entry->Next;
+						Code prev                   = array_entry->Prev;
+						next->Prev                  = array_entry->Prev;
+						prev->Next                  = next;
+						if ( array_token->Front == array_entry )
+							array_token->Front = next;
+
+							parser_types.append(array_entry);
+						continue_for = false;
+					}
+					break;
+				}
+
+				// Append the struct
+				parser_types.append(entry);
+
+				// Append the token array
+				parser_types.append(array_token);
+				continue;
+			}
+
+			CodeTypedef struct_tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
+			parser_types.append(struct_tdef);
+			parser_types.append(entry);
+		}
+		break;
+
+		case CT_Variable:
+		{
+			CodeVar var = cast(CodeVar, entry);
+			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+				Code define_ver = untyped_str(token_fmt(
+						"name",  var->Name
+					,	"value", var->Value->Content
+					,	"type",  var->ValueType.to_strbuilder().to_str()
+					,	"#define <name> (<type>) <value>\n"
+				));
+				parser_types.append(define_ver);
+				continue;
+			}
+			parser_types.append(entry);
+		}
+		break;
+
+		default:
+			parser_types.append(entry);
+		break;
+	}
+
 	// Used to track which functions need generic selectors.
-	Array(CodeFn) code_c_interface = array_init_reserve<CodeFn>(FallbackAllocator, 16);
+	Array(CodeFn) code_c_interface = array_init_reserve<CodeFn>(_ctx->Allocator_Temp, 16);
 
 	CodeBody parsed_ast = parse_file( path_base "components/ast.hpp" );
 	CodeBody ast        = def_body(CT_Global_Body);
@@ -647,7 +742,7 @@ do                          \
 					{
 						Str   old_prefix  = txt("code_");
 						Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
-						StrBuilder new_name    = StrBuilder::fmt_buf(FallbackAllocator, "code__%S", actual_name );
+						StrBuilder new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "code__%S", actual_name );
 
 						fn->Name = cache_str(new_name);
 						code_c_interface.append(fn);
@@ -791,17 +886,17 @@ R"(#define AST_ArrSpecs_Cap \
 				default: gen_generic_selection (Fail case)                                    \
 			) GEN_RESOLVED_FUNCTION_CALL( code, ... )                                       \
 			*/
-			StrBuilder generic_selector = StrBuilder::make_reserve(FallbackAllocator, kilobytes(2));
+			StrBuilder generic_selector = StrBuilder::make_reserve(_ctx->Allocator_Temp, kilobytes(2));
 			for ( CodeFn fn : code_c_interface )
 			{
 				generic_selector.clear();
 				Str   private_prefix  = txt("code__");
 				Str   actual_name     = { fn->Name.Ptr + private_prefix.Len, fn->Name.Len - private_prefix.Len };
-				StrBuilder interface_name  = StrBuilder::fmt_buf(FallbackAllocator, "code_%S", actual_name );
+				StrBuilder interface_name  = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "code_%S", actual_name );
 
 				// Resolve generic's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
-				StrBuilder params_str = StrBuilder::make_reserve(FallbackAllocator, 32);
+				StrBuilder params_str = StrBuilder::make_reserve(_ctx->Allocator_Temp, 32);
 				for (CodeParams param = fn->Params->Next; param != fn->Params.end(); ++ param) {
 					// We skip the first parameter as its always going to be the code for selection
 					if (param->Next == nullptr) {
@@ -910,6 +1005,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
+	CodeBody array_arena = gen_array(txt("gen_Arena"), txt("Array_gen_Arena"));
+	CodeBody array_pool  = gen_array(txt("gen_Pool"),  txt("Array_gen_Pool"));
+
 	CodeBody parsed_interface = parse_file( path_base "components/interface.hpp" );
 	CodeBody interface        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_interface.begin(); entry != parsed_interface.end(); ++ entry ) switch( entry->Type )
@@ -931,7 +1029,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 			if (prev && prev->Name.is_equal(entry->Name)) {
 				// rename second definition so there isn't a symbol conflict
-				StrBuilder postfix_arr = StrBuilder::fmt_buf(FallbackAllocator, "%S_arr", entry->Name);
+				StrBuilder postfix_arr = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%S_arr", entry->Name);
 				entry->Name = cache_str(postfix_arr.to_str());
 				postfix_arr.free();
 			}
@@ -942,11 +1040,11 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
 				Str prefix      = txt("def_");
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
-				Str new_name    = StrBuilder::fmt_buf(FallbackAllocator, "def__%S", actual_name ).to_str();
+				Str new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "def__%S", actual_name ).to_str();
 
 				// Resolve define's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
-				StrBuilder params_str = StrBuilder::make_reserve(FallbackAllocator, 32);
+				StrBuilder params_str = StrBuilder::make_reserve(_ctx->Allocator_Temp, 32);
 				for (CodeParams other_param = fn->Params; other_param != opt_param; ++ other_param) {
 					if ( other_param == opt_param ) {
 						params_str.append_fmt( "%S", other_param->Name );
@@ -1021,7 +1119,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			{
 				Str   old_prefix  = txt("code_");
 				Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
-				StrBuilder new_name    = StrBuilder::fmt_buf(FallbackAllocator, "code__%S", actual_name );
+				StrBuilder new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "code__%S", actual_name );
 
 				fn->Name = cache_str(new_name);
 			}
@@ -1142,10 +1240,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 #pragma endregion Resolve Dependencies
 
 #pragma region Resolve Components
-	CodeBody array_arena = gen_array(txt("gen_Arena"), txt("Array_gen_Arena"));
-	CodeBody array_pool  = gen_array(txt("gen_Pool"),  txt("Array_gen_Pool"));
-	CodeBody array_token = gen_array(txt("gen_Token"), txt("Array_gen_Token"));
-
 	Code src_start              = scan_file(           "components/src_start.c" );
 	Code src_static_data 	      = scan_file( path_base "components/static_data.cpp" );
 	Code src_ast_case_macros    = scan_file( path_base "components/ast_case_macros.cpp" );
@@ -1176,7 +1270,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			{
 				Str   old_prefix  = txt("code_");
 				Str   actual_name = { fn->Name.Ptr + old_prefix.Len, fn->Name.Len  - old_prefix.Len };
-				StrBuilder new_name    = StrBuilder::fmt_buf(FallbackAllocator, "code__%S", actual_name );
+				StrBuilder new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "code__%S", actual_name );
 
 				fn->Name = cache_str(new_name);
 			}
@@ -1219,7 +1313,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				)
 				{
 					// rename second definition so there isn't a symbol conflict
-					StrBuilder postfix_arr = StrBuilder::fmt_buf(FallbackAllocator, "%S_arr", fn->Name);
+					StrBuilder postfix_arr = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%S_arr", fn->Name);
 					fn->Name = cache_str(postfix_arr.to_str());
 					postfix_arr.free();
 				}
@@ -1228,7 +1322,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			{
 				Str prefix      = txt("def_");
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
-				Str new_name    = StrBuilder::fmt_buf(FallbackAllocator, "def__%S", actual_name ).to_str();
+				Str new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "def__%S", actual_name ).to_str();
 
 				fn->Name = cache_str(new_name);
 			}
@@ -1264,51 +1358,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			}
 
 			src_lexer.append(entry);
-		}
-		break;
-
-		case CT_Struct:
-		{
-			if ( entry->Name.is_equal(txt("Token")))
-			{
-				// Add struct Token forward and typedef early.
-				CodeStruct  token_fwd     = parse_struct(code( struct Token; ));
-				CodeTypedef token_typedef = parse_typedef(code( typedef struct Token Token; ));
-				src_lexer.append(token_fwd);
-				src_lexer.append(token_typedef);
-
-				// Skip typedef since we added it
-				b32 continue_for = true;
-				for (Code array_entry = array_token.begin(); continue_for && array_entry != array_token.end(); ++ array_entry) switch (array_entry->Type)
-				{
-					case CT_Typedef:
-					{
-						// pop the array entry
-						array_token->NumEntries -= 1;
-						Code next                   = array_entry->Next;
-						Code prev                   = array_entry->Prev;
-						next->Prev                  = array_entry->Prev;
-						prev->Next                  = next;
-						if ( array_token->Front == array_entry )
-							array_token->Front = next;
-
-						src_lexer.append(array_entry);
-						continue_for = false;
-					}
-					break;
-				}
-
-				// Append the struct
-				src_lexer.append(entry);
-
-				// Append the token array
-				src_lexer.append(array_token);
-				continue;
-			}
-
-			CodeTypedef struct_tdef = parse_typedef(token_fmt("name", entry->Name, stringize( typedef struct <name> <name>; )));
-			src_lexer.append(entry);
-			src_lexer.append(struct_tdef);
 		}
 		break;
 
@@ -1416,13 +1465,14 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code r_header_timing       = refactor(header_timing);
 	Code rf_header_parsing     = refactor_and_format(header_parsing);
 
-	Code rf_types      = refactor_and_format(types);
-	Code rf_ecode      = refactor_and_format(ecode);
-	Code rf_eoperator  = refactor_and_format(eoperator);
-	Code rf_especifier = refactor_and_format(especifier);
-	Code rf_ast        = refactor_and_format(ast);
-	Code rf_code_types = refactor_and_format(code_types);
-	Code rf_ast_types  = refactor_and_format(ast_types);
+	Code rf_types        = refactor_and_format(types);
+	Code rf_parser_types = refactor_and_format(parser_types); 
+	Code rf_ecode        = refactor_and_format(ecode);
+	Code rf_eoperator    = refactor_and_format(eoperator);
+	Code rf_especifier   = refactor_and_format(especifier);
+	Code rf_ast          = refactor_and_format(ast);
+	Code rf_code_types   = refactor_and_format(code_types);
+	Code rf_ast_types    = refactor_and_format(ast_types);
 
 	Code rf_interface = refactor_and_format(interface);
 	Code rf_inlines   = refactor_and_format(inlines);
@@ -1481,10 +1531,11 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( roll_own_dependencies_guard_start );
 		header.print( r_header_platform );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
-		header.print_fmt( "GEN_API_C_BEGIN\n" );
-
 		header.print( r_header_macros );
 		header.print( header_generic_macros );
+
+		header.print_fmt( "GEN_API_C_BEGIN\n" );
+
 		header.print( r_header_basic_types );
 		header.print( r_header_debug );
 		header.print( rf_header_memory );
@@ -1517,6 +1568,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_eoperator );
 		header.print( fmt_newline );
 		header.print( rf_especifier );
+		header.print( rf_etoktype );
+		header.print( rf_parser_types );
 		header.print_fmt("#pragma endregion Types\n\n");
 
 		header.print_fmt("#pragma region AST\n");
@@ -1524,6 +1577,13 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_code_types );
 		header.print( rf_ast_types );
 		header.print_fmt("\n#pragma endregion AST\n");
+
+		header.print( fmt_newline);
+		header.print( rf_array_arena );
+		header.print( fmt_newline);
+		header.print( rf_array_pool);
+		header.print( fmt_newline);
+		header.print( rf_array_string_cached );
 
 		header.print( rf_interface );
 		header.print(fmt_newline);
@@ -1533,7 +1593,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt("#pragma endregion Inlines\n");
 
 		header.print(fmt_newline);
-		header.print( rf_array_string_cached );
 
 		header.print( rf_header_end );
 		header.print( rf_header_builder );
@@ -1573,11 +1632,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print_fmt( "GEN_API_C_BEGIN\n" );
 
-		header.print( fmt_newline);
-		header.print( rf_array_arena );
-		header.print( fmt_newline);
-		header.print( rf_array_pool);
-
 		header.print( r_src_static_data );
 		header.print( fmt_newline);
 
@@ -1591,7 +1645,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( r_src_interface );
 		header.print( r_src_upfront );
 		header.print_fmt( "\n#pragma region Parsing\n\n" );
-		header.print( rf_etoktype );
 		header.print( r_src_lexer );
 		header.print( fmt_newline);
 		header.print( rf_array_code_typename );
@@ -1646,7 +1699,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		Builder src = Builder::open( "gen/gen.dep.c" );
 		src.print_fmt( "GEN_NS_BEGIN\n");
-		src.print_fmt( "GEN_API_C_BEGIN\n" );
 
 		builder_print_fmt(src, generation_notice );
 		builder_print_fmt( src, "// This file is intended to be included within gen.cpp (There is no pragma diagnostic ignores)\n" );
@@ -1684,6 +1736,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_eoperator );
 		header.print( fmt_newline );
 		header.print( rf_especifier );
+		header.print( rf_etoktype );
+		header.print( rf_parser_types );
 		header.print_fmt("#pragma endregion Types\n\n");
 
 		header.print_fmt("#pragma region AST\n");
@@ -1737,7 +1791,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		src.print( r_src_interface );
 		src.print( r_src_upfront );
 		src.print_fmt( "\n#pragma region Parsing\n\n" );
-		src.print( rf_etoktype );
 		src.print( r_src_lexer );
 		src.print( fmt_newline);
 		src.print( rf_array_code_typename );
@@ -1751,11 +1804,11 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		src.print( rf_src_builder );
 		src.print( rf_src_scanner );
 
-		src.print_fmt( "GEN_API_C_END\n" );
+		src.print_fmt( "\nGEN_NS_END\n");
 		src.write();
 	}
 #pragma endregion Segmented
 
-	gen::deinit();
+	gen::deinit( & ctx);
 	return 0;
 }

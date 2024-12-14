@@ -223,6 +223,7 @@ int gen_main()
 
 		header.print_fmt( "\nGEN_NS_BEGIN\n");
 		header.print( static_data );
+		header.print( fmt_newline);
 
 		header.print_fmt( "#pragma region AST\n\n" );
 		header.print( ast_case_macros );
@@ -238,7 +239,9 @@ int gen_main()
 		header.print( parser );
 		header.print( parsing_interface );
 		header.print_fmt( "\n#pragma endregion Parsing\n" );
+		header.print_fmt("\n#pragma region Untyped\n");
 		header.print( untyped );
+		header.print_fmt("\n#pragma endregion Untyped\n");
 		header.print_fmt( "\n#pragma endregion Interface\n");
 
 		if ( generate_builder ) {

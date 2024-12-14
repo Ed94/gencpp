@@ -17,128 +17,128 @@
 
 #pragma region Code Type C-Interface
 
-void       body_append              ( CodeBody body, Code     other );
-void       body_append_body         ( CodeBody body, CodeBody other );
-StrBuilder body_to_strbuilder       ( CodeBody body );
-void       body_to_strbuilder_ref   ( CodeBody body, StrBuilder* result );
-void       body_to_strbuilder_export( CodeBody body, StrBuilder* result );
+GEN_API void       body_append              ( CodeBody body, Code     other );
+GEN_API void       body_append_body         ( CodeBody body, CodeBody other );
+GEN_API StrBuilder body_to_strbuilder       ( CodeBody body );
+GEN_API void       body_to_strbuilder_ref   ( CodeBody body, StrBuilder* result );
+GEN_API void       body_to_strbuilder_export( CodeBody body, StrBuilder* result );
 
-Code begin_CodeBody( CodeBody body);
-Code end_CodeBody  ( CodeBody body );
-Code next_CodeBody ( CodeBody body, Code entry_iter );
+GEN_API Code begin_CodeBody( CodeBody body);
+GEN_API Code end_CodeBody  ( CodeBody body );
+GEN_API Code next_CodeBody ( CodeBody body, Code entry_iter );
 
-void       class_add_interface    ( CodeClass self, CodeTypename interface );
-StrBuilder class_to_strbuilder    ( CodeClass self );
-void       class_to_strbuilder_def( CodeClass self, StrBuilder* result );
-void       class_to_strbuilder_fwd( CodeClass self, StrBuilder* result );
+GEN_API void       class_add_interface    ( CodeClass self, CodeTypename interface );
+GEN_API StrBuilder class_to_strbuilder    ( CodeClass self );
+GEN_API void       class_to_strbuilder_def( CodeClass self, StrBuilder* result );
+GEN_API void       class_to_strbuilder_fwd( CodeClass self, StrBuilder* result );
 
-void       params_append           (CodeParams params, CodeParams param );
-CodeParams params_get              (CodeParams params, s32 idx);
-bool       params_has_entries      (CodeParams params );
-StrBuilder params_to_strbuilder    (CodeParams params );
-void       params_to_strbuilder_ref(CodeParams params, StrBuilder* result );
+GEN_API void       params_append           (CodeParams params, CodeParams param );
+GEN_API CodeParams params_get              (CodeParams params, s32 idx);
+GEN_API bool       params_has_entries      (CodeParams params );
+GEN_API StrBuilder params_to_strbuilder    (CodeParams params );
+GEN_API void       params_to_strbuilder_ref(CodeParams params, StrBuilder* result );
 
-CodeParams begin_CodeParams(CodeParams params);
-CodeParams end_CodeParams  (CodeParams params);
-CodeParams next_CodeParams (CodeParams params, CodeParams entry_iter);
+GEN_API CodeParams begin_CodeParams(CodeParams params);
+GEN_API CodeParams end_CodeParams  (CodeParams params);
+GEN_API CodeParams next_CodeParams (CodeParams params, CodeParams entry_iter);
 
-bool       specifiers_append           (CodeSpecifiers specifiers, Specifier spec);
-s32        specifiers_has              (CodeSpecifiers specifiers, Specifier spec);
-s32        specifiers_remove           (CodeSpecifiers specifiers, Specifier to_remove );
-StrBuilder specifiers_to_strbuilder    (CodeSpecifiers specifiers);
-void       specifiers_to_strbuilder_ref(CodeSpecifiers specifiers, StrBuilder* result);
+GEN_API bool       specifiers_append           (CodeSpecifiers specifiers, Specifier spec);
+GEN_API s32        specifiers_has              (CodeSpecifiers specifiers, Specifier spec);
+GEN_API s32        specifiers_remove           (CodeSpecifiers specifiers, Specifier to_remove );
+GEN_API StrBuilder specifiers_to_strbuilder    (CodeSpecifiers specifiers);
+GEN_API void       specifiers_to_strbuilder_ref(CodeSpecifiers specifiers, StrBuilder* result);
 
-Specifier* begin_CodeSpecifiers(CodeSpecifiers specifiers);
-Specifier* end_CodeSpecifiers  (CodeSpecifiers specifiers);
-Specifier* next_CodeSpecifiers (CodeSpecifiers specifiers, Specifier* spec_iter);
+GEN_API Specifier* begin_CodeSpecifiers(CodeSpecifiers specifiers);
+GEN_API Specifier* end_CodeSpecifiers  (CodeSpecifiers specifiers);
+GEN_API Specifier* next_CodeSpecifiers (CodeSpecifiers specifiers, Specifier* spec_iter);
 
-void       struct_add_interface    (CodeStruct self, CodeTypename interface);
-StrBuilder struct_to_strbuilder    (CodeStruct self);
-void       struct_to_strbuilder_fwd(CodeStruct self, StrBuilder* result);
-void       struct_to_strbuilder_def(CodeStruct self, StrBuilder* result);
+GEN_API void       struct_add_interface    (CodeStruct self, CodeTypename interface);
+GEN_API StrBuilder struct_to_strbuilder    (CodeStruct self);
+GEN_API void       struct_to_strbuilder_fwd(CodeStruct self, StrBuilder* result);
+GEN_API void       struct_to_strbuilder_def(CodeStruct self, StrBuilder* result);
 
-StrBuilder attributes_to_strbuilder    (CodeAttributes attributes);
-void       attributes_to_strbuilder_ref(CodeAttributes attributes, StrBuilder* result);
+GEN_API StrBuilder attributes_to_strbuilder    (CodeAttributes attributes);
+GEN_API void       attributes_to_strbuilder_ref(CodeAttributes attributes, StrBuilder* result);
 
-StrBuilder comment_to_strbuilder    (CodeComment comment );
-void       comment_to_strbuilder_ref(CodeComment comment, StrBuilder* result );
+GEN_API StrBuilder comment_to_strbuilder    (CodeComment comment );
+GEN_API void       comment_to_strbuilder_ref(CodeComment comment, StrBuilder* result );
 
-StrBuilder constructor_to_strbuilder    (CodeConstructor constructor);
-void       constructor_to_strbuilder_def(CodeConstructor constructor, StrBuilder* result );
-void       constructor_to_strbuilder_fwd(CodeConstructor constructor, StrBuilder* result );
+GEN_API StrBuilder constructor_to_strbuilder    (CodeConstructor constructor);
+GEN_API void       constructor_to_strbuilder_def(CodeConstructor constructor, StrBuilder* result );
+GEN_API void       constructor_to_strbuilder_fwd(CodeConstructor constructor, StrBuilder* result );
 
-StrBuilder define_to_strbuilder    (CodeDefine self);
-void       define_to_strbuilder_ref(CodeDefine self, StrBuilder* result);
+GEN_API StrBuilder define_to_strbuilder    (CodeDefine self);
+GEN_API void       define_to_strbuilder_ref(CodeDefine self, StrBuilder* result);
 
-StrBuilder destructor_to_strbuilder    (CodeDestructor destructor);
-void       destructor_to_strbuilder_fwd(CodeDestructor destructor, StrBuilder* result );
-void       destructor_to_strbuilder_def(CodeDestructor destructor, StrBuilder* result );
+GEN_API StrBuilder destructor_to_strbuilder    (CodeDestructor destructor);
+GEN_API void       destructor_to_strbuilder_fwd(CodeDestructor destructor, StrBuilder* result );
+GEN_API void       destructor_to_strbuilder_def(CodeDestructor destructor, StrBuilder* result );
 
-StrBuilder enum_to_strbuilder          (CodeEnum self);
-void       enum_to_strbuilder_def      (CodeEnum self, StrBuilder* result );
-void       enum_to_strbuilder_fwd      (CodeEnum self, StrBuilder* result );
-void       enum_to_strbuilder_class_def(CodeEnum self, StrBuilder* result );
-void       enum_to_strbuilder_class_fwd(CodeEnum self, StrBuilder* result );
+GEN_API StrBuilder enum_to_strbuilder          (CodeEnum self);
+GEN_API void       enum_to_strbuilder_def      (CodeEnum self, StrBuilder* result );
+GEN_API void       enum_to_strbuilder_fwd      (CodeEnum self, StrBuilder* result );
+GEN_API void       enum_to_strbuilder_class_def(CodeEnum self, StrBuilder* result );
+GEN_API void       enum_to_strbuilder_class_fwd(CodeEnum self, StrBuilder* result );
 
-StrBuilder exec_to_strbuilder    (CodeExec exec);
-void       exec_to_strbuilder_ref(CodeExec exec, StrBuilder* result);
+GEN_API StrBuilder exec_to_strbuilder    (CodeExec exec);
+GEN_API void       exec_to_strbuilder_ref(CodeExec exec, StrBuilder* result);
 
-void extern_to_strbuilder(CodeExtern self, StrBuilder* result);
+GEN_API void extern_to_strbuilder(CodeExtern self, StrBuilder* result);
 
-StrBuilder include_to_strbuilder    (CodeInclude self);
-void       include_to_strbuilder_ref(CodeInclude self, StrBuilder* result);
+GEN_API StrBuilder include_to_strbuilder    (CodeInclude self);
+GEN_API void       include_to_strbuilder_ref(CodeInclude self, StrBuilder* result);
 
-StrBuilder friend_to_strbuilder     (CodeFriend self);
-void       friend_to_strbuilder_ref(CodeFriend self, StrBuilder* result);
+GEN_API StrBuilder friend_to_strbuilder     (CodeFriend self);
+GEN_API void       friend_to_strbuilder_ref(CodeFriend self, StrBuilder* result);
 
-StrBuilder fn_to_strbuilder    (CodeFn self);
-void       fn_to_strbuilder_def(CodeFn self, StrBuilder* result);
-void       fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result);
+GEN_API StrBuilder fn_to_strbuilder    (CodeFn self);
+GEN_API void       fn_to_strbuilder_def(CodeFn self, StrBuilder* result);
+GEN_API void       fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result);
 
-StrBuilder module_to_strbuilder    (CodeModule self);
-void       module_to_strbuilder_ref(CodeModule self, StrBuilder* result);
+GEN_API StrBuilder module_to_strbuilder    (CodeModule self);
+GEN_API void       module_to_strbuilder_ref(CodeModule self, StrBuilder* result);
 
-StrBuilder namespace_to_strbuilder    (CodeNS self);
-void       namespace_to_strbuilder_ref(CodeNS self, StrBuilder* result);
+GEN_API StrBuilder namespace_to_strbuilder    (CodeNS self);
+GEN_API void       namespace_to_strbuilder_ref(CodeNS self, StrBuilder* result);
 
-StrBuilder code_op_to_strbuilder    (CodeOperator self);
-void       code_op_to_strbuilder_fwd(CodeOperator self, StrBuilder* result );
-void       code_op_to_strbuilder_def(CodeOperator self, StrBuilder* result );
+GEN_API StrBuilder code_op_to_strbuilder    (CodeOperator self);
+GEN_API void       code_op_to_strbuilder_fwd(CodeOperator self, StrBuilder* result );
+GEN_API void       code_op_to_strbuilder_def(CodeOperator self, StrBuilder* result );
 
-StrBuilder opcast_to_strbuilder     (CodeOpCast op_cast );
-void       opcast_to_strbuilder_def(CodeOpCast op_cast, StrBuilder* result );
-void       opcast_to_strbuilder_fwd(CodeOpCast op_cast, StrBuilder* result );
+GEN_API StrBuilder opcast_to_strbuilder     (CodeOpCast op_cast );
+GEN_API void       opcast_to_strbuilder_def(CodeOpCast op_cast, StrBuilder* result );
+GEN_API void       opcast_to_strbuilder_fwd(CodeOpCast op_cast, StrBuilder* result );
 
-StrBuilder pragma_to_strbuilder    (CodePragma self);
-void       pragma_to_strbuilder_ref(CodePragma self, StrBuilder* result);
+GEN_API StrBuilder pragma_to_strbuilder    (CodePragma self);
+GEN_API void       pragma_to_strbuilder_ref(CodePragma self, StrBuilder* result);
 
-StrBuilder preprocess_to_strbuilder       (CodePreprocessCond cond);
-void       preprocess_to_strbuilder_if    (CodePreprocessCond cond, StrBuilder* result );
-void       preprocess_to_strbuilder_ifdef (CodePreprocessCond cond, StrBuilder* result );
-void       preprocess_to_strbuilder_ifndef(CodePreprocessCond cond, StrBuilder* result );
-void       preprocess_to_strbuilder_elif  (CodePreprocessCond cond, StrBuilder* result );
-void       preprocess_to_strbuilder_else  (CodePreprocessCond cond, StrBuilder* result );
-void       preprocess_to_strbuilder_endif (CodePreprocessCond cond, StrBuilder* result );
+GEN_API StrBuilder preprocess_to_strbuilder       (CodePreprocessCond cond);
+GEN_API void       preprocess_to_strbuilder_if    (CodePreprocessCond cond, StrBuilder* result );
+GEN_API void       preprocess_to_strbuilder_ifdef (CodePreprocessCond cond, StrBuilder* result );
+GEN_API void       preprocess_to_strbuilder_ifndef(CodePreprocessCond cond, StrBuilder* result );
+GEN_API void       preprocess_to_strbuilder_elif  (CodePreprocessCond cond, StrBuilder* result );
+GEN_API void       preprocess_to_strbuilder_else  (CodePreprocessCond cond, StrBuilder* result );
+GEN_API void       preprocess_to_strbuilder_endif (CodePreprocessCond cond, StrBuilder* result );
 
-StrBuilder template_to_strbuilder    (CodeTemplate self);
-void       template_to_strbuilder_ref(CodeTemplate self, StrBuilder* result);
+GEN_API StrBuilder template_to_strbuilder    (CodeTemplate self);
+GEN_API void       template_to_strbuilder_ref(CodeTemplate self, StrBuilder* result);
 
-StrBuilder typename_to_strbuilder    (CodeTypename self);
-void       typename_to_strbuilder_ref(CodeTypename self, StrBuilder* result);
+GEN_API StrBuilder typename_to_strbuilder    (CodeTypename self);
+GEN_API void       typename_to_strbuilder_ref(CodeTypename self, StrBuilder* result);
 
-StrBuilder typedef_to_strbuilder    (CodeTypedef self);
-void       typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result );
+GEN_API StrBuilder typedef_to_strbuilder    (CodeTypedef self);
+GEN_API void       typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result );
 
-StrBuilder union_to_strbuilder    (CodeUnion self);
-void       union_to_strbuilder_def(CodeUnion self, StrBuilder* result);
-void       union_to_strbuilder_fwd(CodeUnion self, StrBuilder* result);
+GEN_API StrBuilder union_to_strbuilder    (CodeUnion self);
+GEN_API void       union_to_strbuilder_def(CodeUnion self, StrBuilder* result);
+GEN_API void       union_to_strbuilder_fwd(CodeUnion self, StrBuilder* result);
 
-StrBuilder using_to_strbuilder    (CodeUsing op_cast );
-void       using_to_strbuilder_ref(CodeUsing op_cast, StrBuilder* result );
-void       using_to_strbuilder_ns (CodeUsing op_cast, StrBuilder* result );
+GEN_API StrBuilder using_to_strbuilder    (CodeUsing op_cast );
+GEN_API void       using_to_strbuilder_ref(CodeUsing op_cast, StrBuilder* result );
+GEN_API void       using_to_strbuilder_ns (CodeUsing op_cast, StrBuilder* result );
 
-StrBuilder var_to_strbuilder    (CodeVar self);
-void       var_to_strbuilder_ref(CodeVar self, StrBuilder* result);
+GEN_API StrBuilder var_to_strbuilder    (CodeVar self);
+GEN_API void       var_to_strbuilder_ref(CodeVar self, StrBuilder* result);
 
 #pragma endregion Code Type C-Interface
 

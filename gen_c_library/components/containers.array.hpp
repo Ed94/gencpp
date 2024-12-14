@@ -42,8 +42,8 @@ CodeBody gen_array_base()
 
 CodeBody gen_array( Str type, Str array_name )
 {
-	StrBuilder array_type = StrBuilder::fmt_buf( FallbackAllocator, "%.*s", array_name.Len, array_name.Ptr );
-	StrBuilder fn         = StrBuilder::fmt_buf( FallbackAllocator, "%.*s", array_name.Len, array_name.Ptr );
+	StrBuilder array_type = StrBuilder::fmt_buf( _ctx->Allocator_Temp, "%.*s", array_name.Len, array_name.Ptr );
+	StrBuilder fn         = StrBuilder::fmt_buf( _ctx->Allocator_Temp, "%.*s", array_name.Len, array_name.Ptr );
 	// c_str_to_lower(fn.Data);
 
 #pragma push_macro( "GEN_ASSERT" )
@@ -375,7 +375,7 @@ CodeBody gen_array( Str type, Str array_name )
 #pragma pop_macro( "forceinline" )
 
 	++ Array_DefinitionCounter;
-	Str slot_str = StrBuilder::fmt_buf(FallbackAllocator, "%d", Array_DefinitionCounter).to_str();
+	Str slot_str = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%d", Array_DefinitionCounter).to_str();
 
 	Code generic_interface_slot = untyped_str(token_fmt( "type", type, "array_type", (Str)array_type, "slot", (Str)slot_str,
 R"(#define GENERIC_SLOT_<slot>__array_init         <type>,        <array_type>_init
@@ -399,13 +399,13 @@ R"(#define GENERIC_SLOT_<slot>__array_init         <type>,        <array_type>_i
 	));
 
 	return def_global_body( args(
-		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( FallbackAllocator, "region %SB", array_type ))),
+		def_pragma( strbuilder_to_str( strbuilder_fmt_buf( _ctx->Allocator_Temp, "region %SB", array_type ))),
 		fmt_newline,
 		generic_interface_slot,
 		fmt_newline,
 		result,
 		fmt_newline,
-		def_pragma( strbuilder_to_str(strbuilder_fmt_buf( FallbackAllocator, "endregion %SB", array_type ))),
+		def_pragma( strbuilder_to_str(strbuilder_fmt_buf( _ctx->Allocator_Temp, "endregion %SB", array_type ))),
 		fmt_newline
 	));
 };

@@ -33,7 +33,6 @@ struct LogEntry
 typedef void LoggerCallback(LogEntry entry);
 #endif
 
-
 // Note(Ed): This is subject to heavily change 
 // with upcoming changes to the library's fallback (default) allocations strategy;
 // and major changes to lexer/parser context usage.
@@ -51,7 +50,6 @@ struct Context
 
 	// LoggerCallaback* log_callback; // TODO(Ed): Impl user logger callback as an option.
 
-// 
 	u32 Max_CommentLineLength; // Used by def_comment
 	u32 Max_StrCacheLength;    // Any cached string longer than this is always allocated again.
 
@@ -99,39 +97,39 @@ struct Context
 };
 
 // Initialize the library. There first ctx initialized must exist for lifetime of other contextes that come after as its the one that
-void init(Context* ctx);
+GEN_API void init(Context* ctx);
 
 // Currently manually free's the arenas, code for checking for leaks.
 // However on Windows at least, it doesn't need to occur as the OS will clean up after the process.
-void deinit(Context* ctx);
+GEN_API void deinit(Context* ctx);
 
-// Clears the allocations, but doesn't return to the heap, the calls init() again.
+// Clears the allocations, but doesn't free the memoery, then calls init() again.
 // Ease of use.
-void reset(Context* ctx);
+GEN_API void reset(Context* ctx);
 
-void set_context(Context* ctx);
+GEN_API void set_context(Context* ctx);
 
 // Alternative way to add a preprocess define entry for the lexer & parser to utilize 
 // if the user doesn't want to use def_define
-void set_preprocess_define( Str id, b32 is_functional );
+GEN_API void set_preprocess_define( Str id, b32 is_functional );
 
 // Used internally to retrive or make string allocations.
 // Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
-StrCached cache_str( Str str );
+GEN_API StrCached cache_str( Str str );
 
 /*
 	This provides a fresh Code AST.
 	The gen interface use this as their method from getting a new AST object from the CodePool.
 	Use this if you want to make your own API for formatting the supported Code Types.
 */
-Code make_code();
+GEN_API Code make_code();
 
 // Set these before calling gen's init() procedure.
 
 #pragma region Upfront
 
-CodeAttributes def_attributes( Str content );
-CodeComment    def_comment   ( Str content );
+GEN_API CodeAttributes def_attributes( Str content );
+GEN_API CodeComment    def_comment   ( Str content );
 
 struct Opts_def_struct {
 	CodeBody       body;
@@ -142,25 +140,25 @@ struct Opts_def_struct {
 	s32            num_interfaces;
 	ModuleFlag     mflags;
 };
-CodeClass def_class( Str name, Opts_def_struct opts GEN_PARAM_DEFAULT );
+GEN_API CodeClass def_class( Str name, Opts_def_struct opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_constructor {
 	CodeParams params;
 	Code      initializer_list;
 	Code      body;
 };
-CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEFAULT );
+GEN_API CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_define {
 	b32 dont_append_preprocess_defines;
 };
-CodeDefine def_define( Str name, Str content, Opts_def_define opts GEN_PARAM_DEFAULT );
+GEN_API CodeDefine def_define( Str name, Str content, Opts_def_define opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_destructor {
 	Code           body;
 	CodeSpecifiers specifiers;
 };
-CodeDestructor def_destructor( Opts_def_destructor opts GEN_PARAM_DEFAULT );
+GEN_API CodeDestructor def_destructor( Opts_def_destructor opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_enum {
 	CodeBody       body;
@@ -170,11 +168,11 @@ struct Opts_def_enum {
 	ModuleFlag     mflags;
 	Code           type_macro;
 };
-CodeEnum def_enum( Str name, Opts_def_enum opts GEN_PARAM_DEFAULT );
+GEN_API CodeEnum def_enum( Str name, Opts_def_enum opts GEN_PARAM_DEFAULT );
 
-CodeExec   def_execution  ( Str content );
-CodeExtern def_extern_link( Str name, CodeBody body );
-CodeFriend def_friend     ( Code symbol );
+GEN_API CodeExec   def_execution  ( Str content );
+GEN_API CodeExtern def_extern_link( Str name, CodeBody body );
+GEN_API CodeFriend def_friend     ( Code symbol );
 
 struct Opts_def_function {
 	CodeParams      params;
@@ -184,14 +182,14 @@ struct Opts_def_function {
 	CodeAttributes  attrs;
 	ModuleFlag      mflags;
 };
-CodeFn def_function( Str name, Opts_def_function opts GEN_PARAM_DEFAULT );
+GEN_API CodeFn def_function( Str name, Opts_def_function opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_include   { b32        foreign; };
 struct Opts_def_module    { ModuleFlag mflags;  };
 struct Opts_def_namespace { ModuleFlag mflags;  };
-CodeInclude def_include  ( Str content,             Opts_def_include   opts GEN_PARAM_DEFAULT );
-CodeModule  def_module   ( Str name,                Opts_def_module    opts GEN_PARAM_DEFAULT );
-CodeNS      def_namespace( Str name, CodeBody body, Opts_def_namespace opts GEN_PARAM_DEFAULT );
+GEN_API CodeInclude def_include  ( Str content,             Opts_def_include   opts GEN_PARAM_DEFAULT );
+GEN_API CodeModule  def_module   ( Str name,                Opts_def_module    opts GEN_PARAM_DEFAULT );
+GEN_API CodeNS      def_namespace( Str name, CodeBody body, Opts_def_namespace opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_operator {
 	CodeParams      params;
@@ -201,26 +199,26 @@ struct Opts_def_operator {
 	CodeAttributes  attributes;
 	ModuleFlag      mflags;
 };
-CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator opts GEN_PARAM_DEFAULT );
+GEN_API CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_operator_cast {
 	CodeBody       body;
 	CodeSpecifiers specs;
 };
-CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
+GEN_API CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_param { Code value; };
-CodeParams  def_param ( CodeTypename type, Str name, Opts_def_param opts GEN_PARAM_DEFAULT );
-CodePragma def_pragma( Str directive );
+GEN_API CodeParams  def_param ( CodeTypename type, Str name, Opts_def_param opts GEN_PARAM_DEFAULT );
+GEN_API CodePragma def_pragma( Str directive );
 
-CodePreprocessCond def_preprocess_cond( EPreprocessCond type, Str content );
+GEN_API CodePreprocessCond def_preprocess_cond( EPreprocessCond type, Str content );
 
-CodeSpecifiers def_specifier( Specifier specifier );
+GEN_API CodeSpecifiers def_specifier( Specifier specifier );
 
-CodeStruct def_struct( Str name, Opts_def_struct opts GEN_PARAM_DEFAULT );
+GEN_API CodeStruct def_struct( Str name, Opts_def_struct opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_template { ModuleFlag mflags; };
-CodeTemplate def_template( CodeParams params, Code definition, Opts_def_template opts GEN_PARAM_DEFAULT );
+GEN_API CodeTemplate def_template( CodeParams params, Code definition, Opts_def_template opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_type {
 	ETypenameTag   type_tag;
@@ -228,27 +226,27 @@ struct Opts_def_type {
 	CodeSpecifiers specifiers;
 	CodeAttributes attributes;
 };
-CodeTypename def_type( Str name, Opts_def_type opts GEN_PARAM_DEFAULT );
+GEN_API CodeTypename def_type( Str name, Opts_def_type opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_typedef {
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef opts GEN_PARAM_DEFAULT );
+GEN_API CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_union {
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeUnion def_union( Str name, CodeBody body, Opts_def_union opts GEN_PARAM_DEFAULT );
+GEN_API CodeUnion def_union( Str name, CodeBody body, Opts_def_union opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_using {
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeUsing def_using( Str name, CodeTypename type, Opts_def_using opts GEN_PARAM_DEFAULT );
+GEN_API CodeUsing def_using( Str name, CodeTypename type, Opts_def_using opts GEN_PARAM_DEFAULT );
 
-CodeUsing def_using_namespace( Str name );
+GEN_API CodeUsing def_using_namespace( Str name );
 
 struct Opts_def_variable
 {
@@ -257,36 +255,36 @@ struct Opts_def_variable
 	CodeAttributes attributes;
 	ModuleFlag     mflags;
 };
-CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable opts GEN_PARAM_DEFAULT );
+GEN_API CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable opts GEN_PARAM_DEFAULT );
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
-CodeBody def_body( CodeType type );
+GEN_API CodeBody def_body( CodeType type );
 
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
 
-CodeBody       def_class_body      ( s32 num, ... );
-CodeBody       def_class_body      ( s32 num, Code* codes );
-CodeBody       def_enum_body       ( s32 num, ... );
-CodeBody       def_enum_body       ( s32 num, Code* codes );
-CodeBody       def_export_body     ( s32 num, ... );
-CodeBody       def_export_body     ( s32 num, Code* codes);
-CodeBody       def_extern_link_body( s32 num, ... );
-CodeBody       def_extern_link_body( s32 num, Code* codes );
-CodeBody       def_function_body   ( s32 num, ... );
-CodeBody       def_function_body   ( s32 num, Code* codes );
-CodeBody       def_global_body     ( s32 num, ... );
-CodeBody       def_global_body     ( s32 num, Code* codes );
-CodeBody       def_namespace_body  ( s32 num, ... );
-CodeBody       def_namespace_body  ( s32 num, Code* codes );
-CodeParams     def_params          ( s32 num, ... );
-CodeParams     def_params          ( s32 num, CodeParams* params );
-CodeSpecifiers def_specifiers      ( s32 num, ... );
-CodeSpecifiers def_specifiers      ( s32 num, Specifier* specs );
-CodeBody       def_struct_body     ( s32 num, ... );
-CodeBody       def_struct_body     ( s32 num, Code* codes );
-CodeBody       def_union_body      ( s32 num, ... );
-CodeBody       def_union_body      ( s32 num, Code* codes );
+GEN_API CodeBody       def_class_body      ( s32 num, ... );
+GEN_API CodeBody       def_class_body      ( s32 num, Code* codes );
+GEN_API CodeBody       def_enum_body       ( s32 num, ... );
+GEN_API CodeBody       def_enum_body       ( s32 num, Code* codes );
+GEN_API CodeBody       def_export_body     ( s32 num, ... );
+GEN_API CodeBody       def_export_body     ( s32 num, Code* codes);
+GEN_API CodeBody       def_extern_link_body( s32 num, ... );
+GEN_API CodeBody       def_extern_link_body( s32 num, Code* codes );
+GEN_API CodeBody       def_function_body   ( s32 num, ... );
+GEN_API CodeBody       def_function_body   ( s32 num, Code* codes );
+GEN_API CodeBody       def_global_body     ( s32 num, ... );
+GEN_API CodeBody       def_global_body     ( s32 num, Code* codes );
+GEN_API CodeBody       def_namespace_body  ( s32 num, ... );
+GEN_API CodeBody       def_namespace_body  ( s32 num, Code* codes );
+GEN_API CodeParams     def_params          ( s32 num, ... );
+GEN_API CodeParams     def_params          ( s32 num, CodeParams* params );
+GEN_API CodeSpecifiers def_specifiers      ( s32 num, ... );
+GEN_API CodeSpecifiers def_specifiers      ( s32 num, Specifier* specs );
+GEN_API CodeBody       def_struct_body     ( s32 num, ... );
+GEN_API CodeBody       def_struct_body     ( s32 num, Code* codes );
+GEN_API CodeBody       def_union_body      ( s32 num, ... );
+GEN_API CodeBody       def_union_body      ( s32 num, Code* codes );
 
 #pragma endregion Upfront
 
@@ -326,37 +324,37 @@ struct ParseInfo
 CodeBody parse_file( Str path );
 #endif
 
-CodeClass       parse_class        ( Str class_def       );
-CodeConstructor parse_constructor  ( Str constructor_def );
-CodeDestructor  parse_destructor   ( Str destructor_def  );
-CodeEnum        parse_enum         ( Str enum_def        );
-CodeBody        parse_export_body  ( Str export_def      );
-CodeExtern      parse_extern_link  ( Str exten_link_def  );
-CodeFriend      parse_friend       ( Str friend_def      );
-CodeFn          parse_function     ( Str fn_def          );
-CodeBody        parse_global_body  ( Str body_def        );
-CodeNS          parse_namespace    ( Str namespace_def   );
-CodeOperator    parse_operator     ( Str operator_def    );
-CodeOpCast      parse_operator_cast( Str operator_def    );
-CodeStruct      parse_struct       ( Str struct_def      );
-CodeTemplate    parse_template     ( Str template_def    );
-CodeTypename    parse_type         ( Str type_def        );
-CodeTypedef     parse_typedef      ( Str typedef_def     );
-CodeUnion       parse_union        ( Str union_def       );
-CodeUsing       parse_using        ( Str using_def       );
-CodeVar         parse_variable     ( Str var_def         );
+GEN_API CodeClass       parse_class        ( Str class_def       );
+GEN_API CodeConstructor parse_constructor  ( Str constructor_def );
+GEN_API CodeDestructor  parse_destructor   ( Str destructor_def  );
+GEN_API CodeEnum        parse_enum         ( Str enum_def        );
+GEN_API CodeBody        parse_export_body  ( Str export_def      );
+GEN_API CodeExtern      parse_extern_link  ( Str exten_link_def  );
+GEN_API CodeFriend      parse_friend       ( Str friend_def      );
+GEN_API CodeFn          parse_function     ( Str fn_def          );
+GEN_API CodeBody        parse_global_body  ( Str body_def        );
+GEN_API CodeNS          parse_namespace    ( Str namespace_def   );
+GEN_API CodeOperator    parse_operator     ( Str operator_def    );
+GEN_API CodeOpCast      parse_operator_cast( Str operator_def    );
+GEN_API CodeStruct      parse_struct       ( Str struct_def      );
+GEN_API CodeTemplate    parse_template     ( Str template_def    );
+GEN_API CodeTypename    parse_type         ( Str type_def        );
+GEN_API CodeTypedef     parse_typedef      ( Str typedef_def     );
+GEN_API CodeUnion       parse_union        ( Str union_def       );
+GEN_API CodeUsing       parse_using        ( Str using_def       );
+GEN_API CodeVar         parse_variable     ( Str var_def         );
 
 #pragma endregion Parsing
 
 #pragma region Untyped text
 
-ssize   token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va );
+GEN_API ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va );
 //! Do not use directly. Use the token_fmt macro instead.
-Str token_fmt_impl( ssize, ... );
+GEN_API Str token_fmt_impl( ssize, ... );
 
-Code untyped_str      ( Str content);
-Code untyped_fmt      ( char const* fmt, ... );
-Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
+GEN_API Code untyped_str( Str content);
+GEN_API Code untyped_fmt      ( char const* fmt, ... );
+GEN_API Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
 
 #pragma endregion Untyped text
 

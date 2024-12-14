@@ -17,8 +17,10 @@ Push-Location $path_root
 #region Arguments
        $vendor       = $null
        $release      = $null
-	   $verbose      = $false
-	   $base         = $false
+[bool] $verbose      = $false
+[bool] $shared       = $false
+[bool] $dyn_link     = $false
+[bool] $base         = $false
 [bool] $segmented    = $false
 [bool] $singleheader = $false
 [bool] $c_library    = $false
@@ -35,8 +37,10 @@ if ( $args ) { $args | ForEach-Object {
 		"verbose"			  { $verbose      = $true }
 		"release"             { $release      = $true }
 		"debug"               { $release      = $false }
+		"shared"              { $shared       = $true }
+		"dyn_link"            { $dyn_link     = $true }
 		"base"                { $base         = $true }
-		"segmented"          { $segmented     = $true }
+		"segmented"           { $segmented    = $true }
 		"singleheader"        { $singleheader = $true }
 		"c_library"           { $c_library    = $true }
 		"unreal"              { $unreal       = $true }

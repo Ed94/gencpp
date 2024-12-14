@@ -224,7 +224,7 @@ word StrBuilder,       gen_StrBuilder
 
 namespace strbuilder_, gen_strbuilder_
 
-word StrCached, gen_StringCached
+word StrCached, gen_StrCached
 
 word StringTable, gen_StringTable
 
@@ -401,7 +401,7 @@ word init,   gen_init
 word deinit, gen_deinit
 word reset,  gen_reset
 
-word cache_str, gen_get_cached_string
+word cache_str, gen_cache_str
 
 word make_code, gen_make_code
 
@@ -413,20 +413,6 @@ namespace token_,   gen_token_
 namespace untyped_, gen_untyped_
 
 // Constants
-
-word TokenMap_FixedArena, gen_TokenMap_FixedArena
-word InitSize_DataArrays, gen_InitSize_DataArrays
-
-word Global_BucketSize,   gen_Global_BucketSize
-word CodePool_NumBlocks,  gen_CodePool_NumBlocks
-word SizePer_StringArena, gen_SizePer_StringArena
-
-word MaxCommentLineLength, gen_MaxCommentLineLength
-word MaxNameLength,        gen_MaxNameLength
-word MaxUntypedStrLength,  gen_MaxUntypedStrLength
-
-word LexAllocator_Size,        gen_LexAllocator_Size
-word Builder_StrBufferReserve, gen_Builder_StrBufferReserve
 
 word access_public,    gen_access_public
 word access_protected, gen_access_protected
@@ -446,22 +432,7 @@ word preprocess_else, gen_preprocess_else
 namespace spec_, gen_spec_
 namespace t_,    gen_t_
 
-word PreprocessorDefines, gen_PreprocessorDefines
-
 // Backend
-
-word FallbackAllocator,         gen_GlobalAllocator
-word Fallback_AllocatorBuckets, gen_Global_AllocatorBuckets
-word CodePools,               gen_CodePools
-word StringArenas,            gen_StringArenas
-word StringCache,             gen_StringCache
-word LexArena,                gen_LexArena
-word Allocator_DataArrays,    gen_Allocator_DataArrays
-word Allocator_CodePool,      gen_Allocator_CodePool
-word Allocator_Lexer,         gen_Allocator_Lexer
-word Allocator_StringArena,   gen_Allocator_StringArena
-word Allocator_StringTable,   gen_Allocator_StringTable
-word Allocator_TypeTable,     gen_Allocator_TypeTable
 
 // Builder
 
@@ -527,7 +498,6 @@ word parser_deinit, gen_parser_deinit
 
 word TokType,         gen_TokType
 word toktype_to_str,  gen_toktype_to_str
-// word str_to_toktype, gen_str_to_toktype
 word NullToken,       gen_NullToken
 
 namespace tok_, gen_tok_

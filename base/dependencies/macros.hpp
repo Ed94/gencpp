@@ -5,6 +5,24 @@
 
 #pragma region Macros
 
+#if GEN_COMPILER_MSVC
+    #ifdef GEN_DYN_LINK
+        #ifdef GEN_EXPORTS
+            #define GEN_API __declspec(dllexport)
+        #else
+            #define GEN_API __declspec(dllimport)
+        #endif
+    #else
+        #define GEN_API  // Empty for static builds
+    #endif
+#else
+    #ifdef GEN_DYN_LINK
+        #define GEN_API __attribute__((visibility("default")))
+    #else
+        #define GEN_API  // Empty for static builds
+    #endif
+#endif
+
 #ifndef global
 #define global        static    // Global variables
 #endif
@@ -69,8 +87,13 @@
 #endif
 
 #ifndef do_once
-#define do_once() for ( local_persist b32 once = true; once; once = false )
-#define do_once_defer( statement ) for ( local_persist b32 once = true; once; once = false, (statement) )
+#define do_once()                                                               \
+    static int __do_once_counter_##__LINE__ = 0;                                \
+    for(; __do_once_counter_##__LINE__ != 1; __do_once_counter_##__LINE__ = 1 ) \
+
+#define do_once_defer( expression )                                                          \
+    static int __do_once_counter_##__LINE__ = 0;                                             \
+    for(; __do_once_counter_##__LINE__ != 1; __do_once_counter_##__LINE__ = 1, (expression)) \
 
 #define do_once_start      \
 	do                     \

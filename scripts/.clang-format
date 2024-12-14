@@ -1,8 +1,9 @@
 # Format Style Options - Created with Clang Power Tools
 ---
 
-# AttributeMacros: [
-# ]
+AttributeMacros: [
+  GEN_API
+]
 StatementMacros: [
   GEN_NS_BEGIN, 
   GEN_NS_END, 

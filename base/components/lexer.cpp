@@ -17,7 +17,6 @@ StrBuilder tok_to_strbuilder(Token tok)
 	return result;
 }
 
-
 bool lex__eat( TokArray* self, TokType type );
 
 Token* lex_current(TokArray* self, bool skip_formatting )

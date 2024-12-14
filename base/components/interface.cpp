@@ -468,5 +468,5 @@ void set_preprocess_define( Str id, b32 is_functional ) {
 	if (is_functional) {
 		strbuilder_append_char( & builder, '(' );
 	}
-	array_append( _ctx->PreprocessorDefines, cache_str(builder) ); 
+	array_append( _ctx->PreprocessorDefines, cache_str( strbuilder_to_str(builder)) ); 
 }

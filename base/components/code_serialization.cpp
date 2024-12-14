@@ -1407,7 +1407,7 @@ void var_to_strbuilder_ref(CodeVar self, StrBuilder* result )
 	if ( self->Attributes || self->Specs )
 	{
 		if ( self->Attributes )
-			strbuilder_append_fmt( result, "%SB ", specifiers_to_strbuilder(self->Specs) );
+			strbuilder_append_fmt( result, "%SB ", attributes_to_strbuilder(self->Attributes) );
 
 		if ( self->Specs )
 			strbuilder_append_fmt( result, "%SB\n", specifiers_to_strbuilder(self->Specs) );
