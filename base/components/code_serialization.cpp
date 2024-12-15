@@ -250,7 +250,7 @@ void define_to_strbuilder_ref(CodeDefine define, StrBuilder* result )
 {
 	GEN_ASSERT(define);
 	GEN_ASSERT(define->Body);
-	GEN_ASSERT(define->Body->Content);
+	GEN_ASSERT(define->Body->Content.Ptr && define->Body->Content.Len > 0);
 	if (define->Params) {
 		StrBuilder params_builder = define_params_to_strbuilder(define->Params);
 		strbuilder_append_fmt( result, "#define %S(%S) %S", define->Name, strbuilder_to_str(params_builder), define->Body->Content );

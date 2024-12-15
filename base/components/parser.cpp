@@ -1327,9 +1327,9 @@ CodeDefine parser_parse_define()
 			params = (CodeDefineParams) make_code();
 			params->Type = CT_Parameters_Define;
 			params->Name = currtok.Text;
+			params->NumEntries ++;
 
 			define->Params = params;
-
 			eat( Tok_Preprocess_Define_Param );
 			// #define <Name> ( <param>
 		}
@@ -4964,12 +4964,13 @@ CodeTypedef parser_parse_typedef()
 		// valid_macro |= macro && macro_expects_body(* macro));
 	// }
 
+	Code macro;
 	if ( valid_macro )
 #endif
 	{
 		type          = cast(Code, t_empty);
-		Code macro    = parse_simple_preprocess(currtok.Type);
 		name          = currtok;
+		Code macro    = parse_simple_preprocess(currtok.Type);
 		name.Text.Len = macro->Content.Len;
 		_ctx->parser.Scope->Name = name.Text;
 		// <ModuleFalgs> typedef <Preprocessed_Macro>
