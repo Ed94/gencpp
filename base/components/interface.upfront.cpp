@@ -1274,7 +1274,7 @@ CodeUsing def_using_namespace( Str name )
 
 CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable p )
 {
-	if ( ! name_check( def_variable, name ) || null_check( def_variable, type ) ) {
+	if ( ! name_check( def_variable, name ) || ! null_check( def_variable, type ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
