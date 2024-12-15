@@ -42,13 +42,14 @@ struct AST_Body
 };
 static_assert( sizeof(AST_Body) == sizeof(AST), "ERROR: AST_Body is not the same size as AST");
 
+// TODO(Ed): Support chaining attributes (Use parameter linkage pattern)
 struct AST_Attributes
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StrCached  Content;
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;

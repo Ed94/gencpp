@@ -473,6 +473,7 @@ void register_macro( Macro macro ) {
 	GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
 	GEN_ASSERT(macro.Name.Len > 0);
 	u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
+	macro.Name = cache_str(macro.Name);
 	hashtable_set( _ctx->Macros, key, macro );
 }
 
@@ -486,6 +487,7 @@ void register_macros( s32 num, ... )
 		Macro macro = va_arg(va, Macro);
 		GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
 		GEN_ASSERT(macro.Name.Len > 0);
+		macro.Name = cache_str(macro.Name);
 
 		u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
 		hashtable_set( _ctx->Macros, key, macro );
@@ -502,6 +504,7 @@ void register_macros( s32 num,  Macro* macros )
 		Macro macro = * macros;
 		GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
 		GEN_ASSERT(macro.Name.Len > 0);
+		macro.Name = cache_str(macro.Name);
 
 		u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
 		hashtable_set( _ctx->Macros, key, macro );

@@ -177,8 +177,22 @@ enum EMacroFlags : u16
 {
 	MF_Functional          = bit(0), // Macro has parameters (args expected to be passed)
 	MF_Expects_Body        = bit(1), // Expects to assign a braced scope to its body.
-	MF_Allow_As_Identifier = bit(2), // lex__eat wil treat this macro as an identifier if the parser attempts to consume it as one.
-                                     //  ^^^ This is a sort of kludge because we don't support push/pop macro programs rn. ^^^
+
+	// lex__eat wil treat this macro as an identifier if the parser attempts to consume it as one.
+	//  ^^^ This is a kludge because we don't support push/pop macro pragmas rn.
+	MF_Allow_As_Identifier = bit(2), 
+
+	// lex__eat wil treat this macro as an attribute if the parser attempts to consume it as one.
+	//  ^^^ This a kludge because unreal has a macro that behaves as both a 'statement' and an attribute (UE_DEPRECATED, PRAGMA_ENABLE_DEPRECATION_WARNINGS, etc)
+	// TODO(Ed): We can keep the MF_Allow_As_Attribute flag for macros, however, we need to add the ability of AST_Attributes to chain themselves.
+	// Its thats already a thing in the standard language anyway
+	// & it would allow UE_DEPRECATED, (UE_PROPERTY / UE_FUNCTION) to chain themselves as attributes of a resolved member function/varaible definition
+	MF_Allow_As_Attribute  = bit(3),
+
+	// When a macro is encountered after attributs and specifiers while parsing a function, or variable:
+	// It will consume the macro and treat it as resolving the definition. (Yes this is for Unreal Engine)
+	// (MUST BE OF MT_Statement TYPE)
+	MF_Allow_As_Definition = bit(4),
 
 	MF_Null           = 0,
 	MF_UnderlyingType = GEN_U16_MAX,

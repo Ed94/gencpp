@@ -532,45 +532,24 @@ void lex_found_token( LexContext* ctx )
 		ctx->token.Type   = macrotype_to_toktype(macro->Type);
 		b32 is_functional = macro_is_functional(* macro);
 		resolved_to_macro = has_args ? is_functional : ! is_functional;
+		if ( ! resolved_to_macro ) {
+			log_fmt("Info(%d, %d): %S identified as a macro but usage here does not resolve to one (interpreting as identifier)\n"
+				, ctx->token.Line
+				, ctx->token.Line
+				, macro->Name
+			);
+		}
 	}
 	if ( resolved_to_macro )
 	{
 		// TODO(Ed): When we introduce a macro AST (and expression support), we'll properly lex this section.
 		// Want to ignore any arguments the define may have as they can be execution expressions.
-		if ( has_args )
-		{
+		if ( has_args ) {
 			ctx->token.Flags |= TF_Macro_Functional;
-
-			// move_forward();
-			// ctx->token.Text.Len++;
-
-			// s32 level = 0;
-			// while ( ctx->left && ((* ctx->scanner) != ')' || level > 0) )
-			// {
-			// 	if ( (* ctx->scanner) == '(' )
-			// 		level++;
-
-			// 	else if ( (* ctx->scanner) == ')' && level > 0 )
-			// 		level--;
-
-			// 	move_forward();
-			// 	ctx->token.Text.Len++;
-			// }
-
-			// move_forward();
-			// ctx->token.Text.Len++;
 		}
-
-		//if ( (* ctx->scanner) == '\r' && ctx->scanner[1] == '\n' )
-		//{
-		//	move_forward();
-		//	ctx->token..Text.Length++;
-		//}
-		//else if ( (* ctx->scanner) == '\n' )
-		//{
-		//	move_forward();
-		//	ctx->token..Text.Length++;
-		//}
+		if ( bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Attribute) ) {
+			ctx->token.Flags |= TF_Attribute;
+		}
 	}
 	else
 	{
