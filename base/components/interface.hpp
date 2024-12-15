@@ -114,6 +114,10 @@ GEN_API PreprocessorMacro* lookup_preprocess_macro( Str Name );
 // Macros are tracked by name so if the name already exists the entry will be overwritten.
 GEN_API void register_preprocess_macro( PreprocessorMacro macro );
 
+// Ease of use batch registration
+GEN_API void register_preprocess_macros( s32 num, ... );
+GEN_API void register_preprocess_macros( s32 num,  PreprocessorMacro* macros );
+
 // Used internally to retrive or make string allocations.
 // Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
 GEN_API StrCached cache_str( Str str );

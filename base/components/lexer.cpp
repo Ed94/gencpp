@@ -118,25 +118,34 @@ s32 lex_preprocessor_define( LexContext* ctx )
 	Token name = { { ctx->scanner, 1 }, Tok_Identifier, ctx->line, ctx->column, TF_Preprocess };
 	move_forward();
 
-	PreprocessorMacro  macro            = { name.Text, MT_Statement, (MacroFlags)0 };
-	PreprocessorMacro* registered_macro = lookup_preprocess_macro(name.Text);
-	if ( registered_macro == nullptr ) {
-		log_fmt("Warning: %S is was not registered before the lexer processed its #define directive, it will be registered as a statement macro"
-			, name.Text 
-		);
-	}
 	while ( ctx->left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) ) {
 		move_forward();
 		name.Text.Len++;
+	}
+
+	Specifier spec   = str_to_specifier( name.Text );
+	TokType   attrib = str_to_toktype( name.Text );
+	b32 not_specifier = spec   == Spec_Invalid;
+	b32 not_attribute = attrib <= Tok___Attributes_Start;
+
+	PreprocessorMacro  macro            = { name.Text, MT_Statement, (MacroFlags)0 };
+	PreprocessorMacro* registered_macro = lookup_preprocess_macro(name.Text);
+
+	if ( registered_macro == nullptr && not_specifier && not_attribute ) {
+		log_fmt("Warning: '%S' was not registered before the lexer processed its #define directive, it will be registered as a statement macro\n"
+			, name.Text 
+		);
+		GEN_DEBUG_TRAP();
 	}
 	array_append( _ctx->Lexer_Tokens, name );
 
 	if ( ctx->left && (* ctx->scanner) == '(' )
 	{
 		if (registered_macro && ! macro_is_functional(* registered_macro)) {
-			log_fmt("Warning: %S registered macro is not flagged as functional yet the definition detects opening parenthesis '(' for arguments"
+			log_fmt("Warning: %S registered macro is not flagged as functional yet the definition detects opening parenthesis '(' for arguments\n"
 				, name.Text
 			);
+			GEN_DEBUG_TRAP();
 		}
 		else {
 			macro.Flags |= MF_Functional;
@@ -151,7 +160,39 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		while( ctx->left && * ctx->scanner != ')')
 		{
 			skip_whitespace();
-			if ( char_is_alpha( (* ctx->scanner) ) || (* ctx->scanner) == '_' )
+			
+			Str possible_varadic = { ctx->scanner, 3 };
+			if ( ctx->left > 3 && str_are_equal( txt("..."), possible_varadic ) ) {
+				Token parameter = { { ctx->scanner, 3 }, Tok_Preprocess_Define_Param, ctx->line, ctx->column, TF_Preprocess };
+				move_forward();
+				move_forward();
+				move_forward();
+
+				array_append(_ctx->Lexer_Tokens, parameter);
+				skip_whitespace();
+				last_parameter = parameter;
+
+				while ( (* ctx->scanner) == '\\' ) {
+					move_forward();
+					skip_whitespace();
+				}
+				if (* ctx->scanner != ')' )
+				{
+					log_failure("lex_preprocessor_define(%d, %d): Expected a ')' after '...' (varaidc macro param) %S\n"
+						, ctx->line
+						, ctx->column
+						, name.Text
+					);
+					return Lex_ReturnNull;
+				}
+				break;
+			}
+			else if ( (* ctx->scanner) == '\\' ) {
+				move_forward();
+				skip_whitespace();
+				continue;
+			}
+			else if ( char_is_alpha( (* ctx->scanner) ) || (* ctx->scanner) == '_' )
 			{
 				Token parameter = { { ctx->scanner, 1 }, Tok_Preprocess_Define_Param, ctx->line, ctx->column, TF_Preprocess };
 				move_forward();
@@ -173,6 +214,10 @@ s32 lex_preprocessor_define( LexContext* ctx )
 				);
 				return Lex_ReturnNull;
 			}
+
+			if (* ctx->scanner == ')' )
+				break;
+
 			// There should be a comma
 			if ( * ctx->scanner != ',' ) {
 				log_failure("lex_preprocessor_define(%d, %d): Expected a comma after parameter %S for %S\n"
@@ -201,6 +246,15 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		array_append(_ctx->Lexer_Tokens, closing_paren);
 		move_forward();
 	}
+	else if ( registered_macro && macro_is_functional( * registered_macro) ) {
+		if (registered_macro && ! macro_is_functional(* registered_macro)) {
+			log_fmt("Warning: %S registered macro is flagged as functional yet the definition detects no opening parenthesis '(' for arguments\n"
+				, name.Text
+			);
+			GEN_DEBUG_TRAP();
+		}
+	}
+
 	if ( registered_macro == nullptr ) {
 		register_preprocess_macro(macro);
 	}

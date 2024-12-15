@@ -248,9 +248,9 @@
 #	if ! GEN_COMPILER_C
 #		define typeof decltype
 #	elif defined(_MSC_VER)
-#		define typeof(x) __typeof__(x)
+#		define typeof __typeof__
 #	elif defined(__GNUC__) || defined(__clang__)
-#		define typeof(x) __typeof__(x)
+#		define typeof __typeof__
 #	else
 #		error "Compiler not supported"
 #	endif

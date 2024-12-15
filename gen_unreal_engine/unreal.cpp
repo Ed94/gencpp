@@ -64,6 +64,45 @@ int gen_main()
 	Code ue_forceinline = code_str(FORCEINLINE);
 	// Code
 
+	register_preprocess_macros( args(
+		(PreprocessorMacro { txt("bit"),                          MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("bitfield_is_set"),              MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("GEN_C_LIKE_CPP"),               MT_Expression, MF_Null       }),
+		(PreprocessorMacro { txt("cast"),                         MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("ccast"),                        MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("rcast"),                        MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("pcast"),                        MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("scast"),                        MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("stringize_va"),                 MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("stringize"),                    MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("do_once"),                      MT_Expression, MF_Functional }), 
+		(PreprocessorMacro { txt("do_once_defer"),                MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("do_once_start"),                MT_Statement,  MF_Null       }), 
+		(PreprocessorMacro { txt("do_once_end"),                  MT_Statement,  MF_Null       }), 
+		(PreprocessorMacro { txt("labeled_scope_start"),          MT_Statement,  MF_Null       }), 
+		(PreprocessorMacro { txt("labeled_scope_end"),            MT_Statement,  MF_Null       }), 
+		(PreprocessorMacro { txt("compiler_decorated_func_name"), MT_Expression, MF_Null       }), 
+		(PreprocessorMacro { txt("num_args_impl"),                MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("num_args"),                     MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("count_of"),                     MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("clamp"),                        MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("is_between"),                   MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("size_of"),                      MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("min"),                          MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("max"),                          MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("offset_of"),                    MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("static_assert"),                MT_Statement,  MF_Functional }),
+		(PreprocessorMacro { txt("typeof"),                       MT_Expression, MF_Null       }),
+		(PreprocessorMacro { txt("GEN_API_C_BEGIN"),              MT_Statement,  MF_Null       }),
+		(PreprocessorMacro { txt("GEN_API_C_END"),                MT_Statement,  MF_Null       }),
+		(PreprocessorMacro { txt("nullptr"),                      MT_Expression, MF_Null       }),
+		(PreprocessorMacro { txt("GEN_REMOVE_PTR"),               MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("GEN_PARAM_DEFAULT"),            MT_Expression, MF_Null       }),
+		(PreprocessorMacro { txt("struct_init"),                  MT_Expression, MF_Functional }),
+		(PreprocessorMacro { txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"),  MT_Statement,  MF_Null       }),
+		(PreprocessorMacro { txt("GEN_OPITMIZE_MAPPINGS_END"),    MT_Statement,  MF_Null       })
+	));
+
 	// gen_dep.hpp
 	{
 		CodeBody macros = def_body( CT_Global_Body );

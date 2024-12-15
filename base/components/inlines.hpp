@@ -265,6 +265,15 @@ forceinline bool             define_params_has_entries(CodeDefineParams self)   
 CodeDefineParams begin_CodeDefineParams(CodeDefineParams params)                              { return (CodeDefineParams) (Code) begin_CodeParams( cast(CodeParams, (Code)params)); }
 CodeDefineParams end_CodeDefineParams  (CodeDefineParams params)                              { return (CodeDefineParams) (Code) end_CodeParams  ( cast(CodeParams, (Code)params)); }
 CodeDefineParams next_CodeDefineParams (CodeDefineParams params, CodeDefineParams entry_iter) { return (CodeDefineParams) (Code) next_CodeParams ( cast(CodeParams, (Code)params), cast(CodeParams, (Code)entry_iter)); }
+
+#if GEN_COMPILER_CPP
+forceinline
+CodeDefineParams& CodeDefineParams::operator ++()
+{
+	* this = ast->Next;
+	return * this;
+}
+#endif
 #pragma endregion CodeDefineParams
 
 #pragma region CodeSpecifiers

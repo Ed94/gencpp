@@ -202,7 +202,7 @@ struct CodeParams
 {
 #if ! GEN_C_LIKE_CPP
 	Using_Code( CodeParams );
-	forceinline void          append( CodeParams other )          { return params_append(* this, other) }
+	forceinline void          append( CodeParams other )          { return params_append(* this, other); }
 	forceinline CodeParams    get( s32 idx )                      { return params_get( * this, idx); }
 	forceinline bool          has_entries()                       { return params_has_entries(* this); }
 	forceinline StrBuilder    to_strbuilder()                     { return params_to_strbuilder(* this); }
@@ -225,8 +225,8 @@ struct CodeDefineParams
 {
 #if ! GEN_C_LIKE_CPP
 	Using_Code( CodeDefineParams );
-	forceinline void             append( CodeDefineParams other )    { return params_append( cast(CodeParams, * this), other) }
-	forceinline CodeDefineParams get( s32 idx )                      { return params_get( cast(CodeParams, * this), idx); }
+	forceinline void             append( CodeDefineParams other )    { return params_append( cast(CodeParams, * this), cast(CodeParams, other)); }
+	forceinline CodeDefineParams get( s32 idx )                      { return (CodeDefineParams) (Code) params_get( cast(CodeParams, * this), idx); }
 	forceinline bool             has_entries()                       { return params_has_entries( cast(CodeParams, * this)); }
 	forceinline StrBuilder       to_strbuilder()                     { return define_params_to_strbuilder(* this); }
 	forceinline void             to_strbuilder( StrBuilder& result ) { return define_params_to_strbuilder_ref(* this, & result); }
@@ -240,7 +240,7 @@ struct CodeDefineParams
 		GEN_ASSERT(ast);
 		return ast;
 	}
-	forceinline CodeDefineParams& operator++() { return (CodeDefineParams) (Code) cast(CodeParams, * this).operator ++(); };
+	forceinline CodeDefineParams& operator++();
 	AST_DefineParams* ast;
 };
 
@@ -1058,9 +1058,9 @@ forceinline StrBuilder to_strbuilder    ( CodeClass self )                      
 forceinline void       to_strbuilder_def( CodeClass self, StrBuilder& result )     { return class_to_strbuilder_def(self, & result); }
 forceinline void       to_strbuilder_fwd( CodeClass self, StrBuilder& result )     { return class_to_strbuilder_fwd(self, & result); }
 
-forceinline void             append       (CodeDefineParams appendee, CodeDefineParams other ) { return params_append(cast(CodeParam, appendee), other); }
-forceinline CodeDefineParams get          (CodeDefineParams params, s32 idx)                   { return params_get(cast(CodeParam, params), idx); }
-forceinline bool             has_entries  (CodeDefineParams params )                           { return params_has_entries(cast(CodeParam, params)); }
+forceinline void             append       (CodeDefineParams appendee, CodeDefineParams other ) {        params_append(cast(CodeParams, appendee), cast(CodeParams, other)); }
+forceinline CodeDefineParams get          (CodeDefineParams params, s32 idx)                   { return (CodeDefineParams) (Code) params_get(cast(CodeParams, params), idx); }
+forceinline bool             has_entries  (CodeDefineParams params )                           { return params_has_entries(cast(CodeParams, params)); }
 forceinline StrBuilder       to_strbuilder(CodeDefineParams params )                           { return define_params_to_strbuilder(params); }
 forceinline void             to_strbuilder(CodeDefineParams params, StrBuilder& result )       { return define_params_to_strbuilder_ref(params, & result); }
 

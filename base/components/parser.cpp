@@ -1318,10 +1318,13 @@ CodeDefine parse_define()
 			define->Params = params;
 
 			eat( Tok_Preprocess_Define_Param );
-			// #define <Name> ( <param> )
+			// #define <Name> ( <param>
 		}
 		
 		while( left && currtok.Type != Tok_Capture_End ) {
+			eat( Tok_Comma );
+			// #define <Name> ( <param>, 
+
 			CodeDefineParams next_param = (CodeDefineParams) make_code();
 			next_param->Type = CT_Parameters_Define;
 			next_param->Name = currtok.Text;
@@ -1344,7 +1347,7 @@ CodeDefine parse_define()
 
 	if ( currtok.Text.Len == 0 )
 	{
-		define->Body = untyped_str( tok_to_str(currtok) );
+		define->Body = untyped_str( txt("\n") );
 		eat( Tok_Preprocess_Content );
 		// #define <Name> ( <params> ) <Content>
 
@@ -1882,7 +1885,6 @@ CodeBody parse_global_nspace( CodeType which )
 			}
 		}
 
-	Member_Resolved_To_Lone_Macro:
 		if ( member == Code_Invalid )
 		{
 			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_strbuilder(currtok_noskip), parser_to_strbuilder(_ctx->parser) );
@@ -2930,9 +2932,9 @@ Code parse_simple_preprocess( TokType which )
 	eat( which );
 	// <Macro>
 
-	PreprocessorMacro macro = * lookup_preprocess_macro( full_macro.Text );
+	PreprocessorMacro* macro = lookup_preprocess_macro( full_macro.Text );
 
-	if ( macro_expects_body(macro) && peektok.Type == Tok_BraceCurly_Open )
+	if ( macro && macro_expects_body(* macro) && peektok.Type == Tok_BraceCurly_Open )
 	{
 		// Eat the block scope right after the macro. Were assuming the macro defines a function definition's signature
 		eat( Tok_BraceCurly_Open );
@@ -2955,7 +2957,7 @@ Code parse_simple_preprocess( TokType which )
 
 		// TODO(Ed): Review this?
 		Str prev_proc = _ctx->parser.Scope->Prev->ProcName;
-		if ( macro.Type == MT_Typename && c_str_compare_len( prev_proc.Ptr, "parser_parse_typedef", prev_proc.Len ) != 0 )
+		if ( macro->Type == MT_Typename && c_str_compare_len( prev_proc.Ptr, "parser_parse_typedef", prev_proc.Len ) != 0 )
 		{
 			if ( check( Tok_Statement_End ))
 			{
@@ -2982,7 +2984,7 @@ Code parse_simple_preprocess( TokType which )
 			// Do nothing
 			goto Leave_Scope_Early;
 		}
-		else if (macro.Type == MT_Typename && str_contains(_ctx->parser.Scope->Prev->ProcName, txt("parser_parse_typedef")))
+		else if (macro && macro->Type == MT_Typename && str_contains(_ctx->parser.Scope->Prev->ProcName, txt("parser_parse_typedef")))
 		{
 			if ( peektok.Type == Tok_Statement_End )
 			{

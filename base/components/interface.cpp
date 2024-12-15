@@ -207,7 +207,7 @@ void define_constants()
 	code_set_global(cast(Code, spec_local_persist));
 
 	if (enum_underlying_macro.Name.Len == 0) {
-		enum_underlying_macro.Name  = txt("enum_underlying(");
+		enum_underlying_macro.Name  = txt("enum_underlying");
 		enum_underlying_macro.Type  = MT_Expression;
 		enum_underlying_macro.Flags = MF_Functional;
 	}
@@ -470,6 +470,42 @@ PreprocessorMacro* lookup_preprocess_macro( Str name ) {
 }
 
 void register_preprocess_macro( PreprocessorMacro macro ) {
+	GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
+	GEN_ASSERT(macro.Name.Len > 0);
 	u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
 	hashtable_set( _ctx->PreprocessorMacros, key, macro );
+}
+
+void register_preprocess_macros( s32 num, ... )
+{
+	GEN_ASSERT(num > 0);
+	va_list va;
+	va_start(va, num);
+	do
+	{
+		PreprocessorMacro macro = va_arg(va, PreprocessorMacro);
+		GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
+		GEN_ASSERT(macro.Name.Len > 0);
+
+		u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
+		hashtable_set( _ctx->PreprocessorMacros, key, macro );
+	}
+	while (num--, num > 0);
+	va_end(va);
+}
+
+void register_preprocess_macros( s32 num,  PreprocessorMacro* macros )
+{
+	GEN_ASSERT(num > 0);
+	do
+	{
+		PreprocessorMacro macro = * macros;
+		GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
+		GEN_ASSERT(macro.Name.Len > 0);
+
+		u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
+		hashtable_set( _ctx->PreprocessorMacros, key, macro );
+		++ macros;
+	}
+	while (num--, num > 0);
 }
