@@ -237,7 +237,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 		Str spec_to_str( Specifier type )
 		{
 			local_persist
-			Str lookup[<num>] = {
+			Str lookup[] = {
 				<entries>
 			};
 

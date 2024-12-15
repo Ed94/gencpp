@@ -39,7 +39,7 @@ enum Specifier : u32
 
 inline Str spec_to_str( Specifier type )
 {
-	local_persist Str lookup[26] = {
+	local_persist Str lookup[] = {
 		{ "INVALID",       sizeof( "INVALID" ) - 1       },
 		{ "consteval",     sizeof( "consteval" ) - 1     },
 		{ "constexpr",     sizeof( "constexpr" ) - 1     },
