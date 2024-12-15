@@ -40,9 +40,9 @@ struct Str
 
 #ifndef txt
 #	if GEN_COMPILER_CPP
-#		define txt( text )          Str { ( text ), sizeof( text ) - 1 }
+#		define txt( text )          GEN_NS Str { ( text ), sizeof( text ) - 1 }
 #	else
-#		define txt( text )         (Str){ ( text ), sizeof( text ) - 1 }
+#		define txt( text )         (GEN_NS Str){ ( text ), sizeof( text ) - 1 }
 #	endif
 #endif
 
