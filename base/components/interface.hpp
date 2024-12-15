@@ -71,7 +71,7 @@ struct Context
 	// Used by the lexer to persistently treat all these identifiers as preprocessor defines.
 	// Populate with strings via gen::cache_str.
 	// Functional defines must have format: id( ;at minimum to indicate that the define is only valid with arguments.
-	HashTable(PreprocessorMacro) PreprocessorMacros;
+	MacroTable Macros;
 
 // Backend
 
@@ -107,16 +107,16 @@ GEN_API void reset(Context* ctx);
 GEN_API void set_context(Context* ctx);
 
 // Mostly intended for the parser
-GEN_API PreprocessorMacro* lookup_preprocess_macro( Str Name );
+GEN_API Macro* lookup_macro( Str Name );
 
 // Alternative way to add a preprocess define entry for the lexer & parser to utilize 
 // if the user doesn't want to use def_define
 // Macros are tracked by name so if the name already exists the entry will be overwritten.
-GEN_API void register_preprocess_macro( PreprocessorMacro macro );
+GEN_API void register_macro( Macro macro );
 
 // Ease of use batch registration
-GEN_API void register_preprocess_macros( s32 num, ... );
-GEN_API void register_preprocess_macros( s32 num,  PreprocessorMacro* macros );
+GEN_API void register_macros( s32 num, ... );
+GEN_API void register_macros( s32 num,  Macro* macros );
 
 // Used internally to retrive or make string allocations.
 // Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)

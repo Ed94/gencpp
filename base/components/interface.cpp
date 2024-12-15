@@ -179,28 +179,28 @@ void define_constants()
 #endif
 
 	spec_const            = def_specifier( Spec_Const);            code_set_global( cast(Code, spec_const ));
-	spec_consteval        = def_specifier( Spec_Consteval);        code_set_global( cast(Code, spec_consteval ));;
-	spec_constexpr        = def_specifier( Spec_Constexpr);        code_set_global( cast(Code, spec_constexpr ));;
-	spec_constinit        = def_specifier( Spec_Constinit);        code_set_global( cast(Code, spec_constinit ));;
-	spec_extern_linkage   = def_specifier( Spec_External_Linkage); code_set_global( cast(Code, spec_extern_linkage ));;
-	spec_final            = def_specifier( Spec_Final);            code_set_global( cast(Code, spec_final ));;
-	spec_forceinline      = def_specifier( Spec_ForceInline);      code_set_global( cast(Code, spec_forceinline ));;
-	spec_global           = def_specifier( Spec_Global);           code_set_global( cast(Code, spec_global ));;
-	spec_inline           = def_specifier( Spec_Inline);           code_set_global( cast(Code, spec_inline ));;
-	spec_internal_linkage = def_specifier( Spec_Internal_Linkage); code_set_global( cast(Code, spec_internal_linkage ));;
-	spec_local_persist    = def_specifier( Spec_Local_Persist);    code_set_global( cast(Code, spec_local_persist ));;
-	spec_mutable          = def_specifier( Spec_Mutable);          code_set_global( cast(Code, spec_mutable ));;
-	spec_neverinline      = def_specifier( Spec_NeverInline);      code_set_global( cast(Code, spec_neverinline ));;
-	spec_noexcept         = def_specifier( Spec_NoExceptions);     code_set_global( cast(Code, spec_noexcept ));;
-	spec_override         = def_specifier( Spec_Override);         code_set_global( cast(Code, spec_override ));;
-	spec_ptr              = def_specifier( Spec_Ptr);              code_set_global( cast(Code, spec_ptr ));;
+	spec_consteval        = def_specifier( Spec_Consteval);        code_set_global( cast(Code, spec_consteval ));
+	spec_constexpr        = def_specifier( Spec_Constexpr);        code_set_global( cast(Code, spec_constexpr ));
+	spec_constinit        = def_specifier( Spec_Constinit);        code_set_global( cast(Code, spec_constinit ));
+	spec_extern_linkage   = def_specifier( Spec_External_Linkage); code_set_global( cast(Code, spec_extern_linkage ));
+	spec_final            = def_specifier( Spec_Final);            code_set_global( cast(Code, spec_final ));
+	spec_forceinline      = def_specifier( Spec_ForceInline);      code_set_global( cast(Code, spec_forceinline ));
+	spec_global           = def_specifier( Spec_Global);           code_set_global( cast(Code, spec_global ));
+	spec_inline           = def_specifier( Spec_Inline);           code_set_global( cast(Code, spec_inline ));
+	spec_internal_linkage = def_specifier( Spec_Internal_Linkage); code_set_global( cast(Code, spec_internal_linkage ));
+	spec_local_persist    = def_specifier( Spec_Local_Persist);    code_set_global( cast(Code, spec_local_persist ));
+	spec_mutable          = def_specifier( Spec_Mutable);          code_set_global( cast(Code, spec_mutable ));
+	spec_neverinline      = def_specifier( Spec_NeverInline);      code_set_global( cast(Code, spec_neverinline ));
+	spec_noexcept         = def_specifier( Spec_NoExceptions);     code_set_global( cast(Code, spec_noexcept ));
+	spec_override         = def_specifier( Spec_Override);         code_set_global( cast(Code, spec_override ));
+	spec_ptr              = def_specifier( Spec_Ptr);              code_set_global( cast(Code, spec_ptr ));
 	spec_pure             = def_specifier( Spec_Pure);             code_set_global( cast(Code, spec_pure ));
-	spec_ref              = def_specifier( Spec_Ref);              code_set_global( cast(Code, spec_ref ));;
-	spec_register         = def_specifier( Spec_Register);         code_set_global( cast(Code, spec_register ));;
-	spec_rvalue           = def_specifier( Spec_RValue);           code_set_global( cast(Code, spec_rvalue ));;
-	spec_static_member    = def_specifier( Spec_Static);           code_set_global( cast(Code, spec_static_member ));;
-	spec_thread_local     = def_specifier( Spec_Thread_Local);     code_set_global( cast(Code, spec_thread_local ));;
-	spec_virtual          = def_specifier( Spec_Virtual);          code_set_global( cast(Code, spec_virtual ));;
+	spec_ref              = def_specifier( Spec_Ref);              code_set_global( cast(Code, spec_ref ));
+	spec_register         = def_specifier( Spec_Register);         code_set_global( cast(Code, spec_register ));
+	spec_rvalue           = def_specifier( Spec_RValue);           code_set_global( cast(Code, spec_rvalue ));
+	spec_static_member    = def_specifier( Spec_Static);           code_set_global( cast(Code, spec_static_member ));
+	spec_thread_local     = def_specifier( Spec_Thread_Local);     code_set_global( cast(Code, spec_thread_local ));
+	spec_virtual          = def_specifier( Spec_Virtual);          code_set_global( cast(Code, spec_virtual ));
 	spec_volatile         = def_specifier( Spec_Volatile);         code_set_global( cast(Code, spec_volatile ));
 
 	spec_local_persist = def_specifiers( 1, Spec_Local_Persist );
@@ -211,7 +211,7 @@ void define_constants()
 		enum_underlying_macro.Type  = MT_Expression;
 		enum_underlying_macro.Flags = MF_Functional;
 	}
-	register_preprocess_macro(enum_underlying_macro);
+	register_macro(enum_underlying_macro);
 }
 
 void init(Context* ctx)
@@ -315,8 +315,8 @@ void init(Context* ctx)
 		if ( ctx->StrCache.Entries == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
 
-		ctx->PreprocessorMacros = hashtable_init(PreprocessorMacro, ctx->Allocator_DyanmicContainers);
-		if (ctx->PreprocessorMacros.Hashes == nullptr || ctx->PreprocessorMacros.Entries == nullptr) {
+		ctx->Macros = hashtable_init(Macro, ctx->Allocator_DyanmicContainers);
+		if (ctx->Macros.Hashes == nullptr || ctx->Macros.Entries == nullptr) {
 			GEN_FATAL( "gen::init: Failed to initialize the PreprocessMacros table" );
 		}
 	}
@@ -356,7 +356,7 @@ void deinit(Context* ctx)
 	array_free( ctx->CodePools);
 	array_free( ctx->StringArenas);
 
-	hashtable_destroy(ctx->PreprocessorMacros);
+	hashtable_destroy(ctx->Macros);
 
 	left  = array_num( ctx->Fallback_AllocatorBuckets);
 	if (left)
@@ -401,7 +401,7 @@ void reset(Context* ctx)
 	while ( left--, left );
 
 	hashtable_clear(ctx->StrCache);
-	hashtable_clear(ctx->PreprocessorMacros);
+	hashtable_clear(ctx->Macros);
 	define_constants();
 }
 
@@ -464,47 +464,47 @@ Code make_code()
 	return result;
 }
 
-PreprocessorMacro* lookup_preprocess_macro( Str name ) {
+Macro* lookup_macro( Str name ) {
 	u32 key = crc32( name.Ptr, name.Len );
-	return hashtable_get( _ctx->PreprocessorMacros, key );
+	return hashtable_get( _ctx->Macros, key );
 }
 
-void register_preprocess_macro( PreprocessorMacro macro ) {
+void register_macro( Macro macro ) {
 	GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
 	GEN_ASSERT(macro.Name.Len > 0);
 	u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
-	hashtable_set( _ctx->PreprocessorMacros, key, macro );
+	hashtable_set( _ctx->Macros, key, macro );
 }
 
-void register_preprocess_macros( s32 num, ... )
+void register_macros( s32 num, ... )
 {
 	GEN_ASSERT(num > 0);
 	va_list va;
 	va_start(va, num);
 	do
 	{
-		PreprocessorMacro macro = va_arg(va, PreprocessorMacro);
+		Macro macro = va_arg(va, Macro);
 		GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
 		GEN_ASSERT(macro.Name.Len > 0);
 
 		u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
-		hashtable_set( _ctx->PreprocessorMacros, key, macro );
+		hashtable_set( _ctx->Macros, key, macro );
 	}
 	while (num--, num > 0);
 	va_end(va);
 }
 
-void register_preprocess_macros( s32 num,  PreprocessorMacro* macros )
+void register_macros( s32 num,  Macro* macros )
 {
 	GEN_ASSERT(num > 0);
 	do
 	{
-		PreprocessorMacro macro = * macros;
+		Macro macro = * macros;
 		GEN_ASSERT_NOT_NULL(macro.Name.Ptr);
 		GEN_ASSERT(macro.Name.Len > 0);
 
 		u32 key = crc32( macro.Name.Ptr, macro.Name.Len );
-		hashtable_set( _ctx->PreprocessorMacros, key, macro );
+		hashtable_set( _ctx->Macros, key, macro );
 		++ macros;
 	}
 	while (num--, num > 0);

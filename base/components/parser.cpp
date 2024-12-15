@@ -97,7 +97,7 @@ bool lex__eat(TokArray* self, TokType type )
 	b32 is_identifier = at_idx.Type == Tok_Identifier;
 	if ( not_accepted )
 	{
-		PreprocessorMacro* macro = lookup_preprocess_macro(at_idx.Text);
+		Macro* macro = lookup_macro(at_idx.Text);
 		b32 accept_as_identifier = macro && bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Identifier );
 		not_accepted             = type == Tok_Identifier && accept_as_identifier ? false : true;
 	}
@@ -196,7 +196,6 @@ internal CodeComment        parse_comment                      ();
 internal Code               parse_complicated_definition       ( TokType which );
 internal CodeBody           parse_class_struct_body            ( TokType which, Token name );
 internal Code               parse_class_struct                 ( TokType which, bool inplace_def );
-internal CodeDefine         parser_parse_define                ();
 internal Code               parse_expression                   ();
 internal Code               parse_forward_or_definition        ( TokType which, bool is_inplace );
 internal CodeFn             parse_function_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type, Token name );
@@ -216,8 +215,9 @@ internal void               parse_template_args                ( Token* token );
 internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, Str name );
 internal CodeVar            parse_variable_declaration_list    ();
 
-internal CodeClass       parser_parse_class    ( bool inplace_def );
+internal CodeClass       parser_parse_class           ( bool inplace_def );
 internal CodeConstructor parser_parse_constructor     ( CodeSpecifiers specifiers );
+internal CodeDefine      parser_parse_define          ();
 internal CodeDestructor  parser_parse_destructor      ( CodeSpecifiers specifiers );
 internal CodeEnum        parser_parse_enum            ( bool inplace_def );
 internal CodeBody        parser_parse_export_body     ();
@@ -1291,89 +1291,6 @@ Code parse_complicated_definition( TokType which )
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
-}
-
-internal inline
-CodeDefine parser_parse_define()
-{
-	push_scope();
-	if ( check(Tok_Preprocess_Hash)) {
-		// If parse_define is called by the user the hash reach here.
-		eat(Tok_Preprocess_Hash);
-	}
-
-	eat( Tok_Preprocess_Define );
-	// #define
-
-	CodeDefine
-	define = (CodeDefine) make_code();
-	define->Type = CT_Preprocess_Define;
-	if ( ! check( Tok_Identifier ) ) {
-		log_failure( "Error, expected identifier after #define\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
-		return InvalidCode;
-	}
-	_ctx->parser.Scope->Name = currtok.Text;
-	define->Name = cache_str( tok_to_str(currtok) );
-	eat( Tok_Identifier );
-	// #define <Name>
-
-	PreprocessorMacro* macro = lookup_preprocess_macro(define->Name);
-	if (macro_is_functional(* macro)) {
-		eat( Tok_Capture_Start );
-		// #define <Name> (
-		CodeDefineParams params;
-		if ( left && currtok.Type != Tok_Capture_End ) {
-			params = (CodeDefineParams) make_code();
-			params->Type = CT_Parameters_Define;
-			params->Name = currtok.Text;
-			params->NumEntries ++;
-
-			define->Params = params;
-			eat( Tok_Preprocess_Define_Param );
-			// #define <Name> ( <param>
-		}
-		
-		while( left && currtok.Type != Tok_Capture_End ) {
-			eat( Tok_Comma );
-			// #define <Name> ( <param>, 
-
-			CodeDefineParams next_param = (CodeDefineParams) make_code();
-			next_param->Type = CT_Parameters_Define;
-			next_param->Name = currtok.Text;
-			define_params_append(params, next_param);
-
-			// #define  <Name> (  <param>, <next_param> ...
-			eat( Tok_Preprocess_Define_Param );
-		}
-
-		eat( Tok_Capture_End );
-		// #define <Name> ( <params> )
-	}
-
-	if ( ! check( Tok_Preprocess_Content ))
-	{
-		log_failure( "Error, expected content after #define %s\n%s", define->Name, parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
-		return InvalidCode;
-	}
-
-	if ( currtok.Text.Len == 0 )
-	{
-		define->Body = untyped_str( txt("\n") );
-		eat( Tok_Preprocess_Content );
-		// #define <Name> ( <params> ) <Content>
-
-		parser_pop(& _ctx->parser);
-		return define;
-	}
-
-	define->Body = untyped_str( strbuilder_to_str( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
-	eat( Tok_Preprocess_Content );
-	// #define <Name> ( <params> ) <Content>
-
-	parser_pop(& _ctx->parser);
-	return define;
 }
 
 internal inline
@@ -2945,7 +2862,7 @@ Code parse_simple_preprocess( TokType which )
 	eat( which );
 	// <Macro>
 
-	PreprocessorMacro* macro = lookup_preprocess_macro( full_macro.Text );
+	Macro* macro = lookup_macro( full_macro.Text );
 	if ( which != Tok_Preprocess_Unsupported && macro == nullptr ) {
 		log_failure("Expected the macro %S to be registered\n%S", full_macro,  parser_to_strbuilder(_ctx->parser));
 		return NullCode;
@@ -3482,6 +3399,93 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 
 	parser_pop(& _ctx->parser);
 	return result;
+}
+
+internal inline
+CodeDefine parser_parse_define()
+{
+	push_scope();
+	if ( check(Tok_Preprocess_Hash)) {
+		// If parse_define is called by the user the hash reach here.
+		eat(Tok_Preprocess_Hash);
+	}
+
+	eat( Tok_Preprocess_Define );
+	// #define
+
+	CodeDefine
+	define = (CodeDefine) make_code();
+	define->Type = CT_Preprocess_Define;
+	if ( ! check( Tok_Identifier ) ) {
+		log_failure( "Error, expected identifier after #define\n%s", parser_to_strbuilder(_ctx->parser) );
+		parser_pop(& _ctx->parser);
+		return InvalidCode;
+	}
+	_ctx->parser.Scope->Name = currtok.Text;
+	define->Name = cache_str( tok_to_str(currtok) );
+	eat( Tok_Identifier );
+	// #define <Name>
+
+	Macro* macro = lookup_macro(define->Name);
+	if (macro_is_functional(* macro)) {
+		eat( Tok_Capture_Start );
+		// #define <Name> (
+
+		// We provide the define params even if empty to make sure '()' are serialized.
+		CodeDefineParams
+		params = (CodeDefineParams) make_code();
+		params->Type = CT_Parameters_Define;
+
+		if ( left && currtok.Type != Tok_Capture_End ) {
+			params->Name = currtok.Text;
+			params->NumEntries ++;
+
+			eat( Tok_Preprocess_Define_Param );
+			// #define <Name> ( <param>
+		}
+		
+		while( left && currtok.Type != Tok_Capture_End ) {
+			eat( Tok_Comma );
+			// #define <Name> ( <param>, 
+
+			CodeDefineParams next_param = (CodeDefineParams) make_code();
+			next_param->Type = CT_Parameters_Define;
+			next_param->Name = currtok.Text;
+			define_params_append(params, next_param);
+
+			// #define  <Name> (  <param>, <next_param> ...
+			eat( Tok_Preprocess_Define_Param );
+		}
+
+		eat( Tok_Capture_End );
+		// #define <Name> ( <params> )
+
+		define->Params = params;
+	}
+
+	if ( ! check( Tok_Preprocess_Content ))
+	{
+		log_failure( "Error, expected content after #define %s\n%s", define->Name, parser_to_strbuilder(_ctx->parser) );
+		parser_pop(& _ctx->parser);
+		return InvalidCode;
+	}
+
+	if ( currtok.Text.Len == 0 )
+	{
+		define->Body = untyped_str( txt("\n") );
+		eat( Tok_Preprocess_Content );
+		// #define <Name> ( <params> ) <Content>
+
+		parser_pop(& _ctx->parser);
+		return define;
+	}
+
+	define->Body = untyped_str( strbuilder_to_str( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
+	eat( Tok_Preprocess_Content );
+	// #define <Name> ( <params> ) <Content>
+
+	parser_pop(& _ctx->parser);
+	return define;
 }
 
 internal
@@ -4960,7 +4964,7 @@ CodeTypedef parser_parse_typedef()
 	valid_macro |= left && currtok.Type == Tok_Preprocess_Macro_Stmt;
 	// if (currtok.Type == Tok_Preprocess_Macro_Stmt)
 	// {
-		// PreprocessMacro* macro = lookup_preprocess_macro(currtok.Text);
+		// PreprocessMacro* macro = lookup_macro(currtok.Text);
 		// valid_macro |= macro && macro_expects_body(* macro));
 	// }
 

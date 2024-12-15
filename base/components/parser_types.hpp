@@ -185,7 +185,7 @@ enum EMacroFlags : u16
 };
 typedef u16 MacroFlags;
 
-struct PreprocessorMacro
+struct Macro
 {
 	StrCached  Name;
 	MacroType  Type;
@@ -193,11 +193,13 @@ struct PreprocessorMacro
 };
 
 forceinline
-b32 macro_is_functional( PreprocessorMacro macro ) {
+b32 macro_is_functional( Macro macro ) {
 	return bitfield_is_set( b16, macro.Flags, MF_Functional );
 }
 
 forceinline
-b32 macro_expects_body( PreprocessorMacro macro ) {
+b32 macro_expects_body( Macro macro ) {
 	return bitfield_is_set( b16, macro.Flags, MF_Expects_Body );
 }
+
+typedef HashTable(Macro) MacroTable;

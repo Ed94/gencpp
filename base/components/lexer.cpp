@@ -128,8 +128,8 @@ s32 lex_preprocessor_define( LexContext* ctx )
 	b32 not_specifier = spec   == Spec_Invalid;
 	b32 not_attribute = attrib <= Tok___Attributes_Start;
 
-	PreprocessorMacro  macro            = { name.Text, MT_Expression, (MacroFlags)0 };
-	PreprocessorMacro* registered_macro = lookup_preprocess_macro(name.Text);
+	Macro  macro            = { name.Text, MT_Expression, (MacroFlags)0 };
+	Macro* registered_macro = lookup_macro(name.Text);
 
 	if ( registered_macro == nullptr && not_specifier && not_attribute ) {
 		log_fmt("Warning: '%S' was not registered before the lexer processed its #define directive, it will be registered as a expression macro\n"
@@ -256,7 +256,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 	}
 
 	if ( registered_macro == nullptr ) {
-		register_preprocess_macro(macro);
+		register_macro(macro);
 	}
 
 	// Define's content handled by lex_preprocessor_directive (the original caller of this)
@@ -525,7 +525,7 @@ void lex_found_token( LexContext* ctx )
 		return;
 	}
 
-	PreprocessorMacro* macro = lookup_preprocess_macro( ctx->token.Text );
+	Macro* macro = lookup_macro( ctx->token.Text );
 	b32 has_args          = ctx->left && (* ctx->scanner) == '(';
 	b32 resolved_to_macro = false;
 	if (macro) {

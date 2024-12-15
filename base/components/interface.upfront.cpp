@@ -578,8 +578,8 @@ CodeDefine def_define( Str name, MacroType type, Opts_def_define p )
 
 	b32  register_define = ! p.dont_register_to_preprocess_macros;
 	if ( register_define ) {
-		PreprocessorMacro macro_entry = { result->Name, type, p.flags };
-		register_preprocess_macro(macro_entry);
+		Macro macro_entry = { result->Name, type, p.flags };
+		register_macro(macro_entry);
 	}
 	return result;
 }

@@ -9,7 +9,7 @@ global Context* _ctx;
 #pragma region Constants
 global u32 context_counter;
 
-global PreprocessorMacro enum_underlying_macro;
+global Macro enum_underlying_macro;
 
 global Code Code_Global;
 global Code Code_Invalid;

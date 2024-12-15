@@ -65,122 +65,122 @@ int gen_main()
 	Context ctx {};
 	gen::init(& ctx);
 
-	register_preprocess_macros( args(
-		(PreprocessorMacro { txt("bit"),                          MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("bitfield_is_set"),              MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("GEN_C_LIKE_CPP"),               MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("cast"),                         MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("ccast"),                        MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("rcast"),                        MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("pcast"),                        MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("scast"),                        MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("stringize_va"),                 MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("stringize"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("do_once"),                      MT_Expression, MF_Functional }), 
-		(PreprocessorMacro { txt("do_once_defer"),                MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("do_once_start"),                MT_Statement,  MF_Null       }), 
-		(PreprocessorMacro { txt("do_once_end"),                  MT_Statement,  MF_Null       }), 
-		(PreprocessorMacro { txt("labeled_scope_start"),          MT_Statement,  MF_Null       }), 
-		(PreprocessorMacro { txt("labeled_scope_end"),            MT_Statement,  MF_Null       }), 
-		(PreprocessorMacro { txt("compiler_decorated_func_name"), MT_Expression, MF_Null       }), 
-		(PreprocessorMacro { txt("num_args_impl"),                MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("num_args"),                     MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("count_of"),                     MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("clamp"),                        MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("is_between"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("size_of"),                      MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("min"),                          MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("max"),                          MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("offset_of"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("static_assert"),                MT_Statement,  MF_Functional }),
-		(PreprocessorMacro { txt("typeof"),                       MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("GEN_API_C_BEGIN"),              MT_Statement,  MF_Null       }),
-		(PreprocessorMacro { txt("GEN_API_C_END"),                MT_Statement,  MF_Null       }),
-		(PreprocessorMacro { txt("nullptr"),                      MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("GEN_REMOVE_PTR"),               MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("GEN_PARAM_DEFAULT"),            MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("struct_init"),                  MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"),  MT_Statement,  MF_Null       }),
-		(PreprocessorMacro { txt("GEN_OPITMIZE_MAPPINGS_END"),    MT_Statement,  MF_Null       }),
-		(PreprocessorMacro { txt("Array"),                        MT_Typename,   MF_Functional }),
-		(PreprocessorMacro { txt("HashTable"),                    MT_Typename,   MF_Functional }),
-		(PreprocessorMacro { txt("Using_Code"),                   MT_Statement,  MF_Functional }),
-		(PreprocessorMacro { txt("Using_CodeOps"),                MT_Statement,  MF_Functional }),
-		(PreprocessorMacro { txt("kilobytes"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("megabytes"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("gigabytes"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("terabytes"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("GEN__ONES"),                    MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("GEN__HIGHS"),                   MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("GEN__HAS_ZERO"),                MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("zero_item"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("zero_array"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("GEN_DEFAULT_MEMORY_ALIGNMENT"), MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("GEN_DEFAULT_ALLOCATOR_FLAGS"),  MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("alloc_item"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("alloc_array"),                  MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("malloc"),                       MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("mfree"),                        MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("GEN_PRINTF_MAXLEN"),            MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("cast_to_str"),                  MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("current"),                      MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("txt"),                          MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("GEN_FILE_OPEN_PROC"),           MT_Statement,  MF_Functional | MF_Expects_Body }),
-		(PreprocessorMacro { txt("GEN_FILE_READ_AT_PROC"),        MT_Statement,  MF_Functional | MF_Expects_Body }),
-		(PreprocessorMacro { txt("GEN_FILE_WRITE_AT_PROC"),       MT_Statement,  MF_Functional | MF_Expects_Body }),
-		(PreprocessorMacro { txt("GEN_FILE_SEEK_PROC"),           MT_Statement,  MF_Functional | MF_Expects_Body }),
-		(PreprocessorMacro { txt("GEN_FILE_CLOSE_PROC"),          MT_Statement,  MF_Functional | MF_Expects_Body }),
-		(PreprocessorMacro { txt("log_failure"),                  MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("operator"),                     MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("InvalidCode"),                  MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("NullCode"),                     MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("Verify_POD"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("gen_main"),                     MT_Statement,  MF_Null       })
+	register_macros( args(
+		(Macro { txt("bit"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("bitfield_is_set"),              MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_C_LIKE_CPP"),               MT_Expression, MF_Null       }),
+		(Macro { txt("cast"),                         MT_Expression, MF_Functional }),
+		(Macro { txt("ccast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("rcast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("pcast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("scast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("stringize_va"),                 MT_Expression, MF_Functional }),
+		(Macro { txt("stringize"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("do_once"),                      MT_Expression, MF_Functional }), 
+		(Macro { txt("do_once_defer"),                MT_Expression, MF_Functional }),
+		(Macro { txt("do_once_start"),                MT_Statement,  MF_Null       }), 
+		(Macro { txt("do_once_end"),                  MT_Statement,  MF_Null       }), 
+		(Macro { txt("labeled_scope_start"),          MT_Statement,  MF_Null       }), 
+		(Macro { txt("labeled_scope_end"),            MT_Statement,  MF_Null       }), 
+		(Macro { txt("compiler_decorated_func_name"), MT_Expression, MF_Null       }), 
+		(Macro { txt("num_args_impl"),                MT_Expression, MF_Functional }),
+		(Macro { txt("num_args"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("count_of"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("clamp"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("is_between"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("size_of"),                      MT_Expression, MF_Functional }),
+		(Macro { txt("min"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("max"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("offset_of"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("static_assert"),                MT_Statement,  MF_Functional }),
+		(Macro { txt("typeof"),                       MT_Expression, MF_Null       }),
+		(Macro { txt("GEN_API_C_BEGIN"),              MT_Statement,  MF_Null       }),
+		(Macro { txt("GEN_API_C_END"),                MT_Statement,  MF_Null       }),
+		(Macro { txt("nullptr"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("GEN_REMOVE_PTR"),               MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_PARAM_DEFAULT"),            MT_Expression, MF_Null       }),
+		(Macro { txt("struct_init"),                  MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"),  MT_Statement,  MF_Null       }),
+		(Macro { txt("GEN_OPITMIZE_MAPPINGS_END"),    MT_Statement,  MF_Null       }),
+		(Macro { txt("Array"),                        MT_Typename,   MF_Functional }),
+		(Macro { txt("HashTable"),                    MT_Typename,   MF_Functional }),
+		(Macro { txt("Using_Code"),                   MT_Statement,  MF_Functional }),
+		(Macro { txt("Using_CodeOps"),                MT_Statement,  MF_Functional }),
+		(Macro { txt("kilobytes"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("megabytes"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("gigabytes"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("terabytes"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("GEN__ONES"),                    MT_Expression, MF_Null       }),
+		(Macro { txt("GEN__HIGHS"),                   MT_Expression, MF_Null       }),
+		(Macro { txt("GEN__HAS_ZERO"),                MT_Expression, MF_Functional }),
+		(Macro { txt("zero_item"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("zero_array"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_DEFAULT_MEMORY_ALIGNMENT"), MT_Expression, MF_Null       }),
+		(Macro { txt("GEN_DEFAULT_ALLOCATOR_FLAGS"),  MT_Expression, MF_Null       }),
+		(Macro { txt("alloc_item"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("alloc_array"),                  MT_Expression, MF_Functional }),
+		(Macro { txt("malloc"),                       MT_Expression, MF_Functional }),
+		(Macro { txt("mfree"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_PRINTF_MAXLEN"),            MT_Expression, MF_Null       }),
+		(Macro { txt("cast_to_str"),                  MT_Expression, MF_Functional }),
+		(Macro { txt("current"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("txt"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_FILE_OPEN_PROC"),           MT_Statement,  MF_Functional | MF_Expects_Body }),
+		(Macro { txt("GEN_FILE_READ_AT_PROC"),        MT_Statement,  MF_Functional | MF_Expects_Body }),
+		(Macro { txt("GEN_FILE_WRITE_AT_PROC"),       MT_Statement,  MF_Functional | MF_Expects_Body }),
+		(Macro { txt("GEN_FILE_SEEK_PROC"),           MT_Statement,  MF_Functional | MF_Expects_Body }),
+		(Macro { txt("GEN_FILE_CLOSE_PROC"),          MT_Statement,  MF_Functional | MF_Expects_Body }),
+		(Macro { txt("log_failure"),                  MT_Expression, MF_Null       }),
+		(Macro { txt("operator"),                     MT_Expression, MF_Null       }),
+		(Macro { txt("InvalidCode"),                  MT_Expression, MF_Null       }),
+		(Macro { txt("NullCode"),                     MT_Expression, MF_Null       }),
+		(Macro { txt("Verify_POD"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("gen_main"),                     MT_Statement,  MF_Null       })
 	));
-	register_preprocess_macros( args(
-		(PreprocessorMacro { txt("name"),                         MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("code"),                         MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("args"),                         MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("code_str"),                     MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("code_fmt"),                     MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("parse_fmt"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("token_fmt"),                    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check_member_val"),             MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check_member_str"),             MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check_member_content"),         MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check_member_ast"),             MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check_params"),                 MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check_param_eq_ret"),           MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("specs"),                        MT_Expression, MF_Functional | MF_Allow_As_Identifier }),
-		(PreprocessorMacro { txt("name_check"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("null_check"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("def_body_start"),               MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("def_body_code_array_start"),    MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("move_forward"),                 MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("skip_whitespace"),              MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("end_line"),                     MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check_parse_args"),             MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("currtok_noskip"),               MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("currtok"),                      MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("peektok"),                      MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("prevtok"),                      MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("nexttok"),                      MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("nexttok_noskip"),               MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("eat"),                          MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("left"),                         MT_Expression, MF_Null       | MF_Allow_As_Identifier }),
-		(PreprocessorMacro { txt("def_assign"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("CHECK_WAS_DEFINED"),            MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("check_noskip"),                 MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("check"),                        MT_Expression, MF_Functional | MF_Allow_As_Identifier }),
-		(PreprocessorMacro { txt("push_scope"),                   MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("cut_length"),                   MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("cut_ptr"),                      MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("pos"),                          MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("move_fwd"),                     MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("Entry"),                        MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("CheckEndParams"),               MT_Expression, MF_Functional }),
-		(PreprocessorMacro { txt("UseTemplateCapture"),           MT_Expression, MF_Null       }),
-		(PreprocessorMacro { txt("check_current"),                MT_Expression, MF_Functional })
+	register_macros( args(
+		(Macro { txt("name"),                         MT_Expression, MF_Functional }),
+		(Macro { txt("code"),                         MT_Expression, MF_Functional }),
+		(Macro { txt("args"),                         MT_Expression, MF_Functional }),
+		(Macro { txt("code_str"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("code_fmt"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("parse_fmt"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("token_fmt"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("check_member_val"),             MT_Expression, MF_Functional }),
+		(Macro { txt("check_member_str"),             MT_Expression, MF_Functional }),
+		(Macro { txt("check_member_content"),         MT_Expression, MF_Functional }),
+		(Macro { txt("check_member_ast"),             MT_Expression, MF_Functional }),
+		(Macro { txt("check_params"),                 MT_Expression, MF_Functional }),
+		(Macro { txt("check_param_eq_ret"),           MT_Expression, MF_Functional }),
+		(Macro { txt("specs"),                        MT_Expression, MF_Functional | MF_Allow_As_Identifier }),
+		(Macro { txt("name_check"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("null_check"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("def_body_start"),               MT_Expression, MF_Functional }),
+		(Macro { txt("def_body_code_array_start"),    MT_Expression, MF_Functional }),
+		(Macro { txt("move_forward"),                 MT_Expression, MF_Functional }),
+		(Macro { txt("skip_whitespace"),              MT_Expression, MF_Functional }),
+		(Macro { txt("end_line"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("check_parse_args"),             MT_Expression, MF_Functional }),
+		(Macro { txt("currtok_noskip"),               MT_Expression, MF_Null       }),
+		(Macro { txt("currtok"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("peektok"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("prevtok"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("nexttok"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("nexttok_noskip"),               MT_Expression, MF_Null       }),
+		(Macro { txt("eat"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("left"),                         MT_Expression, MF_Null       | MF_Allow_As_Identifier }),
+		(Macro { txt("def_assign"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("CHECK_WAS_DEFINED"),            MT_Expression, MF_Null       }),
+		(Macro { txt("check_noskip"),                 MT_Expression, MF_Functional }),
+		(Macro { txt("check"),                        MT_Expression, MF_Functional | MF_Allow_As_Identifier }),
+		(Macro { txt("push_scope"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("cut_length"),                   MT_Expression, MF_Null       }),
+		(Macro { txt("cut_ptr"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("pos"),                          MT_Expression, MF_Null       }),
+		(Macro { txt("move_fwd"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("Entry"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("CheckEndParams"),               MT_Expression, MF_Functional }),
+		(Macro { txt("UseTemplateCapture"),           MT_Expression, MF_Null       }),
+		(Macro { txt("check_current"),                MT_Expression, MF_Functional })
 	));
 
 	Code push_ignores           = scan_file( path_base "helpers/push_ignores.inline.hpp" );
@@ -243,7 +243,7 @@ int gen_main()
 			CodeTemplate tmpl = cast(CodeTemplate, entry);
 			if ( tmpl->Declaration->Name.contains(txt("swap")))
 			{
-				register_preprocess_macro({ txt("swap"), MT_Expression, MF_Functional });
+				register_macro({ txt("swap"), MT_Expression, MF_Functional });
 				CodeDefine macro_swap = parse_define( txt(R"(
 #define swap( a, b )        \
 do                          \
@@ -1113,8 +1113,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody array_arena = gen_array(txt("gen_Arena"), txt("Array_gen_Arena"));
-	CodeBody array_pool  = gen_array(txt("gen_Pool"),  txt("Array_gen_Pool"));
+	CodeBody array_arena           = gen_array(txt("gen_Arena"), txt("Array_gen_Arena"));
+	CodeBody array_pool            = gen_array(txt("gen_Pool"),  txt("Array_gen_Pool"));
+	CodeBody ht_preprocessor_macro = gen_hashtable(txt("gen_Macro"), txt("MacroTable"));
 
 	CodeBody parsed_interface = parse_file( path_base "components/interface.hpp" );
 	CodeBody interface        = def_body(CT_Global_Body);
@@ -1354,10 +1355,36 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code src_static_data 	      = scan_file( path_base "components/static_data.cpp" );
 	Code src_ast_case_macros    = scan_file( path_base "components/ast_case_macros.cpp" );
 	Code src_code_serialization = scan_file( path_base "components/code_serialization.cpp" );
-	Code src_interface          = scan_file( path_base "components/interface.cpp" );
+
 	Code src_parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
 	Code src_untyped            = scan_file( path_base "components/interface.untyped.cpp" );
 	Code src_parser_case_macros = scan_file( path_base "components/parser_case_macros.cpp" );
+
+	CodeBody parsed_src_interface = parse_file( path_base "components/interface.cpp" );
+	CodeBody src_interface        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_src_interface.begin(); entry != parsed_src_interface.end(); ++ entry ) switch( entry ->Type )
+	{
+		case CT_Function:
+		{
+			CodeFn fn = cast(CodeFn, entry);
+			Code prev = entry->Prev;
+			for ( CodeParams arr_param : fn->Params )
+			{
+				b32 repeat_register_macros = fn->Name.is_equal(txt("register_macros")) && arr_param->Name.is_equal(txt("num")) && ! arr_param->Next->Name.is_equal(txt("..."));
+				if ( repeat_register_macros ) {
+					// rename second definition so there isn't a symbol conflict
+					StrBuilder postfix_arr = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%S_arr", fn->Name);
+					fn->Name = cache_str(postfix_arr.to_str());
+				}
+			}
+			src_interface.append(fn);
+		}
+		break;
+
+		default:
+			src_interface.append(entry);
+		break;
+	}
 
 	CodeBody parsed_src_ast = parse_file( path_base "components/ast.cpp" );
 	CodeBody src_ast        = def_body(CT_Global_Body);
@@ -1418,26 +1445,22 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			Code prev = entry->Prev;
 
 			for ( CodeParams arr_param : fn->Params )
-				if (	fn->Name.starts_with(txt("def_"))
-					&&	(		(arr_param->ValueType->Name.starts_with(txt("Specifier")) && fn->Params->NumEntries > 1)
-							||	arr_param->ValueType->Name.starts_with(txt("Code")) )
-				)
-				{
+			{
+				b32 repeat_def_array = fn->Name.starts_with(txt("def_"))         && arr_param->Name.is_equal(txt("num")) && ! arr_param->Next->Name.is_equal(txt("..."));
+				if ( repeat_def_array ) {
 					// rename second definition so there isn't a symbol conflict
 					StrBuilder postfix_arr = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%S_arr", fn->Name);
 					fn->Name = cache_str(postfix_arr.to_str());
-					postfix_arr.free();
 				}
-
+			}
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
+				// The frontend names are warapped in macros so we need to give it the intenral symbol name
 				Str prefix      = txt("def_");
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
 				Str new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "def__%S", actual_name ).to_str();
-
 				fn->Name = cache_str(new_name);
 			}
-
 			src_upfront.append(fn);
 		}
 		break;
@@ -1588,10 +1611,11 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code rf_interface = refactor_and_format(interface);
 	Code rf_inlines   = refactor_and_format(inlines);
 
-	Code rf_array_string_cached = refactor_and_format(array_string_cached);
-	Code rf_header_end          = refactor_and_format(header_end);
-	Code rf_header_builder      = refactor_and_format(header_builder);
-	Code rf_header_scanner      = refactor_and_format( scan_file( path_base "auxillary/scanner.hpp" ));
+	Code rf_ht_preprocessor_macro = refactor_and_format(ht_preprocessor_macro);
+	Code rf_array_string_cached   = refactor_and_format(array_string_cached);
+	Code rf_header_end            = refactor_and_format(header_end);
+	Code rf_header_builder        = refactor_and_format(header_builder);
+	Code rf_header_scanner        = refactor_and_format( scan_file( path_base "auxillary/scanner.hpp" ));
 
 	Code r_src_dep_start  = refactor(src_dep_start);
 	Code r_src_debug      = refactor(src_debug);
@@ -1613,7 +1637,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code r_src_code_serialization = refactor(src_code_serialization);
 	Code r_src_parser_case_macros = refactor(src_parser_case_macros);
 
-	Code r_src_interface        = refactor(src_interface);
+	Code r_src_interface        = refactor_and_format(src_interface);
 	Code r_src_upfront          = refactor_and_format(src_upfront);
 	Code r_src_lexer            = refactor_and_format(src_lexer);
 	Code rf_array_code_typename = refactor_and_format(array_code_typename);
@@ -1696,6 +1720,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_array_pool);
 		header.print( fmt_newline);
 		header.print( rf_array_string_cached );
+		header.print( fmt_newline);
+		header.print( rf_ht_preprocessor_macro );
 
 		header.print( rf_interface );
 		header.print(fmt_newline);

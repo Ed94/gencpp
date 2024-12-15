@@ -310,6 +310,14 @@ word spec_to_str,      gen_spec_to_str
 word spec_is_trailing, gen_spec_is_trailing
 // word str_to_specifier, gen_str_to_specifier
 
+word MacroType,   gen_MacroType
+word EMacroFlags, gen_EMacroFlags
+word MacroFlags,  gen_MacroFlags
+word Macro,       gen_Macro
+
+namespace macro_,    gen_macro_
+namespace macrotype, gen_macrotype_
+
 // AST
 
 word AST, gen_AST

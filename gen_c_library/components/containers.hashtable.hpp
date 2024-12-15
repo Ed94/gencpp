@@ -19,7 +19,7 @@ CodeBody gen_hashtable_base()
 	));
 
 	Code define_type = untyped_str(txt(
-R"(#define HashTable(_type) struct _type
+R"(#define HashTable(_type) struct gen_HashTable_##_type
 )"
 	));
 
