@@ -336,6 +336,7 @@ CodeBody parse_file( Str path );
 
 GEN_API CodeClass       parse_class        ( Str class_def       );
 GEN_API CodeConstructor parse_constructor  ( Str constructor_def );
+GEN_API CodeDefine      parse_define       ( Str define_def      );
 GEN_API CodeDestructor  parse_destructor   ( Str destructor_def  );
 GEN_API CodeEnum        parse_enum         ( Str enum_def        );
 GEN_API CodeBody        parse_export_body  ( Str export_def      );

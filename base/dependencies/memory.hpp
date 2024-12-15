@@ -225,7 +225,7 @@ forceinline ssize         size_remaining(Arena& arena, ssize alignment) { return
 // This id is defined by Unreal for asserts
 #pragma push_macro("check")
 #undef check
-forceinline void check(Arena& arena) { return arena_check(& arena); };
+forceinline void check(Arena& arena) { return arena_check(& arena); }
 #pragma pop_macro("check")
 #endif
 

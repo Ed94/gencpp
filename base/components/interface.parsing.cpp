@@ -82,6 +82,21 @@ CodeConstructor parse_constructor( Str def )
 	return result;
 }
 
+CodeDefine parse_define( Str def )
+{
+	check_parse_args( def );
+
+	TokArray toks = lex( def );
+	if ( toks.Arr == nullptr )
+		return InvalidCode;
+
+	_ctx->parser.Tokens = toks;
+	push_scope();
+	CodeDefine result = parser_parse_define();
+	parser_pop(& _ctx->parser);
+	return result;
+}
+
 CodeDestructor parse_destructor( Str def )
 {
 	check_parse_args( def );

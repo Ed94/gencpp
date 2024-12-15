@@ -93,7 +93,15 @@ bool lex__eat(TokArray* self, TokType type )
 		self->Idx ++;
 	}
 
-	if ( at_idx.Type != type )
+	b32 not_accepted  = at_idx.Type != type;
+	b32 is_identifier = at_idx.Type == Tok_Identifier;
+	if ( not_accepted )
+	{
+		PreprocessorMacro* macro = lookup_preprocess_macro(at_idx.Text);
+		b32 accept_as_identifier = macro && bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Identifier );
+		not_accepted             = type == Tok_Identifier && accept_as_identifier ? false : true;
+	}
+	if ( not_accepted )
 	{
 		Token tok = * lex_current( self, lex_skip_formatting );
 		log_failure( "Parse Error, TokArray::eat, Expected: ' %s ' not ' %.*s ' (%d, %d)`\n%s"
@@ -188,7 +196,7 @@ internal CodeComment        parse_comment                      ();
 internal Code               parse_complicated_definition       ( TokType which );
 internal CodeBody           parse_class_struct_body            ( TokType which, Token name );
 internal Code               parse_class_struct                 ( TokType which, bool inplace_def );
-internal CodeDefine         parse_define                       ();
+internal CodeDefine         parser_parse_define                ();
 internal Code               parse_expression                   ();
 internal Code               parse_forward_or_definition        ( TokType which, bool is_inplace );
 internal CodeFn             parse_function_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type, Token name );
@@ -902,7 +910,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				break;
 			}
 			case Tok_Preprocess_Define: {
-				member = cast(Code, parse_define());
+				member = cast(Code, parser_parse_define());
 				// #define
 				break;
 			}
@@ -1286,9 +1294,14 @@ Code parse_complicated_definition( TokType which )
 }
 
 internal inline
-CodeDefine parse_define()
+CodeDefine parser_parse_define()
 {
 	push_scope();
+	if ( check(Tok_Preprocess_Hash)) {
+		// If parse_define is called by the user the hash reach here.
+		eat(Tok_Preprocess_Hash);
+	}
+
 	eat( Tok_Preprocess_Define );
 	// #define
 
@@ -1698,7 +1711,7 @@ CodeBody parse_global_nspace( CodeType which )
 			break;
 
 			case Tok_Preprocess_Define:
-				member = cast(Code, parse_define());
+				member = cast(Code, parser_parse_define());
 				// #define ...
 			break;
 
@@ -2933,6 +2946,32 @@ Code parse_simple_preprocess( TokType which )
 	// <Macro>
 
 	PreprocessorMacro* macro = lookup_preprocess_macro( full_macro.Text );
+	if ( which != Tok_Preprocess_Unsupported && macro == nullptr ) {
+		log_failure("Expected the macro %S to be registered\n%S", full_macro,  parser_to_strbuilder(_ctx->parser));
+		return NullCode;
+	}
+
+	// TODO(Ed) : Parse this properly later (expression and statement support)
+	if ( macro && macro_is_functional(* macro) )
+	{
+		eat( Tok_Capture_Start );
+
+		s32 level = 0;
+		while ( left && ( currtok.Type != Tok_Capture_End || level > 0 ) )
+		{
+			if ( currtok.Type == Tok_Capture_Start )
+				level++;
+
+			else if ( currtok.Type == Tok_Capture_End && level > 0 )
+				level--;
+
+			eat( currtok.Type );
+		}
+		eat( Tok_Capture_End );
+		// <Macro> ( <params> )
+
+		full_macro.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)full_macro.Text.Ptr;
+	}
 
 	if ( macro && macro_expects_body(* macro) && peektok.Type == Tok_BraceCurly_Open )
 	{
@@ -3619,7 +3658,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		if ( str_contains( tok_to_str(currtok), enum_underlying_macro.Name) )
 		{
 			use_macro_underlying = true;
-			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro_Typename );
+			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
 		}
 	}
 
@@ -3660,7 +3699,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Define:
-					member = cast(Code, parse_define());
+					member = cast(Code, parser_parse_define());
 					// #define
 				break;
 
@@ -4916,22 +4955,32 @@ CodeTypedef parser_parse_typedef()
 #if GEN_PARSER_DISABLE_MACRO_TYPEDEF
 	if ( false )
 #else
-	if ( check( Tok_Preprocess_Macro_Typename ))
+	b32 valid_macro = false;
+	valid_macro |= left && currtok.Type == Tok_Preprocess_Macro_Typename;
+	valid_macro |= left && currtok.Type == Tok_Preprocess_Macro_Stmt;
+	// if (currtok.Type == Tok_Preprocess_Macro_Stmt)
+	// {
+		// PreprocessMacro* macro = lookup_preprocess_macro(currtok.Text);
+		// valid_macro |= macro && macro_expects_body(* macro));
+	// }
+
+	if ( valid_macro )
 #endif
 	{
-		type = cast(Code, t_empty);
-		name = currtok;
+		type          = cast(Code, t_empty);
+		Code macro    = parse_simple_preprocess(currtok.Type);
+		name          = currtok;
+		name.Text.Len = macro->Content.Len;
 		_ctx->parser.Scope->Name = name.Text;
-		eat( Tok_Preprocess_Macro_Typename );
 		// <ModuleFalgs> typedef <Preprocessed_Macro>
 
 		if ( currtok.Type == Tok_Identifier )
 		{
-			type = untyped_str(name.Text);
+			type = macro;
 			name = currtok;
 			eat(Tok_Identifier);
+			// <ModuleFalgs> typedef <Preprocessed_Macro> <Identifier>
 		}
-		// <ModuleFalgs> typedef <Preprocessed_Macro> <Identifier>
 	}
 	else
 	{
@@ -5178,7 +5227,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Define:
-					member = cast(Code, parse_define());
+					member = cast(Code, parser_parse_define());
 				break;
 
 				case Tok_Preprocess_If:

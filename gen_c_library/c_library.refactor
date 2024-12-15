@@ -325,6 +325,7 @@ word CodeComment,        gen_CodeComment
 word CodeClass,          gen_CodeClass
 word CodeConstructor,    gen_CodeConstructor
 word CodeDefine,         gen_CodeDefine
+word CodeDefineParams,   gen_CodeDefineParams
 word CodeDestructor,     gen_CodeDestructor
 word CodeEnum,           gen_CodeEnum
 word CodeExec,           gen_CodeExec

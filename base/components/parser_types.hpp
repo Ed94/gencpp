@@ -129,8 +129,8 @@ struct ParseContext
 
 enum MacroType : u16
 {
-	MT_Statement,      // A macro is assumed to be a statement if not resolved.
-	MT_Expression,
+	MT_Expression,     // A macro is assumed to be a expression if not resolved.
+	MT_Statement,      
 	MT_Typename,
 	MT_Attribute,      // More of a note to the parser than anythign else (attributes should be defined in the user attribues def).
 	MT_Specifier,      // More of a note to the parser than anythign else (specifiers should be defined in the user attribues def).
@@ -175,8 +175,10 @@ Str macrotype_to_str( MacroType type )
 
 enum EMacroFlags : u16
 {
-	MF_Functional     = bit(0), // Macro has parameters (args expected to be passed)
-	MF_Expects_Body   = bit(1), // Expects to assign a braced scope to its body.
+	MF_Functional          = bit(0), // Macro has parameters (args expected to be passed)
+	MF_Expects_Body        = bit(1), // Expects to assign a braced scope to its body.
+	MF_Allow_As_Identifier = bit(2), // lex__eat wil treat this macro as an identifier if the parser attempts to consume it as one.
+                                     //  ^^^ This is a sort of kludge because we don't support push/pop macro programs rn. ^^^
 
 	MF_Null           = 0,
 	MF_UnderlyingType = GEN_U16_MAX,

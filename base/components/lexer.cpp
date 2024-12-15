@@ -123,19 +123,19 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		name.Text.Len++;
 	}
 
-	Specifier spec   = str_to_specifier( name.Text );
-	TokType   attrib = str_to_toktype( name.Text );
+	Specifier spec    = str_to_specifier( name.Text );
+	TokType   attrib  = str_to_toktype( name.Text );
 	b32 not_specifier = spec   == Spec_Invalid;
 	b32 not_attribute = attrib <= Tok___Attributes_Start;
 
-	PreprocessorMacro  macro            = { name.Text, MT_Statement, (MacroFlags)0 };
+	PreprocessorMacro  macro            = { name.Text, MT_Expression, (MacroFlags)0 };
 	PreprocessorMacro* registered_macro = lookup_preprocess_macro(name.Text);
 
 	if ( registered_macro == nullptr && not_specifier && not_attribute ) {
-		log_fmt("Warning: '%S' was not registered before the lexer processed its #define directive, it will be registered as a statement macro\n"
+		log_fmt("Warning: '%S' was not registered before the lexer processed its #define directive, it will be registered as a expression macro\n"
 			, name.Text 
 		);
-		GEN_DEBUG_TRAP();
+		// GEN_DEBUG_TRAP();
 	}
 	array_append( _ctx->Lexer_Tokens, name );
 
@@ -145,7 +145,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 			log_fmt("Warning: %S registered macro is not flagged as functional yet the definition detects opening parenthesis '(' for arguments\n"
 				, name.Text
 			);
-			GEN_DEBUG_TRAP();
+			// GEN_DEBUG_TRAP();
 		}
 		else {
 			macro.Flags |= MF_Functional;
@@ -526,35 +526,41 @@ void lex_found_token( LexContext* ctx )
 	}
 
 	PreprocessorMacro* macro = lookup_preprocess_macro( ctx->token.Text );
-	if ( macro )
+	b32 has_args          = ctx->left && (* ctx->scanner) == '(';
+	b32 resolved_to_macro = false;
+	if (macro) {
+		ctx->token.Type   = macrotype_to_toktype(macro->Type);
+		b32 is_functional = macro_is_functional(* macro);
+		resolved_to_macro = has_args ? is_functional : ! is_functional;
+	}
+	if ( resolved_to_macro )
 	{
-		ctx->token.Type = macrotype_to_toktype(macro->Type);
-
 		// TODO(Ed): When we introduce a macro AST (and expression support), we'll properly lex this section.
 		// Want to ignore any arguments the define may have as they can be execution expressions.
-		if ( ctx->left && (* ctx->scanner) == '(' )
+		if ( has_args )
 		{
 			ctx->token.Flags |= TF_Macro_Functional;
 
-			move_forward();
-			ctx->token.Text.Len++;
+			// move_forward();
+			// ctx->token.Text.Len++;
 
-			s32 level = 0;
-			while ( ctx->left && ((* ctx->scanner) != ')' || level > 0) )
-			{
-				if ( (* ctx->scanner) == '(' )
-					level++;
+			// s32 level = 0;
+			// while ( ctx->left && ((* ctx->scanner) != ')' || level > 0) )
+			// {
+			// 	if ( (* ctx->scanner) == '(' )
+			// 		level++;
 
-				else if ( (* ctx->scanner) == ')' && level > 0 )
-					level--;
+			// 	else if ( (* ctx->scanner) == ')' && level > 0 )
+			// 		level--;
 
-				move_forward();
-				ctx->token.Text.Len++;
-			}
+			// 	move_forward();
+			// 	ctx->token.Text.Len++;
+			// }
 
-			move_forward();
-			ctx->token.Text.Len++;
+			// move_forward();
+			// ctx->token.Text.Len++;
 		}
+
 		//if ( (* ctx->scanner) == '\r' && ctx->scanner[1] == '\n' )
 		//{
 		//	move_forward();
@@ -1277,7 +1283,7 @@ TokArray lex( Str content )
 		{
 			lex_found_token( ctx );
 			TokType last_type = array_back(_ctx->Lexer_Tokens)->Type;
-			if ( last_type == Tok_Preprocess_Macro_Stmt )
+			if ( last_type == Tok_Preprocess_Macro_Stmt || last_type == Tok_Preprocess_Macro_Expr )
 			{
 				Token thanks_c = { { c.scanner, 0 }, Tok_Invalid, c.line, c.column, TF_Null };
 				c.token = thanks_c;
