@@ -427,30 +427,24 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 forceinline
 void lex_found_token( LexContext* ctx )
 {
-	if ( ctx->token.Type != Tok_Invalid )
-	{
+	if ( ctx->token.Type != Tok_Invalid ) {
 		array_append( _ctx->Lexer_Tokens, ctx->token );
 		return;
 	}
 
 	TokType type = str_to_toktype( tok_to_str(ctx->token) );
 
-	if (type <= Tok_Access_Public && type >= Tok_Access_Private )
-	{
+	if (type <= Tok_Access_Public && type >= Tok_Access_Private ) {
 		ctx->token.Flags |= TF_AccessSpecifier;
 	}
-
-	if ( type > Tok___Attributes_Start )
-	{
+	if ( type > Tok___Attributes_Start ) {
 		ctx->token.Flags |= TF_Attribute;
 	}
-
 	if ( type == Tok_Decl_Extern_Linkage )
 	{
 		skip_whitespace();
 
-		if ( (* ctx->scanner) != '"' )
-		{
+		if ( (* ctx->scanner) != '"' ) {
 			type         = Tok_Spec_Extern;
 			ctx->token.Flags |= TF_Specifier;
 		}
@@ -459,7 +453,6 @@ void lex_found_token( LexContext* ctx )
 		array_append( _ctx->Lexer_Tokens, ctx->token );
 		return;
 	}
-
 	if ( ( type <= Tok_Star && type >= Tok_Spec_Alignas)
 			|| type == Tok_Ampersand
 			|| type == Tok_Ampersand_DBL )
@@ -469,8 +462,6 @@ void lex_found_token( LexContext* ctx )
 		array_append( _ctx->Lexer_Tokens, ctx->token );
 		return;
 	}
-
-
 	if ( type != Tok_Invalid )
 	{
 		ctx->token.Type = type;
@@ -478,21 +469,17 @@ void lex_found_token( LexContext* ctx )
 		return;
 	}
 
-	u64 key = 0;
-	// if ( (* ctx->scanner) == '(')
-	// 	key = crc32( ctx->token.Text.Ptr, ctx->token.Text.Len + 1 );
-	// else
-	key = crc32( ctx->token.Text.Ptr, ctx->token.Text.Len );
-
-	Str* define = hashtable_get(_ctx->PreprocessMacros, key );
-	if ( define )
+	PreprocessorMacro* macro = lookup_preprocess_macro( ctx->token.Text );
+	if ( macro )
 	{
-		// TODO(Ed): Needs updating (Macros)
-		ctx->token.Type = Tok_Preprocess_Macro;
+		ctx->token.Type = macrotype_to_toktype(macro->Type);
 
+		// TODO(Ed): When we introduce a macro AST (and expression support), we'll properly lex this section.
 		// Want to ignore any arguments the define may have as they can be execution expressions.
 		if ( ctx->left && (* ctx->scanner) == '(' )
 		{
+			ctx->token.Flags |= TF_Macro_Functional;
+
 			move_forward();
 			ctx->token.Text.Len++;
 
@@ -512,7 +499,6 @@ void lex_found_token( LexContext* ctx )
 			move_forward();
 			ctx->token.Text.Len++;
 		}
-
 		//if ( (* ctx->scanner) == '\r' && ctx->scanner[1] == '\n' )
 		//{
 		//	move_forward();
@@ -1002,7 +988,7 @@ TokArray lex( Str content )
 				goto FoundToken;
 			}
 
-			// Dash is unfortunatlly a bit more complicated...
+			// Dash is unfortunately a bit more complicated...
 			case '-':
 			{
 				Str text = { c.scanner, 1 };
@@ -1139,8 +1125,7 @@ TokArray lex( Str content )
 			c.token.Text = text;
 			move_forward();
 
-			while ( c.left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) )
-			{
+			while ( c.left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) ) {
 				move_forward();
 				c.token.Text.Len++;
 			}
@@ -1166,8 +1151,7 @@ TokArray lex( Str content )
 				move_forward();
 				c.token.Text.Len++;
 
-				while ( c.left && char_is_hex_digit((* ctx->scanner)) )
-				{
+				while ( c.left && char_is_hex_digit((* ctx->scanner)) ) {
 					move_forward();
 					c.token.Text.Len++;
 				}
@@ -1175,8 +1159,7 @@ TokArray lex( Str content )
 				goto FoundToken;
 			}
 
-			while ( c.left && char_is_digit((* ctx->scanner)) )
-			{
+			while ( c.left && char_is_digit((* ctx->scanner)) ) {
 				move_forward();
 				c.token.Text.Len++;
 			}
@@ -1186,8 +1169,7 @@ TokArray lex( Str content )
 				move_forward();
 				c.token.Text.Len++;
 
-				while ( c.left && char_is_digit((* ctx->scanner)) )
-				{
+				while ( c.left && char_is_digit((* ctx->scanner)) ) {
 					move_forward();
 					c.token.Text.Len++;
 				}
@@ -1205,8 +1187,7 @@ TokArray lex( Str content )
 					c.token.Text.Len++;
 
 					// Handle 'll'/'LL' as a special case when we just processed an 'l'/'L'
-					if (c.left && (prev == 'l' || prev == 'L') && ((* ctx->scanner) == 'l' || (* ctx->scanner) == 'L'))
-					{
+					if (c.left && (prev == 'l' || prev == 'L') && ((* ctx->scanner) == 'l' || (* ctx->scanner) == 'L')) {
 						move_forward();
 						c.token.Text.Len++;
 					}
@@ -1232,8 +1213,7 @@ TokArray lex( Str content )
 			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 
 			// Skip to next whitespace since we can't know if anything else is valid until then.
-			while ( c.left && ! char_is_space( (* ctx->scanner) ) )
-			{
+			while ( c.left && ! char_is_space( (* ctx->scanner) ) ) {
 				move_forward();
 			}
 		}
@@ -1242,18 +1222,15 @@ TokArray lex( Str content )
 		{
 			lex_found_token( ctx );
 			TokType last_type = array_back(_ctx->Lexer_Tokens)->Type;
-			// TODO(Ed): Change this to just detect if its a MACRO THAT SHOULD ACCEPT NEWLINES
-			if ( last_type == Tok_Preprocess_Macro )
+			if ( last_type == Tok_Preprocess_Macro_Stmt )
 			{
 				Token thanks_c = { { c.scanner, 0 }, Tok_Invalid, c.line, c.column, TF_Null };
 				c.token = thanks_c;
-				if ( (* ctx->scanner) == '\r')
-				{
+				if ( (* ctx->scanner) == '\r') {
 					move_forward();
 					c.token.Text.Len = 1;
 				}
-
-				if ( (* ctx->scanner) == '\n' )
+				if ( (* ctx->scanner) == '\n' ) 
 				{
 					c.token.Type = Tok_NewLine;
 					c.token.Text.Len++;
@@ -1266,13 +1243,10 @@ TokArray lex( Str content )
 		}
 	}
 
-	if ( array_num(_ctx->Lexer_Tokens) == 0 )
-	{
+	if ( array_num(_ctx->Lexer_Tokens) == 0 ) {
 		log_failure( "Failed to lex any tokens" );
-		{
-			TokArray tok_array =  {};
-			return tok_array;
-		}
+		TokArray tok_array =  {};
+		return tok_array;
 	}
 
 	TokArray result = { _ctx->Lexer_Tokens, 0 };

@@ -138,7 +138,18 @@ enum MacroType : u16
 	MF_UnderlyingType = GEN_U16_Max,
 };
 
-Str macro_type_to_str( MacroType type )
+forceinline
+TokenType macrotype_to_toktype( MacroType type ) {
+	switch ( type ) {
+		case MT_Statement  : return Tok_Preprocess_Macro_Stmt;
+		case MT_Expression : return Tok_Preprocess_Macro_Expr;
+		case MT_Typename   : return Tok_Preprocess_Macro_Typename;
+	}
+	// All others unsupported for now.
+	return Tok_Invalid;
+}
+
+Str macrotype_to_str( MacroType type )
 {
 	local_persist
 	Str lookup[ (u32)Num_ModuleFlags ] = {
