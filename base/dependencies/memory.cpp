@@ -346,25 +346,25 @@ void* arena_allocator_proc( void* allocator_data, AllocType type, ssize size, ss
 	switch ( type )
 	{
 		case EAllocation_ALLOC :
+		{
+			void* end        = pointer_add( arena->PhysicalStart, arena->TotalUsed );
+			ssize total_size = align_forward_s64( size, alignment );
+
+			// NOTE: Out of memory
+			if ( arena->TotalUsed + total_size > (ssize) arena->TotalSize )
 			{
-				void* end        = pointer_add( arena->PhysicalStart, arena->TotalUsed );
-				ssize total_size = align_forward_s64( size, alignment );
-
-				// NOTE: Out of memory
-				if ( arena->TotalUsed + total_size > (ssize) arena->TotalSize )
-				{
-					// zpl__printf_err("%s", "Arena out of memory\n");
-					GEN_FATAL("Arena out of memory! (Possibly could not fit for the largest size Arena!!)");
-					return nullptr;
-				}
-
-				ptr              = align_forward( end, alignment );
-				arena->TotalUsed += total_size;
-
-				if ( flags & ALLOCATOR_FLAG_CLEAR_TO_ZERO )
-					zero_size( ptr, size );
+				// zpl__printf_err("%s", "Arena out of memory\n");
+				GEN_FATAL("Arena out of memory! (Possibly could not fit for the largest size Arena!!)");
 			}
-			break;
+			
+
+			ptr              = align_forward( end, alignment );
+			arena->TotalUsed += total_size;
+
+			if ( flags & ALLOCATOR_FLAG_CLEAR_TO_ZERO )
+				zero_size( ptr, size );
+		}
+		break;
 
 		case EAllocation_FREE :
 			// NOTE: Free all at once

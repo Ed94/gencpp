@@ -378,6 +378,10 @@ void deinit(Context* ctx)
 	-- context_counter;
 }
 
+Context* get_context() { 
+	return _ctx;
+}
+
 void reset(Context* ctx)
 {
 	s32 index = 0;

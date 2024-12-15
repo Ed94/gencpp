@@ -9,7 +9,7 @@
 
 enum TokFlags : u32
 {
-	TF_Operator		         = bit(0),
+	TF_Operator              = bit(0),
 	TF_Assign                = bit(1),
 	TF_Preprocess            = bit(2),
 	TF_Preprocess_Cond       = bit(3),
@@ -152,6 +152,7 @@ TokType macrotype_to_toktype( MacroType type ) {
 	return Tok_Invalid;
 }
 
+inline
 Str macrotype_to_str( MacroType type )
 {
 	local_persist
@@ -215,5 +216,10 @@ forceinline
 b32 macro_expects_body( Macro macro ) {
 	return bitfield_is_set( b16, macro.Flags, MF_Expects_Body );
 }
+
+#if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
+forceinline b32 is_functional( Macro macro ) { return bitfield_is_set( b16, macro.Flags, MF_Functional ); }
+forceinline b32 expects_body ( Macro macro ) { return bitfield_is_set( b16, macro.Flags, MF_Expects_Body ); }
+#endif
 
 typedef HashTable(Macro) MacroTable;

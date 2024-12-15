@@ -143,6 +143,7 @@ Array<Type> array_init_reserve(AllocatorInfo allocator, ssize capacity)
 	return {rcast(Type*, header + 1)};
 }
 
+forceinline
 usize array_grow_formula(ssize value) {
 	return 2 * value + 8;
 }
@@ -202,7 +203,7 @@ bool array_append_at(Array<Type>* array, Type item, usize idx)
 	ArrayHeader* header = array_get_header(* array);
 
 	ssize slot = idx;
-	if (slot >= header->Num)
+	if (slot >= (ssize)(header->Num))
 		slot = header->Num - 1;
 
 	if (slot < 0)
@@ -354,7 +355,6 @@ bool array_reserve(Array<Type>* array, usize new_capacity)
 {
 	GEN_ASSERT(  array != nullptr);
 	GEN_ASSERT(* array != nullptr);
-	GEN_ASSERT(num > 0)
 	ArrayHeader* header = array_get_header(array);
 
 	if (header->Capacity < new_capacity)
@@ -763,7 +763,7 @@ HashTableFindResult hashtable__find(HashTable<Type> table, u64 key)
 }
 
 template<typename Type> forceinline
-bool hashtable_full(HashTable<Type> table) {
+b32 hashtable_full(HashTable<Type> table) {
 	GEN_ASSERT_NOT_NULL(table.Hashes);
 	GEN_ASSERT_NOT_NULL(table.Entries);
 	usize critical_load = usize(HashTable_CriticalLoadScale * f32(array_num(table.Hashes)));

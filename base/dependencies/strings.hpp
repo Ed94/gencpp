@@ -392,6 +392,7 @@ bool strbuilder_append_string(StrBuilder* str, StrBuilder const other) {
 	return strbuilder_append_c_str_len(str, (char const*)other, strbuilder_length(other));
 }
 
+inline
 bool strbuilder_append_fmt(StrBuilder* str, char const* fmt, ...) {
 	GEN_ASSERT(str != nullptr);
 	ssize res;

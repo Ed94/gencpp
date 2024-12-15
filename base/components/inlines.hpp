@@ -262,9 +262,9 @@ forceinline void             define_params_append     (CodeDefineParams appendee
 forceinline CodeDefineParams define_params_get        (CodeDefineParams self, s32 idx )                    { return (CodeDefineParams) (Code) params_get( cast(CodeParams, self), idx); }
 forceinline bool             define_params_has_entries(CodeDefineParams self)                              { return params_has_entries( cast(CodeParams, self)); }
 
-CodeDefineParams begin_CodeDefineParams(CodeDefineParams params)                              { return (CodeDefineParams) (Code) begin_CodeParams( cast(CodeParams, (Code)params)); }
-CodeDefineParams end_CodeDefineParams  (CodeDefineParams params)                              { return (CodeDefineParams) (Code) end_CodeParams  ( cast(CodeParams, (Code)params)); }
-CodeDefineParams next_CodeDefineParams (CodeDefineParams params, CodeDefineParams entry_iter) { return (CodeDefineParams) (Code) next_CodeParams ( cast(CodeParams, (Code)params), cast(CodeParams, (Code)entry_iter)); }
+forceinline CodeDefineParams begin_CodeDefineParams(CodeDefineParams params)                              { return (CodeDefineParams) (Code) begin_CodeParams( cast(CodeParams, (Code)params)); }
+forceinline CodeDefineParams end_CodeDefineParams  (CodeDefineParams params)                              { return (CodeDefineParams) (Code) end_CodeParams  ( cast(CodeParams, (Code)params)); }
+forceinline CodeDefineParams next_CodeDefineParams (CodeDefineParams params, CodeDefineParams entry_iter) { return (CodeDefineParams) (Code) next_CodeParams ( cast(CodeParams, (Code)params), cast(CodeParams, (Code)entry_iter)); }
 
 #if GEN_COMPILER_CPP
 forceinline

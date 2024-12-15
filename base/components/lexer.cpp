@@ -155,7 +155,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		array_append( _ctx->Lexer_Tokens, opening_paren );
 		move_forward();
 
-		Token last_parameter;
+		Token last_parameter = {};
 		// We need to tokenize the define's arguments now:
 		while( ctx->left && * ctx->scanner != ')')
 		{

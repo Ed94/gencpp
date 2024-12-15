@@ -100,6 +100,9 @@ GEN_API void init(Context* ctx);
 // However on Windows at least, it doesn't need to occur as the OS will clean up after the process.
 GEN_API void deinit(Context* ctx);
 
+// Retrieves the active context (not usually needed, but here in case...)
+GEN_API Context* get_context();
+
 // Clears the allocations, but doesn't free the memoery, then calls init() again.
 // Ease of use.
 GEN_API void reset(Context* ctx);

@@ -147,6 +147,7 @@ int gen_main()
 		Code strings      = scan_file( path_base "dependencies/strings.hpp" );
 		Code filesystem   = scan_file( path_base "dependencies/filesystem.hpp" );
 		Code timing       = scan_file( path_base "dependencies/timing.hpp" );
+		Code parsing      = scan_file( path_base "dependencies/parsing.hpp" );
 
 		Builder
 		header = Builder::open("gen/gen.dep.hpp");
@@ -168,6 +169,7 @@ int gen_main()
 		header.print( strings );
 		header.print( filesystem );
 		header.print( timing );
+		header.print(parsing);
 
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
@@ -186,6 +188,7 @@ int gen_main()
 		Code strings    = scan_file( path_base "dependencies/strings.cpp" );
 		Code filesystem = scan_file( path_base "dependencies/filesystem.cpp" );
 		Code timing     = scan_file( path_base "dependencies/timing.cpp" );
+		Code parsing    = scan_file( path_base "dependencies/parsing.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.dep.cpp" );
@@ -204,6 +207,7 @@ int gen_main()
 		src.print( strings );
 		src.print( filesystem );
 		src.print( timing );
+		src.print( parsing );
 
 		src.print_fmt( "\nGEN_NS_END\n" );
 		src.print( fmt_newline );
@@ -310,14 +314,20 @@ int gen_main()
 
 		src.print_fmt( "\n#pragma region Interface\n" );
 		src.print( interface );
+
 		src.print( upfront );
+
 		src.print_fmt( "\n#pragma region Parsing\n\n" );
 		src.print( lexer );
 		src.print( parser_case_macros );
 		src.print( parser );
 		src.print( parsing_interface );
-		src.print( untyped );
 		src.print_fmt( "\n#pragma endregion Parsing\n\n" );
+
+		src.print_fmt( "\n#pragma region Untyped\n\n" );
+		src.print( untyped );
+		src.print_fmt( "#pragma endregion \n\n" );
+
 		src.print_fmt( "#pragma endregion Interface\n\n" );
 
 		src.print_fmt( "GEN_NS_END\n\n");
@@ -364,7 +374,6 @@ int gen_main()
 
 	// gen_scanner.hpp
 	{
-		Code parsing = scan_file( path_base "dependencies/parsing.hpp" );
 		Code scanner = scan_file( path_base "auxillary/scanner.hpp" );
 
 		Builder
@@ -375,7 +384,6 @@ int gen_main()
 		header.print( fmt_newline );
 		header.print( def_include( txt("gen.hpp") ) );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
-		header.print( parsing );
 		header.print( scanner );
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
@@ -385,7 +393,6 @@ int gen_main()
 
 	// gen.scanner.cpp
 	{
-		Code parsing = scan_file( path_base "dependencies/parsing.cpp" );
 		Code scanner = scan_file( path_base "auxillary/scanner.cpp" );
 
 		Builder
@@ -395,8 +402,7 @@ int gen_main()
 		src.print( fmt_newline );
 		src.print( def_include( txt("gen.scanner.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n" );
-		src.print( parsing );
-		// src.print( scanner );
+		src.print( scanner );
 		src.print_fmt( "\nGEN_NS_END\n" );
 		src.print( fmt_newline );
 		src.print( pop_ignores );
