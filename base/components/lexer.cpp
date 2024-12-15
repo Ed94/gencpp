@@ -118,7 +118,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 	Token name = { { ctx->scanner, 1 }, Tok_Identifier, ctx->line, ctx->column, TF_Preprocess };
 	move_forward();
 
-	PreprocessorMacro  macro            = { name.Text, MT_Statement, 0 };
+	PreprocessorMacro  macro            = { name.Text, MT_Statement, (MacroFlags)0 };
 	PreprocessorMacro* registered_macro = lookup_preprocess_macro(name.Text);
 	if ( registered_macro == nullptr ) {
 		log_fmt("Warning: %S is was not registered before the lexer processed its #define directive, it will be registered as a statement macro"
@@ -146,6 +146,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		array_append( _ctx->Lexer_Tokens, opening_paren );
 		move_forward();
 
+		Token last_parameter;
 		// We need to tokenize the define's arguments now:
 		while( ctx->left && * ctx->scanner != ')')
 		{
@@ -162,6 +163,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 				}
 				array_append(_ctx->Lexer_Tokens, parameter);
 				skip_whitespace();
+				last_parameter = parameter;
 			}
 			else {
 				log_failure("lex_preprocessor_define(%d, %d): Expected a '_' or alpha character for a parameter name for %S\n"
@@ -176,7 +178,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 				log_failure("lex_preprocessor_define(%d, %d): Expected a comma after parameter %S for %S\n"
 					, ctx->line
 					, ctx->column
-					, parameter.Text
+					, last_parameter.Text
 					, name.Text
 				);
 				return Lex_ReturnNull;
@@ -190,7 +192,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 			log_failure("lex_preprocessor_define(%d, %d): Expected a ')' after last_parameter %S for %S (ran out of characters...)\n"
 				, ctx->line
 				, ctx->column
-				, parameter.Text
+				, last_parameter.Text
 				, name.Text
 			);
 			return Lex_ReturnNull;
@@ -527,7 +529,6 @@ TokArray lex( Str content )
 	c.content = content;
 	c.left    = content.Len;
 	c.scanner = content.Ptr;
-	c.defines = _ctx->Lexer_defines;
 
 	char const* word        = c.scanner;
 	s32         word_length = 0;

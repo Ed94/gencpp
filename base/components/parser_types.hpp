@@ -4,6 +4,7 @@
 #include "gen/ecode.hpp"
 #include "gen/eoperator.hpp"
 #include "gen/especifier.hpp"
+#include "gen/etoktype.hpp"
 #endif
 
 enum TokFlags : u32
@@ -135,11 +136,11 @@ enum MacroType : u16
 	MT_Block_End,      // Not Supported yet
 	MT_Case_Statement, // Not Supported yet
 
-	MF_UnderlyingType = GEN_U16_Max,
+	MT_UnderlyingType = GEN_U16_MAX,
 };
 
 forceinline
-TokenType macrotype_to_toktype( MacroType type ) {
+TokType macrotype_to_toktype( MacroType type ) {
 	switch ( type ) {
 		case MT_Statement  : return Tok_Preprocess_Macro_Stmt;
 		case MT_Expression : return Tok_Preprocess_Macro_Expr;
@@ -152,7 +153,7 @@ TokenType macrotype_to_toktype( MacroType type ) {
 Str macrotype_to_str( MacroType type )
 {
 	local_persist
-	Str lookup[ (u32)Num_ModuleFlags ] = {
+	Str lookup[] = {
 		{ "Statement",      sizeof("Statement")      - 1 },
 		{ "Expression",     sizeof("Expression")     - 1 },
 		{ "Typename",       sizeof("Typename")       - 1 },
@@ -161,21 +162,22 @@ Str macrotype_to_str( MacroType type )
 		{ "Case_Statement", sizeof("Case_Statement") - 1 },
 	};
 	local_persist
-	Str invalid_flag = { "Invalid", sizeof("Invalid") };
-	if ( flag > ModuleFlag_Import )
-		return invalid_flag;
+	Str invalid = { "Invalid", sizeof("Invalid") };
+	if ( type > MT_Case_Statement )
+		return invalid;
 
-	return lookup[ (u32)flag ];
+	return lookup[ type ];
 }
 
-enum MacroFlags : u16
+enum EMacroFlags : u16
 {
 	MF_Functional     = bit(0), // Macro has parameters (args expected to be passed)
 	MF_Expects_Body   = bit(1), // Expects to assign a braced scope to its body.
 
 	MF_Null           = 0,
-	MF_UnderlyingType = GEN_U16_Max,
+	MF_UnderlyingType = GEN_U16_MAX,
 };
+typedef u16 MacroFlags;
 
 struct PreprocessorMacro
 {
@@ -184,12 +186,12 @@ struct PreprocessorMacro
 	MacroFlags Flags;
 };
 
-forceinine
+forceinline
 b32 macro_is_functional( PreprocessorMacro macro ) {
-	return bitfield_is_set( macro->Flags, MF_Functional );
+	return bitfield_is_set( b16, macro.Flags, MF_Functional );
 }
 
 forceinline
 b32 macro_expects_body( PreprocessorMacro macro ) {
-	return bitfield_is_set( macro->Flags, MF_Expects_Body );
+	return bitfield_is_set( b16, macro.Flags, MF_Expects_Body );
 }

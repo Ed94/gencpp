@@ -151,7 +151,7 @@ struct AST_Define
 			char              _PAD_PROPERTIES_ [ sizeof(AST*) * 4 ];
 			CodeDefineParams  Params;
 			Code              Body; // Should be completely serialized for now to a: StrCached Content.
-			char              _PAD_PROPERTIES_ [ sizeof(AST*) * 1 ];
+			char              _PAD_PROPERTIES_2_ [ sizeof(AST*) * 1 ];
 		};
 	};
 	StrCached         Name;

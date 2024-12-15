@@ -118,11 +118,7 @@ bool lex__eat(TokArray* self, TokType type )
 internal
 void parser_init()
 {
-	_ctx->Lexer_Tokens = array_init_reserve(Token, arena_allocator_info( & _ctx->LexArena)
-		, ( _ctx->InitSize_LexArena - sizeof( ArrayHeader ) ) / sizeof(Token)
-	);
-
-	_ctx->Lexer_defines = hashtable_init_reserve(Str, _ctx->Allocator_DyanmicContainers, 256 );
+	_ctx->Lexer_Tokens = array_init_reserve(Token, _ctx->Allocator_DyanmicContainers, _ctx->InitSize_LexerTokens );
 }
 
 internal
@@ -942,7 +938,6 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
 				break;
 			}
-
 			case Tok_Preprocess_Macro_Expr: {
 				log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
 				return InvalidCode;
@@ -961,7 +956,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			}
 
 			case Tok_Preprocess_Unsupported: {
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported, parser_consume_braces ));
+				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
 				// #<UNKNOWN>
 				break;
 			}
@@ -1317,10 +1312,10 @@ CodeDefine parse_define()
 		CodeDefineParams params;
 		if ( left && currtok.Type != Tok_Capture_End ) {
 			params = (CodeDefineParams) make_code();
-			params.Type = CT_Parameters_Define;
-			params.Name = currtok.text;
+			params->Type = CT_Parameters_Define;
+			params->Name = currtok.Text;
 
-			define->params = params;
+			define->Params = params;
 
 			eat( Tok_Preprocess_Define_Param );
 			// #define <Name> ( <param> )
@@ -1328,8 +1323,8 @@ CodeDefine parse_define()
 		
 		while( left && currtok.Type != Tok_Capture_End ) {
 			CodeDefineParams next_param = (CodeDefineParams) make_code();
-			next_param.Type = CT_Parameters_Define;
-			next_param.Name = currtok.Text;
+			next_param->Type = CT_Parameters_Define;
+			next_param->Name = currtok.Text;
 			define_params_append(params, next_param);
 
 			// #define  <Name> (  <param>, <next_param> ...
@@ -1349,7 +1344,7 @@ CodeDefine parse_define()
 
 	if ( currtok.Text.Len == 0 )
 	{
-		define->Content = cache_str( tok_to_str(currtok) );
+		define->Body = untyped_str( tok_to_str(currtok) );
 		eat( Tok_Preprocess_Content );
 		// #define <Name> ( <params> ) <Content>
 
@@ -1357,7 +1352,7 @@ CodeDefine parse_define()
 		return define;
 	}
 
-	define->Content = cache_str( strbuilder_to_str( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
+	define->Body = untyped_str( strbuilder_to_str( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
 	eat( Tok_Preprocess_Content );
 	// #define <Name> ( <params> ) <Content>
 
@@ -1729,11 +1724,13 @@ CodeBody parse_global_nspace( CodeType which )
 				// #endif
 			break;
 
-			case Tok_Preprocess_Macro: {
-				// <Macro>
-				macro_found = true;
-				goto Preprocess_Macro_Bare_In_Body;
-				// TODO(Ed): MACRO UPDATE
+			case Tok_Preprocess_Macro_Stmt: {
+				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
+				break;
+			}
+			case Tok_Preprocess_Macro_Expr: {
+				log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
+				return InvalidCode;
 			}
 
 			case Tok_Preprocess_Pragma: {
@@ -1743,7 +1740,7 @@ CodeBody parse_global_nspace( CodeType which )
 			break;
 
 			case Tok_Preprocess_Unsupported: {
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported, parser_consume_braces ));
+				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
 				// #<UNSUPPORTED> ...
 			}
 			break;
@@ -1828,6 +1825,7 @@ CodeBody parse_global_nspace( CodeType which )
 			}
 			//! Fallthrough intentional
 			case Tok_Identifier:
+			case Tok_Preprocess_Macro_Typename:
 			case Tok_Spec_Const:
 			case Tok_Type_Long:
 			case Tok_Type_Short:
@@ -1877,28 +1875,6 @@ CodeBody parse_global_nspace( CodeType which )
 						// <Attributes> <Specifiers> <Name>::operator <Type>() { ... }
 						break;
 					}
-				}
-
-				if (macro_found)
-				{
-				Preprocess_Macro_Bare_In_Body:
-					b32 lone_macro = nexttok.Type == Tok_Statement_End || nexttok_noskip.Type == Tok_NewLine;
-					if (lone_macro)
-					{
-						member = parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces );
-						// <Macro>;
-
-						if ( member == Code_Invalid )
-						{
-							log_failure( "Failed to parse member\n%s", parser_to_strbuilder(_ctx->parser) );
-							parser_pop(& _ctx->parser);
-							return InvalidCode;
-						}
-						goto Member_Resolved_To_Lone_Macro;
-					}
-
-					// We have a macro but its most likely behaving as a typename
-					// <Macro ...
 				}
 
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
@@ -2943,7 +2919,7 @@ CodePreprocessCond parse_preprocess_cond()
 }
 
 internal
-Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
+Code parse_simple_preprocess( TokType which )
 {
 	// TODO(Ed): We can handle a macro a bit better than this. It's AST can be made more robust..
 	// Make an AST_Macro, it should have an Name be the macro itself, with the function body being an optional function body node.
@@ -2954,7 +2930,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 	eat( which );
 	// <Macro>
 
-	PreprocessorMacro macro = * lookup_preprocess_macro( name.Text );
+	PreprocessorMacro macro = * lookup_preprocess_macro( full_macro.Text );
 
 	if ( macro_expects_body(macro) && peektok.Type == Tok_BraceCurly_Open )
 	{
@@ -3043,7 +3019,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 
 Leave_Scope_Early:
 	Code result = untyped_str( full_macro.Text );
-	_ctx->parser.Scope->Name = tok.Text;
+	_ctx->parser.Scope->Name = full_macro.Text;
 
 	parser_pop(& _ctx->parser);
 	return result;
@@ -3145,7 +3121,7 @@ CodeVar parse_variable_after_name(
 
 	Code array_expr    = parse_array_decl();
 	Code expr          = NullCode;
-	Code bitfield_expr = NulLCode;
+	Code bitfield_expr = NullCode;
 
 	b32 using_constructor_initializer = false;
 
@@ -3635,13 +3611,13 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		}
 		// enum <class> <Attributes> <Name> : <UnderlyingType>
 	}
-	else if ( currtok.Type == Tok_Preprocess_Macro )
+	else if ( currtok.Type == Tok_Preprocess_Macro_Expr )
 	{
 		// We'll support the enum_underlying macro
-		if ( str_contains( tok_to_str(currtok), enum_underlying_sig) )
+		if ( str_contains( tok_to_str(currtok), enum_underlying_macro.Name) )
 		{
 			use_macro_underlying = true;
-			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro, parser_dont_consume_braces );
+			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro_Typename );
 		}
 	}
 
@@ -5226,7 +5202,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Macro_Stmt:
-					member = parse_simple_preprocess( Tok_Preprocess_Macro );
+					member = parse_simple_preprocess( Tok_Preprocess_Macro_Stmt );
 				break;
 
 				case Tok_Preprocess_Pragma:
@@ -5234,7 +5210,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Unsupported:
-					member = parse_simple_preprocess( Tok_Preprocess_Unsupported, parser_consume_braces );
+					member = parse_simple_preprocess( Tok_Preprocess_Unsupported );
 				break;
 
 				default:

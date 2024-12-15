@@ -60,7 +60,7 @@ struct Context
 	u32 CodePool_NumBlocks;
 
 	// TODO(Ed): Review these... (No longer needed if using the proper allocation strategy)
-	u32 InitSize_LexArena;
+	u32 InitSize_LexerTokens;
 	u32 SizePer_StringArena;
 
 // TODO(Ed): Symbol Table
@@ -87,9 +87,6 @@ struct Context
 	StringTable StrCache;
 
 	// TODO(Ed): This needs to be just handled by a parser context
-
-	// Arena LexArena;
-	// StringTable  Lexer_defines;
 	Array(Token) Lexer_Tokens;
 
 	// TODO(Ed): Active parse context vs a parse result need to be separated conceptually
@@ -109,8 +106,8 @@ GEN_API void reset(Context* ctx);
 
 GEN_API void set_context(Context* ctx);
 
-// Mostly used to verify a macro entry exists for the given name
-GEN_API PreprocessMacro* lookup_preprocess_macro( Str Name );
+// Mostly intended for the parser
+GEN_API PreprocessorMacro* lookup_preprocess_macro( Str Name );
 
 // Alternative way to add a preprocess define entry for the lexer & parser to utilize 
 // if the user doesn't want to use def_define
@@ -154,9 +151,9 @@ struct Opts_def_constructor {
 GEN_API CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_define {
-	MacroFlags       flags;
 	CodeDefineParams params;
 	Str              content;
+	MacroFlags       flags;
 	b32              dont_register_to_preprocess_macros;
 };
 GEN_API CodeDefine def_define( Str name, MacroType type, Opts_def_define opts GEN_PARAM_DEFAULT );
@@ -273,7 +270,7 @@ GEN_API CodeBody def_body( CodeType type );
 GEN_API CodeBody         def_class_body      ( s32 num, ... );
 GEN_API CodeBody         def_class_body      ( s32 num, Code* codes );
 GEN_API CodeDefineParams def_define_params   ( s32 num, ... );
-GEN_API CodeDefineParams def_define_params   ( s32 num, CodeDefineParams* codes )
+GEN_API CodeDefineParams def_define_params   ( s32 num, CodeDefineParams* codes );
 GEN_API CodeBody         def_enum_body       ( s32 num, ... );
 GEN_API CodeBody         def_enum_body       ( s32 num, Code* codes );
 GEN_API CodeBody         def_export_body     ( s32 num, ... );

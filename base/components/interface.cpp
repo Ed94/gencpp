@@ -272,8 +272,8 @@ void init(Context* ctx)
 		ctx->CodePool_NumBlocks = kilobytes(16);
 	}
 
-	if (ctx->InitSize_LexArena == 0 ) {
-		ctx->InitSize_LexArena = megabytes(4);
+	if (ctx->InitSize_LexerTokens == 0 ) {
+		ctx->InitSize_LexerTokens = kilobytes(64);
 	}
 	if (ctx->SizePer_StringArena == 0) {
 		ctx->SizePer_StringArena = megabytes(1);
@@ -315,7 +315,7 @@ void init(Context* ctx)
 		if ( ctx->StrCache.Entries == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
 
-		ctx->PreprocessorMacros = hashtable_init(PreprocessorMacros, ctx->Allocator_DyanmicContainers);
+		ctx->PreprocessorMacros = hashtable_init(PreprocessorMacro, ctx->Allocator_DyanmicContainers);
 		if (ctx->PreprocessorMacros.Hashes == nullptr || ctx->PreprocessorMacros.Entries == nullptr) {
 			GEN_FATAL( "gen::init: Failed to initialize the PreprocessMacros table" );
 		}

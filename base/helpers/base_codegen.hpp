@@ -47,7 +47,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 		Str codetype_to_str( CodeType type )
 		{
 			local_persist
-			Str lookup[<num>] = {
+			Str lookup[] = {
 				<entries>
 			};
 			return lookup[ type ];
@@ -57,7 +57,7 @@ CodeBody gen_ecode( char const* path, bool use_c_definition = false )
 		Str codetype_to_keyword_str( CodeType type )
 		{
 			local_persist
-			Str lookup[ <num> ] = {
+			Str lookup[] = {
 				<keywords>
 			};
 			return lookup[ type ];
@@ -139,7 +139,7 @@ CodeBody gen_eoperator( char const* path, bool use_c_definition = false )
 		Str operator_to_str( Operator op )
 		{
 			local_persist
-			Str lookup[<num>] = {
+			Str lookup[] = {
 				<entries>
 			};
 
@@ -353,7 +353,7 @@ CodeBody gen_etoktype( char const* etok_path, char const* attr_path, bool use_c_
 
 #pragma push_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 #undef GEN_DEFINE_ATTRIBUTE_TOKENS
-	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), strbuilder_to_str(attribute_define_entries)  );
+	CodeDefine attribute_entires_def = def_define( name(GEN_DEFINE_ATTRIBUTE_TOKENS), MT_Statement, { {}, strbuilder_to_str(attribute_define_entries) }  );
 #pragma pop_macro("GEN_DEFINE_ATTRIBUTE_TOKENS")
 
 	// We cannot parse this enum, it has Attribute names as enums

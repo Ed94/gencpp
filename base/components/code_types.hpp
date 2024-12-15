@@ -232,15 +232,15 @@ struct CodeDefineParams
 	forceinline void             to_strbuilder( StrBuilder& result ) { return define_params_to_strbuilder_ref(* this, & result); }
 #endif
 	Using_CodeOps( CodeDefineParams );
-	forceinline CodeDefineParams begin() { return begin_CodeParams( cast(CodeParams, * this)); }
-	forceinline CodeDefineParams end()   { return end_CodeParams( cast(CodeParams, * this)); }
+	forceinline CodeDefineParams begin() { return (CodeDefineParams) (Code) begin_CodeParams( cast(CodeParams, * this)); }
+	forceinline CodeDefineParams end()   { return (CodeDefineParams) (Code) end_CodeParams( cast(CodeParams, * this)); }
 	forceinline operator Code() { return { (AST*)ast }; }
 	forceinline CodeDefineParams  operator *() { return * this; } // Required to support for-range iteration.
 	forceinline AST_DefineParams* operator->() {
 		GEN_ASSERT(ast);
 		return ast;
 	}
-	forceinline CodeDefineParams& operator++() { return cast(CodeParams, * this).operator ++() };
+	forceinline CodeDefineParams& operator++() { return (CodeDefineParams) (Code) cast(CodeParams, * this).operator ++(); };
 	AST_DefineParams* ast;
 };
 

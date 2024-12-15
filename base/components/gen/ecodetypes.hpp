@@ -75,7 +75,7 @@ enum CodeType : u32
 
 inline Str codetype_to_str( CodeType type )
 {
-	local_persist Str lookup[61] = {
+	local_persist Str lookup[] = {
 		{ "Invalid",             sizeof( "Invalid" ) - 1             },
 		{ "Untyped",             sizeof( "Untyped" ) - 1             },
 		{ "NewLine",             sizeof( "NewLine" ) - 1             },
@@ -144,7 +144,7 @@ inline Str codetype_to_str( CodeType type )
 
 inline Str codetype_to_keyword_str( CodeType type )
 {
-	local_persist Str lookup[61] = {
+	local_persist Str lookup[] = {
 		{ "__NA__",          sizeof( "__NA__" ) - 1          },
 		{ "__NA__",          sizeof( "__NA__" ) - 1          },
 		{ "__NA__",          sizeof( "__NA__" ) - 1          },

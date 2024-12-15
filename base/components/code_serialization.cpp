@@ -252,7 +252,7 @@ void define_to_strbuilder_ref(CodeDefine define, StrBuilder* result )
 	GEN_ASSERT(define->Body);
 	GEN_ASSERT(define->Body->Content);
 	if (define->Params) {
-		StrBuilder params_builder = define_params_to_strbuilder(define->Params)
+		StrBuilder params_builder = define_params_to_strbuilder(define->Params);
 		strbuilder_append_fmt( result, "#define %S(%S) %S", define->Name, strbuilder_to_str(params_builder), define->Body->Content );
 	}
 	else {
@@ -268,7 +268,7 @@ StrBuilder define_params_to_strbuilder(CodeDefineParams params)
 	return result;
 }
 
-void define_params_to_strbuilder_ref(CodeDefineParams params, StrBuilder* result)
+void define_params_to_strbuilder_ref(CodeDefineParams self, StrBuilder* result)
 {
 	GEN_ASSERT(self);
 	GEN_ASSERT(result);
@@ -278,9 +278,9 @@ void define_params_to_strbuilder_ref(CodeDefineParams params, StrBuilder* result
 	}
 	if ( self->NumEntries - 1 > 0 )
 	{
-		for ( CodeParams param = begin_CodeDefineParams(self->Next); param != end_CodeDefineParams(self->Next); param = next_CodeDefineParams(self->Next, param) )
+		for ( CodeDefineParams param = begin_CodeDefineParams(self->Next); param != end_CodeDefineParams(self->Next); param = next_CodeDefineParams(self->Next, param) )
 		{
-			strbuilder_append_fmt( result, ", %SB", params_to_strbuilder(param) );
+			strbuilder_append_fmt( result, ", %SB", define_params_to_strbuilder(param) );
 		}
 	}
 }

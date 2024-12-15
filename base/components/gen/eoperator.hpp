@@ -60,7 +60,7 @@ enum Operator : u32
 
 inline Str operator_to_str( Operator op )
 {
-	local_persist Str lookup[47] = {
+	local_persist Str lookup[] = {
 		{ "INVALID",  sizeof( "INVALID" ) - 1  },
 		{ "=",        sizeof( "=" ) - 1        },
 		{ "+=",       sizeof( "+=" ) - 1       },

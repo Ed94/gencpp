@@ -572,13 +572,13 @@ CodeDefine def_define( Str name, MacroType type, Opts_def_define p )
 	result->Name    = cache_str( name );
 	result->Params  = p.params;
 	if ( p.content.Len <= 0 || p.content.Ptr == nullptr )
-		result->Content = cache_str( txt("\n") );
+		result->Body = untyped_str( txt("\n") );
 	else
-		result->Content = cache_str( strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S\n", content)) );
+		result->Body = untyped_str( strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S\n", p.content)) );
 
 	b32  register_define = ! p.dont_register_to_preprocess_macros;
 	if ( register_define ) {
-		macro_entry = { result->Name, type, p.flags };
+		PreprocessorMacro macro_entry = { result->Name, type, p.flags };
 		register_preprocess_macro(macro_entry);
 	}
 	return result;
