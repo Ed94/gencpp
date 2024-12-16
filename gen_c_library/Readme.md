@@ -28,7 +28,7 @@ All free from tag identifiers will be prefixed with `gen_` or `GEN_` as the name
 
 ## Generation structure
 
-1. Files are scaned or parsed
+1. Files are scanned in or parsed.
     * If they are parsed, its dude to requiring some changes to either naming, or adding additonal definitions (container generation, typedefs, etc).
 2. All scanned or parsed code is refactored (identifiers substs) and/or formatted.
 3. Singleheader generated.
@@ -53,12 +53,12 @@ A simple `<container>_DefinitionCounter` is used to know how many instantiations
 
 ## Macro Usage
 
-For the most part macros are kept low usage wise with exception to `_Generic`...  
+For the most part macros are kept minimal with exception to `_Generic`...  
 *(I will be explaining this thing for the rest of this seciton along with gencpp c library's usage of it)*
 
 The `_Generic` macro plays a key role in reducing direct need of the user to wrangle with mangled definition identifiers of 'templated' containers or for type coercion to map distinct data types to a common code path.
 
-Because of its lack of use in many C11 libraries and of those that do, they usually end up obfuscating it with excessive preprocessor abuse; Effort was put into minimizing how much of these macros was handled by the preprocessor vs gencpp itself.
+Because of its lack of use in many C11 libraries.. and, of those that do; they usually end up obfuscating it with excessive preprocessor abuse; Effort was put into minimizing how much of these macros are handled by the preprocessor vs gencpp itself.
 
 The usual presentation (done bare) is the following:
 
@@ -72,12 +72,20 @@ _Generic( (arg),                              \
 )
 ```
 
-Where `_Generic` can be considered the follwoing:
+Where `_Generic` can be considered the follwoing (psuedo-C):
 
 ```c
 #define type_expr_pair(type, expr) type: expr
 
-expr _Generic( selector_arg, a_type_expr_pair, ... )
+C_Expression _Generic( selector_arg, a_type_expr_pair, ... ) {
+    switch( typeof(selector_arg)) {
+        case a_type_expr_pair:
+            return a_type_expr_pari.expr;
+        ...
+        default:
+            return default.expr;
+    }
+}
 ```
 
 The first `arg` of _Generic behaves as the "controlling expression" or the expression that resolves to a type which will dictate which of the following expressions provided after to `_Generic` will be resolved as the one used inline for the implemenation.
@@ -101,15 +109,15 @@ Now, even with gencpp generating this type-expression table, we still need wrapp
 
 > Discarded expressions still have to be semantically valid.
 
-The only way to absolve this issue [(without resorting to nasty preprocessor hacks)](https://github.com/JacksonAllan/CC/blob/main/articles/Better_C_Generics_Part_1_The_Extendible_Generic.md) is with wrapping expressions in a 'slot' resolving macros that do not expand if the slot is not defined:
+The only way to absolve this issue [(without resorting to nasty preprocessor hacks)](https://github.com/JacksonAllan/CC/blob/main/articles/Better_C_Generics_Part_1_The_Extendible_Generic.md) is with wrapping expressions in 'slot' resolving macros that do not expand if the slot is not defined:
 
 ```c
 GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT( GENERIC_SLOT_1__function_sig )
 ```
 
-`GENERIC_SLOT_1__function_sig` is our warpper of a "`int, func_use_int`" pair. The `GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT` is a verbse named macro to indicate that that pair will be expanded ONLY IF its defined.
+`GENERIC_SLOT_1__function_sig` is our warpper of a "`int, func_use_int`" pair. The `GEN_IF_MACRO_DEFINED_INCLUDE_THIS_SLOT` is a verbse named macro to indicate that that pair will be expanded ***ONLY IF*** its defined.
 
-So for any given templated container interface. Expect the follwoing (taken straight from generation, and just cleaned up formatting...):
+So for any given templated container interface. Expect the follwoing (taken straight from generation, and just cleaned up formatting):
 
 ```c
 #define gen_array_append( selector_arg, ... ) _Generic(                         \
