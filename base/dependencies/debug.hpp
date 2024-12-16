@@ -44,7 +44,7 @@
 // NOTE: Things that shouldn't happen with a message!
 #define GEN_PANIC( msg, ... ) GEN_ASSERT_MSG( 0, msg, ##__VA_ARGS__ )
 
-#if GEN_BULD_DEBUG
+#if GEN_BUILD_DEBUG
 	#define GEN_FATAL( ... )                               \
 	do                                                     \
 	{                                                      \

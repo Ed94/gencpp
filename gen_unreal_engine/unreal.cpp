@@ -64,6 +64,45 @@ int gen_main()
 	Code ue_forceinline = code_str(FORCEINLINE);
 	// Code
 
+	register_macros( args(
+		(Macro { txt("bit"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("bitfield_is_set"),              MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_C_LIKE_CPP"),               MT_Expression, MF_Null       }),
+		(Macro { txt("cast"),                         MT_Expression, MF_Functional }),
+		(Macro { txt("ccast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("rcast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("pcast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("scast"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("stringize_va"),                 MT_Expression, MF_Functional }),
+		(Macro { txt("stringize"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("do_once"),                      MT_Expression, MF_Functional }), 
+		(Macro { txt("do_once_defer"),                MT_Expression, MF_Functional }),
+		(Macro { txt("do_once_start"),                MT_Statement,  MF_Null       }), 
+		(Macro { txt("do_once_end"),                  MT_Statement,  MF_Null       }), 
+		(Macro { txt("labeled_scope_start"),          MT_Statement,  MF_Null       }), 
+		(Macro { txt("labeled_scope_end"),            MT_Statement,  MF_Null       }), 
+		(Macro { txt("compiler_decorated_func_name"), MT_Expression, MF_Null       }), 
+		(Macro { txt("num_args_impl"),                MT_Expression, MF_Functional }),
+		(Macro { txt("num_args"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("count_of"),                     MT_Expression, MF_Functional }),
+		(Macro { txt("clamp"),                        MT_Expression, MF_Functional }),
+		(Macro { txt("is_between"),                   MT_Expression, MF_Functional }),
+		(Macro { txt("size_of"),                      MT_Expression, MF_Functional }),
+		(Macro { txt("min"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("max"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("offset_of"),                    MT_Expression, MF_Functional }),
+		(Macro { txt("static_assert"),                MT_Statement,  MF_Functional }),
+		(Macro { txt("typeof"),                       MT_Expression, MF_Null       }),
+		(Macro { txt("GEN_API_C_BEGIN"),              MT_Statement,  MF_Null       }),
+		(Macro { txt("GEN_API_C_END"),                MT_Statement,  MF_Null       }),
+		(Macro { txt("nullptr"),                      MT_Expression, MF_Null       }),
+		(Macro { txt("GEN_REMOVE_PTR"),               MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_PARAM_DEFAULT"),            MT_Expression, MF_Null       }),
+		(Macro { txt("struct_init"),                  MT_Expression, MF_Functional }),
+		(Macro { txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"),  MT_Statement,  MF_Null       }),
+		(Macro { txt("GEN_OPITMIZE_MAPPINGS_END"),    MT_Statement,  MF_Null       })
+	));
+
 	// gen_dep.hpp
 	{
 		CodeBody macros = def_body( CT_Global_Body );
@@ -108,6 +147,7 @@ int gen_main()
 		Code strings      = scan_file( path_base "dependencies/strings.hpp" );
 		Code filesystem   = scan_file( path_base "dependencies/filesystem.hpp" );
 		Code timing       = scan_file( path_base "dependencies/timing.hpp" );
+		Code parsing      = scan_file( path_base "dependencies/parsing.hpp" );
 
 		Builder
 		header = Builder::open("gen/gen.dep.hpp");
@@ -129,6 +169,7 @@ int gen_main()
 		header.print( strings );
 		header.print( filesystem );
 		header.print( timing );
+		header.print(parsing);
 
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
@@ -147,6 +188,7 @@ int gen_main()
 		Code strings    = scan_file( path_base "dependencies/strings.cpp" );
 		Code filesystem = scan_file( path_base "dependencies/filesystem.cpp" );
 		Code timing     = scan_file( path_base "dependencies/timing.cpp" );
+		Code parsing    = scan_file( path_base "dependencies/parsing.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.dep.cpp" );
@@ -165,6 +207,7 @@ int gen_main()
 		src.print( strings );
 		src.print( filesystem );
 		src.print( timing );
+		src.print( parsing );
 
 		src.print_fmt( "\nGEN_NS_END\n" );
 		src.print( fmt_newline );
@@ -271,14 +314,20 @@ int gen_main()
 
 		src.print_fmt( "\n#pragma region Interface\n" );
 		src.print( interface );
+
 		src.print( upfront );
+
 		src.print_fmt( "\n#pragma region Parsing\n\n" );
 		src.print( lexer );
 		src.print( parser_case_macros );
 		src.print( parser );
 		src.print( parsing_interface );
-		src.print( untyped );
 		src.print_fmt( "\n#pragma endregion Parsing\n\n" );
+
+		src.print_fmt( "\n#pragma region Untyped\n\n" );
+		src.print( untyped );
+		src.print_fmt( "#pragma endregion \n\n" );
+
 		src.print_fmt( "#pragma endregion Interface\n\n" );
 
 		src.print_fmt( "GEN_NS_END\n\n");
@@ -325,7 +374,6 @@ int gen_main()
 
 	// gen_scanner.hpp
 	{
-		Code parsing = scan_file( path_base "dependencies/parsing.hpp" );
 		Code scanner = scan_file( path_base "auxillary/scanner.hpp" );
 
 		Builder
@@ -336,7 +384,6 @@ int gen_main()
 		header.print( fmt_newline );
 		header.print( def_include( txt("gen.hpp") ) );
 		header.print_fmt( "\nGEN_NS_BEGIN\n" );
-		header.print( parsing );
 		header.print( scanner );
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.print( fmt_newline );
@@ -346,7 +393,6 @@ int gen_main()
 
 	// gen.scanner.cpp
 	{
-		Code parsing = scan_file( path_base "dependencies/parsing.cpp" );
 		Code scanner = scan_file( path_base "auxillary/scanner.cpp" );
 
 		Builder
@@ -356,8 +402,7 @@ int gen_main()
 		src.print( fmt_newline );
 		src.print( def_include( txt("gen.scanner.hpp") ) );
 		src.print_fmt( "\nGEN_NS_BEGIN\n" );
-		src.print( parsing );
-		// src.print( scanner );
+		src.print( scanner );
 		src.print_fmt( "\nGEN_NS_END\n" );
 		src.print( fmt_newline );
 		src.print( pop_ignores );

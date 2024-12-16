@@ -60,7 +60,7 @@ struct Context
 	u32 CodePool_NumBlocks;
 
 	// TODO(Ed): Review these... (No longer needed if using the proper allocation strategy)
-	u32 InitSize_LexArena;
+	u32 InitSize_LexerTokens;
 	u32 SizePer_StringArena;
 
 // TODO(Ed): Symbol Table
@@ -71,13 +71,15 @@ struct Context
 	// Used by the lexer to persistently treat all these identifiers as preprocessor defines.
 	// Populate with strings via gen::cache_str.
 	// Functional defines must have format: id( ;at minimum to indicate that the define is only valid with arguments.
-	Array(StrCached) PreprocessorDefines;
+	MacroTable Macros;
 
 // Backend
 
 	// The fallback allocator is utilized if any fo the three above allocators is not specified by the user.
 	u32 InitSize_Fallback_Allocator_Bucket_Size;
 	Array(Arena) Fallback_AllocatorBuckets;
+
+	StringTable token_fmt_map;
 
 	// Array(Token) LexerTokens;
 
@@ -87,9 +89,6 @@ struct Context
 	StringTable StrCache;
 
 	// TODO(Ed): This needs to be just handled by a parser context
-
-	Arena LexArena;
-	StringTable  Lexer_defines;
 	Array(Token) Lexer_Tokens;
 
 	// TODO(Ed): Active parse context vs a parse result need to be separated conceptually
@@ -103,15 +102,26 @@ GEN_API void init(Context* ctx);
 // However on Windows at least, it doesn't need to occur as the OS will clean up after the process.
 GEN_API void deinit(Context* ctx);
 
+// Retrieves the active context (not usually needed, but here in case...)
+GEN_API Context* get_context();
+
 // Clears the allocations, but doesn't free the memoery, then calls init() again.
 // Ease of use.
 GEN_API void reset(Context* ctx);
 
 GEN_API void set_context(Context* ctx);
 
+// Mostly intended for the parser
+GEN_API Macro* lookup_macro( Str Name );
+
 // Alternative way to add a preprocess define entry for the lexer & parser to utilize 
 // if the user doesn't want to use def_define
-GEN_API void set_preprocess_define( Str id, b32 is_functional );
+// Macros are tracked by name so if the name already exists the entry will be overwritten.
+GEN_API void register_macro( Macro macro );
+
+// Ease of use batch registration
+GEN_API void register_macros( s32 num, ... );
+GEN_API void register_macros( s32 num,  Macro* macros );
 
 // Used internally to retrive or make string allocations.
 // Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
@@ -150,9 +160,12 @@ struct Opts_def_constructor {
 GEN_API CodeConstructor def_constructor( Opts_def_constructor opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_define {
-	b32 dont_append_preprocess_defines;
+	CodeDefineParams params;
+	Str              content;
+	MacroFlags       flags;
+	b32              dont_register_to_preprocess_macros;
 };
-GEN_API CodeDefine def_define( Str name, Str content, Opts_def_define opts GEN_PARAM_DEFAULT );
+GEN_API CodeDefine def_define( Str name, MacroType type, Opts_def_define opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_destructor {
 	Code           body;
@@ -263,28 +276,30 @@ GEN_API CodeBody def_body( CodeType type );
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
 
-GEN_API CodeBody       def_class_body      ( s32 num, ... );
-GEN_API CodeBody       def_class_body      ( s32 num, Code* codes );
-GEN_API CodeBody       def_enum_body       ( s32 num, ... );
-GEN_API CodeBody       def_enum_body       ( s32 num, Code* codes );
-GEN_API CodeBody       def_export_body     ( s32 num, ... );
-GEN_API CodeBody       def_export_body     ( s32 num, Code* codes);
-GEN_API CodeBody       def_extern_link_body( s32 num, ... );
-GEN_API CodeBody       def_extern_link_body( s32 num, Code* codes );
-GEN_API CodeBody       def_function_body   ( s32 num, ... );
-GEN_API CodeBody       def_function_body   ( s32 num, Code* codes );
-GEN_API CodeBody       def_global_body     ( s32 num, ... );
-GEN_API CodeBody       def_global_body     ( s32 num, Code* codes );
-GEN_API CodeBody       def_namespace_body  ( s32 num, ... );
-GEN_API CodeBody       def_namespace_body  ( s32 num, Code* codes );
-GEN_API CodeParams     def_params          ( s32 num, ... );
-GEN_API CodeParams     def_params          ( s32 num, CodeParams* params );
-GEN_API CodeSpecifiers def_specifiers      ( s32 num, ... );
-GEN_API CodeSpecifiers def_specifiers      ( s32 num, Specifier* specs );
-GEN_API CodeBody       def_struct_body     ( s32 num, ... );
-GEN_API CodeBody       def_struct_body     ( s32 num, Code* codes );
-GEN_API CodeBody       def_union_body      ( s32 num, ... );
-GEN_API CodeBody       def_union_body      ( s32 num, Code* codes );
+GEN_API CodeBody         def_class_body      ( s32 num, ... );
+GEN_API CodeBody         def_class_body      ( s32 num, Code* codes );
+GEN_API CodeDefineParams def_define_params   ( s32 num, ... );
+GEN_API CodeDefineParams def_define_params   ( s32 num, CodeDefineParams* codes );
+GEN_API CodeBody         def_enum_body       ( s32 num, ... );
+GEN_API CodeBody         def_enum_body       ( s32 num, Code* codes );
+GEN_API CodeBody         def_export_body     ( s32 num, ... );
+GEN_API CodeBody         def_export_body     ( s32 num, Code* codes);
+GEN_API CodeBody         def_extern_link_body( s32 num, ... );
+GEN_API CodeBody         def_extern_link_body( s32 num, Code* codes );
+GEN_API CodeBody         def_function_body   ( s32 num, ... );
+GEN_API CodeBody         def_function_body   ( s32 num, Code* codes );
+GEN_API CodeBody         def_global_body     ( s32 num, ... );
+GEN_API CodeBody         def_global_body     ( s32 num, Code* codes );
+GEN_API CodeBody         def_namespace_body  ( s32 num, ... );
+GEN_API CodeBody         def_namespace_body  ( s32 num, Code* codes );
+GEN_API CodeParams       def_params          ( s32 num, ... );
+GEN_API CodeParams       def_params          ( s32 num, CodeParams* params );
+GEN_API CodeSpecifiers   def_specifiers      ( s32 num, ... );
+GEN_API CodeSpecifiers   def_specifiers      ( s32 num, Specifier* specs );
+GEN_API CodeBody         def_struct_body     ( s32 num, ... );
+GEN_API CodeBody         def_struct_body     ( s32 num, Code* codes );
+GEN_API CodeBody         def_union_body      ( s32 num, ... );
+GEN_API CodeBody         def_union_body      ( s32 num, Code* codes );
 
 #pragma endregion Upfront
 
@@ -326,6 +341,7 @@ CodeBody parse_file( Str path );
 
 GEN_API CodeClass       parse_class        ( Str class_def       );
 GEN_API CodeConstructor parse_constructor  ( Str constructor_def );
+GEN_API CodeDefine      parse_define       ( Str define_def      );
 GEN_API CodeDestructor  parse_destructor   ( Str destructor_def  );
 GEN_API CodeEnum        parse_enum         ( Str enum_def        );
 GEN_API CodeBody        parse_export_body  ( Str export_def      );
@@ -367,12 +383,20 @@ GEN_API Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
 #ifndef name
 //	Convienence for defining any name used with the gen api.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
-#define name( Id_ )   { stringize(Id_), sizeof(stringize( Id_ )) - 1 }
+#	if GEN_COMPILER_C
+#		define name( Id_ ) (Str){ stringize(Id_), sizeof(stringize( Id_ )) - 1 }
+#	else
+#		define name( Id_ )  Str { stringize(Id_), sizeof(stringize( Id_ )) - 1 }
+#	endif
 #endif
 
 #ifndef code
 //  Same as name just used to indicate intention of literal for code instead of names.
-#define code( ... ) { stringize( __VA_ARGS__ ), sizeof(stringize(__VA_ARGS__)) - 1 }
+#	if GEN_COMPILER_C
+#		define code( ... ) (Str){ stringize( __VA_ARGS__ ), sizeof(stringize(__VA_ARGS__)) - 1 }
+#	else
+#		define code( ... )  Str { stringize( __VA_ARGS__ ), sizeof(stringize(__VA_ARGS__)) - 1 }
+#	endif
 #endif
 
 #ifndef args

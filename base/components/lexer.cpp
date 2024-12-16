@@ -112,6 +112,158 @@ void lexer_end_line( LexContext* ctx )
 }
 #define end_line() lexer_end_line(ctx)
 
+// TODO(Ed): We need to to attempt to recover from a lex failure?
+s32 lex_preprocessor_define( LexContext* ctx )
+{
+	Token name = { { ctx->scanner, 1 }, Tok_Identifier, ctx->line, ctx->column, TF_Preprocess };
+	move_forward();
+
+	while ( ctx->left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) ) {
+		move_forward();
+		name.Text.Len++;
+	}
+
+	Specifier spec    = str_to_specifier( name.Text );
+	TokType   attrib  = str_to_toktype( name.Text );
+	b32 not_specifier = spec   == Spec_Invalid;
+	b32 not_attribute = attrib <= Tok___Attributes_Start;
+
+	Macro  macro            = { name.Text, MT_Expression, (MacroFlags)0 };
+	Macro* registered_macro = lookup_macro(name.Text);
+
+	if ( registered_macro == nullptr && not_specifier && not_attribute ) {
+		log_fmt("Warning: '%S' was not registered before the lexer processed its #define directive, it will be registered as a expression macro\n"
+			, name.Text 
+		);
+		// GEN_DEBUG_TRAP();
+	}
+	array_append( _ctx->Lexer_Tokens, name );
+
+	if ( ctx->left && (* ctx->scanner) == '(' )
+	{
+		if (registered_macro && ! macro_is_functional(* registered_macro)) {
+			log_fmt("Warning: %S registered macro is not flagged as functional yet the definition detects opening parenthesis '(' for arguments\n"
+				, name.Text
+			);
+			// GEN_DEBUG_TRAP();
+		}
+		else {
+			macro.Flags |= MF_Functional;
+		}
+
+		Token opening_paren = { { ctx->scanner, 1 }, Tok_Capture_Start, ctx->line, ctx->column, TF_Preprocess };
+		array_append( _ctx->Lexer_Tokens, opening_paren );
+		move_forward();
+
+		Token last_parameter = {};
+		// We need to tokenize the define's arguments now:
+		while( ctx->left && * ctx->scanner != ')')
+		{
+			skip_whitespace();
+			
+			Str possible_varadic = { ctx->scanner, 3 };
+			if ( ctx->left > 3 && str_are_equal( txt("..."), possible_varadic ) ) {
+				Token parameter = { { ctx->scanner, 3 }, Tok_Preprocess_Define_Param, ctx->line, ctx->column, TF_Preprocess };
+				move_forward();
+				move_forward();
+				move_forward();
+
+				array_append(_ctx->Lexer_Tokens, parameter);
+				skip_whitespace();
+				last_parameter = parameter;
+
+				while ( (* ctx->scanner) == '\\' ) {
+					move_forward();
+					skip_whitespace();
+				}
+				if (* ctx->scanner != ')' )
+				{
+					log_failure("lex_preprocessor_define(%d, %d): Expected a ')' after '...' (varaidc macro param) %S\n"
+						, ctx->line
+						, ctx->column
+						, name.Text
+					);
+					return Lex_ReturnNull;
+				}
+				break;
+			}
+			else if ( (* ctx->scanner) == '\\' ) {
+				move_forward();
+				skip_whitespace();
+				continue;
+			}
+			else if ( char_is_alpha( (* ctx->scanner) ) || (* ctx->scanner) == '_' )
+			{
+				Token parameter = { { ctx->scanner, 1 }, Tok_Preprocess_Define_Param, ctx->line, ctx->column, TF_Preprocess };
+				move_forward();
+
+				while ( ctx->left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) )
+				{
+					move_forward();
+					parameter.Text.Len++;
+				}
+				array_append(_ctx->Lexer_Tokens, parameter);
+				skip_whitespace();
+				last_parameter = parameter;
+			}
+			else {
+				log_failure("lex_preprocessor_define(%d, %d): Expected a '_' or alpha character for a parameter name for %S\n"
+					, ctx->line
+					, ctx->column
+					, name.Text
+				);
+				return Lex_ReturnNull;
+			}
+
+			if (* ctx->scanner == ')' )
+				break;
+
+			// There should be a comma
+			if ( * ctx->scanner != ',' ) {
+				log_failure("lex_preprocessor_define(%d, %d): Expected a comma after parameter %S for %S\n"
+					, ctx->line
+					, ctx->column
+					, last_parameter.Text
+					, name.Text
+				);
+				return Lex_ReturnNull;
+			}
+			Token comma = { { ctx->scanner, 1 }, Tok_Comma, ctx->line, ctx->column, TF_Preprocess };
+			array_append(_ctx->Lexer_Tokens, comma);
+			move_forward();
+		}
+		
+		if ( * ctx->scanner != ')' ) {
+			log_failure("lex_preprocessor_define(%d, %d): Expected a ')' after last_parameter %S for %S (ran out of characters...)\n"
+				, ctx->line
+				, ctx->column
+				, last_parameter.Text
+				, name.Text
+			);
+			return Lex_ReturnNull;
+		}
+		Token closing_paren = { { ctx->scanner, 1 }, Tok_Capture_End, ctx->line, ctx->column, TF_Preprocess };
+		array_append(_ctx->Lexer_Tokens, closing_paren);
+		move_forward();
+	}
+	else if ( registered_macro && macro_is_functional( * registered_macro) ) {
+		if (registered_macro && ! macro_is_functional(* registered_macro)) {
+			log_fmt("Warning: %S registered macro is flagged as functional yet the definition detects no opening parenthesis '(' for arguments\n"
+				, name.Text
+			);
+			GEN_DEBUG_TRAP();
+		}
+	}
+
+	if ( registered_macro == nullptr ) {
+		register_macro(macro);
+	}
+
+	// Define's content handled by lex_preprocessor_directive (the original caller of this)
+	return Lex_Continue;
+}
+
+// TODO(Ed): We need to to attempt to recover from a lex failure?
 forceinline
 s32 lex_preprocessor_directive( LexContext* ctx )
 {
@@ -215,28 +367,9 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 	if ( ctx->token.Type == Tok_Preprocess_Define )
 	{
-		Token name = { { ctx->scanner, 0 }, Tok_Identifier, ctx->line, ctx->column, TF_Preprocess };
-
-		name.Text.Ptr = ctx->scanner;
-		name.Text.Len = 1;
-		move_forward();
-
-		while ( ctx->left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) )
-		{
-			move_forward();
-			name.Text.Len++;
-		}
-
-		if ( ctx->left && (* ctx->scanner) == '(' )
-		{
-			move_forward();
-			name.Text.Len++;
-		}
-
-		array_append( _ctx->Lexer_Tokens, name );
-
-		u64 key = crc32( name.Text.Ptr, name.Text.Len );
-		hashtable_set(ctx->defines, key, tok_to_str(name) );
+		u32 result = lex_preprocessor_define(ctx); // handles: #define <name>( <params> ) - define's content handled later on within this scope.
+		if (result != Lex_Continue)
+			return Lex_ReturnNull;
 	}
 
 	Token preprocess_content = { { ctx->scanner, 0 }, Tok_Preprocess_Content, ctx->line, ctx->column, TF_Preprocess };
@@ -286,7 +419,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 	s32 within_string = false;
 	s32 within_char   = false;
 
-	// SkipWhitespace();
+	// Consume preprocess content
 	while ( ctx->left )
 	{
 		if ( (* ctx->scanner) == '"' && ! within_char )
@@ -322,6 +455,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 					, (* ctx->scanner), ctx->line, ctx->column
 					, directive_str, preprocess_content.Line, preprocess_content.Column
 					, content_str );
+				return Lex_ReturnNull;
 				break;
 			}
 		}
@@ -349,30 +483,24 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 forceinline
 void lex_found_token( LexContext* ctx )
 {
-	if ( ctx->token.Type != Tok_Invalid )
-	{
+	if ( ctx->token.Type != Tok_Invalid ) {
 		array_append( _ctx->Lexer_Tokens, ctx->token );
 		return;
 	}
 
 	TokType type = str_to_toktype( tok_to_str(ctx->token) );
 
-	if (type <= Tok_Access_Public && type >= Tok_Access_Private )
-	{
+	if (type <= Tok_Access_Public && type >= Tok_Access_Private ) {
 		ctx->token.Flags |= TF_AccessSpecifier;
 	}
-
-	if ( type > Tok___Attributes_Start )
-	{
+	if ( type > Tok___Attributes_Start ) {
 		ctx->token.Flags |= TF_Attribute;
 	}
-
 	if ( type == Tok_Decl_Extern_Linkage )
 	{
 		skip_whitespace();
 
-		if ( (* ctx->scanner) != '"' )
-		{
+		if ( (* ctx->scanner) != '"' ) {
 			type         = Tok_Spec_Extern;
 			ctx->token.Flags |= TF_Specifier;
 		}
@@ -381,7 +509,6 @@ void lex_found_token( LexContext* ctx )
 		array_append( _ctx->Lexer_Tokens, ctx->token );
 		return;
 	}
-
 	if ( ( type <= Tok_Star && type >= Tok_Spec_Alignas)
 			|| type == Tok_Ampersand
 			|| type == Tok_Ampersand_DBL )
@@ -391,8 +518,6 @@ void lex_found_token( LexContext* ctx )
 		array_append( _ctx->Lexer_Tokens, ctx->token );
 		return;
 	}
-
-
 	if ( type != Tok_Invalid )
 	{
 		ctx->token.Type = type;
@@ -400,50 +525,31 @@ void lex_found_token( LexContext* ctx )
 		return;
 	}
 
-	u64 key = 0;
-	if ( (* ctx->scanner) == '(')
-		key = crc32( ctx->token.Text.Ptr, ctx->token.Text.Len + 1 );
-	else
-		key = crc32( ctx->token.Text.Ptr, ctx->token.Text.Len );
-
-	Str* define = hashtable_get(ctx->defines, key );
-	if ( define )
-	{
-		ctx->token.Type = Tok_Preprocess_Macro;
-
-		// Want to ignore any arguments the define may have as they can be execution expressions.
-		if ( ctx->left && (* ctx->scanner) == '(' )
-		{
-			move_forward();
-			ctx->token.Text.Len++;
-
-			s32 level = 0;
-			while ( ctx->left && ((* ctx->scanner) != ')' || level > 0) )
-			{
-				if ( (* ctx->scanner) == '(' )
-					level++;
-
-				else if ( (* ctx->scanner) == ')' && level > 0 )
-					level--;
-
-				move_forward();
-				ctx->token.Text.Len++;
-			}
-
-			move_forward();
-			ctx->token.Text.Len++;
+	Macro* macro = lookup_macro( ctx->token.Text );
+	b32 has_args          = ctx->left && (* ctx->scanner) == '(';
+	b32 resolved_to_macro = false;
+	if (macro) {
+		ctx->token.Type   = macrotype_to_toktype(macro->Type);
+		b32 is_functional = macro_is_functional(* macro);
+		resolved_to_macro = has_args ? is_functional : ! is_functional;
+		if ( ! resolved_to_macro ) {
+			log_fmt("Info(%d, %d): %S identified as a macro but usage here does not resolve to one (interpreting as identifier)\n"
+				, ctx->token.Line
+				, ctx->token.Line
+				, macro->Name
+			);
 		}
-
-		//if ( (* ctx->scanner) == '\r' && ctx->scanner[1] == '\n' )
-		//{
-		//	move_forward();
-		//	ctx->token..Text.Length++;
-		//}
-		//else if ( (* ctx->scanner) == '\n' )
-		//{
-		//	move_forward();
-		//	ctx->token..Text.Length++;
-		//}
+	}
+	if ( resolved_to_macro )
+	{
+		// TODO(Ed): When we introduce a macro AST (and expression support), we'll properly lex this section.
+		// Want to ignore any arguments the define may have as they can be execution expressions.
+		if ( has_args ) {
+			ctx->token.Flags |= TF_Macro_Functional;
+		}
+		if ( bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Attribute) ) {
+			ctx->token.Flags |= TF_Attribute;
+		}
 	}
 	else
 	{
@@ -453,6 +559,7 @@ void lex_found_token( LexContext* ctx )
 	array_append( _ctx->Lexer_Tokens, ctx->token );
 }
 
+// TODO(Ed): We need to to attempt to recover from a lex failure?
 neverinline
 // TokArray lex( Array<Token> tokens, Str content )
 TokArray lex( Str content )
@@ -461,7 +568,6 @@ TokArray lex( Str content )
 	c.content = content;
 	c.left    = content.Len;
 	c.scanner = content.Ptr;
-	c.defines = _ctx->Lexer_defines;
 
 	char const* word        = c.scanner;
 	s32         word_length = 0;
@@ -477,25 +583,9 @@ TokArray lex( Str content )
 		return null_array;
 	}
 
-	for ( StrCached* entry = array_begin(_ctx->PreprocessorDefines); entry != array_end(_ctx->PreprocessorDefines); entry = array_next(_ctx->PreprocessorDefines, entry))
-	{
-		s32         length  = 0;
-		char const* entry_scanner = (*entry).Ptr;
-		while ( entry->Len > length && (char_is_alphanumeric( *entry_scanner ) || *entry_scanner == '_') )
-		{
-			entry_scanner++;
-			length ++;
-		}
-		if ( entry_scanner[0] == '(' )
-		{
-			length++;
-		}
-
-		u64 key = crc32( entry->Ptr, length );
-		hashtable_set(c.defines, key, * entry );
-	}
-
 	array_clear(_ctx->Lexer_Tokens);
+
+	b32 preprocess_args = true;
 
 	while (c.left )
 	{
@@ -938,7 +1028,7 @@ TokArray lex( Str content )
 				goto FoundToken;
 			}
 
-			// Dash is unfortunatlly a bit more complicated...
+			// Dash is unfortunately a bit more complicated...
 			case '-':
 			{
 				Str text = { c.scanner, 1 };
@@ -1075,8 +1165,7 @@ TokArray lex( Str content )
 			c.token.Text = text;
 			move_forward();
 
-			while ( c.left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) )
-			{
+			while ( c.left && ( char_is_alphanumeric((* ctx->scanner)) || (* ctx->scanner) == '_' ) ) {
 				move_forward();
 				c.token.Text.Len++;
 			}
@@ -1102,8 +1191,7 @@ TokArray lex( Str content )
 				move_forward();
 				c.token.Text.Len++;
 
-				while ( c.left && char_is_hex_digit((* ctx->scanner)) )
-				{
+				while ( c.left && char_is_hex_digit((* ctx->scanner)) ) {
 					move_forward();
 					c.token.Text.Len++;
 				}
@@ -1111,8 +1199,7 @@ TokArray lex( Str content )
 				goto FoundToken;
 			}
 
-			while ( c.left && char_is_digit((* ctx->scanner)) )
-			{
+			while ( c.left && char_is_digit((* ctx->scanner)) ) {
 				move_forward();
 				c.token.Text.Len++;
 			}
@@ -1122,8 +1209,7 @@ TokArray lex( Str content )
 				move_forward();
 				c.token.Text.Len++;
 
-				while ( c.left && char_is_digit((* ctx->scanner)) )
-				{
+				while ( c.left && char_is_digit((* ctx->scanner)) ) {
 					move_forward();
 					c.token.Text.Len++;
 				}
@@ -1141,8 +1227,7 @@ TokArray lex( Str content )
 					c.token.Text.Len++;
 
 					// Handle 'll'/'LL' as a special case when we just processed an 'l'/'L'
-					if (c.left && (prev == 'l' || prev == 'L') && ((* ctx->scanner) == 'l' || (* ctx->scanner) == 'L'))
-					{
+					if (c.left && (prev == 'l' || prev == 'L') && ((* ctx->scanner) == 'l' || (* ctx->scanner) == 'L')) {
 						move_forward();
 						c.token.Text.Len++;
 					}
@@ -1168,8 +1253,7 @@ TokArray lex( Str content )
 			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 
 			// Skip to next whitespace since we can't know if anything else is valid until then.
-			while ( c.left && ! char_is_space( (* ctx->scanner) ) )
-			{
+			while ( c.left && ! char_is_space( (* ctx->scanner) ) ) {
 				move_forward();
 			}
 		}
@@ -1178,17 +1262,15 @@ TokArray lex( Str content )
 		{
 			lex_found_token( ctx );
 			TokType last_type = array_back(_ctx->Lexer_Tokens)->Type;
-			if ( last_type == Tok_Preprocess_Macro )
+			if ( last_type == Tok_Preprocess_Macro_Stmt || last_type == Tok_Preprocess_Macro_Expr )
 			{
 				Token thanks_c = { { c.scanner, 0 }, Tok_Invalid, c.line, c.column, TF_Null };
 				c.token = thanks_c;
-				if ( (* ctx->scanner) == '\r')
-				{
+				if ( (* ctx->scanner) == '\r') {
 					move_forward();
 					c.token.Text.Len = 1;
 				}
-
-				if ( (* ctx->scanner) == '\n' )
+				if ( (* ctx->scanner) == '\n' ) 
 				{
 					c.token.Type = Tok_NewLine;
 					c.token.Text.Len++;
@@ -1201,20 +1283,16 @@ TokArray lex( Str content )
 		}
 	}
 
-	if ( array_num(_ctx->Lexer_Tokens) == 0 )
-	{
+	if ( array_num(_ctx->Lexer_Tokens) == 0 ) {
 		log_failure( "Failed to lex any tokens" );
-		{
-			TokArray tok_array =  {};
-			return tok_array;
-		}
+		TokArray tok_array =  {};
+		return tok_array;
 	}
 
-	hashtable_clear(_ctx->Lexer_defines);
-	// defines_map_arena.free();
 	TokArray result = { _ctx->Lexer_Tokens, 0 };
 	return result;
 }
+
 #undef move_forward
 #undef skip_whitespace
 #undef end_line

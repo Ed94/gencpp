@@ -7,12 +7,13 @@ void convert_cpp_enum_to_c( CodeEnum to_convert, CodeBody to_append )
 {
 #pragma push_macro("enum_underlying")
 #undef enum_underlying
+	StrCached type = to_convert->UnderlyingType ? to_convert->UnderlyingType.to_strbuilder().to_str() : to_convert->Name;
+	CodeTypedef tdef = parse_typedef(token_fmt("type", type, "name", to_convert->Name, stringize( typedef enum <type> <name>; )));
 	if (to_convert->UnderlyingType)
 	{
 		to_convert->UnderlyingTypeMacro = untyped_str(token_fmt("type", to_convert->UnderlyingType->Name, stringize(enum_underlying(<type>))));
 		to_convert->UnderlyingType      = CodeTypename{nullptr};
 	}
-	CodeTypedef tdef = parse_typedef(token_fmt("name", to_convert->Name, stringize( typedef enum <name> <name>; )));
 	to_append.append(to_convert);
 	to_append.append(tdef);
 #pragma pop_macro("enum_underlying")

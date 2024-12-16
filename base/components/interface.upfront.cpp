@@ -516,7 +516,6 @@ CodeClass def_class( Str name, Opts_def_struct p )
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
-
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes ) {
 		log_failure( "gen::def_class: attributes was not a 'PlatformAttributes' type: %s", code_debug_str(p.attributes) );
 		GEN_DEBUG_TRAP();
@@ -529,9 +528,12 @@ CodeClass def_class( Str name, Opts_def_struct p )
 	}
 
 	CodeClass
-	result              = (CodeClass) make_code();
-	result->Name        = cache_str( name );
-	result->ModuleFlags = p.mflags;
+	result               = (CodeClass) make_code();
+	result->Name         = cache_str( name );
+	result->ModuleFlags  = p.mflags;
+	result->Attributes   = p.attributes;
+	result->ParentAccess = p.parent_access;
+	result->ParentType   = p.parent;
 	if ( p.body )
 	{
 		switch ( p.body->Type )
@@ -552,44 +554,32 @@ CodeClass def_class( Str name, Opts_def_struct p )
 	else {
 		result->Type = CT_Class_Fwd;
 	}
-
-	result->Attributes   = p.attributes;
-	result->ParentAccess = p.parent_access;
-	result->ParentType   = p.parent;
-
 	for (s32 idx = 0; idx < p.num_interfaces; idx++ ) {
 		class_add_interface(result, p.interfaces[idx] );
 	}
 	return result;
 }
 
-CodeDefine def_define( Str name, Str content, Opts_def_define p )
+CodeDefine def_define( Str name, MacroType type, Opts_def_define p )
 {
 	if ( ! name_check( def_define, name ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
-
 	CodeDefine
 	result          = (CodeDefine) make_code();
 	result->Type    = CT_Preprocess_Define;
 	result->Name    = cache_str( name );
-
-	if ( content.Len <= 0 || content.Ptr == nullptr )
-		result->Content = cache_str( txt("") );
+	result->Params  = p.params;
+	if ( p.content.Len <= 0 || p.content.Ptr == nullptr )
+		result->Body = untyped_str( txt("\n") );
 	else
-		result->Content = cache_str( strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S\n", content)) );
+		result->Body = untyped_str( strbuilder_to_str(strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S\n", p.content)) );
 
-	b32  append_preprocess_defines = ! p.dont_append_preprocess_defines;
-	if ( append_preprocess_defines ) {
-		// Add the define to PreprocessorDefines for usage in parsing
-		s32 lex_id_len = 0;
-		for (; lex_id_len < result->Name.Len; ++ lex_id_len ) {
-			if ( result->Name.Ptr[lex_id_len] == '(' )
-				break;
-		}
-		Str lex_id = { result->Name.Ptr,  lex_id_len };
-		array_append(_ctx->PreprocessorDefines, cache_str(lex_id) );
+	b32  register_define = ! p.dont_register_to_preprocess_macros;
+	if ( register_define ) {
+		Macro macro_entry = { result->Name, type, p.flags };
+		register_macro(macro_entry);
 	}
 	return result;
 }
@@ -1284,7 +1274,7 @@ CodeUsing def_using_namespace( Str name )
 
 CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable p )
 {
-	if ( ! name_check( def_variable, name ) || null_check( def_variable, type ) ) {
+	if ( ! name_check( def_variable, name ) || ! null_check( def_variable, type ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
@@ -1406,6 +1396,67 @@ CodeBody def_class_body( s32 num, Code* codes )
 		body_append(result, entry);
 	}
 	while (num--, num > 0);
+
+	return result;
+}
+
+CodeDefineParams def_define_params( s32 num, ... )
+{
+	def_body_start( def_define_params );
+
+	va_list va;
+	va_start(va, num);
+
+	Code_POD         pod   = va_arg(va, Code_POD);
+	CodeDefineParams param = pcast( CodeDefineParams, pod );
+
+	null_check( def_define_params, param );
+	if ( param->Type != CT_Parameters_Define ) {
+		log_failure( "gen::def_define_params: param %d is not a parameter for a preprocessor define", num - num + 1 );
+		return InvalidCode;
+	}
+
+	CodeDefineParams result = (CodeDefineParams) code_duplicate(param);
+	while ( -- num )
+	{
+		pod   = va_arg(va, Code_POD);
+		param = pcast( CodeDefineParams, pod );
+		if ( param->Type != CT_Parameters_Define ) {
+			log_failure( "gen::def_define_params: param %d is not a parameter for a preprocessor define", num - num + 1 );
+			return InvalidCode;
+		}
+		define_params_append(result, param );
+	}
+	va_end(va);
+
+	return result;
+}
+
+CodeDefineParams def_define_params( s32 num, CodeDefineParams* codes )
+{
+	def_body_code_array_start( def_define_params );
+
+#	define check_current(current)                                                                                                                 \
+	if ( current == nullptr ) {                                                                                                                   \
+		log_failure("gen::def_define_params: Provide a null code in codes array");                                                                \
+		return InvalidCode;                                                                                                                       \
+	}                                                                                                                                             \
+	if (current->Type != CT_Parameters_Define ) {                                                                                                 \
+		log_failure("gen::def_define_params: Code in coes array is not of paramter for preprocessor define type - %s", code_debug_str(current) ); \
+		return InvalidCode;                                                                                                                       \
+	}
+	CodeDefineParams current = (CodeDefineParams)code_duplicate(* codes);
+	check_current(current);
+
+	CodeDefineParams
+	result            = (CodeDefineParams) make_code();
+	result->Name      = current->Name;
+	result->Type      = current->Type;
+	while( codes++, current = * codes, num--, num > 0 ) {
+		check_current(current);
+		define_params_append(result, current );
+	}
+#	undef check_current
 
 	return result;
 }

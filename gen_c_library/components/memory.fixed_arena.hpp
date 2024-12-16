@@ -89,7 +89,14 @@ CodeBody gen_fixed_arenas()
 	result.append(arena_interface_2mb);
 	result.append(arena_interface_4mb);
 
-	CodeDefine def = def_define(txt("fixed_arena_allocator_info(fixed_arena)"), txt("( (AllocatorInfo) { arena_allocator_proc, & (fixed_arena)->arena } )"));
+	register_macros( args(
+		( Macro { txt("fixed_arena_allocator_info"), MT_Expression, MF_Functional }),
+		( Macro { txt("fixed_arena_init"),           MT_Expression, MF_Functional }),
+		( Macro { txt("fixed_arena_free"),           MT_Expression, MF_Functional }),
+		( Macro { txt("fixed_arena_size_remaining"), MT_Expression, MF_Functional })
+	));
+
+	CodeDefine def = parse_define(txt("#define fixed_arena_allocator_info(fixed_arena) ( (AllocatorInfo) { arena_allocator_proc, & (fixed_arena)->arena } )\n"));
 	result.append(def);
 	result.append(fmt_newline);
 

@@ -15,7 +15,9 @@ Builder builder_open( char const* path )
 		return result;
 	}
 
-	result.Buffer = strbuilder_make_reserve( _ctx->Allocator_Temp, _ctx->InitSize_BuilderBuffer );
+	Context* ctx = get_context();
+	GEN_ASSERT_NOT_NULL(ctx);
+	result.Buffer = strbuilder_make_reserve( ctx->Allocator_Temp, ctx->InitSize_BuilderBuffer );
 
 	// log_fmt("$Builder - Opened file: %s\n", result.File.filename );
 	return result;

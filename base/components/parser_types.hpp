@@ -4,39 +4,24 @@
 #include "gen/ecode.hpp"
 #include "gen/eoperator.hpp"
 #include "gen/especifier.hpp"
+#include "gen/etoktype.hpp"
 #endif
-
-enum MacroFlags : u32
-{
-	// Can only be one of these at a time (required)
-	MF_Block_Start    = bit(0), // Start of a "block" scope
-	MF_Block_End      = bit(1), // End of a "block" scope
-	MF_Case_Statement = bit(2), // Used as a case statement (not utilized by the parser yet)
-	MF_Expression     = bit(3), // Used as an expresssion (not utilized by the parser yet)
-	MF_Statement      = bit(4), // Used a statement (will expect to be a lone macro)
-	MF_Expects_Body   = bit(5), // Expects to consume a braced scope
-	MF_Typename       = bit(6), // Behaves as a typename
-
-	// Optional
-	MF_Functional     = bit(7),
-
-	MF_Null           = 0,
-	MF_UnderlyingType = GEN_U32_MAX,
-};
 
 enum TokFlags : u32
 {
-	TF_Operator		   = bit(0),
-	TF_Assign          = bit(1),
-	TF_Preprocess      = bit(2),
-	TF_Preprocess_Cond = bit(3),
-	TF_Attribute       = bit(6),
-	TF_AccessOperator  = bit( 7 ),
-	TF_AccessSpecifier = bit( 8 ),
-	TF_Specifier       = bit( 9 ),
-	TF_EndDefinition   = bit( 10 ),    // Either ; or }
-	TF_Formatting      = bit( 11 ),
-	TF_Literal         = bit( 12 ),
+	TF_Operator              = bit(0),
+	TF_Assign                = bit(1),
+	TF_Preprocess            = bit(2),
+	TF_Preprocess_Cond       = bit(3),
+	TF_Attribute             = bit(6),
+	TF_AccessOperator        = bit(7),
+	TF_AccessSpecifier       = bit(8),
+	TF_Specifier             = bit(9),
+	TF_EndDefinition         = bit(10),    // Either ; or }
+	TF_Formatting            = bit(11),
+	TF_Literal               = bit(12),
+	TF_Macro_Functional      = bit(13),
+	TF_Macro_Expects_Body    = bit(14),
 
 	TF_Null = 0,
 	TF_UnderlyingType = GEN_U32_MAX,
@@ -70,42 +55,42 @@ bool tok_is_valid( Token tok ) {
 
 forceinline
 bool tok_is_access_operator(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_AccessOperator );
+	return bitfield_is_set( u32, tok.Flags, TF_AccessOperator );
 }
 
 forceinline
 bool tok_is_access_specifier(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_AccessSpecifier );
+	return bitfield_is_set( u32, tok.Flags, TF_AccessSpecifier );
 }
 
 forceinline
 bool tok_is_attribute(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Attribute );
+	return bitfield_is_set( u32, tok.Flags, TF_Attribute );
 }
 
 forceinline
 bool tok_is_operator(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Operator );
+	return bitfield_is_set( u32, tok.Flags, TF_Operator );
 }
 
 forceinline
 bool tok_is_preprocessor(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess );
+	return bitfield_is_set( u32, tok.Flags, TF_Preprocess );
 }
 
 forceinline
 bool tok_is_preprocess_cond(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Preprocess_Cond );
+	return bitfield_is_set( u32, tok.Flags, TF_Preprocess_Cond );
 }
 
 forceinline
 bool tok_is_specifier(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_Specifier );
+	return bitfield_is_set( u32, tok.Flags, TF_Specifier );
 }
 
 forceinline
 bool tok_is_end_definition(Token tok) {
-	return bitfield_is_equal( u32, tok.Flags, TF_EndDefinition );
+	return bitfield_is_set( u32, tok.Flags, TF_EndDefinition );
 }
 
 StrBuilder tok_to_strbuilder(Token tok);
@@ -123,7 +108,7 @@ struct LexContext
 	char const*     scanner;
 	s32             line;
 	s32             column;
-	StringTable     defines;
+	// StringTable     defines;
 	Token           token;
 };
 
@@ -141,3 +126,100 @@ struct ParseContext
 	TokArray   Tokens;
 	StackNode* Scope;
 };
+
+enum MacroType : u16
+{
+	MT_Expression,     // A macro is assumed to be a expression if not resolved.
+	MT_Statement,      
+	MT_Typename,
+	MT_Attribute,      // More of a note to the parser than anythign else (attributes should be defined in the user attribues def).
+	MT_Specifier,      // More of a note to the parser than anythign else (specifiers should be defined in the user attribues def).
+	MT_Block_Start,    // Not Supported yet
+	MT_Block_End,      // Not Supported yet
+	MT_Case_Statement, // Not Supported yet
+
+	MT_UnderlyingType = GEN_U16_MAX,
+};
+
+forceinline
+TokType macrotype_to_toktype( MacroType type ) {
+	switch ( type ) {
+		case MT_Statement  : return Tok_Preprocess_Macro_Stmt;
+		case MT_Expression : return Tok_Preprocess_Macro_Expr;
+		case MT_Typename   : return Tok_Preprocess_Macro_Typename;
+	}
+	// All others unsupported for now.
+	return Tok_Invalid;
+}
+
+inline
+Str macrotype_to_str( MacroType type )
+{
+	local_persist
+	Str lookup[] = {
+		{ "Statement",        sizeof("Statement")        - 1 },
+		{ "Expression",       sizeof("Expression")       - 1 },
+		{ "Typename",         sizeof("Typename")         - 1 },
+		{ "Attribute(Macro)", sizeof("Attribute(Macro)") - 1 },
+		{ "Specifier(Macro)", sizeof("Specifier(Macro)") - 1 },
+		{ "Block_Start",      sizeof("Block_Start")      - 1 },
+		{ "Block_End",        sizeof("Block_End")        - 1 },
+		{ "Case_Statement",   sizeof("Case_Statement")   - 1 },
+	};
+	local_persist
+	Str invalid = { "Invalid", sizeof("Invalid") };
+	if ( type > MT_Case_Statement )
+		return invalid;
+
+	return lookup[ type ];
+}
+
+enum EMacroFlags : u16
+{
+	MF_Functional          = bit(0), // Macro has parameters (args expected to be passed)
+	MF_Expects_Body        = bit(1), // Expects to assign a braced scope to its body.
+
+	// lex__eat wil treat this macro as an identifier if the parser attempts to consume it as one.
+	//  ^^^ This is a kludge because we don't support push/pop macro pragmas rn.
+	MF_Allow_As_Identifier = bit(2), 
+
+	// lex__eat wil treat this macro as an attribute if the parser attempts to consume it as one.
+	//  ^^^ This a kludge because unreal has a macro that behaves as both a 'statement' and an attribute (UE_DEPRECATED, PRAGMA_ENABLE_DEPRECATION_WARNINGS, etc)
+	// TODO(Ed): We can keep the MF_Allow_As_Attribute flag for macros, however, we need to add the ability of AST_Attributes to chain themselves.
+	// Its thats already a thing in the standard language anyway
+	// & it would allow UE_DEPRECATED, (UE_PROPERTY / UE_FUNCTION) to chain themselves as attributes of a resolved member function/varaible definition
+	MF_Allow_As_Attribute  = bit(3),
+
+	// When a macro is encountered after attributs and specifiers while parsing a function, or variable:
+	// It will consume the macro and treat it as resolving the definition. (Yes this is for Unreal Engine)
+	// (MUST BE OF MT_Statement TYPE)
+	MF_Allow_As_Definition = bit(4),
+
+	MF_Null           = 0,
+	MF_UnderlyingType = GEN_U16_MAX,
+};
+typedef u16 MacroFlags;
+
+struct Macro
+{
+	StrCached  Name;
+	MacroType  Type;
+	MacroFlags Flags;
+};
+
+forceinline
+b32 macro_is_functional( Macro macro ) {
+	return bitfield_is_set( b16, macro.Flags, MF_Functional );
+}
+
+forceinline
+b32 macro_expects_body( Macro macro ) {
+	return bitfield_is_set( b16, macro.Flags, MF_Expects_Body );
+}
+
+#if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
+forceinline b32 is_functional( Macro macro ) { return bitfield_is_set( b16, macro.Flags, MF_Functional ); }
+forceinline b32 expects_body ( Macro macro ) { return bitfield_is_set( b16, macro.Flags, MF_Expects_Body ); }
+#endif
+
+typedef HashTable(Macro) MacroTable;

@@ -34,8 +34,8 @@
 #endif
 
 #ifndef bit
-#define bit( Value )                             ( 1 << Value )
-#define bitfield_is_equal( Type, Field, Mask ) ( (scast(Type, Mask) & scast(Type, Field)) == scast(Type, Mask) )
+#define bit( Value )                         ( 1 << Value )
+#define bitfield_is_set( Type, Field, Mask ) ( (scast(Type, Mask) & scast(Type, Field)) == scast(Type, Mask) )
 #endif
 
 // Mainly intended for forcing the base library to utilize only C-valid constructs or type coercion
@@ -86,14 +86,16 @@
 #define stringize( ... )    stringize_va( __VA_ARGS__ )
 #endif
 
-#ifndef do_once
-#define do_once()                                                               \
-    static int __do_once_counter_##__LINE__ = 0;                                \
-    for(; __do_once_counter_##__LINE__ != 1; __do_once_counter_##__LINE__ = 1 ) \
+#define src_line_str stringize(__LINE__)
 
-#define do_once_defer( expression )                                                          \
-    static int __do_once_counter_##__LINE__ = 0;                                             \
-    for(; __do_once_counter_##__LINE__ != 1; __do_once_counter_##__LINE__ = 1, (expression)) \
+#ifndef do_once
+#define do_once()                                                                       \
+    static int __do_once_counter_##src_line_str = 0;                                    \
+    for(; __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1 ) \
+
+#define do_once_defer( expression )                                                                       \
+    static int __do_once_counter_##src_line_str = 0;                                                      \
+    for(;      __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1, (expression)) \
 
 #define do_once_start      \
 	do                     \
@@ -248,9 +250,9 @@
 #	if ! GEN_COMPILER_C
 #		define typeof decltype
 #	elif defined(_MSC_VER)
-#		define typeof(x) __typeof__(x)
+#		define typeof __typeof__
 #	elif defined(__GNUC__) || defined(__clang__)
-#		define typeof(x) __typeof__(x)
+#		define typeof __typeof__
 #	else
 #		error "Compiler not supported"
 #	endif

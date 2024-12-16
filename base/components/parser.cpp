@@ -64,12 +64,10 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 	s32 level = 0;
 	do
 	{
-		if ( curr_scope->Name.Ptr )
-		{
+		if ( curr_scope->Name.Ptr ) {
 			strbuilder_append_fmt(& result, "\t%d: %s, AST Name: %.*s\n", level, curr_scope->ProcName.Ptr, curr_scope->Name.Len, curr_scope->Name.Ptr );
 		}
-		else
-		{
+		else {
 			strbuilder_append_fmt(& result, "\t%d: %s\n", level, curr_scope->ProcName.Ptr );
 		}
 
@@ -82,8 +80,7 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 
 bool lex__eat(TokArray* self, TokType type )
 {
-	if ( array_num(self->Arr) - self->Idx <= 0 )
-	{
+	if ( array_num(self->Arr) - self->Idx <= 0 ) {
 		log_failure( "No tokens left.\n%s", parser_to_strbuilder(_ctx->parser) );
 		return false;
 	}
@@ -96,7 +93,15 @@ bool lex__eat(TokArray* self, TokType type )
 		self->Idx ++;
 	}
 
-	if ( at_idx.Type != type )
+	b32 not_accepted  = at_idx.Type != type;
+	b32 is_identifier = at_idx.Type == Tok_Identifier;
+	if ( not_accepted )
+	{
+		Macro* macro = lookup_macro(at_idx.Text);
+		b32 accept_as_identifier = macro && bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Identifier );
+		not_accepted             = type == Tok_Identifier && accept_as_identifier ? false : true;
+	}
+	if ( not_accepted )
 	{
 		Token tok = * lex_current( self, lex_skip_formatting );
 		log_failure( "Parse Error, TokArray::eat, Expected: ' %s ' not ' %.*s ' (%d, %d)`\n%s"
@@ -121,11 +126,7 @@ bool lex__eat(TokArray* self, TokType type )
 internal
 void parser_init()
 {
-	_ctx->Lexer_Tokens = array_init_reserve(Token, arena_allocator_info( & _ctx->LexArena)
-		, ( _ctx->InitSize_LexArena - sizeof( ArrayHeader ) ) / sizeof(Token)
-	);
-
-	_ctx->Lexer_defines = hashtable_init_reserve(Str, _ctx->Allocator_DyanmicContainers, 256 );
+	_ctx->Lexer_Tokens = array_init_reserve(Token, _ctx->Allocator_DyanmicContainers, _ctx->InitSize_LexerTokens );
 }
 
 internal
@@ -195,7 +196,6 @@ internal CodeComment        parse_comment                      ();
 internal Code               parse_complicated_definition       ( TokType which );
 internal CodeBody           parse_class_struct_body            ( TokType which, Token name );
 internal Code               parse_class_struct                 ( TokType which, bool inplace_def );
-internal CodeDefine         parse_define                       ();
 internal Code               parse_expression                   ();
 internal Code               parse_forward_or_definition        ( TokType which, bool is_inplace );
 internal CodeFn             parse_function_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type, Token name );
@@ -204,19 +204,21 @@ internal CodeBody           parse_global_nspace                ( CodeType which 
 internal Code               parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers );
 internal Token              parse_identifier                   ( bool* possible_member_function );
 internal CodeInclude        parse_include                      ();
+internal Code               parse_macro_as_definiton           ( CodeAttributes attributes, CodeSpecifiers specifiers );
 internal CodeOperator       parse_operator_after_ret_type      ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type );
 internal Code               parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers );
 internal CodePragma         parse_pragma                       ();
 internal CodeParams         parse_params                       ( bool use_template_capture );
 internal CodePreprocessCond parse_preprocess_cond              ();
-internal Code               parse_simple_preprocess            ( TokType which, bool dont_consume_braces );
+internal Code               parse_simple_preprocess            ( TokType which  );
 internal Code               parse_static_assert                ();
 internal void               parse_template_args                ( Token* token );
 internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, Str name );
 internal CodeVar            parse_variable_declaration_list    ();
 
-internal CodeClass       parser_parse_class    ( bool inplace_def );
+internal CodeClass       parser_parse_class           ( bool inplace_def );
 internal CodeConstructor parser_parse_constructor     ( CodeSpecifiers specifiers );
+internal CodeDefine      parser_parse_define          ();
 internal CodeDestructor  parser_parse_destructor      ( CodeSpecifiers specifiers );
 internal CodeEnum        parser_parse_enum            ( bool inplace_def );
 internal CodeBody        parser_parse_export_body     ();
@@ -266,8 +268,7 @@ StrBuilder parser_strip_formatting( Str raw_text, bool preserve_newlines )
 	sptr        last_cut = 0;
 	char const* scanner  = raw_text.Ptr;
 
-	if ( scanner[0] == ' ' )
-	{
+	if ( scanner[0] == ' ' ) {
 		move_fwd();
 		last_cut = 1;
 	}
@@ -477,8 +478,7 @@ StrBuilder parser_strip_formatting( Str raw_text, bool preserve_newlines )
 		move_fwd();
 	}
 
-	if ( last_cut < raw_text.Len )
-	{
+	if ( last_cut < raw_text.Len ) {
 		strbuilder_append_c_str_len( & content,  cut_ptr, raw_text.Len - last_cut );
 	}
 
@@ -579,7 +579,7 @@ CodeAttributes parse_attributes()
 	s32   len   = 0;
 
 	// There can be more than one attribute. If there is flatten them to a single string.
-	// TODO(Ed): Support keeping an linked list of attributes similar to parameters
+	// TODO(Ed): Support chaining attributes (Use parameter linkage pattern)
 	while ( left && tok_is_attribute(currtok) )
 	{
 		if ( check( Tok_Attribute_Open ) )
@@ -684,8 +684,7 @@ CodeAttributes parse_attributes()
 internal
 Code parse_class_struct( TokType which, bool inplace_def )
 {
-	if ( which != Tok_Decl_Class && which != Tok_Decl_Struct )
-	{
+	if ( which != Tok_Decl_Class && which != Tok_Decl_Struct ) {
 		log_failure( "Error, expected class or struct, not %s\n%s", toktype_to_str( which ), parser_to_strbuilder(_ctx->parser) );
 		return InvalidCode;
 	}
@@ -700,8 +699,7 @@ Code parse_class_struct( TokType which, bool inplace_def )
 
 	Code result = InvalidCode;
 
-	if ( check(Tok_Module_Export) )
-	{
+	if ( check(Tok_Module_Export) ) {
 		mflags = ModuleFlag_Export;
 		eat( Tok_Module_Export );
 	}
@@ -713,8 +711,7 @@ Code parse_class_struct( TokType which, bool inplace_def )
 	attributes = parse_attributes();
 	// <ModuleFlags> <class/struct> <Attributes>
 
-	if ( check( Tok_Identifier ) )
-	{
+	if ( check( Tok_Identifier ) ) {
 		name = parse_identifier(nullptr);
 		_ctx->parser.Scope->Name = name.Text;
 	}
@@ -733,8 +730,7 @@ Code parse_class_struct( TokType which, bool inplace_def )
 		eat( Tok_Assign_Classifer );
 		// <ModuleFlags> <class/struct> <Attributes> <Name> :
 
-		if ( tok_is_access_specifier(currtok) )
-		{
+		if ( tok_is_access_specifier(currtok) ) {
 			access = tok_to_access_specifier(currtok);
 			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier>
 			eat( currtok.Type );
@@ -749,8 +745,7 @@ Code parse_class_struct( TokType which, bool inplace_def )
 			eat( Tok_Comma );
 			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>,
 
-			if ( tok_is_access_specifier(currtok) )
-			{
+			if ( tok_is_access_specifier(currtok) ) {
 				eat(currtok.Type);
 			}
 			Token interface_tok = parse_identifier(nullptr);
@@ -760,8 +755,7 @@ Code parse_class_struct( TokType which, bool inplace_def )
 		}
 	}
 
-	if ( check( Tok_BraceCurly_Open ) )
-	{
+	if ( check( Tok_BraceCurly_Open ) ) {
 		body = parse_class_struct_body( which, name );
 	}
 	// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }
@@ -821,93 +815,91 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 		if ( currtok_noskip.Type == Tok_Preprocess_Hash )
 			eat( Tok_Preprocess_Hash );
 
-		b32 macro_found = true;
-
 		switch ( currtok_noskip.Type )
 		{
-			case Tok_Statement_End:
-			{
+			case Tok_Statement_End: {
 				// TODO(Ed): Convert this to a general warning procedure
 				log_fmt("Dangling end statement found %SB\n", tok_to_strbuilder(currtok_noskip));
 				eat( Tok_Statement_End );
 				continue;
 			}
-			case Tok_NewLine:
+			case Tok_NewLine: {
 				member = fmt_newline;
 				eat( Tok_NewLine );
-			break;
-
-			case Tok_Comment:
+				break;
+			}
+			case Tok_Comment: {
 				member = cast(Code, parse_comment());
-			break;
-
-			case Tok_Access_Public:
+				break;
+			}
+			case Tok_Access_Public: {
 				member = access_public;
 				eat( Tok_Access_Public );
 				eat( Tok_Assign_Classifer );
 				// public:
-			break;
-
-			case Tok_Access_Protected:
+				break;
+			}
+			case Tok_Access_Protected: {
 				member = access_protected;
 				eat( Tok_Access_Protected );
 				eat( Tok_Assign_Classifer );
 				// protected:
-			break;
-
-			case Tok_Access_Private:
+				break;
+			}
+			case Tok_Access_Private: {
 				member = access_private;
 				eat( Tok_Access_Private );
 				eat( Tok_Assign_Classifer );
 				// private:
-			break;
-
-			case Tok_Decl_Class:
+				break;
+			}
+			case Tok_Decl_Class: {
 				member = parse_complicated_definition( Tok_Decl_Class );
 				// class
-			break;
-
-			case Tok_Decl_Enum:
+				break;
+			}
+			case Tok_Decl_Enum: {
 				member = parse_complicated_definition( Tok_Decl_Enum );
 				// enum
-			break;
-
-			case Tok_Decl_Friend:
+				break;
+			}
+			case Tok_Decl_Friend: {
 				member = cast(Code, parser_parse_friend());
 				// friend
-			break;
-
-			case Tok_Decl_Operator:
+				break;
+			}
+			case Tok_Decl_Operator: {
 				member = cast(Code, parser_parse_operator_cast(NullCode));
 				// operator <Type>()
-			break;
-
-			case Tok_Decl_Struct:
+				break;
+			}
+			case Tok_Decl_Struct: {
 				member = parse_complicated_definition( Tok_Decl_Struct );
 				// struct
-			break;
-
-			case Tok_Decl_Template:
+				break;
+			}
+			case Tok_Decl_Template: {
 				member = cast(Code, parser_parse_template());
 				// template< ... >
-			break;
-
-			case Tok_Decl_Typedef:
+				break;
+			}
+			case Tok_Decl_Typedef: {
 				member = cast(Code, parser_parse_typedef());
 				// typedef
-			break;
-
-			case Tok_Decl_Union:
+				break;
+			}
+			case Tok_Decl_Union: {
 				member = parse_complicated_definition( Tok_Decl_Union );
 				// union
-			break;
-
-			case Tok_Decl_Using:
+				break;
+			}
+			case Tok_Decl_Using: {
 				member = cast(Code, parser_parse_using());
 				// using
-			break;
-
+				break;
+			}
 			case Tok_Operator:
+			{
 				//if ( currtok.Text[0] != '~' )
 				//{
 				//	log_failure( "Operator token found in global body but not destructor unary negation\n%s", to_strbuilder(_ctx->parser) );
@@ -916,17 +908,19 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 				member = cast(Code, parser_parse_destructor(NullCode));
 				// ~<Name>()
-			break;
-
-			case Tok_Preprocess_Define:
-				member = cast(Code, parse_define());
+				break;
+			}
+			case Tok_Preprocess_Define: {
+				member = cast(Code, parser_parse_define());
 				// #define
-			break;
-
+				break;
+			}
 			case Tok_Preprocess_Include:
+			{
 				member = cast(Code, parse_include());
 				// #include
-			break;
+				break;
+			}
 
 			case Tok_Preprocess_If:
 			case Tok_Preprocess_IfDef:
@@ -936,38 +930,51 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				// #<Condition>
 			break;
 
-			case Tok_Preprocess_Else:
+			case Tok_Preprocess_Else: {
 				member = cast(Code, preprocess_else);
 				eat( Tok_Preprocess_Else );
 				// #else
-			break;
-
-			case Tok_Preprocess_EndIf:
+				break;
+			}
+			case Tok_Preprocess_EndIf: {
 				member = cast(Code, preprocess_endif);
 				eat( Tok_Preprocess_EndIf );
 				// #endif
-			break;
+				break;
+			}
 
-			case Tok_Preprocess_Macro:
-				// <Macro>
-				macro_found = true;
-				goto Preprocess_Macro_Bare_In_Body;
-			break;
+			case Tok_Preprocess_Macro_Stmt: {
+				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
+				break;
+			}
+			case Tok_Preprocess_Macro_Expr: {
+				log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
+				return InvalidCode;
+			}
 
-			case Tok_Preprocess_Pragma:
+			// case Tok_Preprocess_Macro:
+			// 	// <Macro>
+			// 	macro_found = true;
+			// 	goto Preprocess_Macro_Bare_In_Body;
+			// break;
+
+			case Tok_Preprocess_Pragma: {
 				member = cast(Code, parse_pragma());
 				// #pragma
-			break;
+				break;
+			}
 
-			case Tok_Preprocess_Unsupported:
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported, parser_consume_braces ));
+			case Tok_Preprocess_Unsupported: {
+				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
 				// #<UNKNOWN>
-			break;
+				break;
+			}
 
-			case Tok_StaticAssert:
+			case Tok_StaticAssert: {
 				member = parse_static_assert();
 				// static_assert
-			break;
+				break;
+			}
 
 			case Tok_Attribute_Open:
 			case Tok_Decl_GNU_Attribute:
@@ -1060,6 +1067,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			}
 			//! Fallthrough intentional
 			case Tok_Identifier:
+			case Tok_Preprocess_Macro_Typename:
 			case Tok_Spec_Const:
 			case Tok_Type_Unsigned:
 			case Tok_Type_Signed:
@@ -1080,28 +1088,6 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 					}
 				}
 
-				if (macro_found)
-				{
-				Preprocess_Macro_Bare_In_Body:
-					b32 lone_macro = nexttok.Type == Tok_Statement_End || nexttok_noskip.Type == Tok_NewLine;
-					if (lone_macro)
-					{
-						member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces ));
-						// <Macro>;
-
-						if ( member == Code_Invalid )
-						{
-							log_failure( "Failed to parse member\n%s", parser_to_strbuilder(_ctx->parser) );
-							parser_pop(& _ctx->parser);
-							return InvalidCode;
-						}
-						continue;
-					}
-
-					// We have a macro but its most likely behaving as a typename
-					// <Macro ...
-				}
-
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
 				// <Attributes> <Specifiers> operator <Op> ...
 				// or
@@ -1111,13 +1097,11 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 			default:
 				Token untyped_tok = currtok;
-
 				while ( left && currtok.Type != Tok_BraceCurly_Close )
 				{
 					untyped_tok.Text.Len = ( (sptr)currtok.Text.Ptr + currtok.Text.Len ) - (sptr)untyped_tok.Text.Ptr;
 					eat( currtok.Type );
 				}
-
 				member = untyped_str( tok_to_str(untyped_tok) );
 				// Something unknown
 			break;
@@ -1129,7 +1113,6 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			parser_pop(& _ctx->parser);
 			return InvalidCode;
 		}
-
 		body_append(result, member );
 	}
 
@@ -1309,54 +1292,6 @@ Code parse_complicated_definition( TokType which )
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
-}
-
-internal inline
-CodeDefine parse_define()
-{
-	push_scope();
-	eat( Tok_Preprocess_Define );
-	// #define
-
-	CodeDefine
-	define = (CodeDefine) make_code();
-	define->Type = CT_Preprocess_Define;
-
-	if ( ! check( Tok_Identifier ) )
-	{
-		log_failure( "Error, expected identifier after #define\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
-		return InvalidCode;
-	}
-
-	_ctx->parser.Scope->Name = currtok.Text;
-	define->Name = cache_str( tok_to_str(currtok) );
-	eat( Tok_Identifier );
-	// #define <Name>
-
-	if ( ! check( Tok_Preprocess_Content ))
-	{
-		log_failure( "Error, expected content after #define %s\n%s", define->Name, parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
-		return InvalidCode;
-	}
-
-	if ( currtok.Text.Len == 0 )
-	{
-		define->Content = cache_str( tok_to_str(currtok) );
-		eat( Tok_Preprocess_Content );
-		// #define <Name> <Content>
-
-		parser_pop(& _ctx->parser);
-		return define;
-	}
-
-	define->Content = cache_str( strbuilder_to_str( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
-	eat( Tok_Preprocess_Content );
-	// #define <Name> <Content>
-
-	parser_pop(& _ctx->parser);
-	return define;
 }
 
 internal inline
@@ -1694,7 +1629,7 @@ CodeBody parse_global_nspace( CodeType which )
 			break;
 
 			case Tok_Preprocess_Define:
-				member = cast(Code, parse_define());
+				member = cast(Code, parser_parse_define());
 				// #define ...
 			break;
 
@@ -1723,12 +1658,14 @@ CodeBody parse_global_nspace( CodeType which )
 				// #endif
 			break;
 
-			case Tok_Preprocess_Macro: {
-				// <Macro>
-				macro_found = true;
-				goto Preprocess_Macro_Bare_In_Body;
+			case Tok_Preprocess_Macro_Stmt: {
+				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
+				break;
 			}
-			break;
+			case Tok_Preprocess_Macro_Expr: {
+				log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
+				return InvalidCode;
+			}
 
 			case Tok_Preprocess_Pragma: {
 				member = cast(Code, parse_pragma());
@@ -1737,7 +1674,7 @@ CodeBody parse_global_nspace( CodeType which )
 			break;
 
 			case Tok_Preprocess_Unsupported: {
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported, parser_consume_braces ));
+				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
 				// #<UNSUPPORTED> ...
 			}
 			break;
@@ -1774,7 +1711,7 @@ CodeBody parse_global_nspace( CodeType which )
 				// <Attributes>
 			}
 			//! Fallthrough intentional
-			GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_TOK_SPECIFIERS_CASES:
+			GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_TOK_SPECIFIER_CASES:
 			{
 				Specifier specs_found[16] = { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
@@ -1787,7 +1724,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 					switch ( spec )
 					{
-						GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_SPECIFIERS_CASES:
+						GEN_PARSER_CLASS_GLOBAL_NSPACE_ALLOWED_MEMBER_SPECIFIER_CASES:
 						break;
 
 						case Spec_Consteval:
@@ -1822,6 +1759,7 @@ CodeBody parse_global_nspace( CodeType which )
 			}
 			//! Fallthrough intentional
 			case Tok_Identifier:
+			case Tok_Preprocess_Macro_Typename:
 			case Tok_Spec_Const:
 			case Tok_Type_Long:
 			case Tok_Type_Short:
@@ -1873,34 +1811,11 @@ CodeBody parse_global_nspace( CodeType which )
 					}
 				}
 
-				if (macro_found)
-				{
-				Preprocess_Macro_Bare_In_Body:
-					b32 lone_macro = nexttok.Type == Tok_Statement_End || nexttok_noskip.Type == Tok_NewLine;
-					if (lone_macro)
-					{
-						member = parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces );
-						// <Macro>;
-
-						if ( member == Code_Invalid )
-						{
-							log_failure( "Failed to parse member\n%s", parser_to_strbuilder(_ctx->parser) );
-							parser_pop(& _ctx->parser);
-							return InvalidCode;
-						}
-						goto Member_Resolved_To_Lone_Macro;
-					}
-
-					// We have a macro but its most likely behaving as a typename
-					// <Macro ...
-				}
-
 				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
 				// <Attributes> <Specifiers> ...
 			}
 		}
 
-	Member_Resolved_To_Lone_Macro:
 		if ( member == Code_Invalid )
 		{
 			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_strbuilder(currtok_noskip), parser_to_strbuilder(_ctx->parser) );
@@ -2520,24 +2435,16 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 
 	Code result = InvalidCode;
 
-#ifndef GEN_PARSER_DISABLE_MACRO_FUNCTION_SIGNATURES
-	b32 lone_macro = false;
-
-	if ( currtok.Type == Tok_Preprocess_Macro && ( nexttok.Type == Tok_Statement_End || nexttok.Type == Tok_Comment ) )
-	{
-		// Were dealing with a lone macro after attributes/specifiers, there was a end statement ';' after.
-		result = parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces );
+	Code macro_stmt = parse_macro_as_definiton(attributes, specifiers);
+	if (macro_stmt) {
 		parser_pop(& _ctx->parser);
-		return result;
-		// <Attributes> <Specifiers> <Macro>
+		return macro_stmt;
 	}
-#endif
 
 	CodeTypename type = parser_parse_type( parser_not_from_template, nullptr );
 	// <Attributes> <Specifiers> <ReturnType/ValueType>
 
-	if ( type == InvalidCode )
-	{
+	if ( type == InvalidCode ) {
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
@@ -2583,7 +2490,40 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		// Example : <Capture_Start> <Value> <Comma>
 		//                 idx         +1      +2
 		bool detected_comma = _ctx->parser.Tokens.Arr[ _ctx->parser.Tokens.Idx + 2 ].Type == Tok_Comma;
-		if ( detected_capture && ! detected_comma )
+
+		b32   detected_non_varadic_unpaired_param = detected_comma && nexttok.Type != Tok_Varadic_Argument;
+		if (! detected_non_varadic_unpaired_param && nexttok.Type ==  Tok_Preprocess_Macro_Expr) for( s32 break_scope = 0; break_scope == 0; ++ break_scope)
+		{
+			Macro* macro = lookup_macro( nexttok.Text );
+			if (macro == nullptr || ! macro_is_functional(* macro))
+				break;
+
+			// (   <Macro_Expr> (  
+			// Idx      +1     +2
+			s32  idx    = _ctx->parser.Tokens.Idx + 1;  
+			s32  level = 0;
+
+			// Find end of the token expression
+			for ( ; idx < array_num(_ctx->parser.Tokens.Arr); idx++ )
+			{
+				Token tok = _ctx->parser.Tokens.Arr[ idx ];
+
+				if ( tok.Type == Tok_Capture_Start )
+					level++;
+				else if ( tok.Type == Tok_Capture_End && level > 0 )
+					level--;
+				if (level == 0 && tok.Type == Tok_Capture_End)
+					break;
+			}
+			++ idx; // Will incremnt to possible comma position
+
+			if ( _ctx->parser.Tokens.Arr[ idx ].Type != Tok_Comma )
+				break;
+
+			detected_non_varadic_unpaired_param = true;
+		}
+
+		if ( detected_capture && ! detected_non_varadic_unpaired_param ) 
 		{
 			// Dealing with a function
 			result = cast(Code, parse_function_after_name( ModuleFlag_None, attributes, specifiers, type, name ));
@@ -2591,19 +2531,47 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		}
 		else
 		{
-			if ( expects_function )
-			{
+			if ( expects_function ) {
 				log_failure( "Expected function declaration (consteval was used)\n%s", parser_to_strbuilder(_ctx->parser) );
 				parser_pop(& _ctx->parser);
 				return InvalidCode;
 			}
-
 			// Dealing with a variable
 			result = cast(Code, parse_variable_after_name( ModuleFlag_None, attributes, specifiers, type, tok_to_str(name) ));
 			// <Attributes> <Specifiers> <ValueType> <Name> ...
 		}
 	}
 
+	parser_pop(& _ctx->parser);	
+	return result;
+}
+
+internal
+Code parse_macro_as_definiton( CodeAttributes attributes, CodeSpecifiers specifiers )
+{
+	push_scope();
+
+	if (currtok.Type != Tok_Preprocess_Macro_Stmt ) {
+		parser_pop(& _ctx->parser);
+		return NullCode;
+	}
+	Macro* macro                     = lookup_macro(currtok.Text);
+	b32    can_resolve_to_definition = macro && bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Definition);
+	if ( ! can_resolve_to_definition) {
+		parser_pop(& _ctx->parser);
+		return NullCode;
+	}
+
+	// TODO(Ed): When AST_Macro is made, have it support attributs and specifiers for when its behaving as a declaration/definition.
+	Code code = parse_simple_preprocess( Tok_Preprocess_Macro_Stmt );
+
+	// Attributes and sepcifiers will be collapsed into the macro's serialization.
+	StrBuilder resolved_definition = strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S %S %S"
+		, attributes ? strbuilder_to_str( attributes_to_strbuilder(attributes)) : txt("")
+		, specifiers ? strbuilder_to_str( specifiers_to_strbuilder(specifiers)) : txt("")
+		, code->Content
+	);
+	Code result = untyped_str( strbuilder_to_str(resolved_definition) );
 	parser_pop(& _ctx->parser);
 	return result;
 }
@@ -2619,8 +2587,7 @@ CodePragma parse_pragma()
 	eat( Tok_Preprocess_Pragma );
 	// #pragma
 
-	if ( ! check( Tok_Preprocess_Content ))
-	{
+	if ( ! check( Tok_Preprocess_Content )) {
 		log_failure( "Error, expected content after #pragma\n%s", parser_to_strbuilder(_ctx->parser) );
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
@@ -2641,15 +2608,14 @@ CodeParams parse_params( bool use_template_capture )
 {
 	push_scope();
 
-	if ( ! use_template_capture )
+	if ( ! use_template_capture ) {
 		eat( Tok_Capture_Start );
-	// (
-
-	else
-	{
+		// (
+	}
+	else {
 		if ( check( Tok_Operator ) && currtok.Text.Ptr[ 0 ] == '<' )
 			eat( Tok_Operator );
-		// <
+			// <
 	}
 
 	if ( ! use_template_capture && check( Tok_Capture_End ) )
@@ -2659,7 +2625,7 @@ CodeParams parse_params( bool use_template_capture )
 		parser_pop(& _ctx->parser);
 		return NullCode;
 	}
-	else if ( check( Tok_Operator ) && currtok.Text.Ptr[ 0 ] == '>' )
+	else if ( check( Tok_Operator ) && currtok.Text.Ptr[ 0 ] == '>' ) 
 	{
 		eat( Tok_Operator );
 		// >
@@ -2687,13 +2653,14 @@ CodeParams parse_params( bool use_template_capture )
 	#define CheckEndParams() \
 		(use_template_capture ? (currtok.Text.Ptr[ 0 ] != '>') : (currtok.Type != Tok_Capture_End))
 
+	// TODO(Ed): Use expression macros or this? macro as attribute?
 	// Ex: Unreal has this type of macro:                 vvvvvvvvv
 	// COREUOBJECT_API void CallFunction( FFrame& Stack, RESULT_DECL, UFunction* Function );
 	// and:                 vvvv
 	// AddComponentByClass(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UActorComponent> Class, bool bManualAttachment, ...
-	if ( check(Tok_Preprocess_Macro))
+	if ( check(Tok_Preprocess_Macro_Expr))
 	{
-		macro = parse_simple_preprocess(Tok_Preprocess_Macro, parser_consume_braces);
+		macro = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
 		// ( <Macro>
 	}
 	if ( currtok.Type != Tok_Comma )
@@ -2713,27 +2680,28 @@ CodeParams parse_params( bool use_template_capture )
 			// ( <Macro> <ValueType> <Name>
 		}
 
+		// TODO(Ed): Use expression macro for this?
 		// Unreal has yet another type of macro:
 		// template<class T UE_REQUIRES(TPointerIsConvertibleFromTo<T, UInterface>::Value)>
 		// class T ... and then ^this^ UE_REQUIRES shows up
 		// So we need to consume that.
-		if ( check( Tok_Preprocess_Macro ))
+		if ( check( Tok_Preprocess_Macro_Expr ))
 		{
-			post_name_macro = parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces );
+			post_name_macro = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
+			// ( <Macro> <ValueType> <Name> <PostNameMacro>
 		}
 
 		// In template captures you can have a typename have direct assignment without a name
 		// typename = typename ...
 		// Which would result in a static value type from a struct expansion (traditionally)
-		if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+		if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 		{
 			eat( Tok_Operator );
-			// ( <Macro> <ValueType> <Name> =
+			// ( <Macro> <ValueType> <Name>  =
 
 			Token value_tok = currtok;
 
-			if ( currtok.Type == Tok_Comma )
-			{
+			if ( currtok.Type == Tok_Comma ) {
 				log_failure( "Expected value after assignment operator\n%s.", parser_to_strbuilder(_ctx->parser) );
 				parser_pop(& _ctx->parser);
 				return InvalidCode;
@@ -2801,10 +2769,10 @@ CodeParams parse_params( bool use_template_capture )
 		// COREUOBJECT_API void CallFunction( FFrame& Stack, RESULT_DECL, UFunction* Function );
 		// and:                 vvvv
 		// AddComponentByClass(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UActorComponent> Class, bool bManualAttachment, ...
-		if ( check(Tok_Preprocess_Macro))
+		if ( check(Tok_Preprocess_Macro_Expr))
 		{
-			macro = parse_simple_preprocess(Tok_Preprocess_Macro, parser_dont_consume_braces);
-			// ( <Macro>
+			macro = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
+			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro>
 		}
 		if ( currtok.Type != Tok_Comma )
 		{
@@ -2829,23 +2797,22 @@ CodeParams parse_params( bool use_template_capture )
 			// template<class T UE_REQUIRES(TPointerIsConvertibleFromTo<T, UInterface>::Value)>
 			// class T ... and then ^this^ UE_REQUIRES shows up
 			// So we need to consume that.
-			if ( check( Tok_Preprocess_Macro ))
-			{
-				post_name_macro = parse_simple_preprocess( Tok_Preprocess_Macro, parser_dont_consume_braces );
+			if ( check( Tok_Preprocess_Macro_Expr )) {
+				post_name_macro = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
+				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <PostNameMacro>
 			}
 
 			// In template captures you can have a typename have direct assignment without a name
 			// typename = typename ...
 			// Which would result in a static value type from a struct expansion (traditionally)
-			if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+			if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 			{
 				eat( Tok_Operator );
-				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> =
+				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> =
 
 				Token value_tok = currtok;
 
-				if ( currtok.Type == Tok_Comma )
-				{
+				if ( currtok.Type == Tok_Comma ) {
 					log_failure( "Expected value after assignment operator\n%s", parser_to_strbuilder(_ctx->parser) );
 					parser_pop(& _ctx->parser);
 					return InvalidCode;
@@ -2877,9 +2844,9 @@ CodeParams parse_params( bool use_template_capture )
 				}
 
 				value = untyped_str( strbuilder_to_str(parser_strip_formatting( tok_to_str(value_tok), parser_strip_formatting_dont_preserve_newlines )) );
-				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>
+				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>
 			}
-			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, ..
+			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, ..
 		}
 
 		CodeParams param = ( CodeParams )make_code();
@@ -2900,21 +2867,20 @@ CodeParams parse_params( bool use_template_capture )
 	}
 
 	if ( ! use_template_capture )
+	{
 		eat( Tok_Capture_End );
-	// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, .. )
-
+		// ( <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, .. )
+	}
 	else
 	{
-		if ( ! check( Tok_Operator ) || currtok.Text.Ptr[ 0 ] != '>' )
-		{
+		if ( ! check( Tok_Operator ) || currtok.Text.Ptr[ 0 ] != '>' ) {
 			log_failure( "Expected '<' after 'template' keyword\n%s", parser_to_strbuilder(_ctx->parser) );
 			parser_pop(& _ctx->parser);
 			return InvalidCode;
 		}
 		eat( Tok_Operator );
-		// < <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> = <Expression>, .. >
+		// < <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, .. >
 	}
-
 	parser_pop(& _ctx->parser);
 	return result;
 #undef context
@@ -2955,18 +2921,46 @@ CodePreprocessCond parse_preprocess_cond()
 }
 
 internal
-Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
+Code parse_simple_preprocess( TokType which )
 {
 	// TODO(Ed): We can handle a macro a bit better than this. It's AST can be made more robust..
 	// Make an AST_Macro, it should have an Name be the macro itself, with the function body being an optional function body node.
 	// If we want it to terminate or have an inline comment we can possbily use its parent typedef for that info...
 	push_scope();
 
-	Token tok = currtok;
+	Token full_macro = currtok;
 	eat( which );
 	// <Macro>
 
-	if ( ! dont_consume_braces && peektok.Type == Tok_BraceCurly_Open )
+	Macro* macro = lookup_macro( full_macro.Text );
+	if ( which != Tok_Preprocess_Unsupported && macro == nullptr ) {
+		log_failure("Expected the macro %S to be registered\n%S", full_macro,  parser_to_strbuilder(_ctx->parser));
+		return NullCode;
+	}
+
+	// TODO(Ed) : Parse this properly later (expression and statement support)
+	if ( macro && macro_is_functional(* macro) )
+	{
+		eat( Tok_Capture_Start );
+
+		s32 level = 0;
+		while ( left && ( currtok.Type != Tok_Capture_End || level > 0 ) )
+		{
+			if ( currtok.Type == Tok_Capture_Start )
+				level++;
+
+			else if ( currtok.Type == Tok_Capture_End && level > 0 )
+				level--;
+
+			eat( currtok.Type );
+		}
+		eat( Tok_Capture_End );
+		// <Macro> ( <params> )
+
+		full_macro.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)full_macro.Text.Ptr;
+	}
+
+	if ( macro && macro_expects_body(* macro) && peektok.Type == Tok_BraceCurly_Open )
 	{
 		// Eat the block scope right after the macro. Were assuming the macro defines a function definition's signature
 		eat( Tok_BraceCurly_Open );
@@ -2987,8 +2981,9 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 		eat( Tok_BraceCurly_Close );
 		// <Macro> { <Body> }
 
+		// TODO(Ed): Review this?
 		Str prev_proc = _ctx->parser.Scope->Prev->ProcName;
-		if ( c_str_compare_len( prev_proc.Ptr, "parser_parse_typedef", prev_proc.Len ) != 0 )
+		if ( macro->Type == MT_Typename && c_str_compare_len( prev_proc.Ptr, "parser_parse_typedef", prev_proc.Len ) != 0 )
 		{
 			if ( check( Tok_Statement_End ))
 			{
@@ -3002,7 +2997,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 			}
 		}
 
-		tok.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)tok.Text.Ptr;
+		full_macro.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)full_macro.Text.Ptr;
 	}
 	else
 	{
@@ -3015,16 +3010,15 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 			// Do nothing
 			goto Leave_Scope_Early;
 		}
-		else if (str_contains(_ctx->parser.Scope->Prev->ProcName, txt("parser_parse_typedef")))
+		else if (macro && macro->Type == MT_Typename && str_contains(_ctx->parser.Scope->Prev->ProcName, txt("parser_parse_typedef")))
 		{
-			// TODO(Ed): Reveiw the context for this?
 			if ( peektok.Type == Tok_Statement_End )
 			{
 				Token stmt_end = currtok;
 				eat( Tok_Statement_End );
 				// <Macro>;
 
-				tok.Text.Len += prevtok.Text.Len;
+				full_macro.Text.Len += prevtok.Text.Len;
 
 				// TODO(Ed): Reveiw the context for this? (ESPECIALLY THIS)
 				if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
@@ -3032,7 +3026,7 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 					eat( Tok_Comment );
 					// <Macro>; <InlineCmt>
 
-					tok.Text.Len += prevtok.Text.Len;
+					full_macro.Text.Len += prevtok.Text.Len;
 				}
 			}
 		}
@@ -3041,24 +3035,19 @@ Code parse_simple_preprocess( TokType which, bool dont_consume_braces )
 			||	str_contains(calling_proc, txt("parse_class_struct_body"))
 		)
 		{
-			if (peektok.Type == Tok_Statement_End)
+			if (left && peektok.Type == Tok_Statement_End)
 			{
 				Token stmt_end = currtok;
 				eat( Tok_Statement_End );
 				// <Macro>;
-				tok.Text.Len += prevtok.Text.Len;
+				full_macro.Text.Len += prevtok.Text.Len;
 			}
-
 		}
-		// tok.Length = ( (sptr)prevtok.Text + prevtok.Length ) - (sptr)tok.Text;
 	}
 
 Leave_Scope_Early:
-
-	char const* content = c_str_fmt_buf( "%.*s ", tok.Text.Len, tok.Text.Ptr );
-
-	Code result = untyped_str( to_str_from_c_str(content) );
-	_ctx->parser.Scope->Name = tok.Text;
+	Code result = untyped_str( full_macro.Text );
+	_ctx->parser.Scope->Name = full_macro.Text;
 
 	parser_pop(& _ctx->parser);
 	return result;
@@ -3153,19 +3142,18 @@ CodeVar parse_variable_after_name(
 	, CodeAttributes    attributes
 	, CodeSpecifiers    specifiers
 	, CodeTypename      type
-	, Str              name
+	, Str               name
 )
 {
 	push_scope();
 
 	Code array_expr    = parse_array_decl();
-	Code expr          = { nullptr };
-	Code bitfield_expr = { nullptr };
+	Code expr          = NullCode;
+	Code bitfield_expr = NullCode;
 
 	b32 using_constructor_initializer = false;
 
-	if ( bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
-	{
+	if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) ) {
 		// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>
 		expr = parse_assignment_expression();
 	}
@@ -3229,15 +3217,13 @@ CodeVar parse_variable_after_name(
 
 		Token expr_tok = currtok;
 
-		if ( currtok.Type == Tok_Statement_End )
-		{
+		if ( currtok.Type == Tok_Statement_End ) {
 			log_failure( "Expected expression after bitfield \n%SB", parser_to_strbuilder(_ctx->parser) );
 			parser_pop(& _ctx->parser);
 			return InvalidCode;
 		}
 
-		while ( left && currtok.Type != Tok_Statement_End )
-		{
+		while ( left && currtok.Type != Tok_Statement_End ) {
 			eat( currtok.Type );
 		}
 
@@ -3251,8 +3237,7 @@ CodeVar parse_variable_after_name(
 	CodeComment inline_cmt = NullCode;
 	if ( type )
 	{
-		if ( currtok.Type == Tok_Comma )
-		{
+		if ( currtok.Type == Tok_Comma ) {
 			// Were dealing with a statement with more than one declaration
 			// This is only handled this way if its the first declaration
 			// Otherwise its looped through in parse_variable_declaration_list
@@ -3271,8 +3256,7 @@ CodeVar parse_variable_after_name(
 		// <Attributes> <Specifiers> <ValueType> <Name> { <Expression> }, ...;
 
 		// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
-		if ( left && ( currtok_noskip.Type == Tok_Comment ) && currtok_noskip.Line == stmt_end.Line )
-		{
+		if ( left && ( currtok_noskip.Type == Tok_Comment ) && currtok_noskip.Line == stmt_end.Line ) {
 			inline_cmt = parse_comment();
 			// <Attributes> <Specifiers> <ValueType> <Name> : <Expression>, ...; <InlineCmt>
 			// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>, ...; <InlineCmt>
@@ -3285,35 +3269,20 @@ CodeVar parse_variable_after_name(
 	result->Type        = CT_Variable;
 	result->Name        = cache_str( name );
 	result->ModuleFlags = mflags;
+	result->ValueType    = type;
+	result->BitfieldSize = bitfield_expr;
+	result->Attributes   = attributes;
+	result->Specs        = specifiers;
+	result->Value        = expr;
+	result->InlineCmt    = inline_cmt;
 
-	// Type can be null if we're dealing with a declaration from a variable declaration-list
-	if ( type )
-		result->ValueType = type;
-
-	if (array_expr )
+	if (array_expr)
 		type->ArrExpr = array_expr;
 
-	if ( bitfield_expr )
-		result->BitfieldSize = bitfield_expr;
-
-	if ( attributes )
-		result->Attributes = attributes;
-
-	if ( specifiers )
-		result->Specs = specifiers;
-
-	if ( expr )
-		result->Value = expr;
-
-	if ( inline_cmt )
-		result->InlineCmt = inline_cmt;
-
-	if ( next_var )
-	{
+	if ( next_var ) {
 		result->NextVar         = next_var;
 		result->NextVar->Parent = cast(Code, result);
 	}
-
 	result->VarParenthesizedInit = using_constructor_initializer;
 
 	parser_pop(& _ctx->parser);
@@ -3502,6 +3471,93 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 	return result;
 }
 
+internal inline
+CodeDefine parser_parse_define()
+{
+	push_scope();
+	if ( check(Tok_Preprocess_Hash)) {
+		// If parse_define is called by the user the hash reach here.
+		eat(Tok_Preprocess_Hash);
+	}
+
+	eat( Tok_Preprocess_Define );
+	// #define
+
+	CodeDefine
+	define = (CodeDefine) make_code();
+	define->Type = CT_Preprocess_Define;
+	if ( ! check( Tok_Identifier ) ) {
+		log_failure( "Error, expected identifier after #define\n%s", parser_to_strbuilder(_ctx->parser) );
+		parser_pop(& _ctx->parser);
+		return InvalidCode;
+	}
+	_ctx->parser.Scope->Name = currtok.Text;
+	define->Name = cache_str( tok_to_str(currtok) );
+	eat( Tok_Identifier );
+	// #define <Name>
+
+	Macro* macro = lookup_macro(define->Name);
+	if (macro_is_functional(* macro)) {
+		eat( Tok_Capture_Start );
+		// #define <Name> (
+
+		// We provide the define params even if empty to make sure '()' are serialized.
+		CodeDefineParams
+		params = (CodeDefineParams) make_code();
+		params->Type = CT_Parameters_Define;
+
+		if ( left && currtok.Type != Tok_Capture_End ) {
+			params->Name = currtok.Text;
+			params->NumEntries ++;
+
+			eat( Tok_Preprocess_Define_Param );
+			// #define <Name> ( <param>
+		}
+		
+		while( left && currtok.Type != Tok_Capture_End ) {
+			eat( Tok_Comma );
+			// #define <Name> ( <param>, 
+
+			CodeDefineParams next_param = (CodeDefineParams) make_code();
+			next_param->Type = CT_Parameters_Define;
+			next_param->Name = currtok.Text;
+			define_params_append(params, next_param);
+
+			// #define  <Name> (  <param>, <next_param> ...
+			eat( Tok_Preprocess_Define_Param );
+		}
+
+		eat( Tok_Capture_End );
+		// #define <Name> ( <params> )
+
+		define->Params = params;
+	}
+
+	if ( ! check( Tok_Preprocess_Content ))
+	{
+		log_failure( "Error, expected content after #define %s\n%s", define->Name, parser_to_strbuilder(_ctx->parser) );
+		parser_pop(& _ctx->parser);
+		return InvalidCode;
+	}
+
+	if ( currtok.Text.Len == 0 )
+	{
+		define->Body = untyped_str( txt("\n") );
+		eat( Tok_Preprocess_Content );
+		// #define <Name> ( <params> ) <Content>
+
+		parser_pop(& _ctx->parser);
+		return define;
+	}
+
+	define->Body = untyped_str( strbuilder_to_str( parser_strip_formatting( tok_to_str(currtok), parser_strip_formatting_dont_preserve_newlines )) );
+	eat( Tok_Preprocess_Content );
+	// #define <Name> ( <params> ) <Content>
+
+	parser_pop(& _ctx->parser);
+	return define;
+}
+
 internal
 CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 {
@@ -3559,7 +3615,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 			specifiers_append(specifiers, Spec_Pure );
 		}
-		else if ( left && c_str_compare_len( upcoming.Text.Ptr, "default", sizeof("default") - 1 ) == 0)
+		else if ( left && c_str_compare_len( upcoming.Text.Ptr, "default", sizeof("default") - 1 ) == 0) 
 		{
 			body = cast(CodeBody, parse_assignment_expression());
 			// <Virtual Specifier> ~<
@@ -3575,8 +3631,10 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 	}
 
 	if ( ! pure_virtual && check( Tok_BraceCurly_Open ) )
+	{
 		body = cast(CodeBody, parse_function_body());
-	// <Virtual Specifier> ~<Name>() { ... }
+		// <Virtual Specifier> ~<Name>() { ... }
+	}
 	else
 	{
 		Token stmt_end = currtok;
@@ -3590,8 +3648,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 	CodeDestructor result = ( CodeDestructor )make_code();
 
-	if ( tok_is_valid(prefix_identifier) )
-	{
+	if ( tok_is_valid(prefix_identifier) ) {
 		prefix_identifier.Text.Len += 1 + identifier.Text.Len;
 		result->Name = cache_str( tok_to_str(prefix_identifier) );
 	}
@@ -3599,8 +3656,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 	if ( specifiers )
 		result->Specs = specifiers;
 
-	if ( body && body->Type == CT_Function_Body )
-	{
+	if ( body && body->Type == CT_Function_Body ) {
 		result->Body = cast(Code, body);
 		result->Type = CT_Destructor;
 	}
@@ -3670,13 +3726,13 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		}
 		// enum <class> <Attributes> <Name> : <UnderlyingType>
 	}
-	else if ( currtok.Type == Tok_Preprocess_Macro )
+	else if ( currtok.Type == Tok_Preprocess_Macro_Expr )
 	{
 		// We'll support the enum_underlying macro
-		if ( str_contains( tok_to_str(currtok), enum_underlying_sig) )
+		if ( str_contains( tok_to_str(currtok), enum_underlying_macro.Name) )
 		{
 			use_macro_underlying = true;
-			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro, parser_dont_consume_braces );
+			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
 		}
 	}
 
@@ -3717,7 +3773,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Define:
-					member = cast(Code, parse_define());
+					member = cast(Code, parser_parse_define());
 					// #define
 				break;
 
@@ -3739,10 +3795,11 @@ CodeEnum parser_parse_enum( bool inplace_def )
 					eat( Tok_Preprocess_EndIf );
 				break;
 
-				case Tok_Preprocess_Macro:
-					member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces));
+				case Tok_Preprocess_Macro_Stmt: {
+					member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
 					// <Macro>
-				break;
+					break;
+				}
 
 				case Tok_Preprocess_Pragma:
 					member = cast(Code, parse_pragma());
@@ -3750,11 +3807,12 @@ CodeEnum parser_parse_enum( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Unsupported:
-					member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported, parser_consume_braces ));
+					member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
 					// #<UNSUPPORTED>
 				break;
 
 				default:
+				{
 					Token entry = currtok;
 
 					eat( Tok_Identifier);
@@ -3765,18 +3823,19 @@ CodeEnum parser_parse_enum( bool inplace_def )
 						eat( Tok_Operator );
 						// <Name> =
 
-						while ( currtok.Type != Tok_Comma && currtok.Type != Tok_BraceCurly_Close )
-						{
+						while ( currtok.Type != Tok_Comma && currtok.Type != Tok_BraceCurly_Close ) {
 							eat( currtok.Type );
 						}
 					}
 					// <Name> = <Expression>
 
 					// Unreal UMETA macro support
-					if ( currtok.Type == Tok_Preprocess_Macro )
-					{
-						eat( Tok_Preprocess_Macro );
+					if ( currtok.Type == Tok_Preprocess_Macro_Expr ) {
+						Code macro = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
 						// <Name> = <Expression> <Macro>
+
+						// We're intentially ignoring this code as its going to be serialized as an untyped string with the rest of the enum "entry".
+						// TODO(Ed): We need a CodeEnumEntry, AST_EnumEntry types
 					}
 
 					if ( currtok.Type == Tok_Comma )
@@ -3799,11 +3858,11 @@ CodeEnum parser_parse_enum( bool inplace_def )
 					entry.Text.Len = ( (sptr)prev.Text.Ptr + prev.Text.Len ) - (sptr)entry.Text.Ptr;
 
 					member = untyped_str( tok_to_str(entry) );
+				}
 				break;
 			}
 
-			if ( member == Code_Invalid )
-			{
+			if ( member == Code_Invalid ) {
 				log_failure( "Failed to parse member\n%s", parser_to_strbuilder(_ctx->parser) );
 				parser_pop(& _ctx->parser);
 				return InvalidCode;
@@ -3952,8 +4011,7 @@ CodeFriend parser_parse_friend()
 			eat( currtok.Type );
 		}
 
-		if ( NumSpecifiers )
-		{
+		if ( NumSpecifiers ) {
 			specifiers = def_specifiers( NumSpecifiers, specs_found );
 		}
 		// <friend> <specifiers>
@@ -3961,8 +4019,7 @@ CodeFriend parser_parse_friend()
 
 	// Type declaration or return type
 	CodeTypename type = parser_parse_type(parser_not_from_template, nullptr);
-	if ( cast(Code, type) == Code_Invalid )
-	{
+	if ( cast(Code, type) == Code_Invalid ) {
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
@@ -3992,8 +4049,7 @@ CodeFriend parser_parse_friend()
 	}
 
 	// Operator declaration or definition
-	if ( currtok.Type == Tok_Decl_Operator )
-	{
+	if ( currtok.Type == Tok_Decl_Operator ) {
 		op = parse_operator_after_ret_type( ModuleFlag_None, NullCode, specifiers, type );
 	}
 
@@ -4040,8 +4096,7 @@ CodeFn parser_parse_function()
 	CodeSpecifiers specifiers = { nullptr };
 	ModuleFlag     mflags     = ModuleFlag_None;
 
-	if ( check(Tok_Module_Export) )
-	{
+	if ( check(Tok_Module_Export) ) {
 		mflags = ModuleFlag_Export;
 		eat( Tok_Module_Export );
 	}
@@ -4073,15 +4128,20 @@ CodeFn parser_parse_function()
 		eat( currtok.Type );
 	}
 
-	if ( NumSpecifiers )
-	{
+	if ( NumSpecifiers ) {
 		specifiers = def_specifiers( NumSpecifiers, specs_found );
 	}
 	// <export> <Attributes> <Specifiers>
 
+	// Note(Ed): We're enforcing that using this codepath requires non-macro jank.
+	// Code macro_stmt = parse_macro_as_definiton(attributes, specifiers);
+	// if (macro_stmt) {
+	// 	parser_pop(& _ctx->parser);
+	// 	return macro_stmt;
+	// }
+
 	CodeTypename ret_type = parser_parse_type(parser_not_from_template, nullptr);
-	if ( cast(Code, ret_type) == Code_Invalid )
-	{
+	if ( cast(Code, ret_type) == Code_Invalid ) {
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
@@ -4089,8 +4149,7 @@ CodeFn parser_parse_function()
 
 	Token name = parse_identifier(nullptr);
 	_ctx->parser.Scope->Name = name.Text;
-	if ( ! tok_is_valid(name) )
-	{
+	if ( ! tok_is_valid(name) ) {
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
@@ -4116,8 +4175,7 @@ CodeNS parser_parse_namespace()
 	// namespace <Name>
 
 	CodeBody body = parse_global_nspace( CT_Namespace_Body );
-	if ( cast(Code, body) == Code_Invalid )
-	{
+	if ( cast(Code, body) == Code_Invalid ) {
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
@@ -4146,8 +4204,7 @@ CodeOperator parser_parse_operator()
 	Specifier specs_found[16] = { Spec_NumSpecifiers };
 	s32        NumSpecifiers = 0;
 
-	if ( check(Tok_Module_Export) )
-	{
+	if ( check(Tok_Module_Export) ) {
 		mflags = ModuleFlag_Export;
 		eat( Tok_Module_Export );
 	}
@@ -4179,8 +4236,7 @@ CodeOperator parser_parse_operator()
 		eat( currtok.Type );
 	}
 
-	if ( NumSpecifiers )
-	{
+	if ( NumSpecifiers ) {
 		specifiers = def_specifiers( NumSpecifiers, specs_found );
 	}
 	// <export> <Attributes> <Specifiers>
@@ -4291,13 +4347,11 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 	if ( tok_is_valid(name) )
 		result->Name = cache_str( tok_to_str(name) );
 
-	if (body)
-	{
+	if (body) {
 		result->Type = CT_Operator_Cast;
 		result->Body = cast(CodeBody, body);
 	}
-	else
-	{
+	else {
 		result->Type = CT_Operator_Cast_Fwd;
 	}
 
@@ -4328,8 +4382,7 @@ CodeTemplate parser_parse_template()
 
 	ModuleFlag mflags = ModuleFlag_None;
 
-	if ( check( Tok_Module_Export ) )
-	{
+	if ( check( Tok_Module_Export ) ) {
 		mflags = ModuleFlag_Export;
 		eat( Tok_Module_Export );
 	}
@@ -4339,8 +4392,7 @@ CodeTemplate parser_parse_template()
 	// <export> template
 
 	CodeParams params = parse_params( UseTemplateCapture );
-	if ( cast(Code, params) == Code_Invalid )
-	{
+	if ( cast(Code, params) == Code_Invalid ) {
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
 	}
@@ -4422,8 +4474,7 @@ CodeTemplate parser_parse_template()
 				eat( currtok.Type );
 			}
 
-			if ( NumSpecifiers )
-			{
+			if ( NumSpecifiers ) {
 				specifiers = def_specifiers( NumSpecifiers, specs_found );
 			}
 			// <export> template< <Parameters> > <Attributes> <Specifiers>
@@ -4436,7 +4487,7 @@ CodeTemplate parser_parse_template()
 		if (is_in_global_nspace)
 		{
 			Code constructor_destructor = parse_global_nspace_constructor_destructor( specifiers );
-			if ( constructor_destructor )
+			if ( constructor_destructor ) 
 			{
 				definition = constructor_destructor;
 				// <Attributes> <Specifiers> <Name> :: <Name> <Type> () { ... }
@@ -4470,8 +4521,7 @@ CodeTemplate parser_parse_template()
 				break;
 			}
 
-			if ( found_operator_cast_outside_class_implmentation )
-			{
+			if ( found_operator_cast_outside_class_implmentation ) {
 				definition = cast(Code, parser_parse_operator_cast( specifiers ));
 				// <Attributes> <Specifiers> <Name> :: operator <Type> () { ... }
 				break;
@@ -4530,8 +4580,7 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 	{
 		Specifier spec = str_to_specifier( tok_to_str(currtok) );
 
-		if ( spec != Spec_Const )
-		{
+		if ( spec != Spec_Const ) {
 			log_failure( "Error, invalid specifier used in type definition: %S\n%SB", tok_to_str(currtok), parser_to_strbuilder(_ctx->parser) );
 			parser_pop(& _ctx->parser);
 			return InvalidCode;
@@ -4543,8 +4592,7 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 	}
 	// <Attributes> <Specifiers>
 
-	if ( left == 0 )
-	{
+	if ( left == 0 ) {
 		log_failure( "Error, unexpected end of type definition\n%SB", parser_to_strbuilder(_ctx->parser) );
 		parser_pop(& _ctx->parser);
 		return InvalidCode;
@@ -4643,16 +4691,17 @@ else if ( currtok.Type == Tok_DeclType )
 			}
 		}
 	}
-	else if ( currtok.Type == Tok_Preprocess_Macro ) {
+	// TODO(Ed): This needs updating
+	else if ( currtok.Type == Tok_Preprocess_Macro_Typename ) {
 		// Typename is a macro
 		name = currtok;
-		eat(Tok_Preprocess_Macro);
+		eat(Tok_Preprocess_Macro_Typename);
 	}
 
 	// The usual Identifier type signature that may have namespace qualifiers
 	else
 	{
-		name                = parse_identifier(nullptr);
+		name = parse_identifier(nullptr);
 		_ctx->parser.Scope->Name = name.Text;
 		if ( ! tok_is_valid(name) )
 		{
@@ -4986,25 +5035,36 @@ CodeTypedef parser_parse_typedef()
 
 	const bool from_typedef = true;
 
+	// TODO(Ed): UPDATE MACRO USAGE HERE
 #if GEN_PARSER_DISABLE_MACRO_TYPEDEF
 	if ( false )
 #else
-	if ( check( Tok_Preprocess_Macro ))
+	b32 valid_macro = false;
+	valid_macro |= left && currtok.Type == Tok_Preprocess_Macro_Typename;
+	valid_macro |= left && currtok.Type == Tok_Preprocess_Macro_Stmt;
+	// if (currtok.Type == Tok_Preprocess_Macro_Stmt)
+	// {
+		// PreprocessMacro* macro = lookup_macro(currtok.Text);
+		// valid_macro |= macro && macro_expects_body(* macro));
+	// }
+
+	if ( valid_macro )
 #endif
 	{
-		type = cast(Code, t_empty);
-		name = currtok;
+		type          = cast(Code, t_empty);
+		name          = currtok;
+		Code macro    = parse_simple_preprocess(currtok.Type);
+		name.Text.Len = macro->Content.Len;
 		_ctx->parser.Scope->Name = name.Text;
-		eat( Tok_Preprocess_Macro );
 		// <ModuleFalgs> typedef <Preprocessed_Macro>
 
 		if ( currtok.Type == Tok_Identifier )
 		{
-			type = untyped_str(name.Text);
+			type = macro;
 			name = currtok;
 			eat(Tok_Identifier);
+			// <ModuleFalgs> typedef <Preprocessed_Macro> <Identifier>
 		}
-		// <ModuleFalgs> typedef <Preprocessed_Macro> <Identifier>
 	}
 	else
 	{
@@ -5198,7 +5258,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 
 	Str name = { nullptr, 0 };
 	if ( check( Tok_Identifier ) )
-{
+	{
 		name = tok_to_str(currtok);
 		_ctx->parser.Scope->Name = currtok.Text;
 		eat( Tok_Identifier );
@@ -5251,7 +5311,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Define:
-					member = cast(Code, parse_define());
+					member = cast(Code, parser_parse_define());
 				break;
 
 				case Tok_Preprocess_If:
@@ -5271,14 +5331,13 @@ CodeUnion parser_parse_union( bool inplace_def )
 					eat( Tok_Preprocess_EndIf );
 				break;
 
-				case Tok_Preprocess_Macro:
-					if ( nexttok.Type == Tok_Identifier ) {
-						// Its a variable with a macro typename
-						member = cast(Code, parser_parse_variable());
-						break;
-					}
+				case Tok_Preprocess_Macro_Typename:
+					// Its a variable with a macro typename
+					member = cast(Code, parser_parse_variable());
+				break;
 
-					member = parse_simple_preprocess( Tok_Preprocess_Macro, parser_consume_braces );
+				case Tok_Preprocess_Macro_Stmt:
+					member = parse_simple_preprocess( Tok_Preprocess_Macro_Stmt );
 				break;
 
 				case Tok_Preprocess_Pragma:
@@ -5286,7 +5345,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Unsupported:
-					member = parse_simple_preprocess( Tok_Preprocess_Unsupported, parser_consume_braces );
+					member = parse_simple_preprocess( Tok_Preprocess_Unsupported );
 				break;
 
 				default:
@@ -5349,7 +5408,7 @@ CodeUsing parser_parse_using()
 	eat( Tok_Decl_Using );
 	// <ModuleFlags> using
 
-	if ( currtok.Type == Tok_Decl_Namespace )
+	if ( currtok.Type == Tok_Decl_Namespace ) 
 	{
 		is_namespace = true;
 		eat( Tok_Decl_Namespace );
@@ -5363,7 +5422,7 @@ CodeUsing parser_parse_using()
 
 	if ( ! is_namespace )
 	{
-		if ( bitfield_is_equal( u32, currtok.Flags, TF_Assign ) )
+		if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 		{
 			attributes = parse_attributes();
 			// <ModuleFlags> using <Name> <Attributes>
@@ -5384,8 +5443,7 @@ CodeUsing parser_parse_using()
 	// <ModuleFlags> using <namespace> <Attributes> <Name> = <UnderlyingType>;
 
 	CodeComment inline_cmt = NullCode;
-	if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-	{
+	if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line ) {
 		inline_cmt = parse_comment();
 	}
 	// <ModuleFlags> using <namespace> <Attributes> <Name> = <UnderlyingType>; <InlineCmt>
@@ -5432,8 +5490,7 @@ CodeVar parser_parse_variable()
 	CodeAttributes attributes = { nullptr };
 	CodeSpecifiers specifiers = { nullptr };
 
-	if ( check(Tok_Module_Export) )
-	{
+	if ( check(Tok_Module_Export) ) {
 		mflags = ModuleFlag_Export;
 		eat( Tok_Module_Export );
 	}
@@ -5465,11 +5522,17 @@ CodeVar parser_parse_variable()
 		eat( currtok.Type );
 	}
 
-	if ( NumSpecifiers )
-	{
+	if ( NumSpecifiers ) {
 		specifiers = def_specifiers( NumSpecifiers, specs_found );
 	}
 	// <ModuleFlags> <Attributes> <Specifiers>
+
+	// Note(Ed): We're enforcing that using this codepath requires non-macro jank.
+	// Code macro_stmt = parse_macro_as_definiton(attributes, specifiers);
+	// if (macro_stmt) {
+	// 	parser_pop(& _ctx->parser);
+	// 	return macro_stmt;
+	// }
 
 	CodeTypename type = parser_parse_type(parser_not_from_template, nullptr);
 	// <ModuleFlags> <Attributes> <Specifiers> <ValueType>

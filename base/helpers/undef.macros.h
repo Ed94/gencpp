@@ -41,7 +41,7 @@
 #undef local_persist
 
 #undef bit
-#undef bitfield_is_equal
+#undef bitfield_is_set
 
 #undef cast
 

@@ -46,6 +46,7 @@ enum CodeType : u32
 	CT_Operator_Cast,
 	CT_Operator_Cast_Fwd,
 	CT_Parameters,
+	CT_Parameters_Define,
 	CT_Preprocess_Define,
 	CT_Preprocess_Include,
 	CT_Preprocess_If,
@@ -74,7 +75,7 @@ enum CodeType : u32
 
 inline Str codetype_to_str( CodeType type )
 {
-	local_persist Str lookup[61] = {
+	local_persist Str lookup[] = {
 		{ "Invalid",             sizeof( "Invalid" ) - 1             },
 		{ "Untyped",             sizeof( "Untyped" ) - 1             },
 		{ "NewLine",             sizeof( "NewLine" ) - 1             },
@@ -114,6 +115,7 @@ inline Str codetype_to_str( CodeType type )
 		{ "Operator_Cast",       sizeof( "Operator_Cast" ) - 1       },
 		{ "Operator_Cast_Fwd",   sizeof( "Operator_Cast_Fwd" ) - 1   },
 		{ "Parameters",          sizeof( "Parameters" ) - 1          },
+		{ "Parameters_Define",   sizeof( "Parameters_Define" ) - 1   },
 		{ "Preprocess_Define",   sizeof( "Preprocess_Define" ) - 1   },
 		{ "Preprocess_Include",  sizeof( "Preprocess_Include" ) - 1  },
 		{ "Preprocess_If",       sizeof( "Preprocess_If" ) - 1       },
@@ -142,7 +144,7 @@ inline Str codetype_to_str( CodeType type )
 
 inline Str codetype_to_keyword_str( CodeType type )
 {
-	local_persist Str lookup[61] = {
+	local_persist Str lookup[] = {
 		{ "__NA__",          sizeof( "__NA__" ) - 1          },
 		{ "__NA__",          sizeof( "__NA__" ) - 1          },
 		{ "__NA__",          sizeof( "__NA__" ) - 1          },
@@ -181,6 +183,7 @@ inline Str codetype_to_keyword_str( CodeType type )
 		{ "operator",        sizeof( "operator" ) - 1        },
 		{ "operator",        sizeof( "operator" ) - 1        },
 		{ "operator",        sizeof( "operator" ) - 1        },
+		{ "__NA__",          sizeof( "__NA__" ) - 1          },
 		{ "__NA__",          sizeof( "__NA__" ) - 1          },
 		{ "define",          sizeof( "define" ) - 1          },
 		{ "include",         sizeof( "include" ) - 1         },

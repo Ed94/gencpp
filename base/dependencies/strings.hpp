@@ -40,9 +40,9 @@ struct Str
 
 #ifndef txt
 #	if GEN_COMPILER_CPP
-#		define txt( text )          Str { ( text ), sizeof( text ) - 1 }
+#		define txt( text )          GEN_NS Str { ( text ), sizeof( text ) - 1 }
 #	else
-#		define txt( text )         (Str){ ( text ), sizeof( text ) - 1 }
+#		define txt( text )         (GEN_NS Str){ ( text ), sizeof( text ) - 1 }
 #	endif
 #endif
 
@@ -392,6 +392,7 @@ bool strbuilder_append_string(StrBuilder* str, StrBuilder const other) {
 	return strbuilder_append_c_str_len(str, (char const*)other, strbuilder_length(other));
 }
 
+inline
 bool strbuilder_append_fmt(StrBuilder* str, char const* fmt, ...) {
 	GEN_ASSERT(str != nullptr);
 	ssize res;

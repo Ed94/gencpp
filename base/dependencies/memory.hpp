@@ -225,10 +225,9 @@ forceinline ssize         size_remaining(Arena& arena, ssize alignment) { return
 // This id is defined by Unreal for asserts
 #pragma push_macro("check")
 #undef check
-forceinline void check(Arena& arena) { return arena_check(& arena); };
+forceinline void check(Arena& arena) { return arena_check(& arena); }
 #pragma pop_macro("check")
 #endif
-
 
 inline
 AllocatorInfo arena_allocator_info( Arena* arena ) {
@@ -392,9 +391,9 @@ void          pool_clear(Pool* pool);
 void          pool_free(Pool* pool);
 
 #if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
-AllocatorInfo allocator_info(Pool& pool) { return pool_allocator_info(& pool); }
-void          clear(Pool& pool)          { return pool_clear(& pool); }
-void          free(Pool& pool)           { return pool_free(& pool); }
+forceinline AllocatorInfo allocator_info(Pool& pool) { return pool_allocator_info(& pool); }
+forceinline void          clear(Pool& pool)          { return pool_clear(& pool); }
+forceinline void          free(Pool& pool)           { return pool_free(& pool); }
 #endif
 
 struct Pool

@@ -179,6 +179,22 @@ inline AST_Define* CodeDefine::operator->()
 	return ast;
 }
 
+inline CodeDefineParams& CodeDefineParams::operator=( Code other )
+{
+	if ( other.ast != nullptr && other->Parent != nullptr )
+	{
+		ast         = rcast( decltype( ast ), code_duplicate( other ).ast );
+		ast->Parent = { nullptr };
+	}
+	ast = rcast( decltype( ast ), other.ast );
+	return *this;
+}
+
+inline CodeDefineParams::operator bool()
+{
+	return ast != nullptr;
+}
+
 inline CodeDestructor& CodeDestructor::operator=( Code other )
 {
 	if ( other.ast != nullptr && other->Parent != nullptr )
@@ -849,6 +865,11 @@ forceinline Code::operator CodeClass() const
 forceinline Code::operator CodeDefine() const
 {
 	return { (AST_Define*)ast };
+}
+
+forceinline Code::operator CodeDefineParams() const
+{
+	return { (AST_DefineParams*)ast };
 }
 
 forceinline Code::operator CodeDestructor() const
