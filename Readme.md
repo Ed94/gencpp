@@ -2,7 +2,8 @@
 
 An attempt at simple staged metaprogramming for C/C++. Reflect and generate code for your codebase at runtime!
 
-![splash](./docs/assets/Code_-_Insiders_2024-12-15_22-52-13.gif)
+![splash-cpp](./docs/assets/Code_-_Insiders_2024-12-15_23-01-22.gif)
+![splash-c](./docs/assets/Code_-_Insiders_2024-12-15_22-57-58.gif)
 
 The library API is a composition of code element constructors, and a non-standards-compliant single-pass C/C++ parser.  
 These build up a code AST to then serialize with a file builder, or can be traversed for staged-reflection of C/C++ code.
