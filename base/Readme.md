@@ -14,7 +14,7 @@ If using the library's provided build scripts:
 .\build.ps1 <compiler> <debug or omit> base
 ```
 
-Standard formats:
+## Content Overview
 
 * **base**: Files are in granular pieces separated into four directories:
   * **dependencies**: Originally from the c-zpl library and modified thereafter.
@@ -123,15 +123,15 @@ The vast majority of macros should be single-line subsitutions that either add:
 
 There are ***five*** header files which are automatically generated using [base_codegen.hpp](./helpers/base_codegen.hpp) by [base.cpp](./base.cpp). They are all located in [components/gen](./components/gen/).
 
-* [`ecodetypes.hpp`](./components/gen/ecode.hpp): `CodeType` enum definition and related implementaiton. Generation is based off of [`ECodeType.csv](./enums/ECodeTypes.csv).
-* [`especifier.hpp`](./components/gen/especifier.hpp): `Specifier` enum definition, etc. Generated using [`ESpecifier.csv`](./enums/ESpecifier.csv).
-* [`eoperator.hpp`](./components/gen/eoperator.hpp): `Operator` enum definition, etc. Generated using [`EOperator.hpp`](./enums/EOperator.csv).
-* [`etoktype.cpp`](./components/gen/etoktype.cpp): `TokType` enum defininition, etc. Used by the lexer and parser backend. Uses two csvs:
-  * [`ETokType.csv`](./enums/ETokType.csv): Provides the enum entries and their strinng ids.
-  * [`AttributeTokens.csv`](./enums/AttributeTokens.csv): Provides tokens entries that should be considered as attributes  by the lexer and parser. Sspecfiically macro attributes such as those use for exporting symbols.
-* [`ast_inlines.hpp`](./components/gen/ast_inlines.hpp): Member trivial `operator` definitions for C++ code types. Does not use a csv.
+* [ecodetypes.hpp](./components/gen/ecode.hpp): `CodeType` enum definition and related implementaiton. Generation is based off of [ECodeType.csv](./enums/ECodeTypes.csv).
+* [especifier.hpp](./components/gen/especifier.hpp): `Specifier` enum definition, etc. Generated using [ESpecifier.csv](./enums/ESpecifier.csv).
+* [eoperator.hpp](./components/gen/eoperator.hpp): `Operator` enum definition, etc. Generated using [EOperator.hpp](./enums/EOperator.csv).
+* [etoktype.cpp](./components/gen/etoktype.cpp): `TokType` enum defininition, etc. Used by the lexer and parser backend. Uses two csvs:
+  * [ETokType.csv](./enums/ETokType.csv): Provides the enum entries and their strinng ids.
+  * [AttributeTokens.csv](./enums/AttributeTokens.csv): Provides tokens entries that should be considered as attributes  by the lexer and parser. Sspecfiically macro attributes such as those use for exporting symbols.
+* [ast_inlines.hpp](./components/gen/ast_inlines.hpp): Member trivial `operator` definitions for C++ code types. Does not use a csv.
 
-[`misc.hpp`](./helpers/misc.hpp): Has shared functions used by the library generation meta-programs throughout this codebase.
+[misc.hpp](./helpers/misc.hpp): Has shared functions used by the library generation meta-programs throughout this codebase.
 
 If using the library's provided build scripts:
 
@@ -160,9 +160,53 @@ Names or Content fields are interned strings and thus showed be cached using `ca
 
 `def_operator` is the most sophisticated upfront constructor as it has multiple permutations of definitions that could be created that are not trivial to determine if valid.
 
-The parser is documented under [`docs/Parsing.md`](../docs/Parsing.md) and [`docs/Parser_Algo.md`](../docs/Parser_Algo.md).
+The parser is documented under [`docs/Parsing.md`](../docs/Parsing.md) and [`docs/Parser_Algo.md`](../docs/Parser_Algo.md). Read that and the entire library if you want to extend it.
+
+### Attributes
+
+To add additional macro attributes, all that has to be done is modifying [`AttributeTokens.csv`](./enums/AttributeTokens.csv).
+
+### Specifiers
+
+To add additional macro specifiers, the following needs to be done:
+
+1. Adjust [especifier.hpp](./components/gen/especifier.hpp)
+2. Adjust [etoktype.cpp](./components/gen/etoktype.cpp)
+3. Adjust [parser_case_macros.cpp](./components/parser_case_macros.cpp)
+
+If the specifier is a new trailing specifier on function definitions:
+
+Head into [base_codegen.hpp](./helpers/base_codegen.hpp): `gen_especifier`. There will be an `is_trailing` function that needs to be adjusted with an additional case for the user's new trailing specifier.
+
+### Code Types
+
+These require the following to be handled to the equivalent extent as the other types:
+
+1. Adjust [ECodeTypes.csv](./enums/ECodeTypes.csv) with the new types
+2. Define a new `AST_<Name>` and `Code<Name>`. See
+    * [ast.hpp](./components/ast.hpp): Initial forwards and user defined conversion for Code.
+    * [ast_types.hpp](./components/ast_types.hpp): Define the `AST_<Name>` struct.
+    * [code_types.hpp](./components/code_types.hpp): Defne the `CodeType` struct. If its needs an iterator see: `struct CodeBody` & `struct CodeParams`.
+3. [ast_case_macros.cpp](./components/ast_case_macros.cpp): Review cases here if the new code type needs to be considered.
+4. [ast.cpp](./components/ast.cpp): Need to review
+    * `code_debug_str`
+    * `code_is_equal`
+    * `code_to_strbuilder_ptr`
+    * `code_validate_body`
+5. [code_serialization.cpp](./components/code_serialization.cpp): Define serialization here.
+6. [inlines.hpp](./components/inlines.hpp): Any inline definitions for the `struct Code<Name>` are defined here.
+7. [interface.cpp](./components/interface.hpp): Define the `Code<Name>` upfront and parsing interface.
+8. [interface.upfront.cpp](./components/interface.upfront.cpp): Define the upfront constructor implementation.
+9. [interface.parsing.cpp](./components/interface.parsing.cpp): Define the parsing interface implementation.
+10. [lexer.cpp](./components/lexer.cpp): Adjust the lexer as needed.
+11. [parser.cpp](./components/parser.cpp): Adjust the parser as needed.
 
 ## A note on compilation and runtime generation speed
 
-The library is designed to be fast to compile and generate code at runtime as fast as resonable possible on a debug build.
+The library is designed to be fast to compile and generate code at runtime as fast as possible on a debug build.
 Its recommended that your metaprogam be compiled using a single translation unit (unity build).
+
+## Whats with the expression / executions support #ifd and enums?
+
+The library is a *work in progress* and those are unfinished hypotheticals for adding the ability to manage or parse the AST of expresions or execution scope code.
+They are entirely untested and not meant to be used yet, futher there is no parsing support or an upfront interface for what CodeTypes are defined so far.
