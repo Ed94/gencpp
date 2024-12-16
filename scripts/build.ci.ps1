@@ -326,7 +326,7 @@ if ( $unreal )
 }
 
 # C Library testing
-if ( $test -and $true )
+if ( $test -and $false )
 {
 	$path_test_c = join-path $path_test   c_library
 	$path_build  = join-path $path_test_c build
@@ -368,7 +368,49 @@ if ( $test -and $true )
 	Pop-Location
 }
 
-if ($test -and $true)
+if ( $test -and $true )
+{
+	$path_test_c = join-path $path_test   c_library
+	$path_build  = join-path $path_test_c build
+	$path_gen    = join-path $path_test_c gen
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+
+	$path_singleheader_include = join-path $path_c_library gen
+	$includes    = @( $path_singleheader_include )
+	$unit       = join-path $path_test_c "test_cuik.c"
+	$executable = join-path $path_build  "test_cuik.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+	$compiler_args += $flag_all_c
+	$compiler_args += $flag_updated_cpp_macro
+	$compiler_args += $flag_c11
+
+	$linker_args   = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_test_c
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning c_library test"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
+if ($test -and $false)
 {
 	$path_test_cpp = join-path $path_test     cpp_library
 	$path_build    = join-path $path_test_cpp build
