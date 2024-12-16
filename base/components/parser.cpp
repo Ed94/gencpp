@@ -601,18 +601,18 @@ CodeAttributes parse_attributes()
 		else if ( check( Tok_Decl_GNU_Attribute ) )
 		{
 			eat( Tok_Decl_GNU_Attribute );
-			eat( Tok_Capture_Start );
-			eat( Tok_Capture_Start );
+			eat( Tok_Paren_Open );
+			eat( Tok_Paren_Open );
 			// __attribute__((
 
-			while ( left && currtok.Type != Tok_Capture_End )
+			while ( left && currtok.Type != Tok_Paren_Close )
 			{
 				eat( currtok.Type );
 			}
 			// __attribute__(( <Content>
 
-			eat( Tok_Capture_End );
-			eat( Tok_Capture_End );
+			eat( Tok_Paren_Close );
+			eat( Tok_Paren_Close );
 			// __attribute__(( <Content> ))
 
 			len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )start.Text.Ptr;
@@ -620,16 +620,16 @@ CodeAttributes parse_attributes()
 		else if ( check( Tok_Decl_MSVC_Attribute ) )
 		{
 			eat( Tok_Decl_MSVC_Attribute );
-			eat( Tok_Capture_Start );
+			eat( Tok_Paren_Open );
 			// __declspec(
 
-			while ( left && currtok.Type != Tok_Capture_End )
+			while ( left && currtok.Type != Tok_Paren_Close )
 			{
 				eat( currtok.Type );
 			}
 			// __declspec( <Content>
 
-			eat( Tok_Capture_End );
+			eat( Tok_Paren_Close );
 			// __declspec( <Content> )
 
 			len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )start.Text.Ptr;
@@ -640,20 +640,20 @@ CodeAttributes parse_attributes()
 			// <Attribute>
 
 			// If its a macro based attribute, this could be a functional macro such as Unreal's UE_DEPRECATED(...)
-			if ( check( Tok_Capture_Start))
+			if ( check( Tok_Paren_Open))
 			{
-				eat( Tok_Capture_Start );
+				eat( Tok_Paren_Open );
 
 				s32 level = 0;
-				while (left && currtok.Type != Tok_Capture_End && level == 0)
+				while (left && currtok.Type != Tok_Paren_Close && level == 0)
 				{
-					if (currtok.Type == Tok_Capture_Start)
+					if (currtok.Type == Tok_Paren_Open)
 						++ level;
-					if (currtok.Type == Tok_Capture_End)
+					if (currtok.Type == Tok_Paren_Close)
 						--level;
 					eat(currtok.Type);
 				}
-				eat(Tok_Capture_End);
+				eat(Tok_Paren_Close);
 			}
 
 			len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )start.Text.Ptr;
@@ -1078,7 +1078,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			case Tok_Type_int:
 			case Tok_Type_double:
 			{
-				if ( nexttok.Type == Tok_Capture_Start && name.Text.Len && currtok.Type == Tok_Identifier )
+				if ( nexttok.Type == Tok_Paren_Open && name.Text.Len && currtok.Type == Tok_Identifier )
 				{
 					if ( c_str_compare_len( name.Text.Ptr, currtok.Text.Ptr, name.Text.Len ) == 0 )
 					{
@@ -1183,7 +1183,7 @@ Code parse_complicated_definition( TokType which )
 			spec = tokens.Arr[spec_idx];
 		}
 
-		if ( tokens.Arr[spec_idx].Type == Tok_Capture_End )
+		if ( tokens.Arr[spec_idx].Type == Tok_Paren_Close )
 		{
 			// Forward declaration with trailing specifiers for a procedure
 			tok = tokens.Arr[spec_idx];
@@ -1318,9 +1318,9 @@ Code parse_assignment_expression()
 			level++;
 		if (currtok.Type == Tok_BraceCurly_Close )
 			level--;
-		if (currtok.Type == Tok_Capture_Start)
+		if (currtok.Type == Tok_Paren_Open)
 			level++;
-		else if (currtok.Type == Tok_Capture_End)
+		else if (currtok.Type == Tok_Paren_Close)
 			level--;
 
 		eat( currtok.Type );
@@ -1873,7 +1873,7 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 				if (nav.Type == Tok_Operator && nav.Text.Ptr[1] == '>')
 					-- template_level;
 
-				if ( nav.Type == Tok_Capture_Start)
+				if ( nav.Type == Tok_Paren_Open)
 				{
 					if (template_level != 0 )
 						++ capture_level;
@@ -1881,12 +1881,12 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 						break;
 				}
 
-				if ( template_level != 0 && nav.Type == Tok_Capture_End)
+				if ( template_level != 0 && nav.Type == Tok_Paren_Close)
 					-- capture_level;
 			}
 		}
 
-		if ( nav.Type == Tok_Capture_Start )
+		if ( nav.Type == Tok_Paren_Open )
 			break;
 	}
 
@@ -1932,10 +1932,10 @@ Code parse_global_nspace_constructor_destructor( CodeSpecifiers specifiers )
 		if (tok_left.Type == Tok_Operator && tok_left.Text.Ptr[1] == '>')
 			-- template_level;
 
-		if ( template_level != 0 && tok_left.Type == Tok_Capture_Start)
+		if ( template_level != 0 && tok_left.Type == Tok_Paren_Open)
 			++ capture_level;
 
-		if ( template_level != 0 && tok_left.Type == Tok_Capture_End)
+		if ( template_level != 0 && tok_left.Type == Tok_Paren_Close)
 			-- capture_level;
 
 		if ( capture_level == 0 && template_level == 0  && tok_left.Type == Tok_Identifier )
@@ -2483,7 +2483,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		Token name = parse_identifier(nullptr);
 		_ctx->parser.Scope->Name = name.Text;
 
-		bool detected_capture = check( Tok_Capture_Start );
+		bool detected_capture = check( Tok_Paren_Open );
 
 		// Check three tokens ahead to make sure that were not dealing with a constructor initialization...
 		//                  (         350.0f    ,         <---  Could be the scenario
@@ -2508,11 +2508,11 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 			{
 				Token tok = _ctx->parser.Tokens.Arr[ idx ];
 
-				if ( tok.Type == Tok_Capture_Start )
+				if ( tok.Type == Tok_Paren_Open )
 					level++;
-				else if ( tok.Type == Tok_Capture_End && level > 0 )
+				else if ( tok.Type == Tok_Paren_Close && level > 0 )
 					level--;
-				if (level == 0 && tok.Type == Tok_Capture_End)
+				if (level == 0 && tok.Type == Tok_Paren_Close)
 					break;
 			}
 			++ idx; // Will incremnt to possible comma position
@@ -2609,7 +2609,7 @@ CodeParams parse_params( bool use_template_capture )
 	push_scope();
 
 	if ( ! use_template_capture ) {
-		eat( Tok_Capture_Start );
+		eat( Tok_Paren_Open );
 		// (
 	}
 	else {
@@ -2618,9 +2618,9 @@ CodeParams parse_params( bool use_template_capture )
 			// <
 	}
 
-	if ( ! use_template_capture && check( Tok_Capture_End ) )
+	if ( ! use_template_capture && check( Tok_Paren_Close ) )
 	{
-		eat( Tok_Capture_End );
+		eat( Tok_Paren_Close );
 		// )
 		parser_pop(& _ctx->parser);
 		return NullCode;
@@ -2651,7 +2651,7 @@ CodeParams parse_params( bool use_template_capture )
 	}
 
 	#define CheckEndParams() \
-		(use_template_capture ? (currtok.Text.Ptr[ 0 ] != '>') : (currtok.Type != Tok_Capture_End))
+		(use_template_capture ? (currtok.Text.Ptr[ 0 ] != '>') : (currtok.Type != Tok_Paren_Close))
 
 	// TODO(Ed): Use expression macros or this? macro as attribute?
 	// Ex: Unreal has this type of macro:                 vvvvvvvvv
@@ -2719,10 +2719,10 @@ CodeParams parse_params( bool use_template_capture )
 				if (currtok.Type == Tok_Operator && currtok.Text.Ptr[1] == '>')
 					-- template_level;
 
-				if ( currtok.Type == Tok_Capture_Start)
+				if ( currtok.Type == Tok_Paren_Open)
 					++ capture_level;
 
-				if ( currtok.Type == Tok_Capture_End)
+				if ( currtok.Type == Tok_Paren_Close)
 					-- capture_level;
 
 				value_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )value_tok.Text.Ptr;
@@ -2833,10 +2833,10 @@ CodeParams parse_params( bool use_template_capture )
 					if (currtok.Type == Tok_Operator && currtok.Text.Ptr[1] == '>')
 						-- template_level;
 
-					if ( currtok.Type == Tok_Capture_Start)
+					if ( currtok.Type == Tok_Paren_Open)
 						++ capture_level;
 
-					if ( currtok.Type == Tok_Capture_End)
+					if ( currtok.Type == Tok_Paren_Close)
 						-- capture_level;
 
 					value_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )value_tok.Text.Ptr;
@@ -2868,7 +2868,7 @@ CodeParams parse_params( bool use_template_capture )
 
 	if ( ! use_template_capture )
 	{
-		eat( Tok_Capture_End );
+		eat( Tok_Paren_Close );
 		// ( <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, .. )
 	}
 	else
@@ -2941,20 +2941,20 @@ Code parse_simple_preprocess( TokType which )
 	// TODO(Ed) : Parse this properly later (expression and statement support)
 	if ( macro && macro_is_functional(* macro) )
 	{
-		eat( Tok_Capture_Start );
+		eat( Tok_Paren_Open );
 
 		s32 level = 0;
-		while ( left && ( currtok.Type != Tok_Capture_End || level > 0 ) )
+		while ( left && ( currtok.Type != Tok_Paren_Close || level > 0 ) )
 		{
-			if ( currtok.Type == Tok_Capture_Start )
+			if ( currtok.Type == Tok_Paren_Open )
 				level++;
 
-			else if ( currtok.Type == Tok_Capture_End && level > 0 )
+			else if ( currtok.Type == Tok_Paren_Close && level > 0 )
 				level--;
 
 			eat( currtok.Type );
 		}
-		eat( Tok_Capture_End );
+		eat( Tok_Paren_Close );
 		// <Macro> ( <params> )
 
 		full_macro.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)full_macro.Text.Ptr;
@@ -3067,21 +3067,21 @@ Code parse_static_assert()
 	_ctx->parser.Scope->Name = content.Text;
 
 	eat( Tok_StaticAssert );
-	eat( Tok_Capture_Start );
+	eat( Tok_Paren_Open );
 	// static_assert(
 
 	// TODO(Ed) : Parse this properly.
 	s32 level = 0;
-	while ( left && ( currtok.Type != Tok_Capture_End || level > 0 ) )
+	while ( left && ( currtok.Type != Tok_Paren_Close || level > 0 ) )
 	{
-		if ( currtok.Type == Tok_Capture_Start )
+		if ( currtok.Type == Tok_Paren_Open )
 			level++;
-		else if ( currtok.Type == Tok_Capture_End )
+		else if ( currtok.Type == Tok_Paren_Close )
 			level--;
 
 		eat( currtok.Type );
 	}
-	eat( Tok_Capture_End );
+	eat( Tok_Paren_Close );
 	eat( Tok_Statement_End );
 	// static_assert( <Content> );
 
@@ -3183,9 +3183,9 @@ CodeVar parse_variable_after_name(
 		// <Attributes> <Specifiers> <ValueType> <Name> = { <Expression> }
 	}
 
-	if ( currtok.Type == Tok_Capture_Start )
+	if ( currtok.Type == Tok_Paren_Open )
 	{
-		eat( Tok_Capture_Start);
+		eat( Tok_Paren_Open);
 		// <Attributes> <Specifiers> <ValueType> <Name> (
 
 		Token expr_token = currtok;
@@ -3193,12 +3193,12 @@ CodeVar parse_variable_after_name(
 		using_constructor_initializer = true;
 
 		s32 level = 0;
-		while ( left && ( currtok.Type != Tok_Capture_End || level > 0 ) )
+		while ( left && ( currtok.Type != Tok_Paren_Close || level > 0 ) )
 		{
-			if ( currtok.Type == Tok_Capture_Start )
+			if ( currtok.Type == Tok_Paren_Open )
 				level++;
 
-			else if ( currtok.Type == Tok_Capture_End && level > 0 )
+			else if ( currtok.Type == Tok_Paren_Close && level > 0 )
 				level--;
 
 			eat( currtok.Type );
@@ -3206,7 +3206,7 @@ CodeVar parse_variable_after_name(
 
 		expr_token.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)expr_token.Text.Ptr;
 		expr                = untyped_str( tok_to_str(expr_token) );
-		eat( Tok_Capture_End );
+		eat( Tok_Paren_Close );
 		// <Attributes> <Specifiers> <ValueType> <Name> ( <Expression> )
 	}
 
@@ -3406,9 +3406,9 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 		s32 level                  = 0;
 		while ( left && ( currtok.Type != Tok_BraceCurly_Open || level > 0 ) )
 		{
-			if (currtok.Type == Tok_Capture_Start)
+			if (currtok.Type == Tok_Paren_Open)
 				level++;
-			else if ( currtok.Type == Tok_Capture_End )
+			else if ( currtok.Type == Tok_Paren_Close )
 				level--;
 
 			eat( currtok.Type );
@@ -3498,7 +3498,7 @@ CodeDefine parser_parse_define()
 
 	Macro* macro = lookup_macro(define->Name);
 	if (macro_is_functional(* macro)) {
-		eat( Tok_Capture_Start );
+		eat( Tok_Paren_Open );
 		// #define <Name> (
 
 		// We provide the define params even if empty to make sure '()' are serialized.
@@ -3506,7 +3506,7 @@ CodeDefine parser_parse_define()
 		params = (CodeDefineParams) make_code();
 		params->Type = CT_Parameters_Define;
 
-		if ( left && currtok.Type != Tok_Capture_End ) {
+		if ( left && currtok.Type != Tok_Paren_Close ) {
 			params->Name = currtok.Text;
 			params->NumEntries ++;
 
@@ -3514,7 +3514,7 @@ CodeDefine parser_parse_define()
 			// #define <Name> ( <param>
 		}
 		
-		while( left && currtok.Type != Tok_Capture_End ) {
+		while( left && currtok.Type != Tok_Paren_Close ) {
 			eat( Tok_Comma );
 			// #define <Name> ( <param>, 
 
@@ -3527,7 +3527,7 @@ CodeDefine parser_parse_define()
 			eat( Tok_Preprocess_Define_Param );
 		}
 
-		eat( Tok_Capture_End );
+		eat( Tok_Paren_Close );
 		// #define <Name> ( <params> )
 
 		define->Params = params;
@@ -3595,8 +3595,8 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 	CodeComment inline_cmt = NullCode;
 	// <Virtual Specifier> ~<Name>
 
-	eat( Tok_Capture_Start );
-	eat( Tok_Capture_End );
+	eat( Tok_Paren_Open );
+	eat( Tok_Paren_Close );
 	// <Virtual Specifier> ~<Name>()
 
 	bool pure_virtual = false;
@@ -4286,8 +4286,8 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 	Token scope_name_tok   = { scope_name, Tok_Identifier, 0, 0, TF_Null };
 	_ctx->parser.Scope->Name = scope_name_tok.Text;
 
-	eat( Tok_Capture_Start );
-	eat( Tok_Capture_End );
+	eat( Tok_Paren_Open );
+	eat( Tok_Paren_Close );
 	// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>()
 
 	// TODO(Ed) : operator cast can have const, volatile, l-value, r-value noexecept qualifying specifiers.
@@ -4638,18 +4638,18 @@ else if ( currtok.Type == Tok_DeclType )
 	eat( Tok_DeclType );
 	// <Attributes> <Specifiers> decltype
 
-	eat( Tok_Capture_Start );
-	while ( left && currtok.Type != Tok_Capture_End )
+	eat( Tok_Paren_Open );
+	while ( left && currtok.Type != Tok_Paren_Close )
 	{
-		if ( currtok.Type == Tok_Capture_Start )
+		if ( currtok.Type == Tok_Paren_Open )
 			level++;
 
-		if ( currtok.Type == Tok_Capture_End )
+		if ( currtok.Type == Tok_Paren_Close )
 			level--;
 
 		eat( currtok.Type );
 	}
-	eat( Tok_Capture_End );
+	eat( Tok_Paren_Close );
 
 	name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
 	_ctx->parser.Scope->Name = name;
@@ -4758,7 +4758,7 @@ else if ( currtok.Type == Tok_DeclType )
 			is_function_typename = true;
 			++scanner;
 		}
-		is_function_typename = scanner->Type == Tok_Capture_Start;
+		is_function_typename = scanner->Type == Tok_Paren_Open;
 
 		Token* first_capture = scanner;
 		if ( is_function_typename )
@@ -4768,7 +4768,7 @@ else if ( currtok.Type == Tok_DeclType )
 				++scanner;
 
 			// Go back to the first capture start found
-			while ( scanner->Type != Tok_Capture_Start )
+			while ( scanner->Type != Tok_Paren_Open )
 				--scanner;
 
 			last_capture = scanner;
@@ -4822,7 +4822,7 @@ else if ( currtok.Type == Tok_DeclType )
 		name = NullToken;
 
 		// The next token can either be a capture for the identifier or it could be the identifier exposed.
-		if ( ! check( Tok_Capture_Start ) )
+		if ( ! check( Tok_Paren_Open ) )
 		{
 			// Started with an identifier immeidately, which means its of the format: <ReturnType> <identifier> <capture>;
 			name = parse_identifier(nullptr);
@@ -4842,7 +4842,7 @@ else if ( currtok.Type == Tok_DeclType )
 			// Parse immeidate capture which would be with parse_params()
 			// Eat Capture End
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
-			eat( Tok_Capture_Start );
+			eat( Tok_Paren_Open );
 			// <Attributes> <ReturnType> (
 
 			// Binding specifiers
@@ -4875,11 +4875,11 @@ else if ( currtok.Type == Tok_DeclType )
 
 			// Immeidate parameters
 
-			if ( check( Tok_Capture_Start ) )
+			if ( check( Tok_Paren_Open ) )
 				params_nested = parse_params();
 			// <Attributes> <ReturnType> ( <Specifiers> <Identifier> ( <Parameters> )
 
-			eat( Tok_Capture_End );
+			eat( Tok_Paren_Close );
 			// <Attributes> <ReturnType> ( <Specifiers> <Identifier> ( <Parameters> ) )
 
 #else
@@ -4887,21 +4887,21 @@ else if ( currtok.Type == Tok_DeclType )
 			// Everything within this capture will just be shoved into the name field including the capture tokens themselves.
 			name = currtok;
 
-			eat( Tok_Capture_Start );
+			eat( Tok_Paren_Open );
 			// <Attributes> <ReturnType> (
 
 			s32 level = 0;
-			while ( left && ( currtok.Type != Tok_Capture_End || level > 0 ) )
+			while ( left && ( currtok.Type != Tok_Paren_Close || level > 0 ) )
 			{
-				if ( currtok.Type == Tok_Capture_Start )
+				if ( currtok.Type == Tok_Paren_Open )
 					level++;
 
-				if ( currtok.Type == Tok_Capture_End )
+				if ( currtok.Type == Tok_Paren_Close )
 					level--;
 
 				eat( currtok.Type );
 			}
-			eat( Tok_Capture_End );
+			eat( Tok_Paren_Close );
 			// <Attributes> <ReturnType> ( <Expression> )
 
 			name.Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;

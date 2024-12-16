@@ -396,7 +396,7 @@ if ($test -and $true)
 
 	Push-Location $path_test_cpp
 		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning c_library test"
+			write-host "`nRunning cpp_library test"
 			$time_taken = Measure-Command { & $executable
 					| ForEach-Object {
 						write-host `t $_ -ForegroundColor Green

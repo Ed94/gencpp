@@ -151,7 +151,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 			macro.Flags |= MF_Functional;
 		}
 
-		Token opening_paren = { { ctx->scanner, 1 }, Tok_Capture_Start, ctx->line, ctx->column, TF_Preprocess };
+		Token opening_paren = { { ctx->scanner, 1 }, Tok_Paren_Open, ctx->line, ctx->column, TF_Preprocess };
 		array_append( _ctx->Lexer_Tokens, opening_paren );
 		move_forward();
 
@@ -242,7 +242,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 			);
 			return Lex_ReturnNull;
 		}
-		Token closing_paren = { { ctx->scanner, 1 }, Tok_Capture_End, ctx->line, ctx->column, TF_Preprocess };
+		Token closing_paren = { { ctx->scanner, 1 }, Tok_Paren_Close, ctx->line, ctx->column, TF_Preprocess };
 		array_append(_ctx->Lexer_Tokens, closing_paren);
 		move_forward();
 	}
@@ -797,7 +797,7 @@ TokArray lex( Str content )
 			{
 				Str text = { c.scanner, 1 };
 				c.token.Text   = text;
-				c.token.Type   = Tok_Capture_Start;
+				c.token.Type   = Tok_Paren_Open;
 
 				if (c.left)
 					move_forward();
@@ -807,7 +807,7 @@ TokArray lex( Str content )
 			{
 				Str text = { c.scanner, 1 };
 				c.token.Text   = text;
-				c.token.Type   = Tok_Capture_End;
+				c.token.Type   = Tok_Paren_Close;
 
 				if (c.left)
 					move_forward();
