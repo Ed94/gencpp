@@ -5518,13 +5518,6 @@ CodeVar parser_parse_variable()
 	}
 	// <ModuleFlags> <Attributes> <Specifiers>
 
-	// Note(Ed): We're enforcing that using this codepath requires non-macro jank.
-	// Code macro_stmt = parse_macro_as_definiton(attributes, specifiers);
-	// if (macro_stmt) {
-	// 	parser_pop(& _ctx->parser);
-	// 	return macro_stmt;
-	// }
-
 	CodeTypename type = parser_parse_type(parser_not_from_template, nullptr);
 	// <ModuleFlags> <Attributes> <Specifiers> <ValueType>
 

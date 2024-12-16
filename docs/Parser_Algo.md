@@ -1101,7 +1101,8 @@ Anything that is in the qualifier capture of the function typename is treated as
     1. If its an in-place definition of a class, enum, struct, or union:
     2. If its a decltype (Not supported yet but draft impl there)
     3. If its a compound native type expression (unsigned, char, short, long, int, float, dobule, etc )
-    4. Ends up being a regular type alias of an identifier
+    4. If its a typename amcro
+    5. A regular type alias of an identifier
 5. Parse specifiers (postfix)
 6. We need to now look ahead to see If we're dealing with a function typename
 7. If wer're dealing with a function typename:
@@ -1129,7 +1130,8 @@ Anything that is in the qualifier capture of the function typename is treated as
     1. If its an in-place definition of a class, enum, struct, or union:
     2. If its a decltype (Not supported yet but draft impl there)
     3. If its a compound native type expression (unsigned, char, short, long, int, float, dobule, etc )
-    4. Ends up being a regular type alias of an identifier
+    4. If its a typename amcro
+    5. A regular type alias of an identifier
 4. Parse specifiers (postfix)
     1. If any specifiers are found populate specifiers code with them.
 5. We need to now look ahead to see If we're dealing with a function typename
@@ -1190,7 +1192,7 @@ Anything that is in the qualifier capture of the function typename is treated as
     6. Decl_Union
     7. Preprocess_Define
     8. Preprocess_Conditional (if, ifdef, ifndef, elif, else, endif)
-    9. Preprocess_Macro
+    9. Preprocess_Macro (`MT_Statement` or `MT_Typename`)
     10. Preprocess_Pragma
     11. Unsupported preprocess directive
     12. Variable
