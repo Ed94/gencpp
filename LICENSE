@@ -1,5 +1,6 @@
 BSD 3-Clause License
 
+gencpp
 Copyright (c) 2023, Edward R. Gonzalez
 
 Redistribution and use in source and binary forms, with or without
@@ -26,3 +27,13 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Special thanks to:
+
+* The Handmade Community.
+
+* Casey Muratori, Ginger Bill (Bill Hall), Mr. 4th (Allen Webster), Ryan Fluery: Influnced conceptually how to handle staged metaprograming.
+
+* Jonathan Blow: Jai's metaprogramming influenced the design of this library.
+
+* My friends for putting up with discord spam on this library.
