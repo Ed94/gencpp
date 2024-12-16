@@ -156,5 +156,4 @@ See the [scripts directory](scripts/).
 
 ### Unreal: Generating a UAttributeSet from a UDataTable
 
-<video src="https://github.com/Ed94/gencpp/blob/main/docs/assets/rider64_2024-12-16_17-22-16" width="600" />
-
+https://github.com/user-attachments/assets/2a07b743-825d-4f9f-beaf-3559e8748a4d
