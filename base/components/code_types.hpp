@@ -362,7 +362,7 @@ struct CodeExec
 	AST_Exec *ast;
 };
 
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
+#ifdef GEN_EXECUTION_EXPRESSION_SUPPORT
 struct CodeExpr
 {
 #if ! GEN_C_LIKE_CPP
@@ -689,7 +689,7 @@ struct CodePreprocessCond
 	AST_PreprocessCond* ast;
 };
 
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
+#ifdef GEN_EXECUTION_EXPRESSION_SUPPORT
 struct CodeStmt
 {
 #if ! GEN_C_LIKE_CPP

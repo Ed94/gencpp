@@ -247,7 +247,7 @@ struct AST_Exec
 };
 static_assert( sizeof(AST_Exec) == sizeof(AST), "ERROR: AST_Exec is not the same size as AST");
 
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
+#ifdef GEN_EXECUTION_EXPRESSION_SUPPORT
 struct AST_Expr
 {
 	union {
@@ -750,7 +750,7 @@ struct AST_Specifiers
 };
 static_assert( sizeof(AST_Specifiers) == sizeof(AST), "ERROR: AST_Specifier is not the same size as AST");
 
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
+#ifdef GEN_EXECUTION_EXPRESSION_SUPPORT
 struct AST_Stmt
 {
 	union {

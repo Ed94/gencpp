@@ -26,7 +26,7 @@ This means that the typename entry for the parameter AST would be either:
 ***Concepts and Constraints are not supported***  
 Its a [todo](https://github.com/Ed94/gencpp/issues/21)
 
-### Feature Macros:
+### Feature Macros
 
 * `GEN_DEFINE_ATTRIBUTE_TOKENS` : Allows user to define their own attribute macros for use in parsing.
   * This can be generated using base.cpp.
@@ -40,6 +40,18 @@ Its a [todo](https://github.com/Ed94/gencpp/issues/21)
 
 ### The Data & Interface
 
+The library's persistent state is managed tracked by a context struct: `global Context* _ctx;` defined within [static_data.cpp](../base/components/static_data.cpp)
+
+https://github.com/Ed94/gencpp/blob/967a044637f1615c709cb723dc61118fcc08dcdb/base/components/interface.hpp#L39-L97
+
+The interface for the context:
+
+* `init`: Initializtion
+* `deinit`: De-initialization.
+* `reset`: Clears the allocations, but doesn't free the memoery, then calls `init()` on `_ctx` again.
+* `get_context`: Retreive the currently tracked context.
+* `set_context`: Swap out the current tracked context.
+
 As mentioned in root readme, the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
 The AST is managed by the library and provided to the user via its interface.  
@@ -47,12 +59,12 @@ However, the user may specifiy memory configuration.
 
 [Data layout of AST struct (Subject to heavily change with upcoming todos)](../base/components/ast.hpp#L396-461)  
 
-https://github.com/Ed94/gencpp/blob/eea4ebf5c40d5d87baa465abfb1be30845b2377e/base/components/ast.hpp#L396-L461
+https://github.com/Ed94/gencpp/blob/967a044637f1615c709cb723dc61118fcc08dcdb/base/components/ast.hpp#L369-L435
 
 *`StringCahced` is a typedef for `Str` (a string slice), to denote it is an interned string*  
 *`CodeType` is enum taggin the type of code. Has an underlying type of `u32`*  
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
-*`StrBuilder` is the dynamically allocated string type for the library*  
+*`StrBuilder` is the dynamically allocating string builder type for the library*  
 
 AST widths are setup to be AST_POD_Size.  
 The width dictates how much the static array can hold before it must give way to using an allocated array:
@@ -117,6 +129,7 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeClass
 * CodeConstructor
 * CodeDefine
+* CodeDefineParams
 * CodeDestructor
 * CodeEnum
 * CodeExec
@@ -127,7 +140,7 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeModule
 * CodeNS
 * CodeOperator
-* CodeOpCast
+* CodeOpCast : User defined member operator conversion
 * CodeParams : Has support for `for : range` iterating across parameters.
 * CodePreprocessCond
 * CodePragma
@@ -140,11 +153,15 @@ The following CodeTypes are used which the user may optionally use strong typing
 * CodeUsing
 * CodeVar
 
-Each Code boy has an associated "filtered AST" with the naming convention: `AST_<CodeName>`
+Each `struct Code<Name>` has an associated "filtered AST" with the naming convention: `AST_<CodeName>`
 Unrelated fields of the AST for that node type are omitted and only necessary padding members are defined otherwise.
-Retrieving a raw version of the ast can be done using the `raw()` function defined in each AST.
 
-## There are three sets of interfaces for Code AST generation the library provides
+For the interface related to these code types see:
+
+* [ast.hpp](../base/components/ast.hpp): Under the region pragma `Code C-Interface`
+* [code_types.hpp](../base/components/code_types.hpp): Under the region pragma `Code C-Interface`. Additional functionlity for c++ will be within the struct definitions or at the end of the file.
+
+## There are three categories of interfaces for Code AST generation & reflection
 
 * Upfront
 * Parsing
@@ -164,6 +181,7 @@ Interface :``
 * def_class
 * def_constructor
 * def_define
+* def_define_params
 * def_destructor
 * def_enum
 * def_execution
@@ -218,6 +236,27 @@ Code <name>
 
 ```
 
+All optional parmeters are defined within `struct Opts_def_<functon name>`. This was done to setup a [macro trick](https://x.com/vkrajacic/status/1749816169736073295) for default optional parameers in the C library:
+
+```cpp
+struct gen_Opts_def_struct
+{
+	gen_CodeBody       body;
+	gen_CodeTypename   parent;
+	gen_AccessSpec     parent_access;
+	gen_CodeAttributes attributes;
+	gen_CodeTypename*  interfaces;
+	gen_s32            num_interfaces;
+	gen_ModuleFlag     mflags;
+};
+typedef struct gen_Opts_def_struct gen_Opts_def_struct;
+
+GEN_API gen_CodeClass gen_def__struct( gen_Str name, gen_Opts_def_struct opts GEN_PARAM_DEFAULT );
+#define gen_def_struct( name, ... ) gen_def__struct( name, ( gen_Opts_def_struct ) { __VA_ARGS__ } )
+```
+
+In the C++ library, the `def_<funtion name>` is not wrapped in a macro.
+
 When using the body functions, its recommended to use the args macro to auto determine the number of arguments for the varadic:
 
 ```cpp
@@ -228,7 +267,7 @@ def_global_body( 3, ht_entry, array_ht_entry, hashtable );
 ```
 
 If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty body.
-When the members have been populated use: `AST::validate_body` to verify that the members are valid entires for that type.
+When the members have been populated use: `code_validate_body` to verify that the members are valid entires for that type.
 
 ### Parse construction
 
@@ -244,7 +283,6 @@ Interface :
 * parse_export_body
 * parse_extern_link
 * parse_friend
-  * Purposefully are only support forward declares with this constructor.
 * parse_function
 * parse_global_body
 * parse_namespace

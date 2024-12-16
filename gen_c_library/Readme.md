@@ -91,7 +91,7 @@ C_Expression _Generic( selector_arg, a_type_expr_pair, ... ) {
 The first `arg` of _Generic behaves as the "controlling expression" or the expression that resolves to a type which will dictate which of the following expressions provided after to `_Generic` will be resolved as the one used inline for the implemenation.
 
 
-For this library's purposes we'll be using the functional macro equivalent *(if there is an excpetion I'll link it at the end fo the section)*:
+For this library's purposes we'll be using the functional macro equivalent *(if there is an exception I'll link it at the end of this section)*:
 
 ```c
 #define macro_that_uses_selector_arg_for_resolving_a_fucntion( selecting_exp) \
@@ -142,4 +142,4 @@ So for any given templated container interface. Expect the follwoing (taken stra
 
 `GEN_RESOLVED_FUNCTION_CALL` is an empty define, its just to indicate that its intended to expand to a function call.
 
-To see the thea actual macro definitions used: [generic_macros.h](./components/generic_macros.h) has them. They'll be injected right after the usual macros are positioned in the header file.
+To see the the actual macro definitions used - see: [generic_macros.h](./components/generic_macros.h). They'll be injected right after the usual macros in the generated header file.

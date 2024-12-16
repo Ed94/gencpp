@@ -800,6 +800,9 @@ do                          \
 			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_ast, ast );
 			if (found) break;
 
+			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_ast, ast );
+			if (found) break;
+
 			ast.append(entry);
 		}
 		break;
@@ -978,6 +981,9 @@ R"(#define AST_ArrSpecs_Cap \
 			found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
 			if (found) break;
 
+			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_code_types, code_types);
+			if (found) break;
+
 			code_types.append(entry);
 		}
 		break;
@@ -1072,7 +1078,10 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
+			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_ast_types, ast_types );
+			if (found) break;
+
+			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_ast_types, ast_types);
 			if (found) break;
 
 			ast_types.append(entry);
@@ -1126,6 +1135,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_interface, interface);
+			if (found) break;
+
+			found = ignore_preprocess_cond_block(txt("0"), entry, parsed_interface, interface);
 			if (found) break;
 
 			interface.append(entry);

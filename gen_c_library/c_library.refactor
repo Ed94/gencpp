@@ -420,6 +420,8 @@ word make_code, gen_make_code
 
 namespace set_allocator_, gen_set_allocator_
 
+namespace Opts_, gen_Opts_
+
 namespace def_,     gen_def_
 namespace parse_,   gen_parse_
 namespace token_,   gen_token_

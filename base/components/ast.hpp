@@ -43,7 +43,7 @@ struct AST_Pragma;
 struct AST_PreprocessCond;
 struct AST_Specifiers;
 
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
+#ifdef GEN_EXECUTION_EXPRESSION_SUPPORT
 struct AST_Expr;
 struct AST_Expr_Assign;
 struct AST_Expr_Alignof;
@@ -140,7 +140,7 @@ struct CodePragma;
 struct CodeSpecifiers;
 #endif
 
-#if GEN_EXECUTION_EXPRESSION_SUPPORT
+#ifdef GEN_EXECUTION_EXPRESSION_SUPPORT
 
 #if GEN_COMPILER_C
 typedef AST_Expr*                CodeExpr;
