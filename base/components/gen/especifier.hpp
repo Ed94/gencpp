@@ -72,16 +72,16 @@ inline Str spec_to_str( Specifier type )
 
 inline bool spec_is_trailing( Specifier specifier )
 {
-	switch (specifier) {
-		case Spec_Const:
-		case Spec_Final:
-		case Spec_NoExceptions:
-		case Spec_Override:
-		case Spec_Pure:
-		case Spec_Volatile:
+	switch ( specifier )
+	{
+		case Spec_Const :
+		case Spec_Final :
+		case Spec_NoExceptions :
+		case Spec_Override :
+		case Spec_Pure :
+		case Spec_Volatile :
 			return true;
-
-		default:
+		default :
 			return false;
 	}
 }

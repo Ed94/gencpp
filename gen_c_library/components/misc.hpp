@@ -28,10 +28,9 @@ b32 ignore_preprocess_cond_block( Str cond_sig, Code& entry_iter, CodeBody& pars
 		//log_fmt("Preprocess cond found: %S\n", cond->Content);
 		found = true;
 
-		s32 depth = 1;
-		++ entry_iter;
-		for(b32 continue_for = true; continue_for && entry_iter != parsed_body.end(); ) switch
-		(entry_iter->Type) {
+		s32 depth = 0;
+		for(b32 continue_for = true; continue_for && entry_iter != parsed_body.end(); ) switch (entry_iter->Type)
+		{
 			case CT_Preprocess_If:
 			case CT_Preprocess_IfDef:
 			case CT_Preprocess_IfNotDef:
@@ -41,20 +40,18 @@ b32 ignore_preprocess_cond_block( Str cond_sig, Code& entry_iter, CodeBody& pars
 
 			case CT_Preprocess_Else:
 				++ entry_iter;
-				for(; continue_for && entry_iter != parsed_body.end(); ++ entry_iter)
+				if (depth == 1) for(; entry_iter != parsed_body.end(); ++ entry_iter)
 				{
-					if (entry_iter->Type == CT_Preprocess_EndIf)
-					{
-						continue_for = false;
+					if ( entry_iter->Type == CT_Preprocess_EndIf)
 						break;
-					}
+
 					body.append(entry_iter);
 				}
 			break;
 
 			case CT_Preprocess_EndIf:
 			{
-				depth --;
+				-- depth;
 				if (depth == 0) {
 					continue_for = false;
 					break;

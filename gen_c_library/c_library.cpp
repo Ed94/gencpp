@@ -1129,6 +1129,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody interface        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_interface.begin(); entry != parsed_interface.end(); ++ entry ) switch( entry->Type )
 	{
+		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
 			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_interface, interface );
@@ -1217,9 +1218,16 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody inlines        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_inlines.begin(); entry != parsed_inlines.end(); ++ entry ) switch( entry->Type )
 	{
+		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
 			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_inlines, inlines );
+			if (found) break;
+
+			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_interface, interface);
+			if (found) break;
+
+			found = ignore_preprocess_cond_block(txt("0"), entry, parsed_interface, interface);
 			if (found) break;
 
 			inlines.append(entry);

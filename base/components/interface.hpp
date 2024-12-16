@@ -327,8 +327,6 @@ forceinline CodeBody         def_union_body      ( s32 num, Code* codes )       
 
 #pragma region Parsing
 
-// TODO(Ed) : Implmeent the new parser API design.
-
 #if 0
 struct StackNode
 {

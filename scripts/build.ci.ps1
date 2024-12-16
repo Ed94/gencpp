@@ -326,7 +326,7 @@ if ( $unreal )
 }
 
 # C Library testing
-if ( $test -and $false )
+if ( $test -and $true )
 {
 	$path_test_c = join-path $path_test   c_library
 	$path_build  = join-path $path_test_c build

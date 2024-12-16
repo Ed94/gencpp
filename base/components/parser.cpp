@@ -3684,9 +3684,6 @@ CodeEnum parser_parse_enum( bool inplace_def )
 	Code         array_expr = { nullptr };
 	CodeTypename type       = { nullptr };
 
-	char  entries_code[ kilobytes(128) ] = { 0 };
-	s32   entries_length = 0;
-
 	bool is_enum_class = false;
 
 	eat( Tok_Decl_Enum );
@@ -4684,11 +4681,12 @@ else if ( currtok.Type == Tok_DeclType )
 			}
 		}
 	}
-	// TODO(Ed): This needs updating
 	else if ( currtok.Type == Tok_Preprocess_Macro_Typename ) {
 		// Typename is a macro
-		name = currtok;
-		eat(Tok_Preprocess_Macro_Typename);
+		// name = currtok;
+		// eat(Tok_Preprocess_Macro_Typename);
+		Code macro = parse_simple_preprocess(Tok_Preprocess_Macro_Typename);
+		name.Text = macro->Content;
 	}
 
 	// The usual Identifier type signature that may have namespace qualifiers
@@ -4734,7 +4732,7 @@ else if ( currtok.Type == Tok_DeclType )
 
 	// For function type signatures
 	CodeTypename return_type = NullCode;
-	CodeParams    params      = NullCode;
+	CodeParams   params      = NullCode;
 
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
 	CodeParams params_nested = NullCode;
