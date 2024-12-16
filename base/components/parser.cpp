@@ -987,7 +987,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				// <Attributes>
 			}
 			//! Fallthrough intended
-			GEN_PARSER_CLASS_STRUCT_BODY_ALLOWED_MEMBER_TOK_SPECIFIERS_CASES:
+			GEN_PARSER_CLASS_STRUCT_BODY_ALLOWED_MEMBER_TOK_SPECIFIER_CASES:
 			{
 				Specifier specs_found[16] = { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
@@ -1000,7 +1000,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 					switch ( spec )
 					{
-						GEN_PARSER_CLASS_STRUCT_BODY_ALLOWED_MEMBER_SPECIFIERS_CASES:
+						GEN_PARSER_CLASS_STRUCT_BODY_ALLOWED_MEMBER_SPECIFIER_CASES:
 						break;
 
 						case Spec_Consteval:
@@ -3993,7 +3993,7 @@ CodeFriend parser_parse_friend()
 
 			switch ( spec )
 			{
-				GEN_PARSER_FRIEND_ALLOWED_SPECIFIERS_CASES:
+				GEN_PARSER_FRIEND_ALLOWED_SPECIFIER_CASES:
 				break;
 
 				default :
@@ -4111,7 +4111,7 @@ CodeFn parser_parse_function()
 
 		switch ( spec )
 		{
-			GEN_PARSER_FUNCTION_ALLOWED_SPECIFIERS_CASES:
+			GEN_PARSER_FUNCTION_ALLOWED_SPECIFIER_CASES:
 			break;
 
 			default:
@@ -4212,7 +4212,7 @@ CodeOperator parser_parse_operator()
 
 		switch ( spec )
 		{
-			GEN_PARSER_OPERATOR_ALLOWED_SPECIFIERS_CASES:
+			GEN_PARSER_OPERATOR_ALLOWED_SPECIFIER_CASES:
 			break;
 
 			default:
@@ -4445,7 +4445,7 @@ CodeTemplate parser_parse_template()
 
 				switch ( spec )
 				{
-					GEN_PARSER_TEMPLATE_ALLOWED_SPECIFIERS_CASES:
+					GEN_PARSER_TEMPLATE_ALLOWED_SPECIFIER_CASES:
 					break;
 
 					case Spec_Consteval :

@@ -57,8 +57,8 @@ The keywords supported for the preprocessor are:
 Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST node.
 If a directive is used with an unsupported keyword its will be processed as an untyped AST.
 
-The preprocessor lines are stored as members of their associated scope they are parsed within. ( Global, Namespace, Class/Struct )  
-***Again (Its not standard): These ASTs will be considered members or entries of braced scope they reside within***
+The preprocessor lines are stored as members of their associated scope they are parsed within ( Global, Namespace, Class/Struct ).
+***Again: These ASTs will be considered members or entries of braced scope they reside within***
 
 Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).  
 Exceptions:
@@ -85,7 +85,7 @@ Macros used within a file should be registered by the user before parsing. This 
 
 ## Registering macros
 
-While the registeration of macros in the meta-program's side for parsing can be considered tedius, its necessary for the parser to accurately resolve the macros intent in one pass and it provides in a sense hygenics in verifying that they are used as intended.
+While the registeration of macros in the meta-program's side for parsing can be considered tedius, its necessary for the parser to accurately resolve the macros intent in one pass (and it provides some hygenics by verifying that they are used as intended).
 
 The following can be used to register a macro:
 
@@ -121,7 +121,7 @@ Additioonally tthe following flags may be set:
 * `MF_Allow_As_Definition`: Will allow the macro be an acceptable token/s when the parser expects a declartion or definition to resolve after attributes or specifiers have been identified beforehand.
   * This flag requires that the macro is of type `MT_Statement` to make any sense of usage.
 
-If a macro is not define the following warning will be issued if `GEN_BUILD_DEBUG=1` during lexing within [lexer.cpp](../base/components/lexer.cpp) - `lex_preprocessor_define`:
+If a macro is not defined the following warning will be issued if `GEN_BUILD_DEBUG=1` during lexing within [lexer.cpp](../base/components/lexer.cpp) - `lex_preprocessor_define`:
 
 ```c
 log_fmt("Warning: '%S' was not registered before the lexer processed its #define directive, it will be registered as a expression macro\n"

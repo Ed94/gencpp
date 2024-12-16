@@ -134,7 +134,7 @@ CodeFn parser_parse_function()
 
         switch ( spec )
         {
-            GEN_PARSER_FUNCTION_ALLOWED_SPECIFIERS_CASES:
+            GEN_PARSER_FUNCTION_ALLOWED_SPECIFIER_CASES:
             break;
 
             default:
