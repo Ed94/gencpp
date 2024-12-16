@@ -36,7 +36,7 @@ Its a [todo](https://github.com/Ed94/gencpp/issues/21)
 * `GEN_EXPOSE_BACKEND` : Will expose symbols meant for internal use only.
 * `GEN_ROLL_OWN_DEPENDENCIES` : Optional override so that user may define the dependencies themselves.
 * `GEN_DONT_ALLOW_INVALID_CODE` (Not implemented yet) : Will fail when an invalid code is constructed, parsed, or serialized.
-* `GEN_C_LIKE_PP` : Setting to `<true or 1>` Will prevent usage of function defnitions using references and structs with member functions. Structs will still have user-defined operator conversions, for-range support, and other operator overloads
+* `GEN_C_LIKE_CPP` : Setting to `<true or 1>` Will prevent usage of function defnitions using references and structs with member functions. Structs will still have user-defined operator conversions, for-range support, and other operator overloads
 
 ### The Data & Interface
 
@@ -51,6 +51,25 @@ The interface for the context:
 * `reset`: Clears the allocations, but doesn't free the memoery, then calls `init()` on `_ctx` again.
 * `get_context`: Retreive the currently tracked context.
 * `set_context`: Swap out the current tracked context.
+
+
+#### Allocato usage
+
+* `Allocator_DyanmicContainers`: Growing arrays, hash tables. (Unbounded sized containers)
+* `Allocator_Pool`: Fixed-sized object allocations (ASTs, etc)
+* `Allocator_StrCache`: StrCached allocations
+* `Allocator_Temp`: Temporary alloations mostly intended for StrBuilder usage. Manually cleared by the user by their own discretion.
+
+The allocator definitions used are exposed to the user incase they want to dictate memory usage
+
+* Allocators are defined with the `AllocatorInfo` structure found in [`memory.hpp`](../base/dependencies/memory.hpp)
+* Most of the work is just defining the allocation procedure:
+
+```cpp
+    void* ( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
+```
+
+For any allocator above that the user does not define before `init`, a fallback allocator will be assigned that utiizes the `fallback_allocator_proc` wtihin [interface.cpp](../base/components/interface.cpp).
 
 As mentioned in root readme, the user is provided Code objects by calling the constructor's functions to generate them or find existing matches.
 
@@ -90,36 +109,14 @@ int AST_ArrSpecs_Cap =
 
 Data Notes:
 
-* The allocator definitions used are exposed to the user incase they want to dictate memory usage
-  * You'll find the memory handling in `init`, `deinit`, `reset`, `gen_strbuilder_allocator`, `cache_str`, `make_code`.
-  * Allocators are defined with the `AllocatorInfo` structure found in [`memory.hpp`](../base/dependencies/memory.hpp)
-  * Most of the work is just defining the allocation procedure:
-
-```cpp
-    void* ( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
-```
-
 * ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.
 * Code types have member symbols but their data layout is enforced to be POD types.
 * This library treats memory failures as fatal.
 * Cached Strings are stored in their own set of arenas. AST constructors use cached strings for names, and content.
-  * `StringArenas`, `StringCache`, `Allocator_StringArena`, and `Allocator_StringTable` are the associated containers or allocators.
 * Strings used for serialization and file buffers are not contained by those used for cached strings.
-  * They are currently using `FallbackAllocator`, which are tracked array of arenas that grows as needed (adds buckets when one runs out).
-  * Memory within the buckets is not reused, so its inherently wasteful.
-  * I will be augmenting the default allocator with virtual memory & a slab allocator in the [future](https://github.com/Ed94/gencpp/issues/12)
-* Intrusive linked lists used children nodes on bodies, and parameters.
+  * `_ctx->Allocator_Temp` is used.
 * Its intended to generate the AST in one go and serialize after. The constructors and serializer are designed to be a "one pass, front to back" setup.
-* Allocations can be tuned by defining the folloiwng macros (will be moved to runtime configuration in the future):
-  * `GEN_GLOBAL_BUCKET_SIZE` : Size of each bucket area for the global allocator
-  * `GEN_CODEPOOL_NUM_BLOCKS` : Number of blocks per code pool in the code allocator
-  * `GEN_SIZE_PER_STRING_ARENA` : Size per arena used with string caching.
-  * `GEN_MAX_COMMENT_LINE_LENGTH` : Longest length a comment can have per line.
-  * `GEN_MAX_NAME_LENGTH` : Max length of any identifier.
-  * `GEN_MAX_UNTYPED_STR_LENGTH` : Max content length for any untyped code.
-  * `TokenMap_FixedArena` : token_fmt_va uses local_persit memory of this arena type for the hashtable.
-  * `GEN_LEX_ALLOCATOR_SIZE`
-  * `GEN_BUILDER_STR_BUFFER_RESERVE`
+  * Any modifcations to an existing AST should be to just construct another with the modifications done on-demand while traversing the AST (non-destructive).
 
 The following CodeTypes are used which the user may optionally use strong typing with if they enable: `GEN_ENFORCE_STRONG_CODE_TYPES`
 
