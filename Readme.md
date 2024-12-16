@@ -145,5 +145,15 @@ struct ArrayHeader
 *(The library currently uses clang-format for formatting, beware its pretty slow...)*
 
 ## Building
-
+<video controls src="rider64_2024-12-16_17-22-16.mp4" title="Title"></video>
 See the [scripts directory](scripts/).
+
+
+## Gallery
+
+### Generating a UAttributeSet from a datatable
+
+<video src="./docs/assets/rider64_2024-12-16_17-22-16.mp4" width="640"></video>
+
+### Listing definitions in the Cuik Compiler
+
