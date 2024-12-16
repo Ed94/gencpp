@@ -93,6 +93,9 @@ struct Context
 
 	// TODO(Ed): Active parse context vs a parse result need to be separated conceptually
 	ParseContext parser;
+
+	// TODO(Ed): Formatting - This will eventually be in a separate struct when in the process of serialization of the builder.
+	s32 temp_serialize_indent;
 };
 
 // Initialize the library. There first ctx initialized must exist for lifetime of other contextes that come after as its the one that
@@ -121,7 +124,11 @@ GEN_API void register_macro( Macro macro );
 
 // Ease of use batch registration
 GEN_API void register_macros( s32 num, ... );
-GEN_API void register_macros( s32 num,  Macro* macros );
+GEN_API void register_macros_arr( s32 num, Macro* macros );
+
+#if GEN_COMPILER_CPP
+forceinline void register_macros( s32 num, Macro* macros ) { return register_macros_arr(num, macros); }
+#endif
 
 // Used internally to retrive or make string allocations.
 // Strings are stored in a series of string arenas of fixed size (SizePer_StringArena)
@@ -276,30 +283,45 @@ GEN_API CodeBody def_body( CodeType type );
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
 
-GEN_API CodeBody         def_class_body      ( s32 num, ... );
-GEN_API CodeBody         def_class_body      ( s32 num, Code* codes );
-GEN_API CodeDefineParams def_define_params   ( s32 num, ... );
-GEN_API CodeDefineParams def_define_params   ( s32 num, CodeDefineParams* codes );
-GEN_API CodeBody         def_enum_body       ( s32 num, ... );
-GEN_API CodeBody         def_enum_body       ( s32 num, Code* codes );
-GEN_API CodeBody         def_export_body     ( s32 num, ... );
-GEN_API CodeBody         def_export_body     ( s32 num, Code* codes);
-GEN_API CodeBody         def_extern_link_body( s32 num, ... );
-GEN_API CodeBody         def_extern_link_body( s32 num, Code* codes );
-GEN_API CodeBody         def_function_body   ( s32 num, ... );
-GEN_API CodeBody         def_function_body   ( s32 num, Code* codes );
-GEN_API CodeBody         def_global_body     ( s32 num, ... );
-GEN_API CodeBody         def_global_body     ( s32 num, Code* codes );
-GEN_API CodeBody         def_namespace_body  ( s32 num, ... );
-GEN_API CodeBody         def_namespace_body  ( s32 num, Code* codes );
-GEN_API CodeParams       def_params          ( s32 num, ... );
-GEN_API CodeParams       def_params          ( s32 num, CodeParams* params );
-GEN_API CodeSpecifiers   def_specifiers      ( s32 num, ... );
-GEN_API CodeSpecifiers   def_specifiers      ( s32 num, Specifier* specs );
-GEN_API CodeBody         def_struct_body     ( s32 num, ... );
-GEN_API CodeBody         def_struct_body     ( s32 num, Code* codes );
-GEN_API CodeBody         def_union_body      ( s32 num, ... );
-GEN_API CodeBody         def_union_body      ( s32 num, Code* codes );
+GEN_API CodeBody         def_class_body           ( s32 num, ... );
+GEN_API CodeBody         def_class_body_arr       ( s32 num, Code* codes );
+GEN_API CodeDefineParams def_define_params        ( s32 num, ... );
+GEN_API CodeDefineParams def_define_params_arr    ( s32 num, CodeDefineParams* codes );
+GEN_API CodeBody         def_enum_body            ( s32 num, ... );
+GEN_API CodeBody         def_enum_body_arr        ( s32 num, Code* codes );
+GEN_API CodeBody         def_export_body          ( s32 num, ... );
+GEN_API CodeBody         def_export_body_arr      ( s32 num, Code* codes);
+GEN_API CodeBody         def_extern_link_body     ( s32 num, ... );
+GEN_API CodeBody         def_extern_link_body_arr ( s32 num, Code* codes );
+GEN_API CodeBody         def_function_body        ( s32 num, ... );
+GEN_API CodeBody         def_function_body_arr    ( s32 num, Code* codes );
+GEN_API CodeBody         def_global_body          ( s32 num, ... );
+GEN_API CodeBody         def_global_body_arr      ( s32 num, Code* codes );
+GEN_API CodeBody         def_namespace_body       ( s32 num, ... );
+GEN_API CodeBody         def_namespace_body_arr   ( s32 num, Code* codes );
+GEN_API CodeParams       def_params               ( s32 num, ... );
+GEN_API CodeParams       def_params_arr           ( s32 num, CodeParams* params );
+GEN_API CodeSpecifiers   def_specifiers           ( s32 num, ... );
+GEN_API CodeSpecifiers   def_specifiers_arr       ( s32 num, Specifier* specs );
+GEN_API CodeBody         def_struct_body          ( s32 num, ... );
+GEN_API CodeBody         def_struct_body_arr      ( s32 num, Code* codes );
+GEN_API CodeBody         def_union_body           ( s32 num, ... );
+GEN_API CodeBody         def_union_body_arr       ( s32 num, Code* codes );
+
+#if GEN_COMPILER_CPP
+forceinline CodeBody         def_class_body      ( s32 num, Code* codes )             { return def_class_body_arr(num, codes); }
+forceinline CodeDefineParams def_define_params   ( s32 num, CodeDefineParams* codes ) { return def_define_params_arr(num, codes); }
+forceinline CodeBody         def_enum_body       ( s32 num, Code* codes )             { return def_enum_body_arr(num, codes); }
+forceinline CodeBody         def_export_body     ( s32 num, Code* codes)              { return def_export_body_arr(num, codes); }
+forceinline CodeBody         def_extern_link_body( s32 num, Code* codes )             { return def_extern_link_body_arr(num, codes); }
+forceinline CodeBody         def_function_body   ( s32 num, Code* codes )             { return def_function_body_arr(num, codes); }
+forceinline CodeBody         def_global_body     ( s32 num, Code* codes )             { return def_global_body_arr(num, codes); }
+forceinline CodeBody         def_namespace_body  ( s32 num, Code* codes )             { return def_namespace_body_arr(num, codes); }
+forceinline CodeParams       def_params          ( s32 num, CodeParams* params )      { return def_params_arr(num, params); }
+forceinline CodeSpecifiers   def_specifiers      ( s32 num, Specifier* specs )        { return def_specifiers_arr(num, specs); }
+forceinline CodeBody         def_struct_body     ( s32 num, Code* codes )             { return def_struct_body_arr(num, codes); }
+forceinline CodeBody         def_union_body      ( s32 num, Code* codes )             { return def_union_body_arr(num, codes); }
+#endif
 
 #pragma endregion Upfront
 

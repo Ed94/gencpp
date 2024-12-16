@@ -89,13 +89,13 @@
 #define src_line_str stringize(__LINE__)
 
 #ifndef do_once
-#define do_once()                                                                       \
-    static int __do_once_counter_##src_line_str = 0;                                    \
-    for(; __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1 ) \
+#define do_once()                                                                            \
+	local_persist int __do_once_counter_##src_line_str  = 0;                                 \
+    for(;      __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1 ) \
 
-#define do_once_defer( expression )                                                                       \
-    static int __do_once_counter_##src_line_str = 0;                                                      \
-    for(;      __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1, (expression)) \
+#define do_once_defer( expression )                                                                 \
+    local_persist int __do_once_counter_##src_line_str  = 0;                                        \
+    for(;__do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1, (expression)) \
 
 #define do_once_start      \
 	do                     \

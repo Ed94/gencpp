@@ -39,3 +39,5 @@ gen_c_library/gen
 **/*.vcxproj
 **/*.vcxproj.filters
 **/*.vcxproj.user
+test/c_library/gen
+test/cpp_library/gen

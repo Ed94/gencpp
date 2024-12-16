@@ -1369,7 +1369,7 @@ CodeBody def_class_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_class_body( s32 num, Code* codes )
+CodeBody def_class_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_class_body );
 
@@ -1432,7 +1432,7 @@ CodeDefineParams def_define_params( s32 num, ... )
 	return result;
 }
 
-CodeDefineParams def_define_params( s32 num, CodeDefineParams* codes )
+CodeDefineParams def_define_params_arr( s32 num, CodeDefineParams* codes )
 {
 	def_body_code_array_start( def_define_params );
 
@@ -1491,7 +1491,7 @@ CodeBody def_enum_body( s32 num, ... )
 	return (CodeBody) result;
 }
 
-CodeBody def_enum_body( s32 num, Code* codes )
+CodeBody def_enum_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_enum_body );
 
@@ -1552,7 +1552,7 @@ CodeBody def_export_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_export_body( s32 num, Code* codes )
+CodeBody def_export_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_export_body );
 
@@ -1618,7 +1618,7 @@ CodeBody def_extern_link_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_extern_link_body( s32 num, Code* codes )
+CodeBody def_extern_link_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_extern_linkage_body );
 
@@ -1685,7 +1685,7 @@ CodeBody def_function_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_function_body( s32 num, Code* codes )
+CodeBody def_function_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_function_body );
 
@@ -1756,7 +1756,7 @@ CodeBody def_global_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_global_body( s32 num, Code* codes )
+CodeBody def_global_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_global_body );
 
@@ -1827,7 +1827,7 @@ CodeBody def_namespace_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_namespace_body( s32 num, Code* codes )
+CodeBody def_namespace_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_namespace_body );
 
@@ -1889,7 +1889,7 @@ CodeParams def_params( s32 num, ... )
 	return result;
 }
 
-CodeParams def_params( s32 num, CodeParams* codes )
+CodeParams def_params_arr( s32 num, CodeParams* codes )
 {
 	def_body_code_array_start( def_params );
 
@@ -1945,7 +1945,7 @@ CodeSpecifiers def_specifiers( s32 num, ... )
 	return result;
 }
 
-CodeSpecifiers def_specifiers( s32 num, Specifier* specs )
+CodeSpecifiers def_specifiers_arr( s32 num, Specifier* specs )
 {
 	if ( num <= 0 ) {
 		log_failure("gen::def_specifiers: num cannot be zero or less");
@@ -2004,7 +2004,7 @@ CodeBody def_struct_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_struct_body( s32 num, Code* codes )
+CodeBody def_struct_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_struct_body );
 
@@ -2065,7 +2065,7 @@ CodeBody def_union_body( s32 num, ... )
 	return result;
 }
 
-CodeBody def_union_body( s32 num, Code* codes )
+CodeBody def_union_body_arr( s32 num, Code* codes )
 {
 	def_body_code_array_start( def_union_body );
 

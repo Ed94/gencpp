@@ -21,7 +21,7 @@ word global,                       gen_global
 word internal,                     gen_internal
 word local_persist,                gen_local_persist
 word bit,                          gen_bit
-word bitfield_is_set,            gen_bitfield_is_set
+word bitfield_is_set,              gen_bitfield_is_set
 word cast,                         gen_cast
 word ccast,                        gen_ccast
 word pcast,                        gen_pcast
@@ -407,6 +407,8 @@ namespace using_,      gen_using_
 namespace var_,        gen_var_
 
 // Gen Interface
+
+word _ctx, gen__ctx
 
 word init,   gen_init
 word deinit, gen_deinit

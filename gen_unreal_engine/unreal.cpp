@@ -100,7 +100,8 @@ int gen_main()
 		(Macro { txt("GEN_PARAM_DEFAULT"),            MT_Expression, MF_Null       }),
 		(Macro { txt("struct_init"),                  MT_Expression, MF_Functional }),
 		(Macro { txt("GEN_OPTIMIZE_MAPPINGS_BEGIN"),  MT_Statement,  MF_Null       }),
-		(Macro { txt("GEN_OPITMIZE_MAPPINGS_END"),    MT_Statement,  MF_Null       })
+		(Macro { txt("GEN_OPITMIZE_MAPPINGS_END"),    MT_Statement,  MF_Null       }),
+		(Macro { txt("src_line_str"),                 MT_Expression, MF_Null       })
 	));
 
 	// gen_dep.hpp

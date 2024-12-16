@@ -238,6 +238,7 @@ Interface :
 
 * parse_class
 * parse_constructor
+* parse_define
 * parse_destructor
 * parse_enum
 * parse_export_body
@@ -322,6 +323,7 @@ Code        <name>       = parse_<function name>( gen_code_str );
 
 The following are provided predefined by the library as they are commonly used:
 
+* `enum_underlying_macro`
 * `access_public`
 * `access_protected`
 * `access_private`

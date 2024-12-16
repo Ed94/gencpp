@@ -282,10 +282,9 @@ bool array_fill(Array<Type> array, usize begin, usize end, Type value)
 	ArrayHeader* header = array_get_header(array);
 
 	if (begin < 0 || end > header->Num)
-	return false;
+		return false;
 
-	for (ssize idx = ssize(begin); idx < ssize(end); idx++)
-	{
+	for (ssize idx = ssize(begin); idx < ssize(end); idx++) {
 		array[idx] = value;
 	}
 
@@ -754,7 +753,7 @@ HashTableFindResult hashtable__find(HashTable<Type> table, u64 key)
 			if (table.Entries[result.EntryIndex].Key == key)
 				break;
 
-			result.PrevIndex = result.EntryIndex;
+			result.PrevIndex  = result.EntryIndex;
 			result.EntryIndex = table.Entries[result.EntryIndex].Next;
 		}
 	}

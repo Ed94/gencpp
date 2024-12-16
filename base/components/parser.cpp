@@ -1028,7 +1028,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 
 				if ( NumSpecifiers )
 				{
-					specifiers = def_specifiers( NumSpecifiers, specs_found );
+					specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 				}
 				// <Attributes> <Specifiers>
 
@@ -1753,7 +1753,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 				if ( NumSpecifiers )
 				{
-					specifiers = def_specifiers( NumSpecifiers, specs_found );
+					specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 				}
 				// <Attributes> <Specifiers>
 			}
@@ -4012,7 +4012,7 @@ CodeFriend parser_parse_friend()
 		}
 
 		if ( NumSpecifiers ) {
-			specifiers = def_specifiers( NumSpecifiers, specs_found );
+			specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 		}
 		// <friend> <specifiers>
 	}
@@ -4129,7 +4129,7 @@ CodeFn parser_parse_function()
 	}
 
 	if ( NumSpecifiers ) {
-		specifiers = def_specifiers( NumSpecifiers, specs_found );
+		specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 	}
 	// <export> <Attributes> <Specifiers>
 
@@ -4237,7 +4237,7 @@ CodeOperator parser_parse_operator()
 	}
 
 	if ( NumSpecifiers ) {
-		specifiers = def_specifiers( NumSpecifiers, specs_found );
+		specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 	}
 	// <export> <Attributes> <Specifiers>
 
@@ -4475,7 +4475,7 @@ CodeTemplate parser_parse_template()
 			}
 
 			if ( NumSpecifiers ) {
-				specifiers = def_specifiers( NumSpecifiers, specs_found );
+				specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 			}
 			// <export> template< <Parameters> > <Attributes> <Specifiers>
 		}
@@ -4733,7 +4733,7 @@ else if ( currtok.Type == Tok_DeclType )
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
 	if ( NumSpecifiers )
 	{
-		specifiers    = def_specifiers( NumSpecifiers, specs_found );
+		specifiers    = def_specifiers_arr( NumSpecifiers, specs_found );
 		NumSpecifiers = 0;
 	}
 #endif
@@ -4813,7 +4813,7 @@ else if ( currtok.Type == Tok_DeclType )
 
 #else
 		if ( NumSpecifiers )
-			return_type->Specs = def_specifiers( NumSpecifiers, ( Specifier* )specs_found );
+			return_type->Specs = def_specifiers_arr( NumSpecifiers, ( Specifier* )specs_found );
 
 		// Reset specifiers, the function itself will have its own suffix specifiers possibly.
 		NumSpecifiers = 0;
@@ -4864,7 +4864,7 @@ else if ( currtok.Type == Tok_DeclType )
 
 			if ( NumSpecifiers )
 			{
-				specifiers = def_specifiers( NumSpecifiers, specs_found );
+				specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 			}
 			NumSpecifiers = 0;
 			// <Attributes> <ReturnType> ( <Specifiers>
@@ -4935,7 +4935,7 @@ else if ( currtok.Type == Tok_DeclType )
 #ifdef GEN_USE_NEW_TYPENAME_PARSING
 		if ( NumSpecifiers )
 		{
-			func_suffix_specs = def_specifiers( NumSpecifiers, specs_found );
+			func_suffix_specs = def_specifiers_arr( NumSpecifiers, specs_found );
 			NumSpecifiers     = 0;
 		}
 #endif
@@ -4985,7 +4985,7 @@ else if ( currtok.Type == Tok_DeclType )
 #else
 	if ( NumSpecifiers )
 	{
-		CodeSpecifiers specifiers = def_specifiers( NumSpecifiers, ( Specifier* )specs_found );
+		CodeSpecifiers specifiers = def_specifiers_arr( NumSpecifiers, ( Specifier* )specs_found );
 		result->Specs   = specifiers;
 	}
 #endif
@@ -5523,7 +5523,7 @@ CodeVar parser_parse_variable()
 	}
 
 	if ( NumSpecifiers ) {
-		specifiers = def_specifiers( NumSpecifiers, specs_found );
+		specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 	}
 	// <ModuleFlags> <Attributes> <Specifiers>
 

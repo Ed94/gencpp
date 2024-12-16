@@ -73,7 +73,7 @@ CodeConstructor parse_constructor( Str def )
 
 	if ( NumSpecifiers )
 	{
-		specifiers = def_specifiers( NumSpecifiers, specs_found );
+		specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 		// <specifiers> ...
 	}
 

@@ -1126,6 +1126,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_interface, interface );
 			if (found) break;
 
+			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_interface, interface);
+			if (found) break;
+
 			interface.append(entry);
 		}
 		break;
@@ -1136,12 +1139,14 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			CodeFn fn = cast(CodeFn, entry);
 			Code prev = entry->Prev;
 
+			#if 0
 			if (prev && prev->Name.is_equal(entry->Name)) {
 				// rename second definition so there isn't a symbol conflict
 				StrBuilder postfix_arr = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%S_arr", entry->Name);
 				entry->Name = cache_str(postfix_arr.to_str());
 				postfix_arr.free();
 			}
+			#endif
 
 			b32 handled= false;
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
@@ -1368,6 +1373,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		{
 			CodeFn fn = cast(CodeFn, entry);
 			Code prev = entry->Prev;
+			#if 0
 			for ( CodeParams arr_param : fn->Params )
 			{
 				b32 repeat_register_macros = fn->Name.is_equal(txt("register_macros")) && arr_param->Name.is_equal(txt("num")) && ! arr_param->Next->Name.is_equal(txt("..."));
@@ -1377,6 +1383,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 					fn->Name = cache_str(postfix_arr.to_str());
 				}
 			}
+			#endif
 			src_interface.append(fn);
 		}
 		break;
@@ -1444,6 +1451,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			CodeFn fn = cast(CodeFn, entry);
 			Code prev = entry->Prev;
 
+			#if 0
 			for ( CodeParams arr_param : fn->Params )
 			{
 				b32 repeat_def_array = fn->Name.starts_with(txt("def_"))         && arr_param->Name.is_equal(txt("num")) && ! arr_param->Next->Name.is_equal(txt("..."));
@@ -1453,6 +1461,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 					fn->Name = cache_str(postfix_arr.to_str());
 				}
 			}
+			#endif
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
 				// The frontend names are warapped in macros so we need to give it the intenral symbol name

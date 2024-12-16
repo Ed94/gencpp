@@ -238,10 +238,10 @@ CodeBody gen_array( Str type, Str array_name )
 			GEN_ASSERT(begin <= end);
 			ArrayHeader* header = array_get_header( self );
 
-			if ( begin < 0 || end >= header->Num )
+			if ( begin < 0 || end > header->Num )
 				return false;
 
-			for ( ssize idx = begin; idx < end; idx ++ )
+			for ( ssize idx = (ssize)begin; idx < (ssize)end; idx ++ )
 				self[ idx ] = value;
 
 			return true;

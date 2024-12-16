@@ -1036,12 +1036,24 @@ void specifiers_to_strbuilder_ref( CodeSpecifiers self, StrBuilder* result )
 	GEN_ASSERT(result);
 	s32 idx  = 0;
 	s32 left = self->NumEntries;
-	while ( left-- )
+	while ( left -- )
 	{
-		Str spec = spec_to_str( self->ArrSpecs[idx] );
-		strbuilder_append_fmt( result, "%.*s ", spec.Len, spec.Ptr );
+		Specifier spec     = self->ArrSpecs[idx];
+		Str       spec_str = spec_to_str( spec );
+		if ( idx > 0 ) switch (spec) {
+			case Spec_Ptr:
+			case Spec_Ref:
+			case Spec_RValue:
+			break;
+
+			default:
+				strbuilder_append_str(result, txt(" "));
+			break;
+		}
+		strbuilder_append_fmt( result, "%S", spec_str );
 		idx++;
 	}
+	strbuilder_append_str(result, txt(" "));
 }
 
 StrBuilder struct_to_strbuilder(CodeStruct self)
@@ -1445,7 +1457,7 @@ void var_to_strbuilder_ref(CodeVar self, StrBuilder* result )
 			strbuilder_append_fmt( result, "%SB ", attributes_to_strbuilder(self->Attributes) );
 
 		if ( self->Specs )
-			strbuilder_append_fmt( result, "%SB\n", specifiers_to_strbuilder(self->Specs) );
+			strbuilder_append_fmt( result, "%SB", specifiers_to_strbuilder(self->Specs) );
 
 		strbuilder_append_fmt( result, "%SB %S", typename_to_strbuilder(self->ValueType), self->Name );
 

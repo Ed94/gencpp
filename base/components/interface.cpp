@@ -503,7 +503,7 @@ void register_macros( s32 num, ... )
 	va_end(va);
 }
 
-void register_macros( s32 num,  Macro* macros )
+void register_macros_arr( s32 num,  Macro* macros )
 {
 	GEN_ASSERT(num > 0);
 	do

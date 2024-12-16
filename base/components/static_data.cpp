@@ -5,10 +5,9 @@
 
 #pragma region StaticData
 global Context* _ctx;
+global u32      context_counter;
 
 #pragma region Constants
-global u32 context_counter;
-
 global Macro enum_underlying_macro;
 
 global Code Code_Global;

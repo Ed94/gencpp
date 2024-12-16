@@ -11,10 +11,10 @@
 #if GEN_BUILD_DEBUG
 #	if defined( GEN_COMPILER_MSVC )
 #		if _MSC_VER < 1300
-#pragma message("GEN_BUILD_DEBUG: __asm int 3")
+// #pragma message("GEN_BUILD_DEBUG: __asm int 3")
 #			define GEN_DEBUG_TRAP() __asm int 3 /* Trap to debugger! */
 #		else
-#pragma message("GEN_BUILD_DEBUG: __debugbreak()")
+// #pragma message("GEN_BUILD_DEBUG: __debugbreak()")
 #			define GEN_DEBUG_TRAP() __debugbreak()
 #		endif
 #	elif defined( GEN_COMPILER_TINYC )
@@ -23,7 +23,7 @@
 #		define GEN_DEBUG_TRAP() __builtin_trap()
 #	endif
 #else
-#pragma message("GEN_BUILD_DEBUG: omitted")
+// #pragma message("GEN_BUILD_DEBUG: omitted")
 #	define GEN_DEBUG_TRAP()
 #endif
 

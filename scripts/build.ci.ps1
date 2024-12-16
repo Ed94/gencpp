@@ -325,18 +325,23 @@ if ( $unreal )
 	. $refactor_unreal
 }
 
+# C Library testing
 if ( $test )
 {
-	$path_test_c_lib = join-path $path_test       c_library
-	$path_build      = join-path $path_test_c_lib build
-
+	$path_test_c = join-path $path_test   c_library
+	$path_build  = join-path $path_test_c build
+	$path_gen    = join-path $path_test_c gen
 	if ( -not(Test-Path($path_build) )) {
 		New-Item -ItemType Directory -Path $path_build
 	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
 
-	$includes    = @( $path_c_library )
-	$unit       = join-path $path_test_c_lib "gen.c"
-	$executable = join-path $path_build      "gen_c_library_test.exe"
+	$path_singleheader_include = join-path $path_c_library gen
+	$includes    = @( $path_singleheader_include )
+	$unit       = join-path $path_test_c "test.c"
+	$executable = join-path $path_build  "test.exe"
 
 	$compiler_args = @()
 	$compiler_args += ( $flag_define + 'GEN_TIME' )
@@ -350,7 +355,46 @@ if ( $test )
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 
-	Push-Location $path_test_c_lib
+	Push-Location $path_test_c
+		if ( Test-Path( $executable ) ) {
+			write-host "`nRunning c_library test"
+			$time_taken = Measure-Command { & $executable
+					| ForEach-Object {
+						write-host `t $_ -ForegroundColor Green
+					}
+				}
+			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
+		}
+	Pop-Location
+}
+
+if ($test)
+{
+	$path_test_cpp = join-path $path_test     cpp_library
+	$path_build    = join-path $path_test_cpp build
+	$path_gen      = join-path $path_test_cpp gen
+	if ( -not(Test-Path($path_build) )) {
+		New-Item -ItemType Directory -Path $path_build
+	}
+	if ( -not(Test-Path($path_gen) )) {
+		New-Item -ItemType Directory -Path $path_gen
+	}
+
+	$path_singleheader_include = join-path $path_singleheader gen
+	$includes    = @( $path_singleheader_include )
+	$unit       = join-path $path_test_cpp "test.cpp"
+	$executable = join-path $path_build    "test.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+
+	$linker_args   = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+
+	Push-Location $path_test_cpp
 		if ( Test-Path( $executable ) ) {
 			write-host "`nRunning c_library test"
 			$time_taken = Measure-Command { & $executable
