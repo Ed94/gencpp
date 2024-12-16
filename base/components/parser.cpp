@@ -4133,13 +4133,6 @@ CodeFn parser_parse_function()
 	}
 	// <export> <Attributes> <Specifiers>
 
-	// Note(Ed): We're enforcing that using this codepath requires non-macro jank.
-	// Code macro_stmt = parse_macro_as_definiton(attributes, specifiers);
-	// if (macro_stmt) {
-	// 	parser_pop(& _ctx->parser);
-	// 	return macro_stmt;
-	// }
-
 	CodeTypename ret_type = parser_parse_type(parser_not_from_template, nullptr);
 	if ( cast(Code, ret_type) == Code_Invalid ) {
 		parser_pop(& _ctx->parser);

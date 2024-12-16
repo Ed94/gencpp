@@ -132,8 +132,6 @@ enum MacroType : u16
 	MT_Expression,     // A macro is assumed to be a expression if not resolved.
 	MT_Statement,      
 	MT_Typename,
-	MT_Attribute,      // More of a note to the parser than anythign else (attributes should be defined in the user attribues def).
-	MT_Specifier,      // More of a note to the parser than anythign else (specifiers should be defined in the user attribues def).
 	MT_Block_Start,    // Not Supported yet
 	MT_Block_End,      // Not Supported yet
 	MT_Case_Statement, // Not Supported yet
@@ -160,8 +158,6 @@ Str macrotype_to_str( MacroType type )
 		{ "Statement",        sizeof("Statement")        - 1 },
 		{ "Expression",       sizeof("Expression")       - 1 },
 		{ "Typename",         sizeof("Typename")         - 1 },
-		{ "Attribute(Macro)", sizeof("Attribute(Macro)") - 1 },
-		{ "Specifier(Macro)", sizeof("Specifier(Macro)") - 1 },
 		{ "Block_Start",      sizeof("Block_Start")      - 1 },
 		{ "Block_End",        sizeof("Block_End")        - 1 },
 		{ "Case_Statement",   sizeof("Case_Statement")   - 1 },

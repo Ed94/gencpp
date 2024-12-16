@@ -6,9 +6,9 @@
 
 # Parsing
 
-The library features a naive single-pass parser tailored for only what the library needs to construct the supported syntax of C++ into its AST for *"front-end"* meta-programming purposes.
+The library features a naive single-pass parser, tailored for only what the library needs; for construction of C++ code into gencpp's AST for *"front-end"* meta-programming purposes.
 
-This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around ~7000 loc. I hope to keep it under 10k loc worst case.
+This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around ~7000 loc. I hope to keep it under 10-15k loc worst case.
 
 You can think of this parser as *frontend parser* vs a *semantic parser*. Its intuitively similar to WYSIWYG. What you ***precerive*** as the syntax from the user-side before the compiler gets a hold of it, is what you get.
 
@@ -17,6 +17,7 @@ User exposed interface:
 ```cpp
 CodeClass       parse_class        ( Str class_def       );
 CodeConstructor parse_constructor  ( Str constructor_def );
+CodeDefine      parse_define       ( Str define_def      );
 CodeDestructor  parse_destructor   ( Str destructor_def  );
 CodeEnum        parse_enum         ( Str enum_def        );
 CodeBody        parse_export_body  ( Str export_def      );
@@ -53,7 +54,7 @@ The keywords supported for the preprocessor are:
 * endif
 * pragma
 
-Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST. 
+Each directive `#` line is considered one preproecessor unit, and will be treated as one Preprocessor AST node.
 If a directive is used with an unsupported keyword its will be processed as an untyped AST.
 
 The preprocessor lines are stored as members of their associated scope they are parsed within. ( Global, Namespace, Class/Struct )  
@@ -62,29 +63,89 @@ The preprocessor lines are stored as members of their associated scope they are 
 Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).  
 Exceptions:
 
-* function signatures are allowed for a preprocessed macro: `neverinline MACRO() { ... }`
+* varaible definitions are allowed for a preprocessed macro `extern MACRO();`
+* function definitions are allowed for a preprocessed macro: `neverinline MACRO() { ... }`
   * Disable with: `#define GEN_PARSER_DISABLE_MACRO_FUNCTION_SIGNATURES`
 * typedefs allow for a preprocessed macro: `typedef MACRO();`
   * Disable with: `#define GEN_PARSER_DISABLE_MACRO_TYPEDEF`
 * Macros can behave as typenames
-* There is some macro support in paramters for functions or templates *(Specifically added to support parsing Unreal Engine source)*.
+* There is some macro support in parameters for functions or templates *(Specifically added to support parsing Unreal Engine source)*.
 
 *(Exceptions are added on an on-demand basis)*
 *(See functions `parse_operator_function_or_variable` and `parse_typedef` )*
 
 Adding your own exceptions is possible by simply modifying the parser to allow for the syntax you need.
 
-*Note: You could interpret this strictness as a feature. This would allow the user to see if their codebase or a third-party's codebase some some egregious preprocessor abuse.*
+*Note: You could interpret this strictness as a feature. This would allow the user to see if their codebase or a third-party's codebase contains some egregious preprocessor abuse.*
 
-If a macro is not defined withint e scope of parsing a set of files, it can be defined beforehand by:
+Macros used within a file should be registered by the user before parsing. This can be done two ways:
 
-* Appending the [`PreprocessorDefines`](https://github.com/Ed94/gencpp/blob/a18b5b97aa5cfd20242065cbf53462a623cd18fa/base/components/header_end.hpp#L137) array.
-  * For functional macros a "(" just needs to be added after the name like: `<name>(` so that it will tokenize its arguments as part of the token during lexing.
-* Defining a CodeDefine using `def_define`. The definition will be processed by the interface for user into `PreprocessorDefines`.
-  * This can be prevented by setting the optional prameter `dont_append_preprocess_defines`.
+1. The register macro interface within [interface.hpp](../base/components/interface.hpp).
+2. Using `def_define` to create a CodeDefine and making sure to not set `opts.dont_register_to_preprocess_macros` to `true`.
 
-The lexing and parsing takes shortcuts from whats expected in the standard.
+## Registering macros
 
+While the registeration of macros in the meta-program's side for parsing can be considered tedius, its necessary for the parser to accurately resolve the macros intent in one pass and it provides in a sense hygenics in verifying that they are used as intended.
+
+The following can be used to register a macro:
+
+```c
+GEN_API void register_macro( Macro macro );
+GEN_API void register_macros( s32 num, ... );
+GEN_API void register_macros_arr( s32 num, Macro* macros );
+```
+
+The Macro typename is defined with the following in [parser_types.hpp](../base/components/parser_types.hpp):
+
+```c
+struct Macro
+{
+    StrCached  Name;
+    MacroType  Type;
+    MacroFlags Flags;
+};
+```
+
+The macro can be designated one of the following types:
+
+* `MT_Expression`: Intended to resolve to an expression expansion.
+* `MT_Statement`: Intended to resolve an statement expansion.
+* `MT_Typename`: Intended to resolve to a typename.
+
+Additioonally tthe following flags may be set:
+
+* `MF_Functional`: The macro intended to be passed arguments are at least have the calling `()` as part of its usage.
+* `MF_Expects_Body`: The parser should expect a braced-body `{ ... }` after the macro signature `<name> <params>`
+* `MF_Allow_As_Identifier`: Will allow the macro to be an acceptable token/s when an `Tok_Identifier` is expected.
+* `MF_Allow_As_Attribute`: Will allow the macro to be an acceptable token/s when an attribute token/s is expected.
+* `MF_Allow_As_Definition`: Will allow the macro be an acceptable token/s when the parser expects a declartion or definition to resolve after attributes or specifiers have been identified beforehand.
+  * This flag requires that the macro is of type `MT_Statement` to make any sense of usage.
+
+If a macro is not define the following warning will be issued if `GEN_BUILD_DEBUG=1` during lexing within [lexer.cpp](../base/components/lexer.cpp) - `lex_preprocessor_define`:
+
+```c
+log_fmt("Warning: '%S' was not registered before the lexer processed its #define directive, it will be registered as a expression macro\n"
+    , name.Text 
+);
+```
+
+Further within the same scope, the lexer will issue a warning if it detects a macro was not flagged as function but has an open parenthesis `(` token right after is name with no whitespace:
+
+```c
+log_fmt("Warning: %S registered macro is not flagged as functional yet the definition detects opening parenthesis '(' for arguments\n"
+    , name.Text
+);
+```
+
+Macros are tracked using a `MacroTable Macros;` defined as a member of the library's `Context`.
+
+```c
+typedef HashTable(Macro) MacroTable;
+```
+
+## Notes
+
+* Empty lines used throughout the file are preserved for formatting purposes during ast serialization (they have a dedicated Token: `Tok_NewLine`).
 * Numeric literals are not checked for validity.
 * The parse API treats any execution scope definitions with no validation and are turned into untyped Code ASTs. (There is a [todo](https://github.com/Ed94/gencpp/issues/49) to add support)
   * *This includes the assignment of variables.*
@@ -95,4 +156,4 @@ The lexing and parsing takes shortcuts from whats expected in the standard.
 * Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
   * This is useful for example: parsing Unreal `Module_API` macros.
 
-Empty lines used throughout the file are preserved for formatting purposes during ast serialization.
+**The lexer & parser do not gracefully attempt to continue when it comes across incorrect code, and doesn't properly track errors into a listing (yet).**
