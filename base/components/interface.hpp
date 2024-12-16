@@ -79,6 +79,8 @@ struct Context
 	u32 InitSize_Fallback_Allocator_Bucket_Size;
 	Array(Arena) Fallback_AllocatorBuckets;
 
+	StringTable token_fmt_map;
+
 	// Array(Token) LexerTokens;
 
 	Array(Pool)  CodePools;
@@ -381,12 +383,20 @@ GEN_API Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
 #ifndef name
 //	Convienence for defining any name used with the gen api.
 //  Lets you provide the length and string literal to the functions without the need for the DSL.
-#define name( Id_ )   { stringize(Id_), sizeof(stringize( Id_ )) - 1 }
+#	if GEN_COMPILER_C
+#		define name( Id_ ) (Str){ stringize(Id_), sizeof(stringize( Id_ )) - 1 }
+#	else
+#		define name( Id_ )  Str { stringize(Id_), sizeof(stringize( Id_ )) - 1 }
+#	endif
 #endif
 
 #ifndef code
 //  Same as name just used to indicate intention of literal for code instead of names.
-#define code( ... ) { stringize( __VA_ARGS__ ), sizeof(stringize(__VA_ARGS__)) - 1 }
+#	if GEN_COMPILER_C
+#		define code( ... ) (Str){ stringize( __VA_ARGS__ ), sizeof(stringize(__VA_ARGS__)) - 1 }
+#	else
+#		define code( ... )  Str { stringize( __VA_ARGS__ ), sizeof(stringize(__VA_ARGS__)) - 1 }
+#	endif
 #endif
 
 #ifndef args

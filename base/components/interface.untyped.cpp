@@ -8,9 +8,8 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 	char const* buf_begin = buf;
 	ssize       remaining = buf_size;
 
-	local_persist StringTable tok_map;
-	do_once() {
-		tok_map = hashtable_init(Str, _ctx->Allocator_DyanmicContainers );
+	if (_ctx->token_fmt_map.Hashes == nullptr) {
+		_ctx->token_fmt_map = hashtable_init(Str, _ctx->Allocator_DyanmicContainers );
 	}
 	// Populate token pairs
 	{
@@ -22,7 +21,7 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 			Str         value = va_arg( va, Str );
 
 			u32 key = crc32( token, c_str_len(token) );
-			hashtable_set( tok_map, key, value );
+			hashtable_set( _ctx->token_fmt_map, key, value );
 		}
 	}
 
@@ -57,8 +56,8 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 
 			char const* token = fmt + 1;
 
-			u32       key   = crc32( token, tok_len );
-			Str*     value = hashtable_get(tok_map, key );
+			u32      key   = crc32( token, tok_len );
+			Str*     value = hashtable_get(_ctx->token_fmt_map, key );
 
 			if ( value )
 			{
@@ -87,7 +86,7 @@ ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va )
 			current = * fmt;
 		}
 	}
-	hashtable_clear(tok_map);
+	hashtable_clear(_ctx->token_fmt_map);
 	ssize result = buf_size - remaining;
 	return result;
 }

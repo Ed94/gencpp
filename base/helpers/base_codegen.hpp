@@ -283,7 +283,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 	body_append(result, enum_code);
 	if (use_c_definition)
 	{
-		CodeTypedef specifier_t = parse_typedef( code(typedef u32 Specifier; ));
+		CodeTypedef specifier_t = parse_typedef( code(typedef enum Specifier Specifier; ));
 		body_append(result, specifier_t);
 	}
 
@@ -499,60 +499,60 @@ CodeBody gen_ast_inlines()
 #pragma pop_macro("GEN_NS")
 #pragma pop_macro("CodeInvalid")
 
-	CodeBody impl_code               = parse_global_body( token_fmt( "typename", Str name(Code),               code_impl_tmpl ));
-	CodeBody impl_code_body          = parse_global_body( token_fmt( "typename", Str name(CodeBody),           code_impl_tmpl ));
-	CodeBody impl_code_attr          = parse_global_body( token_fmt( "typename", Str name(CodeAttributes),     code_impl_tmpl ));
-	CodeBody impl_code_cmt           = parse_global_body( token_fmt( "typename", Str name(CodeComment),        code_impl_tmpl ));
-	CodeBody impl_code_constr        = parse_global_body( token_fmt( "typename", Str name(CodeConstructor),    code_impl_tmpl ));
-	CodeBody impl_code_class         = parse_global_body( token_fmt( "typename", Str name(CodeClass),          code_impl_tmpl ));
-	CodeBody impl_code_define        = parse_global_body( token_fmt( "typename", Str name(CodeDefine),         code_impl_tmpl ));
-	CodeBody impl_code_define_params = parse_global_body( token_fmt( "typename", Str name(CodeDefineParams),   code_impl_tmpl ));
-	CodeBody impl_code_destruct      = parse_global_body( token_fmt( "typename", Str name(CodeDestructor),     code_impl_tmpl ));
-	CodeBody impl_code_enum          = parse_global_body( token_fmt( "typename", Str name(CodeEnum),           code_impl_tmpl ));
-	CodeBody impl_code_exec          = parse_global_body( token_fmt( "typename", Str name(CodeExec),           code_impl_tmpl ));
-	CodeBody impl_code_extern        = parse_global_body( token_fmt( "typename", Str name(CodeExtern),         code_impl_tmpl ));
-	CodeBody impl_code_include       = parse_global_body( token_fmt( "typename", Str name(CodeInclude),        code_impl_tmpl ));
-	CodeBody impl_code_friend        = parse_global_body( token_fmt( "typename", Str name(CodeFriend),         code_impl_tmpl ));
-	CodeBody impl_code_fn	         = parse_global_body( token_fmt( "typename", Str name(CodeFn),             code_impl_tmpl ));
-	CodeBody impl_code_module        = parse_global_body( token_fmt( "typename", Str name(CodeModule),         code_impl_tmpl ));
-	CodeBody impl_code_ns            = parse_global_body( token_fmt( "typename", Str name(CodeNS),             code_impl_tmpl ));
-	CodeBody impl_code_op            = parse_global_body( token_fmt( "typename", Str name(CodeOperator),       code_impl_tmpl ));
-	CodeBody impl_code_opcast        = parse_global_body( token_fmt( "typename", Str name(CodeOpCast),         code_impl_tmpl ));
-	CodeBody impl_code_params        = parse_global_body( token_fmt( "typename", Str name(CodeParams),         code_impl_tmpl ));
-	CodeBody impl_code_pragma        = parse_global_body( token_fmt( "typename", Str name(CodePragma),         code_impl_tmpl ));
-	CodeBody impl_code_precond       = parse_global_body( token_fmt( "typename", Str name(CodePreprocessCond), code_impl_tmpl ));
-	CodeBody impl_code_specs         = parse_global_body( token_fmt( "typename", Str name(CodeSpecifiers),     code_impl_tmpl ));
-	CodeBody impl_code_struct        = parse_global_body( token_fmt( "typename", Str name(CodeStruct),         code_impl_tmpl ));
-	CodeBody impl_code_tmpl          = parse_global_body( token_fmt( "typename", Str name(CodeTemplate),       code_impl_tmpl ));
-	CodeBody impl_code_type          = parse_global_body( token_fmt( "typename", Str name(CodeTypename),       code_impl_tmpl ));
-	CodeBody impl_code_typedef       = parse_global_body( token_fmt( "typename", Str name(CodeTypedef),        code_impl_tmpl ));
-	CodeBody impl_code_union         = parse_global_body( token_fmt( "typename", Str name(CodeUnion),          code_impl_tmpl ));
-	CodeBody impl_code_using         = parse_global_body( token_fmt( "typename", Str name(CodeUsing),          code_impl_tmpl ));
-	CodeBody impl_code_var           = parse_global_body( token_fmt( "typename", Str name(CodeVar),            code_impl_tmpl ));
+	CodeBody impl_code               = parse_global_body( token_fmt( "typename", name(Code),               code_impl_tmpl ));
+	CodeBody impl_code_body          = parse_global_body( token_fmt( "typename", name(CodeBody),           code_impl_tmpl ));
+	CodeBody impl_code_attr          = parse_global_body( token_fmt( "typename", name(CodeAttributes),     code_impl_tmpl ));
+	CodeBody impl_code_cmt           = parse_global_body( token_fmt( "typename", name(CodeComment),        code_impl_tmpl ));
+	CodeBody impl_code_constr        = parse_global_body( token_fmt( "typename", name(CodeConstructor),    code_impl_tmpl ));
+	CodeBody impl_code_class         = parse_global_body( token_fmt( "typename", name(CodeClass),          code_impl_tmpl ));
+	CodeBody impl_code_define        = parse_global_body( token_fmt( "typename", name(CodeDefine),         code_impl_tmpl ));
+	CodeBody impl_code_define_params = parse_global_body( token_fmt( "typename", name(CodeDefineParams),   code_impl_tmpl ));
+	CodeBody impl_code_destruct      = parse_global_body( token_fmt( "typename", name(CodeDestructor),     code_impl_tmpl ));
+	CodeBody impl_code_enum          = parse_global_body( token_fmt( "typename", name(CodeEnum),           code_impl_tmpl ));
+	CodeBody impl_code_exec          = parse_global_body( token_fmt( "typename", name(CodeExec),           code_impl_tmpl ));
+	CodeBody impl_code_extern        = parse_global_body( token_fmt( "typename", name(CodeExtern),         code_impl_tmpl ));
+	CodeBody impl_code_include       = parse_global_body( token_fmt( "typename", name(CodeInclude),        code_impl_tmpl ));
+	CodeBody impl_code_friend        = parse_global_body( token_fmt( "typename", name(CodeFriend),         code_impl_tmpl ));
+	CodeBody impl_code_fn	         = parse_global_body( token_fmt( "typename", name(CodeFn),             code_impl_tmpl ));
+	CodeBody impl_code_module        = parse_global_body( token_fmt( "typename", name(CodeModule),         code_impl_tmpl ));
+	CodeBody impl_code_ns            = parse_global_body( token_fmt( "typename", name(CodeNS),             code_impl_tmpl ));
+	CodeBody impl_code_op            = parse_global_body( token_fmt( "typename", name(CodeOperator),       code_impl_tmpl ));
+	CodeBody impl_code_opcast        = parse_global_body( token_fmt( "typename", name(CodeOpCast),         code_impl_tmpl ));
+	CodeBody impl_code_params        = parse_global_body( token_fmt( "typename", name(CodeParams),         code_impl_tmpl ));
+	CodeBody impl_code_pragma        = parse_global_body( token_fmt( "typename", name(CodePragma),         code_impl_tmpl ));
+	CodeBody impl_code_precond       = parse_global_body( token_fmt( "typename", name(CodePreprocessCond), code_impl_tmpl ));
+	CodeBody impl_code_specs         = parse_global_body( token_fmt( "typename", name(CodeSpecifiers),     code_impl_tmpl ));
+	CodeBody impl_code_struct        = parse_global_body( token_fmt( "typename", name(CodeStruct),         code_impl_tmpl ));
+	CodeBody impl_code_tmpl          = parse_global_body( token_fmt( "typename", name(CodeTemplate),       code_impl_tmpl ));
+	CodeBody impl_code_type          = parse_global_body( token_fmt( "typename", name(CodeTypename),       code_impl_tmpl ));
+	CodeBody impl_code_typedef       = parse_global_body( token_fmt( "typename", name(CodeTypedef),        code_impl_tmpl ));
+	CodeBody impl_code_union         = parse_global_body( token_fmt( "typename", name(CodeUnion),          code_impl_tmpl ));
+	CodeBody impl_code_using         = parse_global_body( token_fmt( "typename", name(CodeUsing),          code_impl_tmpl ));
+	CodeBody impl_code_var           = parse_global_body( token_fmt( "typename", name(CodeVar),            code_impl_tmpl ));
 
-	body_append(impl_code_attr,     parse_global_body( token_fmt( "typename", Str name(Attributes),     codetype_impl_tmpl )));
-	body_append(impl_code_cmt,      parse_global_body( token_fmt( "typename", Str name(Comment),        codetype_impl_tmpl )));
-	body_append(impl_code_constr,   parse_global_body( token_fmt( "typename", Str name(Constructor),    codetype_impl_tmpl )));
-	body_append(impl_code_define,   parse_global_body( token_fmt( "typename", Str name(Define),         codetype_impl_tmpl )));
-	body_append(impl_code_destruct, parse_global_body( token_fmt( "typename", Str name(Destructor),     codetype_impl_tmpl )));
-	body_append(impl_code_enum,     parse_global_body( token_fmt( "typename", Str name(Enum),           codetype_impl_tmpl )));
-	body_append(impl_code_exec,     parse_global_body( token_fmt( "typename", Str name(Exec),           codetype_impl_tmpl )));
-	body_append(impl_code_extern,   parse_global_body( token_fmt( "typename", Str name(Extern),         codetype_impl_tmpl )));
-	body_append(impl_code_include,  parse_global_body( token_fmt( "typename", Str name(Include),        codetype_impl_tmpl )));
-	body_append(impl_code_friend,   parse_global_body( token_fmt( "typename", Str name(Friend),         codetype_impl_tmpl )));
-	body_append(impl_code_fn,       parse_global_body( token_fmt( "typename", Str name(Fn),             codetype_impl_tmpl )));
-	body_append(impl_code_module,   parse_global_body( token_fmt( "typename", Str name(Module),         codetype_impl_tmpl )));
-	body_append(impl_code_ns,       parse_global_body( token_fmt( "typename", Str name(NS),             codetype_impl_tmpl )));
-	body_append(impl_code_op,       parse_global_body( token_fmt( "typename", Str name(Operator),       codetype_impl_tmpl )));
-	body_append(impl_code_opcast,   parse_global_body( token_fmt( "typename", Str name(OpCast),         codetype_impl_tmpl )));
-	body_append(impl_code_pragma,   parse_global_body( token_fmt( "typename", Str name(Pragma),         codetype_impl_tmpl )));
-	body_append(impl_code_precond,  parse_global_body( token_fmt( "typename", Str name(PreprocessCond), codetype_impl_tmpl )));
-	body_append(impl_code_tmpl,     parse_global_body( token_fmt( "typename", Str name(Template),       codetype_impl_tmpl )));
-	body_append(impl_code_type,     parse_global_body( token_fmt( "typename", Str name(Typename),       codetype_impl_tmpl )));
-	body_append(impl_code_typedef,  parse_global_body( token_fmt( "typename", Str name(Typedef),        codetype_impl_tmpl )));
-	body_append(impl_code_union,    parse_global_body( token_fmt( "typename", Str name(Union),          codetype_impl_tmpl )));
-	body_append(impl_code_using,    parse_global_body( token_fmt( "typename", Str name(Using),          codetype_impl_tmpl )));
-	body_append(impl_code_var,      parse_global_body( token_fmt( "typename", Str name(Var),            codetype_impl_tmpl )));
+	body_append(impl_code_attr,     parse_global_body( token_fmt( "typename", name(Attributes),     codetype_impl_tmpl )));
+	body_append(impl_code_cmt,      parse_global_body( token_fmt( "typename", name(Comment),        codetype_impl_tmpl )));
+	body_append(impl_code_constr,   parse_global_body( token_fmt( "typename", name(Constructor),    codetype_impl_tmpl )));
+	body_append(impl_code_define,   parse_global_body( token_fmt( "typename", name(Define),         codetype_impl_tmpl )));
+	body_append(impl_code_destruct, parse_global_body( token_fmt( "typename", name(Destructor),     codetype_impl_tmpl )));
+	body_append(impl_code_enum,     parse_global_body( token_fmt( "typename", name(Enum),           codetype_impl_tmpl )));
+	body_append(impl_code_exec,     parse_global_body( token_fmt( "typename", name(Exec),           codetype_impl_tmpl )));
+	body_append(impl_code_extern,   parse_global_body( token_fmt( "typename", name(Extern),         codetype_impl_tmpl )));
+	body_append(impl_code_include,  parse_global_body( token_fmt( "typename", name(Include),        codetype_impl_tmpl )));
+	body_append(impl_code_friend,   parse_global_body( token_fmt( "typename", name(Friend),         codetype_impl_tmpl )));
+	body_append(impl_code_fn,       parse_global_body( token_fmt( "typename", name(Fn),             codetype_impl_tmpl )));
+	body_append(impl_code_module,   parse_global_body( token_fmt( "typename", name(Module),         codetype_impl_tmpl )));
+	body_append(impl_code_ns,       parse_global_body( token_fmt( "typename", name(NS),             codetype_impl_tmpl )));
+	body_append(impl_code_op,       parse_global_body( token_fmt( "typename", name(Operator),       codetype_impl_tmpl )));
+	body_append(impl_code_opcast,   parse_global_body( token_fmt( "typename", name(OpCast),         codetype_impl_tmpl )));
+	body_append(impl_code_pragma,   parse_global_body( token_fmt( "typename", name(Pragma),         codetype_impl_tmpl )));
+	body_append(impl_code_precond,  parse_global_body( token_fmt( "typename", name(PreprocessCond), codetype_impl_tmpl )));
+	body_append(impl_code_tmpl,     parse_global_body( token_fmt( "typename", name(Template),       codetype_impl_tmpl )));
+	body_append(impl_code_type,     parse_global_body( token_fmt( "typename", name(Typename),       codetype_impl_tmpl )));
+	body_append(impl_code_typedef,  parse_global_body( token_fmt( "typename", name(Typedef),        codetype_impl_tmpl )));
+	body_append(impl_code_union,    parse_global_body( token_fmt( "typename", name(Union),          codetype_impl_tmpl )));
+	body_append(impl_code_using,    parse_global_body( token_fmt( "typename", name(Using),          codetype_impl_tmpl )));
+	body_append(impl_code_var,      parse_global_body( token_fmt( "typename", name(Var),            codetype_impl_tmpl )));
 
 	#pragma push_macro("forceinline")
 	#undef forceinline
@@ -564,35 +564,35 @@ CodeBody gen_ast_inlines()
 	);
 	#pragma pop_macro("forceinline")
 
-	CodeBody impl_cast_body          = parse_global_body( token_fmt( "typename", Str name(Body),           cast_tmpl ));
-	CodeBody impl_cast_attribute     = parse_global_body( token_fmt( "typename", Str name(Attributes),     cast_tmpl ));
-	CodeBody impl_cast_cmt           = parse_global_body( token_fmt( "typename", Str name(Comment),        cast_tmpl ));
-	CodeBody impl_cast_constr        = parse_global_body( token_fmt( "typename", Str name(Constructor),    cast_tmpl ));
-	CodeBody impl_cast_class         = parse_global_body( token_fmt( "typename", Str name(Class),          cast_tmpl ));
-	CodeBody impl_cast_define        = parse_global_body( token_fmt( "typename", Str name(Define),         cast_tmpl ));
-	CodeBody impl_cast_define_params = parse_global_body( token_fmt( "typename", Str name(DefineParams),   cast_tmpl ));
-	CodeBody impl_cast_destruct      = parse_global_body( token_fmt( "typename", Str name(Destructor),     cast_tmpl ));
-	CodeBody impl_cast_enum          = parse_global_body( token_fmt( "typename", Str name(Enum),           cast_tmpl ));
-	CodeBody impl_cast_exec          = parse_global_body( token_fmt( "typename", Str name(Exec),           cast_tmpl ));
-	CodeBody impl_cast_extern        = parse_global_body( token_fmt( "typename", Str name(Extern),         cast_tmpl ));
-	CodeBody impl_cast_friend        = parse_global_body( token_fmt( "typename", Str name(Friend),         cast_tmpl ));
-	CodeBody impl_cast_fn            = parse_global_body( token_fmt( "typename", Str name(Fn),             cast_tmpl ));
-	CodeBody impl_cast_include       = parse_global_body( token_fmt( "typename", Str name(Include),        cast_tmpl ));
-	CodeBody impl_cast_module        = parse_global_body( token_fmt( "typename", Str name(Module),         cast_tmpl ));
-	CodeBody impl_cast_ns            = parse_global_body( token_fmt( "typename", Str name(NS),             cast_tmpl ));
-	CodeBody impl_cast_op            = parse_global_body( token_fmt( "typename", Str name(Operator),       cast_tmpl ));
-	CodeBody impl_cast_opcast        = parse_global_body( token_fmt( "typename", Str name(OpCast),         cast_tmpl ));
-	CodeBody impl_cast_params        = parse_global_body( token_fmt( "typename", Str name(Params),         cast_tmpl ));
-	CodeBody impl_cast_pragma        = parse_global_body( token_fmt( "typename", Str name(Pragma),         cast_tmpl ));
-	CodeBody impl_cast_precond       = parse_global_body( token_fmt( "typename", Str name(PreprocessCond), cast_tmpl ));
-	CodeBody impl_cast_specs         = parse_global_body( token_fmt( "typename", Str name(Specifiers),     cast_tmpl ));
-	CodeBody impl_cast_struct        = parse_global_body( token_fmt( "typename", Str name(Struct),         cast_tmpl ));
-	CodeBody impl_cast_tmpl          = parse_global_body( token_fmt( "typename", Str name(Template),       cast_tmpl ));
-	CodeBody impl_cast_type          = parse_global_body( token_fmt( "typename", Str name(Typename),       cast_tmpl ));
-	CodeBody impl_cast_typedef       = parse_global_body( token_fmt( "typename", Str name(Typedef),        cast_tmpl ));
-	CodeBody impl_cast_union         = parse_global_body( token_fmt( "typename", Str name(Union),          cast_tmpl ));
-	CodeBody impl_cast_using         = parse_global_body( token_fmt( "typename", Str name(Using),          cast_tmpl ));
-	CodeBody impl_cast_var           = parse_global_body( token_fmt( "typename", Str name(Var),            cast_tmpl ));
+	CodeBody impl_cast_body          = parse_global_body( token_fmt( "typename", name(Body),           cast_tmpl ));
+	CodeBody impl_cast_attribute     = parse_global_body( token_fmt( "typename", name(Attributes),     cast_tmpl ));
+	CodeBody impl_cast_cmt           = parse_global_body( token_fmt( "typename", name(Comment),        cast_tmpl ));
+	CodeBody impl_cast_constr        = parse_global_body( token_fmt( "typename", name(Constructor),    cast_tmpl ));
+	CodeBody impl_cast_class         = parse_global_body( token_fmt( "typename", name(Class),          cast_tmpl ));
+	CodeBody impl_cast_define        = parse_global_body( token_fmt( "typename", name(Define),         cast_tmpl ));
+	CodeBody impl_cast_define_params = parse_global_body( token_fmt( "typename", name(DefineParams),   cast_tmpl ));
+	CodeBody impl_cast_destruct      = parse_global_body( token_fmt( "typename", name(Destructor),     cast_tmpl ));
+	CodeBody impl_cast_enum          = parse_global_body( token_fmt( "typename", name(Enum),           cast_tmpl ));
+	CodeBody impl_cast_exec          = parse_global_body( token_fmt( "typename", name(Exec),           cast_tmpl ));
+	CodeBody impl_cast_extern        = parse_global_body( token_fmt( "typename", name(Extern),         cast_tmpl ));
+	CodeBody impl_cast_friend        = parse_global_body( token_fmt( "typename", name(Friend),         cast_tmpl ));
+	CodeBody impl_cast_fn            = parse_global_body( token_fmt( "typename", name(Fn),             cast_tmpl ));
+	CodeBody impl_cast_include       = parse_global_body( token_fmt( "typename", name(Include),        cast_tmpl ));
+	CodeBody impl_cast_module        = parse_global_body( token_fmt( "typename", name(Module),         cast_tmpl ));
+	CodeBody impl_cast_ns            = parse_global_body( token_fmt( "typename", name(NS),             cast_tmpl ));
+	CodeBody impl_cast_op            = parse_global_body( token_fmt( "typename", name(Operator),       cast_tmpl ));
+	CodeBody impl_cast_opcast        = parse_global_body( token_fmt( "typename", name(OpCast),         cast_tmpl ));
+	CodeBody impl_cast_params        = parse_global_body( token_fmt( "typename", name(Params),         cast_tmpl ));
+	CodeBody impl_cast_pragma        = parse_global_body( token_fmt( "typename", name(Pragma),         cast_tmpl ));
+	CodeBody impl_cast_precond       = parse_global_body( token_fmt( "typename", name(PreprocessCond), cast_tmpl ));
+	CodeBody impl_cast_specs         = parse_global_body( token_fmt( "typename", name(Specifiers),     cast_tmpl ));
+	CodeBody impl_cast_struct        = parse_global_body( token_fmt( "typename", name(Struct),         cast_tmpl ));
+	CodeBody impl_cast_tmpl          = parse_global_body( token_fmt( "typename", name(Template),       cast_tmpl ));
+	CodeBody impl_cast_type          = parse_global_body( token_fmt( "typename", name(Typename),       cast_tmpl ));
+	CodeBody impl_cast_typedef       = parse_global_body( token_fmt( "typename", name(Typedef),        cast_tmpl ));
+	CodeBody impl_cast_union         = parse_global_body( token_fmt( "typename", name(Union),          cast_tmpl ));
+	CodeBody impl_cast_using         = parse_global_body( token_fmt( "typename", name(Using),          cast_tmpl ));
+	CodeBody impl_cast_var           = parse_global_body( token_fmt( "typename", name(Var),            cast_tmpl ));
 
 	CodeBody result = def_global_body( args(
 		def_pragma( txt("region generated code inline implementation")),

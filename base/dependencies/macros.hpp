@@ -86,14 +86,16 @@
 #define stringize( ... )    stringize_va( __VA_ARGS__ )
 #endif
 
-#ifndef do_once
-#define do_once()                                                               \
-    static int __do_once_counter_##__LINE__ = 0;                                \
-    for(; __do_once_counter_##__LINE__ != 1; __do_once_counter_##__LINE__ = 1 ) \
+#define src_line_str stringize(__LINE__)
 
-#define do_once_defer( expression )                                                          \
-    static int __do_once_counter_##__LINE__ = 0;                                             \
-    for(; __do_once_counter_##__LINE__ != 1; __do_once_counter_##__LINE__ = 1, (expression)) \
+#ifndef do_once
+#define do_once()                                                                       \
+    static int __do_once_counter_##src_line_str = 0;                                    \
+    for(; __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1 ) \
+
+#define do_once_defer( expression )                                                                       \
+    static int __do_once_counter_##src_line_str = 0;                                                      \
+    for(;      __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1, (expression)) \
 
 #define do_once_start      \
 	do                     \

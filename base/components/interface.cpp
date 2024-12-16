@@ -376,6 +376,9 @@ void deinit(Context* ctx)
 	if (_ctx == ctx) 
 		_ctx = nullptr;
 	-- context_counter;
+
+	Context wipe = {};
+	* ctx = wipe;
 }
 
 Context* get_context() { 
