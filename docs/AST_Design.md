@@ -53,6 +53,7 @@ StrBuilder <prefix>_to_strbuilder(Code code);
 
 Where the first generates strings allocated using Allocator_StringArena and the other appends an existing strings with their backed allocator.
 
-Serialization of for the AST is defined for `Code` in [`ast.chpp`](../base/components/ast.cpp) with `code_to_strbuilder_ptr` & `code_to_strbuilder`.  
+Serialization of for the AST is defined for `Code` in [`ast.cpp`](../base/components/ast.cpp) with `code_to_strbuilder_ptr` & `code_to_strbuilder`.  
 Serializtion for the rest of the code types is within [`code_serialization.cpp`](../base/components/code_serialization.cpp).  
+
 Gencpp's serialization does not provide coherent formatting of the code. The user should use a formatter after serializing.

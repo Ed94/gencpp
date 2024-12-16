@@ -29,16 +29,16 @@
 struct AST_Body
 {
 	union {
-		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char  _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached      Name;
-	Code              Front;
-	Code              Back;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char              _PAD_UNUSED_[ sizeof(ModuleFlag) ];
-	s32 			  NumEntries;
+	StrCached Name;
+	Code      Front;
+	Code      Back;
+	Token*    Tok;
+	Code      Parent;
+	CodeType  Type;
+	char      _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	s32       NumEntries;
 };
 static_assert( sizeof(AST_Body) == sizeof(AST), "ERROR: AST_Body is not the same size as AST");
 
@@ -47,7 +47,7 @@ struct AST_Attributes
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StrCached  Content;
+		StrCached     Content;
 	};
 	StrCached         Name;
 	Code              Prev;
@@ -65,7 +65,7 @@ struct AST_BaseClass
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -82,7 +82,7 @@ struct AST_Comment
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StrCached  Content;
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -100,14 +100,14 @@ struct AST_Class
 		{
 			CodeComment     InlineCmt; // Only supported by forward declarations
 			CodeAttributes  Attributes;
-			char 	        _PAD_SPECS_ [ sizeof(AST*) ];
+			char            _PAD_SPECS_ [ sizeof(AST*) ];
 			CodeTypename    ParentType;
-			char 	        _PAD_PARAMS_[ sizeof(AST*) ];
+			char            _PAD_PARAMS_[ sizeof(AST*) ];
 			CodeBody        Body;
-			char 	        _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			char            _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached            Name;
+	StrCached               Name;
 	CodeTypename            Prev;
 	CodeTypename            Next;
 	Token*                  Tok;
@@ -130,10 +130,10 @@ struct AST_Constructor
 			Code           InitializerList;
 			CodeParams     Params;
 			Code           Body;
-			char 		   _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
+			char           _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
 		};
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -155,13 +155,13 @@ struct AST_Define
 			char              _PAD_PROPERTIES_2_ [ sizeof(AST*) * 1 ];
 		};
 	};
-	StrCached         Name;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	StrCached Name;
+	Code      Prev;
+	Code      Next;
+	Token*    Tok;
+	Code      Parent;
+	CodeType  Type;
+	char      _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Define) == sizeof(AST), "ERROR: AST_Define is not the same size as AST");
 
@@ -176,7 +176,7 @@ struct AST_DefineParams
 	Token*            Tok;
 	Code              Parent;
 	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	char              _PAD_UNUSED_[ sizeof(ModuleFlag) ];
 	s32               NumEntries;
 };
 static_assert( sizeof(AST_DefineParams) == sizeof(AST), "ERROR: AST_DefineParams is not the same size as AST");
@@ -192,10 +192,10 @@ struct AST_Destructor
 			CodeSpecifiers Specs;
 			char           _PAD_PROPERTIES_2_ [ sizeof(AST*) * 2 ];
 			Code           Body;
-			char 		   _PAD_PROPERTIES_3_ [ sizeof(AST*) ];
+			char           _PAD_PROPERTIES_3_ [ sizeof(AST*) ];
 		};
 	};
-	StrCached           Name;
+	StrCached              Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -217,10 +217,10 @@ struct AST_Enum
 			CodeTypename   UnderlyingType;
 			Code           UnderlyingTypeMacro;
 			CodeBody       Body;
-			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			char           _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached           Name;
+	StrCached              Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -237,7 +237,7 @@ struct AST_Exec
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StrCached  Content;
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
@@ -515,13 +515,13 @@ struct AST_Extern
 			char      _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
 	Code              Parent;
 	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	char              _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Extern) == sizeof(AST), "ERROR: AST_Extern is not the same size as AST");
 
@@ -531,13 +531,13 @@ struct AST_Include
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StrCached  Content;
 	};
-	StrCached      Name;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	StrCached Name;
+	Code      Prev;
+	Code      Next;
+	Token*    Tok;
+	Code      Parent;
+	CodeType  Type;
+	char      _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Include) == sizeof(AST), "ERROR: AST_Include is not the same size as AST");
 
@@ -550,16 +550,16 @@ struct AST_Friend
 			CodeComment InlineCmt;
 			char        _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
 			Code        Declaration;
-			char 	    _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			char        _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached      Name;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	StrCached Name;
+	Code      Prev;
+	Code      Next;
+	Token*    Tok;
+	Code      Parent;
+	CodeType  Type;
+	char      _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Friend) == sizeof(AST), "ERROR: AST_Friend is not the same size as AST");
 
@@ -573,19 +573,19 @@ struct AST_Fn
 			CodeAttributes  Attributes;
 			CodeSpecifiers  Specs;
 			CodeTypename    ReturnType;
-			CodeParams 	    Params;
+			CodeParams      Params;
 			CodeBody        Body;
-			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
+			char            _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
 	};
-	StrCached            Name;
-	Code                    Prev;
-	Code                    Next;
-	Token*                  Tok;
-	Code                    Parent;
-	CodeType                Type;
-	ModuleFlag              ModuleFlags;
-	char 			        _PAD_UNUSED_[ sizeof(u32) ];
+	StrCached  Name;
+	Code       Prev;
+	Code       Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	ModuleFlag ModuleFlags;
+	char       _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Fn) == sizeof(AST), "ERROR: AST_Fn is not the same size as AST");
 
@@ -594,14 +594,14 @@ struct AST_Module
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached      Name;
+	StrCached         Name;
 	Code              Prev;
 	Code              Next;
 	Token*            Tok;
 	Code              Parent;
 	CodeType          Type;
 	ModuleFlag        ModuleFlags;
-	char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	char             _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Module) == sizeof(AST), "ERROR: AST_Module is not the same size as AST");
 
@@ -610,45 +610,45 @@ struct AST_NS
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct {
-			char 	  _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
+			char      _PAD_PROPERTIES_[ sizeof(AST*) * 5 ];
 			CodeBody  Body;
-			char 	  _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			char      _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached      Name;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	ModuleFlag        ModuleFlags;
-	char 			  _PAD_UNUSED_[ sizeof(u32) ];
+	StrCached  Name;
+	Code       Prev;
+	Code       Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	ModuleFlag ModuleFlags;
+	char       _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_NS) == sizeof(AST), "ERROR: AST_NS is not the same size as AST");
 
 struct AST_Operator
 {
 	union {
-		char                _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
+		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
-			CodeComment     InlineCmt;
-			CodeAttributes  Attributes;
-			CodeSpecifiers  Specs;
-			CodeTypename    ReturnType;
-			CodeParams 	    Params;
-			CodeBody        Body;
-			char 	        _PAD_PROPERTIES_ [ sizeof(AST*) ];
+			CodeComment    InlineCmt;
+			CodeAttributes Attributes;
+			CodeSpecifiers Specs;
+			CodeTypename   ReturnType;
+			CodeParams 	   Params;
+			CodeBody       Body;
+			char           _PAD_PROPERTIES_ [ sizeof(AST*) ];
 		};
 	};
-	StrCached   Name;
-	Code           Prev;
-	Code           Next;
-	Token*         Tok;
-	Code           Parent;
-	CodeType       Type;
-	ModuleFlag     ModuleFlags;
-	Operator       Op;
+	StrCached  Name;
+	Code       Prev;
+	Code       Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	ModuleFlag ModuleFlags;
+	Operator   Op;
 };
 static_assert( sizeof(AST_Operator) == sizeof(AST), "ERROR: AST_Operator is not the same size as AST");
 
@@ -658,22 +658,22 @@ struct AST_OpCast
 		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
-			CodeComment     InlineCmt;
-			char 	        _PAD_PROPERTIES_[ sizeof(AST*)  ];
-			CodeSpecifiers  Specs;
-			CodeTypename    ValueType;
-			char 	        _PAD_PROPERTIES_2_[ sizeof(AST*) ];
-			CodeBody        Body;
-			char 	        _PAD_PROPERTIES_3_[ sizeof(AST*) ];
+			CodeComment    InlineCmt;
+			char           _PAD_PROPERTIES_[ sizeof(AST*)  ];
+			CodeSpecifiers Specs;
+			CodeTypename   ValueType;
+			char           _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			CodeBody       Body;
+			char           _PAD_PROPERTIES_3_[ sizeof(AST*) ];
 		};
 	};
-	StrCached      Name;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	StrCached Name;
+	Code      Prev;
+	Code      Next;
+	Token*    Tok;
+	Code      Parent;
+	CodeType  Type;
+	char      _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_OpCast) == sizeof(AST), "ERROR: AST_OpCast is not the same size as AST");
 
@@ -684,7 +684,7 @@ struct AST_Params
 		struct
 		{
 			// TODO(Ed): Support attributes for parameters (Some prefix macros can be converted to that...)
-			char 	     _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
+			char         _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 			CodeTypename ValueType;
 			Code         Macro;
 			Code         Value;
@@ -692,14 +692,14 @@ struct AST_Params
 			// char     _PAD_PROPERTIES_3_[sizeof( AST* )];
 		};
 	};
-	StrCached         Name;
-	CodeParams        Last;
-	CodeParams        Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
-	s32               NumEntries;
+	StrCached  Name;
+	CodeParams Last;
+	CodeParams Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	char       _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	s32        NumEntries;
 };
 static_assert( sizeof(AST_Params) == sizeof(AST), "ERROR: AST_Params is not the same size as AST");
 
@@ -709,13 +709,13 @@ struct AST_Pragma
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		StrCached  Content;
 	};
-	StrCached      Name;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	StrCached Name;
+	Code      Prev;
+	Code      Next;
+	Token*    Tok;
+	Code      Parent;
+	CodeType  Type;
+	char      _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_Pragma) == sizeof(AST), "ERROR: AST_Pragma is not the same size as AST");
 
@@ -723,30 +723,30 @@ struct AST_PreprocessCond
 {
 	union {
 		char          _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
-		StrCached  Content;
+		StrCached     Content;
 	};
-	StrCached      Name;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	StrCached Name;
+	Code      Prev;
+	Code      Next;
+	Token*    Tok;
+	Code      Parent;
+	CodeType  Type;
+	char      _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
 };
 static_assert( sizeof(AST_PreprocessCond) == sizeof(AST), "ERROR: AST_PreprocessCond is not the same size as AST");
 
 struct AST_Specifiers
 {
-	Specifier         ArrSpecs[ AST_ArrSpecs_Cap ];
+	Specifier      ArrSpecs[ AST_ArrSpecs_Cap ];
 	StrCached      Name;
-	CodeSpecifiers    NextSpecs;
-	Code              Prev;
-	Code              Next;
-	Token*            Tok;
-	Code              Parent;
-	CodeType          Type;
-	char 			  _PAD_UNUSED_[ sizeof(ModuleFlag) ];
-	s32               NumEntries;
+	CodeSpecifiers NextSpecs;
+	Code           Prev;
+	Code           Next;
+	Token*         Tok;
+	Code           Parent;
+	CodeType       Type;
+	char           _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	s32            NumEntries;
 };
 static_assert( sizeof(AST_Specifiers) == sizeof(AST), "ERROR: AST_Specifier is not the same size as AST");
 
@@ -756,7 +756,7 @@ struct AST_Stmt
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -771,7 +771,7 @@ struct AST_Stmt_Break
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -786,7 +786,7 @@ struct AST_Stmt_Case
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -801,7 +801,7 @@ struct AST_Stmt_Continue
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -816,7 +816,7 @@ struct AST_Stmt_Decl
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -831,7 +831,7 @@ struct AST_Stmt_Do
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -846,7 +846,7 @@ struct AST_Stmt_Expr
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -861,7 +861,7 @@ struct AST_Stmt_Else
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -876,7 +876,7 @@ struct AST_Stmt_If
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -891,7 +891,7 @@ struct AST_Stmt_For
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -906,7 +906,7 @@ struct AST_Stmt_Goto
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -921,7 +921,7 @@ struct AST_Stmt_Label
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -936,7 +936,7 @@ struct AST_Stmt_Switch
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -951,7 +951,7 @@ struct AST_Stmt_While
 	union {
 		char _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 	};
-	StrCached   Name;
+	StrCached      Name;
 	CodeExpr       Prev;
 	CodeExpr       Next;
 	Token*         Tok;
@@ -970,14 +970,14 @@ struct AST_Struct
 		{
 			CodeComment    InlineCmt;
 			CodeAttributes Attributes;
-			char 	       _PAD_SPECS_ [ sizeof(AST*) ];
+			char           _PAD_SPECS_ [ sizeof(AST*) ];
 			CodeTypename   ParentType;
-			char 	       _PAD_PARAMS_[ sizeof(AST*) ];
+			char           _PAD_PARAMS_[ sizeof(AST*) ];
 			CodeBody       Body;
-			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			char          _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached           Name;
+	StrCached              Name;
 	CodeTypename           Prev;
 	CodeTypename           Next;
 	Token*                 Tok;
@@ -994,20 +994,20 @@ struct AST_Template
 		char               _PAD_[ sizeof(Specifier) * AST_ArrSpecs_Cap + sizeof(AST*) ];
 		struct
 		{
-			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
+			char           _PAD_PROPERTIES_[ sizeof(AST*) * 4 ];
 			CodeParams 	   Params;
 			Code           Declaration;
-			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			char           _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached           Name;
-	Code                   Prev;
-	Code                   Next;
-	Token*                 Tok;
-	Code                   Parent;
-	CodeType               Type;
-	ModuleFlag             ModuleFlags;
-	char 			       _PAD_UNUSED_[ sizeof(u32) ];
+	StrCached  Name;
+	Code       Prev;
+	Code       Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	ModuleFlag ModuleFlags;
+	char       _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Template) == sizeof(AST), "ERROR: AST_Template is not the same size as AST");
 
@@ -1029,13 +1029,13 @@ struct AST_Type
 			// CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 		};
 	};
-	StrCached           Name;
+	StrCached              Name;
 	Code                   Prev;
 	Code                   Next;
-	Token*                  Tok;
+	Token*                 Tok;
 	Code                   Parent;
 	CodeType               Type;
-	char 			       _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	char                   _PAD_UNUSED_[ sizeof(ModuleFlag) ];
 	b32                    IsParamPack;
 };
 static_assert( sizeof(AST_Type) == sizeof(AST), "ERROR: AST_Type is not the same size as AST");
@@ -1062,7 +1062,7 @@ struct AST_Typename
 	Token*                 Tok;
 	Code                   Parent;
 	CodeType               Type;
-	char 			       _PAD_UNUSED_[ sizeof(ModuleFlag) ];
+	char                   _PAD_UNUSED_[ sizeof(ModuleFlag) ];
 	struct {
 		b16                IsParamPack;   // Used by typename to know if type should be considered a parameter pack.
 		ETypenameTag       TypeTag;       // Used by typename to keep track of explicitly declared tags for the identifier (enum, struct, union)
@@ -1077,9 +1077,9 @@ struct AST_Typedef
 		struct
 		{
 			CodeComment    InlineCmt;
-			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+			char           _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
 			Code           UnderlyingType;
-			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
+			char           _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 		};
 	};
 	StrCached           Name;
@@ -1101,19 +1101,19 @@ struct AST_Union
 		{
 			char           _PAD_INLINE_CMT_[ sizeof(AST*) ];
 			CodeAttributes Attributes;
-			char 	       _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
+			char           _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
 			CodeBody       Body;
-			char 	       _PAD_PROPERTIES_2_[ sizeof(AST*) ];
+			char           _PAD_PROPERTIES_2_[ sizeof(AST*) ];
 		};
 	};
-	StrCached           Name;
-	Code                   Prev;
-	Code                   Next;
-	Token*                 Tok;
-	Code                   Parent;
-	CodeType               Type;
-	ModuleFlag             ModuleFlags;
-	char 			       _PAD_UNUSED_[ sizeof(u32) ];
+	StrCached  Name;
+	Code       Prev;
+	Code       Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	ModuleFlag ModuleFlags;
+	char       _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Union) == sizeof(AST), "ERROR: AST_Union is not the same size as AST");
 
@@ -1125,19 +1125,19 @@ struct AST_Using
 		{
 			CodeComment     InlineCmt;
 			CodeAttributes  Attributes;
-			char 	        _PAD_SPECS_     [ sizeof(AST*) ];
+			char            _PAD_SPECS_     [ sizeof(AST*) ];
 			CodeTypename    UnderlyingType;
-			char 	        _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
+			char            _PAD_PROPERTIES_[ sizeof(AST*) * 3 ];
 		};
 	};
-	StrCached            Name;
-	Code                    Prev;
-	Code                    Next;
-	Token*                  Tok;
-	Code                    Parent;
-	CodeType                Type;
-	ModuleFlag              ModuleFlags;
-	char 			        _PAD_UNUSED_[ sizeof(u32) ];
+	StrCached  Name;
+	Code       Prev;
+	Code       Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	ModuleFlag ModuleFlags;
+	char       _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Using) == sizeof(AST), "ERROR: AST_Using is not the same size as AST");
 
@@ -1153,17 +1153,17 @@ struct AST_Var
 			CodeTypename   ValueType;
 			Code           BitfieldSize;
 			Code           Value;
-			CodeVar		   NextVar;
+			CodeVar        NextVar;
 		};
 	};
-	StrCached           Name;
-	Code                   Prev;
-	Code                   Next;
-	Token*                 Tok;
-	Code                   Parent;
-	CodeType               Type;
-	ModuleFlag             ModuleFlags;
-	s32                    VarParenthesizedInit;
+	StrCached  Name;
+	Code       Prev;
+	Code       Next;
+	Token*     Tok;
+	Code       Parent;
+	CodeType   Type;
+	ModuleFlag ModuleFlags;
+	s32        VarParenthesizedInit;
 };
 static_assert( sizeof(AST_Var) == sizeof(AST), "ERROR: AST_Var is not the same size as AST");
 

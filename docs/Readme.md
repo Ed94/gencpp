@@ -85,7 +85,7 @@ https://github.com/Ed94/gencpp/blob/967a044637f1615c709cb723dc61118fcc08dcdb/bas
 *`OperatorT` is a typedef for `EOperator::Type` which has an underlying type of `u32`*  
 *`StrBuilder` is the dynamically allocating string builder type for the library*  
 
-AST widths are setup to be AST_POD_Size.  
+AST widths are setup to be AST_POD_Size (128 bytes by default).
 The width dictates how much the static array can hold before it must give way to using an allocated array:
 
 ```cpp
@@ -104,9 +104,6 @@ int AST_ArrSpecs_Cap =
 )
 / sizeof(Specifier) - 1;
 ```
-
-*Ex: If the AST_POD_Size is 128 the capacity of the static array is 20.*
-
 Data Notes:
 
 * ASTs are wrapped for the user in a Code struct which is a wrapper for a AST* type.
