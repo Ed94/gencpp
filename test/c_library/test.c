@@ -1,6 +1,5 @@
 #define GEN_IMPLEMENTATION
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-#define GEN_ENFORCE_STRONG_CODE_TYPES
 #include "gen_singleheader.h"
 
 #define gen_iterator( Type, container, iter )   \

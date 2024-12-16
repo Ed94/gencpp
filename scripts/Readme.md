@@ -15,11 +15,13 @@ Its main uage is the [c_library generation](../gen_c_library/).
 Remove any generated content from the repository.
 
 **`build.ps1`**  
-Build c_library, segmented, singleheader, unreal. Supports msvc or clang, release or debug.
+Build c library (segmented, singleheader, static, or dynamic), cpp library (segmented, singleheader, or unreal). Supports msvc or clang, release or debug.
 
-```
+```erlang
 args:
-    c_library
+    c_lib        : Build c11 library (singleheader & segmented)
+    c_lib_static : Build static  c11 library
+    c_lib_dyn    : Buidl dyanmic c11
     segemented
     singleheader
     unreal

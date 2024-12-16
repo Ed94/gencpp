@@ -8,6 +8,12 @@
 
 The library is fragmented into a series of headers and source files meant to be scanned in and then generated to a standard target format, or a user's desires.
 
+If using the library's provided build scripts:
+
+```ps1
+.\build.ps1 <compiler> <debug or omit> base
+```
+
 Standard formats:
 
 * **base**: Files are in granular pieces separated into four directories:
@@ -27,7 +33,7 @@ Standard formats:
 * **gen_segemetned**: Dependencies go into gen.dep.{hpp/cpp} and components into gen.{hpp/cpp}
 * **gen_singleheader**: Everything into a single file: gen.hpp
 * **gen_unreal_engine**: Like gen_segemented but the library is modified slightly to compile as a thirdparty library within an Unreal Engine plugin or module.
-* **gen_c_library**: The library is heavily modifed into C11 compliant code. A segemented and single-header set of variants are generatd.
+* **gen_c_library**: The library is heavily modifed into C11 compliant code. A segemented and single-header set of variants are generated.
 
 Code not making up the core library is located in `auxiliary/<auxiliary_name>.<hpp/cpp>`. These are optional extensions or tools for the library.
 
