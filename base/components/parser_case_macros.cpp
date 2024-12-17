@@ -97,9 +97,16 @@ case Spec_Global:           \
 case Spec_Inline:           \
 case Spec_Local_Persist:    \
 case Spec_Mutable:          \
+case Spec_Restrict:         \
 case Spec_Static:           \
 case Spec_Thread_Local:     \
 case Spec_Volatile
 
+#define GEN_PARSER_TYPENAME_ALLOWED_SUFFIX_SPECIFIER_CASES \
+case Spec_Const:    \
+case Spec_Ptr:      \
+case Spec_Restrict: \
+case Spec_Ref:      \
+case Spec_RValue
 
 

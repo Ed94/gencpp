@@ -1217,9 +1217,9 @@ Code parse_complicated_definition( TokType which )
 			Token name = parse_identifier(nullptr);
 			_ctx->parser.Scope->Name = name.Text;
 
-			Code result = parse_variable_after_name(ModuleFlag_None, NullCode, NullCode, type, name.Text);
+			CodeVar result = parse_variable_after_name(ModuleFlag_None, NullCode, NullCode, type, name.Text);
 			parser_pop(& _ctx->parser);
-			return result;
+			return (Code) result;
 		}
 		else if ( tok.Type == Tok_Identifier && tokens.Arr[ idx - 3 ].Type == which )
 		{
@@ -4719,13 +4719,16 @@ else if ( currtok.Type == Tok_DeclType )
 	{
 		Specifier spec = str_to_specifier( currtok.Text );
 
-		if ( spec != Spec_Const && spec != Spec_Ptr && spec != Spec_Ref && spec != Spec_RValue )
-		{
-			log_failure( "Error, invalid specifier used in type definition: %S\n%SB", currtok.Text, parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
-			return InvalidCode;
-		}
+		switch (spec ) {
+			GEN_PARSER_TYPENAME_ALLOWED_SUFFIX_SPECIFIER_CASES:
+			break;
 
+			default: {
+				log_failure( "Error, invalid specifier used in type definition: %S\n%SB", currtok.Text, parser_to_strbuilder(_ctx->parser) );
+				parser_pop(& _ctx->parser);
+				return InvalidCode;
+			}
+		}
 		specs_found[ NumSpecifiers ] = spec;
 		NumSpecifiers++;
 		eat( currtok.Type );

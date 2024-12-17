@@ -14,6 +14,7 @@ NeverInline,      neverinline
 Ptr,              *
 Ref,              &
 Register,         register
+Restrict,         restrict
 RValue,           &&
 Static,           static
 Thread_Local,     thread_local

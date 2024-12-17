@@ -20,13 +20,24 @@ int main()
 		((gen_Macro){ txt("FOR_SUCC"),  MT_Statement,  MF_Functional })
 	));
 
-	gen_CodeBody h_passes = gen_parse_file("Cuik/tb/opt/passes.h");
+	gen_CodeBody h_passes = gen_parse_file("Cuik/tb/opt/passes.h\n");
 	for (gen_Code code = gen_iterator(CodeBody, h_passes, code)) switch (code->Type) {
-		case CT_Struct:
 		case CT_Function:
+			gen_log_fmt("%S:\t%S params: %S return type: %S\n"
+				, gen_codetype_to_str(code->Type)
+				, code->Name
+				, gen_strbuilder_to_str( gen_params_to_strbuilder( (gen_CodeParams) code->Params))
+				, gen_strbuilder_to_str( gen_typename_to_strbuilder((gen_CodeTypename) code->ReturnType))
+			);
+		break;
+
 		case CT_Variable:
+			gen_log_fmt("%S:\t%S Type: %S\n", gen_codetype_to_str(code->Type), code->Name, code->ValueType);
+		break;
+
+		case CT_Struct:
 		case CT_Typedef:
-			gen_log_fmt("%S: %S", gen_codetype_to_str(code->Type), code->Name);
+			gen_log_fmt("%S:\t%S\n", gen_codetype_to_str(code->Type), code->Name);
 		break;
 	}
 
