@@ -44,11 +44,6 @@ AccessSpec tok_to_access_specifier(Token tok) {
 }
 
 forceinline
-Str tok_to_str(Token tok) {
-	return tok.Text;
-}
-
-forceinline
 bool tok_is_valid( Token tok ) {
 	return tok.Text.Ptr && tok.Text.Len && tok.Type != Tok_Invalid;
 }

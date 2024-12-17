@@ -39,7 +39,7 @@ CodeConstructor parse_constructor( Str def )
 
 	while ( left && tok_is_specifier(currtok) )
 	{
-		Specifier spec = str_to_specifier( tok_to_str(currtok) );
+		Specifier spec = str_to_specifier( currtok.Text );
 
 		b32 ignore_spec = false;
 

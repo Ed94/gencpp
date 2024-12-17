@@ -281,7 +281,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Text.Len++;
 	}
 
-	ctx->token.Type = str_to_toktype( tok_to_str(ctx->token) );
+	ctx->token.Type = str_to_toktype( ctx->token.Text );
 
 	bool   is_preprocessor = ctx->token.Type >= Tok_Preprocess_Define && ctx->token.Type <= Tok_Preprocess_Pragma;
 	if ( ! is_preprocessor )
@@ -488,7 +488,7 @@ void lex_found_token( LexContext* ctx )
 		return;
 	}
 
-	TokType type = str_to_toktype( tok_to_str(ctx->token) );
+	TokType type = str_to_toktype( ctx->token.Text );
 
 	if (type <= Tok_Access_Public && type >= Tok_Access_Private ) {
 		ctx->token.Flags |= TF_AccessSpecifier;
