@@ -54,11 +54,13 @@ A simple `<container>_DefinitionCounter` is used to know how many instantiations
 ## Macro Usage
 
 For the most part macros are kept minimal with exception to `_Generic`...  
-*(I will be explaining this thing for the rest of this seciton along with gencpp c library's usage of it)*
 
 The `_Generic` macro plays a key role in reducing direct need of the user to wrangle with mangled definition identifiers of 'templated' containers or for type coercion to map distinct data types to a common code path.
 
-Because of its lack of use in many C11 libraries.. and, of those that do; they usually end up obfuscate it with excessive preprocessor abuse; Effort was put into minimizing how much of these macros are handled by the preprocessor vs gencpp itself.
+Many C11 libraries don't use it.. and, of those that do. they usually end up obfuscate it with excessive preprocessor abuse; Effort was put into minimizing how much of these macros are handled by the preprocessor vs gencpp itself.
+
+*(I will be explaining this thing for the rest of this seciton along with gencpp c library's usage of it)*
+
 
 The usual presentation (done bare) is the following:
 
