@@ -1,3 +1,7 @@
+#if GEN_INTELLISENSE_DIRECTIVES
+#include "../../gen_c_library/gen/gen_singleheader.h"
+#endif
+
 #define GEN_IMPLEMENTATION
 #define GEN_DEFINE_LIBRARY_CODE_CONSTANTS
 #include "gen_singleheader.h"
@@ -16,7 +20,7 @@ int main()
 	gen_CodeVar hello_var = gen_parse_variable(code(
 		char const* hello_gencpp_str = "HELLO GENCPP C11 !";
 	));
-	gen_builder_print( & src_hello, (gen_Code)hello_var );
+	gen_builder_print( & src_hello, hello_var );
 	gen_builder_write(& src_hello);
 
 	gen_CodeBody body = gen_parse_file("gen/hello.c");

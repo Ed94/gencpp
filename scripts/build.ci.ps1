@@ -326,7 +326,7 @@ if ( $unreal )
 }
 
 # C Library testing
-if ( $test -and $false )
+if ( $test -and $true )
 {
 	$path_test_c = join-path $path_test   c_library
 	$path_build  = join-path $path_test_c build
@@ -368,7 +368,7 @@ if ( $test -and $false )
 	Pop-Location
 }
 
-if ( $test -and $true )
+if ( $test -and $false )
 {
 	$path_test_c = join-path $path_test   c_library
 	$path_build  = join-path $path_test_c build

@@ -1256,63 +1256,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_header_builder = parse_file( path_base "auxiliary/builder.hpp" );
-	CodeBody header_builder        = def_body(CT_Global_Body);
-	for ( Code entry = parsed_header_builder.begin(); entry != parsed_header_builder.end(); ++ entry ) switch( entry->Type )
-	{
-		case CT_Preprocess_IfDef:
-		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_builder, header_builder );
-			if (found) break;
-
-			header_builder.append(entry);
-		}
-		break;
-
-		case CT_Preprocess_If:
-		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_header_builder, header_builder );
-			if (found) break;
-
-			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), entry, parsed_header_builder, header_builder );
-			if (found) break;
-
-			header_builder.append(entry);
-		}
-		break;
-
-		case CT_Struct:
-		{
-			CodeBody body     = cast(CodeBody, entry->Body);
-			CodeBody new_body = def_body(CT_Struct_Body);
-			for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch(body_entry->Type)
-			{
-				case CT_Preprocess_If:
-				{
-					b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), body_entry, body, new_body );
-					if (found) break;
-
-					new_body.append(body_entry);
-				}
-				break;
-
-				default:
-					new_body.append(body_entry);
-				break;
-			}
-			if ( new_body->NumEntries > 0 ) {
-				entry->Body = new_body;
-			}
-
-			header_builder.append(entry);
-		}
-		break;
-
-		default:
-			header_builder.append(entry);
-		break;
-	}
-
 	s32 idx = 0;
 	CodeBody parsed_header_end = parse_file( path_base "components/header_end.hpp" );
 	CodeBody header_end        = def_body(CT_Global_Body);
@@ -1350,6 +1293,111 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 #pragma endregion Resolve Components
+
+#pragma region Resolve Aux
+	CodeDefine gsel_builder_print    = NullCode;
+	CodeBody   parsed_header_builder = parse_file( path_base "auxiliary/builder.hpp" );
+	CodeBody   header_builder        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_header_builder.begin(); entry != parsed_header_builder.end(); ++ entry ) switch( entry->Type )
+	{
+		case CT_Preprocess_IfDef:
+		{
+			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_builder, header_builder );
+			if (found) break;
+
+			header_builder.append(entry);
+		}
+		break;
+
+		case CT_Preprocess_If:
+		{
+			b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_header_builder, header_builder );
+			if (found) break;
+
+			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), entry, parsed_header_builder, header_builder );
+			if (found) break;
+
+			header_builder.append(entry);
+		}
+		break;
+
+		case CT_Function_Fwd:
+		{
+			CodeFn fn = cast(CodeFn, entry);
+
+			if (! fn->Name.is_equal(txt("builder_print")) ) {
+				header_builder.append(fn);
+				continue;
+			}
+
+			fn->Name = cache_str(txt("builder__print"));
+
+			StrBuilder generic_selector = StrBuilder::make(_ctx->Allocator_Temp, 
+				"#define builder_print(builder, code) _Generic( (code), \\\n"
+			);
+			// Append slots
+			for(Str type : code_typenames ) {
+				generic_selector.append_fmt("%S : %S,\\\n", type, fn->Name );
+			}
+			generic_selector.append(txt("default: gen_generic_selection_fail \\\n"));
+			generic_selector.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( builder, (Code)code )"));
+
+			// We need to register this as an identifier macro now sot that parsing the source wont break.
+			register_macro({ txt("builder_print"), MT_Statement, MF_Functional | MF_Allow_As_Identifier });
+
+			// We'll be adding this selector after builder_print_fmt
+			gsel_builder_print = parse_define(generic_selector);
+
+			header_builder.append(fn);	
+		}
+		break;
+
+		case CT_Function:
+		{
+			CodeFn fn = cast(CodeFn, entry);
+
+			if ( fn->Name.is_equal(txt("builder_print_fmt")) ) {
+				header_builder.append(fn);
+				
+				// Add the selector right after
+				header_builder.append(fmt_newline);
+				header_builder.append(gsel_builder_print);
+			}
+		}
+		break;
+
+		case CT_Struct:
+		{
+			CodeBody body     = cast(CodeBody, entry->Body);
+			CodeBody new_body = def_body(CT_Struct_Body);
+			for ( Code body_entry = body.begin(); body_entry != body.end(); ++ body_entry ) switch(body_entry->Type)
+			{
+				case CT_Preprocess_If:
+				{
+					b32 found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP"), body_entry, body, new_body );
+					if (found) break;
+
+					new_body.append(body_entry);
+				}
+				break;
+
+				default:
+					new_body.append(body_entry);
+				break;
+			}
+			if ( new_body->NumEntries > 0 ) {
+				entry->Body = new_body;
+			}
+
+			header_builder.append(entry);
+		}
+		break;
+
+		default:
+			header_builder.append(entry);
+		break;
+	}
+#pragma endregion Aux
 
 // Source Content : Reflection and Generation
 
@@ -1559,6 +1607,26 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	}
 #pragma endregion Resolve Components
 
+#pragma region Resolve Aux
+	CodeBody   parsed_src_builder = parse_file( path_base "auxiliary/builder.cpp" );
+	CodeBody   src_builder        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_src_builder.begin(); entry != parsed_src_builder.end(); ++ entry ) switch( entry->Type )
+	{
+		case CT_Function:
+		{
+			if (entry->Name.is_equal(txt("builder_print"))) {
+				entry->Name = cache_str(txt("builder__print"));
+			}
+			src_builder.append(entry);
+		}
+		break;
+
+		default:
+			src_builder.append(entry);
+		break;
+	}
+#pragma endregion ResolveAux
+
 	// THERE SHOULD BE NO NEW GENERIC CONTAINER DEFINITIONS PAST THIS POINT (It will not have slots for the generic selection generated macros)
 	CodeBody containers = def_body(CT_Global_Body);
 	{
@@ -1644,7 +1712,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody etoktype    = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv", helper_use_c_definition );
 	Code     rf_etoktype = refactor_and_format(etoktype);
 
-	Code rf_src_builder = refactor_and_format( scan_file( path_base "auxiliary/builder.cpp" ));
+	Code rf_src_builder = refactor_and_format( src_builder );
 	Code rf_src_scanner = refactor_and_format( scan_file( path_base "auxiliary/scanner.cpp" ));
 #pragma endregion Refactored / Formatted
 

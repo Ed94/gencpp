@@ -50,6 +50,7 @@ struct Context
 
 	// LoggerCallaback* log_callback; // TODO(Ed): Impl user logger callback as an option.
 
+// Initalization config
 	u32 Max_CommentLineLength; // Used by def_comment
 	u32 Max_StrCacheLength;    // Any cached string longer than this is always allocated again.
 
