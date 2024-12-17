@@ -79,18 +79,18 @@ Example using each construction interface:
 Validation and construction through a functional interface.
 
 ```cpp
-Code t_uw           = def_type( name(usize) );
-Code t_allocator    = def_type( name(allocator) );
-Code t_string_const = def_type( name(char), def_specifiers( args( ESpecifier::Const, ESpecifier::Ptr ) ));
+CodeTypename t_uw           = def_type( name(usize) );
+CodeTypename t_allocator    = def_type( name(allocator) );
+CodeTypename t_string_const = def_type( name(char), def_specifiers( args( ESpecifier::Const, ESpecifier::Ptr ) ));
 
-Code header;
+CodeStruct header;
 {
-    Code num       = def_variable( t_uw,        name(Num) );
-    Code cap       = def_variable( t_uw,        name(Capacity) );
-    Code mem_alloc = def_variable( t_allocator, name(Allocator) );
-    Code body      = def_struct_body( args( num, cap, mem_alloc ) );
+    CodeVar  num       = def_variable( t_uw,        name(Num) );
+    CodeVar  cap       = def_variable( t_uw,        name(Capacity) );
+    CodeVar  mem_alloc = def_variable( t_allocator, name(Allocator) );
+    CodeBody body      = def_struct_body( args( num, cap, mem_alloc ) );
 
-    header = def_struct( name(ArrayHeader), __, __, body );
+    header = def_struct( name(ArrayHeader), { body });
 }
 ```
 
@@ -99,7 +99,7 @@ Code header;
 Validation through ast construction.
 
 ```cpp
-Code header = parse_struct( code(
+CodeStruct header = parse_struct( code(
     struct ArrayHeader
     {
         usize     Num;
