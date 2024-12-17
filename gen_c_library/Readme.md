@@ -97,7 +97,7 @@ For this library's purposes we'll be using the functional macro equivalent *(if 
 
 ```c
 #define macro_that_uses_selector_arg_for_resolving_a_fucntion( selecting_exp) \
-_Generic( (arg),                                                              \
+_Generic( (selecting_exp),                                                    \
     int            : func_use_int,                                            \
     double         : func_use_double,                                         \
     struct Whatnot : func_use_Whatnot,                                        \
