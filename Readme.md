@@ -152,7 +152,7 @@ See the [scripts directory](scripts/).
 
 ### Listing definitions in the Cuik Compiler
 
-
+https://github.com/user-attachments/assets/2302240c-01f1-4e1b-a4b5-292eb3186648
 
 ### Unreal: Generating a UAttributeSet from a UDataTable
 
