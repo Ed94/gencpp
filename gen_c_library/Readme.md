@@ -21,7 +21,7 @@ To generate a static or dynamic library:
 ```ps1
 .\build.ps1 <compiler> <debug or omit> c_lib_static c_lib_dyn
 ```
-
+.
 All free from tag identifiers will be prefixed with `gen_` or `GEN_` as the namespace. This can either be changed after generation with a `.refactor` script (or your preferred subst method), OR by modifying [c_library.refactor](./c_library.refactor).
 
 **If c_library.refactor is modified you may need to modify c_library.cpp and its [components](./components/). As some of the container generation relies on that prefix.**
@@ -29,7 +29,7 @@ All free from tag identifiers will be prefixed with `gen_` or `GEN_` as the name
 ## Generation structure
 
 1. Files are scanned in or parsed.
-    * If they are parsed, its dude to requiring some changes to either naming, or adding additonal definitions (container generation, typedefs, etc).
+    * If they are parsed, its due to requiring some changes to either naming, or adding additonal definitions (container generation, typedefs, etc).
 2. All scanned or parsed code is refactored (identifiers substs) and/or formatted.
 3. Singleheader generated.
 4. Segmented headers and source generated.
@@ -43,7 +43,7 @@ The array and hashtable containers used across this library are generated using 
 
 These are functionally (and interface wise) equivalent to the library's `Array<Type>` `HashTable<Type>` within [containers.hpp](../base/dependencies/containers.hpp)
 
-Both files follow the same patter of providing three procedures:
+Both files follow the same pattern of providing three procedures:
 
 * `gen_<container>_base` : Intended to be called once, defines universal "base" definitions.
 * `gen_<container>` : Called per instatiation of the container for a given set of dependent args.
@@ -58,7 +58,7 @@ For the most part macros are kept minimal with exception to `_Generic`...
 
 The `_Generic` macro plays a key role in reducing direct need of the user to wrangle with mangled definition identifiers of 'templated' containers or for type coercion to map distinct data types to a common code path.
 
-Because of its lack of use in many C11 libraries.. and, of those that do; they usually end up obfuscating it with excessive preprocessor abuse; Effort was put into minimizing how much of these macros are handled by the preprocessor vs gencpp itself.
+Because of its lack of use in many C11 libraries.. and, of those that do; they usually end up obfuscate it with excessive preprocessor abuse; Effort was put into minimizing how much of these macros are handled by the preprocessor vs gencpp itself.
 
 The usual presentation (done bare) is the following:
 
