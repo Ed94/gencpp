@@ -4629,7 +4629,7 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 		// <Attributes> <Specifiers> <class, enum, struct, union> <Name>
 	}
 
-// Decltype draft implementaiton
+// Decltype draft implementation
 #if 0
 else if ( currtok.Type == Tok_DeclType )
 {

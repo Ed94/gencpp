@@ -420,7 +420,7 @@ struct AST
 		Code Next;
 		Code Back;
 	};
-	Token*            Token; // Reference to starting token, only avaialble if it was derived from parsing.
+	Token*            Token; // Reference to starting token, only available if it was derived from parsing.
 	Code              Parent;
 	CodeType          Type;
 //	CodeFlag          CodeFlags;

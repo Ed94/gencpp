@@ -231,7 +231,7 @@ int gen_main()
 
 	// gen_builder.hpp
 	{
-		Code builder = scan_file( path_base "auxillary/builder.hpp" );
+		Code builder = scan_file( path_base "auxiliary/builder.hpp" );
 
 		Builder header = builder_open( "gen/gen.builder.hpp" );
 		builder_print_fmt( & header, generation_notice );
@@ -245,7 +245,7 @@ int gen_main()
 
 	// gen_builder.cpp
 	{
-		Code builder = scan_file( path_base "auxillary/builder.cpp" );
+		Code builder = scan_file( path_base "auxiliary/builder.cpp" );
 
 		Builder src = builder_open( "gen/gen.builder.cpp" );
 		builder_print_fmt( & src, generation_notice );
@@ -258,7 +258,7 @@ int gen_main()
 
 	// gen_scanner.hpp
 	{
-		Code scanner = scan_file( path_base "auxillary/scanner.hpp" );
+		Code scanner = scan_file( path_base "auxiliary/scanner.hpp" );
 
 		Builder header = builder_open( "gen/gen.scanner.hpp" );
 		builder_print_fmt( & header, generation_notice );
@@ -272,7 +272,7 @@ int gen_main()
 
 	// gen_scanner.cpp
 	{
-		Code scanner = scan_file( path_base "auxillary/scanner.cpp" );
+		Code scanner = scan_file( path_base "auxiliary/scanner.cpp" );
 
 		Builder src = builder_open( "gen/gen.scanner.cpp" );
 		builder_print_fmt( & src, generation_notice );

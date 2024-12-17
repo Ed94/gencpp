@@ -995,7 +995,7 @@ R"(#define AST_ArrSpecs_Cap \
 			/*
 			This thing makes a:
 			#define code_<interface_name>( code, ... ) _Generic( (code),                    \
-				<slots> of defintions that look like: <typeof(code)>: code__<interface_name>, \
+				<slots> of definitions that look like: <typeof(code)>: code__<interface_name>, \
 				default: gen_generic_selection (Fail case)                                    \
 			) GEN_RESOLVED_FUNCTION_CALL( code, ... )                                       \
 			*/
@@ -1256,7 +1256,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		break;
 	}
 
-	CodeBody parsed_header_builder = parse_file( path_base "auxillary/builder.hpp" );
+	CodeBody parsed_header_builder = parse_file( path_base "auxiliary/builder.hpp" );
 	CodeBody header_builder        = def_body(CT_Global_Body);
 	for ( Code entry = parsed_header_builder.begin(); entry != parsed_header_builder.end(); ++ entry ) switch( entry->Type )
 	{
@@ -1559,7 +1559,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	}
 #pragma endregion Resolve Components
 
-	// THERE SHOULD BE NO NEW GENERIC CONTAINER DEFINTIONS PAST THIS POINT (It will not have slots for the generic selection generated macros)
+	// THERE SHOULD BE NO NEW GENERIC CONTAINER DEFINITIONS PAST THIS POINT (It will not have slots for the generic selection generated macros)
 	CodeBody containers = def_body(CT_Global_Body);
 	{
 		containers.append( def_pragma(code(region Containers)));
@@ -1611,7 +1611,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code rf_array_string_cached   = refactor_and_format(array_string_cached);
 	Code rf_header_end            = refactor_and_format(header_end);
 	Code rf_header_builder        = refactor_and_format(header_builder);
-	Code rf_header_scanner        = refactor_and_format( scan_file( path_base "auxillary/scanner.hpp" ));
+	Code rf_header_scanner        = refactor_and_format( scan_file( path_base "auxiliary/scanner.hpp" ));
 
 	Code r_src_dep_start  = refactor(src_dep_start);
 	Code r_src_debug      = refactor(src_debug);
@@ -1644,8 +1644,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	CodeBody etoktype    = gen_etoktype( path_base "enums/ETokType.csv", path_base "enums/AttributeTokens.csv", helper_use_c_definition );
 	Code     rf_etoktype = refactor_and_format(etoktype);
 
-	Code rf_src_builder = refactor_and_format( scan_file( path_base "auxillary/builder.cpp" ));
-	Code rf_src_scanner = refactor_and_format( scan_file( path_base "auxillary/scanner.cpp" ));
+	Code rf_src_builder = refactor_and_format( scan_file( path_base "auxiliary/builder.cpp" ));
+	Code rf_src_scanner = refactor_and_format( scan_file( path_base "auxiliary/scanner.cpp" ));
 #pragma endregion Refactored / Formatted
 
 #pragma region Singleheader

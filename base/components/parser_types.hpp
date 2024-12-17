@@ -178,7 +178,7 @@ enum EMacroFlags : u16
 	//  ^^^ This a kludge because unreal has a macro that behaves as both a 'statement' and an attribute (UE_DEPRECATED, PRAGMA_ENABLE_DEPRECATION_WARNINGS, etc)
 	// TODO(Ed): We can keep the MF_Allow_As_Attribute flag for macros, however, we need to add the ability of AST_Attributes to chain themselves.
 	// Its thats already a thing in the standard language anyway
-	// & it would allow UE_DEPRECATED, (UE_PROPERTY / UE_FUNCTION) to chain themselves as attributes of a resolved member function/varaible definition
+	// & it would allow UE_DEPRECATED, (UE_PROPERTY / UE_FUNCTION) to chain themselves as attributes of a resolved member function/variable definition
 	MF_Allow_As_Attribute  = bit(3),
 
 	// When a macro is encountered after attributs and specifiers while parsing a function, or variable:

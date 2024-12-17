@@ -6,7 +6,7 @@
 
 # AST Types Documentation
 
-While the Readme for docs covers the data layout per AST, this will focus on the AST types avaialble, and their nuances.
+While the Readme for docs covers the data layout per AST, this will focus on the AST types available, and their nuances.
 
 ## Body
 
@@ -37,7 +37,7 @@ s32       NumEntries;
 The `Front` member represents the start of the link list and `Back` the end.
 NumEntries is the number of entries in the body.
 
-Parent should have a compatible CodeType type for the type of defintion used.
+Parent should have a compatible CodeType type for the type of definition used.
 
 Serialization:
 
@@ -95,7 +95,7 @@ Serialization:
 <Content>
 ```
 
-The parser will perserve comments found if residing with a body or in accepted inline-to-definition locations.
+The parser will preserve comments found if residing with a body or in accepted inline-to-definition locations.
 Otherwise they will be skipped by the TokArray::__eat and TokArray::current( skip foramtting enabled ) functions.
 
 The upfront constructor: `def_comment` expects to recieve a comment without the `//` or `/* */` parts. It will add them during construction.
@@ -289,7 +289,7 @@ Serialization:
 ## Execution
 
 Just represents an execution body. Equivalent to an untyped body.
-Will be obsolute when function body parsing is implemented.
+Will be obsolete when function body parsing is implemented.
 
 Fields:
 

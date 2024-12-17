@@ -337,7 +337,7 @@ int gen_main()
 
 	// gen_builder.hpp
 	{
-		Code builder = scan_file( path_base "auxillary/builder.hpp" );
+		Code builder = scan_file( path_base "auxiliary/builder.hpp" );
 
 		Builder
 		header = Builder::open( "gen/gen.builder.hpp" );
@@ -356,7 +356,7 @@ int gen_main()
 
 	// gen_builder.cpp
 	{
-		Code builder = scan_file( path_base "auxillary/builder.cpp" );
+		Code builder = scan_file( path_base "auxiliary/builder.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.builder.cpp" );
@@ -374,7 +374,7 @@ int gen_main()
 
 	// gen_scanner.hpp
 	{
-		Code scanner = scan_file( path_base "auxillary/scanner.hpp" );
+		Code scanner = scan_file( path_base "auxiliary/scanner.hpp" );
 
 		Builder
 		header = Builder::open( "gen/gen.scanner.hpp" );
@@ -393,7 +393,7 @@ int gen_main()
 
 	// gen.scanner.cpp
 	{
-		Code scanner = scan_file( path_base "auxillary/scanner.cpp" );
+		Code scanner = scan_file( path_base "auxiliary/scanner.cpp" );
 
 		Builder
 		src = Builder::open( "gen/gen.scanner.cpp" );

@@ -22,7 +22,7 @@ args:
     c_lib        : Build c11 library (singleheader & segmented)
     c_lib_static : Build static  c11 library
     c_lib_dyn    : Buidl dyanmic c11
-    segemented
+    segmented
     singleheader
     unreal
     clang

@@ -106,10 +106,10 @@ Copy-Item -Verbose -Path $path_base\gen.hpp               -Destination $path_rel
 Copy-Item -Verbose -Path $path_base\gen.cpp               -Destination $path_release_content
 Copy-Item -Verbose -Path $path_base\gen.dep.hpp           -Destination $path_release_content
 Copy-Item -Verbose -Path $path_base\gen.dep.cpp           -Destination $path_release_content
-Copy-Item -Verbose -Path $path_base\auxillary\builder.hpp -Destination $path_release_content\auxillary
-Copy-Item -Verbose -Path $path_base\auxillary\builder.cpp -Destination $path_release_content\auxillary
-Copy-Item -Verbose -Path $path_base\auxillary\scanner.hpp -Destination $path_release_content\auxillary
-Copy-Item -Verbose -Path $path_base\auxillary\scanner.cpp -Destination $path_release_content\auxillary
+Copy-Item -Verbose -Path $path_base\auxiliary\builder.hpp -Destination $path_release_content\auxiliary
+Copy-Item -Verbose -Path $path_base\auxiliary\builder.cpp -Destination $path_release_content\auxiliary
+Copy-Item -Verbose -Path $path_base\auxiliary\scanner.hpp -Destination $path_release_content\auxiliary
+Copy-Item -Verbose -Path $path_base\auxiliary\scanner.cpp -Destination $path_release_content\auxiliary
 
 New-Item -ItemType Directory -Force -Path "$path_release_content\components"
 New-Item -ItemType Directory -Force -Path "$path_release_content\components\gen"

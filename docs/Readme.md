@@ -260,7 +260,7 @@ def_global_body( args( ht_entry, array_ht_entry, hashtable ));
 def_global_body( 3, ht_entry, array_ht_entry, hashtable );
 ```
 
-If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty body.
+If a more incremental approach is desired for the body ASTs, `Code def_body( CodeT type )` can be used to create an empty bodyss
 When the members have been populated use: `code_validate_body` to verify that the members are valid entires for that type.
 
 ### Parse construction
@@ -432,7 +432,7 @@ and have the desired specifiers assigned to them beforehand.
 
 ## Code generation and modification
 
-There are two provided auxillary interfaces:
+There are two provided auxiliary interfaces:
 
 * Builder
 * Scanner
@@ -444,7 +444,7 @@ There are two provided auxillary interfaces:
 * The code is provided via print( code ) function  will be serialized to its buffer.
 * When all serialization is finished, use the write() command to write the buffer to the file.
 
-### Scanner Auxillary Interface
+### Scanner
 
 * The purpose is to scan or parse files
 * Some with two basic functions to convert a fil to code: `scan_file` and `parse_file`

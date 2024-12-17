@@ -4,7 +4,7 @@
 
 <- [docs - General](Readme.md)
 
-# Parser's Algorithim
+# Parser's Algorithm
 
 gencpp uses a hand-written recursive descent parser. Both the lexer and parser currently handle a full C/C++ file in a single pass.
 
@@ -399,7 +399,7 @@ Below is an outline of the general alogirithim used for these internal procedure
 
 ## `parse_function_after_name`
 
-This is needed as a function defintion is not easily resolvable early on, as such this function handles resolving a function
+This is needed as a function definition is not easily resolvable early on, as such this function handles resolving a function
 after its been made ceratin that the type of declaration or definition is indeed for a function signature.
 
 By the point this function is called the following are known : export module flag, attributes, specifiers, return type, & name
@@ -548,7 +548,7 @@ In the future statements and expressions will be parsed.
 
 ### Implementation Constraints
 
-* Cannot definitively distinguish nested namespaces with identical names
+* Cannot distinguish nested namespaces with identical names
 * Return type detection requires parser enhancement
 * Template parameter validation is syntax-based only
 * Future enhancement: Implement type parsing with rollback capability
@@ -595,7 +595,7 @@ Notes:
 
 ## `parse_operator_after_ret_type`
 
-This is needed as a operator defintion is not easily resolvable early on, as such this function handles resolving a operator after its been made ceratin that the type of declaration or definition is indeed for a operator signature.
+This is needed as a operator definition is not easily resolvable early on, as such this function handles resolving a operator after its been made ceratin that the type of declaration or definition is indeed for a operator signature.
 
 By the point this function is called the following are known : export module flag, attributes, specifiers, and return type
 
@@ -639,7 +639,7 @@ By the point this function is called the following are known : export module fla
 
 ## `parse_operator_function_or_variable`
 
-When this function is called, attribute and specifiers may have been resolved, however what comes next can still be either an operator, function, or varaible.
+When this function is called, attribute and specifiers may have been resolved, however what comes next can still be either an operator, function, or variable.
 
 1. Initial Type Resolution
    1. Push parsing scope
@@ -792,7 +792,7 @@ This will get changed heavily once we have better support for typename expressio
 
 ## `parse_variable_after_name`
 
-This is needed as a variable defintion is not easily resolvable early on, it takes a long evaluation period before its known that the declaration or definition is a variable. As such this function handles resolving a variable.  
+This is needed as a variable definition is not easily resolvable early on, it takes a long evaluation period before its known that the declaration or definition is a variable. As such this function handles resolving a variable.  
 By the point this function is called the following are known : export module flag, attributes, specifiers, value type, name
 
 1. Initialization Processing
@@ -1090,7 +1090,7 @@ Limitations:
 
 This implementatin will be updated in the future to properly handle functional typename signatures.
 
-### Current Algorithim
+### Current Algorithm
 
 Anything that is in the qualifier capture of the function typename is treated as an expression abstracted as an untyped string
 
@@ -1119,7 +1119,7 @@ Anything that is in the qualifier capture of the function typename is treated as
 8. Check for varaidic argument (param pack) token:
    1. Consume varadic argument token
 
-### WIP - Alternative Algorithim
+### WIP - Alternative Algorithm
 
 Currently wrapped up via macro: `GEN_USE_NEW_TYPENAME_PARSING`
 Anything that is in the qualifier capture of the function typename is treated as an expression abstracted as an untyped string
@@ -1152,7 +1152,7 @@ Anything that is in the qualifier capture of the function typename is treated as
 7. Check for varaidic argument (param pack) token:
    1. Consume varadic argument token
 
-### **Later: Algorithim based on typename expressions**
+### **Later: Algorithm based on typename expressions**
 
 ## `parse_typedef`
 

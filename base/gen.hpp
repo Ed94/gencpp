@@ -33,8 +33,8 @@ GEN_NS_BEGIN
 #include "components/gen/ast_inlines.hpp"
 #include "components/header_end.hpp"
 
-#include "auxillary/builder.hpp"
-#include "auxillary/scanner.hpp"
+#include "auxiliary/builder.hpp"
+#include "auxiliary/scanner.hpp"
 
 GEN_NS_END
 

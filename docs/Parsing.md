@@ -10,7 +10,7 @@ The library features a naive single-pass parser, tailored for only what the libr
 
 This parser does not, and should not do the compiler's job. By only supporting this minimal set of features, the parser is kept (so far) around ~7000 loc. I hope to keep it under 10-15k loc worst case.
 
-You can think of this parser as *frontend parser* vs a *semantic parser*. Its intuitively similar to WYSIWYG. What you ***precerive*** as the syntax from the user-side before the compiler gets a hold of it, is what you get.
+You can think of this parser as *frontend parser* vs a *semantic parser*. Its intuitively similar to WYSIWYG. What you ***perceive*** as the syntax from the user-side before the compiler gets a hold of it, is what you get.
 
 User exposed interface:
 
@@ -63,7 +63,7 @@ The preprocessor lines are stored as members of their associated scope they are 
 Any preprocessor definition abuse that changes the syntax of the core language is unsupported and will fail to parse if not kept within an execution scope (function body, or expression assignment).  
 Exceptions:
 
-* varaible definitions are allowed for a preprocessed macro `extern MACRO();`
+* variable definitions are allowed for a preprocessed macro `extern MACRO();`
 * function definitions are allowed for a preprocessed macro: `neverinline MACRO() { ... }`
   * Disable with: `#define GEN_PARSER_DISABLE_MACRO_FUNCTION_SIGNATURES`
 * typedefs allow for a preprocessed macro: `typedef MACRO();`

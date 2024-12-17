@@ -7,9 +7,9 @@
 #	include "gen.hpp"
 #	include "helpers/push_ignores.inline.hpp"
 #	include "helpers/helper.hpp"
-#	include "auxillary/builder.hpp"
-#	include "auxillary/builder.cpp"
-#	include "auxillary/scanner.hpp"
+#	include "auxiliary/builder.hpp"
+#	include "auxiliary/builder.cpp"
+#	include "auxiliary/scanner.hpp"
 
 #include <stdlib.h>
 

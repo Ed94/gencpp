@@ -159,10 +159,10 @@ int gen_main()
 		header.print( header_end );
 
 		if ( generate_builder ) {
-			header.print( scan_file( path_base "auxillary/builder.hpp" ) );
+			header.print( scan_file( path_base "auxiliary/builder.hpp" ) );
 		}
 		if ( generate_scanner ) {
-			header.print( scan_file( path_base "auxillary/scanner.hpp" ) );
+			header.print( scan_file( path_base "auxiliary/scanner.hpp" ) );
 		}
 
 		header.print(fmt_newline);
@@ -246,11 +246,11 @@ int gen_main()
 		header.print_fmt( "\n#pragma endregion Interface\n");
 
 		if ( generate_builder ) {
-			header.print( scan_file( path_base "auxillary/builder.cpp"  ) );
+			header.print( scan_file( path_base "auxiliary/builder.cpp"  ) );
 		}
 
 		if ( generate_scanner ) {
-			header.print( scan_file( path_base "auxillary/scanner.cpp" ) );
+			header.print( scan_file( path_base "auxiliary/scanner.cpp" ) );
 		}
 
 		header.print( fmt_newline);

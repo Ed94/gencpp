@@ -15,7 +15,7 @@ In order to abstract away constant use of `AST*` its wrapped in a Code type whic
 When its the [C generated variant of the library](../gen_c_library/)
 ```c
 typedef AST* Code;
-tyepdef AST_<name>* Code<name>;
+typedef AST_<name>* Code<name>;
 ...
 ```
 

@@ -24,16 +24,16 @@ If using the library's provided build scripts:
     * `<push/pop>.<name>.inline.<hpp>`: macros that are meant to be injected at specific locations of the library file/s.
     * `misc.hpp`: Misc functionality used by the library generation metaprograms.
     * `undef.macros.h`: Undefines all macros from library.
-  * **auxillary**: Non-essential tooling:
+  * **auxiliary**: Non-essential tooling:
     * `Builder`: Similar conceptually to Jai programming language's *builder*, just opens a file and prepares a string buffer to serialize code into (`builder_print`, `builder_print_fmt`). Then write & close the file when completed (`builder_write`).
-    * **`Scanner`**: Interface to load up `Code` from files two basic funcctions are currently provided.
+    * **`Scanner`**: Interface to load up `Code` from files two basic functions are currently provided.
       * `scan_file`: Used mainly by the library format generators to directly scan files into untyped `Code` (raw string content, pre-formatted no AST parsed).
       * `parse_file`: Used to read file and then parsed to populate a `CodeBody` AST.
       * CSV parsing via one or two columns simplified.
 * **gen_segemetned**: Dependencies go into gen.dep.{hpp/cpp} and components into gen.{hpp/cpp}
 * **gen_singleheader**: Everything into a single file: gen.hpp
-* **gen_unreal_engine**: Like gen_segemented but the library is modified slightly to compile as a thirdparty library within an Unreal Engine plugin or module.
-* **gen_c_library**: The library is heavily modifed into C11 compliant code. A segemented and single-header set of variants are generated.
+* **gen_unreal_engine**: Like gen_segmented but the library is modified slightly to compile as a thirdparty library within an Unreal Engine plugin or module.
+* **gen_c_library**: The library is heavily modifed into C11 compliant code. A segmented and single-header set of variants are generated.
 
 Code not making up the core library is located in `auxiliary/<auxiliary_name>.<hpp/cpp>`. These are optional extensions or tools for the library.
 
@@ -108,7 +108,7 @@ Any large macros used implementing the gen interface or parser are going to be p
 The vast majority of macros should be single-line subsitutions that either add:
 
 * Improvements to searching
-* Inteniality of keyword usage
+* Intentionality of keyword usage
 * A  feature that only the preprocessor has (ex: function name reflection or stringifying)
 * Compatibility of statements or expressions bewteen C & C++ that cannot be parsed by gencpp itself.
 * Masking highly verbose syntax (the latter is getting phased out).
@@ -123,7 +123,7 @@ The vast majority of macros should be single-line subsitutions that either add:
 
 There are ***five*** header files which are automatically generated using [base_codegen.hpp](./helpers/base_codegen.hpp) by [base.cpp](./base.cpp). They are all located in [components/gen](./components/gen/).
 
-* [ecodetypes.hpp](./components/gen/ecode.hpp): `CodeType` enum definition and related implementaiton. Generation is based off of [ECodeType.csv](./enums/ECodeTypes.csv).
+* [ecodetypes.hpp](./components/gen/ecode.hpp): `CodeType` enum definition and related implementation. Generation is based off of [ECodeType.csv](./enums/ECodeTypes.csv).
 * [especifier.hpp](./components/gen/especifier.hpp): `Specifier` enum definition, etc. Generated using [ESpecifier.csv](./enums/ESpecifier.csv).
 * [eoperator.hpp](./components/gen/eoperator.hpp): `Operator` enum definition, etc. Generated using [EOperator.hpp](./enums/EOperator.csv).
 * [etoktype.cpp](./components/gen/etoktype.cpp): `TokType` enum defininition, etc. Used by the lexer and parser backend. Uses two csvs:

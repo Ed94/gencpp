@@ -37,8 +37,8 @@ GEN_NS_BEGIN
 #include "components/interface.parsing.cpp"
 #include "components/interface.untyped.cpp"
 
-#include "auxillary/builder.cpp"
-#include "auxillary/scanner.cpp"
+#include "auxiliary/builder.cpp"
+#include "auxiliary/scanner.cpp"
 
 GEN_NS_END
 

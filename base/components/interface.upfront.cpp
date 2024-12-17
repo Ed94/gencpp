@@ -402,7 +402,7 @@ bool null__check( char const* context, char const* code_id, Code code ) {
 #define null_check( context, code ) null__check( #context, #code, cast(Code, code) )
 
 /*
-The implementaiton of the upfront constructors involves doing three things:
+The implementation of the upfront constructors involves doing three things:
 * Validate the arguments given to construct the intended type of AST is valid.
 * Construct said AST type.
 * Lock the AST (set to readonly) and return the valid object.

@@ -32,7 +32,7 @@ All free from tag identifiers will be prefixed with `gen_` or `GEN_` as the name
     * If they are parsed, its dude to requiring some changes to either naming, or adding additonal definitions (container generation, typedefs, etc).
 2. All scanned or parsed code is refactored (identifiers substs) and/or formatted.
 3. Singleheader generated.
-4. Segemented headers and source generated.
+4. Segmented headers and source generated.
 
 ## Templated container generation
 
