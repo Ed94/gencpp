@@ -42,3 +42,5 @@ gen_c_library/gen
 **/*.vcxproj.user
 test/c_library/gen
 test/cpp_library/gen
+
+!scripts/helpers/refactor.exe
