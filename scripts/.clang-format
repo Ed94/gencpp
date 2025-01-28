@@ -146,7 +146,7 @@ QualifierAlignment: Leave
 
 ReferenceAlignment: Left
 
-ReflowComments: true
+ReflowComments: false
 
 # RequiresExpressionIndentation: OuterScope
 
@@ -164,7 +164,7 @@ SpaceAfterTemplateKeyword: false
 SpaceAroundPointerQualifiers: Default
 
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeCaseColon: true
+SpaceBeforeCaseColon: false
 SpaceBeforeCpp11BracedList: true
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
@@ -182,7 +182,7 @@ SpacesInContainerLiterals: false
 SpacesInLineCommentPrefix:
   Minimum: 1
   Maximum: 20
-SpacesInParentheses: true
+SpacesInParentheses: false
 SpacesInSquareBrackets: false
 
 Standard: c++17

@@ -38,84 +38,84 @@ enum Specifier : u32
 	Spec_UnderlyingType = 0xffffffffu
 };
 
-inline Str spec_to_str( Specifier type )
+inline Str spec_to_str(Specifier type)
 {
 	local_persist Str lookup[] = {
-		{ "INVALID",       sizeof( "INVALID" ) - 1       },
-		{ "consteval",     sizeof( "consteval" ) - 1     },
-		{ "constexpr",     sizeof( "constexpr" ) - 1     },
-		{ "constinit",     sizeof( "constinit" ) - 1     },
-		{ "explicit",      sizeof( "explicit" ) - 1      },
-		{ "extern",        sizeof( "extern" ) - 1        },
-		{ "forceinline",   sizeof( "forceinline" ) - 1   },
-		{ "global",        sizeof( "global" ) - 1        },
-		{ "inline",        sizeof( "inline" ) - 1        },
-		{ "internal",      sizeof( "internal" ) - 1      },
-		{ "local_persist", sizeof( "local_persist" ) - 1 },
-		{ "mutable",       sizeof( "mutable" ) - 1       },
-		{ "neverinline",   sizeof( "neverinline" ) - 1   },
-		{ "*",             sizeof( "*" ) - 1             },
-		{ "&",             sizeof( "&" ) - 1             },
-		{ "register",      sizeof( "register" ) - 1      },
-		{ "restrict",      sizeof( "restrict" ) - 1      },
-		{ "&&",            sizeof( "&&" ) - 1            },
-		{ "static",        sizeof( "static" ) - 1        },
-		{ "thread_local",  sizeof( "thread_local" ) - 1  },
-		{ "virtual",       sizeof( "virtual" ) - 1       },
-		{ "const",         sizeof( "const" ) - 1         },
-		{ "final",         sizeof( "final" ) - 1         },
-		{ "noexcept",      sizeof( "noexcept" ) - 1      },
-		{ "override",      sizeof( "override" ) - 1      },
-		{ "= 0",           sizeof( "= 0" ) - 1           },
-		{ "volatile",      sizeof( "volatile" ) - 1      },
+		{ "INVALID",       sizeof("INVALID") - 1       },
+		{ "consteval",     sizeof("consteval") - 1     },
+		{ "constexpr",     sizeof("constexpr") - 1     },
+		{ "constinit",     sizeof("constinit") - 1     },
+		{ "explicit",      sizeof("explicit") - 1      },
+		{ "extern",        sizeof("extern") - 1        },
+		{ "forceinline",   sizeof("forceinline") - 1   },
+		{ "global",        sizeof("global") - 1        },
+		{ "inline",        sizeof("inline") - 1        },
+		{ "internal",      sizeof("internal") - 1      },
+		{ "local_persist", sizeof("local_persist") - 1 },
+		{ "mutable",       sizeof("mutable") - 1       },
+		{ "neverinline",   sizeof("neverinline") - 1   },
+		{ "*",             sizeof("*") - 1             },
+		{ "&",             sizeof("&") - 1             },
+		{ "register",      sizeof("register") - 1      },
+		{ "restrict",      sizeof("restrict") - 1      },
+		{ "&&",            sizeof("&&") - 1            },
+		{ "static",        sizeof("static") - 1        },
+		{ "thread_local",  sizeof("thread_local") - 1  },
+		{ "virtual",       sizeof("virtual") - 1       },
+		{ "const",         sizeof("const") - 1         },
+		{ "final",         sizeof("final") - 1         },
+		{ "noexcept",      sizeof("noexcept") - 1      },
+		{ "override",      sizeof("override") - 1      },
+		{ "= 0",           sizeof("= 0") - 1           },
+		{ "volatile",      sizeof("volatile") - 1      },
 	};
 	return lookup[type];
 }
 
-inline bool spec_is_trailing( Specifier specifier )
+inline bool spec_is_trailing(Specifier specifier)
 {
-	switch ( specifier )
+	switch (specifier)
 	{
-		case Spec_Const :
-		case Spec_Final :
-		case Spec_NoExceptions :
-		case Spec_Override :
-		case Spec_Pure :
-		case Spec_Volatile :
+		case Spec_Const:
+		case Spec_Final:
+		case Spec_NoExceptions:
+		case Spec_Override:
+		case Spec_Pure:
+		case Spec_Volatile:
 			return true;
-		default :
+		default:
 			return false;
 	}
 }
 
-inline Specifier str_to_specifier( Str str )
+inline Specifier str_to_specifier(Str str)
 {
 	local_persist u32 keymap[Spec_NumSpecifiers];
-	do_once_start for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
+	do_once_start for (u32 index = 0; index < Spec_NumSpecifiers; index++)
 	{
-		Str enum_str  = spec_to_str( (Specifier)index );
-		keymap[index] = crc32( enum_str.Ptr, enum_str.Len );
+		Str enum_str  = spec_to_str((Specifier)index);
+		keymap[index] = crc32(enum_str.Ptr, enum_str.Len);
 	}
-	do_once_end u32 hash = crc32( str.Ptr, str.Len );
-	for ( u32 index = 0; index < Spec_NumSpecifiers; index++ )
+	do_once_end u32 hash = crc32(str.Ptr, str.Len);
+	for (u32 index = 0; index < Spec_NumSpecifiers; index++)
 	{
-		if ( keymap[index] == hash )
+		if (keymap[index] == hash)
 			return (Specifier)index;
 	}
 	return Spec_Invalid;
 }
 
-forceinline Str to_str( Specifier spec )
+forceinline Str to_str(Specifier spec)
 {
-	return spec_to_str( spec );
+	return spec_to_str(spec);
 }
 
-forceinline Specifier to_type( Str str )
+forceinline Specifier to_type(Str str)
 {
-	return str_to_specifier( str );
+	return str_to_specifier(str);
 }
 
-forceinline bool is_trailing( Specifier specifier )
+forceinline bool is_trailing(Specifier specifier)
 {
-	return spec_is_trailing( specifier );
+	return spec_is_trailing(specifier);
 }

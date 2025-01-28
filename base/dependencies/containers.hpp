@@ -309,6 +309,7 @@ ArrayHeader* array_get_header(Array<Type> array) {
 	using NonConstType = TRemoveConst<Type>;
     return rcast(ArrayHeader*, const_cast<NonConstType*>(Data)) - 1;
 }
+
 template<class Type> forceinline
 bool array_grow(Array<Type>* array, usize min_capacity)
 {

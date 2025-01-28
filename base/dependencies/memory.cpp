@@ -90,7 +90,7 @@ struct _heap_alloc_info
 
 void* heap_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
 {
-	void* ptr = NULL;
+	void* ptr = nullptr;
 	// unused( allocator_data );
 	// unused( old_size );
 	if ( ! alignment )
