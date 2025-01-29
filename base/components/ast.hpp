@@ -337,10 +337,10 @@ struct Code
 
 #pragma region Statics
 // Used to identify ASTs that should always be duplicated. (Global constant ASTs)
-extern Code Code_Global;
+GEN_API extern Code Code_Global;
 
 // Used to identify invalid generated code.
-extern Code Code_Invalid;
+GEN_API extern Code Code_Invalid;
 #pragma endregion Statics
 
 struct Code_POD

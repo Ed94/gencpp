@@ -4,87 +4,87 @@
 #endif
 
 #pragma region StaticData
-global Context* _ctx;
-global u32      context_counter;
+GEN_API global Context* _ctx;
+GEN_API global u32      context_counter;
 
 #pragma region Constants
-global Macro enum_underlying_macro;
+GEN_API global Macro enum_underlying_macro;
 
-global Code Code_Global;
-global Code Code_Invalid;
+GEN_API global Code Code_Global;
+GEN_API global Code Code_Invalid;
 
-global Code access_public;
-global Code access_protected;
-global Code access_private;
+GEN_API global Code access_public;
+GEN_API global Code access_protected;
+GEN_API global Code access_private;
 
-global CodeAttributes attrib_api_export;
-global CodeAttributes attrib_api_import;
+GEN_API global CodeAttributes attrib_api_export;
+GEN_API global CodeAttributes attrib_api_import;
 
-global Code module_global_fragment;
-global Code module_private_fragment;
+GEN_API global Code module_global_fragment;
+GEN_API global Code module_private_fragment;
 
-global Code fmt_newline;
+GEN_API global Code fmt_newline;
 
-global CodeParams param_varadic;
+GEN_API global CodeParams param_varadic;
 
-global CodePragma pragma_once;
+GEN_API global CodePragma pragma_once;
 
-global CodePreprocessCond preprocess_else;
-global CodePreprocessCond preprocess_endif;
+GEN_API global CodePreprocessCond preprocess_else;
+GEN_API global CodePreprocessCond preprocess_endif;
 
-global CodeSpecifiers spec_const;
-global CodeSpecifiers spec_consteval;
-global CodeSpecifiers spec_constexpr;
-global CodeSpecifiers spec_constinit;
-global CodeSpecifiers spec_extern_linkage;
-global CodeSpecifiers spec_final;
-global CodeSpecifiers spec_forceinline;
-global CodeSpecifiers spec_global;
-global CodeSpecifiers spec_inline;
-global CodeSpecifiers spec_internal_linkage;
-global CodeSpecifiers spec_local_persist;
-global CodeSpecifiers spec_mutable;
-global CodeSpecifiers spec_noexcept;
-global CodeSpecifiers spec_neverinline;
-global CodeSpecifiers spec_override;
-global CodeSpecifiers spec_ptr;
-global CodeSpecifiers spec_pure;
-global CodeSpecifiers spec_ref;
-global CodeSpecifiers spec_register;
-global CodeSpecifiers spec_rvalue;
-global CodeSpecifiers spec_static_member;
-global CodeSpecifiers spec_thread_local;
-global CodeSpecifiers spec_virtual;
-global CodeSpecifiers spec_volatile;
+GEN_API global CodeSpecifiers spec_const;
+GEN_API global CodeSpecifiers spec_consteval;
+GEN_API global CodeSpecifiers spec_constexpr;
+GEN_API global CodeSpecifiers spec_constinit;
+GEN_API global CodeSpecifiers spec_extern_linkage;
+GEN_API global CodeSpecifiers spec_final;
+GEN_API global CodeSpecifiers spec_forceinline;
+GEN_API global CodeSpecifiers spec_global;
+GEN_API global CodeSpecifiers spec_inline;
+GEN_API global CodeSpecifiers spec_internal_linkage;
+GEN_API global CodeSpecifiers spec_local_persist;
+GEN_API global CodeSpecifiers spec_mutable;
+GEN_API global CodeSpecifiers spec_noexcept;
+GEN_API global CodeSpecifiers spec_neverinline;
+GEN_API global CodeSpecifiers spec_override;
+GEN_API global CodeSpecifiers spec_ptr;
+GEN_API global CodeSpecifiers spec_pure;
+GEN_API global CodeSpecifiers spec_ref;
+GEN_API global CodeSpecifiers spec_register;
+GEN_API global CodeSpecifiers spec_rvalue;
+GEN_API global CodeSpecifiers spec_static_member;
+GEN_API global CodeSpecifiers spec_thread_local;
+GEN_API global CodeSpecifiers spec_virtual;
+GEN_API global CodeSpecifiers spec_volatile;
 
-global CodeTypename t_empty;
-global CodeTypename t_auto;
-global CodeTypename t_void;
-global CodeTypename t_int;
-global CodeTypename t_bool;
-global CodeTypename t_char;
-global CodeTypename t_wchar_t;
-global CodeTypename t_class;
-global CodeTypename t_typename;
+GEN_API global CodeTypename t_empty;
+GEN_API global CodeTypename t_auto;
+GEN_API global CodeTypename t_void;
+GEN_API global CodeTypename t_int;
+GEN_API global CodeTypename t_bool;
+GEN_API global CodeTypename t_char;
+GEN_API global CodeTypename t_wchar_t;
+GEN_API global CodeTypename t_class;
+GEN_API global CodeTypename t_typename;
 
 #ifdef GEN_DEFINE_LIBRARY_CODE_CONSTANTS
-global CodeTypename t_b32;
+GEN_API global CodeTypename t_b32;
 
-global CodeTypename t_s8;
-global CodeTypename t_s16;
-global CodeTypename t_s32;
-global CodeTypename t_s64;
+GEN_API global CodeTypename t_s8;
+GEN_API global CodeTypename t_s16;
+GEN_API global CodeTypename t_s32;
+GEN_API global CodeTypename t_s64;
 
-global CodeTypename t_u8;
-global CodeTypename t_u16;
-global CodeTypename t_u32;
-global CodeTypename t_u64;
+GEN_API global CodeTypename t_u8;
+GEN_API global CodeTypename t_u16;
+GEN_API global CodeTypename t_u32;
+GEN_API global CodeTypename t_u64;
 
-global CodeTypename t_ssize;
-global CodeTypename t_usize;
+GEN_API global CodeTypename t_ssize;
+GEN_API global CodeTypename t_usize;
 
-global CodeTypename t_f32;
-global CodeTypename t_f64;
+GEN_API global CodeTypename t_f32;
+GEN_API global CodeTypename t_f64;
 #endif
 
 #pragma endregion Constants

@@ -33,10 +33,10 @@ char const* c_str_trim( char const* str, b32 catch_newline );
 void c_str_to_lower( char* str );
 void c_str_to_upper( char* str );
 
-s64  c_str_to_i64( const char* str, char** end_ptr, s32 base );
-void i64_to_str( s64 value, char* string, s32 base );
-void u64_to_str( u64 value, char* string, s32 base );
-f64  c_str_to_f64( const char* str, char** end_ptr );
+GEN_API s64  c_str_to_i64( const char* str, char** end_ptr, s32 base );
+GEN_API void i64_to_str( s64 value, char* string, s32 base );
+GEN_API void u64_to_str( u64 value, char* string, s32 base );
+GEN_API f64  c_str_to_f64( const char* str, char** end_ptr );
 
 inline
 const char* char_first_occurence( const char* s, char c )

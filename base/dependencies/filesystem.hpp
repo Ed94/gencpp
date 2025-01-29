@@ -121,20 +121,20 @@ enum FileStandardType
 	* @param  std Check zpl_file_standard_type
 	* @return     File handle to standard I/O
 	*/
-FileInfo* file_get_standard( FileStandardType std );
+GEN_API FileInfo* file_get_standard( FileStandardType std );
 
 /**
 	* Closes the file
 	* @param  file
 	*/
-FileError file_close( FileInfo* file );
+GEN_API FileError file_close( FileInfo* file );
 
 /**
 	* Returns the currently opened file's name
 	* @param  file
 	*/
 inline
-	char const* file_name( FileInfo* file )
+char const* file_name( FileInfo* file )
 {
 	return file->filename ? file->filename : "";
 }
@@ -144,7 +144,7 @@ inline
 	* @param  file
 	* @param  filename
 	*/
-FileError file_open( FileInfo* file, char const* filename );
+GEN_API FileError file_open( FileInfo* file, char const* filename );
 
 /**
 	* Opens a file using a specified mode
@@ -152,7 +152,7 @@ FileError file_open( FileInfo* file, char const* filename );
 	* @param  mode     Access mode to use
 	* @param  filename
 	*/
-FileError file_open_mode( FileInfo* file, FileMode mode, char const* filename );
+GEN_API FileError file_open_mode( FileInfo* file, FileMode mode, char const* filename );
 
 /**
 	* Reads from a file
@@ -200,14 +200,14 @@ constexpr b32 file_no_zero_terminate = false;
 	* @param  filepath       Path to the file
 	* @return                File contents data
 	*/
-FileContents file_read_contents( AllocatorInfo a, b32 zero_terminate, char const* filepath );
+GEN_API FileContents file_read_contents( AllocatorInfo a, b32 zero_terminate, char const* filepath );
 
 /**
 	* Returns a size of the file
 	* @param  file
 	* @return      File size
 	*/
-s64 file_size( FileInfo* file );
+GEN_API s64 file_size( FileInfo* file );
 
 /**
 	* Seeks the file cursor from the beginning of file to a specific position
@@ -274,7 +274,7 @@ enum FileStreamFlags : u32
 	* @param file
 	* @param allocator
 	*/
-b8 file_stream_new( FileInfo* file, AllocatorInfo allocator );
+GEN_API b8 file_stream_new( FileInfo* file, AllocatorInfo allocator );
 
 /**
 	* Opens a memory stream over an existing buffer
@@ -284,14 +284,14 @@ b8 file_stream_new( FileInfo* file, AllocatorInfo allocator );
 	* @param  size     Buffer's size
 	* @param  flags
 	*/
-b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, ssize size, FileStreamFlags flags );
+GEN_API b8 file_stream_open( FileInfo* file, AllocatorInfo allocator, u8* buffer, ssize size, FileStreamFlags flags );
 
 /**
 	* Retrieves the stream's underlying buffer and buffer size.
 	* @param file memory stream
 	* @param size (Optional) buffer size
 	*/
-u8* file_stream_buf( FileInfo* file, ssize* size );
+GEN_API u8* file_stream_buf( FileInfo* file, ssize* size );
 
 extern FileOperations const memory_file_operations;
 

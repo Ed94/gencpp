@@ -122,7 +122,7 @@ struct ADT_Node
 	* @param is_array
 	* @return error code
 	*/
-u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32 is_array );
+GEN_API u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32 is_array );
 
 /**
 	* @brief Destroy an ADT branch and its descendants
@@ -130,7 +130,7 @@ u8 adt_make_branch( ADT_Node* node, AllocatorInfo backing, char const* name, b32
 	* @param node
 	* @return error code
 	*/
-u8 adt_destroy_branch( ADT_Node* node );
+GEN_API u8 adt_destroy_branch( ADT_Node* node );
 
 /**
 	* @brief Initialise an ADT leaf
@@ -140,7 +140,7 @@ u8 adt_destroy_branch( ADT_Node* node );
 	* @param type Node's type (use zpl_adt_make_branch for container nodes)
 	* @return error code
 	*/
-u8 adt_make_leaf( ADT_Node* node, char const* name, ADT_Type type );
+GEN_API u8 adt_make_leaf( ADT_Node* node, char const* name, ADT_Type type );
 
 
 /**
@@ -160,7 +160,7 @@ u8 adt_make_leaf( ADT_Node* node, char const* name, ADT_Type type );
 	*
 	* @see code/apps/examples/json_get.c
 	*/
-ADT_Node* adt_query( ADT_Node* node, char const* uri );
+GEN_API ADT_Node* adt_query( ADT_Node* node, char const* uri );
 
 /**
 	* @brief Find a field node within an object by the given name.
@@ -170,7 +170,7 @@ ADT_Node* adt_query( ADT_Node* node, char const* uri );
 	* @param deep_search Perform search recursively
 	* @return zpl_adt_node * node
 	*/
-ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search );
+GEN_API ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search );
 
 /**
 	* @brief Allocate an unitialised node within a container at a specified index.
@@ -179,7 +179,7 @@ ADT_Node* adt_find( ADT_Node* node, char const* name, b32 deep_search );
 	* @param index
 	* @return zpl_adt_node * node
 	*/
-ADT_Node* adt_alloc_at( ADT_Node* parent, ssize index );
+GEN_API ADT_Node* adt_alloc_at( ADT_Node* parent, ssize index );
 
 /**
 	* @brief Allocate an unitialised node within a container.
@@ -187,7 +187,7 @@ ADT_Node* adt_alloc_at( ADT_Node* parent, ssize index );
 	* @param parent
 	* @return zpl_adt_node * node
 	*/
-ADT_Node* adt_alloc( ADT_Node* parent );
+GEN_API ADT_Node* adt_alloc( ADT_Node* parent );
 
 /**
 	* @brief Move an existing node to a new container at a specified index.
@@ -197,7 +197,7 @@ ADT_Node* adt_alloc( ADT_Node* parent );
 	* @param index
 	* @return zpl_adt_node * node
 	*/
-ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, ssize index );
+GEN_API ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, ssize index );
 
 /**
 	* @brief Move an existing node to a new container.
@@ -206,7 +206,7 @@ ADT_Node* adt_move_node_at( ADT_Node* node, ADT_Node* new_parent, ssize index );
 	* @param new_parent
 	* @return zpl_adt_node * node
 	*/
-ADT_Node* adt_move_node( ADT_Node* node, ADT_Node* new_parent );
+GEN_API ADT_Node* adt_move_node( ADT_Node* node, ADT_Node* new_parent );
 
 /**
 	* @brief Swap two nodes.
@@ -215,7 +215,7 @@ ADT_Node* adt_move_node( ADT_Node* node, ADT_Node* new_parent );
 	* @param other_node
 	* @return
 	*/
-void adt_swap_nodes( ADT_Node* node, ADT_Node* other_node );
+GEN_API void adt_swap_nodes( ADT_Node* node, ADT_Node* other_node );
 
 /**
 	* @brief Remove node from container.
@@ -223,7 +223,7 @@ void adt_swap_nodes( ADT_Node* node, ADT_Node* other_node );
 	* @param node
 	* @return
 	*/
-void adt_remove_node( ADT_Node* node );
+GEN_API void adt_remove_node( ADT_Node* node );
 
 /**
 	* @brief Initialise a node as an object
@@ -233,7 +233,7 @@ void adt_remove_node( ADT_Node* node );
 	* @param backing
 	* @return
 	*/
-b8 adt_set_obj( ADT_Node* obj, char const* name, AllocatorInfo backing );
+GEN_API b8 adt_set_obj( ADT_Node* obj, char const* name, AllocatorInfo backing );
 
 /**
 	* @brief Initialise a node as an array
@@ -243,7 +243,7 @@ b8 adt_set_obj( ADT_Node* obj, char const* name, AllocatorInfo backing );
 	* @param backing
 	* @return
 	*/
-b8 adt_set_arr( ADT_Node* obj, char const* name, AllocatorInfo backing );
+GEN_API b8 adt_set_arr( ADT_Node* obj, char const* name, AllocatorInfo backing );
 
 /**
 	* @brief Initialise a node as a string
@@ -253,7 +253,7 @@ b8 adt_set_arr( ADT_Node* obj, char const* name, AllocatorInfo backing );
 	* @param value
 	* @return
 	*/
-b8 adt_set_str( ADT_Node* obj, char const* name, char const* value );
+GEN_API b8 adt_set_str( ADT_Node* obj, char const* name, char const* value );
 
 /**
 	* @brief Initialise a node as a float
@@ -263,7 +263,7 @@ b8 adt_set_str( ADT_Node* obj, char const* name, char const* value );
 	* @param value
 	* @return
 	*/
-b8 adt_set_flt( ADT_Node* obj, char const* name, f64 value );
+GEN_API b8 adt_set_flt( ADT_Node* obj, char const* name, f64 value );
 
 /**
 	* @brief Initialise a node as a signed integer
@@ -273,7 +273,7 @@ b8 adt_set_flt( ADT_Node* obj, char const* name, f64 value );
 	* @param value
 	* @return
 	*/
-b8 adt_set_int( ADT_Node* obj, char const* name, s64 value );
+GEN_API b8 adt_set_int( ADT_Node* obj, char const* name, s64 value );
 
 /**
 	* @brief Append a new node to a container as an object
@@ -282,7 +282,7 @@ b8 adt_set_int( ADT_Node* obj, char const* name, s64 value );
 	* @param name
 	* @return*
 	*/
-ADT_Node* adt_append_obj( ADT_Node* parent, char const* name );
+GEN_API ADT_Node* adt_append_obj( ADT_Node* parent, char const* name );
 
 /**
 	* @brief Append a new node to a container as an array
@@ -291,7 +291,7 @@ ADT_Node* adt_append_obj( ADT_Node* parent, char const* name );
 	* @param name
 	* @return*
 	*/
-ADT_Node* adt_append_arr( ADT_Node* parent, char const* name );
+GEN_API ADT_Node* adt_append_arr( ADT_Node* parent, char const* name );
 
 /**
 	* @brief Append a new node to a container as a string
@@ -301,7 +301,7 @@ ADT_Node* adt_append_arr( ADT_Node* parent, char const* name );
 	* @param value
 	* @return*
 	*/
-ADT_Node* adt_append_str( ADT_Node* parent, char const* name, char const* value );
+GEN_API ADT_Node* adt_append_str( ADT_Node* parent, char const* name, char const* value );
 
 /**
 	* @brief Append a new node to a container as a float
@@ -311,7 +311,7 @@ ADT_Node* adt_append_str( ADT_Node* parent, char const* name, char const* value 
 	* @param value
 	* @return*
 	*/
-ADT_Node* adt_append_flt( ADT_Node* parent, char const* name, f64 value );
+GEN_API ADT_Node* adt_append_flt( ADT_Node* parent, char const* name, f64 value );
 
 /**
 	* @brief Append a new node to a container as a signed integer
@@ -321,7 +321,7 @@ ADT_Node* adt_append_flt( ADT_Node* parent, char const* name, f64 value );
 	* @param value
 	* @return*
 	*/
-ADT_Node* adt_append_int( ADT_Node* parent, char const* name, s64 value );
+GEN_API ADT_Node* adt_append_int( ADT_Node* parent, char const* name, s64 value );
 
 /* parser helpers */
 
@@ -332,7 +332,7 @@ ADT_Node* adt_append_int( ADT_Node* parent, char const* name, s64 value );
 	* @param base
 	* @return*
 	*/
-char* adt_parse_number( ADT_Node* node, char* base );
+GEN_API char* adt_parse_number( ADT_Node* node, char* base );
 
 /**
 	* @brief Parses a text and stores the result into an unitialised node.
@@ -342,7 +342,7 @@ char* adt_parse_number( ADT_Node* node, char* base );
 	* @param base
 	* @return*
 	*/
-char* adt_parse_number_strict( ADT_Node* node, char* base_str );
+GEN_API char* adt_parse_number_strict( ADT_Node* node, char* base_str );
 
 /**
 	* @brief Parses and converts an existing string node into a number.
@@ -350,7 +350,7 @@ char* adt_parse_number_strict( ADT_Node* node, char* base_str );
 	* @param node
 	* @return
 	*/
-ADT_Error adt_c_str_to_number( ADT_Node* node );
+GEN_API ADT_Error adt_c_str_to_number( ADT_Node* node );
 
 /**
 	* @brief Parses and converts an existing string node into a number.
@@ -359,7 +359,7 @@ ADT_Error adt_c_str_to_number( ADT_Node* node );
 	* @param node
 	* @return
 	*/
-ADT_Error adt_c_str_to_number_strict( ADT_Node* node );
+GEN_API ADT_Error adt_c_str_to_number_strict( ADT_Node* node );
 
 /**
 	* @brief Prints a number into a file stream.
@@ -371,7 +371,7 @@ ADT_Error adt_c_str_to_number_strict( ADT_Node* node );
 	* @param node
 	* @return
 	*/
-ADT_Error adt_print_number( FileInfo* file, ADT_Node* node );
+GEN_API ADT_Error adt_print_number( FileInfo* file, ADT_Node* node );
 
 /**
 	* @brief Prints a string into a file stream.
@@ -385,7 +385,7 @@ ADT_Error adt_print_number( FileInfo* file, ADT_Node* node );
 	* @param escape_symbol
 	* @return
 	*/
-ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_chars, char const* escape_symbol );
+GEN_API ADT_Error adt_print_string( FileInfo* file, ADT_Node* node, char const* escaped_chars, char const* escape_symbol );
 
 #pragma endregion ADT
 
@@ -401,14 +401,14 @@ enum CSV_Error : u32
 
 typedef ADT_Node CSV_Object;
 
-u8   csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header );
-u8   csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim );
-void csv_free( CSV_Object* obj );
+        u8   csv_parse( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header );
+GEN_API u8   csv_parse_delimiter( CSV_Object* root, char* text, AllocatorInfo allocator, b32 has_header, char delim );
+        void csv_free( CSV_Object* obj );
 
-void   csv_write( FileInfo* file, CSV_Object* obj );
-StrBuilder csv_write_string( AllocatorInfo a, CSV_Object* obj );
-void   csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delim );
-StrBuilder csv_write_strbuilder_delimiter( AllocatorInfo a, CSV_Object* obj, char delim );
+        void       csv_write( FileInfo* file, CSV_Object* obj );
+        StrBuilder csv_write_string( AllocatorInfo a, CSV_Object* obj );
+GEN_API void       csv_write_delimiter( FileInfo* file, CSV_Object* obj, char delim );
+GEN_API StrBuilder csv_write_strbuilder_delimiter( AllocatorInfo a, CSV_Object* obj, char delim );
 
 /* inline */
 

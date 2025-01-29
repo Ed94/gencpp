@@ -20,9 +20,9 @@
 // This is a simple file reader that reads the entire file into memory.
 // It has an extra option to skip the first few lines for undesired includes.
 // This is done so that includes can be kept in dependency and component files so that intellisense works.
-Code scan_file( char const* path );
+GEN_API Code scan_file( char const* path );
 
-CodeBody parse_file( const char* path );
+GEN_API CodeBody parse_file( const char* path );
 
 // The follow is basic support for light csv parsing (use it as an example)
 // Make something robust if its more serious.
@@ -40,7 +40,7 @@ struct CSV_Columns2 {
 	Array(ADT_Node) Col_2;
 };
 
-CSV_Column parse_csv_one_column(AllocatorInfo allocator, char const* path);
-CSV_Columns2 parse_csv_two_columns(AllocatorInfo allocator, char const* path);
+GEN_API CSV_Column   parse_csv_one_column (AllocatorInfo allocator, char const* path);
+GEN_API CSV_Columns2 parse_csv_two_columns(AllocatorInfo allocator, char const* path);
 
 #pragma endregion Scanner

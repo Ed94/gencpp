@@ -181,7 +181,7 @@ enum EMacroFlags : u16
 	// & it would allow UE_DEPRECATED, (UE_PROPERTY / UE_FUNCTION) to chain themselves as attributes of a resolved member function/variable definition
 	MF_Allow_As_Attribute  = bit(3),
 
-	// When a macro is encountered after attributs and specifiers while parsing a function, or variable:
+	// When a macro is encountered after attributes and specifiers while parsing a function, or variable:
 	// It will consume the macro and treat it as resolving the definition. (Yes this is for Unreal Engine)
 	// (MUST BE OF MT_Statement TYPE)
 	MF_Allow_As_Definition = bit(4),

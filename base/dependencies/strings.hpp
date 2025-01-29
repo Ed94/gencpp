@@ -122,10 +122,11 @@ struct StrBuilder;
 
 forceinline usize strbuilder_grow_formula(usize value);
 
+GEN_API StrBuilder        strbuilder_make_reserve        (AllocatorInfo allocator, ssize        capacity);
+GEN_API StrBuilder        strbuilder_make_length         (AllocatorInfo allocator, char const*  str,   ssize length);
+
 StrBuilder        strbuilder_make_c_str          (AllocatorInfo allocator, char const*  str);
 StrBuilder        strbuilder_make_str            (AllocatorInfo allocator, Str         str);
-StrBuilder        strbuilder_make_reserve        (AllocatorInfo allocator, ssize        capacity);
-StrBuilder        strbuilder_make_length         (AllocatorInfo allocator, char const*  str,   ssize length);
 StrBuilder        strbuilder_fmt                 (AllocatorInfo allocator, char*        buf,   ssize buf_size,  char const* fmt, ...);
 StrBuilder        strbuilder_fmt_buf             (AllocatorInfo allocator, char const*  fmt, ...);
 StrBuilder        strbuilder_join                (AllocatorInfo allocator, char const** parts, ssize num_parts, char const* glue);

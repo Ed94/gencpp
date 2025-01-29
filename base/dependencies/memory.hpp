@@ -41,10 +41,10 @@ void const* pointer_add_const( void const* ptr, ssize bytes );
 ssize pointer_diff( void const* begin, void const* end );
 
 //! Copy non-overlapping memory from source to destination.
-void* mem_copy( void* dest, void const* source, ssize size );
+GEN_API void* mem_copy( void* dest, void const* source, ssize size );
 
 //! Search for a constant value within the size limit at memory location.
-void const* mem_find( void const* data, u8 byte_value, ssize size );
+GEN_API void const* mem_find( void const* data, u8 byte_value, ssize size );
 
 //! Copy memory from source to destination.
 void* mem_move( void* dest, void const* source, ssize size );
@@ -119,17 +119,17 @@ void* resize_align( AllocatorInfo a, void* ptr, ssize old_size, ssize new_size, 
 /* define GEN_HEAP_ANALYSIS to enable this feature */
 /* call zpl_heap_stats_init at the beginning of the entry point */
 /* you can call zpl_heap_stats_check near the end of the execution to validate any possible leaks */
-void  heap_stats_init( void );
-ssize heap_stats_used_memory( void );
-ssize heap_stats_alloc_count( void );
-void  heap_stats_check( void );
+GEN_API void  heap_stats_init( void );
+GEN_API ssize heap_stats_used_memory( void );
+GEN_API ssize heap_stats_alloc_count( void );
+GEN_API void  heap_stats_check( void );
 
 //! Allocate/Resize memory using default options.
 
 //! Use this if you don't need a "fancy" resize allocation
 void* default_resize_align( AllocatorInfo a, void* ptr, ssize old_size, ssize new_size, ssize alignment );
 
-void* heap_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
+GEN_API void* heap_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags );
 
 //! The heap allocator backed by operating system's memory manager.
 constexpr AllocatorInfo heap( void ) { AllocatorInfo allocator = { heap_allocator_proc, nullptr }; return allocator; }
@@ -147,25 +147,25 @@ struct VirtualMemory
 };
 
 //! Initialize virtual memory from existing data.
-VirtualMemory vm_from_memory( void* data, ssize size );
+GEN_API VirtualMemory vm_from_memory( void* data, ssize size );
 
 //! Allocate virtual memory at address with size.
 
 //! @param addr The starting address of the region to reserve. If NULL, it lets operating system to decide where to allocate it.
 //! @param size The size to serve.
-VirtualMemory vm_alloc( void* addr, ssize size );
+GEN_API VirtualMemory vm_alloc( void* addr, ssize size );
 
 //! Release the virtual memory.
-b32 vm_free( VirtualMemory vm );
+GEN_API b32 vm_free( VirtualMemory vm );
 
 //! Trim virtual memory.
-VirtualMemory vm_trim( VirtualMemory vm, ssize lead_size, ssize size );
+GEN_API VirtualMemory vm_trim( VirtualMemory vm, ssize lead_size, ssize size );
 
 //! Purge virtual memory.
-b32 vm_purge( VirtualMemory vm );
+GEN_API b32 vm_purge( VirtualMemory vm );
 
 //! Retrieve VM's page size and alignment.
-ssize virtual_memory_page_size( ssize* alignment_out );
+GEN_API ssize virtual_memory_page_size( ssize* alignment_out );
 
 #pragma region Arena
 struct Arena;
@@ -173,7 +173,7 @@ struct Arena;
 AllocatorInfo arena_allocator_info( Arena* arena );
 
 // Remove static keyword and rename allocator_proc
-void* arena_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
+GEN_API void* arena_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
 
 // Add these declarations after the Arena struct
 Arena arena_init_from_allocator(AllocatorInfo backing, ssize size);
@@ -382,13 +382,13 @@ using FixedArena_4MB   = FixedArena< megabytes( 4 ) >;
 #pragma region Pool
 struct Pool;
 
-void* pool_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
+GEN_API void* pool_allocator_proc(void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags);
 
-Pool          pool_init(AllocatorInfo backing, ssize num_blocks, ssize block_size);
-Pool          pool_init_align(AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align);
-AllocatorInfo pool_allocator_info(Pool* pool);
-void          pool_clear(Pool* pool);
-void          pool_free(Pool* pool);
+        Pool          pool_init(AllocatorInfo backing, ssize num_blocks, ssize block_size);
+        Pool          pool_init_align(AllocatorInfo backing, ssize num_blocks, ssize block_size, ssize block_align);
+        AllocatorInfo pool_allocator_info(Pool* pool);
+GEN_API void          pool_clear(Pool* pool);
+        void          pool_free(Pool* pool);
 
 #if GEN_COMPILER_CPP && ! GEN_C_LIKE_CPP
 forceinline AllocatorInfo allocator_info(Pool& pool) { return pool_allocator_info(& pool); }
