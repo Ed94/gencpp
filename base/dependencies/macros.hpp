@@ -35,6 +35,9 @@
 
 #ifndef bit
 #define bit( Value )                         ( 1 << Value )
+#endif
+
+#ifndef bitfield_is_set
 #define bitfield_is_set( Type, Field, Mask ) ( (scast(Type, Mask) & scast(Type, Field)) == scast(Type, Mask) )
 #endif
 
