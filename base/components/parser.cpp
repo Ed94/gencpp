@@ -1388,9 +1388,18 @@ CodeFn parse_function_after_name(
 	CodeParams params = parse_params(parser_use_parenthesis);
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Parameters> )
 
+	Code suffix_specs = NullCode;
+
 	// TODO(Ed), Review old comment : These have to be kept separate from the return type's specifiers.
 	while ( left && tok_is_specifier(currtok) )
 	{
+		// For Unreal's PURE_VIRTUAL Support
+		Macro* macro = lookup_macro( currtok.Text );
+		if (macro && tok_is_specifier(currtok))
+		{
+			suffix_specs = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
+			continue;
+		}
 		if ( specifiers == nullptr )
 		{
 			specifiers = def_specifier( str_to_specifier( currtok.Text) );
@@ -1402,18 +1411,6 @@ CodeFn parse_function_after_name(
 		eat( currtok.Type );
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
-
-	Code suffix_specs = NullCode;
-
-	// For Unreal's PURE_VIRTUAL Support
-	if ( left )
-	{
-		Macro* macro = lookup_macro( currtok.Text );
-		if (macro && tok_is_specifier(currtok))
-		{
-			suffix_specs = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
-		}
-	}
 
 	CodeBody    body       = NullCode;
 	CodeComment inline_cmt = NullCode;
