@@ -550,6 +550,9 @@ void lex_found_token( LexContext* ctx )
 		if ( bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Attribute) ) {
 			ctx->token.Flags |= TF_Attribute;
 		}
+		if ( bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Specifier ) ) {
+			ctx->token.Flags |= TF_Specifier;
+		}
 	}
 	else
 	{

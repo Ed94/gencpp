@@ -575,7 +575,7 @@ struct AST_Fn
 			CodeTypename    ReturnType;
 			CodeParams      Params;
 			CodeBody        Body;
-			char            _PAD_PROPERTIES_ [ sizeof(AST*) ];
+			Code            SuffixSpecs;  // Thanks Unreal
 		};
 	};
 	StrCached  Name;

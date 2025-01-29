@@ -5,6 +5,7 @@
 
 #pragma region Macros
 
+#ifndef GEN_API
 #if GEN_COMPILER_MSVC
     #ifdef GEN_DYN_LINK
         #ifdef GEN_DYN_EXPORT
@@ -22,6 +23,7 @@
         #define GEN_API  // Empty for static builds
     #endif
 #endif
+#endif // GEN_API
 
 #ifndef global
 #define global        static    // Global variables

@@ -186,6 +186,8 @@ enum EMacroFlags : u16
 	// (MUST BE OF MT_Statement TYPE)
 	MF_Allow_As_Definition = bit(4),
 
+	MF_Allow_As_Specifier = bit(5), // Created for Unreal's PURE_VIRTUAL
+
 	MF_Null           = 0,
 	MF_UnderlyingType = GEN_U16_MAX,
 };

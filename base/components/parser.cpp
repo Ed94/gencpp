@@ -1403,6 +1403,18 @@ CodeFn parse_function_after_name(
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
 
+	Code suffix_specs = NullCode;
+
+	// For Unreal's PURE_VIRTUAL Support
+	if ( left )
+	{
+		Macro* macro = lookup_macro( currtok.Text );
+		if (macro && tok_is_specifier(currtok))
+		{
+			suffix_specs = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
+		}
+	}
+
 	CodeBody    body       = NullCode;
 	CodeComment inline_cmt = NullCode;
 	if ( check( Tok_BraceCurly_Open ) )
@@ -1478,6 +1490,9 @@ CodeFn parse_function_after_name(
 
 	if ( specifiers )
 		result->Specs = specifiers;
+
+	if ( suffix_specs )
+		result->SuffixSpecs = suffix_specs;
 
 	result->ReturnType = ret_type;
 

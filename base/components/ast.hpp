@@ -400,7 +400,7 @@ struct AST
 			};
 			union {
 				Code  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
-				Code  SuffixSpecs;      // Only used with typenames, to store the function suffix if typename is function signature. ( May not be needed )
+				Code  SuffixSpecs;      // Typename, Function (Thanks Unreal)
 				Code  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
 		};

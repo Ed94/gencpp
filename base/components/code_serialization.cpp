@@ -589,6 +589,10 @@ void fn_to_strbuilder_def(CodeFn self, StrBuilder* result )
 		}
 	}
 
+	// This is bodged in for now SOLEY for Unreal's PURE_VIRTUAL functional macro
+	if ( self->SuffixSpecs )
+		strbuilder_append_fmt( result, " %SB", code_to_strbuilder(self->SuffixSpecs) );
+
 	strbuilder_append_fmt( result, "\n{\n%SB\n}\n", body_to_strbuilder(self->Body) );
 }
 
@@ -646,7 +650,12 @@ void fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result )
 
 	if ( self->Specs && specifiers_has(self->Specs, Spec_Pure ) >= 0 )
 		strbuilder_append_str( result, txt(" = 0;") );
-	else if (self->Body)
+
+	// This is bodged in for now SOLEY for Unreal's PURE_VIRTUAL functional macro (I kept it open ended for other jank)
+	if ( self->SuffixSpecs )
+		strbuilder_append_fmt( result, " %SB", code_to_strbuilder(self->SuffixSpecs) );
+
+	if (self->Body)
 		strbuilder_append_fmt( result, " = %SB;", body_to_strbuilder(self->Body) );
 
 	if ( self->InlineCmt )
