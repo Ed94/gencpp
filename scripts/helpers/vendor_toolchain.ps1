@@ -344,15 +344,17 @@ if ( $vendor -match "clang" )
 		}
 
 		# Check if output is a static library
-		# if ( $binary -match '\.lib$' )
-		# {
-			# $lib_args  = @()
+		if ( $binary -match '\.lib$' )
+		{
+			$lib_args  = @()
 			# $lib_args += $flag_nologo
 			# $lib_args += $flag_link_win_machine_64
 			# $lib_args += ( $flag_link_win_path_output + $binary )
-			# $lib_args += $object
-			# return run-archiver $archiver $binary $lib_args
-		# }
+			# $lib_args += '--format=windows'
+			# $lib_args += '-X64'
+			$lib_args += $object
+			return run-archiver $archiver $binary $lib_args
+		}
 
 		$linker_args += $object
 		return run-linker $linker $binary $linker_args
