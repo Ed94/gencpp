@@ -25,8 +25,12 @@
 #endif
 #endif // GEN_API
 
-#ifndef global
-#define global        static    // Global variables
+#ifndef global // Global variables
+#	ifdef GEN_DYN_EXPORT
+#		define global         
+#	else
+#		define global static
+#	endif
 #endif
 #ifndef internal
 #define internal      static    // Internal linkage

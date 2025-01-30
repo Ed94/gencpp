@@ -280,6 +280,7 @@ if ( $c_lib_dyn )
 	$compiler_args += $flag_c11
 	$compiler_args += ( $flag_define + 'GEN_DYN_LINK' )
 	$compiler_args += ( $flag_define + 'GEN_DYN_EXPORT' )
+	$compiler_args += ( $flag_define + 'GEN_DEFINE_LIBRARY_CODE_CONSTANTS' )
  
 	$linker_args = @()
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $path_dll

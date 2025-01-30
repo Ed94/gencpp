@@ -2045,9 +2045,12 @@ Token parse_identifier( bool* possible_member_function )
 	Token name = currtok;
 	_ctx->parser.Scope->Name = name.Text;
 
+	Macro* macro = lookup_macro(currtok.Text);
+	b32 accept_as_identifier = macro && bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Identifier );
+
 	// Typename can be: '::' <name>
 	// If that is the case first  option will be Tok_Access_StaticSymbol below
-	if (check(Tok_Identifier))
+	if (check(Tok_Identifier) || accept_as_identifier)
 		eat( Tok_Identifier );
 	// <Name>
 
