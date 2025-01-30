@@ -717,6 +717,13 @@ Code parse_class_struct( TokType which, bool inplace_def )
 	}
 	// <ModuleFlags> <class/struct> <Attributes> <Name>
 
+	CodeSpecifiers specifiers = NullCode;
+	if ( check(Tok_Spec_Final)) {
+		specifiers = def_specifier(Spec_Final);
+		eat(Tok_Spec_Final);
+	}
+	// <ModuleFlags> <class/struct> <Attributes> <Name> <final>
+
 	local_persist
 	char interface_arr_mem[ kilobytes(4) ] = {0};
 	Array(CodeTypename) interfaces; {
@@ -728,22 +735,22 @@ Code parse_class_struct( TokType which, bool inplace_def )
 	if ( check( Tok_Assign_Classifer ) )
 	{
 		eat( Tok_Assign_Classifer );
-		// <ModuleFlags> <class/struct> <Attributes> <Name> :
+		// <ModuleFlags> <class/struct> <Attributes> <Name> <final> :
 
 		if ( tok_is_access_specifier(currtok) ) {
 			access = tok_to_access_specifier(currtok);
-			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier>
+			// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier>
 			eat( currtok.Type );
 		}
 
 		Token parent_tok = parse_identifier(nullptr);
 		parent = def_type( parent_tok.Text );
-		// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Parent/Interface Name>
+		// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Parent/Interface Name>
 
 		while ( check(Tok_Comma) )
 		{
 			eat( Tok_Comma );
-			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>,
+			// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Name>,
 
 			if ( tok_is_access_specifier(currtok) ) {
 				eat(currtok.Type);
@@ -751,32 +758,32 @@ Code parse_class_struct( TokType which, bool inplace_def )
 			Token interface_tok = parse_identifier(nullptr);
 
 			array_append( interfaces, def_type( interface_tok.Text ) );
-			// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ...
+			// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Name>, ...
 		}
 	}
 
 	if ( check( Tok_BraceCurly_Open ) ) {
 		body = parse_class_struct_body( which, name );
 	}
-	// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }
+	// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Name>, ... { <Body> }
 
 	CodeComment inline_cmt = NullCode;
 	if ( ! inplace_def )
 	{
 		Token stmt_end = currtok;
 		eat( Tok_Statement_End );
-		// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> };
+		// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Name>, ... { <Body> };
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
-		// <ModuleFlags> <class/struct> <Attributes> <Name> : <Access Specifier> <Name>, ... { <Body> }; <InlineCmt>
+		// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Name>, ... { <Body> }; <InlineCmt>
 	}
 
 	if ( which == Tok_Decl_Class )
-		result = cast(Code, def_class( name.Text, def_assign( body, parent, access, attributes, interfaces, scast(s32, array_num(interfaces)), mflags ) ));
+		result = cast(Code, def_class( name.Text, def_assign( body, parent, access, attributes, interfaces, scast(s32, array_num(interfaces)), specifiers, mflags ) ));
 
 	else
-		result = cast(Code, def_struct( name.Text, def_assign( body, (CodeTypename)parent, access, attributes, interfaces, scast(s32, array_num(interfaces)), mflags ) ));
+		result = cast(Code, def_struct( name.Text, def_assign( body, (CodeTypename)parent, access, attributes, interfaces, scast(s32, array_num(interfaces)), specifiers, mflags ) ));
 
 	if ( inline_cmt )
 		result->InlineCmt = cast(Code, inline_cmt);
@@ -947,10 +954,6 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
 				break;
 			}
-			case Tok_Preprocess_Macro_Expr: {
-				log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
-				return InvalidCode;
-			}
 
 			// case Tok_Preprocess_Macro:
 			// 	// <Macro>
@@ -976,6 +979,15 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				break;
 			}
 
+			case Tok_Preprocess_Macro_Expr:
+			{
+				if ( ! tok_is_attribute(currtok))
+				{
+					log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
+					return InvalidCode;
+				}
+			}
+			//! Fallthrough intended
 			case Tok_Attribute_Open:
 			case Tok_Decl_GNU_Attribute:
 			case Tok_Decl_MSVC_Attribute:
@@ -1143,27 +1155,44 @@ Code parse_complicated_definition( TokType which )
 {
 	push_scope();
 
-	bool is_inplace = false;
+	b32 is_inplace = false;
+	b32 is_fn_def  = false;
 
 	TokArray tokens = _ctx->parser.Tokens;
 
 	s32 idx         = tokens.Idx;
 	s32 level       = 0;
+	b32 had_def     = false;
+	b32 had_paren   = false;
 	for ( ; idx < array_num(tokens.Arr); idx++ )
 	{
 		if ( tokens.Arr[ idx ].Type == Tok_BraceCurly_Open )
 			level++;
 
-		if ( tokens.Arr[ idx ].Type == Tok_BraceCurly_Close )
+		if ( tokens.Arr[ idx ].Type == Tok_BraceCurly_Close ) {
 			level--;
+			had_def = level == 0;
+		}
 
-		if ( level == 0 && tokens.Arr[ idx ].Type == Tok_Statement_End )
+		b32 found_fn_def = had_def && had_paren;
+
+		if ( level == 0 && (tokens.Arr[ idx ].Type == Tok_Statement_End || found_fn_def) )
 			break;
+	}
+
+	is_fn_def = had_def && had_paren;
+	if (is_fn_def)
+	{
+		// Function definition with <which> on return type
+		Code result = parse_operator_function_or_variable(false, NullCode, NullCode);
+		// <which> <typename>(...) ... { ... }
+		parser_pop(& _ctx->parser);
+		return result;
 	}
 
 	if ( ( idx - 2 ) == tokens.Idx )
 	{
-		// Its a forward declaration only
+		// It's a forward declaration only
 		Code result = parse_forward_or_definition( which, is_inplace );
 		// <class, enum, struct, or union> <Name>;
 		parser_pop(& _ctx->parser);
@@ -1427,13 +1456,27 @@ CodeFn parse_function_after_name(
 	else if ( check(Tok_Operator) && currtok.Text.Ptr[0] == '=' )
 	{
 		eat(Tok_Operator);
-		specifiers_append(specifiers, Spec_Pure );
+		if ( specifiers == nullptr )
+		{
+			specifiers       = (CodeSpecifiers) make_code();
+			specifiers->Type = CT_Specifiers;
+		}
+		if ( str_are_equal(nexttok.Text, txt("delete")))
+		{
+			specifiers_append(specifiers, Spec_Delete);
+			eat(currtok.Type);	
+			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> = delete
+		}
+		else
+		{
+			specifiers_append(specifiers, Spec_Pure );
 
-		eat( Tok_Number);
+			eat( Tok_Number);
+			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> = 0
+		}
 		Token stmt_end = currtok;
 		eat( Tok_Statement_End );
-		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> = 0;
-
+		
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
 		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>; <InlineCmt>
@@ -1684,10 +1727,6 @@ CodeBody parse_global_nspace( CodeType which )
 				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
 				break;
 			}
-			case Tok_Preprocess_Macro_Expr: {
-				log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
-				return InvalidCode;
-			}
 
 			case Tok_Preprocess_Pragma: {
 				member = cast(Code, parse_pragma());
@@ -1720,6 +1759,16 @@ CodeBody parse_global_nspace( CodeType which )
 				// import ...
 				log_failure( "gen::%s: This function is not implemented" );
 				return InvalidCode;
+			}
+			break;
+
+			case Tok_Preprocess_Macro_Expr: 
+			{
+				if (tok_is_attribute(currtok))
+				{
+					log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
+					return InvalidCode;
+				}
 			}
 			//! Fallthrough intentional
 			case Tok_Attribute_Open:
@@ -1995,7 +2044,11 @@ Token parse_identifier( bool* possible_member_function )
 
 	Token name = currtok;
 	_ctx->parser.Scope->Name = name.Text;
-	eat( Tok_Identifier );
+
+	// Typename can be: '::' <name>
+	// If that is the case first  option will be Tok_Access_StaticSymbol below
+	if (check(Tok_Identifier))
+		eat( Tok_Identifier );
 	// <Name>
 
 	parse_template_args( & name );
@@ -2415,6 +2468,25 @@ CodeOperator parse_operator_after_ret_type(
 		eat( currtok.Type );
 	}
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>
+		
+	// TODO(Ed): Add proper "delete" and "new" awareness
+	// We're dealing with either a "= delete" or operator deletion
+	if (check(Tok_Operator) && currtok.Text.Ptr[0] == '=')
+	{
+		eat(currtok.Type);
+		if ( ! str_are_equal(currtok.Text, txt("delete")))
+		{
+			log_failure("Expected delete after = in operator forward instead found \"%S\"\n%SB", currtok.Text, parser_to_strbuilder(_ctx->parser));
+			parser_pop(& _ctx->parser);
+			return InvalidCode;
+		}
+		if (specifiers == nullptr)
+			specifiers = def_specifier( Spec_Delete );
+		else 
+			specifiers_append(specifiers, Spec_Delete);
+		eat(currtok.Type);
+		// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers> = delete
+	}
 
 	// Parse Body
 	CodeBody    body       = { nullptr };
@@ -2465,6 +2537,24 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 
 	CodeTypename type = parser_parse_type( parser_not_from_template, nullptr );
 	// <Attributes> <Specifiers> <ReturnType/ValueType>
+
+	// Thanks Unreal
+	CodeAttributes post_rt_attributes = parse_attributes();
+	if (post_rt_attributes)
+	{
+		if (attributes)
+		{
+			StrBuilder merged = strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S %S", attributes->Content, post_rt_attributes->Content);
+			attributes->Content = cache_str(strbuilder_to_str(merged));
+		}
+		else
+		{
+			attributes = post_rt_attributes;
+		}
+		// <Attributes> <Specifiers> <ReturnType/ValueType> <Attributes>
+		// CONVERTED TO:
+		// <Attributes> <Specifiers> <ReturnType/ValueType>
+	}
 
 	if ( type == InvalidCode ) {
 		parser_pop(& _ctx->parser);
@@ -2713,10 +2803,8 @@ CodeParams parse_params( bool use_template_capture )
 			// ( <Macro> <ValueType> <Name> <PostNameMacro>
 		}
 
-		// In template captures you can have a typename have direct assignment without a name
-		// typename = typename ...
-		// Which would result in a static value type from a struct expansion (traditionally)
-		if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
+		// C++ allows typename = expression... so anything goes....
+		if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 		{
 			eat( Tok_Operator );
 			// ( <Macro> <ValueType> <Name>  =
@@ -2824,10 +2912,8 @@ CodeParams parse_params( bool use_template_capture )
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <PostNameMacro>
 			}
 
-			// In template captures you can have a typename have direct assignment without a name
-			// typename = typename ...
-			// Which would result in a static value type from a struct expansion (traditionally)
-			if ( ( name.Text.Ptr || use_template_capture ) && bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
+			/// C++ allows typename = expression... so anything goes....
+			if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
 			{
 				eat( Tok_Operator );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> =
@@ -3451,6 +3537,7 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 		body = cast(CodeBody, parse_function_body());
 		// <Name> ( <Parameters> ) { <Body> }
 	}
+	// TODO(Ed): Add support for detecting constructor deletion
 	else if ( check( Tok_Operator) && currtok.Text.Ptr[ 0 ] == '=' )
 	{
 		body = cast(CodeBody, parse_assignment_expression());
@@ -5438,7 +5525,10 @@ CodeUsing parser_parse_using()
 
 	if ( ! is_namespace )
 	{
-		if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) )
+		attributes = parse_attributes();
+		// <ModuleFlags> using <Name> <Attributes>
+		
+		if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ))
 		{
 			attributes = parse_attributes();
 			// <ModuleFlags> using <Name> <Attributes>

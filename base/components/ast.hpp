@@ -378,7 +378,7 @@ struct AST
 		{
 			Code      InlineCmt;       // Class, Constructor, Destructor, Enum, Friend, Functon, Operator, OpCast, Struct, Typedef, Using, Variable
 			Code      Attributes;      // Class, Enum, Function, Struct, Typedef, Union, Using, Variable // TODO(Ed): Parameters can have attributes
-			Code      Specs;           // Destructor, Function, Operator, Typename, Variable
+			Code      Specs;           // Class, Destructor, Function, Operator, Struct, Typename, Variable
 			union {
 				Code  InitializerList; // Constructor
 				Code  ParentType;      // Class, Struct, ParentType->Next has a possible list of interfaces.

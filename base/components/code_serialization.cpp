@@ -186,10 +186,16 @@ void class_to_strbuilder_def( CodeClass self, StrBuilder* result )
 		strbuilder_append_fmt( result, "%SB ", attributes_to_strbuilder(self->Attributes) );
 	}
 
+	if ( self->Name.Len )
+		strbuilder_append_str( result, self->Name );
+
+	if (self->Specs && specifiers_has(self->Specs, Spec_Final) > -1)
+		strbuilder_append_str(result, txt(" final"));
+
 	if ( self->ParentType )
 	{
 		Str access_level = access_spec_to_str( self->ParentAccess );
-		strbuilder_append_fmt( result, "%S : %S %SB", self->Name, access_level, typename_to_strbuilder(self->ParentType) );
+		strbuilder_append_fmt( result, " : %S %SB", self->Name, access_level, typename_to_strbuilder(self->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, self->ParentType->Next);
 		if ( interface )
@@ -200,10 +206,6 @@ void class_to_strbuilder_def( CodeClass self, StrBuilder* result )
 			strbuilder_append_fmt( result, ", public %SB", typename_to_strbuilder(interface) );
 			interface = interface->Next ? cast(CodeTypename, interface->Next) : NullCode;
 		}
-	}
-	else if ( self->Name.Len )
-	{
-		strbuilder_append_str( result, self->Name );
 	}
 
 	if ( self->InlineCmt )
@@ -646,10 +648,12 @@ void fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result )
 				strbuilder_append_fmt( result, " %.*s", spec_str.Len, spec_str.Ptr );
 			}
 		}
-	}
 
-	if ( self->Specs && specifiers_has(self->Specs, Spec_Pure ) >= 0 )
-		strbuilder_append_str( result, txt(" = 0;") );
+		if ( specifiers_has(self->Specs, Spec_Pure ) >= 0 )
+			strbuilder_append_str( result, txt(" = 0") );
+		else if ( specifiers_has(self->Specs, Spec_Delete ) >= 0 )
+			strbuilder_append_str( result, txt(" = delete") );
+	}
 
 	// This is bodged in for now SOLEY for Unreal's PURE_VIRTUAL functional macro (I kept it open ended for other jank)
 	if ( self->SuffixSpecs )
@@ -1096,11 +1100,17 @@ void struct_to_strbuilder_def( CodeStruct self, StrBuilder* result )
 		strbuilder_append_fmt( result, "%SB ", attributes_to_strbuilder(self->Attributes) );
 	}
 
+	if ( self->Name.Len )
+		strbuilder_append_str( result, self->Name );
+
+	if (self->Specs && specifiers_has(self->Specs, Spec_Final))
+		strbuilder_append_str( result, txt(" final"));
+
 	if ( self->ParentType )
 	{
 		Str access_level = access_spec_to_str( self->ParentAccess );
 
-		strbuilder_append_fmt( result, "%S : %S %SB", self->Name, access_level, typename_to_strbuilder(self->ParentType) );
+		strbuilder_append_fmt( result, " : %S %SB", access_level, typename_to_strbuilder(self->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, self->ParentType->Next);
 		if ( interface )
@@ -1111,10 +1121,6 @@ void struct_to_strbuilder_def( CodeStruct self, StrBuilder* result )
 			strbuilder_append_fmt( result, ", %SB", typename_to_strbuilder(interface) );
 			interface = interface->Next ? cast( CodeTypename, interface->Next) : NullCode;
 		}
-	}
-	else if ( self->Name.Len )
-	{
-		strbuilder_append_str( result, self->Name );
 	}
 
 	if ( self->InlineCmt )

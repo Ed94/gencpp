@@ -532,6 +532,7 @@ CodeClass def_class( Str name, Opts_def_struct p )
 	result->Name         = cache_str( name );
 	result->ModuleFlags  = p.mflags;
 	result->Attributes   = p.attributes;
+	result->Specs        = p.specifiers;
 	result->ParentAccess = p.parent_access;
 	result->ParentType   = p.parent;
 	if ( p.body )
@@ -1065,6 +1066,7 @@ CodeStruct def_struct( Str name, Opts_def_struct p )
 		result->Type = CT_Struct_Fwd;
 	}
 	result->Attributes   = p.attributes;
+	result->Specs        = p.specifiers;
 	result->ParentAccess = p.parent_access;
 	result->ParentType   = p.parent;
 

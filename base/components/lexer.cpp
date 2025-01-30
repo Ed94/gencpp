@@ -264,7 +264,6 @@ s32 lex_preprocessor_define( LexContext* ctx )
 }
 
 // TODO(Ed): We need to to attempt to recover from a lex failure?
-forceinline
 s32 lex_preprocessor_directive( LexContext* ctx )
 {
 	char const* hash = ctx->scanner;
@@ -480,7 +479,6 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 	return Lex_Continue; // Skip found token, its all handled here.
 }
 
-forceinline
 void lex_found_token( LexContext* ctx )
 {
 	if ( ctx->token.Type != Tok_Invalid ) {

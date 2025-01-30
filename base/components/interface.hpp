@@ -156,6 +156,7 @@ struct Opts_def_struct {
 	CodeAttributes attributes;
 	CodeTypename*  interfaces;
 	s32            num_interfaces;
+	CodeSpecifiers specifiers; // Only used for final specifier for now.
 	ModuleFlag     mflags;
 };
 GEN_API CodeClass def_class( Str name, Opts_def_struct opts GEN_PARAM_DEFAULT );

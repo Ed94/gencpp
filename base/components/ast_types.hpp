@@ -100,7 +100,7 @@ struct AST_Class
 		{
 			CodeComment     InlineCmt; // Only supported by forward declarations
 			CodeAttributes  Attributes;
-			char            _PAD_SPECS_ [ sizeof(AST*) ];
+			CodeSpecifiers  Specs; // Support for final
 			CodeTypename    ParentType;
 			char            _PAD_PARAMS_[ sizeof(AST*) ];
 			CodeBody        Body;
@@ -970,7 +970,7 @@ struct AST_Struct
 		{
 			CodeComment    InlineCmt;
 			CodeAttributes Attributes;
-			char           _PAD_SPECS_ [ sizeof(AST*) ];
+			CodeSpecifiers Specs; // Support for final
 			CodeTypename   ParentType;
 			char           _PAD_PARAMS_[ sizeof(AST*) ];
 			CodeBody       Body;

@@ -24,4 +24,5 @@ Final,            final
 NoExceptions,     noexcept
 Override,         override
 Pure,             = 0
+Delete,           = delete
 Volatile,         volatile

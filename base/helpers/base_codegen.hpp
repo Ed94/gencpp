@@ -220,6 +220,7 @@ CodeBody gen_especifier( char const* path, bool use_c_definition = false )
 				case Spec_NoExceptions:
 				case Spec_Override:
 				case Spec_Pure:
+				case Spec_Delete:
 				case Spec_Volatile:
 					return true;
 		
