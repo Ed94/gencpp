@@ -74,7 +74,7 @@ bool code_is_valid(Code self)
 	return self != nullptr && self->Type != CT_Invalid;
 }
 forceinline
-bool code_has_entries(AST* self)
+bool code_has_entries(Code self)
 {
 	GEN_ASSERT(self);
 	return self->NumEntries > 0;
@@ -169,12 +169,12 @@ void class_add_interface( CodeClass self, CodeTypename type )
 		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}
 
-	while ( possible_slot != nullptr )
+	while ( possible_slot->Next != nullptr )
 	{
 		possible_slot = cast(CodeTypename, possible_slot->Next);
 	}
 
-	possible_slot = type;
+	possible_slot->Next = type;
 }
 #pragma endregion CodeClass
 
@@ -378,12 +378,12 @@ void struct_add_interface(CodeStruct self, CodeTypename type )
 		// then you'll need to move this over to ParentType->next and update ParentAccess accordingly.
 	}
 
-	while ( possible_slot != nullptr )
+	while ( possible_slot->Next != nullptr )
 	{
-		possible_slot = cast(CodeTypename, possible_slot->Next);
+		possible_slot->Next = cast(CodeTypename, possible_slot->Next);
 	}
 
-	possible_slot = type;
+	possible_slot->Next = type;
 }
 #pragma endregion Code
 

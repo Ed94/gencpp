@@ -239,18 +239,18 @@ template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( 
 
 #pragma region Code C-Interface
 
-GEN_API void       code_append           (Code code, Code other );
+        void       code_append           (Code code, Code other );
 GEN_API Str        code_debug_str        (Code code);
 GEN_API Code       code_duplicate        (Code code);
-GEN_API Code*      code_entry            (Code code, u32 idx );
-GEN_API bool       code_has_entries      (Code code);
-GEN_API bool       code_is_body          (Code code);
+        Code*      code_entry            (Code code, u32 idx );
+        bool       code_has_entries      (Code code);
+        bool       code_is_body          (Code code);
 GEN_API bool       code_is_equal         (Code code, Code other);
-GEN_API bool       code_is_valid         (Code code);
-GEN_API void       code_set_global       (Code code);
+        bool       code_is_valid         (Code code);
+        void       code_set_global       (Code code);
 GEN_API StrBuilder code_to_strbuilder    (Code self );
 GEN_API void       code_to_strbuilder_ptr(Code self, StrBuilder* result );
-GEN_API Str        code_type_str         (Code self );
+        Str        code_type_str         (Code self );
 GEN_API bool       code_validate_body    (Code self );
 
 #pragma endregion Code C-Interface
@@ -399,7 +399,7 @@ struct AST
 				Code  Value;            // Parameter, Variable
 			};
 			union {
-				Code  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+				Code  NextVar;          // Variable
 				Code  SuffixSpecs;      // Typename, Function (Thanks Unreal)
 				Code  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
