@@ -23,47 +23,47 @@ GEN_API StrBuilder body_to_strbuilder       ( CodeBody body );
 GEN_API void       body_to_strbuilder_ref   ( CodeBody body, StrBuilder* result );
 GEN_API void       body_to_strbuilder_export( CodeBody body, StrBuilder* result );
 
-GEN_API Code begin_CodeBody( CodeBody body);
-GEN_API Code end_CodeBody  ( CodeBody body );
-GEN_API Code next_CodeBody ( CodeBody body, Code entry_iter );
+Code begin_CodeBody( CodeBody body);
+Code end_CodeBody  ( CodeBody body );
+Code next_CodeBody ( CodeBody body, Code entry_iter );
 
-GEN_API void       class_add_interface    ( CodeClass self, CodeTypename interface );
+        void       class_add_interface    ( CodeClass self, CodeTypename interface );
 GEN_API StrBuilder class_to_strbuilder    ( CodeClass self );
 GEN_API void       class_to_strbuilder_def( CodeClass self, StrBuilder* result );
 GEN_API void       class_to_strbuilder_fwd( CodeClass self, StrBuilder* result );
 
-GEN_API void             define_params_append           (CodeDefineParams appendee, CodeDefineParams other );
-GEN_API CodeDefineParams define_params_get              (CodeDefineParams params, s32 idx);
-GEN_API bool             define_params_has_entries      (CodeDefineParams params );
+        void             define_params_append           (CodeDefineParams appendee, CodeDefineParams other );
+        CodeDefineParams define_params_get              (CodeDefineParams params, s32 idx);
+        bool             define_params_has_entries      (CodeDefineParams params );
 GEN_API StrBuilder       define_params_to_strbuilder    (CodeDefineParams params );
 GEN_API void             define_params_to_strbuilder_ref(CodeDefineParams params, StrBuilder* result );
 
-GEN_API CodeDefineParams begin_CodeDefineParams(CodeDefineParams params);
-GEN_API CodeDefineParams end_CodeDefineParams  (CodeDefineParams params);
-GEN_API CodeDefineParams next_CodeDefineParams (CodeDefineParams params, CodeDefineParams entry_iter);
+CodeDefineParams begin_CodeDefineParams(CodeDefineParams params);
+CodeDefineParams end_CodeDefineParams  (CodeDefineParams params);
+CodeDefineParams next_CodeDefineParams (CodeDefineParams params, CodeDefineParams entry_iter);
 
-GEN_API void       params_append           (CodeParams appendee, CodeParams other );
-GEN_API CodeParams params_get              (CodeParams params, s32 idx);
-GEN_API bool       params_has_entries      (CodeParams params );
+        void       params_append           (CodeParams appendee, CodeParams other );
+        CodeParams params_get              (CodeParams params, s32 idx);
+        bool       params_has_entries      (CodeParams params );
 GEN_API StrBuilder params_to_strbuilder    (CodeParams params );
 GEN_API void       params_to_strbuilder_ref(CodeParams params, StrBuilder* result );
 
-GEN_API CodeParams begin_CodeParams(CodeParams params);
-GEN_API CodeParams end_CodeParams  (CodeParams params);
-GEN_API CodeParams next_CodeParams (CodeParams params, CodeParams entry_iter);
+CodeParams begin_CodeParams(CodeParams params);
+CodeParams end_CodeParams  (CodeParams params);
+CodeParams next_CodeParams (CodeParams params, CodeParams entry_iter);
 
-GEN_API bool       specifiers_append           (CodeSpecifiers specifiers, Specifier spec);
-GEN_API bool       specifiers_has              (CodeSpecifiers specifiers, Specifier spec);
-GEN_API s32        specifiers_index_of         (CodeSpecifiers specifiers, Specifier spec);
-GEN_API s32        specifiers_remove           (CodeSpecifiers specifiers, Specifier to_remove );
+        bool       specifiers_append           (CodeSpecifiers specifiers, Specifier spec);
+        bool       specifiers_has              (CodeSpecifiers specifiers, Specifier spec);
+        s32        specifiers_index_of         (CodeSpecifiers specifiers, Specifier spec);
+        s32        specifiers_remove           (CodeSpecifiers specifiers, Specifier to_remove );
 GEN_API StrBuilder specifiers_to_strbuilder    (CodeSpecifiers specifiers);
 GEN_API void       specifiers_to_strbuilder_ref(CodeSpecifiers specifiers, StrBuilder* result);
 
-GEN_API Specifier* begin_CodeSpecifiers(CodeSpecifiers specifiers);
-GEN_API Specifier* end_CodeSpecifiers  (CodeSpecifiers specifiers);
-GEN_API Specifier* next_CodeSpecifiers (CodeSpecifiers specifiers, Specifier* spec_iter);
+Specifier* begin_CodeSpecifiers(CodeSpecifiers specifiers);
+Specifier* end_CodeSpecifiers  (CodeSpecifiers specifiers);
+Specifier* next_CodeSpecifiers (CodeSpecifiers specifiers, Specifier* spec_iter);
 
-GEN_API void       struct_add_interface    (CodeStruct self, CodeTypename interface);
+        void       struct_add_interface    (CodeStruct self, CodeTypename interface);
 GEN_API StrBuilder struct_to_strbuilder    (CodeStruct self);
 GEN_API void       struct_to_strbuilder_fwd(CodeStruct self, StrBuilder* result);
 GEN_API void       struct_to_strbuilder_def(CodeStruct self, StrBuilder* result);
@@ -146,9 +146,9 @@ GEN_API void       union_to_strbuilder_fwd(CodeUnion self, StrBuilder* result);
 
 GEN_API StrBuilder using_to_strbuilder    (CodeUsing op_cast );
 GEN_API void       using_to_strbuilder_ref(CodeUsing op_cast, StrBuilder* result );
-GEN_API void       using_to_strbuilder_ns (CodeUsing op_cast, StrBuilder* result );
+        void       using_to_strbuilder_ns (CodeUsing op_cast, StrBuilder* result );
 
-GEN_API StrBuilder var_to_strbuilder    (CodeVar self);
+        StrBuilder var_to_strbuilder    (CodeVar self);
 GEN_API void       var_to_strbuilder_ref(CodeVar self, StrBuilder* result);
 
 // TODO(Ed): Move C-Interface inlines here...

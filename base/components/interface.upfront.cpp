@@ -1114,7 +1114,7 @@ CodeTypename def_type( Str name, Opts_def_type p )
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
-	Code           arrayexpr  = p.arrayexpr;
+	Code           array_expr = p.array_expr;
 	CodeSpecifiers specifiers = p.specifiers;
 	CodeAttributes attributes = p.attributes;
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes ) {
@@ -1127,8 +1127,8 @@ CodeTypename def_type( Str name, Opts_def_type p )
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
-	if ( p.arrayexpr && p.arrayexpr->Type != CT_Untyped ) {
-		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", code_debug_str((Code)p.arrayexpr) );
+	if ( p.array_expr && p.array_expr->Type != CT_Untyped ) {
+		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", code_debug_str((Code)p.array_expr) );
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
@@ -1138,7 +1138,7 @@ CodeTypename def_type( Str name, Opts_def_type p )
 	result->Type       = CT_Typename;
 	result->Attributes = p.attributes;
 	result->Specs      = p.specifiers;
-	result->ArrExpr    = p.arrayexpr;
+	result->ArrExpr    = p.array_expr;
 	result->TypeTag    = p.type_tag;
 	return result;
 }

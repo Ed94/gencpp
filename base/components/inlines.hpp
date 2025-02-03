@@ -3,6 +3,285 @@
 #include "interface.hpp"
 #endif
 
+#pragma region Serialization
+inline
+StrBuilder attributes_to_strbuilder(CodeAttributes attributes) {
+	GEN_ASSERT(attributes);
+	char* raw = ccast(char*, str_duplicate( attributes->Content, get_context()->Allocator_Temp ).Ptr);
+	StrBuilder result = { raw };
+	return result;
+}
+
+inline
+void attributes_to_strbuilder_ref(CodeAttributes attributes, StrBuilder* result) {
+	GEN_ASSERT(attributes);
+	GEN_ASSERT(result);
+	strbuilder_append_str(result, attributes->Content);
+}
+
+inline
+StrBuilder comment_to_strbuilder(CodeComment comment) {
+	GEN_ASSERT(comment);
+	char* raw = ccast(char*, str_duplicate( comment->Content, get_context()->Allocator_Temp ).Ptr);
+	StrBuilder result = { raw };
+	return result;
+}
+
+inline
+void body_to_strbuilder_ref( CodeBody body, StrBuilder* result )
+{
+	GEN_ASSERT(body   != nullptr);
+	GEN_ASSERT(result != nullptr);
+	Code curr = body->Front;
+	s32  left = body->NumEntries;
+	while ( left -- )
+	{
+		code_to_strbuilder_ptr(curr, result);
+		// strbuilder_append_fmt( result, "%SB", code_to_strbuilder(curr) );
+		++curr;
+	}
+}
+
+inline
+void comment_to_strbuilder_ref(CodeComment comment, StrBuilder* result) {
+	GEN_ASSERT(comment);
+	GEN_ASSERT(result);
+	strbuilder_append_str(result, comment->Content);
+}
+
+inline
+StrBuilder define_to_strbuilder(CodeDefine define)
+{
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
+	define_to_strbuilder_ref(define, & result);
+	return result;
+}
+
+inline
+StrBuilder define_params_to_strbuilder(CodeDefineParams params)
+{
+	GEN_ASSERT(params);
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
+	define_params_to_strbuilder_ref( params, & result );
+	return result;
+}
+
+inline
+StrBuilder exec_to_strbuilder(CodeExec exec)
+{
+	GEN_ASSERT(exec);
+	char* raw = ccast(char*, str_duplicate( exec->Content, _ctx->Allocator_Temp ).Ptr);
+	StrBuilder result = { raw };
+	return result;
+}
+
+inline
+void extern_to_strbuilder(CodeExtern self, StrBuilder* result )
+{
+	if ( self->Body )
+		strbuilder_append_fmt( result, "extern \"%S\"\n{\n%SB\n}\n", self->Name, body_to_strbuilder(self->Body) );
+	else
+		strbuilder_append_fmt( result, "extern \"%S\"\n{}\n", self->Name );
+}
+
+inline
+StrBuilder include_to_strbuilder(CodeInclude include)
+{
+	return strbuilder_fmt_buf( _ctx->Allocator_Temp, "#include %S\n", include->Content );
+}
+
+inline
+void include_to_strbuilder_ref( CodeInclude include, StrBuilder* result )
+{
+	strbuilder_append_fmt( result, "#include %S\n", include->Content );
+}
+
+inline
+StrBuilder friend_to_strbuilder(CodeFriend self)
+{
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
+	friend_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+void friend_to_strbuilder_ref(CodeFriend self, StrBuilder* result )
+{
+	strbuilder_append_fmt( result, "friend %SB", code_to_strbuilder(self->Declaration) );
+
+	if ( self->Declaration->Type != CT_Function && self->Declaration->Type != CT_Operator && (* result)[ strbuilder_length(* result) - 1 ] != ';' )
+	{
+		strbuilder_append_str( result, txt(";") );
+	}
+
+	if ( self->InlineCmt )
+		strbuilder_append_fmt( result, "  %S", self->InlineCmt->Content );
+	else
+		strbuilder_append_str( result, txt("\n"));
+}
+
+inline
+StrBuilder module_to_strbuilder(CodeModule self)
+{
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 64 );
+	module_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+StrBuilder namespace_to_strbuilder(CodeNS self)
+{
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
+	namespace_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+void namespace_to_strbuilder_ref(CodeNS self, StrBuilder* result )
+{
+	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
+		strbuilder_append_str( result, txt("export ") );
+
+	strbuilder_append_fmt( result, "namespace %S\n{\n%SB\n}\n", self->Name, body_to_strbuilder(self->Body) );
+}
+
+inline
+StrBuilder params_to_strbuilder(CodeParams self)
+{
+	GEN_ASSERT(self);
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
+	params_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+void preprocess_to_strbuilder_if(CodePreprocessCond cond, StrBuilder* result )
+{
+	GEN_ASSERT(cond);
+	strbuilder_append_fmt( result, "#if %S", cond->Content );
+}
+
+inline
+void preprocess_to_strbuilder_ifdef(CodePreprocessCond cond, StrBuilder* result )
+{
+	GEN_ASSERT(cond);
+	strbuilder_append_fmt( result, "#ifdef %S\n", cond->Content );
+}
+
+inline
+void preprocess_to_strbuilder_ifndef(CodePreprocessCond cond, StrBuilder* result )
+{
+	GEN_ASSERT(cond);
+	strbuilder_append_fmt( result, "#ifndef %S", cond->Content );
+}
+
+inline
+void preprocess_to_strbuilder_elif(CodePreprocessCond cond, StrBuilder* result )
+{
+	GEN_ASSERT(cond);
+	strbuilder_append_fmt( result, "#elif %S\n", cond->Content );
+}
+
+inline
+void preprocess_to_strbuilder_else(CodePreprocessCond cond, StrBuilder* result )
+{
+	GEN_ASSERT(cond);
+	strbuilder_append_str( result, txt("#else\n") );
+}
+
+inline
+void preprocess_to_strbuilder_endif(CodePreprocessCond cond, StrBuilder* result )
+{
+	GEN_ASSERT(cond);
+	strbuilder_append_str( result, txt("#endif\n") );
+}
+
+inline
+StrBuilder pragma_to_strbuilder(CodePragma self)
+{
+	GEN_ASSERT(self);
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
+	pragma_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+void pragma_to_strbuilder_ref(CodePragma self, StrBuilder* result )
+{
+	strbuilder_append_fmt( result, "#pragma %S\n", self->Content );
+}
+
+inline
+StrBuilder specifiers_to_strbuilder(CodeSpecifiers self)
+{
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 64 );
+	specifiers_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+StrBuilder template_to_strbuilder(CodeTemplate self)
+{
+	GEN_ASSERT(self);
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 1024 );
+	template_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+StrBuilder typedef_to_strbuilder(CodeTypedef self)
+{
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
+	typedef_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+StrBuilder typename_to_strbuilder(CodeTypename self)
+{
+	StrBuilder result = strbuilder_make_str( _ctx->Allocator_Temp, txt("") );
+	typename_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+StrBuilder using_to_strbuilder(CodeUsing self)
+{
+	GEN_ASSERT(self);
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
+	switch ( self->Type )
+	{
+		case CT_Using:
+			using_to_strbuilder_ref( self, & result );
+		break;
+		case CT_Using_Namespace:
+			using_to_strbuilder_ns( self, & result );
+		break;
+	}
+	return result;
+}
+
+inline
+void using_to_strbuilder_ns(CodeUsing self, StrBuilder* result )
+{
+	GEN_ASSERT(self);
+	GEN_ASSERT(result);
+	if ( self->InlineCmt )
+		strbuilder_append_fmt( result, "using namespace $S;  %S", self->Name, self->InlineCmt->Content );
+	else
+		strbuilder_append_fmt( result, "using namespace %S;\n", self->Name );
+}
+
+inline
+StrBuilder var_to_strbuilder(CodeVar self)
+{
+	GEN_ASSERT(self);
+	StrBuilder result = strbuilder_make_reserve( get_context()->Allocator_Temp, 256 );
+	var_to_strbuilder_ref( self, & result );
+	return result;
+}
+#pragma endregion Serialization
+
 #pragma region Code
 inline
 void code_append( Code self, Code other )

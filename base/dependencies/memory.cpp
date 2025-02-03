@@ -84,7 +84,7 @@ void heap_stats_check( void )
 typedef struct _heap_alloc_info _heap_alloc_info;
 struct _heap_alloc_info
 {
-	ssize    size;
+	ssize size;
 	void* physical_start;
 };
 

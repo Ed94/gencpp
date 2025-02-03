@@ -3,21 +3,6 @@
 #include "ast.cpp"
 #endif
 
-inline
-StrBuilder attributes_to_strbuilder(CodeAttributes attributes) {
-	GEN_ASSERT(attributes);
-	char* raw = ccast(char*, str_duplicate( attributes->Content, _ctx->Allocator_Temp ).Ptr);
-	StrBuilder result = { raw };
-	return result;
-}
-
-inline
-void attributes_to_strbuilder_ref(CodeAttributes attributes, StrBuilder* result) {
-	GEN_ASSERT(attributes);
-	GEN_ASSERT(result);
-	strbuilder_append_str(result, attributes->Content);
-}
-
 StrBuilder body_to_strbuilder(CodeBody body)
 {
 	GEN_ASSERT(body);
@@ -47,20 +32,6 @@ StrBuilder body_to_strbuilder(CodeBody body)
 	return result;
 }
 
-void body_to_strbuilder_ref( CodeBody body, StrBuilder* result )
-{
-	GEN_ASSERT(body   != nullptr);
-	GEN_ASSERT(result != nullptr);
-	Code curr = body->Front;
-	s32  left = body->NumEntries;
-	while ( left -- )
-	{
-		code_to_strbuilder_ptr(curr, result);
-		// strbuilder_append_fmt( result, "%SB", code_to_strbuilder(curr) );
-		++curr;
-	}
-}
-
 void body_to_strbuilder_export( CodeBody body, StrBuilder* result )
 {
 	GEN_ASSERT(body   != nullptr);
@@ -77,21 +48,6 @@ void body_to_strbuilder_export( CodeBody body, StrBuilder* result )
 	}
 
 	strbuilder_append_fmt( result, "};\n" );
-}
-
-inline
-StrBuilder comment_to_strbuilder(CodeComment comment) {
-	GEN_ASSERT(comment);
-	char* raw = ccast(char*, str_duplicate( comment->Content, _ctx->Allocator_Temp ).Ptr);
-	StrBuilder result = { raw };
-	return result;
-}
-
-inline
-void comment_to_strbuilder_ref(CodeComment comment, StrBuilder* result) {
-	GEN_ASSERT(comment);
-	GEN_ASSERT(result);
-	strbuilder_append_str(result, comment->Content);
 }
 
 StrBuilder constructor_to_strbuilder(CodeConstructor self)
@@ -189,7 +145,7 @@ void class_to_strbuilder_def( CodeClass self, StrBuilder* result )
 	if ( self->Name.Len )
 		strbuilder_append_str( result, self->Name );
 
-	if (self->Specs && specifiers_has(self->Specs, Spec_Final) > -1)
+	if (self->Specs && specifiers_has(self->Specs, Spec_Final))
 		strbuilder_append_str(result, txt(" final"));
 
 	if ( self->ParentType )
@@ -241,13 +197,6 @@ void class_to_strbuilder_fwd( CodeClass self, StrBuilder* result )
 	}
 }
 
-StrBuilder define_to_strbuilder(CodeDefine define)
-{
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
-	define_to_strbuilder_ref(define, & result);
-	return result;
-}
-
 void define_to_strbuilder_ref(CodeDefine define, StrBuilder* result )
 {
 	GEN_ASSERT(define);
@@ -260,14 +209,6 @@ void define_to_strbuilder_ref(CodeDefine define, StrBuilder* result )
 	else {
 		strbuilder_append_fmt( result, "#define %S %S", define->Name, define->Body->Content );
 	}
-}
-
-StrBuilder define_params_to_strbuilder(CodeDefineParams params)
-{
-	GEN_ASSERT(params);
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
-	define_params_to_strbuilder_ref( params, & result );
-	return result;
 }
 
 void define_params_to_strbuilder_ref(CodeDefineParams self, StrBuilder* result)
@@ -478,54 +419,6 @@ void enum_to_strbuilder_class_fwd(CodeEnum self, StrBuilder* result )
 	}
 }
 
-StrBuilder exec_to_strbuilder(CodeExec exec)
-{
-	GEN_ASSERT(exec);
-	char* raw = ccast(char*, str_duplicate( exec->Content, _ctx->Allocator_Temp ).Ptr);
-	StrBuilder result = { raw };
-	return result;
-}
-
-void extern_to_strbuilder(CodeExtern self, StrBuilder* result )
-{
-	if ( self->Body )
-		strbuilder_append_fmt( result, "extern \"%S\"\n{\n%SB\n}\n", self->Name, body_to_strbuilder(self->Body) );
-	else
-		strbuilder_append_fmt( result, "extern \"%S\"\n{}\n", self->Name );
-}
-
-StrBuilder include_to_strbuilder(CodeInclude include)
-{
-	return strbuilder_fmt_buf( _ctx->Allocator_Temp, "#include %S\n", include->Content );
-}
-
-void include_to_strbuilder_ref( CodeInclude include, StrBuilder* result )
-{
-	strbuilder_append_fmt( result, "#include %S\n", include->Content );
-}
-
-StrBuilder friend_to_strbuilder(CodeFriend self)
-{
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
-	friend_to_strbuilder_ref( self, & result );
-	return result;
-}
-
-void friend_to_strbuilder_ref(CodeFriend self, StrBuilder* result )
-{
-	strbuilder_append_fmt( result, "friend %SB", code_to_strbuilder(self->Declaration) );
-
-	if ( self->Declaration->Type != CT_Function && self->Declaration->Type != CT_Operator && (* result)[ strbuilder_length(* result) - 1 ] != ';' )
-	{
-		strbuilder_append_str( result, txt(";") );
-	}
-
-	if ( self->InlineCmt )
-		strbuilder_append_fmt( result, "  %S", self->InlineCmt->Content );
-	else
-		strbuilder_append_str( result, txt("\n"));
-}
-
 StrBuilder fn_to_strbuilder(CodeFn self)
 {
 	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
@@ -649,9 +542,9 @@ void fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result )
 			}
 		}
 
-		if ( specifiers_has(self->Specs, Spec_Pure ) >= 0 )
+		if ( specifiers_has(self->Specs, Spec_Pure ) )
 			strbuilder_append_str( result, txt(" = 0") );
-		else if ( specifiers_has(self->Specs, Spec_Delete ) >= 0 )
+		else if ( specifiers_has(self->Specs, Spec_Delete ) )
 			strbuilder_append_str( result, txt(" = delete") );
 	}
 
@@ -668,13 +561,6 @@ void fn_to_strbuilder_fwd(CodeFn self, StrBuilder* result )
 		strbuilder_append_str( result, txt(";\n") );
 }
 
-StrBuilder module_to_strbuilder(CodeModule self)
-{
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 64 );
-	module_to_strbuilder_ref( self, & result );
-	return result;
-}
-
 void module_to_strbuilder_ref(CodeModule self, StrBuilder* result )
 {
 	if (((scast(u32, ModuleFlag_Export) & scast(u32, self->ModuleFlags)) == scast(u32, ModuleFlag_Export)))
@@ -684,21 +570,6 @@ void module_to_strbuilder_ref(CodeModule self, StrBuilder* result )
 		strbuilder_append_str( result, txt("import "));
 
 	strbuilder_append_fmt( result, "%S;\n", self->Name );
-}
-
-StrBuilder namespace_to_strbuilder(CodeNS self)
-{
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
-	namespace_to_strbuilder_ref( self, & result );
-	return result;
-}
-
-void namespace_to_strbuilder_ref(CodeNS self, StrBuilder* result )
-{
-	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
-		strbuilder_append_str( result, txt("export ") );
-
-	strbuilder_append_fmt( result, "namespace %S\n{\n%SB\n}\n", self->Name, body_to_strbuilder(self->Body) );
 }
 
 StrBuilder code_op_to_strbuilder(CodeOperator self)
@@ -912,14 +783,6 @@ void opcast_to_strbuilder_fwd(CodeOpCast self, StrBuilder* result )
 		strbuilder_append_fmt( result, "operator %SB();\n", typename_to_strbuilder(self->ValueType) );
 }
 
-StrBuilder params_to_strbuilder(CodeParams self)
-{
-	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
-	params_to_strbuilder_ref( self, & result );
-	return result;
-}
-
 void params_to_strbuilder_ref( CodeParams self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
@@ -984,62 +847,6 @@ StrBuilder preprocess_to_strbuilder(CodePreprocessCond self)
 			preprocess_to_strbuilder_endif( self, & result );
 		break;
 	}
-	return result;
-}
-
-void preprocess_to_strbuilder_if(CodePreprocessCond cond, StrBuilder* result )
-{
-	GEN_ASSERT(cond);
-	strbuilder_append_fmt( result, "#if %S", cond->Content );
-}
-
-void preprocess_to_strbuilder_ifdef(CodePreprocessCond cond, StrBuilder* result )
-{
-	GEN_ASSERT(cond);
-	strbuilder_append_fmt( result, "#ifdef %S\n", cond->Content );
-}
-
-void preprocess_to_strbuilder_ifndef(CodePreprocessCond cond, StrBuilder* result )
-{
-	GEN_ASSERT(cond);
-	strbuilder_append_fmt( result, "#ifndef %S", cond->Content );
-}
-
-void preprocess_to_strbuilder_elif(CodePreprocessCond cond, StrBuilder* result )
-{
-	GEN_ASSERT(cond);
-	strbuilder_append_fmt( result, "#elif %S\n", cond->Content );
-}
-
-void preprocess_to_strbuilder_else(CodePreprocessCond cond, StrBuilder* result )
-{
-	GEN_ASSERT(cond);
-	strbuilder_append_str( result, txt("#else\n") );
-}
-
-void preprocess_to_strbuilder_endif(CodePreprocessCond cond, StrBuilder* result )
-{
-	GEN_ASSERT(cond);
-	strbuilder_append_str( result, txt("#endif\n") );
-}
-
-StrBuilder pragma_to_strbuilder(CodePragma self)
-{
-	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
-	pragma_to_strbuilder_ref( self, & result );
-	return result;
-}
-
-void pragma_to_strbuilder_ref(CodePragma self, StrBuilder* result )
-{
-	strbuilder_append_fmt( result, "#pragma %S\n", self->Content );
-}
-
-StrBuilder specifiers_to_strbuilder(CodeSpecifiers self)
-{
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 64 );
-	specifiers_to_strbuilder_ref( self, & result );
 	return result;
 }
 
@@ -1155,14 +962,6 @@ void struct_to_strbuilder_fwd( CodeStruct self, StrBuilder* result )
 	}
 }
 
-StrBuilder template_to_strbuilder(CodeTemplate self)
-{
-	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 1024 );
-	template_to_strbuilder_ref( self, & result );
-	return result;
-}
-
 void template_to_strbuilder_ref(CodeTemplate self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
@@ -1174,13 +973,6 @@ void template_to_strbuilder_ref(CodeTemplate self, StrBuilder* result )
 		strbuilder_append_fmt( result, "template< %SB >\n%SB", params_to_strbuilder(self->Params), code_to_strbuilder(self->Declaration) );
 	else
 		strbuilder_append_fmt( result, "template<>\n%SB", code_to_strbuilder(self->Declaration) );
-}
-
-StrBuilder typedef_to_strbuilder(CodeTypedef self)
-{
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
-	typedef_to_strbuilder_ref( self, & result );
-	return result;
 }
 
 void typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result )
@@ -1216,13 +1008,6 @@ void typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result )
 		strbuilder_append_fmt( result, "  %S", self->InlineCmt->Content);
 	else
 		strbuilder_append_str( result, txt("\n"));
-}
-
-StrBuilder typename_to_strbuilder(CodeTypename self)
-{
-	StrBuilder result = strbuilder_make_str( _ctx->Allocator_Temp, txt("") );
-	typename_to_strbuilder_ref( self, & result );
-	return result;
 }
 
 void typename_to_strbuilder_ref(CodeTypename self, StrBuilder* result )
@@ -1346,22 +1131,6 @@ void union_to_strbuilder_fwd(CodeUnion self, StrBuilder* result )
 		strbuilder_append_str( result, txt(";\n"));
 }
 
-StrBuilder using_to_strbuilder(CodeUsing self)
-{
-	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
-	switch ( self->Type )
-	{
-		case CT_Using:
-			using_to_strbuilder_ref( self, & result );
-		break;
-		case CT_Using_Namespace:
-			using_to_strbuilder_ns( self, & result );
-		break;
-	}
-	return result;
-}
-
 void using_to_strbuilder_ref(CodeUsing self, StrBuilder* result )
 {
 	GEN_ASSERT(self);
@@ -1397,26 +1166,6 @@ void using_to_strbuilder_ref(CodeUsing self, StrBuilder* result )
 		strbuilder_append_fmt( result, "  %S\n", self->InlineCmt->Content );
 	else
 		strbuilder_append_str( result, txt("\n"));
-}
-
-inline
-void using_to_strbuilder_ns(CodeUsing self, StrBuilder* result )
-{
-	GEN_ASSERT(self);
-	GEN_ASSERT(result);
-	if ( self->InlineCmt )
-		strbuilder_append_fmt( result, "using namespace $SC;  %S", self->Name, self->InlineCmt->Content );
-	else
-		strbuilder_append_fmt( result, "using namespace %S;\n", self->Name );
-}
-
-inline
-StrBuilder var_to_strbuilder(CodeVar self)
-{
-	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
-	var_to_strbuilder_ref( self, & result );
-	return result;
 }
 
 neverinline
