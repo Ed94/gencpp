@@ -296,7 +296,17 @@ bool specifiers_append(CodeSpecifiers self, Specifier spec )
 	return true;
 }
 inline
-s32 specifiers_has(CodeSpecifiers self, Specifier spec)
+bool specifiers_has(CodeSpecifiers self, Specifier spec)
+{
+	GEN_ASSERT(self != nullptr);
+	for ( s32 idx = 0; idx < self->NumEntries; idx++ ) {
+		if ( self->ArrSpecs[ idx ] == spec )
+			return true;
+	}
+	return false;
+}
+inline
+s32 specifiers_index_of(CodeSpecifiers self, Specifier spec)
 {
 	GEN_ASSERT(self != nullptr);
 	for ( s32 idx = 0; idx < self->NumEntries; idx++ ) {

@@ -53,7 +53,8 @@ GEN_API CodeParams end_CodeParams  (CodeParams params);
 GEN_API CodeParams next_CodeParams (CodeParams params, CodeParams entry_iter);
 
 GEN_API bool       specifiers_append           (CodeSpecifiers specifiers, Specifier spec);
-GEN_API s32        specifiers_has              (CodeSpecifiers specifiers, Specifier spec);
+GEN_API bool       specifiers_has              (CodeSpecifiers specifiers, Specifier spec);
+GEN_API s32        specifiers_index_of         (CodeSpecifiers specifiers, Specifier spec);
 GEN_API s32        specifiers_remove           (CodeSpecifiers specifiers, Specifier to_remove );
 GEN_API StrBuilder specifiers_to_strbuilder    (CodeSpecifiers specifiers);
 GEN_API void       specifiers_to_strbuilder_ref(CodeSpecifiers specifiers, StrBuilder* result);
@@ -149,6 +150,8 @@ GEN_API void       using_to_strbuilder_ns (CodeUsing op_cast, StrBuilder* result
 
 GEN_API StrBuilder var_to_strbuilder    (CodeVar self);
 GEN_API void       var_to_strbuilder_ref(CodeVar self, StrBuilder* result);
+
+// TODO(Ed): Move C-Interface inlines here...
 
 #pragma endregion Code Type C-Interface
 

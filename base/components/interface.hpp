@@ -280,7 +280,7 @@ struct Opts_def_variable
 GEN_API CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable opts GEN_PARAM_DEFAULT );
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
-GEN_API CodeBody def_body( CodeType type );
+CodeBody def_body( CodeType type );
 
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
@@ -388,7 +388,7 @@ GEN_API CodeVar         parse_variable     ( Str var_def         );
 
 GEN_API ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va );
 //! Do not use directly. Use the token_fmt macro instead.
-GEN_API Str token_fmt_impl( ssize, ... );
+Str   token_fmt_impl( ssize, ... );
 
 GEN_API Code untyped_str( Str content);
 GEN_API Code untyped_fmt      ( char const* fmt, ... );
