@@ -58,4 +58,41 @@ StrBuilder strbuilder_make_reserve( AllocatorInfo allocator, ssize capacity )
 	return result;
 }
 
+bool strbuilder_make_space_for(StrBuilder* str, char const* to_append, ssize add_len)
+{
+	ssize available = strbuilder_avail_space(* str);
+
+	if (available >= add_len) {
+		return true;
+	}
+	else
+	{
+		ssize new_len, old_size, new_size;
+		void* ptr;
+		void* new_ptr;
+
+		AllocatorInfo allocator = strbuilder_get_header(* str)->Allocator;
+		StrBuilderHeader* header    = nullptr;
+
+		new_len  = strbuilder_grow_formula(strbuilder_length(* str) + add_len);
+		ptr      = strbuilder_get_header(* str);
+		old_size = size_of(StrBuilderHeader) + strbuilder_length(* str) + 1;
+		new_size = size_of(StrBuilderHeader) + new_len + 1;
+
+		new_ptr = resize(allocator, ptr, old_size, new_size);
+
+		if (new_ptr == nullptr)
+			return false;
+
+		header = rcast(StrBuilderHeader*, new_ptr);
+		header->Allocator = allocator;
+		header->Capacity  = new_len;
+
+		char** Data = rcast(char**, str);
+		* Data = rcast(char*, header + 1);
+
+		return true;
+	}
+}
+
 #pragma endregion StrBuilder
