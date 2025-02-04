@@ -52,7 +52,7 @@ void comment_to_strbuilder_ref(CodeComment comment, StrBuilder* result) {
 inline
 StrBuilder define_to_strbuilder(CodeDefine define)
 {
-	GEN_ASSERT(define)
+	GEN_ASSERT(define);
 	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 512 );
 	define_to_strbuilder_ref(define, & result);
 	return result;
@@ -77,12 +77,10 @@ StrBuilder exec_to_strbuilder(CodeExec exec)
 }
 
 inline
-StrBuilder exec_to_strbuilder_ref(CodeExec exec, StrBuilder* result) {
+void exec_to_strbuilder_ref(CodeExec exec, StrBuilder* result) {
 	GEN_ASSERT(exec);
 	GEN_ASSERT(result);
-	char* raw = ccast(char*, str_duplicate( exec->Content, get_context()->Allocator_Temp ).Ptr);
-	StrBuilder result = { raw };
-	return result;
+	strbuilder_append_str(result, exec->Content);
 }
 
 inline
@@ -177,6 +175,23 @@ StrBuilder params_to_strbuilder(CodeParams self)
 }
 
 inline
+StrBuilder pragma_to_strbuilder(CodePragma self)
+{
+	GEN_ASSERT(self);
+	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
+	pragma_to_strbuilder_ref( self, & result );
+	return result;
+}
+
+inline
+void pragma_to_strbuilder_ref(CodePragma self, StrBuilder* result )
+{
+	GEN_ASSERT(self);
+	GEN_ASSERT(result);
+	strbuilder_append_fmt( result, "#pragma %S\n", self->Content );
+}
+
+inline
 void preprocess_to_strbuilder_if(CodePreprocessCond cond, StrBuilder* result )
 {
 	GEN_ASSERT(cond);
@@ -225,26 +240,9 @@ void preprocess_to_strbuilder_endif(CodePreprocessCond cond, StrBuilder* result 
 }
 
 inline
-StrBuilder pragma_to_strbuilder(CodePragma self)
-{
-	GEN_ASSERT(self);
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 256 );
-	pragma_to_strbuilder_ref( self, & result );
-	return result;
-}
-
-inline
-void pragma_to_strbuilder_ref(CodePragma self, StrBuilder* result )
-{
-	GEN_ASSERT(self)
-	GEN_ASSERT(result)
-	strbuilder_append_fmt( result, "#pragma %S\n", self->Content );
-}
-
-inline
 StrBuilder specifiers_to_strbuilder(CodeSpecifiers self)
 {
-	GEN_ASSERT(self)
+	GEN_ASSERT(self);
 	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 64 );
 	specifiers_to_strbuilder_ref( self, & result );
 	return result;
@@ -262,7 +260,7 @@ StrBuilder template_to_strbuilder(CodeTemplate self)
 inline
 StrBuilder typedef_to_strbuilder(CodeTypedef self)
 {
-	GEN_ASSERT(self)
+	GEN_ASSERT(self);
 	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, 128 );
 	typedef_to_strbuilder_ref( self, & result );
 	return result;
@@ -271,7 +269,7 @@ StrBuilder typedef_to_strbuilder(CodeTypedef self)
 inline
 StrBuilder typename_to_strbuilder(CodeTypename self)
 {
-	GEN_ASSERT(self)
+	GEN_ASSERT(self);
 	StrBuilder result = strbuilder_make_str( _ctx->Allocator_Temp, txt("") );
 	typename_to_strbuilder_ref( self, & result );
 	return result;

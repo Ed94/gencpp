@@ -134,11 +134,11 @@ GEN_API StrBuilder preprocess_to_strbuilder       (CodePreprocessCond cond);
         StrBuilder template_to_strbuilder    (CodeTemplate self);
 GEN_API void       template_to_strbuilder_ref(CodeTemplate self, StrBuilder* result);
 
-        StrBuilder typename_to_strbuilder    (CodeTypename self);
-GEN_API void       typename_to_strbuilder_ref(CodeTypename self, StrBuilder* result);
-
         StrBuilder typedef_to_strbuilder    (CodeTypedef self);
 GEN_API void       typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result );
+
+        StrBuilder typename_to_strbuilder    (CodeTypename self);
+GEN_API void       typename_to_strbuilder_ref(CodeTypename self, StrBuilder* result);
 
 GEN_API StrBuilder union_to_strbuilder    (CodeUnion self);
 GEN_API void       union_to_strbuilder_def(CodeUnion self, StrBuilder* result);
