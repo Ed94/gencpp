@@ -306,7 +306,7 @@ do                          \
 		break;
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_memory, header_memory );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_memory, header_memory );
 			if (found) break;
 
 			header_memory.append(entry);
@@ -334,7 +334,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_printing, header_printing );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_printing, header_printing );
 			if (found) break;
 
 			header_printing.append(entry);
@@ -391,7 +391,7 @@ do                          \
 
 		case CT_Preprocess_IfDef:
 		{
-			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+			ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
 		}
 		break;
 
@@ -472,7 +472,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_filesystem, header_filesystem );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_filesystem, header_filesystem );
 			if (found) break;
 
 			header_filesystem.append(entry);
@@ -532,7 +532,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_parsing, header_parsing );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_parsing, header_parsing );
 			if (found) break;
 
 			header_parsing.append(entry);
@@ -640,7 +640,7 @@ do                          \
 
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_types, types );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_types, types );
 			if (found) break;
 
 			types.append(entry);
@@ -702,7 +702,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_parser_types, parser_types );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_parser_types, parser_types );
 			if (found) break;
 
 			parser_types.append(entry);
@@ -797,7 +797,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_ast, ast );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_ast, ast );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_ast, ast );
@@ -978,7 +978,7 @@ R"(#define AST_ArrSpecs_Cap \
 				++ entry; // Skip a newline...
 				break;
 			}
-			found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
+			found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_code_types, code_types);
@@ -1078,7 +1078,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_ast_types, ast_types );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_ast_types, ast_types );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_ast_types, ast_types);
@@ -1132,7 +1132,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_interface, interface );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_interface, interface );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_interface, interface);
@@ -1221,7 +1221,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_inlines, inlines );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_inlines, inlines );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_interface, interface);
@@ -1263,7 +1263,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_constants, constants );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_constants, constants );
 			if (found) break;
 
 			constants.append(entry);
@@ -1302,7 +1302,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_builder, header_builder );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_builder, header_builder );
 			if (found) break;
 
 			header_builder.append(entry);
@@ -1446,7 +1446,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_ast, src_ast );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_ast, src_ast );
 			if (found) break;
 
 			src_ast.append(entry);
@@ -1481,7 +1481,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_upfront, src_upfront );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_upfront, src_upfront );
 			if (found) break;
 
 			src_upfront.append(entry);
@@ -1520,7 +1520,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_lexer, src_lexer );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_lexer, src_lexer );
 			if (found) break;
 
 			src_lexer.append(entry);
@@ -1569,7 +1569,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_parser, src_parser );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_parser, src_parser );
 			if (found) break;
 
 			src_parser.append(entry);

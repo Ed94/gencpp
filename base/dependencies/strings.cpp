@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
 #	include "hashing.cpp"
 #endif

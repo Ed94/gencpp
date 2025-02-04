@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
 #	include "helpers/push_ignores.inline.hpp"
 #	include "components/header_start.hpp"

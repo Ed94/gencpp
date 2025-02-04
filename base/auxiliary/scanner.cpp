@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #	include "scanner.hpp"
 #endif
 
@@ -24,7 +24,7 @@ Code scan_file( char const* path )
 		file_read( & file, str, fsize );
 		strbuilder_get_header(str)->Length = fsize;
 
-	// Skip GEN_INTELLISENSE_DIRECTIVES preprocessor blocks
+	// Skip INTELLISENSE_DIRECTIVES preprocessor blocks
 	// Its designed so that the directive should be the first thing in the file.
 	// Anything that comes before it will also be omitted.
 	{
@@ -33,7 +33,7 @@ Code scan_file( char const* path )
 	#define move_fwd() do { ++ scanner; -- left; } while (0)
 		const Str directive_start = txt( "ifdef" );
 		const Str directive_end   = txt( "endif" );
-		const Str def_intellisense = txt("GEN_INTELLISENSE_DIRECTIVES" );
+		const Str def_intellisense = txt("INTELLISENSE_DIRECTIVES" );
 
 		bool        found_directive = false;
 		char const* scanner         = (char const*)str;
