@@ -11,6 +11,14 @@ These build up a code AST to then serialize with a file builder, or can be trave
 This code base attempts follow the [handmade philosophy](https://handmade.network/manifesto).  
 Its not meant to be a black box metaprogramming utility, it should be easy to integrate into a user's project domain.
 
+## Langauge Bindings
+
+* [gencpp-odin](https://github.com/Ed94/gencpp-odin): Bindings for the odin programming language.
+
+## Utility Libraries
+
+* [UnrealGencpp](https://github.com/Ed94/UnrealGencpp): Setup as a plugin to integrate into Unreal Engine or Unreal Projects.
+
 ## Documentation
 
 * [docs - General](./docs/Readme.md): Overview and additional docs
