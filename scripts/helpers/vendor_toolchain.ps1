@@ -564,6 +564,7 @@ if ( $vendor -match "msvc" )
 		# Check if output is a static library
 		if ( $binary -match '\.lib$' )
 		{
+			write-host "Running archiver for $binary"
 			$lib_args  = @()
 			$lib_args += $flag_nologo
 			$lib_args += $flag_link_win_machine_64
