@@ -509,7 +509,7 @@ do                          \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs.has(Spec_Constexpr) > -1)
+			if (var->Specs.has(Spec_Constexpr))
 			{
 				Opts_def_define opts = { {}, entry->Value->Content };
 				CodeDefine define = def_define(entry->Name, MT_Expression, opts);
@@ -769,7 +769,7 @@ do                          \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+			if (var->Specs && var->Specs.has(Spec_Constexpr)) {
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
@@ -1257,16 +1257,16 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	}
 
 	s32 idx = 0;
-	CodeBody parsed_header_end = parse_file( path_base "components/header_end.hpp" );
-	CodeBody header_end        = def_body(CT_Global_Body);
-	for ( Code entry = parsed_header_end.begin(); entry != parsed_header_end.end(); ++ entry, ++ idx ) switch( entry->Type )
+	CodeBody parsed_constants = parse_file( path_base "components/constants.hpp" );
+	CodeBody constants        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_constants.begin(); entry != parsed_constants.end(); ++ entry, ++ idx ) switch( entry->Type )
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_end, header_end );
+			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_constants, constants );
 			if (found) break;
 
-			header_end.append(entry);
+			constants.append(entry);
 		}
 		break;
 
@@ -1278,18 +1278,18 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				s32 constexpr_found = var->Specs.remove( Spec_Constexpr );
 				if (constexpr_found > -1)
 				{
-					Opts_def_define opts = { {},  entry->Value->Content };
+					Opts_def_define opts = { {}, entry->Value->Content };
 					CodeDefine define = def_define(entry->Name, MT_Expression, opts );
-					header_end.append(define);
+					constants.append(define);
 					continue;
 				}
 			}
-			header_end.append(entry);
+			constants.append(entry);
 		}
 		break;
 
 		default:
-			header_end.append(entry);
+		constants.append(entry);
 		break;
 	}
 #pragma endregion Resolve Components
@@ -1542,7 +1542,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+			if (var->Specs && var->Specs.has(Spec_Constexpr)) {
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
@@ -1587,7 +1587,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+			if (var->Specs && var->Specs.has(Spec_Constexpr)) {
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
@@ -1673,11 +1673,11 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code rf_ast_types    = refactor_and_format(ast_types);
 
 	Code rf_interface = refactor_and_format(interface);
+	Code rf_constants = refactor_and_format(constants);
 	Code rf_inlines   = refactor_and_format(inlines);
 
 	Code rf_ht_preprocessor_macro = refactor_and_format(ht_preprocessor_macro);
 	Code rf_array_string_cached   = refactor_and_format(array_string_cached);
-	Code rf_header_end            = refactor_and_format(header_end);
 	Code rf_header_builder        = refactor_and_format(header_builder);
 	Code rf_header_scanner        = refactor_and_format( scan_file( path_base "auxiliary/scanner.hpp" ));
 
@@ -1788,6 +1788,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_ht_preprocessor_macro );
 
 		header.print( rf_interface );
+		header.print( rf_constants );
 		header.print(fmt_newline);
 
 		header.print_fmt("#pragma region Inlines\n");
@@ -1796,7 +1797,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 		header.print(fmt_newline);
 
-		header.print( rf_header_end );
 		header.print( rf_header_builder );
 		header.print( rf_header_scanner );
 
@@ -1950,6 +1950,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt("\n#pragma endregion AST\n");
 
 		header.print( rf_interface );
+		header.print( rf_constants );
 		header.print(fmt_newline);
 
 		header.print_fmt("#pragma region Inlines\n");
@@ -1959,7 +1960,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print(fmt_newline);
 		header.print( rf_array_string_cached );
 
-		header.print( rf_header_end );
 		header.print( rf_header_builder );
 		header.print( rf_header_scanner );
 

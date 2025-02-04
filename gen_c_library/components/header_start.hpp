@@ -13,7 +13,7 @@
 	|  \_____|\___}_l |_|\___} .__/| .__/ {_____/ \__\__/_l\__. |\___/\__,_l   \____}{_____}{_____} |
 	|                        | |   | |                      __} |                                   |
 	|                        l_l   l_l                     {___/                                    |
-	! ----------------------------------------------------------------------- VERSION: v0.23-Alpha  |
+	! ----------------------------------------------------------------------- VERSION: v0.25-Alpha  |
 	! ============================================================================================= |
 	! WARNING: THIS IS AN ALPHA VERSION OF THE LIBRARY, USE AT YOUR OWN DISCRETION                  |
 	! NEVER DO CODE GENERATION WITHOUT AT LEAST HAVING CONTENT IN A CODEBASE UNDER VERSION CONTROL  |

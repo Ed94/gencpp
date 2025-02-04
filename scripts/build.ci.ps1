@@ -172,7 +172,7 @@ if ( $segmented )
 						write-host `t $_ -ForegroundColor Green
 					}
 				}
-			write-host "`nBootstrap completed in $($time_taken.TotalMilliseconds) ms"
+			write-host "`nSegmented completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
 }

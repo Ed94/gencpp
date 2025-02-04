@@ -2788,10 +2788,10 @@ CodeParams parse_params( bool use_template_capture )
 		}
 		// ( <Macro> <ValueType>
 
-		if ( check( Tok_Identifier ) )
+		if ( check( Tok_Identifier ) || bitfield_is_set(u32, currtok.Flags, TF_Identifier) )
 		{
 			name = currtok;
-			eat( Tok_Identifier );
+			eat( currtok.Type );
 			// ( <Macro> <ValueType> <Name>
 		}
 
@@ -2899,10 +2899,10 @@ CodeParams parse_params( bool use_template_capture )
 
 			name = NullToken;
 
-			if ( check( Tok_Identifier ) )
+			if ( check( Tok_Identifier ) || bitfield_is_set(u32, currtok.Flags, TF_Identifier) )
 			{
 				name = currtok;
-				eat( Tok_Identifier );
+				eat( currtok.Type );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name>
 			}
 
