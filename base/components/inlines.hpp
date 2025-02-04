@@ -36,7 +36,7 @@ void body_to_strbuilder_ref( CodeBody body, StrBuilder* result )
 	s32  left = body->NumEntries;
 	while ( left -- )
 	{
-		code_to_strbuilder_ptr(curr, result);
+		code_to_strbuilder_ref(curr, result);
 		// strbuilder_append_fmt( result, "%SB", code_to_strbuilder(curr) );
 		++curr;
 	}
@@ -76,6 +76,15 @@ StrBuilder exec_to_strbuilder(CodeExec exec)
 }
 
 inline
+StrBuilder exec_to_strbuilder_ref(CodeExec exec, StrBuilder* result) {
+	GEN_ASSERT(exec)
+	GEN_ASSERT(result)
+	char* raw = ccast(char*, str_duplicate( exec->Content, get_context()->Allocator_Temp ).Ptr);
+	StrBuilder result = { raw };
+	return result;
+}
+
+inline
 void extern_to_strbuilder(CodeExtern self, StrBuilder* result )
 {
 	if ( self->Body )
@@ -87,12 +96,15 @@ void extern_to_strbuilder(CodeExtern self, StrBuilder* result )
 inline
 StrBuilder include_to_strbuilder(CodeInclude include)
 {
+	GEN_ASSERT(include)
 	return strbuilder_fmt_buf( _ctx->Allocator_Temp, "#include %S\n", include->Content );
 }
 
 inline
 void include_to_strbuilder_ref( CodeInclude include, StrBuilder* result )
 {
+	GEN_ASSERT(include)
+	GEN_ASSERT(result)
 	strbuilder_append_fmt( result, "#include %S\n", include->Content );
 }
 

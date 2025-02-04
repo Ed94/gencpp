@@ -42,7 +42,7 @@ void body_to_strbuilder_export( CodeBody body, StrBuilder* result )
 	s32  left = body->NumEntries;
 	while ( left-- )
 	{
-		code_to_strbuilder_ptr(curr, result);
+		code_to_strbuilder_ref(curr, result);
 		// strbuilder_append_fmt( result, "%SB", code_to_strbuilder(curr) );
 		++curr;
 	}

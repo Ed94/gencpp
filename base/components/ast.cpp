@@ -379,11 +379,11 @@ Code code_duplicate(Code self)
 StrBuilder code_to_strbuilder(Code self)
 {
 	StrBuilder result = strbuilder_make_str( _ctx->Allocator_Temp, txt("") );
-	code_to_strbuilder_ptr( self, & result );
+	code_to_strbuilder_ref( self, & result );
 	return result;
 }
 
-void code_to_strbuilder_ptr( Code self, StrBuilder* result )
+void code_to_strbuilder_ref( Code self, StrBuilder* result )
 {
 	GEN_ASSERT(self != nullptr);
 	local_persist thread_local

@@ -193,6 +193,7 @@ typedef AST_Stmt_If*       CodeStmt_If;
 typedef AST_Stmt_For*      CodeStmt_For;
 typedef AST_Stmt_Goto*     CodeStmt_Goto;
 typedef AST_Stmt_Label*    CodeStmt_Label;
+typedef AST_Stmt_Lambda*   CodeStmt_Lambda;
 typedef AST_Stmt_Switch*   CodeStmt_Switch;
 typedef AST_Stmt_While*    CodeStmt_While;
 #else
@@ -208,6 +209,7 @@ struct CodeStmt_If;
 struct CodeStmt_For;
 struct CodeStmt_Goto;
 struct CodeStmt_Label;
+struct CodeStmt_Lambda;
 struct CodeStmt_Switch;
 struct CodeStmt_While;
 #endif
@@ -249,7 +251,7 @@ GEN_API bool       code_is_equal         (Code code, Code other);
         bool       code_is_valid         (Code code);
         void       code_set_global       (Code code);
 GEN_API StrBuilder code_to_strbuilder    (Code self );
-GEN_API void       code_to_strbuilder_ptr(Code self, StrBuilder* result );
+GEN_API void       code_to_strbuilder_ref(Code self, StrBuilder* result );
         Str        code_type_str         (Code self );
 GEN_API bool       code_validate_body    (Code self );
 
@@ -287,7 +289,7 @@ struct Code
 	forceinline Code*      entry(u32 idx)                    { return code_entry(* this, idx); }
 	forceinline bool       has_entries()                     { return code_has_entries(* this); }
 	forceinline StrBuilder to_strbuilder()                   { return code_to_strbuilder(* this); }
-	forceinline void       to_strbuilder(StrBuilder& result) { return code_to_strbuilder_ptr(* this, & result); }
+	forceinline void       to_strbuilder(StrBuilder& result) { return code_to_strbuilder_ref(* this, & result); }
 	forceinline Str        type_str()                        { return code_type_str(* this); }
 	forceinline bool       validate_body()                   { return code_validate_body(*this); }
 #endif
