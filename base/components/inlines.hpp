@@ -484,7 +484,7 @@ void class_add_interface( CodeClass self, CodeTypename type )
 		possible_slot = cast(CodeTypename, possible_slot->Next);
 	}
 
-	possible_slot->Next = type;
+	possible_slot->Next = cast(Code, type);
 }
 #pragma endregion CodeClass
 
@@ -700,10 +700,10 @@ void struct_add_interface(CodeStruct self, CodeTypename type )
 
 	while ( possible_slot->Next != nullptr )
 	{
-		possible_slot->Next = cast(CodeTypename, possible_slot->Next);
+		possible_slot = cast(CodeTypename, possible_slot->Next);
 	}
 
-	possible_slot->Next = type;
+	possible_slot->Next = cast(Code, type);
 }
 #pragma endregion Code
 

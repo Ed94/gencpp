@@ -1882,6 +1882,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 		header.print( r_header_macros );
 		header.print( header_generic_macros );
+		
+		header.print_fmt( "\nGEN_API_C_BEGIN\n" );
+
 		header.print( r_header_basic_types );
 		header.print( r_header_debug );
 		header.print( rf_header_memory );
@@ -1895,6 +1898,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( r_header_timing );
 		header.print(rf_header_parsing );
 
+		header.print_fmt( "\nGEN_API_C_END\n" );
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.write();
 	}
@@ -1949,6 +1953,15 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_ast_types );
 		header.print_fmt("\n#pragma endregion AST\n");
 
+		header.print( fmt_newline);
+		header.print( rf_array_arena );
+		header.print( fmt_newline);
+		header.print( rf_array_pool);
+		header.print( fmt_newline);
+		header.print( rf_array_string_cached );
+		header.print( fmt_newline);
+		header.print( rf_ht_preprocessor_macro );
+
 		header.print( rf_interface );
 		header.print( rf_constants );
 		header.print(fmt_newline);
@@ -1958,7 +1971,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt("#pragma endregion Inlines\n");
 
 		header.print(fmt_newline);
-		header.print( rf_array_string_cached );
 
 		header.print( rf_header_builder );
 		header.print( rf_header_scanner );
@@ -1975,11 +1987,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		builder_print( src, push_ignores );
 		builder_print( src, src_start );
 		src.print_fmt( "\nGEN_NS_BEGIN\n");
-
-		src.print( fmt_newline);
-		src.print( rf_array_arena );
-		src.print( fmt_newline);
-		src.print( rf_array_pool);
 
 		src.print( r_src_static_data );
 		src.print( fmt_newline);
