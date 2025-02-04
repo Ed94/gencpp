@@ -95,4 +95,83 @@ bool strbuilder_make_space_for(StrBuilder* str, char const* to_append, ssize add
 	}
 }
 
+bool strbuilder_append_c_str_len(StrBuilder* str, char const* c_str_to_append, ssize append_length)
+{
+	GEN_ASSERT(str != nullptr);
+	if ( rcast(sptr, c_str_to_append) > 0)
+	{
+		ssize curr_len = strbuilder_length(* str);
+
+		if ( ! strbuilder_make_space_for(str, c_str_to_append, append_length))
+			return false;
+
+		StrBuilderHeader* header = strbuilder_get_header(* str);
+
+		char* Data = * str;
+		mem_copy( Data + curr_len, c_str_to_append, append_length);
+
+		Data[curr_len + append_length] = '\0';
+
+		header->Length = curr_len + append_length;
+	}
+	return c_str_to_append != nullptr;
+}
+
+void strbuilder_trim(StrBuilder str, char const* cut_set)
+{
+	ssize len = 0;
+
+	char* start_pos = str;
+	char* end_pos   = scast(char*, str) + strbuilder_length(str) - 1;
+
+	while (start_pos <= end_pos && char_first_occurence(cut_set, *start_pos))
+	start_pos++;
+
+	while (end_pos > start_pos && char_first_occurence(cut_set, *end_pos))
+	end_pos--;
+
+	len = scast(ssize, (start_pos > end_pos) ? 0 : ((end_pos - start_pos) + 1));
+
+	if (str != start_pos)
+		mem_move(str, start_pos, len);
+
+	str[len] = '\0';
+
+	strbuilder_get_header(str)->Length = len;
+}
+
+StrBuilder strbuilder_visualize_whitespace(StrBuilder const str)
+{
+	StrBuilderHeader* header = (StrBuilderHeader*)(scast(char const*, str) - sizeof(StrBuilderHeader));
+	StrBuilder        result = strbuilder_make_reserve(header->Allocator, strbuilder_length(str) * 2); // Assume worst case for space requirements.
+
+	for (char const* c = strbuilder_begin(str); c != strbuilder_end(str); c = strbuilder_next(str, c))
+	switch ( * c )
+	{
+		case ' ':
+			strbuilder_append_str(& result, txt("·"));
+		break;
+		case '\t':
+			strbuilder_append_str(& result, txt("→"));
+		break;
+		case '\n':
+			strbuilder_append_str(& result, txt("↵"));
+		break;
+		case '\r':
+			strbuilder_append_str(& result, txt("⏎"));
+		break;
+		case '\v':
+			strbuilder_append_str(& result, txt("⇕"));
+		break;
+		case '\f':
+			strbuilder_append_str(& result, txt("⌂"));
+		break;
+		default:
+			strbuilder_append_char(& result, * c);
+		break;
+	}
+
+	return result;
+}
+
 #pragma endregion StrBuilder
