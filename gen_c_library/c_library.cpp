@@ -2005,6 +2005,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		src.print( fmt_newline);
 		src.print( rf_array_code_typename );
 		src.print( fmt_newline);
+		src.print( r_src_parser_case_macros );
 		src.print( rf_src_parser );
 		src.print( r_src_parsing );
 		src.print_fmt( "\n#pragma endregion Parsing\n" );
