@@ -26,7 +26,7 @@
 #endif // GEN_API
 
 #ifndef global // Global variables
-#	ifdef GEN_DYN_EXPORT
+#	if defined(GEN_STATIC_LINK) || defined(GEN_DYN_LINK)
 #		define global         
 #	else
 #		define global static
