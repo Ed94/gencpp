@@ -1365,8 +1365,10 @@ Code parse_assignment_expression()
 		eat( currtok.Type );
 	}
 
-	expr_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )expr_tok.Text.Ptr - 1;
-	expr              = untyped_str( expr_tok.Text );
+	if (left) {
+		expr_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )expr_tok.Text.Ptr - 1;
+	}
+	expr = untyped_str( expr_tok.Text );
 	// = <Expression>
 	return expr;
 }
