@@ -306,7 +306,7 @@ do                          \
 		break;
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_memory, header_memory );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_memory, header_memory );
 			if (found) break;
 
 			header_memory.append(entry);
@@ -334,7 +334,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_printing, header_printing );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_printing, header_printing );
 			if (found) break;
 
 			header_printing.append(entry);
@@ -391,7 +391,7 @@ do                          \
 
 		case CT_Preprocess_IfDef:
 		{
-			ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
+			ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_strings, header_strings );
 		}
 		break;
 
@@ -472,7 +472,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_filesystem, header_filesystem );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_filesystem, header_filesystem );
 			if (found) break;
 
 			header_filesystem.append(entry);
@@ -509,7 +509,7 @@ do                          \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs.has(Spec_Constexpr) > -1)
+			if (var->Specs.has(Spec_Constexpr))
 			{
 				Opts_def_define opts = { {}, entry->Value->Content };
 				CodeDefine define = def_define(entry->Name, MT_Expression, opts);
@@ -532,7 +532,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_parsing, header_parsing );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_parsing, header_parsing );
 			if (found) break;
 
 			header_parsing.append(entry);
@@ -640,7 +640,7 @@ do                          \
 
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_types, types );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_types, types );
 			if (found) break;
 
 			types.append(entry);
@@ -702,7 +702,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_parser_types, parser_types );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_parser_types, parser_types );
 			if (found) break;
 
 			parser_types.append(entry);
@@ -769,7 +769,7 @@ do                          \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+			if (var->Specs && var->Specs.has(Spec_Constexpr)) {
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
@@ -797,7 +797,7 @@ do                          \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_ast, ast );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_ast, ast );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_ast, ast );
@@ -978,7 +978,7 @@ R"(#define AST_ArrSpecs_Cap \
 				++ entry; // Skip a newline...
 				break;
 			}
-			found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
+			found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_code_types, code_types );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_code_types, code_types);
@@ -1078,7 +1078,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_ast_types, ast_types );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_ast_types, ast_types );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_EXECUTION_EXPRESSION_SUPPORT"), entry, parsed_ast_types, ast_types);
@@ -1132,7 +1132,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_interface, interface );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_interface, interface );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_interface, interface);
@@ -1221,7 +1221,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Preprocess_If:
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_inlines, inlines );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_inlines, inlines );
 			if (found) break;
 
 			found = ignore_preprocess_cond_block(txt("GEN_COMPILER_CPP"), entry, parsed_interface, interface);
@@ -1257,16 +1257,16 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	}
 
 	s32 idx = 0;
-	CodeBody parsed_header_end = parse_file( path_base "components/header_end.hpp" );
-	CodeBody header_end        = def_body(CT_Global_Body);
-	for ( Code entry = parsed_header_end.begin(); entry != parsed_header_end.end(); ++ entry, ++ idx ) switch( entry->Type )
+	CodeBody parsed_constants = parse_file( path_base "components/constants.hpp" );
+	CodeBody constants        = def_body(CT_Global_Body);
+	for ( Code entry = parsed_constants.begin(); entry != parsed_constants.end(); ++ entry, ++ idx ) switch( entry->Type )
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_end, header_end );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_constants, constants );
 			if (found) break;
 
-			header_end.append(entry);
+			constants.append(entry);
 		}
 		break;
 
@@ -1278,18 +1278,18 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				s32 constexpr_found = var->Specs.remove( Spec_Constexpr );
 				if (constexpr_found > -1)
 				{
-					Opts_def_define opts = { {},  entry->Value->Content };
+					Opts_def_define opts = { {}, entry->Value->Content };
 					CodeDefine define = def_define(entry->Name, MT_Expression, opts );
-					header_end.append(define);
+					constants.append(define);
 					continue;
 				}
 			}
-			header_end.append(entry);
+			constants.append(entry);
 		}
 		break;
 
 		default:
-			header_end.append(entry);
+		constants.append(entry);
 		break;
 	}
 #pragma endregion Resolve Components
@@ -1302,7 +1302,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_header_builder, header_builder );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_header_builder, header_builder );
 			if (found) break;
 
 			header_builder.append(entry);
@@ -1446,7 +1446,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_ast, src_ast );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_ast, src_ast );
 			if (found) break;
 
 			src_ast.append(entry);
@@ -1481,7 +1481,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_upfront, src_upfront );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_upfront, src_upfront );
 			if (found) break;
 
 			src_upfront.append(entry);
@@ -1520,7 +1520,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_lexer, src_lexer );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_lexer, src_lexer );
 			if (found) break;
 
 			src_lexer.append(entry);
@@ -1542,7 +1542,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+			if (var->Specs && var->Specs.has(Spec_Constexpr)) {
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
@@ -1569,7 +1569,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	{
 		case CT_Preprocess_IfDef:
 		{
-			b32 found = ignore_preprocess_cond_block(txt("GEN_INTELLISENSE_DIRECTIVES"), entry, parsed_src_parser, src_parser );
+			b32 found = ignore_preprocess_cond_block(txt("INTELLISENSE_DIRECTIVES"), entry, parsed_src_parser, src_parser );
 			if (found) break;
 
 			src_parser.append(entry);
@@ -1587,7 +1587,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		case CT_Variable:
 		{
 			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs && var->Specs.has(Spec_Constexpr) > -1) {
+			if (var->Specs && var->Specs.has(Spec_Constexpr)) {
 				Code define_ver = untyped_str(token_fmt(
 						"name",  var->Name
 					,	"value", var->Value->Content
@@ -1673,11 +1673,11 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code rf_ast_types    = refactor_and_format(ast_types);
 
 	Code rf_interface = refactor_and_format(interface);
+	Code rf_constants = refactor_and_format(constants);
 	Code rf_inlines   = refactor_and_format(inlines);
 
 	Code rf_ht_preprocessor_macro = refactor_and_format(ht_preprocessor_macro);
 	Code rf_array_string_cached   = refactor_and_format(array_string_cached);
-	Code rf_header_end            = refactor_and_format(header_end);
 	Code rf_header_builder        = refactor_and_format(header_builder);
 	Code rf_header_scanner        = refactor_and_format( scan_file( path_base "auxiliary/scanner.hpp" ));
 
@@ -1788,6 +1788,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_ht_preprocessor_macro );
 
 		header.print( rf_interface );
+		header.print( rf_constants );
 		header.print(fmt_newline);
 
 		header.print_fmt("#pragma region Inlines\n");
@@ -1796,7 +1797,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 		header.print(fmt_newline);
 
-		header.print( rf_header_end );
 		header.print( rf_header_builder );
 		header.print( rf_header_scanner );
 
@@ -1882,6 +1882,9 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 		header.print( r_header_macros );
 		header.print( header_generic_macros );
+		
+		header.print_fmt( "\nGEN_API_C_BEGIN\n" );
+
 		header.print( r_header_basic_types );
 		header.print( r_header_debug );
 		header.print( rf_header_memory );
@@ -1895,6 +1898,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( r_header_timing );
 		header.print(rf_header_parsing );
 
+		header.print_fmt( "\nGEN_API_C_END\n" );
 		header.print_fmt( "\nGEN_NS_END\n" );
 		header.write();
 	}
@@ -1949,7 +1953,17 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( rf_ast_types );
 		header.print_fmt("\n#pragma endregion AST\n");
 
+		header.print( fmt_newline);
+		header.print( rf_array_arena );
+		header.print( fmt_newline);
+		header.print( rf_array_pool);
+		header.print( fmt_newline);
+		header.print( rf_array_string_cached );
+		header.print( fmt_newline);
+		header.print( rf_ht_preprocessor_macro );
+
 		header.print( rf_interface );
+		header.print( rf_constants );
 		header.print(fmt_newline);
 
 		header.print_fmt("#pragma region Inlines\n");
@@ -1957,9 +1971,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print_fmt("#pragma endregion Inlines\n");
 
 		header.print(fmt_newline);
-		header.print( rf_array_string_cached );
 
-		header.print( rf_header_end );
 		header.print( rf_header_builder );
 		header.print( rf_header_scanner );
 
@@ -1975,11 +1987,6 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		builder_print( src, push_ignores );
 		builder_print( src, src_start );
 		src.print_fmt( "\nGEN_NS_BEGIN\n");
-
-		src.print( fmt_newline);
-		src.print( rf_array_arena );
-		src.print( fmt_newline);
-		src.print( rf_array_pool);
 
 		src.print( r_src_static_data );
 		src.print( fmt_newline);
@@ -1998,6 +2005,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		src.print( fmt_newline);
 		src.print( rf_array_code_typename );
 		src.print( fmt_newline);
+		src.print( r_src_parser_case_macros );
 		src.print( rf_src_parser );
 		src.print( r_src_parsing );
 		src.print_fmt( "\n#pragma endregion Parsing\n" );

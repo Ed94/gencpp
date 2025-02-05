@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #pragma once
 #include "interface.upfront.cpp"
 #include "gen/etoktype.cpp"
@@ -487,6 +487,10 @@ void lex_found_token( LexContext* ctx )
 	}
 
 	TokType type = str_to_toktype( ctx->token.Text );
+
+	if (type == Tok_Preprocess_Define || type == Tok_Preprocess_Include) {
+		ctx->token.Flags |= TF_Identifier;
+	}
 
 	if (type <= Tok_Access_Public && type >= Tok_Access_Private ) {
 		ctx->token.Flags |= TF_AccessSpecifier;

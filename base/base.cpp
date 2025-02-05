@@ -30,7 +30,7 @@ int gen_main()
 	gen::init( & ctx);
 
 	CodeBody gen_component_header = def_global_body( args(
-		def_preprocess_cond( PreprocessCond_IfDef, txt("GEN_INTELLISENSE_DIRECTIVES") ),
+		def_preprocess_cond( PreprocessCond_IfDef, txt("INTELLISENSE_DIRECTIVES") ),
 		pragma_once,
 		def_include(txt("components/types.hpp")),
 		preprocess_endif,

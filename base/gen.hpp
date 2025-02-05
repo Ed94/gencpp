@@ -29,9 +29,9 @@ GEN_NS_BEGIN
 
 #include "components/interface.hpp"
 
+#include "components/constants.hpp"
 #include "components/inlines.hpp"
 #include "components/gen/ast_inlines.hpp"
-#include "components/header_end.hpp"
 
 #include "auxiliary/builder.hpp"
 #include "auxiliary/scanner.hpp"

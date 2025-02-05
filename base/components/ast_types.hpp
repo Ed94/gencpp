@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
 #	include "code_types.hpp"
 #endif
@@ -227,7 +227,7 @@ struct AST_Enum
 	Code                   Parent;
 	CodeType               Type;
 	ModuleFlag             ModuleFlags;
-	char                   _PAD_UNUSED_[ sizeof(ModuleFlag) + sizeof(u32) ];
+	char                   _PAD_UNUSED_[ sizeof(u32) ];
 };
 static_assert( sizeof(AST_Enum) == sizeof(AST), "ERROR: AST_Enum is not the same size as AST");
 
@@ -738,8 +738,8 @@ static_assert( sizeof(AST_PreprocessCond) == sizeof(AST), "ERROR: AST_Preprocess
 struct AST_Specifiers
 {
 	Specifier      ArrSpecs[ AST_ArrSpecs_Cap ];
-	StrCached      Name;
 	CodeSpecifiers NextSpecs;
+	StrCached      Name;
 	Code           Prev;
 	Code           Next;
 	Token*         Tok;
@@ -1056,7 +1056,7 @@ struct AST_Typename
 			CodeSpecifiers SpecsFuncSuffix; // Only used for function signatures
 		};
 	};
-	StrCached           Name;
+	StrCached              Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;
@@ -1082,7 +1082,7 @@ struct AST_Typedef
 			char           _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 		};
 	};
-	StrCached           Name;
+	StrCached              Name;
 	Code                   Prev;
 	Code                   Next;
 	Token*                 Tok;

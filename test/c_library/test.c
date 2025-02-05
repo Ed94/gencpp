@@ -1,4 +1,4 @@
-#if GEN_INTELLISENSE_DIRECTIVES
+#if INTELLISENSE_DIRECTIVES
 #include "../../gen_c_library/gen/gen_singleheader.h"
 #endif
 

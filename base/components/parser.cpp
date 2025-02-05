@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #pragma once
 #include "gen/etoktype.cpp"
 #include "parser_case_macros.cpp"
@@ -1365,8 +1365,10 @@ Code parse_assignment_expression()
 		eat( currtok.Type );
 	}
 
-	expr_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )expr_tok.Text.Ptr - 1;
-	expr              = untyped_str( expr_tok.Text );
+	if (left) {
+		expr_tok.Text.Len = ( ( sptr )currtok.Text.Ptr + currtok.Text.Len ) - ( sptr )expr_tok.Text.Ptr - 1;
+	}
+	expr = untyped_str( expr_tok.Text );
 	// = <Expression>
 	return expr;
 }
@@ -2788,10 +2790,10 @@ CodeParams parse_params( bool use_template_capture )
 		}
 		// ( <Macro> <ValueType>
 
-		if ( check( Tok_Identifier ) )
+		if ( check( Tok_Identifier ) || bitfield_is_set(u32, currtok.Flags, TF_Identifier) )
 		{
 			name = currtok;
-			eat( Tok_Identifier );
+			eat( currtok.Type );
 			// ( <Macro> <ValueType> <Name>
 		}
 
@@ -2899,10 +2901,10 @@ CodeParams parse_params( bool use_template_capture )
 
 			name = NullToken;
 
-			if ( check( Tok_Identifier ) )
+			if ( check( Tok_Identifier ) || bitfield_is_set(u32, currtok.Flags, TF_Identifier) )
 			{
 				name = currtok;
-				eat( Tok_Identifier );
+				eat( currtok.Type );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name>
 			}
 

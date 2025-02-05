@@ -172,7 +172,7 @@ if ( $segmented )
 						write-host `t $_ -ForegroundColor Green
 					}
 				}
-			write-host "`nBootstrap completed in $($time_taken.TotalMilliseconds) ms"
+			write-host "`nSegmented completed in $($time_taken.TotalMilliseconds) ms"
 		}
 	Pop-Location
 }
@@ -263,6 +263,7 @@ if ( $c_lib_static )
 	$compiler_args += $flag_all_c
 	$compiler_args += $flag_updated_cpp_macro
 	$compiler_args += $flag_c11
+	$compiler_args += ($flag_define + 'GEN_STATIC_LINK')
 
 	$linker_args = @()
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $path_lib

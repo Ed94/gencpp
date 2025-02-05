@@ -191,7 +191,7 @@ These require the following to be handled to the equivalent extent as the other 
 4. [ast.cpp](./components/ast.cpp): Need to review
     * `code_debug_str`
     * `code_is_equal`
-    * `code_to_strbuilder_ptr`
+    * `code_to_strbuilder_ref`
     * `code_validate_body`
 5. [code_serialization.cpp](./components/code_serialization.cpp): Define serialization here.
 6. [inlines.hpp](./components/inlines.hpp): Any inline definitions for the `struct Code<Name>` are defined here.

@@ -1,6 +1,6 @@
 #pragma once
 
-#if GEN_INTELLISENSE_DIRECTIVES
+#if INTELLISENSE_DIRECTIVES
 #	include "../gen.hpp"
 #	include "misc.hpp"
 

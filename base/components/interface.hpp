@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #pragma once
 #include "ast_types.hpp"
 #endif
@@ -99,6 +99,11 @@ struct Context
 	s32 temp_serialize_indent;
 };
 
+// TODO(Ed): Eventually this library should opt out of an implicit context for baseline implementation
+// This would automatically make it viable for multi-threaded purposes among other things
+// An implicit context interface will be provided instead as wrapper procedures as convience.
+GEN_API extern Context* _ctx;
+
 // Initialize the library. There first ctx initialized must exist for lifetime of other contextes that come after as its the one that
 GEN_API void init(Context* ctx);
 
@@ -194,7 +199,7 @@ GEN_API CodeEnum def_enum( Str name, Opts_def_enum opts GEN_PARAM_DEFAULT );
 
 GEN_API CodeExec   def_execution  ( Str content );
 GEN_API CodeExtern def_extern_link( Str name, CodeBody body );
-GEN_API CodeFriend def_friend     ( Code symbol );
+GEN_API CodeFriend def_friend     ( Code code );
 
 struct Opts_def_function {
 	CodeParams      params;
@@ -230,7 +235,7 @@ struct Opts_def_operator_cast {
 GEN_API CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast opts GEN_PARAM_DEFAULT );
 
 struct Opts_def_param { Code value; };
-GEN_API CodeParams  def_param ( CodeTypename type, Str name, Opts_def_param opts GEN_PARAM_DEFAULT );
+GEN_API CodeParams def_param ( CodeTypename type, Str name, Opts_def_param opts GEN_PARAM_DEFAULT );
 GEN_API CodePragma def_pragma( Str directive );
 
 GEN_API CodePreprocessCond def_preprocess_cond( EPreprocessCond type, Str content );
@@ -244,7 +249,7 @@ GEN_API CodeTemplate def_template( CodeParams params, Code definition, Opts_def_
 
 struct Opts_def_type {
 	ETypenameTag   type_tag;
-	Code           arrayexpr;
+	Code           array_expr;
 	CodeSpecifiers specifiers;
 	CodeAttributes attributes;
 };
@@ -280,7 +285,7 @@ struct Opts_def_variable
 GEN_API CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable opts GEN_PARAM_DEFAULT );
 
 // Constructs an empty body. Use AST::validate_body() to check if the body is was has valid entries.
-GEN_API CodeBody def_body( CodeType type );
+CodeBody def_body( CodeType type );
 
 // There are two options for defining a struct body, either varadically provided with the args macro to auto-deduce the arg num,
 /// or provide as an array of Code objects.
@@ -388,7 +393,7 @@ GEN_API CodeVar         parse_variable     ( Str var_def         );
 
 GEN_API ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list va );
 //! Do not use directly. Use the token_fmt macro instead.
-GEN_API Str token_fmt_impl( ssize, ... );
+Str   token_fmt_impl( ssize, ... );
 
 GEN_API Code untyped_str( Str content);
 GEN_API Code untyped_fmt      ( char const* fmt, ... );

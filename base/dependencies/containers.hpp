@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
 #	include "printing.hpp"
 #endif
@@ -416,7 +416,7 @@ bool array_set_capacity(Array<Type>* array, usize new_capacity)
 // These are intended for use in the base library of gencpp and the C-variant of the library
 // It provides a interoperability between the C++ and C implementation of arrays. (not letting these do any crazy substiution though)
 // They are undefined in gen.hpp and gen.cpp at the end of the files.
-// We cpp library expects the user to use the regular calls as they can resolve the type fine.
+// The cpp library expects the user to use the regular calls as they can resolve the type fine.
 
 #define array_init(type, allocator)                        array_init           <type>                               (allocator )
 #define array_init_reserve(type, allocator, cap)           array_init_reserve   <type>                               (allocator, cap)

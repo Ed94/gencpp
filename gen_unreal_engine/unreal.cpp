@@ -224,8 +224,8 @@ int gen_main()
 		Code ast_types    = scan_file( path_base "components/ast_types.hpp" );
 		Code code_types   = scan_file( path_base "components/code_types.hpp" );
 		Code interface    = scan_file( path_base "components/interface.hpp" );
+		Code constants    = scan_file( path_base "components/constants.hpp" );
 		Code inlines      = scan_file( path_base "components/inlines.hpp" );
-		Code header_end   = scan_file( path_base "components/header_end.hpp" );
 
 		CodeBody ecode       = gen_ecode     ( path_base "enums/ECodeTypes.csv" );
 		CodeBody eoperator   = gen_eoperator ( path_base "enums/EOperator.csv" );
@@ -266,6 +266,7 @@ int gen_main()
 		header.print_fmt( "\n#pragma endregion AST\n" );
 
 		header.print( interface );
+		header.print( constants );
 
 		header.print_fmt( "\n#pragma region Inlines\n" );
 		header.print( inlines );
@@ -274,7 +275,6 @@ int gen_main()
 		header.print( fmt_newline );
 		header.print_fmt( "#pragma endregion Inlines\n" );
 
-		header.print( header_end );
 		header.print_fmt( "\nGEN_NS_END\n\n" );
 		header.print( pop_ignores );
 		header.write();

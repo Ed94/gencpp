@@ -1,4 +1,4 @@
-#ifdef GEN_INTELLISENSE_DIRECTIVES
+#ifdef INTELLISENSE_DIRECTIVES
 #pragma once
 #include "types.hpp"
 #include "gen/ecode.hpp"
@@ -193,6 +193,7 @@ typedef AST_Stmt_If*       CodeStmt_If;
 typedef AST_Stmt_For*      CodeStmt_For;
 typedef AST_Stmt_Goto*     CodeStmt_Goto;
 typedef AST_Stmt_Label*    CodeStmt_Label;
+typedef AST_Stmt_Lambda*   CodeStmt_Lambda;
 typedef AST_Stmt_Switch*   CodeStmt_Switch;
 typedef AST_Stmt_While*    CodeStmt_While;
 #else
@@ -208,6 +209,7 @@ struct CodeStmt_If;
 struct CodeStmt_For;
 struct CodeStmt_Goto;
 struct CodeStmt_Label;
+struct CodeStmt_Lambda;
 struct CodeStmt_Switch;
 struct CodeStmt_While;
 #endif
@@ -239,18 +241,18 @@ template< class Type> forceinline Type tmpl_cast( Code self ) { return * rcast( 
 
 #pragma region Code C-Interface
 
-GEN_API void       code_append           (Code code, Code other );
+        void       code_append           (Code code, Code other );
 GEN_API Str        code_debug_str        (Code code);
 GEN_API Code       code_duplicate        (Code code);
-GEN_API Code*      code_entry            (Code code, u32 idx );
-GEN_API bool       code_has_entries      (Code code);
-GEN_API bool       code_is_body          (Code code);
+        Code*      code_entry            (Code code, u32 idx );
+        bool       code_has_entries      (Code code);
+        bool       code_is_body          (Code code);
 GEN_API bool       code_is_equal         (Code code, Code other);
-GEN_API bool       code_is_valid         (Code code);
-GEN_API void       code_set_global       (Code code);
+        bool       code_is_valid         (Code code);
+        void       code_set_global       (Code code);
 GEN_API StrBuilder code_to_strbuilder    (Code self );
-GEN_API void       code_to_strbuilder_ptr(Code self, StrBuilder* result );
-GEN_API Str        code_type_str         (Code self );
+GEN_API void       code_to_strbuilder_ref(Code self, StrBuilder* result );
+        Str        code_type_str         (Code self );
 GEN_API bool       code_validate_body    (Code self );
 
 #pragma endregion Code C-Interface
@@ -287,7 +289,7 @@ struct Code
 	forceinline Code*      entry(u32 idx)                    { return code_entry(* this, idx); }
 	forceinline bool       has_entries()                     { return code_has_entries(* this); }
 	forceinline StrBuilder to_strbuilder()                   { return code_to_strbuilder(* this); }
-	forceinline void       to_strbuilder(StrBuilder& result) { return code_to_strbuilder_ptr(* this, & result); }
+	forceinline void       to_strbuilder(StrBuilder& result) { return code_to_strbuilder_ref(* this, & result); }
 	forceinline Str        type_str()                        { return code_type_str(* this); }
 	forceinline bool       validate_body()                   { return code_validate_body(*this); }
 #endif
@@ -399,7 +401,7 @@ struct AST
 				Code  Value;            // Parameter, Variable
 			};
 			union {
-				Code  NextVar;          // Variable; Possible way to handle comma separated variables declarations. ( , NextVar->Specs NextVar->Name NextVar->ArrExpr = NextVar->Value )
+				Code  NextVar;          // Variable
 				Code  SuffixSpecs;      // Typename, Function (Thanks Unreal)
 				Code  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
