@@ -168,26 +168,36 @@ Str macrotype_to_str( MacroType type )
 
 enum EMacroFlags : u16
 {
-	MF_Functional          = bit(0), // Macro has parameters (args expected to be passed)
-	MF_Expects_Body        = bit(1), // Expects to assign a braced scope to its body.
+	// Macro has parameters (args expected to be passed)
+	MF_Functional          = bit(0), 
+
+	// Expects to assign a braced scope to its body.
+	MF_Expects_Body        = bit(1), 
 
 	// lex__eat wil treat this macro as an identifier if the parser attempts to consume it as one.
-	//  ^^^ This is a kludge because we don't support push/pop macro pragmas rn.
+	// This is a kludge because we don't support push/pop macro pragmas rn.
 	MF_Allow_As_Identifier = bit(2), 
 
+	// When parsing identifiers, it will allow the consumption of the macro parameters (as its expected to be a part of constructing the identifier)
+	// Example of a decarator macro from stb_sprintf.h: 
+	// STBSP__PUBLICDEC int STB_SPRINTF_DECORATE(sprintf)(char* buf, char const *fmt, ...) STBSP__ATTRIBUTE_FORMAT(2,3);
+	//                       ^^ STB_SPRINTF_DECORATE is decorating sprintf
+	MF_Identifier_Decorator = bit(3), 
+
 	// lex__eat wil treat this macro as an attribute if the parser attempts to consume it as one.
-	//  ^^^ This a kludge because unreal has a macro that behaves as both a 'statement' and an attribute (UE_DEPRECATED, PRAGMA_ENABLE_DEPRECATION_WARNINGS, etc)
+	// This a kludge because unreal has a macro that behaves as both a 'statement' and an attribute (UE_DEPRECATED, PRAGMA_ENABLE_DEPRECATION_WARNINGS, etc)
 	// TODO(Ed): We can keep the MF_Allow_As_Attribute flag for macros, however, we need to add the ability of AST_Attributes to chain themselves.
 	// Its thats already a thing in the standard language anyway
 	// & it would allow UE_DEPRECATED, (UE_PROPERTY / UE_FUNCTION) to chain themselves as attributes of a resolved member function/variable definition
-	MF_Allow_As_Attribute  = bit(3),
+	MF_Allow_As_Attribute  = bit(4),
 
 	// When a macro is encountered after attributes and specifiers while parsing a function, or variable:
-	// It will consume the macro and treat it as resolving the definition. (Yes this is for Unreal Engine)
+	// It will consume the macro and treat it as resolving the definition.
 	// (MUST BE OF MT_Statement TYPE)
-	MF_Allow_As_Definition = bit(4),
+	MF_Allow_As_Definition = bit(5),
 
-	MF_Allow_As_Specifier = bit(5), // Created for Unreal's PURE_VIRTUAL
+	// Created for Unreal's PURE_VIRTUAL
+	MF_Allow_As_Specifier = bit(6),
 
 	MF_Null           = 0,
 	MF_UnderlyingType = GEN_U16_MAX,

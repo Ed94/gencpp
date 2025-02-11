@@ -38,13 +38,13 @@ void body_to_strbuilder_export( CodeBody body, StrBuilder* result )
 	GEN_ASSERT(result != nullptr);
 	strbuilder_append_fmt( result, "export\n{\n" );
 
-	Code curr = cast(Code, body);
+	Code curr = body->Front;
 	s32  left = body->NumEntries;
 	while ( left-- )
 	{
 		code_to_strbuilder_ref(curr, result);
 		// strbuilder_append_fmt( result, "%SB", code_to_strbuilder(curr) );
-		++curr;
+		curr = curr->Next;
 	}
 
 	strbuilder_append_fmt( result, "};\n" );

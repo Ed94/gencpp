@@ -53,6 +53,7 @@ word enum_underlying,              gen_enum_underlying
 word nullptr,                      gen_nullptr
 word struct_init,                  gen_struct_init
 word hash,                         gen_hash
+word txt,                          gen_txt
 
 // Basic Types
 
@@ -409,6 +410,8 @@ namespace var_,        gen_var_
 // Gen Interface
 
 word _ctx, gen__ctx
+
+word get_context, gen_get_context
 
 word init,   gen_init
 word deinit, gen_deinit

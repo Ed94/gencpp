@@ -38,7 +38,7 @@ void body_to_strbuilder_ref( CodeBody body, StrBuilder* result )
 	{
 		code_to_strbuilder_ref(curr, result);
 		// strbuilder_append_fmt( result, "%SB", code_to_strbuilder(curr) );
-		++curr;
+		curr = curr->Next;
 	}
 }
 

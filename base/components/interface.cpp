@@ -283,6 +283,15 @@ void init(Context* ctx)
 		ctx->InitSize_Fallback_Allocator_Bucket_Size = megabytes(8);
 	}
 
+	if (ctx->InitSize_StrCacheTable == 0)
+	{
+		ctx->InitSize_StrCacheTable = kilobytes(8);
+	}
+	if (ctx->InitSize_MacrosTable == 0)
+	{
+		ctx->InitSize_MacrosTable = kilobytes(8);
+	}
+
 	// Override the current context (user has to put it back if unwanted).
 	_ctx = ctx;
 
@@ -311,11 +320,11 @@ void init(Context* ctx)
 	}
 	// Setup the hash tables
 	{
-		ctx->StrCache = hashtable_init(StrCached, ctx->Allocator_DyanmicContainers);
+		ctx->StrCache = hashtable_init_reserve(StrCached, ctx->Allocator_DyanmicContainers, ctx->InitSize_StrCacheTable);
 		if ( ctx->StrCache.Entries == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the StringCache");
 
-		ctx->Macros = hashtable_init(Macro, ctx->Allocator_DyanmicContainers);
+		ctx->Macros = hashtable_init_reserve(Macro, ctx->Allocator_DyanmicContainers, ctx->InitSize_MacrosTable);
 		if (ctx->Macros.Hashes == nullptr || ctx->Macros.Entries == nullptr) {
 			GEN_FATAL( "gen::init: Failed to initialize the PreprocessMacros table" );
 		}

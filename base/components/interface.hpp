@@ -64,6 +64,9 @@ struct Context
 	u32 InitSize_LexerTokens;
 	u32 SizePer_StringArena;
 
+	u32 InitSize_StrCacheTable;
+	u32 InitSize_MacrosTable;
+
 // TODO(Ed): Symbol Table
 	// Keep track of all resolved symbols (naemspaced identifiers)
 

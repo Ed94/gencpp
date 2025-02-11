@@ -1443,6 +1443,22 @@ CodeFn parse_function_after_name(
 	}
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
 
+	// Check for trailing specifiers...
+	CodeAttributes post_rt_attributes = parse_attributes();
+	if (post_rt_attributes)
+	{
+		if (attributes)
+		{
+			StrBuilder merged   =  strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S %S", attributes->Content, post_rt_attributes->Content);
+			attributes->Content = cache_str(strbuilder_to_str(merged));
+		}
+		else
+		{
+			attributes = post_rt_attributes;
+		}
+	}
+	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> <Attributes> 
+
 	CodeBody    body       = NullCode;
 	CodeComment inline_cmt = NullCode;
 	if ( check( Tok_BraceCurly_Open ) )
@@ -1481,17 +1497,19 @@ CodeFn parse_function_after_name(
 		
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
-		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>; <InlineCmt>
+			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> < = 0 or delete > ; <InlineCmt>
 	}
-	else
+
+
+	if (body == nullptr)
 	{
 		Token stmt_end = currtok;
 		eat( Tok_Statement_End );
-		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>;
+		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> <Attributes> < = 0 or delete > ;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
 			inline_cmt = parse_comment();
-			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>; <InlineCmt>
+			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> < = 0 or delete > ; <InlineCmt>
 	}
 
 	StrBuilder
@@ -1766,7 +1784,7 @@ CodeBody parse_global_nspace( CodeType which )
 
 			case Tok_Preprocess_Macro_Expr: 
 			{
-				if (tok_is_attribute(currtok))
+				if ( ! tok_is_attribute(currtok))
 				{
 					log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(_ctx->parser));
 					return InvalidCode;
@@ -2049,11 +2067,20 @@ Token parse_identifier( bool* possible_member_function )
 
 	Macro* macro = lookup_macro(currtok.Text);
 	b32 accept_as_identifier = macro && bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Identifier );
+	b32 is_decarator         = macro && bitfield_is_set(MacroFlags, macro->Flags, MF_Identifier_Decorator );
 
 	// Typename can be: '::' <name>
 	// If that is the case first  option will be Tok_Access_StaticSymbol below
-	if (check(Tok_Identifier) || accept_as_identifier)
-		eat( Tok_Identifier );
+	if (check(Tok_Identifier) || accept_as_identifier) 
+	{
+		if (is_decarator) {
+			Code name_macro = parse_simple_preprocess(currtok.Type);
+			name.Text.Len   = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;
+		}	
+		else {
+			eat(Tok_Identifier);
+		}
+	}
 	// <Name>
 
 	parse_template_args( & name );
@@ -4714,21 +4741,37 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 	else if ( currtok.Type == Tok_Decl_Class || currtok.Type == Tok_Decl_Enum || currtok.Type == Tok_Decl_Struct
 			|| currtok.Type == Tok_Decl_Union )
 	{
-		switch (currtok.Type) {
-			case Tok_Decl_Class  : tag = Tag_Class;  break;
-			case Tok_Decl_Enum   : tag = Tag_Enum;   break;
-			case Tok_Decl_Struct : tag = Tag_Struct; break;
-			case Tok_Decl_Union  : tag = Tag_Union;  break;
-			default:
-				break;
+		Token next = nexttok;
+
+		if (next.Type == Tok_Identifier)
+		{
+			switch (currtok.Type) {
+				case Tok_Decl_Class  : tag = Tag_Class;  break;
+				case Tok_Decl_Enum   : tag = Tag_Enum;   break;
+				case Tok_Decl_Struct : tag = Tag_Struct; break;
+				case Tok_Decl_Union  : tag = Tag_Union;  break;
+				default:
+					break;
+			}
+			eat( currtok.Type );
+			// <Attributes> <Specifiers> <class, enum, struct, union>
+
+			name = parse_identifier(nullptr);
+			// <Attributes> <Specifiers> <class, enum, struct, union> <Name> 
 		}
-		eat( currtok.Type );
-		// <Attributes> <Specifiers> <class, enum, struct, union>
+		else if  (next.Type == Tok_BraceCurly_Open)
+		{
+			name = currtok;
+			// We have an inplace definition, we need to consume that...
 
-		name = parse_identifier(nullptr);
+			// TODO(Ed): we need to add a way for AST_CodeTypename to track an implace definition..
+			b32 const inplace = true;
+			Code indplace_def = cast(Code, parser_parse_struct(inplace));
 
-		// name.Length = ( ( sptr )currtok.Text + currtok.Length ) - ( sptr )name.Text;
-		// eat( Tok_Identifier );
+			// For now we lose the structural information, 
+			name.Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;
+			// <Attributes> <Specifiers> <class, enum, struct, union> <inplace def>
+		}
 		_ctx->parser.Scope->Name = name.Text;
 		// <Attributes> <Specifiers> <class, enum, struct, union> <Name>
 	}

@@ -198,21 +198,16 @@
 #ifndef        forceinline
 #	if GEN_COMPILER_MSVC
 #		define forceinline __forceinline
-#		define neverinline __declspec( noinline )
 #	elif GEN_COMPILER_GCC
 #		define forceinline inline __attribute__((__always_inline__))
-#		define neverinline __attribute__( ( __noinline__ ) )
 #	elif GEN_COMPILER_CLANG
 #	if __has_attribute(__always_inline__)
 #		define forceinline inline __attribute__((__always_inline__))
-#		define neverinline __attribute__( ( __noinline__ ) )
 #	else
 #		define forceinline
-#		define neverinline
 #	endif
 #	else
 #		define forceinline
-#		define neverinline
 #	endif
 #endif
 

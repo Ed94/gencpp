@@ -404,7 +404,7 @@ if ( $vendor -match "msvc" )
 	$flag_optimize_intrinsics		  = '/Oi'
 	$flag_optimized_debug_forceinline = '/d2Obforceinline'
 	$flag_optimized_debug			  = '/Zo'
-	$flag_
+	# $flag_
 	# $flag_out_name                    = '/OUT:'
 	$flag_path_interm                 = '/Fo'
 	$flag_path_debug                  = '/Fd'

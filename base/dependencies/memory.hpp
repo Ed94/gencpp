@@ -138,7 +138,7 @@ constexpr AllocatorInfo heap( void ) { AllocatorInfo allocator = { heap_allocato
 #define malloc( sz ) alloc( heap(), sz )
 
 //! Helper to free memory allocated by heap allocator.
-#define mfree( ptr ) free( heap(), ptr )
+#define mfree( ptr ) allocator_free( heap(), ptr )
 
 struct VirtualMemory
 {
