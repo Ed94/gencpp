@@ -314,4 +314,12 @@
 #	define GEN_OPITMIZE_MAPPINGS_END
 #endif
 
+#ifndef get_optional
+#	if GEN_COMPILER_C
+#		define get_optional(opt) opt ? *opt : (typeof(*opt)){0}
+#	else
+#		define get_optional(opt) opt
+#	endif
+#endif
+
 #pragma endregion Macros

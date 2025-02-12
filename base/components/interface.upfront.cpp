@@ -473,8 +473,10 @@ CodeComment def_comment( Str content )
 	return (CodeComment) result;
 }
 
-CodeConstructor def_constructor( Opts_def_constructor p )
+CodeConstructor def_constructor( Opts_def_constructor opt )
 {
+	Opts_def_constructor p = get_optional(opt);
+
 	if ( p.params && p.params->Type != CT_Parameters ) {
 		log_failure("gen::def_constructor: params must be of Parameters type - %s", code_debug_str((Code)p.params));
 		GEN_DEBUG_TRAP();
@@ -510,8 +512,10 @@ CodeConstructor def_constructor( Opts_def_constructor p )
 	return result;
 }
 
-CodeClass def_class( Str name, Opts_def_struct p )
+CodeClass def_class( Str name, Opts_def_struct opt )
 {
+	Opts_def_struct p = get_optional(opt);
+
 	if ( ! name_check( def_class, name ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -561,8 +565,10 @@ CodeClass def_class( Str name, Opts_def_struct p )
 	return result;
 }
 
-CodeDefine def_define( Str name, MacroType type, Opts_def_define p )
+CodeDefine def_define( Str name, MacroType type, Opts_def_define opt )
 {
+	Opts_def_define p = get_optional(opt);
+
 	if ( ! name_check( def_define, name ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -585,8 +591,10 @@ CodeDefine def_define( Str name, MacroType type, Opts_def_define p )
 	return result;
 }
 
-CodeDestructor def_destructor( Opts_def_destructor p )
+CodeDestructor def_destructor( Opts_def_destructor opt )
 {
+	Opts_def_destructor p = get_optional(opt);
+
 	if ( p.specifiers && p.specifiers->Type != CT_Specifiers ) {
 		log_failure( "gen::def_destructor: specifiers was not a 'Specifiers' type: %s", code_debug_str(p.specifiers) );
 		GEN_DEBUG_TRAP();
@@ -619,8 +627,10 @@ CodeDestructor def_destructor( Opts_def_destructor p )
 	return result;
 }
 
-CodeEnum def_enum( Str name, Opts_def_enum p )
+CodeEnum def_enum( Str name, Opts_def_enum opt )
 {
+	Opts_def_enum p = get_optional(opt);
+
 	if ( ! name_check( def_enum, name ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -742,8 +752,10 @@ CodeFriend def_friend( Code declaration )
 	return result;
 }
 
-CodeFn def_function( Str name, Opts_def_function p )
+CodeFn def_function( Str name, Opts_def_function opt )
 {
+	Opts_def_function p = get_optional(opt);
+
 	if ( ! name_check( def_function, name )) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -802,8 +814,10 @@ CodeFn def_function( Str name, Opts_def_function p )
 	return result;
 }
 
-CodeInclude def_include( Str path, Opts_def_include p )
+CodeInclude def_include( Str path, Opts_def_include opt )
 {
+	Opts_def_include p = get_optional(opt);
+
 	if ( path.Len <= 0 || path.Ptr == nullptr ) {
 		log_failure( "gen::def_include: Invalid path provided - %d" );
 		GEN_DEBUG_TRAP();
@@ -821,8 +835,10 @@ CodeInclude def_include( Str path, Opts_def_include p )
 	return result;
 }
 
-CodeModule def_module( Str name, Opts_def_module p )
+CodeModule def_module( Str name, Opts_def_module opt )
 {
+	Opts_def_module p = get_optional(opt);
+
 	if ( ! name_check( def_module, name )) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -835,8 +851,10 @@ CodeModule def_module( Str name, Opts_def_module p )
 	return result;
 }
 
-CodeNS def_namespace( Str name, CodeBody body, Opts_def_namespace p )
+CodeNS def_namespace( Str name, CodeBody body, Opts_def_namespace opt )
 {
+	Opts_def_namespace p = get_optional(opt);
+
 	if ( ! name_check( def_namespace, name )) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -859,8 +877,10 @@ CodeNS def_namespace( Str name, CodeBody body, Opts_def_namespace p )
 	return result;
 }
 
-CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator p )
+CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator opt )
 {
+	Opts_def_operator p = get_optional(opt);
+
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes ) {
 		log_failure( "gen::def_operator: PlatformAttributes was provided but its not of attributes type: %s", code_debug_str(p.attributes) );
 		GEN_DEBUG_TRAP();
@@ -926,8 +946,10 @@ CodeOperator def_operator( Operator op, Str nspace, Opts_def_operator p )
 	return result;
 }
 
-CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast p )
+CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast opt )
 {
+	Opts_def_operator_cast p = get_optional(opt);
+
 	if ( ! null_check( def_operator_cast, type )) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -959,8 +981,10 @@ CodeOpCast def_operator_cast( CodeTypename type, Opts_def_operator_cast p )
 	return result;
 }
 
-CodeParams def_param( CodeTypename type, Str name, Opts_def_param p )
+CodeParams def_param( CodeTypename type, Str name, Opts_def_param opt )
 {
+	Opts_def_param p = get_optional(opt);
+
 	if ( ! name_check( def_param, name ) || ! null_check( def_param, type ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -1034,8 +1058,10 @@ CodeSpecifiers def_specifier( Specifier spec )
 	return result;
 }
 
-CodeStruct def_struct( Str name, Opts_def_struct p )
+CodeStruct def_struct( Str name, Opts_def_struct opt )
 {
+	Opts_def_struct p = get_optional(opt);
+
 	if ( p.attributes && p.attributes->Type != CT_PlatformAttributes ) {
 		log_failure( "gen::def_struct: attributes was not a `PlatformAttributes` type - %s", code_debug_str(cast(Code, p.attributes)) );
 		GEN_DEBUG_TRAP();
@@ -1076,8 +1102,10 @@ CodeStruct def_struct( Str name, Opts_def_struct p )
 	return result;
 }
 
-CodeTemplate def_template( CodeParams params, Code declaration, Opts_def_template p )
+CodeTemplate def_template( CodeParams params, Code declaration, Opts_def_template opt )
 {
+	Opts_def_template p = get_optional(opt);
+
 	if ( ! null_check( def_template, declaration ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -1108,8 +1136,10 @@ CodeTemplate def_template( CodeParams params, Code declaration, Opts_def_templat
 	return result;
 }
 
-CodeTypename def_type( Str name, Opts_def_type p )
+CodeTypename def_type( Str name, Opts_def_type opt )
 {
+	Opts_def_type p = get_optional(opt);
+
 	if ( ! name_check( def_type, name )) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -1143,8 +1173,10 @@ CodeTypename def_type( Str name, Opts_def_type p )
 	return result;
 }
 
-CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef p )
+CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef opt )
 {
+	Opts_def_typedef p = get_optional(opt);
+
 	if ( ! null_check( def_typedef, type ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -1206,8 +1238,10 @@ CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef p )
 	return result;
 }
 
-CodeUnion def_union( Str name, CodeBody body, Opts_def_union p )
+CodeUnion def_union( Str name, CodeBody body, Opts_def_union opt )
 {
+	Opts_def_union p = get_optional(opt);
+
 	if ( ! null_check( def_union, body ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -1233,8 +1267,10 @@ CodeUnion def_union( Str name, CodeBody body, Opts_def_union p )
 	return result;
 }
 
-CodeUsing def_using( Str name, CodeTypename type, Opts_def_using p )
+CodeUsing def_using( Str name, CodeTypename type, Opts_def_using opt )
 {
+	Opts_def_using p = get_optional(opt);
+
 	if ( ! name_check( def_using, name ) || null_check( def_using, type ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
@@ -1274,8 +1310,10 @@ CodeUsing def_using_namespace( Str name )
 	return result;
 }
 
-CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable p )
+CodeVar def_variable( CodeTypename type, Str name, Opts_def_variable opt )
 {
+	Opts_def_variable p = get_optional(opt);
+
 	if ( ! name_check( def_variable, name ) || ! null_check( def_variable, type ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;

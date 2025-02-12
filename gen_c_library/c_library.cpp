@@ -1159,6 +1159,8 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
 				Str new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "def__%S", actual_name ).to_str();
 
+				opt_param->ValueType->Specs = def_specifier(Spec_Ptr);
+
 				// Resolve define's arguments
 				b32    has_args   = fn->Params->NumEntries > 1;
 				StrBuilder params_str = StrBuilder::make_reserve(_ctx->Allocator_Temp, 32);
@@ -1172,10 +1174,10 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				}
 				char const* tmpl_fn_macro = nullptr;
 				if (params_str.length() > 0 ) {
-					tmpl_fn_macro= "#define <def_name>( <params> ... ) <def__name>( <params> (<opts_type>) { __VA_ARGS__ } )\n";
+					tmpl_fn_macro= "#define <def_name>( <params> ... ) <def__name>( <params> & (<opts_type>) { __VA_ARGS__ } )\n";
 				}
 				else {
-					tmpl_fn_macro= "#define <def_name>( ... ) <def__name>( (<opts_type>) { __VA_ARGS__ } )\n";
+					tmpl_fn_macro= "#define <def_name>( ... ) <def__name>( & (<opts_type>) { __VA_ARGS__ } )\n";
 				}
 				Code fn_macro = untyped_str(token_fmt(
 						"def_name",  fn->Name
@@ -1504,6 +1506,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
 				Str new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "def__%S", actual_name ).to_str();
 				fn->Name = cache_str(new_name);
+				opt_param->ValueType->Specs = def_specifier(Spec_Ptr);
 			}
 			src_upfront.append(fn);
 		}
