@@ -253,6 +253,7 @@ struct CodeSpecifiers
 	Using_Code( CodeSpecifiers );
 	bool       append( Specifier spec )            { return specifiers_append(* this, spec); }
 	s32        has( Specifier spec )               { return specifiers_has(* this, spec); }
+	s32        index_of( Specifier spec )          { return specifiers_index_of(* this, spec); }
 	s32        remove( Specifier to_remove )       { return specifiers_remove(* this, to_remove); }
 	StrBuilder to_strbuilder()                     { return specifiers_to_strbuilder(* this ); }
 	void       to_strbuilder( StrBuilder& result ) { return specifiers_to_strbuilder_ref(* this, & result); }

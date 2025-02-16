@@ -2390,7 +2390,10 @@ CodeOperator parse_operator_after_ret_type(
 		case '(':
 		{
 			if ( currtok.Text.Ptr[1] == ')' )
+			{
 				op = Op_FunctionCall;
+				eat(Tok_Paren_Open);
+			}
 
 			else
 				op = Op_Invalid;
