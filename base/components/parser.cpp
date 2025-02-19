@@ -11,7 +11,7 @@
 constexpr bool lex_dont_skip_formatting = false;
 constexpr bool      lex_skip_formatting = true;
 
-void parser_push( ParseContext* ctx, StackNode* node )
+void parser_push( ParseContext* ctx, ParseStackNode* node )
 {
 	node->Prev = ctx->Scope;
 	ctx->Scope = node;
@@ -60,7 +60,7 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 	else
 		strbuilder_append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
 
-	StackNode* curr_scope = ctx.Scope;
+	ParseStackNode* curr_scope = ctx.Scope;
 	s32 level = 0;
 	do
 	{
@@ -181,9 +181,10 @@ bool _check_parse_args( Str def, char const* func_name )
 #	define check_noskip( Type_ ) ( left && currtok_noskip.Type == Type_ )
 #	define check( Type_ )        ( left && currtok.Type        == Type_ )
 
-#	define push_scope()                                                                                                         \
-	Str null_name = {};                                                                                                         \
-	StackNode scope = { nullptr, lex_current( &  _ctx->parser.Tokens, lex_dont_skip_formatting ), null_name, txt( __func__ ) }; \
+// TODO(Ed): Don't do this anymore, we need a better initializer.
+#	define push_scope()                                                                                                                                        \
+	Str null_name = {};                                                                                                                                        \
+	ParseStackNode scope = { nullptr, {nullptr, 0}, lex_current( &  _ctx->parser.Tokens, lex_dont_skip_formatting ), null_name, txt( __func__ ), { nullptr} }; \
 	parser_push( & _ctx->parser, & scope )
 
 #pragma endregion Helper Macros

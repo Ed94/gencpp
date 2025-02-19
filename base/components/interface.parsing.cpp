@@ -8,6 +8,29 @@
 
 // Publically Exposed Interface
 
+ParseInfo wip_parse_str(LexedInfo lexed, Opts_parse opts)
+{
+	TokArray toks;
+	if (lexed.tokens.Num == 0 && lexed.tokens.Ptr == nullptr) {
+		check_parse_args(lexed.text);
+		toks = lex(lexed.text);
+
+		TokenSlice slice = { toks.Arr, scast(s32, array_num(toks.Arr)) };
+		lexed.tokens = slice;
+	}
+	ParseInfo info = struct_zero(ParseInfo);
+	info.lexed = lexed;
+
+	// TODO(Ed): ParseInfo should be set to the parser context.
+
+	_ctx->parser.Tokens = toks;
+	push_scope();
+	CodeBody result = parse_global_nspace(CT_Global_Body);
+	parser_pop(& _ctx->parser);
+
+	return info;
+}
+
 CodeClass parse_class( Str def )
 {
 	check_parse_args( def );

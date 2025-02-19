@@ -406,7 +406,8 @@ struct AST
 				Code  PostNameMacro;    // Only used with parameters for specifically UE_REQUIRES (Thanks Unreal)
 			};
 		};
-		StrCached  Content;          // Attributes, Comment, Execution, Include
+		StrCached  Content;      // Attributes, Comment, Execution, Include
+		// TokenSlice Content;   // TODO(Ed): Use a token slice for content
 		struct {
 			Specifier  ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
 			Code       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.
@@ -422,7 +423,7 @@ struct AST
 		Code Next;
 		Code Back;
 	};
-	Token*            Token; // Reference to starting token, only available if it was derived from parsing.
+	Token*            Token; // Reference to starting token, only available if it was derived from parsing. // TODO(Ed): Change this to a token slice.
 	Code              Parent;
 	CodeType          Type;
 //	CodeFlag          CodeFlags;

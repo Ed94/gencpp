@@ -391,37 +391,41 @@ forceinline CodeBody         def_union_body      ( s32 num, Code* codes )       
 
 #pragma region Parsing
 
-#if 0
-struct StackNode
+struct ParseStackNode
 {
-	StackNode* Prev;
+	ParseStackNode* Prev;
 
-	Token Start;
-	Token Name;       // The name of the AST node (if parsed)
-	Str  FailedProc; // The name of the procedure that failed
+	TokenSlice tokens;
+	Token*     Start;
+	Str        Name;     // The name of the AST node (if parsed)
+	Str        ProcName; // The name of the procedure
+	Code       code;     // Relevant AST node
+	// TODO(Ed): When an error occurs, the parse stack is not released and instead the scope is left dangling.
 };
-// Stack nodes are allocated the error's allocator
 
-struct Error
+struct ParseMessage
 {
-	StrBuilder     message;
-	StackNode* context_stack;
+	ParseMessage*   Next;
+	ParseStackNode* Scope;
+	Str             Log;
+	LogLevel        Level;
 };
 
 struct ParseInfo
 {
-	Arena FileMem;
-	Arena TokMem;
-	Arena CodeMem;
-
-	FileContents FileContent;
-	Array<Token> Tokens;
-	Array<Error> Errors;
-	// Errors are allocated to a dedicated general arena.
+	ParseMessage* messages;
+	LexedInfo     lexed;
+	Code          result;
 };
 
-CodeBody parse_file( Str path );
-#endif
+struct Opts_parse
+{
+	AllocatorInfo backing_msgs;
+	AllocatorInfo backing_tokens;
+	AllocatorInfo backing_ast;
+};
+
+ParseInfo wip_parse_str( LexedInfo lexed, Opts_parse opts GEN_PARAM_DEFAULT );
 
 GEN_API CodeClass       parse_class        ( Str class_def       );
 GEN_API CodeConstructor parse_constructor  ( Str constructor_def );

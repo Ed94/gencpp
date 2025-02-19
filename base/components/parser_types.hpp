@@ -97,6 +97,12 @@ struct TokArray
 	s32          Idx;
 };
 
+struct TokenSlice
+{
+	Token* Ptr;
+	s32    Num;
+};
+
 struct LexContext
 {
 	Str             content;
@@ -108,19 +114,18 @@ struct LexContext
 	Token           token;
 };
 
-struct StackNode
+struct LexedInfo
 {
-	StackNode* Prev;
-
-	Token* Start;
-	Str    Name;          // The name of the AST node (if parsed)
-	Str    ProcName;    // The name of the procedure
+	Str        text;
+	TokenSlice tokens;
 };
+
+typedef struct ParseStackNode ParseStackNode;
 
 struct ParseContext
 {
-	TokArray   Tokens;
-	StackNode* Scope;
+	TokArray        Tokens;
+	ParseStackNode* Scope;
 };
 
 enum MacroType : u16

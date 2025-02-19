@@ -535,7 +535,7 @@ namespace Lexer_, gen_Lexer_
 word LexContext, gen_LexContext
 word lex,        gen_lex
 
-word StackNode,    gen_StackNode
+word ParseStackNode,    gen_ParseStackNode
 word ParseContext, gen_ParseContext
 
 // namespace parse_, gen_parse_
