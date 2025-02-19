@@ -564,9 +564,12 @@ void lex_found_token( LexContext* ctx )
 	array_append( _ctx->Lexer_Tokens, ctx->token );
 }
 
+// TODO(Ed): We should dynamically allocate the lexer's array in Allocator_DyanmicContainers.
+
 // TODO(Ed): We need to to attempt to recover from a lex failure?
+
 neverinline
-// TokArray lex( Array<Token> tokens, Str content )
+// void lex( Array<Token> tokens, Str content )
 TokArray lex( Str content )
 {
 	LexContext c; LexContext* ctx = & c;

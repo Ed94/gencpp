@@ -15,7 +15,7 @@
   \▓▓▓▓▓▓  \▓▓▓▓▓▓▓\▓▓   \▓▓     \▓▓▓▓▓▓\▓▓   \▓▓   \▓▓▓▓  \▓▓▓▓▓▓▓\▓▓      \▓▓       \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓
 */
 
-enum LogLevel : u32
+enum LogLevel //: u32
 {
 	LL_Null,
 	LL_Note,
@@ -24,14 +24,17 @@ enum LogLevel : u32
 	LL_Fatal,
 	LL_UnderlyingType = GEN_U32_MAX,
 };
+typedef enum LogLevel LogLevel;
 
 Str loglevel_to_str(LogLevel level) 
 {
 	local_persist
 	Str lookup[] = {
-		txt("Info"),
-		txt("Warning"),
-		txt("Panic"),
+		{ "Null",    sizeof("Null")  - 1 },
+		{ "Note",    sizeof("Note")  - 1 },
+		{ "Warning", sizeof("Info")  - 1 },
+		{ "Error",   sizeof("Error") - 1 },
+		{ "Fatal",   sizeof("Fatal") - 1 },
 	};
 	return lookup[level];
 }
@@ -148,7 +151,7 @@ inline
 void logger_fmt(Context* ctx, LogLevel level, char const* fmt, ...)
 {
 	local_persist thread_local
-	PrintF_Buffer buf = struct_init(PrintF_Buffer, {0});
+	PrintF_Buffer buf = struct_zero(PrintF_Buffer);
 
 	va_list va;
 	va_start(va, fmt);
@@ -403,6 +406,7 @@ struct ParseStackNode
 	// TODO(Ed): When an error occurs, the parse stack is not released and instead the scope is left dangling.
 };
 
+typedef struct ParseMessage ParseMessage;
 struct ParseMessage
 {
 	ParseMessage*   Next;
@@ -418,14 +422,14 @@ struct ParseInfo
 	Code          result;
 };
 
-struct Opts_parse
+struct ParseOpts
 {
 	AllocatorInfo backing_msgs;
 	AllocatorInfo backing_tokens;
 	AllocatorInfo backing_ast;
 };
 
-ParseInfo wip_parse_str( LexedInfo lexed, Opts_parse opts GEN_PARAM_DEFAULT );
+ParseInfo wip_parse_str( LexedInfo lexed, ParseOpts* opts GEN_PARAM_DEFAULT );
 
 GEN_API CodeClass       parse_class        ( Str class_def       );
 GEN_API CodeConstructor parse_constructor  ( Str constructor_def );
@@ -459,6 +463,7 @@ Str   token_fmt_impl( ssize, ... );
 GEN_API Code untyped_str      ( Str content);
 GEN_API Code untyped_fmt      ( char const* fmt, ... );
 GEN_API Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
+GEN_API Code untyped_toks     ( TokenSlice tokens );
 
 #pragma endregion Untyped text
 

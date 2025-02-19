@@ -176,3 +176,16 @@ Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... )
 
 	return result;
 }
+
+Code untyped_toks( TokenSlice tokens )
+{
+	if ( tokens.Num == 0 ) {
+		log_failure( "untyped_toks: empty token slice" );
+		return InvalidCode;
+	}
+	Code
+	result              = make_code();
+	result->Type        = CT_Untyped;
+	result->ContentToks = tokens;
+	return result;
+}

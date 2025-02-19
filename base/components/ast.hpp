@@ -404,7 +404,7 @@ struct AST
 			};
 		};
 		StrCached  Content;      // Attributes, Comment, Execution, Include
-		// TokenSlice Content;   // TODO(Ed): Use a token slice for content
+		TokenSlice ContentToks; // TODO(Ed): Use a token slice for content
 		struct {
 			Specifier  ArrSpecs[AST_ArrSpecs_Cap]; // Specifiers
 			Code       NextSpecs;              // Specifiers; If ArrSpecs is full, then NextSpecs is used.

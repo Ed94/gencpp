@@ -8,7 +8,7 @@
 
 // Publically Exposed Interface
 
-ParseInfo wip_parse_str(LexedInfo lexed, Opts_parse opts)
+ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 {
 	TokArray toks;
 	if (lexed.tokens.Num == 0 && lexed.tokens.Ptr == nullptr) {

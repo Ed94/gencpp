@@ -91,16 +91,31 @@ bool tok_is_end_definition(Token tok) {
 
 StrBuilder tok_to_strbuilder(Token tok);
 
-struct TokArray 
-{
-	Array(Token) Arr;
-	s32          Idx;
-};
-
 struct TokenSlice
 {
 	Token* Ptr;
 	s32    Num;
+
+#if GEN_COMPILER_CPP
+	forceinline operator Token* ()               const { return Ptr; }
+	forceinline Token& operator[]( ssize index ) const { return Ptr[index]; }
+#endif
+};
+
+forceinline 
+Str token_range_to_str(Token start, Token end)
+{
+	Str result = {
+		start.Text.Ptr,
+		(scast(sptr, rcast(uptr, end.Text.Ptr)) + end.Text.Len) - scast(sptr, rcast(uptr, start.Text.Ptr))
+	};
+	return result;
+}
+
+struct TokArray 
+{
+	Array(Token) Arr;
+	s32          Idx;
 };
 
 struct LexContext

@@ -191,7 +191,7 @@ bool _check_parse_args( Str def, char const* func_name )
 
 // Procedure Forwards ( Entire parser internal parser interface )
 
-internal Code               parse_array_decl                   ();
+internal Code               parse_array_decl                   (ParseContext* ctx);
 internal CodeAttributes     parse_attributes                   ();
 internal CodeComment        parse_comment                      ();
 internal Code               parse_complicated_definition       ( TokType which );
@@ -491,8 +491,15 @@ StrBuilder parser_strip_formatting( Str raw_text, bool preserve_newlines )
 	return content;
 }
 
+StrBuilder parser_strip_formatting_2(TokenSlice tokens)
+{
+	// TODO(Ed): Use this to produce strings for validation purposes. We shouldn't serialize down from tokens once we start storing token slices for content.
+	StrBuilder result = struct_zero(StrBuilder);
+	return result;
+}
+
 internal
-Code parse_array_decl()
+Code parse_array_decl(ParseContext* ctx)
 {
 	push_scope();
 
@@ -525,16 +532,20 @@ Code parse_array_decl()
 			return InvalidCode;
 		}
 
+		TokenSlice tokens = { & currtok, 1 };
 		Token untyped_tok = currtok;
 
 		while ( left && currtok.Type != Tok_BraceSquare_Close )
 		{
 			eat( currtok.Type );
+			++ tokens.Num;
 		}
 
-		untyped_tok.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)untyped_tok.Text.Ptr;
+		// untyped_tok.Text.Len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)untyped_tok.Text.Ptr;
+		untyped_tok.Text = token_range_to_str(untyped_tok, prevtok);
 
 		Code array_expr = untyped_str( untyped_tok.Text );
+		// Code array_expr = untyped_toks( tokens ); // TODO(Ed): Use token slice instead of untyped strings.
 		// [ <Content>
 
 		if ( left == 0 )
@@ -557,7 +568,7 @@ Code parse_array_decl()
 		// Its a multi-dimensional array
 		if ( check( Tok_BraceSquare_Open ))
 		{
-			Code adjacent_arr_expr = parse_array_decl();
+			Code adjacent_arr_expr = parse_array_decl(ctx);
 			// [ <Content> ][ <Content> ]...
 
 			array_expr->Next = adjacent_arr_expr;
@@ -3291,7 +3302,7 @@ CodeVar parse_variable_after_name(
 {
 	push_scope();
 
-	Code array_expr    = parse_array_decl();
+	Code array_expr    = parse_array_decl(& _ctx->parser);
 	Code expr          = NullCode;
 	Code bitfield_expr = NullCode;
 
@@ -5345,7 +5356,7 @@ CodeTypedef parser_parse_typedef()
 			return InvalidCode;
 		}
 
-		array_expr = parse_array_decl();
+		array_expr = parse_array_decl(& _ctx->parser);
 		// <UnderlyingType> + <ArrayExpr>
 	}
 
@@ -5591,7 +5602,7 @@ CodeUsing parser_parse_using()
 			type = parser_parse_type(parser_not_from_template, nullptr);
 			// <ModuleFlags> using <Name> <Attributes> = <UnderlyingType>
 
-			array_expr = parse_array_decl();
+			array_expr = parse_array_decl(& _ctx->parser);
 			// <UnderlyingType> + <ArrExpr>
 		}
 	}

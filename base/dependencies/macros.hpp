@@ -310,7 +310,7 @@
 #	if GEN_COMPILER_CPP
 #		define struct_zero(type) {}
 #	else
-#		define struct_zero(type) (type) {0}
+#		define struct_zero(type) {0}
 #	endif
 #endif
 
