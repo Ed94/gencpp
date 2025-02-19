@@ -134,12 +134,6 @@ GEN_API void* heap_allocator_proc( void* allocator_data, AllocType type, ssize s
 //! The heap allocator backed by operating system's memory manager.
 constexpr AllocatorInfo heap( void ) { AllocatorInfo allocator = { heap_allocator_proc, nullptr }; return allocator; }
 
-//! Helper to allocate memory using heap allocator.
-#define malloc( sz ) alloc( heap(), sz )
-
-//! Helper to free memory allocated by heap allocator.
-#define mfree( ptr ) allocator_free( heap(), ptr )
-
 struct VirtualMemory
 {
 	void*  data;
@@ -184,6 +178,8 @@ ssize arena_alignment_of  (Arena* arena, ssize alignment);
 void  arena_check         (Arena* arena);
 void  arena_free          (Arena* arena);
 ssize arena_size_remaining(Arena* arena, ssize alignment);
+
+// TODO(Ed): Add arena_pos, arena_pop, and arena_pop_to
 
 struct Arena
 {

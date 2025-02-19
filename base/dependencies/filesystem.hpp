@@ -187,7 +187,7 @@ struct FileContents
 {
 	AllocatorInfo allocator;
 	void*         data;
-	ssize            size;
+	ssize         size;
 };
 
 constexpr b32 file_zero_terminate    = true;

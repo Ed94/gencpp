@@ -15,23 +15,34 @@
   \▓▓▓▓▓▓  \▓▓▓▓▓▓▓\▓▓   \▓▓     \▓▓▓▓▓▓\▓▓   \▓▓   \▓▓▓▓  \▓▓▓▓▓▓▓\▓▓      \▓▓       \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓
 */
 
-#if 0
 enum LogLevel : u32
 {
-	Info,
-	Warning,
-	Panic,
+	LL_Null,
+	LL_Note,
+	LL_Warning,
+	LL_Error,
+	LL_Fatal,
+	LL_UnderlyingType = GEN_U32_MAX,
 };
+
+Str loglevel_to_str(LogLevel level) 
+{
+	local_persist
+	Str lookup[] = {
+		txt("Info"),
+		txt("Warning"),
+		txt("Panic"),
+	};
+	return lookup[level];
+}
 
 struct LogEntry
 {
-	Str   msg;
-	u32   line_num;
-	void* data;
+	Str      msg;
+	LogLevel level;
 };
 
-typedef void LoggerCallback(LogEntry entry);
-#endif
+typedef void LoggerProc(LogEntry entry);
 
 // Note(Ed): This is subject to heavily change 
 // with upcoming changes to the library's fallback (default) allocations strategy;
@@ -70,6 +81,10 @@ struct Context
 // TODO(Ed): Symbol Table
 	// Keep track of all resolved symbols (naemspaced identifiers)
 
+// Logging
+
+	LoggerProc* Logger;
+
 // Parser
 
 	// Used by the lexer to persistently treat all these identifiers as preprocessor defines.
@@ -107,6 +122,45 @@ struct Context
 // An implicit context interface will be provided instead as wrapper procedures as convience.
 GEN_API extern Context* _ctx;
 
+// By default this library will either crash or exit if an error is detected while generating codes.
+// Even if set to not use GEN_FATAL, GEN_FATAL will still be used for memory failures as the library is unusable when they occur.
+#ifdef GEN_DONT_USE_FATAL
+	#define log_failure log_fmt
+#else
+	#define log_failure GEN_FATAL
+#endif
+
+// TODO(Ed): Swap all usage of this with logger_fmt (then rename logger_fmt to log_fmt)
+inline
+ssize log_fmt(char const* fmt, ...)
+{
+	ssize res;
+	va_list va;
+
+	va_start(va, fmt);
+	res = c_str_fmt_out_va(fmt, va);
+	va_end(va);
+
+	return res;
+}
+
+inline
+void logger_fmt(Context* ctx, LogLevel level, char const* fmt, ...)
+{
+	local_persist thread_local
+	PrintF_Buffer buf = struct_init(PrintF_Buffer, {0});
+
+	va_list va;
+	va_start(va, fmt);
+	ssize res = c_str_fmt_va(buf, GEN_PRINTF_MAXLEN, fmt, va) -1;
+	va_end(va);
+
+	StrBuilder msg = strbuilder_make_length(ctx->Allocator_Temp, buf, res);
+
+	LogEntry entry = { strbuilder_to_str(msg), level };
+	ctx->Logger(entry);
+}
+
 // Initialize the library. There first ctx initialized must exist for lifetime of other contextes that come after as its the one that
 GEN_API void init(Context* ctx);
 
@@ -117,7 +171,7 @@ GEN_API void deinit(Context* ctx);
 // Retrieves the active context (not usually needed, but here in case...)
 GEN_API Context* get_context();
 
-// Clears the allocations, but doesn't free the memoery, then calls init() again.
+// Clears the allocations, but doesn't free the memory, then calls init() again.
 // Ease of use.
 GEN_API void reset(Context* ctx);
 
@@ -398,7 +452,7 @@ GEN_API ssize token_fmt_va( char* buf, usize buf_size, s32 num_tokens, va_list v
 //! Do not use directly. Use the token_fmt macro instead.
 Str   token_fmt_impl( ssize, ... );
 
-GEN_API Code untyped_str( Str content);
+GEN_API Code untyped_str      ( Str content);
 GEN_API Code untyped_fmt      ( char const* fmt, ... );
 GEN_API Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... );
 

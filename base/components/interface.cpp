@@ -72,6 +72,14 @@ void* fallback_allocator_proc( void* allocator_data, AllocType type, ssize size,
 }
 
 internal
+void fallback_logger(LogEntry entry) 
+{
+	GEN_ASSERT(entry.msg.Len > 0);
+	GEN_ASSERT(entry.msg.Ptr);
+	log_fmt("%S: %S", loglevel_to_str(entry.level), entry.msg);
+}
+
+internal
 void define_constants()
 {
 	// We only initalize these if there is no base context.
@@ -292,6 +300,10 @@ void init(Context* ctx)
 		ctx->InitSize_MacrosTable = kilobytes(8);
 	}
 
+	if (ctx->Logger == nullptr) {
+		ctx->Logger = & fallback_logger;
+	}
+
 	// Override the current context (user has to put it back if unwanted).
 	_ctx = ctx;
 
@@ -307,7 +319,7 @@ void init(Context* ctx)
 	}
 	// Setup the code pool and code entries arena.
 	{
-		Pool code_pool = pool_init( ctx->Allocator_Pool, ctx->CodePool_NumBlocks, sizeof(AST) );
+		Pool code_pool = pool_init( ctx->Allocator_Pool, ctx->CodePool_NumBlocks, size_of(AST) );
 		if ( code_pool.PhysicalStart == nullptr )
 			GEN_FATAL( "gen::init: Failed to initialize the code pool" );
 		array_append( ctx->CodePools, code_pool );

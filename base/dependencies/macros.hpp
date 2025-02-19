@@ -298,10 +298,20 @@
 #	define GEN_PARAM_DEFAULT
 #endif
 
-#if GEN_COMPILER_CPP
-    #define struct_init(type, value) {value}
-#else
-    #define struct_init(type, value) {value}
+#ifndef struct_init
+#	if GEN_COMPILER_CPP
+#		define struct_init(type, value) value
+#	else
+#		define struct_init(type, value) (type) value
+#	endif
+#endif
+
+#ifndef struct_zero
+#	if GEN_COMPILER_CPP
+#		define struct_zero(type) {}
+#	else
+#		define struct_zero(type) (type) {0}
+#	endif
 #endif
 
 #if 0

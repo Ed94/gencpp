@@ -26,17 +26,4 @@ GEN_API ssize  c_str_fmt_file_va   ( FileInfo* f, char const* fmt, va_list va );
 constexpr
 char const* Msg_Invalid_Value = "INVALID VALUE PROVIDED";
 
-inline
-ssize log_fmt(char const* fmt, ...)
-{
-	ssize res;
-	va_list va;
-
-	va_start(va, fmt);
-	res = c_str_fmt_out_va(fmt, va);
-	va_end(va);
-
-	return res;
-}
-
 #pragma endregion Printing
