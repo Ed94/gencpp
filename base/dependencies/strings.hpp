@@ -1,7 +1,5 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
-#	include "basic_types.hpp"
-#	include "memory.hpp"
 #	include "hashing.hpp"
 #endif
 

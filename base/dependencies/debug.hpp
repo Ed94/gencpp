@@ -1,7 +1,5 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
-#	include "platform.hpp"
-#	include "macros.hpp"
 #	include "basic_types.hpp"
 #endif
 

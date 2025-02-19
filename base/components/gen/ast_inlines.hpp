@@ -1,6 +1,6 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #pragma once
-#include "components/types.hpp"
+#include "inlines.hpp"
 #endif
 
 // This file was generated automatially by gencpp's bootstrap.cpp (See: https://github.com/Ed94/gencpp)

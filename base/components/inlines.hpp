@@ -1,6 +1,6 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #pragma once
-#include "interface.hpp"
+#include "constants.hpp"
 #endif
 
 #pragma region Serialization
