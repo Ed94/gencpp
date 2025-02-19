@@ -185,15 +185,21 @@ bool _check_parse_args( Str def, char const* func_name )
 #	define push_scope()                                                                                                                                        \
 	Str null_name = {};                                                                                                                                        \
 	ParseStackNode scope = { nullptr, {nullptr, 0}, lex_current( &  _ctx->parser.Tokens, lex_dont_skip_formatting ), null_name, txt( __func__ ), { nullptr} }; \
-	parser_push( & _ctx->parser, & scope )
+	parser_push( & _ctx->parser, & scope ) 
+
+#if GEN_COMPILER_CPP
+#	define NullScope { nullptr, {nullptr, 0}, lex_current( &  ctx->parser.Tokens, lex_dont_skip_formatting ), Str{nullptr, 0}, txt( __func__ ), { nullptr} }
+#else
+#	define NullScope (ParseStackNode){ nullptr, {nullptr, 0}, lex_current( &  ctx->parser.Tokens, lex_dont_skip_formatting ), (Str){nullptr, 0}, txt( __func__ ), { nullptr} }
+#endif
 
 #pragma endregion Helper Macros
 
 // Procedure Forwards ( Entire parser internal parser interface )
 
-internal Code               parse_array_decl                   (ParseContext* ctx);
-internal CodeAttributes     parse_attributes                   ();
-internal CodeComment        parse_comment                      ();
+internal Code               parse_array_decl                   (Context* ctx);
+internal CodeAttributes     parse_attributes                   (Context* ctx);
+internal CodeComment        parse_comment                      (Context* ctx);
 internal Code               parse_complicated_definition       ( TokType which );
 internal CodeBody           parse_class_struct_body            ( TokType which, Token name );
 internal Code               parse_class_struct                 ( TokType which, bool inplace_def );
@@ -499,9 +505,10 @@ StrBuilder parser_strip_formatting_2(TokenSlice tokens)
 }
 
 internal
-Code parse_array_decl(ParseContext* ctx)
+Code parse_array_decl(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	if ( check( Tok_Operator ) && currtok.Text.Ptr[0] == '[' && currtok.Text.Ptr[1] == ']' )
 	{
@@ -509,7 +516,7 @@ Code parse_array_decl(ParseContext* ctx)
 		eat( Tok_Operator );
 		// []
 
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return array_expr;
 	}
 
@@ -520,15 +527,15 @@ Code parse_array_decl(ParseContext* ctx)
 
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of array declaration ( '[]' scope started )\n%s", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Error, unexpected end of array declaration ( '[]' scope started )\n%s", parser_to_strbuilder(ctx->parser) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
 		if ( currtok.Type == Tok_BraceSquare_Close )
 		{
-			log_failure( "Error, empty array expression in definition\n%s", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Error, empty array expression in definition\n%s", parser_to_strbuilder(ctx->parser) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
@@ -550,15 +557,15 @@ Code parse_array_decl(ParseContext* ctx)
 
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of array declaration, expected ]\n%s", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Error, unexpected end of array declaration, expected ]\n%s", parser_to_strbuilder(ctx->parser) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
 		if ( currtok.Type != Tok_BraceSquare_Close )
 		{
-			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", toktype_to_str( currtok.Type ), parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", toktype_to_str( currtok.Type ), parser_to_strbuilder(ctx->parser) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
@@ -574,18 +581,19 @@ Code parse_array_decl(ParseContext* ctx)
 			array_expr->Next = adjacent_arr_expr;
 		}
 
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return array_expr;
 	}
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return NullCode;
 }
 
 internal inline
-CodeAttributes parse_attributes()
+CodeAttributes parse_attributes(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
 
 	Token start = currtok;
 	s32   len   = 0;
@@ -676,7 +684,7 @@ CodeAttributes parse_attributes()
 	if ( len > 0 )
 	{
 		Str attribute_txt = { start.Text.Ptr, len };
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 
 		StrBuilder name_stripped = parser_strip_formatting( attribute_txt, parser_strip_formatting_dont_preserve_newlines );
 
@@ -685,11 +693,10 @@ CodeAttributes parse_attributes()
 		result->Name    = cache_str( strbuilder_to_str(name_stripped) );
 		result->Content = result->Name;
 		// result->Token   =
-
 		return ( CodeAttributes )result;
 	}
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return NullCode;
 }
 
@@ -720,7 +727,7 @@ Code parse_class_struct( TokType which, bool inplace_def )
 	eat( which );
 	// <ModuleFlags> <class/struct>
 
-	attributes = parse_attributes();
+	attributes = parse_attributes(_ctx);
 	// <ModuleFlags> <class/struct> <Attributes>
 
 	if ( check( Tok_Identifier ) ) {
@@ -787,7 +794,7 @@ Code parse_class_struct( TokType which, bool inplace_def )
 		// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Name>, ... { <Body> };
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 		// <ModuleFlags> <class/struct> <Attributes> <Name> <final> : <Access Specifier> <Name>, ... { <Body> }; <InlineCmt>
 	}
 
@@ -848,7 +855,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				break;
 			}
 			case Tok_Comment: {
-				member = cast(Code, parse_comment());
+				member = cast(Code, parse_comment(_ctx));
 				break;
 			}
 			case Tok_Access_Public: {
@@ -1007,7 +1014,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 			GEN_DEFINE_ATTRIBUTE_TOKENS
 		#undef Entry
 			{
-				attributes = parse_attributes();
+				attributes = parse_attributes(_ctx);
 				// <Attributes>
 			}
 			//! Fallthrough intended
@@ -1059,7 +1066,7 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 				if ( tok_is_attribute(currtok) )
 				{
 					// Unfortuantely Unreal has code where there is attirbutes before specifiers
-					CodeAttributes more_attributes = parse_attributes();
+					CodeAttributes more_attributes = parse_attributes(_ctx);
 
 					if ( attributes )
 					{
@@ -1147,9 +1154,10 @@ CodeBody parse_class_struct_body( TokType which, Token name )
 }
 
 internal
-CodeComment parse_comment()
-{
-	push_scope();
+CodeComment parse_comment(Context* ctx)
+{	
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	CodeComment
 	result          = (CodeComment) make_code();
@@ -1158,7 +1166,7 @@ CodeComment parse_comment()
 	// result->Token   = currtok_noskip;
 	eat( Tok_Comment );
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
@@ -1456,7 +1464,7 @@ CodeFn parse_function_after_name(
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers>
 
 	// Check for trailing specifiers...
-	CodeAttributes post_rt_attributes = parse_attributes();
+	CodeAttributes post_rt_attributes = parse_attributes(_ctx);
 	if (post_rt_attributes)
 	{
 		if (attributes)
@@ -1508,7 +1516,7 @@ CodeFn parse_function_after_name(
 		eat( Tok_Statement_End );
 		
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> < = 0 or delete > ; <InlineCmt>
 	}
 
@@ -1520,7 +1528,7 @@ CodeFn parse_function_after_name(
 		// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> <Attributes> < = 0 or delete > ;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 			// <Attributes> <Specifiers> <ReturnType> <Name> ( <Paraemters> ) <Specifiers> < = 0 or delete > ; <InlineCmt>
 	}
 
@@ -1674,7 +1682,7 @@ CodeBody parse_global_nspace( CodeType which )
 			break;
 
 			case Tok_Comment:
-				member = cast(Code, parse_comment());
+				member = cast(Code, parse_comment(_ctx));
 			break;
 
 			case Tok_Decl_Class:
@@ -1810,7 +1818,7 @@ CodeBody parse_global_nspace( CodeType which )
 			GEN_DEFINE_ATTRIBUTE_TOKENS
 		#undef Entry
 			{
-				attributes = parse_attributes();
+				attributes = parse_attributes(_ctx);
 				// <Attributes>
 			}
 			//! Fallthrough intentional
@@ -2555,7 +2563,7 @@ CodeOperator parse_operator_after_ret_type(
 		// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 			// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>; <InlineCmt>
 	}
 
@@ -2586,7 +2594,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	// <Attributes> <Specifiers> <ReturnType/ValueType>
 
 	// Thanks Unreal
-	CodeAttributes post_rt_attributes = parse_attributes();
+	CodeAttributes post_rt_attributes = parse_attributes(_ctx);
 	if (post_rt_attributes)
 	{
 		if (attributes)
@@ -3302,7 +3310,7 @@ CodeVar parse_variable_after_name(
 {
 	push_scope();
 
-	Code array_expr    = parse_array_decl(& _ctx->parser);
+	Code array_expr    = parse_array_decl(_ctx);
 	Code expr          = NullCode;
 	Code bitfield_expr = NullCode;
 
@@ -3412,7 +3420,7 @@ CodeVar parse_variable_after_name(
 
 		// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
 		if ( left && ( currtok_noskip.Type == Tok_Comment ) && currtok_noskip.Line == stmt_end.Line ) {
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 			// <Attributes> <Specifiers> <ValueType> <Name> : <Expression>, ...; <InlineCmt>
 			// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>, ...; <InlineCmt>
 			// <Attributes> <Specifiers> <ValueType> <Name> { <Expression> }, ...; <InlineCmt>
@@ -3596,7 +3604,7 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 		// <Name> ( <Parameters> );
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 		// <Name> ( <Parameters> ); <InlineCmt>
 	}
 
@@ -3798,7 +3806,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 		// <Virtual Specifier> ~<Name>() <Pure Specifier>;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 		// <Virtual Specifier> ~<Name>() <Pure Specifier>; <InlineCmt>
 	}
 
@@ -3852,7 +3860,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		// enum class
 	}
 
-	attributes = parse_attributes();
+	attributes = parse_attributes(_ctx);
 	// enum <class> <Attributes>
 
 	if ( check( Tok_Identifier ) )
@@ -3922,7 +3930,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 				break;
 
 				case Tok_Comment:
-					member = cast(Code, parse_comment());
+					member = cast(Code, parse_comment(_ctx));
 				break;
 
 				case Tok_Preprocess_Define:
@@ -4037,7 +4045,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		// enum <class> <Attributes> <Name> : <UnderlyingType> { <Body> };
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 			// enum <class> <Attributes> <Name> : <UnderlyingType> { <Body> }; <InlineCmt>
 	}
 
@@ -4215,7 +4223,7 @@ CodeFriend parser_parse_friend()
 		// friend <ReturnType> <Name> ( <Parameters> );
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 		// friend <Type>; <InlineCmt>
 		// friend <ReturnType> <Name> ( <Parameters> ); <InlineCmt>
 	}
@@ -4255,7 +4263,7 @@ CodeFn parser_parse_function()
 	}
 	// <export>
 
-	attributes = parse_attributes();
+	attributes = parse_attributes(_ctx);
 	// <export> <Attributes>
 
 	while ( left && tok_is_specifier(currtok) )
@@ -4356,7 +4364,7 @@ CodeOperator parser_parse_operator()
 	}
 	// <export>
 
-	attributes = parse_attributes();
+	attributes = parse_attributes(_ctx);
 	// <export> <Attributes>
 
 	while ( left && tok_is_specifier(currtok) )
@@ -4484,7 +4492,7 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 		// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>() <const>;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment();
+			inline_cmt = parse_comment(_ctx);
 			// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>() <const>; <InlineCmt>
 	}
 
@@ -4587,7 +4595,7 @@ CodeTemplate parser_parse_template()
 		Specifier specs_found[ 16 ] = { Spec_NumSpecifiers };
 		s32        NumSpecifiers = 0;
 
-		attributes = parse_attributes();
+		attributes = parse_attributes(_ctx);
 		// <export> template< <Parameters> > <Attributes>
 
 		// Specifiers Parsing
@@ -4718,7 +4726,7 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 	ETypenameTag tag = Tag_None;
 
 	// Attributes are assumed to be before the type signature
-	CodeAttributes attributes = parse_attributes();
+	CodeAttributes attributes = parse_attributes(_ctx);
 	// <Attributes>
 
 	// Prefix specifiers
@@ -5356,7 +5364,7 @@ CodeTypedef parser_parse_typedef()
 			return InvalidCode;
 		}
 
-		array_expr = parse_array_decl(& _ctx->parser);
+		array_expr = parse_array_decl(_ctx);
 		// <UnderlyingType> + <ArrayExpr>
 	}
 
@@ -5366,7 +5374,7 @@ CodeTypedef parser_parse_typedef()
 
 	CodeComment inline_cmt = NullCode;
 	if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-		inline_cmt = parse_comment();
+		inline_cmt = parse_comment(_ctx);
 		// <ModuleFalgs> typedef <UnderlyingType> <Name> <ArrayExpr>; <InlineCmt>
 
 	CodeTypedef
@@ -5419,7 +5427,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 	eat( Tok_Decl_Union );
 	// <ModuleFlags> union
 
-	CodeAttributes attributes = parse_attributes();
+	CodeAttributes attributes = parse_attributes(_ctx);
 	// <ModuleFlags> union <Attributes>
 
 	Str name = { nullptr, 0 };
@@ -5455,7 +5463,7 @@ CodeUnion parser_parse_union( bool inplace_def )
 				break;
 
 				case Tok_Comment:
-					member = cast(Code, parse_comment());
+					member = cast(Code, parse_comment(_ctx));
 				break;
 
 				// TODO(Ed) : Unions can have constructors and destructors
@@ -5588,12 +5596,12 @@ CodeUsing parser_parse_using()
 
 	if ( ! is_namespace )
 	{
-		attributes = parse_attributes();
+		attributes = parse_attributes(_ctx);
 		// <ModuleFlags> using <Name> <Attributes>
 		
 		if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ))
 		{
-			attributes = parse_attributes();
+			attributes = parse_attributes(_ctx);
 			// <ModuleFlags> using <Name> <Attributes>
 
 			eat( Tok_Operator );
@@ -5602,7 +5610,7 @@ CodeUsing parser_parse_using()
 			type = parser_parse_type(parser_not_from_template, nullptr);
 			// <ModuleFlags> using <Name> <Attributes> = <UnderlyingType>
 
-			array_expr = parse_array_decl(& _ctx->parser);
+			array_expr = parse_array_decl(_ctx);
 			// <UnderlyingType> + <ArrExpr>
 		}
 	}
@@ -5613,7 +5621,7 @@ CodeUsing parser_parse_using()
 
 	CodeComment inline_cmt = NullCode;
 	if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line ) {
-		inline_cmt = parse_comment();
+		inline_cmt = parse_comment(_ctx);
 	}
 	// <ModuleFlags> using <namespace> <Attributes> <Name> = <UnderlyingType>; <InlineCmt>
 
@@ -5665,7 +5673,7 @@ CodeVar parser_parse_variable()
 	}
 	// <ModuleFlags>
 
-	attributes = parse_attributes();
+	attributes = parse_attributes(_ctx);
 	// <ModuleFlags> <Attributes>
 
 	while ( left && tok_is_specifier(currtok) )

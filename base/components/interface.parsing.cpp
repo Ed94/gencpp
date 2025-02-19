@@ -349,6 +349,7 @@ CodeVar parse_variable( Str def )
 #undef left
 #undef check
 #undef push_scope
+#undef NullScope
 #undef def_assign
 
 // Here for C Variant
