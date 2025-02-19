@@ -1,6 +1,6 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #pragma once
-#include "gen/etoktype.cpp"
+#include "gen/etoktype.hpp"
 #include "interface.upfront.cpp"
 #include "lexer.cpp"
 #include "parser.cpp"

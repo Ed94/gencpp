@@ -1,7 +1,9 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #pragma once
+#include "basic_types.hpp"
+#include "strings.hpp"
 #include "types.hpp"
-#include "gen/ecode.hpp"
+#include "gen/ecodetypes.hpp"
 #include "gen/eoperator.hpp"
 #include "gen/especifier.hpp"
 #endif

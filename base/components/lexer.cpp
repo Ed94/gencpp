@@ -1,7 +1,7 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #pragma once
 #include "interface.upfront.cpp"
-#include "gen/etoktype.cpp"
+#include "gen/etoktype.hpp"
 #endif
 
 StrBuilder tok_to_strbuilder(Token tok)

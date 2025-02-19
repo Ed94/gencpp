@@ -395,11 +395,11 @@ struct ParseStackNode
 {
 	ParseStackNode* Prev;
 
-	TokenSlice tokens;
+	TokenSlice Tokens;
 	Token*     Start;
 	Str        Name;     // The name of the AST node (if parsed)
 	Str        ProcName; // The name of the procedure
-	Code       code;     // Relevant AST node
+	Code       CodeRel;  // Relevant AST node
 	// TODO(Ed): When an error occurs, the parse stack is not released and instead the scope is left dangling.
 };
 

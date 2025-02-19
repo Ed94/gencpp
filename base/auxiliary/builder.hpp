@@ -3,7 +3,7 @@
 #	include "helpers/push_ignores.inline.hpp"
 #	include "components/header_start.hpp"
 #	include "components/types.hpp"
-#	include "components/gen/ecode.hpp"
+#	include "components/gen/ecodetypes.hpp"
 #	include "components/gen/eoperator.hpp"
 #	include "components/gen/especifier.hpp"
 #	include "components/ast.hpp"

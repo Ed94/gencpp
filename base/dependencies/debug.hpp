@@ -1,9 +1,8 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
-#	include "dependencies/platform.hpp"
-#	include "dependencies/macros.hpp"
-#	include "basic_types.hpp"
+#	include "platform.hpp"
 #	include "macros.hpp"
+#	include "basic_types.hpp"
 #endif
 
 #pragma region Debug

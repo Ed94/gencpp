@@ -1,7 +1,7 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #pragma once
 #include "types.hpp"
-#include "gen/ecode.hpp"
+#include "gen/ecodetypes.hpp"
 #include "gen/eoperator.hpp"
 #include "gen/especifier.hpp"
 #include "gen/etoktype.hpp"
@@ -110,7 +110,6 @@ struct LexContext
 	char const*     scanner;
 	s32             line;
 	s32             column;
-	// StringTable     defines;
 	Token           token;
 };
 

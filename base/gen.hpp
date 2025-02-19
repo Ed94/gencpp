@@ -11,9 +11,6 @@
 #include "helpers/push_ignores.inline.hpp"
 #include "components/header_start.hpp"
 
-// Has container defines pushed
-#include "gen.dep.hpp"
-
 GEN_NS_BEGIN
 
 #include "components/types.hpp"

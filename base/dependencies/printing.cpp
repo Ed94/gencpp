@@ -1,6 +1,6 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
-#	include "strbuilder_ops.cpp"
+#	include "string_ops.cpp"
 #endif
 
 #pragma region Printing
