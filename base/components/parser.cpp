@@ -17,21 +17,21 @@ void parser_push( ParseContext* ctx, ParseStackNode* node )
 	ctx->Scope = node;
 
 #if 0 && GEN_BUILD_DEBUG
-	log_fmt("\tEntering _ctx->parser: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
+	log_fmt("\tEntering parser: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
 #endif
 }
 
 void parser_pop(ParseContext* ctx)
 {
 #if 0 && GEN_BUILD_DEBUG
-	log_fmt("\tPopping  _ctx->parser: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
+	log_fmt("\tPopping parser: %.*s\n", Scope->ProcName.Len, Scope->ProcName.Ptr );
 #endif
 	ctx->Scope = ctx->Scope->Prev;
 }
 
-StrBuilder parser_to_strbuilder(ParseContext ctx)
+StrBuilder parser_to_strbuilder(ParseContext ctx, AllocatorInfo temp)
 {
-	StrBuilder result = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(4) );
+	StrBuilder result = strbuilder_make_reserve( temp, kilobytes(4) );
 
 	Token scope_start = * ctx.Scope->Start;
 	Token last_valid  = ctx.Tokens.Idx >= array_num(ctx.Tokens.Arr) ? ctx.Tokens.Arr[array_num(ctx.Tokens.Arr) -1] : (* lex_current(& ctx.Tokens, true));
@@ -45,7 +45,7 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 	}
 
 	Str scope_str = { scope_start.Text.Ptr, length };
-	StrBuilder line = strbuilder_make_str( _ctx->Allocator_Temp, scope_str );
+	StrBuilder line = strbuilder_make_str( temp, scope_str );
 	strbuilder_append_fmt( & result, "\tScope    : %s\n", line );
 	strbuilder_free(& line);
 
@@ -53,7 +53,7 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 	sptr   length_from_err = dist;
 
 	Str err_str        = { last_valid.Text.Ptr, length_from_err };
-	StrBuilder line_from_err = strbuilder_make_str( _ctx->Allocator_Temp, err_str );
+	StrBuilder line_from_err = strbuilder_make_str( temp, err_str );
 
 	if ( length_from_err < 100 )
 		strbuilder_append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
@@ -78,10 +78,10 @@ StrBuilder parser_to_strbuilder(ParseContext ctx)
 	return result;
 }
 
-bool lex__eat(TokArray* self, TokType type )
+bool lex__eat(Context* ctx, TokArray* self, TokType type)
 {
 	if ( array_num(self->Arr) - self->Idx <= 0 ) {
-		log_failure( "No tokens left.\n%s", parser_to_strbuilder(_ctx->parser) );
+		log_failure( "No tokens left.\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		return false;
 	}
 
@@ -109,7 +109,7 @@ bool lex__eat(TokArray* self, TokType type )
 			, at_idx.Text.Len, at_idx.Text.Ptr
 			, tok.Line
 			, tok.Column
-			, parser_to_strbuilder(_ctx->parser)
+			, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp)
 		);
 		GEN_DEBUG_TRAP();
 		return false;
@@ -124,53 +124,52 @@ bool lex__eat(TokArray* self, TokType type )
 }
 
 internal
-void parser_init()
+void parser_init(Context* ctx)
 {
-	_ctx->Lexer_Tokens = array_init_reserve(Token, _ctx->Allocator_DyanmicContainers, _ctx->InitSize_LexerTokens );
+	ctx->Lexer_Tokens = array_init_reserve(Token, ctx->Allocator_DyanmicContainers, ctx->InitSize_LexerTokens );
 }
 
 internal
-void parser_deinit()
+void parser_deinit(Context* ctx)
 {
 	Array(Token) null_array = { nullptr };
-	_ctx->Lexer_Tokens = null_array;
+	ctx->Lexer_Tokens = null_array;
 }
 
 #pragma region Helper Macros
 
-#define check_parse_args( def ) _check_parse_args(def, stringize(_func_) )
-bool _check_parse_args( Str def, char const* func_name )
+#define check_parse_args( def ) _check_parse_args(& ctx->parser, def, stringize(_func_) )
+bool _check_parse_args(ParseContext* parser, Str def, char const* func_name )
 {
 	if ( def.Len <= 0 )
 	{
 		log_failure( c_str_fmt_buf("gen::%s: length must greater than 0", func_name) );
-		parser_pop(& _ctx->parser);
+		parser_pop(parser);
 		return false;
 	}
 	if ( def.Ptr == nullptr )
 	{
 		log_failure( c_str_fmt_buf("gen::%s: def was null", func_name) );
-		parser_pop(& _ctx->parser);
+		parser_pop(parser);
 		return false;
 	}
 	return true;
 }
 
-#	define currtok_noskip (* lex_current( &  _ctx->parser.Tokens, lex_dont_skip_formatting ))
-#	define currtok        (* lex_current( & _ctx->parser.Tokens, lex_skip_formatting ))
-#	define peektok        (* lex_peek(_ctx->parser.Tokens, lex_skip_formatting))
-#	define prevtok        (* lex_previous( _ctx->parser.Tokens, lex_dont_skip_formatting))
-#	define nexttok		  (* lex_next( _ctx->parser.Tokens, lex_skip_formatting ))
-#	define nexttok_noskip (* lex_next( _ctx->parser.Tokens, lex_dont_skip_formatting))
-#	define eat( Type_ )   lex__eat( & _ctx->parser.Tokens, Type_ )
-#	define left           ( array_num(_ctx->parser.Tokens.Arr) - _ctx->parser.Tokens.Idx )
+#	define currtok_noskip (* lex_current( &  ctx->parser.Tokens, lex_dont_skip_formatting ))
+#	define currtok        (* lex_current( & ctx->parser.Tokens, lex_skip_formatting ))
+#	define peektok        (* lex_peek(ctx->parser.Tokens, lex_skip_formatting))
+#	define prevtok        (* lex_previous( ctx->parser.Tokens, lex_dont_skip_formatting))
+#	define nexttok		  (* lex_next( ctx->parser.Tokens, lex_skip_formatting ))
+#	define nexttok_noskip (* lex_next( ctx->parser.Tokens, lex_dont_skip_formatting))
+#	define eat( Type_ )   lex__eat(ctx, & ctx->parser.Tokens, Type_ )
+#	define left           ( array_num(ctx->parser.Tokens.Arr) - ctx->parser.Tokens.Idx )
 
 #if GEN_COMPILER_CPP
 #	define def_assign( ... ) { __VA_ARGS__ }
 #else
 #	define def_assign( ... ) __VA_ARGS__
 #endif
-
 
 #ifdef check
 #define CHECK_WAS_DEFINED
@@ -180,12 +179,6 @@ bool _check_parse_args( Str def, char const* func_name )
 
 #	define check_noskip( Type_ ) ( left && currtok_noskip.Type == Type_ )
 #	define check( Type_ )        ( left && currtok.Type        == Type_ )
-
-// TODO(Ed): Don't do this anymore, we need a better initializer.
-#	define push_scope()                                                                                                                                        \
-	Str null_name = {};                                                                                                                                        \
-	ParseStackNode scope = { nullptr, {nullptr, 0}, lex_current( &  _ctx->parser.Tokens, lex_dont_skip_formatting ), null_name, txt( __func__ ), { nullptr} }; \
-	parser_push( & _ctx->parser, & scope ) 
 
 #if GEN_COMPILER_CPP
 #	define NullScope { nullptr, {nullptr, 0}, lex_current( &  ctx->parser.Tokens, lex_dont_skip_formatting ), Str{nullptr, 0}, txt( __func__ ), { nullptr} }
@@ -203,45 +196,45 @@ internal CodeComment        parse_comment                      (Context* ctx);
 internal Code               parse_complicated_definition       (Context* ctx, TokType which);
 internal CodeBody           parse_class_struct_body            (Context* ctx, TokType which, Token name);
 internal Code               parse_class_struct                 (Context* ctx, TokType which, bool inplace_def);
-internal Code               parse_expression                   ();
+internal Code               parse_expression                   (Context* ctx);
 internal Code               parse_forward_or_definition        (Context* ctx, TokType which, bool is_inplace);
 internal CodeFn             parse_function_after_name          (Context* ctx, ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type, Token name);
 internal Code               parse_function_body                (Context* ctx);
-internal CodeBody           parse_global_nspace                (Context* ctx, CodeType which );
+internal CodeBody           parse_global_nspace                (Context* ctx, CodeType which);
 internal Code               parse_global_nspace_constructor_destructor(Context* ctx, CodeSpecifiers specifiers);
 internal Token              parse_identifier                   (Context* ctx, bool* possible_member_function);
 internal CodeInclude        parse_include                      (Context* ctx);
 internal Code               parse_macro_as_definiton           (Context* ctx, CodeAttributes attributes, CodeSpecifiers specifiers);
-internal CodeOperator       parse_operator_after_ret_type      (Context* ctx, ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type );
-internal Code               parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers );
-internal CodePragma         parse_pragma                       ();
-internal CodeParams         parse_params                       ( bool use_template_capture );
-internal CodePreprocessCond parse_preprocess_cond              ();
-internal Code               parse_simple_preprocess            ( TokType which  );
-internal Code               parse_static_assert                ();
-internal void               parse_template_args                ( Token* token );
-internal CodeVar            parse_variable_after_name          ( ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, Str name );
-internal CodeVar            parse_variable_declaration_list    ();
+internal CodeOperator       parse_operator_after_ret_type      (Context* ctx, ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename ret_type);
+internal Code               parse_operator_function_or_variable(Context* ctx, bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers);
+internal CodePragma         parse_pragma                       (Context* ctx);
+internal CodeParams         parse_params                       (Context* ctx, bool use_template_capture);
+internal CodePreprocessCond parse_preprocess_cond              (Context* ctx);
+internal Code               parse_simple_preprocess            (Context* ctx, TokType which);
+internal Code               parse_static_assert                (Context* ctx);
+internal void               parse_template_args                (Context* ctx, Token* token );
+internal CodeVar            parse_variable_after_name          (Context* ctx, ModuleFlag mflags, CodeAttributes attributes, CodeSpecifiers specifiers, CodeTypename type, Str name);
+internal CodeVar            parse_variable_declaration_list    (Context* ctx);
 
-internal CodeClass       parser_parse_class           ( bool inplace_def );
-internal CodeConstructor parser_parse_constructor     ( CodeSpecifiers specifiers );
-internal CodeDefine      parser_parse_define          ();
-internal CodeDestructor  parser_parse_destructor      ( CodeSpecifiers specifiers );
-internal CodeEnum        parser_parse_enum            ( bool inplace_def );
-internal CodeBody        parser_parse_export_body     ();
-internal CodeBody        parser_parse_extern_link_body();
-internal CodeExtern      parser_parse_extern_link     ();
-internal CodeFriend      parser_parse_friend          ();
-internal CodeFn          parser_parse_function        ();
-internal CodeNS          parser_parse_namespace       ();
-internal CodeOpCast      parser_parse_operator_cast   ( CodeSpecifiers specifiers );
-internal CodeStruct      parser_parse_struct          ( bool inplace_def );
-internal CodeVar         parser_parse_variable        ();
-internal CodeTemplate    parser_parse_template        ();
-internal CodeTypename    parser_parse_type            ( bool from_template, bool* is_function );
-internal CodeTypedef     parser_parse_typedef         ();
-internal CodeUnion       parser_parse_union           ( bool inplace_def );
-internal CodeUsing       parser_parse_using           ();
+internal CodeClass       parser_parse_class           (Context* ctx, bool inplace_def );
+internal CodeConstructor parser_parse_constructor     (Context* ctx, CodeSpecifiers specifiers );
+internal CodeDefine      parser_parse_define          (Context* ctx);
+internal CodeDestructor  parser_parse_destructor      (Context* ctx, CodeSpecifiers specifiers );
+internal CodeEnum        parser_parse_enum            (Context* ctx, bool inplace_def );
+internal CodeBody        parser_parse_export_body     (Context* ctx);
+internal CodeBody        parser_parse_extern_link_body(Context* ctx);
+internal CodeExtern      parser_parse_extern_link     (Context* ctx);
+internal CodeFriend      parser_parse_friend          (Context* ctx);
+internal CodeFn          parser_parse_function        (Context* ctx);
+internal CodeNS          parser_parse_namespace       (Context* ctx);
+internal CodeOpCast      parser_parse_operator_cast   (Context* ctx, CodeSpecifiers specifiers );
+internal CodeStruct      parser_parse_struct          (Context* ctx, bool inplace_def );
+internal CodeVar         parser_parse_variable        (Context* ctx);
+internal CodeTemplate    parser_parse_template        (Context* ctx);
+internal CodeTypename    parser_parse_type            (Context* ctx, bool from_template, bool* is_function );
+internal CodeTypedef     parser_parse_typedef         (Context* ctx);
+internal CodeUnion       parser_parse_union           (Context* ctx, bool inplace_def );
+internal CodeUsing       parser_parse_using           (Context* ctx);
 
 constexpr bool parser_inplace_def         = true;
 constexpr bool parser_not_inplace_def     = false;
@@ -259,9 +252,9 @@ constexpr bool parser_strip_formatting_dont_preserve_newlines = false;
 	It has edge case failures that prevent it from being used in function bodies.
 */
 internal
-StrBuilder parser_strip_formatting( Str raw_text, bool preserve_newlines )
+StrBuilder parser_strip_formatting(Context* ctx, Str raw_text, bool preserve_newlines )
 {
-	StrBuilder content = strbuilder_make_reserve( _ctx->Allocator_Temp, raw_text.Len );
+	StrBuilder content = strbuilder_make_reserve( ctx->Allocator_Temp, raw_text.Len );
 
 	if ( raw_text.Len == 0 )
 		return content;
@@ -527,14 +520,14 @@ Code parse_array_decl(Context* ctx)
 
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of array declaration ( '[]' scope started )\n%s", parser_to_strbuilder(ctx->parser) );
+			log_failure( "Error, unexpected end of array declaration ( '[]' scope started )\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
 		if ( currtok.Type == Tok_BraceSquare_Close )
 		{
-			log_failure( "Error, empty array expression in definition\n%s", parser_to_strbuilder(ctx->parser) );
+			log_failure( "Error, empty array expression in definition\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
@@ -557,14 +550,14 @@ Code parse_array_decl(Context* ctx)
 
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of array declaration, expected ]\n%s", parser_to_strbuilder(ctx->parser) );
+			log_failure( "Error, unexpected end of array declaration, expected ]\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
 		if ( currtok.Type != Tok_BraceSquare_Close )
 		{
-			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", toktype_to_str( currtok.Type ), parser_to_strbuilder(ctx->parser) );
+			log_failure( "%s: Error, expected ] in array declaration, not %s\n%s", toktype_to_str( currtok.Type ), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
@@ -686,7 +679,7 @@ CodeAttributes parse_attributes(Context* ctx)
 		Str attribute_txt = { start.Text.Ptr, len };
 		parser_pop(& ctx->parser);
 
-		StrBuilder name_stripped = parser_strip_formatting( attribute_txt, parser_strip_formatting_dont_preserve_newlines );
+		StrBuilder name_stripped = parser_strip_formatting(ctx, attribute_txt, parser_strip_formatting_dont_preserve_newlines );
 
 		Code result     = make_code();
 		result->Type    = CT_PlatformAttributes;
@@ -704,7 +697,7 @@ internal
 Code parse_class_struct(Context* ctx, TokType which, bool inplace_def)
 {
 	if ( which != Tok_Decl_Class && which != Tok_Decl_Struct ) {
-		log_failure( "Error, expected class or struct, not %s\n%s", toktype_to_str( which ), parser_to_strbuilder(ctx->parser) );
+		log_failure( "Error, expected class or struct, not %s\n%s", toktype_to_str( which ), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		return InvalidCode;
 	}
 
@@ -896,12 +889,12 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 				break;
 			}
 			case Tok_Decl_Friend: {
-				member = cast(Code, parser_parse_friend());
+				member = cast(Code, parser_parse_friend(ctx));
 				// friend
 				break;
 			}
 			case Tok_Decl_Operator: {
-				member = cast(Code, parser_parse_operator_cast(NullCode));
+				member = cast(Code, parser_parse_operator_cast(ctx, NullCode));
 				// operator <Type>()
 				break;
 			}
@@ -911,12 +904,12 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 				break;
 			}
 			case Tok_Decl_Template: {
-				member = cast(Code, parser_parse_template());
+				member = cast(Code, parser_parse_template(ctx));
 				// template< ... >
 				break;
 			}
 			case Tok_Decl_Typedef: {
-				member = cast(Code, parser_parse_typedef());
+				member = cast(Code, parser_parse_typedef(ctx));
 				// typedef
 				break;
 			}
@@ -926,7 +919,7 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 				break;
 			}
 			case Tok_Decl_Using: {
-				member = cast(Code, parser_parse_using());
+				member = cast(Code, parser_parse_using(ctx));
 				// using
 				break;
 			}
@@ -938,12 +931,12 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 				//	return InvalidCode;
 				//}
 
-				member = cast(Code, parser_parse_destructor(NullCode));
+				member = cast(Code, parser_parse_destructor(ctx, NullCode));
 				// ~<Name>()
 				break;
 			}
 			case Tok_Preprocess_Define: {
-				member = cast(Code, parser_parse_define());
+				member = cast(Code, parser_parse_define(ctx));
 				// #define
 				break;
 			}
@@ -958,7 +951,7 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 			case Tok_Preprocess_IfDef:
 			case Tok_Preprocess_IfNotDef:
 			case Tok_Preprocess_ElIf:
-				member = cast(Code, parse_preprocess_cond());
+				member = cast(Code, parse_preprocess_cond(ctx));
 				// #<Condition>
 			break;
 
@@ -976,7 +969,7 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 			}
 
 			case Tok_Preprocess_Macro_Stmt: {
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
+				member = cast(Code, parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Stmt ));
 				break;
 			}
 
@@ -987,19 +980,19 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 			// break;
 
 			case Tok_Preprocess_Pragma: {
-				member = cast(Code, parse_pragma());
+				member = cast(Code, parse_pragma(ctx));
 				// #pragma
 				break;
 			}
 
 			case Tok_Preprocess_Unsupported: {
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
+				member = cast(Code, parse_simple_preprocess(ctx, Tok_Preprocess_Unsupported));
 				// #<UNKNOWN>
 				break;
 			}
 
 			case Tok_StaticAssert: {
-				member = parse_static_assert();
+				member = parse_static_assert(ctx);
 				// static_assert
 				break;
 			}
@@ -1008,7 +1001,7 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 			{
 				if ( ! tok_is_attribute(currtok))
 				{
-					log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(ctx->parser));
+					log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp));
 					return InvalidCode;
 				}
 			}
@@ -1049,7 +1042,7 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 						break;
 
 						default:
-							log_failure( "Invalid specifier %S for class/struct member\n%S", spec_to_str(spec), strbuilder_to_str( parser_to_strbuilder(ctx->parser)) );
+							log_failure( "Invalid specifier %S for class/struct member\n%S", spec_to_str(spec), strbuilder_to_str( parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp)) );
 							parser_pop(& ctx->parser);
 							return InvalidCode;
 					}
@@ -1090,14 +1083,14 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 
 				if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[0] == '~' )
 				{
-					member = cast(Code, parser_parse_destructor( specifiers ));
+					member = cast(Code, parser_parse_destructor(ctx, specifiers ));
 					// <Attribute> <Specifiers> ~<Name>()
 					break;
 				}
 
 				if ( currtok.Type == Tok_Decl_Operator )
 				{
-					member = cast(Code, parser_parse_operator_cast( specifiers ));
+					member = cast(Code, parser_parse_operator_cast(ctx, specifiers ));
 					// <Attributes> <Specifiers> operator <Type>()
 					break;
 				}
@@ -1119,13 +1112,13 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 				{
 					if ( c_str_compare_len( name.Text.Ptr, currtok.Text.Ptr, name.Text.Len ) == 0 )
 					{
-						member = cast(Code, parser_parse_constructor( specifiers ));
+						member = cast(Code, parser_parse_constructor(ctx, specifiers ));
 						// <Attributes> <Specifiers> <Name>()
 						break;
 					}
 				}
 
-				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
+				member = parse_operator_function_or_variable(ctx, expects_function, attributes, specifiers );
 				// <Attributes> <Specifiers> operator <Op> ...
 				// or
 				// <Attributes> <Specifiers> <Name> ...
@@ -1146,7 +1139,7 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 
 		if ( member == Code_Invalid )
 		{
-			log_failure( "Failed to parse member\n%s", parser_to_strbuilder(ctx->parser) );
+			log_failure( "Failed to parse member\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
@@ -1211,7 +1204,7 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 	if (is_fn_def)
 	{
 		// Function definition with <which> on return type
-		Code result = parse_operator_function_or_variable(false, NullCode, NullCode);
+		Code result = parse_operator_function_or_variable(ctx, false, NullCode, NullCode);
 		// <which> <typename>(...) ... { ... }
 		parser_pop(& ctx->parser);
 		return result;
@@ -1244,13 +1237,13 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 			// Forward declaration with trailing specifiers for a procedure
 			tok = tokens.Arr[spec_idx];
 
-			Code result = parse_operator_function_or_variable( false, NullCode, NullCode );
+			Code result = parse_operator_function_or_variable(ctx, false, NullCode, NullCode);
 			// <Attributes> <Specifiers> <ReturnType/ValueType> <operator <Op>, or Name> ...
 			parser_pop(& ctx->parser);
 			return result;
 		}
 
-		log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), parser_to_strbuilder(ctx->parser) );
+		log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
@@ -1273,7 +1266,7 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 			Token name = parse_identifier(ctx, nullptr);
 			ctx->parser.Scope->Name = name.Text;
 
-			CodeVar result = parse_variable_after_name(ModuleFlag_None, NullCode, NullCode, type, name.Text);
+			CodeVar result = parse_variable_after_name(ctx, ModuleFlag_None, NullCode, NullCode, type, name.Text);
 			parser_pop(& ctx->parser);
 			return (Code) result;
 		}
@@ -1292,7 +1285,7 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 			// <enum>         <type_identifier> : <identifier>;
 			// <enum> <class> <type_identifier> : <identifier>;
 			ok_to_parse = true;
-			Code result = cast(Code, parser_parse_enum( ! parser_inplace_def));
+			Code result = cast(Code, parser_parse_enum(ctx, ! parser_inplace_def));
 			parser_pop(& ctx->parser);
 			return result;
 		}
@@ -1305,12 +1298,12 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 
 		if ( ! ok_to_parse )
 		{
-			log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), parser_to_strbuilder(ctx->parser) );
+			log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
-		Code result = parse_operator_function_or_variable( false, NullCode, NullCode );
+		Code result = parse_operator_function_or_variable(ctx, false, NullCode, NullCode );
 		// <Attributes> <Specifiers> <ReturnType/ValueType> <operator <Op>, or Name> ...
 		parser_pop(& ctx->parser);
 		return result;
@@ -1324,7 +1317,7 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 			&&	( tokens.Arr[idx - 4].Type != which))
 		)
 		{
-			log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), parser_to_strbuilder(ctx->parser) );
+			log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
@@ -1332,7 +1325,7 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 		// Its a forward declaration of an enum class
 		// <enum>         <type_identifier> : <identifier>;
 		// <enum> <class> <type_identifier> : <identifier>;
-		Code result = cast(Code, parser_parse_enum( ! parser_inplace_def));
+		Code result = cast(Code, parser_parse_enum(ctx, ! parser_inplace_def));
 		parser_pop(& ctx->parser);
 		return result;
 	}
@@ -1347,14 +1340,14 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 	else if ( tok.Type == Tok_BraceSquare_Close )
 	{
 		// Its an array definition
-		Code result = parse_operator_function_or_variable( false, NullCode, NullCode );
+		Code result = parse_operator_function_or_variable(ctx, false, NullCode, NullCode );
 		// <which> <type_identifier> <identifier> [ ... ];
 		parser_pop(& ctx->parser);
 		return result;
 	}
 	else
 	{
-		log_failure( "Unsupported or bad member definition after %s declaration\n%SB", toktype_to_str(which).Ptr, parser_to_strbuilder(ctx->parser) );
+		log_failure( "Unsupported or bad member definition after %s declaration\n%SB", toktype_to_str(which).Ptr, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
@@ -1375,7 +1368,7 @@ Code parse_assignment_expression(Context* ctx)
 
 	if ( currtok.Type == Tok_Statement_End && currtok.Type != Tok_Comma )
 	{
-		log_failure( "Expected expression after assignment operator\n%s", parser_to_strbuilder(ctx->parser) );
+		log_failure( "Expected expression after assignment operator\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
@@ -1413,25 +1406,25 @@ Code parse_forward_or_definition(Context* ctx, TokType which, bool is_inplace )
 	switch ( which )
 	{
 		case Tok_Decl_Class:
-			result = cast(Code, parser_parse_class( is_inplace ));
+			result = cast(Code, parser_parse_class(ctx, is_inplace ));
 			return result;
 
 		case Tok_Decl_Enum:
-			result = cast(Code, parser_parse_enum( is_inplace ));
+			result = cast(Code, parser_parse_enum(ctx, is_inplace ));
 			return result;
 
 		case Tok_Decl_Struct:
-			result = cast(Code, parser_parse_struct( is_inplace ));
+			result = cast(Code, parser_parse_struct(ctx, is_inplace ));
 			return result;
 
 		case Tok_Decl_Union:
-			result = cast(Code, parser_parse_union( is_inplace ));
+			result = cast(Code, parser_parse_union(ctx, is_inplace ));
 			return result;
 
 		default:
 			log_failure( "Error, wrong token type given to parse_complicated_definition "
 				"(only supports class, enum, struct, union) \n%s"
-				, parser_to_strbuilder(ctx->parser) );
+				, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 
 			return InvalidCode;
 	}
@@ -1450,7 +1443,7 @@ CodeFn parse_function_after_name(Context* ctx
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope );
 
-	CodeParams params = parse_params(parser_use_parenthesis);
+	CodeParams params = parse_params(ctx, parser_use_parenthesis);
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Parameters> )
 
 	Code suffix_specs = NullCode;
@@ -1462,7 +1455,7 @@ CodeFn parse_function_after_name(Context* ctx
 		Macro* macro = lookup_macro( currtok.Text );
 		if (macro && tok_is_specifier(currtok))
 		{
-			suffix_specs = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
+			suffix_specs = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Expr);
 			continue;
 		}
 		if ( specifiers == nullptr )
@@ -1565,7 +1558,7 @@ CodeFn parse_function_after_name(Context* ctx
 
 			default:
 			{
-				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", code_debug_str(body), parser_to_strbuilder(ctx->parser));
+				log_failure("Body must be either of Function_Body or Untyped type, %s\n%s", code_debug_str(body), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp));
 				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
@@ -1679,7 +1672,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 		{
 			case Tok_Comma:
 			{
-				log_failure("Dangling comma found: %SB\nContext:\n%SB", tok_to_strbuilder(currtok), parser_to_strbuilder(ctx->parser));
+				log_failure("Dangling comma found: %SB\nContext:\n%SB", tok_to_strbuilder(currtok), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp));
 				parser_pop( & ctx->parser);
 				return InvalidCode;
 			}
@@ -1713,14 +1706,14 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 
 			case Tok_Decl_Extern_Linkage:
 				if ( which == CT_Extern_Linkage_Body )
-					log_failure( "Nested extern linkage\n%s", parser_to_strbuilder(ctx->parser) );
+					log_failure( "Nested extern linkage\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 
-				member = cast(Code, parser_parse_extern_link());
+				member = cast(Code, parser_parse_extern_link(ctx));
 				// extern "..." { ... }
 			break;
 
 			case Tok_Decl_Namespace:
-				member = cast(Code, parser_parse_namespace());
+				member = cast(Code, parser_parse_namespace(ctx));
 				// namespace <Name> { ... }
 			break;
 
@@ -1730,12 +1723,12 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			break;
 
 			case Tok_Decl_Template:
-				member = cast(Code, parser_parse_template());
+				member = cast(Code, parser_parse_template(ctx));
 				// template<...> ...
 			break;
 
 			case Tok_Decl_Typedef:
-				member = cast(Code, parser_parse_typedef());
+				member = cast(Code, parser_parse_typedef(ctx));
 				// typedef ...
 			break;
 
@@ -1745,12 +1738,12 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			break;
 
 			case Tok_Decl_Using:
-				member = cast(Code, parser_parse_using());
+				member = cast(Code, parser_parse_using(ctx));
 				// using ...
 			break;
 
 			case Tok_Preprocess_Define:
-				member = cast(Code, parser_parse_define());
+				member = cast(Code, parser_parse_define(ctx));
 				// #define ...
 			break;
 
@@ -1763,7 +1756,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			case Tok_Preprocess_IfDef:
 			case Tok_Preprocess_IfNotDef:
 			case Tok_Preprocess_ElIf:
-				member = cast(Code, parse_preprocess_cond());
+				member = cast(Code, parse_preprocess_cond(ctx));
 				// #<Conditional> ...
 			break;
 
@@ -1780,33 +1773,33 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			break;
 
 			case Tok_Preprocess_Macro_Stmt: {
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
+				member = cast(Code, parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Stmt ));
 				break;
 			}
 
 			case Tok_Preprocess_Pragma: {
-				member = cast(Code, parse_pragma());
+				member = cast(Code, parse_pragma(ctx));
 				// #pragma ...
 			}
 			break;
 
 			case Tok_Preprocess_Unsupported: {
-				member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
+				member = cast(Code, parse_simple_preprocess(ctx, Tok_Preprocess_Unsupported ));
 				// #<UNSUPPORTED> ...
 			}
 			break;
 
 			case Tok_StaticAssert: {
-				member = cast(Code, parse_static_assert());
+				member = cast(Code, parse_static_assert(ctx));
 				// static_assert( <Conditional Expression>, ... );
 			}
 			break;
 
 			case Tok_Module_Export: {
 				if ( which == CT_Export_Body )
-					log_failure( "Nested export declaration\n%s", parser_to_strbuilder(ctx->parser) );
+					log_failure( "Nested export declaration\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 
-				member = cast(Code, parser_parse_export_body());
+				member = cast(Code, parser_parse_export_body(ctx));
 				// export { ... }
 			}
 			break;
@@ -1822,7 +1815,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			{
 				if ( ! tok_is_attribute(currtok))
 				{
-					log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(ctx->parser));
+					log_failure("Unbounded macro expression residing in class/struct body\n%S", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp));
 					return InvalidCode;
 				}
 			}
@@ -1865,7 +1858,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 						default:
 							Str spec_str = spec_to_str(spec);
 
-							log_failure( "Invalid specifier %S for variable\n%S", spec_str, strbuilder_to_str( parser_to_strbuilder(ctx->parser)) );
+							log_failure( "Invalid specifier %S for variable\n%S", spec_str, strbuilder_to_str( parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp)) );
 							parser_pop(& ctx->parser);
 							return InvalidCode;
 					}
@@ -1932,20 +1925,20 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 
 					if ( found_operator_cast_outside_class_implmentation )
 					{
-						member = cast(Code, parser_parse_operator_cast( specifiers ));
+						member = cast(Code, parser_parse_operator_cast(ctx, specifiers ));
 						// <Attributes> <Specifiers> <Name>::operator <Type>() { ... }
 						break;
 					}
 				}
 
-				member = parse_operator_function_or_variable( expects_function, attributes, specifiers );
+				member = parse_operator_function_or_variable(ctx, expects_function, attributes, specifiers );
 				// <Attributes> <Specifiers> ...
 			}
 		}
 
 		if ( member == Code_Invalid )
 		{
-			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_strbuilder(currtok_noskip), parser_to_strbuilder(_ctx->parser) );
+			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_strbuilder(currtok_noskip), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
@@ -2085,11 +2078,11 @@ Code parse_global_nspace_constructor_destructor(Context* ctx, CodeSpecifiers spe
 		if (possible_destructor)
 		{
 			// <Name> :: ~<Name> (
-			result = cast(Code, parser_parse_destructor( specifiers ));
+			result = cast(Code, parser_parse_destructor(ctx, specifiers ));
 		}
 		else {
 			// <Name> :: <Name> (
-			result = cast(Code, parser_parse_constructor( specifiers ));
+			result = cast(Code, parser_parse_constructor(ctx, specifiers ));
 		}
 	}
 
@@ -2118,7 +2111,7 @@ Token parse_identifier(Context* ctx, bool* possible_member_function)
 	if (check(Tok_Identifier) || accept_as_identifier) 
 	{
 		if (is_decarator) {
-			Code name_macro = parse_simple_preprocess(currtok.Type);
+			Code name_macro = parse_simple_preprocess(ctx, currtok.Type);
 			name.Text.Len   = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;
 		}	
 		else {
@@ -2127,7 +2120,7 @@ Token parse_identifier(Context* ctx, bool* possible_member_function)
 	}
 	// <Name>
 
-	parse_template_args( & name );
+	parse_template_args(ctx, & name);
 	// <Name><Template Args>
 
 	while ( check( Tok_Access_StaticSymbol ) )
@@ -2138,7 +2131,7 @@ Token parse_identifier(Context* ctx, bool* possible_member_function)
 		Token invalid = NullToken;
 		if ( left == 0 )
 		{
-			log_failure( "Error, unexpected end of static symbol identifier\n%s", parser_to_strbuilder(ctx->parser) );
+			log_failure( "Error, unexpected end of static symbol identifier\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return invalid;
 		}
@@ -2153,7 +2146,7 @@ Token parse_identifier(Context* ctx, bool* possible_member_function)
 				return name;
 			}
 
-			log_failure( "Error, had a ~ operator after %SB but not a destructor\n%s", toktype_to_str( prevtok.Type ), parser_to_strbuilder(ctx->parser) );
+			log_failure( "Error, had a ~ operator after %SB but not a destructor\n%s", toktype_to_str( prevtok.Type ), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return invalid;
 		}
@@ -2165,7 +2158,7 @@ Token parse_identifier(Context* ctx, bool* possible_member_function)
 
 			else
 			{
-				log_failure( "Found a member function pointer identifier but the parsing context did not expect it\n%s", parser_to_strbuilder(ctx->parser) );
+				log_failure( "Found a member function pointer identifier but the parsing context did not expect it\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 				parser_pop(& ctx->parser);
 				return invalid;
 			}
@@ -2173,7 +2166,7 @@ Token parse_identifier(Context* ctx, bool* possible_member_function)
 
 		if ( currtok.Type != Tok_Identifier )
 		{
-			log_failure( "Error, expected static symbol identifier, not %s\n%s", toktype_to_str( currtok.Type ), parser_to_strbuilder(ctx->parser) );
+			log_failure( "Error, expected static symbol identifier, not %s\n%s", toktype_to_str( currtok.Type ), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return invalid;
 		}
@@ -2182,7 +2175,7 @@ Token parse_identifier(Context* ctx, bool* possible_member_function)
 		eat( Tok_Identifier );
 		// <Qualifier Name> <Template Args> :: <Name>
 
-		parse_template_args( & name );
+		parse_template_args(ctx, & name);
 		// <Qualifier Name> <Template Args> :: <Name> <Template Args>
 	}
 	// <Qualifier Name> <Template Args> :: <Name> <Template Args> ...
@@ -2205,7 +2198,7 @@ CodeInclude parse_include(Context* ctx)
 
 	if ( ! check( Tok_String ))
 	{
-		log_failure( "Error, expected include string after #include\n%s", parser_to_strbuilder(ctx->parser) );
+		log_failure( "Error, expected include string after #include\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
@@ -2254,7 +2247,7 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 		&& currtok.Type != Tok_Ampersand
 		&& currtok.Type != Tok_Ampersand_DBL )
 	{
-		log_failure( "Expected operator after 'operator' keyword\n%s", parser_to_strbuilder(ctx->parser) );
+		log_failure( "Expected operator after 'operator' keyword\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
@@ -2510,7 +2503,7 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 			{
 				if ( op == Op_Invalid )
 				{
-					log_failure( "Invalid operator '%s'\n%s", prevtok.Text, parser_to_strbuilder(ctx->parser) );
+					log_failure( "Invalid operator '%s'\n%s", prevtok.Text, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 					parser_pop(& ctx->parser);
 					return InvalidCode;
 				}
@@ -2520,7 +2513,7 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 
 	if ( op == Op_Invalid )
 	{
-		log_failure( "Invalid operator '%s'\n%s", currtok.Text, parser_to_strbuilder(ctx->parser) );
+		log_failure( "Invalid operator '%s'\n%s", currtok.Text, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
@@ -2530,7 +2523,7 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op>
 
 	// Parse Params
-	CodeParams params = parse_params(parser_use_parenthesis);
+	CodeParams params = parse_params(ctx, parser_use_parenthesis);
 	// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> )
 
 	if ( params == nullptr && op == Op_Multiply )
@@ -2557,8 +2550,8 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 		eat(currtok.Type);
 		if ( ! str_are_equal(currtok.Text, txt("delete")))
 		{
-			log_failure("Expected delete after = in operator forward instead found \"%S\"\n%SB", currtok.Text, parser_to_strbuilder(_ctx->parser));
-			parser_pop(& _ctx->parser);
+			log_failure("Expected delete after = in operator forward instead found \"%S\"\n%SB", currtok.Text, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp));
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 		if (specifiers == nullptr)
@@ -2574,10 +2567,10 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 	CodeComment inline_cmt = NullCode;
 	if ( check( Tok_BraceCurly_Open ) )
 	{
-		body = cast(CodeBody, parse_function_body(_ctx));
+		body = cast(CodeBody, parse_function_body(ctx));
 		if ( cast(Code, body) == Code_Invalid )
 		{
-			parser_pop(& _ctx->parser);
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 		// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers> { ... }
@@ -2589,7 +2582,7 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 		// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment(_ctx);
+			inline_cmt = parse_comment(ctx);
 			// <ExportFlag> <Attributes> <Specifiers> <ReturnType> <Qualifier::...> operator <Op> ( <Parameters> ) <Specifiers>; <InlineCmt>
 	}
 
@@ -2599,33 +2592,34 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-Code parse_operator_function_or_variable( bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers )
+Code parse_operator_function_or_variable(Context* ctx, bool expects_function, CodeAttributes attributes, CodeSpecifiers specifiers )
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Code result = InvalidCode;
 
-	Code macro_stmt = parse_macro_as_definiton(_ctx, attributes, specifiers);
+	Code macro_stmt = parse_macro_as_definiton(ctx, attributes, specifiers);
 	if (macro_stmt) {
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return macro_stmt;
 	}
 
-	CodeTypename type = parser_parse_type( parser_not_from_template, nullptr );
+	CodeTypename type = parser_parse_type(ctx, parser_not_from_template, nullptr );
 	// <Attributes> <Specifiers> <ReturnType/ValueType>
 
 	// Thanks Unreal
-	CodeAttributes post_rt_attributes = parse_attributes(_ctx);
+	CodeAttributes post_rt_attributes = parse_attributes(ctx);
 	if (post_rt_attributes)
 	{
 		if (attributes)
 		{
-			StrBuilder merged = strbuilder_fmt_buf(_ctx->Allocator_Temp, "%S %S", attributes->Content, post_rt_attributes->Content);
+			StrBuilder merged = strbuilder_fmt_buf(ctx->Allocator_Temp, "%S %S", attributes->Content, post_rt_attributes->Content);
 			attributes->Content = cache_str(strbuilder_to_str(merged));
 		}
 		else
@@ -2638,21 +2632,21 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	}
 
 	if ( type == InvalidCode ) {
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 
 	bool found_operator = false;
-	s32  idx            = _ctx->parser.Tokens.Idx;
+	s32  idx            = ctx->parser.Tokens.Idx;
 
-	for ( ; idx < array_num(_ctx->parser.Tokens.Arr); idx++ )
+	for ( ; idx < array_num(ctx->parser.Tokens.Arr); idx++ )
 	{
-		Token tok = _ctx->parser.Tokens.Arr[ idx ];
+		Token tok = ctx->parser.Tokens.Arr[ idx ];
 
 		if ( tok.Type == Tok_Identifier )
 		{
 			idx++;
-			tok = _ctx->parser.Tokens.Arr[ idx ];
+			tok = ctx->parser.Tokens.Arr[ idx ];
 			if ( tok.Type == Tok_Access_StaticSymbol )
 				continue;
 
@@ -2668,13 +2662,13 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 	if ( found_operator )
 	{
 		// Dealing with an operator overload
-		result = cast(Code, parse_operator_after_ret_type(_ctx, ModuleFlag_None, attributes, specifiers, type) );
+		result = cast(Code, parse_operator_after_ret_type(ctx, ModuleFlag_None, attributes, specifiers, type) );
 		// <Attributes> <Specifiers> <ReturnType> operator ...
 	}
 	else
 	{
-		Token name = parse_identifier(_ctx, nullptr);
-		_ctx->parser.Scope->Name = name.Text;
+		Token name = parse_identifier(ctx, nullptr);
+		ctx->parser.Scope->Name = name.Text;
 
 		bool detected_capture = check( Tok_Paren_Open );
 
@@ -2682,7 +2676,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		//                  (         350.0f    ,         <---  Could be the scenario
 		// Example : <Capture_Start> <Value> <Comma>
 		//                 idx         +1      +2
-		bool detected_comma = _ctx->parser.Tokens.Arr[ _ctx->parser.Tokens.Idx + 2 ].Type == Tok_Comma;
+		bool detected_comma = ctx->parser.Tokens.Arr[ ctx->parser.Tokens.Idx + 2 ].Type == Tok_Comma;
 
 		b32   detected_non_varadic_unpaired_param = detected_comma && nexttok.Type != Tok_Varadic_Argument;
 		if (! detected_non_varadic_unpaired_param && nexttok.Type ==  Tok_Preprocess_Macro_Expr) for( s32 break_scope = 0; break_scope == 0; ++ break_scope)
@@ -2693,13 +2687,13 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 
 			// (   <Macro_Expr> (  
 			// Idx      +1     +2
-			s32  idx    = _ctx->parser.Tokens.Idx + 1;  
+			s32  idx    = ctx->parser.Tokens.Idx + 1;  
 			s32  level = 0;
 
 			// Find end of the token expression
-			for ( ; idx < array_num(_ctx->parser.Tokens.Arr); idx++ )
+			for ( ; idx < array_num(ctx->parser.Tokens.Arr); idx++ )
 			{
-				Token tok = _ctx->parser.Tokens.Arr[ idx ];
+				Token tok = ctx->parser.Tokens.Arr[ idx ];
 
 				if ( tok.Type == Tok_Paren_Open )
 					level++;
@@ -2710,7 +2704,7 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 			}
 			++ idx; // Will incremnt to possible comma position
 
-			if ( _ctx->parser.Tokens.Arr[ idx ].Type != Tok_Comma )
+			if ( ctx->parser.Tokens.Arr[ idx ].Type != Tok_Comma )
 				break;
 
 			detected_non_varadic_unpaired_param = true;
@@ -2719,30 +2713,31 @@ Code parse_operator_function_or_variable( bool expects_function, CodeAttributes 
 		if ( detected_capture && ! detected_non_varadic_unpaired_param ) 
 		{
 			// Dealing with a function
-			result = cast(Code, parse_function_after_name(_ctx, ModuleFlag_None, attributes, specifiers, type, name ));
+			result = cast(Code, parse_function_after_name(ctx, ModuleFlag_None, attributes, specifiers, type, name ));
 			// <Attributes> <Specifiers> <ReturnType> <Name> ( ...
 		}
 		else
 		{
 			if ( expects_function ) {
-				log_failure( "Expected function declaration (consteval was used)\n%s", parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Expected function declaration (consteval was used)\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
 			// Dealing with a variable
-			result = cast(Code, parse_variable_after_name( ModuleFlag_None, attributes, specifiers, type, name.Text ));
+			result = cast(Code, parse_variable_after_name(ctx, ModuleFlag_None, attributes, specifiers, type, name.Text ));
 			// <Attributes> <Specifiers> <ValueType> <Name> ...
 		}
 	}
 
-	parser_pop(& _ctx->parser);	
+	parser_pop(& ctx->parser);	
 	return result;
 }
 
 internal
 Code parse_macro_as_definiton(Context* ctx, CodeAttributes attributes, CodeSpecifiers specifiers)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	if (currtok.Type != Tok_Preprocess_Macro_Stmt ) {
 		parser_pop(& ctx->parser);
@@ -2756,7 +2751,7 @@ Code parse_macro_as_definiton(Context* ctx, CodeAttributes attributes, CodeSpeci
 	}
 
 	// TODO(Ed): When AST_Macro is made, have it support attributs and specifiers for when its behaving as a declaration/definition.
-	Code code = parse_simple_preprocess( Tok_Preprocess_Macro_Stmt );
+	Code code = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Stmt );
 
 	// Attributes and sepcifiers will be collapsed into the macro's serialization.
 	StrBuilder resolved_definition = strbuilder_fmt_buf(ctx->Allocator_Temp, "%S %S %S"
@@ -2770,9 +2765,10 @@ Code parse_macro_as_definiton(Context* ctx, CodeAttributes attributes, CodeSpeci
 }
 
 internal
-CodePragma parse_pragma()
+CodePragma parse_pragma(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	CodePragma
 	pragma       = (CodePragma) make_code();
@@ -2781,25 +2777,26 @@ CodePragma parse_pragma()
 	// #pragma
 
 	if ( ! check( Tok_Preprocess_Content )) {
-		log_failure( "Error, expected content after #pragma\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
+		log_failure( "Error, expected content after #pragma\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 
-	_ctx->parser.Scope->Name = currtok.Text;
+	ctx->parser.Scope->Name = currtok.Text;
 
 	pragma->Content = cache_str( currtok.Text );
 	eat( Tok_Preprocess_Content );
 	// #pragma <Content>
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return pragma;
 }
 
 internal inline
-CodeParams parse_params( bool use_template_capture )
+CodeParams parse_params(Context* ctx, bool use_template_capture )
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	if ( ! use_template_capture ) {
 		eat( Tok_Paren_Open );
@@ -2815,14 +2812,14 @@ CodeParams parse_params( bool use_template_capture )
 	{
 		eat( Tok_Paren_Close );
 		// )
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return NullCode;
 	}
 	else if ( check( Tok_Operator ) && currtok.Text.Ptr[ 0 ] == '>' ) 
 	{
 		eat( Tok_Operator );
 		// >
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return NullCode;
 	}
 
@@ -2837,7 +2834,7 @@ CodeParams parse_params( bool use_template_capture )
 		eat( Tok_Varadic_Argument );
 		// ( or <  ...
 
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return param_varadic;
 		// ( ... )
 		// or < ... >
@@ -2853,15 +2850,15 @@ CodeParams parse_params( bool use_template_capture )
 	// AddComponentByClass(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UActorComponent> Class, bool bManualAttachment, ...
 	if ( check(Tok_Preprocess_Macro_Expr))
 	{
-		macro = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
+		macro = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Expr);
 		// ( <Macro>
 	}
 	if ( currtok.Type != Tok_Comma )
 	{
-		type = parser_parse_type( use_template_capture, nullptr );
+		type = parser_parse_type(ctx, use_template_capture, nullptr );
 		if ( cast(Code, type) == Code_Invalid )
 		{
-			parser_pop(& _ctx->parser);
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 		// ( <Macro> <ValueType>
@@ -2880,7 +2877,7 @@ CodeParams parse_params( bool use_template_capture )
 		// So we need to consume that.
 		if ( check( Tok_Preprocess_Macro_Expr ))
 		{
-			post_name_macro = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
+			post_name_macro = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Expr );
 			// ( <Macro> <ValueType> <Name> <PostNameMacro>
 		}
 
@@ -2893,8 +2890,8 @@ CodeParams parse_params( bool use_template_capture )
 			Token value_tok = currtok;
 
 			if ( currtok.Type == Tok_Comma ) {
-				log_failure( "Expected value after assignment operator\n%s.", parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Expected value after assignment operator\n%s.", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
 
@@ -2920,7 +2917,7 @@ CodeParams parse_params( bool use_template_capture )
 				eat( currtok.Type );
 			}
 
-			value = untyped_str( strbuilder_to_str(parser_strip_formatting( value_tok.Text, parser_strip_formatting_dont_preserve_newlines )) );
+			value = untyped_str( strbuilder_to_str(parser_strip_formatting(ctx, value_tok.Text, parser_strip_formatting_dont_preserve_newlines )) );
 			// ( <Macro> <ValueType> <Name> = <Expression>
 		}
 	}
@@ -2962,15 +2959,15 @@ CodeParams parse_params( bool use_template_capture )
 		// AddComponentByClass(UPARAM(meta = (AllowAbstract = "false")) TSubclassOf<UActorComponent> Class, bool bManualAttachment, ...
 		if ( check(Tok_Preprocess_Macro_Expr))
 		{
-			macro = parse_simple_preprocess(Tok_Preprocess_Macro_Expr);
+			macro = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Expr);
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro>
 		}
 		if ( currtok.Type != Tok_Comma )
 		{
-			type = cast(Code, parser_parse_type( use_template_capture, nullptr ));
+			type = cast(Code, parser_parse_type(ctx, use_template_capture, nullptr ));
 			if ( type == Code_Invalid )
 			{
-				parser_pop(& _ctx->parser);
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType>
@@ -2989,7 +2986,7 @@ CodeParams parse_params( bool use_template_capture )
 			// class T ... and then ^this^ UE_REQUIRES shows up
 			// So we need to consume that.
 			if ( check( Tok_Preprocess_Macro_Expr )) {
-				post_name_macro = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
+				post_name_macro = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Expr );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <PostNameMacro>
 			}
 
@@ -3002,8 +2999,8 @@ CodeParams parse_params( bool use_template_capture )
 				Token value_tok = currtok;
 
 				if ( currtok.Type == Tok_Comma ) {
-					log_failure( "Expected value after assignment operator\n%s", parser_to_strbuilder(_ctx->parser) );
-					parser_pop(& _ctx->parser);
+					log_failure( "Expected value after assignment operator\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+					parser_pop(& ctx->parser);
 					return InvalidCode;
 				}
 
@@ -3032,7 +3029,7 @@ CodeParams parse_params( bool use_template_capture )
 					eat( currtok.Type );
 				}
 
-				value = untyped_str( strbuilder_to_str(parser_strip_formatting( value_tok.Text, parser_strip_formatting_dont_preserve_newlines )) );
+				value = untyped_str( strbuilder_to_str(parser_strip_formatting(ctx, value_tok.Text, parser_strip_formatting_dont_preserve_newlines )) );
 				// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>
 			}
 			// ( <Macro> <ValueType> <Name> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, ..
@@ -3063,27 +3060,28 @@ CodeParams parse_params( bool use_template_capture )
 	else
 	{
 		if ( ! check( Tok_Operator ) || currtok.Text.Ptr[ 0 ] != '>' ) {
-			log_failure( "Expected '<' after 'template' keyword\n%s", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Expected '<' after 'template' keyword\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 		eat( Tok_Operator );
 		// < <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, <Macro> <ValueType> <Name> <PostNameMacro> = <Expression>, .. >
 	}
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 #undef context
 }
 
 internal
-CodePreprocessCond parse_preprocess_cond()
+CodePreprocessCond parse_preprocess_cond(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	if ( ! tok_is_preprocess_cond(currtok) )
 	{
-		log_failure( "Error, expected preprocess conditional\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
+		log_failure( "Error, expected preprocess conditional\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 
@@ -3095,27 +3093,28 @@ CodePreprocessCond parse_preprocess_cond()
 
 	if ( ! check( Tok_Preprocess_Content ))
 	{
-		log_failure( "Error, expected content after #define\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
+		log_failure( "Error, expected content after #define\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 
-	_ctx->parser.Scope->Name = currtok.Text;
+	ctx->parser.Scope->Name = currtok.Text;
 	cond->Content = cache_str( currtok.Text );
 	eat( Tok_Preprocess_Content );
 	// #<Conditiona> <Content>
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return cond;
 }
 
 internal
-Code parse_simple_preprocess( TokType which )
+Code parse_simple_preprocess(Context* ctx, TokType which)
 {
 	// TODO(Ed): We can handle a macro a bit better than this. It's AST can be made more robust..
 	// Make an AST_Macro, it should have an Name be the macro itself, with the function body being an optional function body node.
 	// If we want it to terminate or have an inline comment we can possbily use its parent typedef for that info...
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Token full_macro = currtok;
 	eat( which );
@@ -3123,7 +3122,7 @@ Code parse_simple_preprocess( TokType which )
 
 	Macro* macro = lookup_macro( full_macro.Text );
 	if ( which != Tok_Preprocess_Unsupported && macro == nullptr ) {
-		log_failure("Expected the macro %S to be registered\n%S", full_macro,  parser_to_strbuilder(_ctx->parser));
+		log_failure("Expected the macro %S to be registered\n%S", full_macro,  parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp));
 		return NullCode;
 	}
 
@@ -3171,7 +3170,7 @@ Code parse_simple_preprocess( TokType which )
 		// <Macro> { <Body> }
 
 		// TODO(Ed): Review this?
-		Str prev_proc = _ctx->parser.Scope->Prev->ProcName;
+		Str prev_proc = ctx->parser.Scope->Prev->ProcName;
 		if ( macro->Type == MT_Typename && c_str_compare_len( prev_proc.Ptr, "parser_parse_typedef", prev_proc.Len ) != 0 )
 		{
 			if ( check( Tok_Statement_End ))
@@ -3192,14 +3191,14 @@ Code parse_simple_preprocess( TokType which )
 	{
 		// If the macro is just a macro in the body of an AST it may have a semi-colon for the user to close on purpsoe
 		// (especially for functional macros)
-		Str calling_proc = _ctx->parser.Scope->Prev->ProcName;
+		Str calling_proc = ctx->parser.Scope->Prev->ProcName;
 
-		if (str_contains(_ctx->parser.Scope->Prev->ProcName, txt("parser_parse_enum")))
+		if (str_contains(ctx->parser.Scope->Prev->ProcName, txt("parser_parse_enum")))
 		{
 			// Do nothing
 			goto Leave_Scope_Early;
 		}
-		else if (macro && macro->Type == MT_Typename && str_contains(_ctx->parser.Scope->Prev->ProcName, txt("parser_parse_typedef")))
+		else if (macro && macro->Type == MT_Typename && str_contains(ctx->parser.Scope->Prev->ProcName, txt("parser_parse_typedef")))
 		{
 			if ( peektok.Type == Tok_Statement_End )
 			{
@@ -3236,16 +3235,17 @@ Code parse_simple_preprocess( TokType which )
 
 Leave_Scope_Early:
 	Code result = untyped_str( full_macro.Text );
-	_ctx->parser.Scope->Name = full_macro.Text;
+	ctx->parser.Scope->Name = full_macro.Text;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-Code parse_static_assert()
+Code parse_static_assert(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Code
 	assert       = make_code();
@@ -3253,7 +3253,7 @@ Code parse_static_assert()
 
 	Token content = currtok;
 
-	_ctx->parser.Scope->Name = content.Text;
+	ctx->parser.Scope->Name = content.Text;
 
 	eat( Tok_StaticAssert );
 	eat( Tok_Paren_Open );
@@ -3281,7 +3281,7 @@ Code parse_static_assert()
 	assert->Content = cache_str( content_str );
 	assert->Name	= assert->Content;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return assert;
 }
 
@@ -3292,7 +3292,7 @@ Code parse_static_assert()
 	passed the basic stripping supported it report a soft failure.
 */
 internal inline
-void parse_template_args( Token* token )
+void parse_template_args(Context* ctx, Token* token)
 {
 	if ( currtok.Type == Tok_Operator && currtok.Text.Ptr[ 0 ] == '<' && currtok.Text.Len == 1 )
 	{
@@ -3326,17 +3326,18 @@ void parse_template_args( Token* token )
 
 // Variable parsing is handled in multiple places because its initial signature is shared with function parsing
 internal
-CodeVar parse_variable_after_name(
-	  ModuleFlag        mflags
+CodeVar parse_variable_after_name(Context* ctx
+	, ModuleFlag        mflags
 	, CodeAttributes    attributes
 	, CodeSpecifiers    specifiers
 	, CodeTypename      type
 	, Str               name
 )
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
-	Code array_expr    = parse_array_decl(_ctx);
+	Code array_expr    = parse_array_decl(ctx);
 	Code expr          = NullCode;
 	Code bitfield_expr = NullCode;
 
@@ -3344,7 +3345,7 @@ CodeVar parse_variable_after_name(
 
 	if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ) ) {
 		// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>
-		expr = parse_assignment_expression(_ctx);
+		expr = parse_assignment_expression(ctx);
 	}
 
 	if ( currtok.Type == Tok_BraceCurly_Open )
@@ -3407,8 +3408,8 @@ CodeVar parse_variable_after_name(
 		Token expr_tok = currtok;
 
 		if ( currtok.Type == Tok_Statement_End ) {
-			log_failure( "Expected expression after bitfield \n%SB", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Expected expression after bitfield \n%SB", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
@@ -3430,7 +3431,7 @@ CodeVar parse_variable_after_name(
 			// Were dealing with a statement with more than one declaration
 			// This is only handled this way if its the first declaration
 			// Otherwise its looped through in parse_variable_declaration_list
-			next_var = parse_variable_declaration_list();
+			next_var = parse_variable_declaration_list(ctx);
 			// <Attributes> <Specifiers> <ValueType> <Name> : <Expression>, ...
 			// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>, ...
 			// <Attributes> <Specifiers> <ValueType> <Name> { <Expression> }, ...
@@ -3446,7 +3447,7 @@ CodeVar parse_variable_after_name(
 
 		// Check for inline comment : <type> <identifier> = <expression>; // <inline comment>
 		if ( left && ( currtok_noskip.Type == Tok_Comment ) && currtok_noskip.Line == stmt_end.Line ) {
-			inline_cmt = parse_comment(_ctx);
+			inline_cmt = parse_comment(ctx);
 			// <Attributes> <Specifiers> <ValueType> <Name> : <Expression>, ...; <InlineCmt>
 			// <Attributes> <Specifiers> <ValueType> <Name> = <Expression>, ...; <InlineCmt>
 			// <Attributes> <Specifiers> <ValueType> <Name> { <Expression> }, ...; <InlineCmt>
@@ -3474,7 +3475,7 @@ CodeVar parse_variable_after_name(
 	}
 	result->VarParenthesizedInit = using_constructor_initializer;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
@@ -3483,9 +3484,10 @@ CodeVar parse_variable_after_name(
 	* Function Pointers
 */
 internal
-CodeVar parse_variable_declaration_list()
+CodeVar parse_variable_declaration_list(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	CodeVar result   = NullCode;
 	CodeVar last_var = NullCode;
@@ -3507,7 +3509,7 @@ CodeVar parse_variable_declaration_list()
 					{
 						log_failure( "Error, const specifier must come after pointer specifier for variable declaration proceeding comma\n"
 						"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%SB"
-						, parser_to_strbuilder(_ctx->parser) );
+						, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
 
 						specifiers_append(specifiers, spec );
 					}
@@ -3522,7 +3524,7 @@ CodeVar parse_variable_declaration_list()
 				{
 					log_failure( "Error, invalid specifier '%S' proceeding comma\n"
 					"(Parser will add and continue to specifiers, but will most likely fail to compile)\n%S"
-					, currtok.Text, strbuilder_to_str( parser_to_strbuilder(_ctx->parser)) );
+					, currtok.Text, strbuilder_to_str( parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp)) );
 					continue;
 				}
 				break;
@@ -3541,7 +3543,7 @@ CodeVar parse_variable_declaration_list()
 		eat( Tok_Identifier );
 		// , <Specifiers> <Name>
 
-		CodeVar var = parse_variable_after_name( ModuleFlag_None, NullCode, specifiers, NullCode, name );
+		CodeVar var = parse_variable_after_name(ctx, ModuleFlag_None, NullCode, specifiers, NullCode, name );
 		// , <Specifiers> <Name> ...
 
 		if ( ! result )
@@ -3557,26 +3559,30 @@ CodeVar parse_variable_declaration_list()
 		}
 	}
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeClass parser_parse_class( bool inplace_def )
+CodeClass parser_parse_class(Context* ctx, bool inplace_def)
 {
-	push_scope();
-	CodeClass result = (CodeClass) parse_class_struct( _ctx, Tok_Decl_Class, inplace_def );
-	parser_pop(& _ctx->parser);
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
+
+	CodeClass result = (CodeClass) parse_class_struct(ctx, Tok_Decl_Class, inplace_def );
+
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
+CodeConstructor parser_parse_constructor(Context* ctx, CodeSpecifiers specifiers )
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
-	Token     identifier = parse_identifier(_ctx, nullptr);
-	CodeParams params     = parse_params(parser_not_from_template);
+	Token     identifier = parse_identifier(ctx, nullptr);
+	CodeParams params     = parse_params(ctx, parser_not_from_template);
 	// <Name> ( <Parameters> )
 
 	Code        initializer_list = NullCode;
@@ -3610,18 +3616,18 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 
 		// TODO(Ed): Constructors can have post-fix specifiers
 
-		body = cast(CodeBody, parse_function_body(_ctx));
+		body = cast(CodeBody, parse_function_body(ctx));
 		// <Name> ( <Parameters> ) : <InitializerList> { <Body> }
 	}
 	else if ( check( Tok_BraceCurly_Open ) )
 	{
-		body = cast(CodeBody, parse_function_body(_ctx));
+		body = cast(CodeBody, parse_function_body(ctx));
 		// <Name> ( <Parameters> ) { <Body> }
 	}
 	// TODO(Ed): Add support for detecting constructor deletion
 	else if ( check( Tok_Operator) && currtok.Text.Ptr[ 0 ] == '=' )
 	{
-		body = cast(CodeBody, parse_assignment_expression(_ctx));
+		body = cast(CodeBody, parse_assignment_expression(ctx));
 	}
 	else
 	{
@@ -3630,7 +3636,7 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 		// <Name> ( <Parameters> );
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment(_ctx);
+			inline_cmt = parse_comment(ctx);
 		// <Name> ( <Parameters> ); <InlineCmt>
 	}
 
@@ -3657,14 +3663,16 @@ CodeConstructor parser_parse_constructor( CodeSpecifiers specifiers )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal inline
-CodeDefine parser_parse_define()
+CodeDefine parser_parse_define(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
+
 	if ( check(Tok_Preprocess_Hash)) {
 		// If parse_define is called by the user the hash reach here.
 		eat(Tok_Preprocess_Hash);
@@ -3677,11 +3685,11 @@ CodeDefine parser_parse_define()
 	define = (CodeDefine) make_code();
 	define->Type = CT_Preprocess_Define;
 	if ( ! check( Tok_Identifier ) ) {
-		log_failure( "Error, expected identifier after #define\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
+		log_failure( "Error, expected identifier after #define\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
-	_ctx->parser.Scope->Name = currtok.Text;
+	ctx->parser.Scope->Name = currtok.Text;
 	define->Name = cache_str( currtok.Text );
 	eat( Tok_Identifier );
 	// #define <Name>
@@ -3725,8 +3733,8 @@ CodeDefine parser_parse_define()
 
 	if ( ! check( Tok_Preprocess_Content ))
 	{
-		log_failure( "Error, expected content after #define %s\n%s", define->Name, parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
+		log_failure( "Error, expected content after #define %s\n%s", define->Name, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 
@@ -3736,25 +3744,26 @@ CodeDefine parser_parse_define()
 		eat( Tok_Preprocess_Content );
 		// #define <Name> ( <params> ) <Content>
 
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return define;
 	}
 
-	define->Body = untyped_str( strbuilder_to_str( parser_strip_formatting( currtok.Text, parser_strip_formatting_dont_preserve_newlines )) );
+	define->Body = untyped_str( strbuilder_to_str( parser_strip_formatting(ctx, currtok.Text, parser_strip_formatting_dont_preserve_newlines )) );
 	eat( Tok_Preprocess_Content );
 	// #define <Name> ( <params> ) <Content>
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return define;
 }
 
 internal
-CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
+CodeDestructor parser_parse_destructor(Context* ctx, CodeSpecifiers specifiers)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
-	bool has_context         = _ctx->parser.Scope && _ctx->parser.Scope->Prev;
-	bool is_in_global_nspace = has_context && str_are_equal( _ctx->parser.Scope->Prev->ProcName, txt("parse_global_nspace") );
+	bool has_context         = ctx->parser.Scope && ctx->parser.Scope->Prev;
+	bool is_in_global_nspace = has_context && str_are_equal( ctx->parser.Scope->Prev->ProcName, txt("parse_global_nspace") );
 
 	if ( check( Tok_Spec_Virtual ) )
 	{
@@ -3768,19 +3777,19 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 	Token prefix_identifier = NullToken;
 	if (is_in_global_nspace)
-		prefix_identifier = parse_identifier(_ctx, nullptr);
+		prefix_identifier = parse_identifier(ctx, nullptr);
 
 	if ( left && currtok.Text.Ptr[ 0 ] == '~' )
 		eat( Tok_Operator );
 	else
 	{
-		log_failure( "Expected destructor '~' token\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop( & _ctx->parser);
+		log_failure( "Expected destructor '~' token\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop( & ctx->parser);
 		return InvalidCode;
 	}
 	// <Virtual Specifier> ~
 
-	Token       identifier = parse_identifier(_ctx, nullptr);
+	Token       identifier = parse_identifier(ctx, nullptr);
 	CodeBody    body       = { nullptr };
 	CodeComment inline_cmt = NullCode;
 	// <Virtual Specifier> ~<Name>
@@ -3807,13 +3816,13 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 		}
 		else if ( left && c_str_compare_len( upcoming.Text.Ptr, "default", sizeof("default") - 1 ) == 0) 
 		{
-			body = cast(CodeBody, parse_assignment_expression(_ctx));
+			body = cast(CodeBody, parse_assignment_expression(ctx));
 			// <Virtual Specifier> ~<
 		}
 		else
 		{
-			log_failure( "Pure or default specifier expected due to '=' token\n%s", parser_to_strbuilder(_ctx->parser) );
-			parser_pop( & _ctx->parser);
+			log_failure( "Pure or default specifier expected due to '=' token\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+			parser_pop( & ctx->parser);
 			return InvalidCode;
 		}
 
@@ -3822,7 +3831,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 
 	if ( ! pure_virtual && check( Tok_BraceCurly_Open ) )
 	{
-		body = cast(CodeBody, parse_function_body(_ctx));
+		body = cast(CodeBody, parse_function_body(ctx));
 		// <Virtual Specifier> ~<Name>() { ... }
 	}
 	else
@@ -3832,7 +3841,7 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 		// <Virtual Specifier> ~<Name>() <Pure Specifier>;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment(_ctx);
+			inline_cmt = parse_comment(ctx);
 		// <Virtual Specifier> ~<Name>() <Pure Specifier>; <InlineCmt>
 	}
 
@@ -3856,14 +3865,15 @@ CodeDestructor parser_parse_destructor( CodeSpecifiers specifiers )
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeEnum parser_parse_enum( bool inplace_def )
+CodeEnum parser_parse_enum(Context* ctx, bool inplace_def)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Specifier specs_found[16] = { Spec_NumSpecifiers };
 	s32       NumSpecifiers = 0;
@@ -3886,13 +3896,13 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		// enum class
 	}
 
-	attributes = parse_attributes(_ctx);
+	attributes = parse_attributes(ctx);
 	// enum <class> <Attributes>
 
 	if ( check( Tok_Identifier ) )
 	{
 		name = currtok;
-		_ctx->parser.Scope->Name = currtok.Text;
+		ctx->parser.Scope->Name = currtok.Text;
 		eat( Tok_Identifier );
 	}
 	// enum <class> <Attributes> <Name>
@@ -3904,11 +3914,11 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		eat( Tok_Assign_Classifer );
 		// enum <class> <Attributes> <Name> :
 
-		type = parser_parse_type(parser_not_from_template, nullptr);
+		type = parser_parse_type(ctx, parser_not_from_template, nullptr);
 		if ( cast(Code, type) == Code_Invalid )
 		{
-			log_failure( "Failed to parse enum classifier\n%s", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Failed to parse enum classifier\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 		// enum <class> <Attributes> <Name> : <UnderlyingType>
@@ -3919,7 +3929,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		if ( str_contains( currtok.Text, enum_underlying_macro.Name) )
 		{
 			use_macro_underlying = true;
-			underlying_macro     = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
+			underlying_macro     = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Expr );
 		}
 	}
 
@@ -3940,8 +3950,8 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		{
 			if ( ! expects_entry )
 			{
-				log_failure( "Did not expect an entry after last member of enum body.\n%s", parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Did not expect an entry after last member of enum body.\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				break;
 			}
 
@@ -3956,11 +3966,11 @@ CodeEnum parser_parse_enum( bool inplace_def )
 				break;
 
 				case Tok_Comment:
-					member = cast(Code, parse_comment(_ctx));
+					member = cast(Code, parse_comment(ctx));
 				break;
 
 				case Tok_Preprocess_Define:
-					member = cast(Code, parser_parse_define());
+					member = cast(Code, parser_parse_define(ctx));
 					// #define
 				break;
 
@@ -3968,7 +3978,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 				case Tok_Preprocess_IfDef:
 				case Tok_Preprocess_IfNotDef:
 				case Tok_Preprocess_ElIf:
-					member = cast(Code, parse_preprocess_cond());
+					member = cast(Code, parse_preprocess_cond(ctx));
 					// #<if, ifdef, ifndef, elif> ...
 				break;
 
@@ -3983,18 +3993,18 @@ CodeEnum parser_parse_enum( bool inplace_def )
 				break;
 
 				case Tok_Preprocess_Macro_Stmt: {
-					member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Macro_Stmt ));
+					member = cast(Code, parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Stmt ));
 					// <Macro>
 					break;
 				}
 
 				case Tok_Preprocess_Pragma:
-					member = cast(Code, parse_pragma());
+					member = cast(Code, parse_pragma(ctx));
 					// #pragma
 				break;
 
 				case Tok_Preprocess_Unsupported:
-					member = cast(Code, parse_simple_preprocess( Tok_Preprocess_Unsupported ));
+					member = cast(Code, parse_simple_preprocess(ctx, Tok_Preprocess_Unsupported ));
 					// #<UNSUPPORTED>
 				break;
 
@@ -4018,7 +4028,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 
 					// Unreal UMETA macro support
 					if ( currtok.Type == Tok_Preprocess_Macro_Expr ) {
-						Code macro = parse_simple_preprocess( Tok_Preprocess_Macro_Expr );
+						Code macro = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Expr );
 						// <Name> = <Expression> <Macro>
 
 						// We're intentially ignoring this code as its going to be serialized as an untyped string with the rest of the enum "entry".
@@ -4027,7 +4037,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 
 					if ( currtok.Type == Tok_Comma )
 					{
-						//Token prev = * previous(_ctx->parser.Tokens, dont_skip_formatting);
+						//Token prev = * previous(ctx->parser.Tokens, dont_skip_formatting);
 						//entry.Length = ( (sptr)prev.Text + prev.Length ) - (sptr)entry.Text;
 
 						eat( Tok_Comma );
@@ -4041,7 +4051,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 						// <Name> = <Expression> <Macro>, // <Inline Comment>
 					// }
 
-					Token prev     = * lex_previous(_ctx->parser.Tokens, lex_dont_skip_formatting);
+					Token prev     = * lex_previous(ctx->parser.Tokens, lex_dont_skip_formatting);
 					entry.Text.Len = ( (sptr)prev.Text.Ptr + prev.Text.Len ) - (sptr)entry.Text.Ptr;
 
 					member = untyped_str( entry.Text );
@@ -4050,8 +4060,8 @@ CodeEnum parser_parse_enum( bool inplace_def )
 			}
 
 			if ( member == Code_Invalid ) {
-				log_failure( "Failed to parse member\n%s", parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Failed to parse member\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
 
@@ -4071,7 +4081,7 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		// enum <class> <Attributes> <Name> : <UnderlyingType> { <Body> };
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment(_ctx);
+			inline_cmt = parse_comment(ctx);
 			// enum <class> <Attributes> <Name> : <UnderlyingType> { <Body> }; <InlineCmt>
 	}
 
@@ -4100,32 +4110,39 @@ CodeEnum parser_parse_enum( bool inplace_def )
 		result->InlineCmt = inline_cmt;
 
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal inline
-CodeBody parser_parse_export_body()
+CodeBody parser_parse_export_body(Context* ctx)
 {
-	push_scope();
-	CodeBody result = parse_global_nspace(_ctx, CT_Export_Body );
-	parser_pop(& _ctx->parser);
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
+
+	CodeBody result = parse_global_nspace(ctx, CT_Export_Body );
+
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal inline
-CodeBody parser_parse_extern_link_body()
+CodeBody parser_parse_extern_link_body(Context* ctx)
 {
-	push_scope();
-	CodeBody result = parse_global_nspace(_ctx, CT_Extern_Linkage_Body );
-	parser_pop(& _ctx->parser);
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
+
+	CodeBody result = parse_global_nspace(ctx, CT_Extern_Linkage_Body );
+
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeExtern parser_parse_extern_link()
+CodeExtern parser_parse_extern_link(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	eat( Tok_Decl_Extern_Linkage );
 	// extern
@@ -4142,25 +4159,26 @@ CodeExtern parser_parse_extern_link()
 	result->Type = CT_Extern_Linkage;
 	result->Name = cache_str( name.Text );
 
-	CodeBody entry = parser_parse_extern_link_body();
+	CodeBody entry = parser_parse_extern_link_body(ctx);
 	if ( cast(Code, entry) == Code_Invalid )
 	{
-		log_failure( "Failed to parse body\n%s", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
+		log_failure( "Failed to parse body\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop(& ctx->parser);
 		return result;
 	}
 	// extern "<Name>" { <Body> }
 
 	result->Body = entry;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeFriend parser_parse_friend()
+CodeFriend parser_parse_friend(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	eat( Tok_Decl_Friend );
 	// friend
@@ -4184,8 +4202,8 @@ CodeFriend parser_parse_friend()
 				break;
 
 				default :
-					log_failure( "Invalid specifier %S for friend definition\n%S", spec_to_str( spec ), strbuilder_to_str( parser_to_strbuilder(_ctx->parser)) );
-					parser_pop(& _ctx->parser);
+					log_failure( "Invalid specifier %S for friend definition\n%S", spec_to_str( spec ), strbuilder_to_str( parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp)) );
+					parser_pop(& ctx->parser);
 					return InvalidCode;
 			}
 
@@ -4205,9 +4223,9 @@ CodeFriend parser_parse_friend()
 	}
 
 	// Type declaration or return type
-	CodeTypename type = parser_parse_type(parser_not_from_template, nullptr);
+	CodeTypename type = parser_parse_type(ctx, parser_not_from_template, nullptr);
 	if ( cast(Code, type) == Code_Invalid ) {
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 	// friend <Type>
@@ -4216,11 +4234,11 @@ CodeFriend parser_parse_friend()
 	if ( currtok.Type == Tok_Identifier )
 	{
 		// Name
-		Token name          = parse_identifier(_ctx, nullptr);
-		_ctx->parser.Scope->Name = name.Text;
+		Token name          = parse_identifier(ctx, nullptr);
+		ctx->parser.Scope->Name = name.Text;
 		// friend <ReturnType> <Name>
 
-		function = parse_function_after_name(_ctx, ModuleFlag_None, NullCode, specifiers, type, name );
+		function = parse_function_after_name(ctx, ModuleFlag_None, NullCode, specifiers, type, name );
 
 		// Parameter list
 		// CodeParams params = parse_params();
@@ -4237,7 +4255,7 @@ CodeFriend parser_parse_friend()
 
 	// Operator declaration or definition
 	if ( currtok.Type == Tok_Decl_Operator ) {
-		op = parse_operator_after_ret_type(_ctx, ModuleFlag_None, NullCode, specifiers, type);
+		op = parse_operator_after_ret_type(ctx, ModuleFlag_None, NullCode, specifiers, type);
 	}
 
 	CodeComment inline_cmt = NullCode;
@@ -4249,7 +4267,7 @@ CodeFriend parser_parse_friend()
 		// friend <ReturnType> <Name> ( <Parameters> );
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment(_ctx);
+			inline_cmt = parse_comment(ctx);
 		// friend <Type>; <InlineCmt>
 		// friend <ReturnType> <Name> ( <Parameters> ); <InlineCmt>
 	}
@@ -4267,14 +4285,15 @@ CodeFriend parser_parse_friend()
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeFn parser_parse_function()
+CodeFn parser_parse_function(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Specifier specs_found[16] = { Spec_NumSpecifiers };
 	s32        NumSpecifiers = 0;
@@ -4289,7 +4308,7 @@ CodeFn parser_parse_function()
 	}
 	// <export>
 
-	attributes = parse_attributes(_ctx);
+	attributes = parse_attributes(ctx);
 	// <export> <Attributes>
 
 	while ( left && tok_is_specifier(currtok) )
@@ -4302,8 +4321,8 @@ CodeFn parser_parse_function()
 			break;
 
 			default:
-				log_failure( "Invalid specifier %S for functon\n%SB", spec_to_str(spec), parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Invalid specifier %S for functon\n%SB", spec_to_str(spec), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 		}
 
@@ -4320,43 +4339,44 @@ CodeFn parser_parse_function()
 	}
 	// <export> <Attributes> <Specifiers>
 
-	CodeTypename ret_type = parser_parse_type(parser_not_from_template, nullptr);
+	CodeTypename ret_type = parser_parse_type(ctx, parser_not_from_template, nullptr);
 	if ( cast(Code, ret_type) == Code_Invalid ) {
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 	// <export> <Attributes> <Specifiers> <ReturnType>
 
-	Token name = parse_identifier(_ctx, nullptr);
-	_ctx->parser.Scope->Name = name.Text;
+	Token name = parse_identifier(ctx, nullptr);
+	ctx->parser.Scope->Name = name.Text;
 	if ( ! tok_is_valid(name) ) {
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 	// <export> <Attributes> <Specifiers> <ReturnType> <Name>
 
-	CodeFn result = parse_function_after_name(_ctx, mflags, attributes, specifiers, ret_type, name );
+	CodeFn result = parse_function_after_name(ctx, mflags, attributes, specifiers, ret_type, name );
 	// <export> <Attributes> <Specifiers> <ReturnType> <Name> ...
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeNS parser_parse_namespace()
+CodeNS parser_parse_namespace(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	eat( Tok_Decl_Namespace );
 	// namespace
 
-	Token name = parse_identifier(_ctx, nullptr);
-	_ctx->parser.Scope->Name = name.Text;
+	Token name = parse_identifier(ctx, nullptr);
+	ctx->parser.Scope->Name = name.Text;
 	// namespace <Name>
 
-	CodeBody body = parse_global_nspace(_ctx, CT_Namespace_Body );
+	CodeBody body = parse_global_nspace(ctx, CT_Namespace_Body );
 	if ( cast(Code, body) == Code_Invalid ) {
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 	// namespace <Name> { <Body> }
@@ -4368,14 +4388,15 @@ CodeNS parser_parse_namespace()
 
 	result->Body = body;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeOperator parser_parse_operator()
+CodeOperator parser_parse_operator(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	CodeAttributes attributes = { nullptr };
 	CodeSpecifiers specifiers = { nullptr };
@@ -4390,7 +4411,7 @@ CodeOperator parser_parse_operator()
 	}
 	// <export>
 
-	attributes = parse_attributes(_ctx);
+	attributes = parse_attributes(ctx);
 	// <export> <Attributes>
 
 	while ( left && tok_is_specifier(currtok) )
@@ -4403,8 +4424,8 @@ CodeOperator parser_parse_operator()
 			break;
 
 			default:
-				log_failure( "Invalid specifier " "%S" " for operator\n%SB", spec_to_str(spec), parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Invalid specifier " "%S" " for operator\n%SB", spec_to_str(spec), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 		}
 
@@ -4422,20 +4443,21 @@ CodeOperator parser_parse_operator()
 	// <export> <Attributes> <Specifiers>
 
 	// Parse Return Type
-	CodeTypename ret_type = parser_parse_type(parser_not_from_template, nullptr);
+	CodeTypename ret_type = parser_parse_type(ctx, parser_not_from_template, nullptr);
 	// <export> <Attributes> <Specifiers> <ReturnType>
 
-	CodeOperator result = parse_operator_after_ret_type(_ctx, mflags, attributes, specifiers, ret_type);
+	CodeOperator result = parse_operator_after_ret_type(ctx, mflags, attributes, specifiers, ret_type);
 	// <export> <Attributes> <Specifiers> <ReturnType> ...
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
+CodeOpCast parser_parse_operator_cast(Context* ctx, CodeSpecifiers specifiers)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	// Operator's namespace if not within same class.
 	Token name = NullToken;
@@ -4459,12 +4481,12 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 	eat( Tok_Decl_Operator );
 	// <Specifiers> <Qualifier> :: ... operator
 
-	CodeTypename type = parser_parse_type(parser_not_from_template, nullptr);
+	CodeTypename type = parser_parse_type(ctx, parser_not_from_template, nullptr);
 	// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>
 
 	Str scope_name         = { type->Name.Ptr, type->Name.Len };
 	Token scope_name_tok   = { scope_name, Tok_Identifier, 0, 0, TF_Null };
-	_ctx->parser.Scope->Name = scope_name_tok.Text;
+	ctx->parser.Scope->Name = scope_name_tok.Text;
 
 	eat( Tok_Paren_Open );
 	eat( Tok_Paren_Close );
@@ -4518,7 +4540,7 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 		// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>() <const>;
 
 		if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-			inline_cmt = parse_comment(_ctx);
+			inline_cmt = parse_comment(ctx);
 			// <Specifiers> <Qualifier> :: ... operator <UnderlyingType>() <const>; <InlineCmt>
 	}
 
@@ -4540,25 +4562,27 @@ CodeOpCast parser_parse_operator_cast( CodeSpecifiers specifiers )
 
 	result->ValueType = cast(CodeTypename, type);
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal inline
-CodeStruct parser_parse_struct( bool inplace_def )
+CodeStruct parser_parse_struct(Context* ctx, bool inplace_def)
 {
-	push_scope();
-	CodeStruct result = (CodeStruct) parse_class_struct( _ctx, Tok_Decl_Struct, inplace_def );
-	parser_pop(& _ctx->parser);
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
+	CodeStruct result = (CodeStruct) parse_class_struct(ctx, Tok_Decl_Struct, inplace_def );
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeTemplate parser_parse_template()
+CodeTemplate parser_parse_template(Context* ctx)
 {
 #define UseTemplateCapture true
 
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	ModuleFlag mflags = ModuleFlag_None;
 
@@ -4571,9 +4595,9 @@ CodeTemplate parser_parse_template()
 	eat( Tok_Decl_Template );
 	// <export> template
 
-	CodeParams params = parse_params( UseTemplateCapture );
+	CodeParams params = parse_params(ctx, UseTemplateCapture);
 	if ( cast(Code, params) == Code_Invalid ) {
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 	// <export> template< <Parameters> >
@@ -4584,28 +4608,28 @@ CodeTemplate parser_parse_template()
 	{
 		if ( check( Tok_Decl_Class ) )
 		{
-			definition = cast(Code, parser_parse_class( parser_not_inplace_def));
+			definition = cast(Code, parser_parse_class(ctx, parser_not_inplace_def));
 			// <export> template< <Parameters> > class ...
 			break;
 		}
 
 		if ( check( Tok_Decl_Struct ) )
 		{
-			definition = cast(Code, parser_parse_struct( parser_not_inplace_def));
+			definition = cast(Code, parser_parse_struct(ctx, parser_not_inplace_def));
 			// <export> template< <Parameters> > struct ...
 			break;
 		}
 
 		if ( check( Tok_Decl_Union ) )
 		{
-			definition = cast(Code, parser_parse_union( parser_not_inplace_def));
+			definition = cast(Code, parser_parse_union(ctx, parser_not_inplace_def));
 			// <export> template< <Parameters> > union ...
 			break;
 		}
 
 		if ( check( Tok_Decl_Using ) )
 		{
-			definition = cast(Code, parser_parse_using());
+			definition = cast(Code, parser_parse_using(ctx));
 			// <export> template< <Parameters> > using ...
 			break;
 		}
@@ -4621,7 +4645,7 @@ CodeTemplate parser_parse_template()
 		Specifier specs_found[ 16 ] = { Spec_NumSpecifiers };
 		s32        NumSpecifiers = 0;
 
-		attributes = parse_attributes(_ctx);
+		attributes = parse_attributes(ctx);
 		// <export> template< <Parameters> > <Attributes>
 
 		// Specifiers Parsing
@@ -4640,8 +4664,8 @@ CodeTemplate parser_parse_template()
 						break;
 
 					default :
-						log_failure( "Invalid specifier %S for variable or function\n%SB", spec_to_str( spec ), parser_to_strbuilder(_ctx->parser) );
-						parser_pop(& _ctx->parser);
+						log_failure( "Invalid specifier %S for variable or function\n%SB", spec_to_str( spec ), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+						parser_pop(& ctx->parser);
 						return InvalidCode;
 				}
 
@@ -4661,12 +4685,12 @@ CodeTemplate parser_parse_template()
 		}
 
 
-		bool has_context         = _ctx->parser.Scope && _ctx->parser.Scope->Prev;
-		bool is_in_global_nspace = has_context && str_are_equal( _ctx->parser.Scope->Prev->ProcName, txt("parse_global_nspace") );
+		bool has_context         = ctx->parser.Scope && ctx->parser.Scope->Prev;
+		bool is_in_global_nspace = has_context && str_are_equal( ctx->parser.Scope->Prev->ProcName, txt("parse_global_nspace") );
 		// Possible constructor implemented at global file scope.
 		if (is_in_global_nspace)
 		{
-			Code constructor_destructor = parse_global_nspace_constructor_destructor(_ctx, specifiers );
+			Code constructor_destructor = parse_global_nspace_constructor_destructor(ctx, specifiers );
 			if ( constructor_destructor ) 
 			{
 				definition = constructor_destructor;
@@ -4679,16 +4703,16 @@ CodeTemplate parser_parse_template()
 		if (is_in_global_nspace)
 		{
 			bool found_operator_cast_outside_class_implmentation = false;
-			s32  idx = _ctx->parser.Tokens.Idx;
+			s32  idx = ctx->parser.Tokens.Idx;
 
-			for ( ; idx < array_num(_ctx->parser.Tokens.Arr); idx++ )
+			for ( ; idx < array_num(ctx->parser.Tokens.Arr); idx++ )
 			{
-				Token tok = _ctx->parser.Tokens.Arr[ idx ];
+				Token tok = ctx->parser.Tokens.Arr[ idx ];
 
 				if ( tok.Type == Tok_Identifier )
 				{
 					idx++;
-					tok = _ctx->parser.Tokens.Arr[ idx ];
+					tok = ctx->parser.Tokens.Arr[ idx ];
 					if ( tok.Type == Tok_Access_StaticSymbol )
 						continue;
 
@@ -4702,13 +4726,13 @@ CodeTemplate parser_parse_template()
 			}
 
 			if ( found_operator_cast_outside_class_implmentation ) {
-				definition = cast(Code, parser_parse_operator_cast( specifiers ));
+				definition = cast(Code, parser_parse_operator_cast(ctx, specifiers));
 				// <Attributes> <Specifiers> <Name> :: operator <Type> () { ... }
 				break;
 			}
 		}
 
-		definition = parse_operator_function_or_variable( expects_function, attributes, specifiers );
+		definition = parse_operator_function_or_variable(ctx, expects_function, attributes, specifiers);
 		// <export> template< <Parameters> > <Attributes> <Specifiers> ...
 		break;
 	}
@@ -4720,7 +4744,7 @@ CodeTemplate parser_parse_template()
 	result->ModuleFlags = mflags;
 	// result->Name        = definition->Name;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 #undef UseTemplateCapture
 }
@@ -4738,9 +4762,10 @@ CodeTemplate parser_parse_template()
 	The excess whitespace cannot be stripped however, because there is no semantic awareness within the first capture group.
 */
 internal
-CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
+CodeTypename parser_parse_type(Context* ctx, bool from_template, bool* typedef_is_function)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Token context_tok = prevtok;
 
@@ -4752,7 +4777,7 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 	ETypenameTag tag = Tag_None;
 
 	// Attributes are assumed to be before the type signature
-	CodeAttributes attributes = parse_attributes(_ctx);
+	CodeAttributes attributes = parse_attributes(ctx);
 	// <Attributes>
 
 	// Prefix specifiers
@@ -4761,8 +4786,8 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 		Specifier spec = str_to_specifier( currtok.Text );
 
 		if ( spec != Spec_Const ) {
-			log_failure( "Error, invalid specifier used in type definition: %S\n%SB", currtok.Text, parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Error, invalid specifier used in type definition: %S\n%SB", currtok.Text, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
@@ -4773,8 +4798,8 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 	// <Attributes> <Specifiers>
 
 	if ( left == 0 ) {
-		log_failure( "Error, unexpected end of type definition\n%SB", parser_to_strbuilder(_ctx->parser) );
-		parser_pop(& _ctx->parser);
+		log_failure( "Error, unexpected end of type definition\n%SB", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 
@@ -4805,7 +4830,7 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 			eat( currtok.Type );
 			// <Attributes> <Specifiers> <class, enum, struct, union>
 
-			name = parse_identifier(_ctx, nullptr);
+			name = parse_identifier(ctx, nullptr);
 			// <Attributes> <Specifiers> <class, enum, struct, union> <Name> 
 		}
 		else if  (next.Type == Tok_BraceCurly_Open)
@@ -4815,13 +4840,13 @@ CodeTypename parser_parse_type( bool from_template, bool* typedef_is_function )
 
 			// TODO(Ed): we need to add a way for AST_CodeTypename to track an implace definition..
 			b32 const inplace = true;
-			Code indplace_def = cast(Code, parser_parse_struct(inplace));
+			Code indplace_def = cast(Code, parser_parse_struct(ctx, inplace));
 
 			// For now we lose the structural information, 
 			name.Text.Len = ( ( sptr )prevtok.Text.Ptr + prevtok.Text.Len ) - ( sptr )name.Text.Ptr;
 			// <Attributes> <Specifiers> <class, enum, struct, union> <inplace def>
 		}
-		_ctx->parser.Scope->Name = name.Text;
+		ctx->parser.Scope->Name = name.Text;
 		// <Attributes> <Specifiers> <class, enum, struct, union> <Name>
 	}
 
@@ -4848,7 +4873,7 @@ else if ( currtok.Type == Tok_DeclType )
 	eat( Tok_Paren_Close );
 
 	name.Length = ( (sptr)currtok.Text + currtok.Length ) - (sptr)name.Text;
-	_ctx->parser.Scope->Name = name;
+	ctx->parser.Scope->Name = name;
 	// <Attributes> <Specifiers> decltype( <Expression > )
 }
 #endif
@@ -4877,12 +4902,12 @@ else if ( currtok.Type == Tok_DeclType )
 
 		if ( ! from_template )
 		{
-			name                = parse_identifier(_ctx, nullptr);
-			_ctx->parser.Scope->Name = name.Text;
+			name                = parse_identifier(ctx, nullptr);
+			ctx->parser.Scope->Name = name.Text;
 			if ( ! tok_is_valid(name) )
 			{
-				log_failure( "Error, failed to type signature\n%s", parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Error, failed to type signature\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
 		}
@@ -4891,19 +4916,19 @@ else if ( currtok.Type == Tok_DeclType )
 		// Typename is a macro
 		// name = currtok;
 		// eat(Tok_Preprocess_Macro_Typename);
-		Code macro = parse_simple_preprocess(Tok_Preprocess_Macro_Typename);
+		Code macro = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Typename);
 		name.Text = macro->Content;
 	}
 
 	// The usual Identifier type signature that may have namespace qualifiers
 	else
 	{
-		name = parse_identifier(_ctx, nullptr);
-		_ctx->parser.Scope->Name = name.Text;
+		name = parse_identifier(ctx, nullptr);
+		ctx->parser.Scope->Name = name.Text;
 		if ( ! tok_is_valid(name) )
 		{
-			log_failure( "Error, failed to type signature\n%s", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Error, failed to type signature\n%s", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 		// <Attributes> <Specifiers> <Qualifier ::> <Identifier>
@@ -4920,8 +4945,8 @@ else if ( currtok.Type == Tok_DeclType )
 			break;
 
 			default: {
-				log_failure( "Error, invalid specifier used in type definition: %S\n%SB", currtok.Text, parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Error, invalid specifier used in type definition: %S\n%SB", currtok.Text, parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
 		}
@@ -4950,7 +4975,7 @@ else if ( currtok.Type == Tok_DeclType )
 	bool   is_function_typename = false;
 	Token* last_capture         = nullptr;
 	{
-		Token* scanner = _ctx->parser.Tokens.Arr + _ctx->parser.Tokens.Idx;
+		Token* scanner = ctx->parser.Tokens.Arr + ctx->parser.Tokens.Idx;
 
 		// An identifier being within a typename's signature only occurs if were parsing a typename for a typedef.
 		if ( typedef_is_function && scanner->Type == Tok_Identifier )
@@ -4974,8 +4999,8 @@ else if ( currtok.Type == Tok_DeclType )
 			last_capture = scanner;
 		}
 
-		bool has_context   = _ctx->parser.Scope && _ctx->parser.Scope->Prev;
-		bool is_for_opcast = has_context && str_are_equal( _ctx->parser.Scope->Prev->ProcName, txt("parser_parse_operator_cast") );
+		bool has_context   = ctx->parser.Scope && ctx->parser.Scope->Prev;
+		bool is_for_opcast = has_context && str_are_equal( ctx->parser.Scope->Prev->ProcName, txt("parser_parse_operator_cast") );
 		if ( is_for_opcast && is_function_typename && last_capture )
 		{
 			// If we're parsing for an operator cast, having one capture start is not enough
@@ -5025,13 +5050,13 @@ else if ( currtok.Type == Tok_DeclType )
 		if ( ! check( Tok_Paren_Open ) )
 		{
 			// Started with an identifier immeidately, which means its of the format: <ReturnType> <identifier> <capture>;
-			name = parse_identifier(_ctx, nullptr);
+			name = parse_identifier(ctx, nullptr);
 		}
 		// <Attributes> <ReturnType> <Identifier>
 
 		// If the next token is a capture start and is not the last capture, then we're dealing with function typename whoose identifier is within the
 		// capture.
-		else if ( ( _ctx->parser.Tokens.Arr + _ctx->parser.Tokens.Idx ) != last_capture )
+		else if ( ( ctx->parser.Tokens.Arr + ctx->parser.Tokens.Idx ) != last_capture )
 		{
 			// WIP : Possible alternative without much pain...
 			// If this were to be parsed properly...
@@ -5052,8 +5077,8 @@ else if ( currtok.Type == Tok_DeclType )
 
 				if ( spec != Spec_Ptr && spec != Spec_Ref && spec != Spec_RValue )
 				{
-					log_failure( "Error, invalid specifier used in type definition: %S\n%SB", toktype_to_str(currtok), to_strbuilder(_ctx->parser) );
-					pop(& _ctx->parser);
+					log_failure( "Error, invalid specifier used in type definition: %S\n%SB", toktype_to_str(currtok), to_strbuilder(ctx->parser) );
+					pop(& ctx->parser);
 					return InvalidCode;
 				}
 
@@ -5109,7 +5134,7 @@ else if ( currtok.Type == Tok_DeclType )
 		}
 
 		// Were now dealing with the parameters of the function
-		params = parse_params(parser_use_parenthesis);
+		params = parse_params(ctx, parser_use_parenthesis);
 		// <Attributes> <ReturnType> <All Kinds of nonsense> ( <Parameters> )
 
 		// Look for suffix specifiers for the function
@@ -5122,8 +5147,8 @@ else if ( currtok.Type == Tok_DeclType )
 					// && spec != Spec_NoExcept
 					&& spec != Spec_RValue )
 			{
-				log_failure( "Error, invalid specifier used in type definition: %S\n%S", currtok.Text, strbuilder_to_str( parser_to_strbuilder(_ctx->parser)) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Error, invalid specifier used in type definition: %S\n%S", currtok.Text, strbuilder_to_str( parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp)) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 			}
 
@@ -5153,10 +5178,10 @@ else if ( currtok.Type == Tok_DeclType )
 
 	CodeTypename result = ( CodeTypename )make_code();
 	result->Type        = CT_Typename;
-	// result->Token = _ctx->parser.Scope->Start;
+	// result->Token = ctx->parser.Scope->Start;
 
 	// Need to wait until were using the new parsing method to do this.
-	StrBuilder name_stripped = parser_strip_formatting( name.Text, parser_strip_formatting_dont_preserve_newlines );
+	StrBuilder name_stripped = parser_strip_formatting(ctx, name.Text, parser_strip_formatting_dont_preserve_newlines );
 
 	// name_stripped.strip_space();
 
@@ -5207,14 +5232,15 @@ else if ( currtok.Type == Tok_DeclType )
 
 	result->TypeTag = tag;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeTypedef parser_parse_typedef()
+CodeTypedef parser_parse_typedef(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	bool  is_function = false;
 	Token name        = NullToken;
@@ -5253,9 +5279,9 @@ CodeTypedef parser_parse_typedef()
 	{
 		type          = cast(Code, t_empty);
 		name          = currtok;
-		Code macro    = parse_simple_preprocess(currtok.Type);
+		Code macro    = parse_simple_preprocess(ctx, currtok.Type);
 		name.Text.Len = macro->Content.Len;
-		_ctx->parser.Scope->Name = name.Text;
+		ctx->parser.Scope->Name = name.Text;
 		// <ModuleFalgs> typedef <Preprocessed_Macro>
 
 		if ( currtok.Type == Tok_Identifier )
@@ -5278,7 +5304,7 @@ CodeTypedef parser_parse_typedef()
 		// This code is highly correlated with parse_complicated_definition
 		if ( is_complicated )
 		{
-			TokArray tokens = _ctx->parser.Tokens;
+			TokArray tokens = ctx->parser.Tokens;
 			TokType  which  = currtok.Type;
 
 			s32 idx = tokens.Idx;
@@ -5299,7 +5325,7 @@ CodeTypedef parser_parse_typedef()
 			if ( (idx - 3 ) == tokens.Idx )
 			{
 				// Its a forward declaration only
-				type = parse_forward_or_definition(_ctx, which, from_typedef );
+				type = parse_forward_or_definition(ctx, which, from_typedef );
 				// <ModuleFalgs> typedef <UnderlyingType: Forward Decl>
 			}
 			else
@@ -5338,34 +5364,34 @@ CodeTypedef parser_parse_typedef()
 
 					if ( ! ok_to_parse )
 					{
-						log_failure( "Unsupported or bad member definition after struct declaration\n%SB", parser_to_strbuilder(_ctx->parser) );
-						parser_pop(& _ctx->parser);
+						log_failure( "Unsupported or bad member definition after struct declaration\n%SB", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+						parser_pop(& ctx->parser);
 						return InvalidCode;
 					}
 
 					// TODO(Ed) : I'm not sure if I have to use parser_parse_type here, I'd rather not as that would complicate parser_parse_type.
 					// type = parser_parse_type();
-					type = parse_forward_or_definition(_ctx, which, from_typedef );
+					type = parse_forward_or_definition(ctx, which, from_typedef );
 					// <ModuleFalgs> typedef <UnderlyingType>
 				}
 				else if ( tok.Type == Tok_BraceCurly_Close )
 				{
 					// Its a definition
 					// <which> { ... };
-					type = parse_forward_or_definition(_ctx, currtok.Type, from_typedef );
+					type = parse_forward_or_definition(ctx, currtok.Type, from_typedef );
 					// <ModuleFalgs> typedef <UnderlyingType>
 				}
 				else if ( tok.Type == Tok_BraceSquare_Close)
 				{
 					// Its an array definition
 					// <which> <type_identifier> <identifier> [ ... ];
-					type = cast(Code, parser_parse_type(parser_not_from_template, nullptr));
+					type = cast(Code, parser_parse_type(ctx, parser_not_from_template, nullptr));
 					// <ModuleFalgs> typedef <UnderlyingType>
 				}
 				else
 				{
-					log_failure( "Unsupported or bad member definition after struct declaration\n%SB", parser_to_strbuilder(_ctx->parser) );
-					parser_pop(& _ctx->parser);
+					log_failure( "Unsupported or bad member definition after struct declaration\n%SB", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+					parser_pop(& ctx->parser);
 					return InvalidCode;
 				}
 			}
@@ -5373,7 +5399,7 @@ CodeTypedef parser_parse_typedef()
 		else
 		{
 			bool from_template = false;
-			type = cast(Code, parser_parse_type( from_template, &is_function ));
+			type = cast(Code, parser_parse_type(ctx, from_template, &is_function ));
 			// <ModuleFalgs> typedef <UnderlyingType>
 		}
 
@@ -5385,12 +5411,12 @@ CodeTypedef parser_parse_typedef()
 		}
 		else if ( ! is_function )
 		{
-			log_failure( "Error, expected identifier for typedef\n%SB", parser_to_strbuilder(_ctx->parser) );
-			parser_pop(& _ctx->parser);
+			log_failure( "Error, expected identifier for typedef\n%SB", parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
 
-		array_expr = parse_array_decl(_ctx);
+		array_expr = parse_array_decl(ctx);
 		// <UnderlyingType> + <ArrayExpr>
 	}
 
@@ -5400,7 +5426,7 @@ CodeTypedef parser_parse_typedef()
 
 	CodeComment inline_cmt = NullCode;
 	if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line )
-		inline_cmt = parse_comment(_ctx);
+		inline_cmt = parse_comment(ctx);
 		// <ModuleFalgs> typedef <UnderlyingType> <Name> <ArrayExpr>; <InlineCmt>
 
 	CodeTypedef
@@ -5432,14 +5458,15 @@ CodeTypedef parser_parse_typedef()
 	if ( inline_cmt )
 		result->InlineCmt = inline_cmt;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal neverinline
-CodeUnion parser_parse_union( bool inplace_def )
+CodeUnion parser_parse_union(Context* ctx, bool inplace_def)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	ModuleFlag mflags = ModuleFlag_None;
 
@@ -5453,14 +5480,14 @@ CodeUnion parser_parse_union( bool inplace_def )
 	eat( Tok_Decl_Union );
 	// <ModuleFlags> union
 
-	CodeAttributes attributes = parse_attributes(_ctx);
+	CodeAttributes attributes = parse_attributes(ctx);
 	// <ModuleFlags> union <Attributes>
 
 	Str name = { nullptr, 0 };
 	if ( check( Tok_Identifier ) )
 	{
 		name = currtok.Text;
-		_ctx->parser.Scope->Name = currtok.Text;
+		ctx->parser.Scope->Name = currtok.Text;
 		eat( Tok_Identifier );
 	}
 	// <ModuleFlags> union <Attributes> <Name>
@@ -5489,36 +5516,36 @@ CodeUnion parser_parse_union( bool inplace_def )
 				break;
 
 				case Tok_Comment:
-					member = cast(Code, parse_comment(_ctx));
+					member = cast(Code, parse_comment(ctx));
 				break;
 
 				// TODO(Ed) : Unions can have constructors and destructors
 
 				case Tok_Decl_Class:
-					member = parse_complicated_definition(_ctx, Tok_Decl_Class );
+					member = parse_complicated_definition(ctx, Tok_Decl_Class );
 				break;
 
 				case Tok_Decl_Enum:
-					member = parse_complicated_definition(_ctx, Tok_Decl_Enum );
+					member = parse_complicated_definition(ctx, Tok_Decl_Enum );
 				break;
 
 				case Tok_Decl_Struct:
-					member = parse_complicated_definition(_ctx, Tok_Decl_Struct );
+					member = parse_complicated_definition(ctx, Tok_Decl_Struct );
 				break;
 
 				case Tok_Decl_Union:
-					member = parse_complicated_definition(_ctx, Tok_Decl_Union );
+					member = parse_complicated_definition(ctx, Tok_Decl_Union );
 				break;
 
 				case Tok_Preprocess_Define:
-					member = cast(Code, parser_parse_define());
+					member = cast(Code, parser_parse_define(ctx));
 				break;
 
 				case Tok_Preprocess_If:
 				case Tok_Preprocess_IfDef:
 				case Tok_Preprocess_IfNotDef:
 				case Tok_Preprocess_ElIf:
-					member = cast(Code, parse_preprocess_cond());
+					member = cast(Code, parse_preprocess_cond(ctx));
 				break;
 
 				case Tok_Preprocess_Else:
@@ -5533,23 +5560,23 @@ CodeUnion parser_parse_union( bool inplace_def )
 
 				case Tok_Preprocess_Macro_Typename:
 					// Its a variable with a macro typename
-					member = cast(Code, parser_parse_variable());
+					member = cast(Code, parser_parse_variable(ctx));
 				break;
 
 				case Tok_Preprocess_Macro_Stmt:
-					member = parse_simple_preprocess( Tok_Preprocess_Macro_Stmt );
+					member = parse_simple_preprocess(ctx, Tok_Preprocess_Macro_Stmt );
 				break;
 
 				case Tok_Preprocess_Pragma:
-					member = cast(Code, parse_pragma());
+					member = cast(Code, parse_pragma(ctx));
 				break;
 
 				case Tok_Preprocess_Unsupported:
-					member = parse_simple_preprocess( Tok_Preprocess_Unsupported );
+					member = parse_simple_preprocess(ctx, Tok_Preprocess_Unsupported );
 				break;
 
 				default:
-					member = cast(Code, parser_parse_variable());
+					member = cast(Code, parser_parse_variable(ctx));
 				break;
 			}
 
@@ -5577,14 +5604,15 @@ CodeUnion parser_parse_union( bool inplace_def )
 	result->Body       = body;
 	result->Attributes = attributes;
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeUsing parser_parse_using()
+CodeUsing parser_parse_using(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Specifier specs_found[16] = { Spec_Invalid };
 	s32        NumSpecifiers = 0;
@@ -5616,27 +5644,27 @@ CodeUsing parser_parse_using()
 	}
 
 	name = currtok;
-	_ctx->parser.Scope->Name = name.Text;
+	ctx->parser.Scope->Name = name.Text;
 	eat( Tok_Identifier );
 	// <ModuleFlags> using <namespace> <Name>
 
 	if ( ! is_namespace )
 	{
-		attributes = parse_attributes(_ctx);
+		attributes = parse_attributes(ctx);
 		// <ModuleFlags> using <Name> <Attributes>
 		
 		if ( bitfield_is_set( u32, currtok.Flags, TF_Assign ))
 		{
-			attributes = parse_attributes(_ctx);
+			attributes = parse_attributes(ctx);
 			// <ModuleFlags> using <Name> <Attributes>
 
 			eat( Tok_Operator );
 			// <ModuleFlags> using <Name> <Attributes> =
 
-			type = parser_parse_type(parser_not_from_template, nullptr);
+			type = parser_parse_type(ctx, parser_not_from_template, nullptr);
 			// <ModuleFlags> using <Name> <Attributes> = <UnderlyingType>
 
-			array_expr = parse_array_decl(_ctx);
+			array_expr = parse_array_decl(ctx);
 			// <UnderlyingType> + <ArrExpr>
 		}
 	}
@@ -5647,7 +5675,7 @@ CodeUsing parser_parse_using()
 
 	CodeComment inline_cmt = NullCode;
 	if ( currtok_noskip.Type == Tok_Comment && currtok_noskip.Line == stmt_end.Line ) {
-		inline_cmt = parse_comment(_ctx);
+		inline_cmt = parse_comment(ctx);
 	}
 	// <ModuleFlags> using <namespace> <Attributes> <Name> = <UnderlyingType>; <InlineCmt>
 
@@ -5677,14 +5705,15 @@ CodeUsing parser_parse_using()
 			result->InlineCmt = inline_cmt;
 	}
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 internal
-CodeVar parser_parse_variable()
+CodeVar parser_parse_variable(Context* ctx)
 {
-	push_scope();
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope );
 
 	Specifier specs_found[16] = { Spec_NumSpecifiers };
 	s32       NumSpecifiers = 0;
@@ -5699,7 +5728,7 @@ CodeVar parser_parse_variable()
 	}
 	// <ModuleFlags>
 
-	attributes = parse_attributes(_ctx);
+	attributes = parse_attributes(ctx);
 	// <ModuleFlags> <Attributes>
 
 	while ( left && tok_is_specifier(currtok) )
@@ -5711,8 +5740,8 @@ CodeVar parser_parse_variable()
 			break;
 
 			default:
-				log_failure( "Invalid specifier %S for variable\n%S", spec_to_str( spec ), strbuilder_to_str( parser_to_strbuilder(_ctx->parser)) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Invalid specifier %S for variable\n%S", spec_to_str( spec ), strbuilder_to_str( parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp)) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 		}
 
@@ -5730,20 +5759,20 @@ CodeVar parser_parse_variable()
 	}
 	// <ModuleFlags> <Attributes> <Specifiers>
 
-	CodeTypename type = parser_parse_type(parser_not_from_template, nullptr);
+	CodeTypename type = parser_parse_type(ctx, parser_not_from_template, nullptr);
 	// <ModuleFlags> <Attributes> <Specifiers> <ValueType>
 
 	if ( cast(Code, type) == Code_Invalid )
 		return InvalidCode;
 
-	_ctx->parser.Scope->Name = parse_identifier(_ctx, nullptr).Text;
+	ctx->parser.Scope->Name = parse_identifier(ctx, nullptr).Text;
 	// <ModuleFlags> <Attributes> <Specifiers> <ValueType> <Name>
 
-	CodeVar result = parse_variable_after_name( mflags, attributes, specifiers, type, _ctx->parser.Scope->Name );
+	CodeVar result = parse_variable_after_name(ctx, mflags, attributes, specifiers, type, ctx->parser.Scope->Name );
 	// Regular  : <ModuleFlags> <Attributes> <Specifiers> <ValueType> <Name>                  = <Value>; <InlineCmt>
 	// Bitfield : <ModuleFlags> <Attributes> <Specifiers> <ValueType> <Name> : <BitfieldSize> = <Value>; <InlineCmt>
 
-	parser_pop(& _ctx->parser);
+	parser_pop(& ctx->parser);
 	return result;
 }
 

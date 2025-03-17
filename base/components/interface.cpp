@@ -3,8 +3,8 @@
 #include "code_serialization.cpp"
 #endif
 
-internal void parser_init();
-internal void parser_deinit();
+internal void parser_init(Context* ctx);
+internal void parser_deinit(Context* ctx);
 
 internal
 void* fallback_allocator_proc( void* allocator_data, AllocType type, ssize size, ssize alignment, void* old_memory, ssize old_size, u64 flags )
@@ -343,7 +343,7 @@ void init(Context* ctx)
 	}
 
 	define_constants();
-	parser_init();
+	parser_init(ctx);
 
 	++ context_counter;
 }
@@ -392,7 +392,7 @@ void deinit(Context* ctx)
 		while ( left--, left );
 		array_free( ctx->Fallback_AllocatorBuckets);
 	}
-	parser_deinit();
+	parser_deinit(ctx);
 
 	if (_ctx == ctx) 
 		_ctx = nullptr;

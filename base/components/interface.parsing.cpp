@@ -10,6 +10,9 @@
 
 ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	TokArray toks;
 	if (lexed.tokens.Num == 0 && lexed.tokens.Ptr == nullptr) {
 		check_parse_args(lexed.text);
@@ -23,31 +26,44 @@ ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 
 	// TODO(Ed): ParseInfo should be set to the parser context.
 
-	_ctx->parser.Tokens = toks;
-	push_scope();
-	CodeBody result = parse_global_nspace(_ctx, CT_Global_Body);
-	parser_pop(& _ctx->parser);
+	ctx->parser.Tokens = toks;
 
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
+
+	CodeBody result = parse_global_nspace(ctx,CT_Global_Body);
+
+	parser_pop(& ctx->parser);
 	return info;
 }
 
 CodeClass parse_class( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	push_scope();
-	CodeClass result = (CodeClass) parse_class_struct( _ctx, Tok_Decl_Class, parser_not_inplace_def );
-	parser_pop(& _ctx->parser);
+		ctx->parser.Tokens = toks;
+
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
+
+	CodeClass result = (CodeClass) parse_class_struct( ctx, Tok_Decl_Class, parser_not_inplace_def );
+
+	parser_pop(& ctx->parser);
 	return result;
 }
 
-CodeConstructor parse_constructor( Str def )
+CodeConstructor parse_constructor(Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
@@ -80,8 +96,8 @@ CodeConstructor parse_constructor( Str def )
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(_ctx->parser) );
-				parser_pop(& _ctx->parser);
+				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
 				return InvalidCode;
 		}
 
@@ -100,28 +116,38 @@ CodeConstructor parse_constructor( Str def )
 		// <specifiers> ...
 	}
 
-	_ctx->parser.Tokens         = toks;
-	CodeConstructor result = parser_parse_constructor( specifiers );
+	ctx->parser.Tokens     = toks;
+	CodeConstructor result = parser_parse_constructor(ctx, specifiers);
 	return result;
 }
 
 CodeDefine parse_define( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+	
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	push_scope();
-	CodeDefine result = parser_parse_define();
-	parser_pop(& _ctx->parser);
+	ctx->parser.Tokens = toks;
+
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
+
+	CodeDefine result = parser_parse_define(ctx);
+
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 CodeDestructor parse_destructor( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
@@ -131,210 +157,269 @@ CodeDestructor parse_destructor( Str def )
 	// TODO(Ed): Destructors can have prefix attributes
 	// TODO(Ed): Destructors can have virtual
 
-	_ctx->parser.Tokens        = toks;
-	CodeDestructor result = parser_parse_destructor(NullCode);
+	ctx->parser.Tokens   = toks;
+	CodeDestructor result = parser_parse_destructor(ctx, NullCode);
 	return result;
 }
 
 CodeEnum parse_enum( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
+
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 	{
-		parser_pop(& _ctx->parser);
+		parser_pop(& ctx->parser);
 		return InvalidCode;
 	}
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_enum( parser_not_inplace_def);
+	ctx->parser.Tokens = toks;
+	return parser_parse_enum(ctx, parser_not_inplace_def);
 }
 
 CodeBody parse_export_body( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_export_body();
+	ctx->parser.Tokens = toks;
+	return parser_parse_export_body(ctx);
 }
 
 CodeExtern parse_extern_link( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_extern_link();
+	ctx->parser.Tokens = toks;
+	return parser_parse_extern_link(ctx);
 }
 
 CodeFriend parse_friend( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_friend();
+	ctx->parser.Tokens = toks;
+	return parser_parse_friend(ctx);
 }
 
 CodeFn parse_function( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return (CodeFn) parser_parse_function();
+	ctx->parser.Tokens = toks;
+	return (CodeFn) parser_parse_function(ctx);
 }
 
 CodeBody parse_global_body( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	push_scope();
-	CodeBody result = parse_global_nspace(_ctx, CT_Global_Body );
-	parser_pop(& _ctx->parser);
+	ctx->parser.Tokens = toks;
+
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
+
+	CodeBody result = parse_global_nspace(ctx, CT_Global_Body );
+
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 CodeNS parse_namespace( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_namespace();
+	ctx->parser.Tokens = toks;
+	return parser_parse_namespace(ctx);
 }
 
 CodeOperator parse_operator( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return (CodeOperator) parser_parse_operator();
+	ctx->parser.Tokens = toks;
+	return (CodeOperator) parser_parse_operator(ctx);
 }
 
 CodeOpCast parse_operator_cast( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_operator_cast(NullCode);
+	ctx->parser.Tokens = toks;
+	return parser_parse_operator_cast(ctx, NullCode);
 }
 
 CodeStruct parse_struct( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	push_scope();
-	CodeStruct result = (CodeStruct) parse_class_struct( _ctx, Tok_Decl_Struct, parser_not_inplace_def );
-	parser_pop(& _ctx->parser);
+	ctx->parser.Tokens = toks;
+
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
+
+	CodeStruct result = (CodeStruct) parse_class_struct( ctx, Tok_Decl_Struct, parser_not_inplace_def );
+
+	parser_pop(& ctx->parser);
 	return result;
 }
 
 CodeTemplate parse_template( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_template();
+	ctx->parser.Tokens = toks;
+	return parser_parse_template(ctx);
 }
 
 CodeTypename parse_type( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_type( parser_not_from_template, nullptr);
+	ctx->parser.Tokens = toks;
+	return parser_parse_type( ctx, parser_not_from_template, nullptr);
 }
 
 CodeTypedef parse_typedef( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_typedef();
+	ctx->parser.Tokens = toks;
+	return parser_parse_typedef(ctx);
 }
 
 CodeUnion parse_union( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_union( parser_not_inplace_def);
+	ctx->parser.Tokens = toks;
+	return parser_parse_union(ctx, parser_not_inplace_def);
 }
 
 CodeUsing parse_using( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_using();
+	ctx->parser.Tokens = toks;
+	return parser_parse_using(ctx);
 }
 
 CodeVar parse_variable( Str def )
 {
+	// TODO(Ed): Lift this.
+	Context* ctx = _ctx;
+
 	check_parse_args( def );
 
 	TokArray toks = lex( def );
 	if ( toks.Arr == nullptr )
 		return InvalidCode;
 
-	_ctx->parser.Tokens = toks;
-	return parser_parse_variable();
+	ctx->parser.Tokens = toks;
+	return parser_parse_variable(ctx);
 }
 
 // Undef helper macros
