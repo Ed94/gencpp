@@ -569,6 +569,23 @@ void lex_found_token( LexContext* ctx )
 // TODO(Ed): We need to to attempt to recover from a lex failure?
 
 neverinline
+LexedInfo lex_WIP(Context* lib_ctx, Str content)
+{
+	LexedInfo result = struct_zero();
+	result.text   = content;
+	result.tokens = array_init_reserve(Token, ctx->Allocator_DyanmicContainers, ctx->InitSize_LexerTokens );
+
+	LexContext c = struct_zero(); LexContext* ctx = & c;
+	c.content = content;
+	c.left    = content.Len;
+	c.scanner = content.Ptr;
+
+	
+
+	return result;
+}
+
+neverinline
 // void lex( Array<Token> tokens, Str content )
 TokArray lex( Str content )
 {

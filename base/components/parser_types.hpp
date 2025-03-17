@@ -128,10 +128,19 @@ struct LexContext
 	Token           token;
 };
 
+typedef struct LexerMessage LexerMessage;
+struct LexerMessage
+{
+	LexerMessage* next;
+	Str           content;
+	LogLevel      level;
+};
+
 struct LexedInfo
 {
-	Str        text;
-	TokenSlice tokens;
+	LexerMessage messages;
+	Str          text;
+	TokenSlice   tokens;
 };
 
 typedef struct ParseStackNode ParseStackNode;

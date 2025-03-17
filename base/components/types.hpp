@@ -31,6 +31,38 @@
 
 */
 
+enum LogLevel //: u32
+{
+	LL_Null,
+	LL_Note,
+	LL_Warning,
+	LL_Error,
+	LL_Fatal,
+	LL_UnderlyingType = GEN_U32_MAX,
+};
+typedef enum LogLevel LogLevel;
+
+Str loglevel_to_str(LogLevel level) 
+{
+	local_persist
+	Str lookup[] = {
+		{ "Null",    sizeof("Null")  - 1 },
+		{ "Note",    sizeof("Note")  - 1 },
+		{ "Warning", sizeof("Info")  - 1 },
+		{ "Error",   sizeof("Error") - 1 },
+		{ "Fatal",   sizeof("Fatal") - 1 },
+	};
+	return lookup[level];
+}
+
+struct LogEntry
+{
+	Str      msg;
+	LogLevel level;
+};
+
+typedef void LoggerProc(LogEntry entry);
+
 enum AccessSpec : u32
 {
 	AccessSpec_Default,
