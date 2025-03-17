@@ -26,10 +26,8 @@ template <class TType> using TRemovePtr = typename RemovePtr<TType>::Type;
 
 struct ArrayHeader;
 
-#if GEN_COMPILER_CPP
-	template<class Type> struct Array;
-#	define get_array_underlying_type(array) typename TRemovePtr<typeof(array)>:: DataType
-#endif
+template<class Type> struct Array;
+#define get_array_underlying_type(array) typename TRemovePtr<typeof(array)>:: DataType
 
 usize array_grow_formula(ssize value);
 
@@ -59,12 +57,12 @@ struct ArrayHeader {
 	usize         Num;
 };
 
-#if GEN_COMPILER_CPP
 template<class Type>
 struct Array
 {
 	Type* Data;
 
+#if ! GEN_C_LIKE_CPP
 #pragma region Member Mapping
 	forceinline static Array  init(AllocatorInfo allocator)                         { return array_init<Type>(allocator); }
 	forceinline static Array  init_reserve(AllocatorInfo allocator, ssize capacity) { return array_init_reserve<Type>(allocator, capacity); }
@@ -88,6 +86,7 @@ struct Array
 	forceinline bool         resize(usize num)                                 { return array_resize<Type>(this, num); }
 	forceinline bool         set_capacity(usize new_capacity)                  { return array_set_capacity<Type>(this, new_capacity); }
 #pragma endregion Member Mapping
+#endif
 
 	forceinline operator Type*()             { return Data; }
 	forceinline operator Type const*() const { return Data; }
@@ -99,9 +98,8 @@ struct Array
 
 	using DataType = Type;
 };
-#endif
 
-#if GEN_COMPILER_CPP && 0
+#if 0
 template<class Type> bool append(Array<Type>& array, Array<Type> other)                         { return append( & array, other ); }
 template<class Type> bool append(Array<Type>& array, Type value)                                { return append( & array, value ); }
 template<class Type> bool append(Array<Type>& array, Type* items, usize item_num)               { return append( & array, items, item_num ); }

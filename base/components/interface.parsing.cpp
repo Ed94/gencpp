@@ -25,7 +25,7 @@ ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 
 	_ctx->parser.Tokens = toks;
 	push_scope();
-	CodeBody result = parse_global_nspace(CT_Global_Body);
+	CodeBody result = parse_global_nspace(_ctx, CT_Global_Body);
 	parser_pop(& _ctx->parser);
 
 	return info;
@@ -41,7 +41,7 @@ CodeClass parse_class( Str def )
 
 	_ctx->parser.Tokens = toks;
 	push_scope();
-	CodeClass result = (CodeClass) parse_class_struct( Tok_Decl_Class, parser_not_inplace_def );
+	CodeClass result = (CodeClass) parse_class_struct( _ctx, Tok_Decl_Class, parser_not_inplace_def );
 	parser_pop(& _ctx->parser);
 	return result;
 }
@@ -209,7 +209,7 @@ CodeBody parse_global_body( Str def )
 
 	_ctx->parser.Tokens = toks;
 	push_scope();
-	CodeBody result = parse_global_nspace( CT_Global_Body );
+	CodeBody result = parse_global_nspace(_ctx, CT_Global_Body );
 	parser_pop(& _ctx->parser);
 	return result;
 }
@@ -260,7 +260,7 @@ CodeStruct parse_struct( Str def )
 
 	_ctx->parser.Tokens = toks;
 	push_scope();
-	CodeStruct result = (CodeStruct) parse_class_struct( Tok_Decl_Struct, parser_not_inplace_def );
+	CodeStruct result = (CodeStruct) parse_class_struct( _ctx, Tok_Decl_Struct, parser_not_inplace_def );
 	parser_pop(& _ctx->parser);
 	return result;
 }
