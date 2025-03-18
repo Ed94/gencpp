@@ -93,12 +93,12 @@ StrBuilder tok_to_strbuilder(Token tok);
 
 struct TokenSlice
 {
-	Token* Ptr;
-	s32    Num;
+	Token* ptr;
+	s32    num;
 
 #if GEN_COMPILER_CPP
-	forceinline operator Token* ()               const { return Ptr; }
-	forceinline Token& operator[]( ssize index ) const { return Ptr[index]; }
+	forceinline operator Token* ()               const { return ptr; }
+	forceinline Token& operator[]( ssize index ) const { return ptr[index]; }
 #endif
 };
 
@@ -118,16 +118,6 @@ struct TokArray
 	s32          Idx;
 };
 
-struct LexContext
-{
-	Str             content;
-	s32             left;
-	char const*     scanner;
-	s32             line;
-	s32             column;
-	Token           token;
-};
-
 typedef struct LexerMessage LexerMessage;
 struct LexerMessage
 {
@@ -136,19 +126,42 @@ struct LexerMessage
 	LogLevel      level;
 };
 
+struct LexContext
+{
+	LexerMessage*   messages;
+	Str             content;
+	s32             left;
+	char const*     scanner;
+	s32             line;
+	s32             column;
+	Token           token;
+};
+
 struct LexedInfo
 {
-	LexerMessage messages;
-	Str          text;
-	TokenSlice   tokens;
+	LexerMessage* messages;
+	Str           text;
+	TokenSlice    tokens;
 };
 
 typedef struct ParseStackNode ParseStackNode;
 
+typedef struct ParseMessage ParseMessage;
+struct ParseMessage
+{
+	ParseMessage*   Next;
+	ParseStackNode* Scope;
+	Str             Content;
+	LogLevel        Level;
+};
+
 struct ParseContext
 {
-	TokArray        Tokens;
+	ParseMessage*   messages;
 	ParseStackNode* Scope;
+	// TokArray       Tokens;
+	TokenSlice      tokens;
+	s32             token_id;
 };
 
 enum MacroType : u16

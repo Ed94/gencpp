@@ -17,55 +17,55 @@ StrBuilder tok_to_strbuilder(Token tok)
 	return result;
 }
 
-bool lex__eat(Context* ctx, TokArray* self, TokType type );
+bool lex__eat(Context* ctx, ParseContext* self, TokType type );
 
-Token* lex_current(TokArray* self, bool skip_formatting )
+Token* lex_current(ParseContext* self, bool skip_formatting )
 {
 	if ( skip_formatting )
 	{
-		while ( self->Arr[self->Idx].Type == Tok_NewLine || self->Arr[self->Idx].Type == Tok_Comment  )
-			self->Idx++;
+		while ( self->tokens[self->token_id].Type == Tok_NewLine || self->tokens[self->token_id].Type == Tok_Comment  )
+			self->token_id++;
 	}
-	return & self->Arr[self->Idx];
+	return & self->tokens[self->token_id];
 }
 
-Token* lex_peek(TokArray self, bool skip_formatting)
+Token* lex_peek(ParseContext const* self, bool skip_formatting)
 {
-	s32 idx = self.Idx;
+	s32 idx = self->token_id;
 	if ( skip_formatting )
 	{
-		while ( self.Arr[idx].Type == Tok_NewLine )
+		while ( self->tokens[idx].Type == Tok_NewLine )
 			idx++;
 
-		return & self.Arr[idx];
+		return & self->tokens[idx];
 	}
-	return & self.Arr[idx];
+	return & self->tokens[idx];
 }
 
-Token* lex_previous(TokArray self, bool skip_formatting)
+Token* lex_previous(ParseContext const* self, bool skip_formatting)
 {
-	s32 idx = self.Idx;
+	s32 idx = self->token_id;
 	if ( skip_formatting )
 	{
-		while ( self.Arr[idx].Type == Tok_NewLine )
+		while ( self->tokens[idx].Type == Tok_NewLine )
 			idx --;
 
-		return & self.Arr[idx];
+		return & self->tokens[idx];
 	}
-	return & self.Arr[idx - 1];
+	return & self->tokens[idx - 1];
 }
 
-Token* lex_next(TokArray self, bool skip_formatting)
+Token* lex_next(ParseContext const* self, bool skip_formatting)
 {
-	s32 idx = self.Idx;
+	s32 idx = self->token_id;
 	if ( skip_formatting )
 	{
-		while ( self.Arr[idx].Type == Tok_NewLine )
+		while ( self->tokens[idx].Type == Tok_NewLine )
 			idx++;
 
-		return & self.Arr[idx + 1];
+		return & self->tokens[idx + 1];
 	}
-	return & self.Arr[idx + 1];
+	return & self->tokens[idx + 1];
 }
 
 enum
@@ -569,43 +569,27 @@ void lex_found_token( LexContext* ctx )
 // TODO(Ed): We need to to attempt to recover from a lex failure?
 
 neverinline
-LexedInfo lex_WIP(Context* lib_ctx, Str content)
+LexedInfo lex(Context* lib_ctx, Str content)
 {
-	LexedInfo result = struct_zero();
-	result.text   = content;
-	result.tokens = array_init_reserve(Token, ctx->Allocator_DyanmicContainers, ctx->InitSize_LexerTokens );
+	LexedInfo info = struct_zero();
 
 	LexContext c = struct_zero(); LexContext* ctx = & c;
 	c.content = content;
 	c.left    = content.Len;
 	c.scanner = content.Ptr;
+	c.line    = 1;
+	c.column  = 1;
 
-	
+	Array(Token) tokens = array_init_reserve(Token, lib_ctx->Allocator_DyanmicContainers, lib_ctx->InitSize_LexerTokens );
 
-	return result;
-}
-
-neverinline
-// void lex( Array<Token> tokens, Str content )
-TokArray lex( Str content )
-{
-	LexContext c; LexContext* ctx = & c;
-	c.content = content;
-	c.left    = content.Len;
-	c.scanner = content.Ptr;
-
-	char const* word        = c.scanner;
-	s32         word_length = 0;
-
-	c.line   = 1;
-	c.column = 1;
+	// TODO(Ed): Re-implement to new constraints:
+	// 1. Ability to continue on error
+	// 2. Return a lexed info.
 
 	skip_whitespace();
-	if ( c.left <= 0 )
-	{
+	if ( c.left <= 0 ) {
 		log_failure( "gen::lex: no tokens found (only whitespace provided)" );
-		TokArray null_array = {};
-		return null_array;
+		return info;
 	}
 
 	array_clear(_ctx->Lexer_Tokens);
@@ -615,16 +599,12 @@ TokArray lex( Str content )
 	while (c.left )
 	{
 		#if 0
-		if (Tokens.num())
-		{
+		if (Tokens.num()) {
 			log_fmt("\nLastTok: %SB", Tokens.back().to_strbuilder());
 		}
 		#endif
 
-		{
-			Token thanks_c = { { c.scanner, 0 }, Tok_Invalid, c.line, c.column, TF_Null };
-			c.token = thanks_c;
-		}
+		c.token = struct_init(Token) { { c.scanner, 0 }, Tok_Invalid, c.line, c.column, TF_Null };
 
 		bool is_define = false;
 
@@ -690,8 +670,7 @@ TokArray lex( Str content )
 
 					case Lex_ReturnNull:
 					{
-						TokArray tok_array =  {};
-						return tok_array;
+						return info;
 					}
 				}
 			}
@@ -1310,12 +1289,13 @@ TokArray lex( Str content )
 
 	if ( array_num(_ctx->Lexer_Tokens) == 0 ) {
 		log_failure( "Failed to lex any tokens" );
-		TokArray tok_array =  {};
-		return tok_array;
+		return info;
 	}
-
-	TokArray result = { _ctx->Lexer_Tokens, 0 };
-	return result;
+	
+	info.messages = c.messages;
+	info.text     = content;
+	info.tokens   = struct_init(TokenSlice) { tokens, scast(s32, array_num(tokens)) };
+	return info;
 }
 
 #undef move_forward

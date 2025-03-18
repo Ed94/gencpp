@@ -13,20 +13,16 @@ ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
 
-	TokArray toks;
-	if (lexed.tokens.Num == 0 && lexed.tokens.Ptr == nullptr) {
+	if (lexed.tokens.num == 0 && lexed.tokens.ptr == nullptr) {
 		check_parse_args(lexed.text);
-		toks = lex(lexed.text);
-
-		TokenSlice slice = { toks.Arr, scast(s32, array_num(toks.Arr)) };
-		lexed.tokens = slice;
+		lexed = lex(ctx, lexed.text);
 	}
 	ParseInfo info = struct_zero(ParseInfo);
 	info.lexed = lexed;
 
 	// TODO(Ed): ParseInfo should be set to the parser context.
 
-	ctx->parser.Tokens = toks;
+	ctx->parser.tokens = lexed.tokens;
 
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);

@@ -93,14 +93,6 @@ struct Context
 // An implicit context interface will be provided instead as wrapper procedures as convience.
 GEN_API extern Context* _ctx;
 
-// By default this library will either crash or exit if an error is detected while generating codes.
-// Even if set to not use GEN_FATAL, GEN_FATAL will still be used for memory failures as the library is unusable when they occur.
-#ifdef GEN_DONT_USE_FATAL
-	#define log_failure log_fmt
-#else
-	#define log_failure GEN_FATAL
-#endif
-
 // TODO(Ed): Swap all usage of this with logger_fmt (then rename logger_fmt to log_fmt)
 inline
 ssize log_fmt(char const* fmt, ...)
@@ -372,15 +364,6 @@ struct ParseStackNode
 	Str        ProcName; // The name of the procedure
 	Code       CodeRel;  // Relevant AST node
 	// TODO(Ed): When an error occurs, the parse stack is not released and instead the scope is left dangling.
-};
-
-typedef struct ParseMessage ParseMessage;
-struct ParseMessage
-{
-	ParseMessage*   Next;
-	ParseStackNode* Scope;
-	Str             Content;
-	LogLevel        Level;
 };
 
 struct ParseInfo

@@ -17,6 +17,39 @@ template <class TType> struct RemovePtr<TType*> { typedef TType Type; };
 
 template <class TType> using TRemovePtr = typename RemovePtr<TType>::Type;
 
+#pragma region Slice
+#if 0
+#define Slice(Type) Slice<Type>
+
+template<class Type> struct Slice;
+
+template<class Type>
+Type* slice_get(Slice<Type> self, ssize id) { 
+	GEN_ASSERT(id > -1);
+	GEN_ASSERT(id < self.len);
+	return self.ptr[id];
+ }
+
+template<class Type>
+struct Slice
+{
+	Type* ptr;
+	ssize len;
+
+#if GEN_COMPILER_CPP
+	forceinline operator Token* ()               const { return ptr; }
+	forceinline Token& operator[]( ssize index ) const { return ptr[index]; }
+
+	forceinline Type* begin() { return ptr; }
+	forceinline Type* end()   { return ptr + len; }
+#endif
+
+#if ! GEN_C_LIKE_CPP && GEN_COMPILER_CPP
+	forceinline Type& back() { return ptr[len - 1]; }
+#endif
+};
+#endif
+#pragma endregion Slice
 
 #pragma region Array
 #define Array(Type) Array<Type>

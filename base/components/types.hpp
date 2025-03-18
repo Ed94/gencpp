@@ -55,6 +55,7 @@ Str loglevel_to_str(LogLevel level)
 	return lookup[level];
 }
 
+typedef struct LogEntry LogEntry;
 struct LogEntry
 {
 	Str      msg;
@@ -62,6 +63,14 @@ struct LogEntry
 };
 
 typedef void LoggerProc(LogEntry entry);
+
+// By default this library will either crash or exit if an error is detected while generating codes.
+// Even if set to not use GEN_FATAL, GEN_FATAL will still be used for memory failures as the library is unusable when they occur.
+#ifdef GEN_DONT_USE_FATAL
+	#define log_failure log_fmt
+#else
+	#define log_failure GEN_FATAL
+#endif
 
 enum AccessSpec : u32
 {

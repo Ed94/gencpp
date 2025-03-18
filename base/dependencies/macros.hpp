@@ -300,9 +300,9 @@
 
 #ifndef struct_init
 #	if GEN_COMPILER_CPP
-#		define struct_init(type, value) value
+#		define struct_init(type) 
 #	else
-#		define struct_init(type, value) (type) value
+#		define struct_init(type) (type)
 #	endif
 #endif
 
