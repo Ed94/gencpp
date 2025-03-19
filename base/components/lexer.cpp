@@ -23,10 +23,10 @@ Token* lex_current(ParseContext* self, bool skip_formatting )
 {
 	if ( skip_formatting )
 	{
-		while ( self->tokens[self->token_id].Type == Tok_NewLine || self->tokens[self->token_id].Type == Tok_Comment  )
+		while ( self->tokens.ptr[self->token_id].Type == Tok_NewLine || self->tokens.ptr[self->token_id].Type == Tok_Comment  )
 			self->token_id++;
 	}
-	return & self->tokens[self->token_id];
+	return & self->tokens.ptr[self->token_id];
 }
 
 Token* lex_peek(ParseContext const* self, bool skip_formatting)
@@ -34,12 +34,12 @@ Token* lex_peek(ParseContext const* self, bool skip_formatting)
 	s32 idx = self->token_id;
 	if ( skip_formatting )
 	{
-		while ( self->tokens[idx].Type == Tok_NewLine )
+		while ( self->tokens.ptr[idx].Type == Tok_NewLine )
 			idx++;
 
-		return & self->tokens[idx];
+		return & self->tokens.ptr[idx];
 	}
-	return & self->tokens[idx];
+	return & self->tokens.ptr[idx];
 }
 
 Token* lex_previous(ParseContext const* self, bool skip_formatting)
@@ -47,12 +47,12 @@ Token* lex_previous(ParseContext const* self, bool skip_formatting)
 	s32 idx = self->token_id;
 	if ( skip_formatting )
 	{
-		while ( self->tokens[idx].Type == Tok_NewLine )
+		while ( self->tokens.ptr[idx].Type == Tok_NewLine )
 			idx --;
 
-		return & self->tokens[idx];
+		return & self->tokens.ptr[idx];
 	}
-	return & self->tokens[idx - 1];
+	return & self->tokens.ptr[idx - 1];
 }
 
 Token* lex_next(ParseContext const* self, bool skip_formatting)
@@ -60,12 +60,12 @@ Token* lex_next(ParseContext const* self, bool skip_formatting)
 	s32 idx = self->token_id;
 	if ( skip_formatting )
 	{
-		while ( self->tokens[idx].Type == Tok_NewLine )
+		while ( self->tokens.ptr[idx].Type == Tok_NewLine )
 			idx++;
 
-		return & self->tokens[idx + 1];
+		return & self->tokens.ptr[idx + 1];
 	}
-	return & self->tokens[idx + 1];
+	return & self->tokens.ptr[idx + 1];
 }
 
 enum
@@ -137,7 +137,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		);
 		// GEN_DEBUG_TRAP();
 	}
-	array_append( ctx->tokens, name );
+	array_append(ctx->tokens, name);
 
 	if ( ctx->left && (* ctx->scanner) == '(' )
 	{
@@ -152,7 +152,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		}
 
 		Token opening_paren = { { ctx->scanner, 1 }, Tok_Paren_Open, ctx->line, ctx->column, TF_Preprocess };
-		array_append( ctx->tokens, opening_paren );
+		array_append(ctx->tokens, opening_paren);
 		move_forward();
 
 		Token last_parameter = {};
@@ -571,9 +571,9 @@ void lex_found_token( LexContext* ctx )
 neverinline
 LexedInfo lex(Context* lib_ctx, Str content)
 {
-	LexedInfo info = struct_zero();
+	LexedInfo info = struct_zero(LexedInfo);
 
-	LexContext c = struct_zero(); LexContext* ctx = & c;
+	LexContext c = struct_zero(LexContext); LexContext* ctx = & c;
 	c.content = content;
 	c.left    = content.Len;
 	c.scanner = content.Ptr;

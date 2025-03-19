@@ -34,11 +34,11 @@ StrBuilder parser_to_strbuilder(ParseContext const* ctx, AllocatorInfo temp)
 	StrBuilder result = strbuilder_make_reserve( temp, kilobytes(4) );
 
 	Token scope_start = * ctx->Scope->Start;
-	Token last_valid  = (ctx->token_id >= ctx->tokens.num) ? ctx->tokens[ctx->tokens.num -1] : (* lex_peek(ctx, true));
+	Token last_valid  = (ctx->token_id >= ctx->tokens.num) ? ctx->tokens.ptr[ctx->tokens.num -1] : (* lex_peek(ctx, true));
 
 	sptr        length  = scope_start.Text.Len;
 	char const* current = scope_start.Text.Ptr + length;
-	while ( current <= ctx->tokens[ctx->tokens.num - 1].Text.Ptr && (* current) != '\n' && length < 74 )
+	while ( current <= ctx->tokens.ptr[ctx->tokens.num - 1].Text.Ptr && (* current) != '\n' && length < 74 )
 	{
 		current++;
 		length++;
@@ -85,7 +85,7 @@ bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 		return false;
 	}
 
-	Token at_idx = parser->tokens[ parser->token_id ];
+	Token at_idx = parser->tokens.ptr[ parser->token_id ];
 
 	if ( ( at_idx.Type == Tok_NewLine && type != Tok_NewLine )
 	||   ( at_idx.Type == Tok_Comment && type != Tok_Comment ) )
@@ -126,14 +126,11 @@ bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 internal
 void parser_init(Context* ctx)
 {
-	// ctx->Lexer_Tokens = array_init_reserve(Token, ctx->Allocator_DyanmicContainers, ctx->InitSize_LexerTokens );
 }
 
 internal
 void parser_deinit(Context* ctx)
 {
-	// Array(Token) null_array = { nullptr };
-	// ctx->Lexer_Tokens = null_array;
 }
 
 #pragma region Helper Macros
@@ -183,7 +180,7 @@ bool _check_parse_args(ParseContext* parser, Str def, char const* func_name )
 #if GEN_COMPILER_CPP
 #	define NullScope { nullptr, {nullptr, 0}, lex_current( &  ctx->parser, lex_dont_skip_formatting ), Str{nullptr, 0}, txt( __func__ ), { nullptr} }
 #else
-#	define NullScope (ParseStackNode){ nullptr, {nullptr, 0}, lex_current( &  ctx->parser.Tokens, lex_dont_skip_formatting ), (Str){nullptr, 0}, txt( __func__ ), { nullptr} }
+#	define NullScope (ParseStackNode){ nullptr, {nullptr, 0}, lex_current( &  ctx->parser, lex_dont_skip_formatting ), (Str){nullptr, 0}, txt( __func__ ), { nullptr} }
 #endif
 
 #pragma endregion Helper Macros
@@ -1186,17 +1183,17 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 	b32 had_paren   = false;
 	for ( ; idx < tokens.num; idx++ )
 	{
-		if ( tokens[ idx ].Type == Tok_BraceCurly_Open )
+		if ( tokens.ptr[ idx ].Type == Tok_BraceCurly_Open )
 			level++;
 
-		if ( tokens[ idx ].Type == Tok_BraceCurly_Close ) {
+		if ( tokens.ptr[ idx ].Type == Tok_BraceCurly_Close ) {
 			level--;
 			had_def = level == 0;
 		}
 
 		b32 found_fn_def = had_def && had_paren;
 
-		if ( level == 0 && (tokens[ idx ].Type == Tok_Statement_End || found_fn_def) )
+		if ( level == 0 && (tokens.ptr[ idx ].Type == Tok_Statement_End || found_fn_def) )
 			break;
 	}
 
@@ -1219,23 +1216,23 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 		return result;
 	}
 
-	Token tok = tokens[ idx - 1 ];
+	Token tok = tokens.ptr[ idx - 1 ];
 	if ( tok_is_specifier(tok) && spec_is_trailing( str_to_specifier( tok.Text)) )
 	{
 		// <which> <type_identifier>(...) <specifier> ...;
 
 		s32   spec_idx = idx - 1;
-		Token spec     = tokens[spec_idx];
+		Token spec     = tokens.ptr[spec_idx];
 		while ( tok_is_specifier(spec) && spec_is_trailing( str_to_specifier( spec.Text)) )
 		{
 			-- spec_idx;
-			spec = tokens[spec_idx];
+			spec = tokens.ptr[spec_idx];
 		}
 
-		if ( tokens[spec_idx].Type == Tok_Paren_Close )
+		if ( tokens.ptr[spec_idx].Type == Tok_Paren_Close )
 		{
 			// Forward declaration with trailing specifiers for a procedure
-			tok = tokens[spec_idx];
+			tok = tokens.ptr[spec_idx];
 
 			Code result = parse_operator_function_or_variable(ctx, false, NullCode, NullCode);
 			// <Attributes> <Specifiers> <ReturnType/ValueType> <operator <Op>, or Name> ...
@@ -1249,7 +1246,7 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 	}
 	if ( tok.Type == Tok_Identifier )
 	{
-		tok = tokens[ idx - 2 ];
+		tok = tokens.ptr[ idx - 2 ];
 		bool is_indirection = tok.Type == Tok_Ampersand || tok.Type == Tok_Star;
 		bool ok_to_parse    = false;
 
@@ -1270,15 +1267,15 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 			parser_pop(& ctx->parser);
 			return (Code) result;
 		}
-		else if ( tok.Type == Tok_Identifier && tokens[ idx - 3 ].Type == which )
+		else if ( tok.Type == Tok_Identifier && tokens.ptr[ idx - 3 ].Type == which )
 		{
 			// Its a variable with type ID using <which> namespace.
 			// <which> <type_identifier> <identifier>;
 			ok_to_parse = true;
 		}
 		else if ( tok.Type == Tok_Assign_Classifer
-		&& (	( tokens[idx - 5].Type == which && tokens[idx - 4].Type == Tok_Decl_Class )
-			||	( tokens[idx - 4].Type == which))
+		&& (	( tokens.ptr[idx - 5].Type == which && tokens.ptr[idx - 4].Type == Tok_Decl_Class )
+			||	( tokens.ptr[idx - 4].Type == which))
 		)
 		{
 			// Its a forward declaration of an enum
@@ -1310,11 +1307,11 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 	}
 	else if ( tok.Type >= Tok_Type_Unsigned && tok.Type <= Tok_Type_MS_W64 )
 	{
-		tok = tokens[ idx - 2 ];
+		tok = tokens.ptr[ idx - 2 ];
 
 		if ( tok.Type != Tok_Assign_Classifer
-		|| (	( tokens[idx - 5].Type != which && tokens[idx - 4].Type != Tok_Decl_Class )
-			&&	( tokens[idx - 4].Type != which))
+		|| (	( tokens.ptr[idx - 5].Type != which && tokens.ptr[idx - 4].Type != Tok_Decl_Class )
+			&&	( tokens.ptr[idx - 4].Type != which))
 		)
 		{
 			log_failure( "Unsupported or bad member definition after %s declaration\n%s", toktype_to_str(which), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
@@ -1905,12 +1902,12 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 
 					for ( ; idx < ctx->parser.tokens.num; idx++ )
 					{
-						Token tok = ctx->parser.tokens[ idx ];
+						Token tok = ctx->parser.tokens.ptr[ idx ];
 
 						if ( tok.Type == Tok_Identifier )
 						{
 							idx++;
-							tok = ctx->parser.tokens[ idx ];
+							tok = ctx->parser.tokens.ptr[ idx ];
 							if ( tok.Type == Tok_Access_StaticSymbol )
 								continue;
 
@@ -1978,8 +1975,8 @@ Code parse_global_nspace_constructor_destructor(Context* ctx, CodeSpecifiers spe
 	TokenSlice tokens = ctx->parser.tokens;
 
 	s32   idx = ctx->parser.token_id;
-	Token nav = tokens[ idx ];
-	for ( ; idx < tokens.num; idx++, nav = tokens[ idx ] )
+	Token nav = tokens.ptr[ idx ];
+	for ( ; idx < tokens.num; idx++, nav = tokens.ptr[ idx ] )
 	{
 		if ( nav.Text.Ptr[0] == '<' )
 		{

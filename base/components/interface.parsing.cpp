@@ -22,7 +22,7 @@ ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 
 	// TODO(Ed): ParseInfo should be set to the parser context.
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 	ctx->parser.tokens = lexed.tokens;
 
 	ParseStackNode scope = NullScope;
@@ -41,7 +41,7 @@ CodeClass parse_class( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -62,7 +62,7 @@ CodeConstructor parse_constructor(Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -129,7 +129,7 @@ CodeDefine parse_define( Str def )
 	
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -150,7 +150,7 @@ CodeDestructor parse_destructor( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -171,7 +171,7 @@ CodeEnum parse_enum( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -189,7 +189,7 @@ CodeBody parse_export_body( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -206,7 +206,7 @@ CodeExtern parse_extern_link( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -223,7 +223,7 @@ CodeFriend parse_friend( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -240,7 +240,7 @@ CodeFn parse_function( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -257,7 +257,7 @@ CodeBody parse_global_body( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -278,7 +278,7 @@ CodeNS parse_namespace( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -295,7 +295,7 @@ CodeOperator parse_operator( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -312,7 +312,7 @@ CodeOpCast parse_operator_cast( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -329,7 +329,7 @@ CodeStruct parse_struct( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -350,7 +350,7 @@ CodeTemplate parse_template( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -367,7 +367,7 @@ CodeTypename parse_type( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -384,7 +384,7 @@ CodeTypedef parse_typedef( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -401,7 +401,7 @@ CodeUnion parse_union( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -418,7 +418,7 @@ CodeUsing parse_using( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
@@ -435,7 +435,7 @@ CodeVar parse_variable( Str def )
 
 	check_parse_args( def );
 
-	ctx->parser = struct_zero();
+	ctx->parser = struct_zero(ParseContext);
 
 	LexedInfo lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;

@@ -108,7 +108,7 @@ inline
 void logger_fmt(Context* ctx, LogLevel level, char const* fmt, ...)
 {
 	local_persist thread_local
-	PrintF_Buffer buf = struct_zero(PrintF_Buffer);
+	PrintF_Buffer buf = struct_zero_init();
 
 	va_list va;
 	va_start(va, fmt);
