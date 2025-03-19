@@ -159,7 +159,7 @@ struct ParseMessage
 struct ParseContext
 {
 	ParseMessage*   messages;
-	ParseStackNode* Scope;
+	ParseStackNode* scope;
 	// TokArray       Tokens;
 	TokenSlice      tokens;
 	s32             token_id;

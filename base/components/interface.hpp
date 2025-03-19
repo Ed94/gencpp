@@ -353,13 +353,13 @@ forceinline CodeBody         def_union_body      ( s32 num, Code* codes )       
 
 struct ParseStackNode
 {
-	ParseStackNode* Prev;
+	ParseStackNode* prev;
 
-	TokenSlice Tokens;
-	Token*     Start;
-	Str        Name;     // The name of the AST node (if parsed)
-	Str        ProcName; // The name of the procedure
-	Code       CodeRel;  // Relevant AST node
+	TokenSlice tokens;
+	Token*     start;
+	Str        name;     // The name of the AST node (if parsed)
+	Str        proc_name; // The name of the procedure
+	Code       code_rel;  // Relevant AST node
 	// TODO(Ed): When an error occurs, the parse stack is not released and instead the scope is left dangling.
 };
 
