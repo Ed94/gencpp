@@ -22,6 +22,7 @@ ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 
 	// TODO(Ed): ParseInfo should be set to the parser context.
 
+	ctx->parser = struct_zero();
 	ctx->parser.tokens = lexed.tokens;
 
 	ParseStackNode scope = NullScope;
@@ -40,17 +41,16 @@ CodeClass parse_class( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
-		return InvalidCode;
+	ctx->parser = struct_zero();
 
-		ctx->parser.Tokens = toks;
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
+		return InvalidCode;
 
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-
 	CodeClass result = (CodeClass) parse_class_struct( ctx, Tok_Decl_Class, parser_not_inplace_def );
-
 	parser_pop(& ctx->parser);
 	return result;
 }
@@ -62,9 +62,15 @@ CodeConstructor parse_constructor(Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
+
+	ParseStackNode scope = NullScope;
+	parser_push(& ctx->parser, & scope);
 
 	// TODO(Ed): Constructors can have prefix attributes
 
@@ -92,7 +98,7 @@ CodeConstructor parse_constructor(Str def )
 				break;
 
 			default :
-				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(ctx->parser, ctx->Allocator_Temp) );
+				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
 				parser_pop(& ctx->parser);
 				return InvalidCode;
 		}
@@ -106,14 +112,13 @@ CodeConstructor parse_constructor(Str def )
 		eat( currtok.Type );
 	}
 
-	if ( NumSpecifiers )
-	{
+	if ( NumSpecifiers ) {
 		specifiers = def_specifiers_arr( NumSpecifiers, specs_found );
 		// <specifiers> ...
 	}
 
-	ctx->parser.Tokens     = toks;
 	CodeConstructor result = parser_parse_constructor(ctx, specifiers);
+	parser_pop(& ctx->parser);
 	return result;
 }
 
@@ -124,17 +129,16 @@ CodeDefine parse_define( Str def )
 	
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
-		return InvalidCode;
+	ctx->parser = struct_zero();
 
-	ctx->parser.Tokens = toks;
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
+		return InvalidCode;
 
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-
 	CodeDefine result = parser_parse_define(ctx);
-
 	parser_pop(& ctx->parser);
 	return result;
 }
@@ -146,14 +150,16 @@ CodeDestructor parse_destructor( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
 	// TODO(Ed): Destructors can have prefix attributes
 	// TODO(Ed): Destructors can have virtual
 
-	ctx->parser.Tokens   = toks;
 	CodeDestructor result = parser_parse_destructor(ctx, NullCode);
 	return result;
 }
@@ -165,17 +171,14 @@ CodeEnum parse_enum( Str def )
 
 	check_parse_args( def );
 
-	ParseStackNode scope = NullScope;
-	parser_push(& ctx->parser, & scope);
+	ctx->parser = struct_zero();
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
-	{
-		parser_pop(& ctx->parser);
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr ) {
 		return InvalidCode;
 	}
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_enum(ctx, parser_not_inplace_def);
 }
 
@@ -186,11 +189,13 @@ CodeBody parse_export_body( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_export_body(ctx);
 }
 
@@ -201,11 +206,13 @@ CodeExtern parse_extern_link( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_extern_link(ctx);
 }
 
@@ -216,11 +223,13 @@ CodeFriend parse_friend( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_friend(ctx);
 }
 
@@ -231,11 +240,13 @@ CodeFn parse_function( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return (CodeFn) parser_parse_function(ctx);
 }
 
@@ -246,17 +257,16 @@ CodeBody parse_global_body( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
-		return InvalidCode;
+	ctx->parser = struct_zero();
 
-	ctx->parser.Tokens = toks;
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
+		return InvalidCode;
 
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-
 	CodeBody result = parse_global_nspace(ctx, CT_Global_Body );
-
 	parser_pop(& ctx->parser);
 	return result;
 }
@@ -268,11 +278,13 @@ CodeNS parse_namespace( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_namespace(ctx);
 }
 
@@ -283,11 +295,13 @@ CodeOperator parse_operator( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return (CodeOperator) parser_parse_operator(ctx);
 }
 
@@ -298,11 +312,13 @@ CodeOpCast parse_operator_cast( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_operator_cast(ctx, NullCode);
 }
 
@@ -313,17 +329,16 @@ CodeStruct parse_struct( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
-		return InvalidCode;
+	ctx->parser = struct_zero();
 
-	ctx->parser.Tokens = toks;
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
+		return InvalidCode;
 
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-
 	CodeStruct result = (CodeStruct) parse_class_struct( ctx, Tok_Decl_Struct, parser_not_inplace_def );
-
 	parser_pop(& ctx->parser);
 	return result;
 }
@@ -335,11 +350,13 @@ CodeTemplate parse_template( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_template(ctx);
 }
 
@@ -350,11 +367,13 @@ CodeTypename parse_type( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_type( ctx, parser_not_from_template, nullptr);
 }
 
@@ -365,11 +384,13 @@ CodeTypedef parse_typedef( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_typedef(ctx);
 }
 
@@ -380,11 +401,13 @@ CodeUnion parse_union( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_union(ctx, parser_not_inplace_def);
 }
 
@@ -395,11 +418,13 @@ CodeUsing parse_using( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_using(ctx);
 }
 
@@ -410,11 +435,13 @@ CodeVar parse_variable( Str def )
 
 	check_parse_args( def );
 
-	TokArray toks = lex( def );
-	if ( toks.Arr == nullptr )
+	ctx->parser = struct_zero();
+
+	LexedInfo lexed = lex(ctx, def);
+	ctx->parser.tokens = lexed.tokens;
+	if ( ctx->parser.tokens.ptr == nullptr )
 		return InvalidCode;
 
-	ctx->parser.Tokens = toks;
 	return parser_parse_variable(ctx);
 }
 

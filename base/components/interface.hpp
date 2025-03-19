@@ -78,9 +78,6 @@ struct Context
 
 	StringTable StrCache;
 
-	// TODO(Ed): This needs to be just handled by a parser context
-	Array(Token) Lexer_Tokens;
-
 	// TODO(Ed): Active parse context vs a parse result need to be separated conceptually
 	ParseContext parser;
 

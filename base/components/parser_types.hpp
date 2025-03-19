@@ -135,6 +135,7 @@ struct LexContext
 	s32             line;
 	s32             column;
 	Token           token;
+	Array(Token)    tokens;
 };
 
 struct LexedInfo

@@ -179,7 +179,7 @@ Code untyped_token_fmt( s32 num_tokens, char const* fmt, ... )
 
 Code untyped_toks( TokenSlice tokens )
 {
-	if ( tokens.Num == 0 ) {
+	if ( tokens.num == 0 ) {
 		log_failure( "untyped_toks: empty token slice" );
 		return InvalidCode;
 	}

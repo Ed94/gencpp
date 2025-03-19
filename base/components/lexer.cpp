@@ -137,7 +137,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		);
 		// GEN_DEBUG_TRAP();
 	}
-	array_append( _ctx->Lexer_Tokens, name );
+	array_append( ctx->tokens, name );
 
 	if ( ctx->left && (* ctx->scanner) == '(' )
 	{
@@ -152,7 +152,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		}
 
 		Token opening_paren = { { ctx->scanner, 1 }, Tok_Paren_Open, ctx->line, ctx->column, TF_Preprocess };
-		array_append( _ctx->Lexer_Tokens, opening_paren );
+		array_append( ctx->tokens, opening_paren );
 		move_forward();
 
 		Token last_parameter = {};
@@ -168,7 +168,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 				move_forward();
 				move_forward();
 
-				array_append(_ctx->Lexer_Tokens, parameter);
+				array_append(ctx->tokens, parameter);
 				skip_whitespace();
 				last_parameter = parameter;
 
@@ -202,7 +202,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 					move_forward();
 					parameter.Text.Len++;
 				}
-				array_append(_ctx->Lexer_Tokens, parameter);
+				array_append(ctx->tokens, parameter);
 				skip_whitespace();
 				last_parameter = parameter;
 			}
@@ -229,7 +229,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 				return Lex_ReturnNull;
 			}
 			Token comma = { { ctx->scanner, 1 }, Tok_Comma, ctx->line, ctx->column, TF_Preprocess };
-			array_append(_ctx->Lexer_Tokens, comma);
+			array_append(ctx->tokens, comma);
 			move_forward();
 		}
 		
@@ -243,7 +243,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 			return Lex_ReturnNull;
 		}
 		Token closing_paren = { { ctx->scanner, 1 }, Tok_Paren_Close, ctx->line, ctx->column, TF_Preprocess };
-		array_append(_ctx->Lexer_Tokens, closing_paren);
+		array_append(ctx->tokens, closing_paren);
 		move_forward();
 	}
 	else if ( registered_macro && macro_is_functional( * registered_macro) ) {
@@ -268,7 +268,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 {
 	char const* hash = ctx->scanner;
 	Token hash_tok = { { hash, 1 }, Tok_Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess };
-	array_append( _ctx->Lexer_Tokens, hash_tok  );
+	array_append(ctx->tokens, hash_tok);
 
 	move_forward();
 	skip_whitespace();
@@ -344,14 +344,14 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		ctx->token.Text.Len = ctx->token.Text.Len + ctx->token.Text.Ptr - hash;
 		ctx->token.Text.Ptr = hash;
-		array_append( _ctx->Lexer_Tokens, ctx->token );
+		array_append(ctx->tokens, ctx->token);
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
 	if ( ctx->token.Type == Tok_Preprocess_Else || ctx->token.Type == Tok_Preprocess_EndIf )
 	{
 		ctx->token.Flags |= TF_Preprocess_Cond;
-		array_append( _ctx->Lexer_Tokens, ctx->token );
+		array_append(ctx->tokens, ctx->token);
 		end_line();
 		return Lex_Continue;
 	}
@@ -360,7 +360,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		ctx->token.Flags |= TF_Preprocess_Cond;
 	}
 
-	array_append( _ctx->Lexer_Tokens, ctx->token );
+	array_append(ctx->tokens, ctx->token);
 
 	skip_whitespace();
 
@@ -411,7 +411,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			move_forward();
 		}
 
-		array_append( _ctx->Lexer_Tokens, preprocess_content );
+		array_append(ctx->tokens, preprocess_content);
 		return Lex_Continue; // Skip found token, its all handled here.
 	}
 
@@ -475,14 +475,14 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		preprocess_content.Text.Len++;
 	}
 
-	array_append( _ctx->Lexer_Tokens, preprocess_content );
+	array_append(ctx->tokens, preprocess_content);
 	return Lex_Continue; // Skip found token, its all handled here.
 }
 
 void lex_found_token( LexContext* ctx )
 {
 	if ( ctx->token.Type != Tok_Invalid ) {
-		array_append( _ctx->Lexer_Tokens, ctx->token );
+		array_append(ctx->tokens, ctx->token);
 		return;
 	}
 
@@ -508,7 +508,7 @@ void lex_found_token( LexContext* ctx )
 		}
 
 		ctx->token.Type = type;
-		array_append( _ctx->Lexer_Tokens, ctx->token );
+		array_append(ctx->tokens, ctx->token);
 		return;
 	}
 	if ( ( type <= Tok_Star && type >= Tok_Spec_Alignas)
@@ -517,13 +517,13 @@ void lex_found_token( LexContext* ctx )
 	{
 		ctx->token.Type   = type;
 		ctx->token.Flags |= TF_Specifier;
-		array_append( _ctx->Lexer_Tokens, ctx->token );
+		array_append(ctx->tokens, ctx->token);
 		return;
 	}
 	if ( type != Tok_Invalid )
 	{
 		ctx->token.Type = type;
-		array_append( _ctx->Lexer_Tokens, ctx->token );
+		array_append(ctx->tokens, ctx->token);
 		return;
 	}
 
@@ -561,7 +561,7 @@ void lex_found_token( LexContext* ctx )
 		ctx->token.Type = Tok_Identifier;
 	}
 
-	array_append( _ctx->Lexer_Tokens, ctx->token );
+	array_append(ctx->tokens, ctx->token);
 }
 
 // TODO(Ed): We should dynamically allocate the lexer's array in Allocator_DyanmicContainers.
@@ -579,8 +579,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 	c.scanner = content.Ptr;
 	c.line    = 1;
 	c.column  = 1;
-
-	Array(Token) tokens = array_init_reserve(Token, lib_ctx->Allocator_DyanmicContainers, lib_ctx->InitSize_LexerTokens );
+	c.tokens  = array_init_reserve(Token, lib_ctx->Allocator_DyanmicContainers, lib_ctx->InitSize_LexerTokens );
 
 	// TODO(Ed): Re-implement to new constraints:
 	// 1. Ability to continue on error
@@ -592,18 +591,10 @@ LexedInfo lex(Context* lib_ctx, Str content)
 		return info;
 	}
 
-	array_clear(_ctx->Lexer_Tokens);
-
 	b32 preprocess_args = true;
 
 	while (c.left )
 	{
-		#if 0
-		if (Tokens.num()) {
-			log_fmt("\nLastTok: %SB", Tokens.back().to_strbuilder());
-		}
-		#endif
-
 		c.token = struct_init(Token) { { c.scanner, 0 }, Tok_Invalid, c.line, c.column, TF_Null };
 
 		bool is_define = false;
@@ -623,7 +614,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 				c.token.Type = Tok_NewLine;
 				c.token.Text.Len++;
 
-				array_append( _ctx->Lexer_Tokens, c.token );
+				array_append(c.tokens, c.token);
 				continue;
 			}
 		}
@@ -662,7 +653,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 								c.token.Text.Len++;
 								move_forward();
 
-								array_append( _ctx->Lexer_Tokens, c.token );
+								array_append(c.tokens, c.token);
 							}
 						}
 						continue;
@@ -1118,7 +1109,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 							move_forward();
 							c.token.Text.Len++;
 						}
-						array_append( _ctx->Lexer_Tokens, c.token );
+						array_append(c.tokens, c.token);
 						continue;
 					}
 					else if ( (* ctx->scanner) == '*' )
@@ -1154,7 +1145,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 							move_forward();
 							c.token.Text.Len++;
 						}
-						array_append( _ctx->Lexer_Tokens, c.token );
+						array_append(c.tokens, c.token);
 						// end_line();
 						continue;
 					}
@@ -1242,14 +1233,14 @@ LexedInfo lex(Context* lib_ctx, Str content)
 		}
 		else
 		{
-			s32 start = max( 0, array_num(_ctx->Lexer_Tokens) - 100 );
+			s32 start = max( 0, array_num(c.tokens) - 100 );
 			log_fmt("\n%d\n", start);
-			for ( s32 idx = start; idx < array_num(_ctx->Lexer_Tokens); idx++ )
+			for ( s32 idx = start; idx < array_num(c.tokens); idx++ )
 			{
 				log_fmt( "Token %d Type: %s : %.*s\n"
 					, idx
-					, toktype_to_str( _ctx->Lexer_Tokens[ idx ].Type ).Ptr
-					, _ctx->Lexer_Tokens[ idx ].Text.Len, _ctx->Lexer_Tokens[ idx ].Text.Ptr
+					, toktype_to_str( c.tokens[ idx ].Type ).Ptr
+					, c.tokens[ idx ].Text.Len, c.tokens[ idx ].Text.Ptr
 				);
 			}
 
@@ -1265,7 +1256,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 		FoundToken:
 		{
 			lex_found_token( ctx );
-			TokType last_type = array_back(_ctx->Lexer_Tokens)->Type;
+			TokType last_type = array_back(c.tokens)->Type;
 			if ( last_type == Tok_Preprocess_Macro_Stmt || last_type == Tok_Preprocess_Macro_Expr )
 			{
 				Token thanks_c = { { c.scanner, 0 }, Tok_Invalid, c.line, c.column, TF_Null };
@@ -1280,21 +1271,21 @@ LexedInfo lex(Context* lib_ctx, Str content)
 					c.token.Text.Len++;
 					move_forward();
 
-					array_append( _ctx->Lexer_Tokens, c.token );
+					array_append(c.tokens, c.token);
 					continue;
 				}
 			}
 		}
 	}
 
-	if ( array_num(_ctx->Lexer_Tokens) == 0 ) {
+	if ( array_num(c.tokens) == 0 ) {
 		log_failure( "Failed to lex any tokens" );
 		return info;
 	}
 	
 	info.messages = c.messages;
 	info.text     = content;
-	info.tokens   = struct_init(TokenSlice) { tokens, scast(s32, array_num(tokens)) };
+	info.tokens   = struct_init(TokenSlice) { pcast(Token*, c.tokens), scast(s32, array_num(c.tokens)) };
 	return info;
 }
 

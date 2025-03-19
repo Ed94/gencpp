@@ -126,14 +126,14 @@ bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 internal
 void parser_init(Context* ctx)
 {
-	ctx->Lexer_Tokens = array_init_reserve(Token, ctx->Allocator_DyanmicContainers, ctx->InitSize_LexerTokens );
+	// ctx->Lexer_Tokens = array_init_reserve(Token, ctx->Allocator_DyanmicContainers, ctx->InitSize_LexerTokens );
 }
 
 internal
 void parser_deinit(Context* ctx)
 {
-	Array(Token) null_array = { nullptr };
-	ctx->Lexer_Tokens = null_array;
+	// Array(Token) null_array = { nullptr };
+	// ctx->Lexer_Tokens = null_array;
 }
 
 #pragma region Helper Macros
