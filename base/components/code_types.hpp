@@ -252,7 +252,7 @@ struct CodeSpecifiers
 #if ! GEN_C_LIKE_CPP
 	Using_Code( CodeSpecifiers );
 	bool       append( Specifier spec )            { return specifiers_append(* this, spec); }
-	s32        has( Specifier spec )               { return specifiers_has(* this, spec); }
+	bool       has( Specifier spec )               { return specifiers_has(* this, spec); }
 	s32        index_of( Specifier spec )          { return specifiers_index_of(* this, spec); }
 	s32        remove( Specifier to_remove )       { return specifiers_remove(* this, to_remove); }
 	StrBuilder to_strbuilder()                     { return specifiers_to_strbuilder(* this ); }
@@ -1074,11 +1074,12 @@ forceinline bool       has_entries  (CodeParams params )                       {
 forceinline StrBuilder to_strbuilder(CodeParams params )                       { return params_to_strbuilder(params); }
 forceinline void       to_strbuilder(CodeParams params, StrBuilder& result )   { return params_to_strbuilder_ref(params, & result); }
   
-forceinline bool       append       (CodeSpecifiers specifiers, Specifier spec)       { return specifiers_append(specifiers, spec); }
-forceinline s32        has          (CodeSpecifiers specifiers, Specifier spec)       { return specifiers_has(specifiers, spec); }
-forceinline s32        remove       (CodeSpecifiers specifiers, Specifier to_remove ) { return specifiers_remove(specifiers, to_remove); }
-forceinline StrBuilder to_strbuilder(CodeSpecifiers specifiers)                       { return specifiers_to_strbuilder(specifiers); }
-forceinline void       to_strbuilder(CodeSpecifiers specifiers, StrBuilder& result)   { return specifiers_to_strbuilder_ref(specifiers, & result);  }
+forceinline bool       append             (CodeSpecifiers specifiers, Specifier spec)       { return specifiers_append(specifiers, spec); }
+forceinline bool       has                (CodeSpecifiers specifiers, Specifier spec)       { return specifiers_has(specifiers, spec); }
+forceinline s32        specifiers_index_of(CodeSpecifiers specifiers, Specifier spec)       { return specifiers_index_of(specifiers, spec); }
+forceinline s32        remove             (CodeSpecifiers specifiers, Specifier to_remove ) { return specifiers_remove(specifiers, to_remove); }
+forceinline StrBuilder to_strbuilder      (CodeSpecifiers specifiers)                       { return specifiers_to_strbuilder(specifiers); }
+forceinline void       to_strbuilder      (CodeSpecifiers specifiers, StrBuilder& result)   { return specifiers_to_strbuilder_ref(specifiers, & result);  }
 
 forceinline void       add_interface    (CodeStruct self, CodeTypename interface) { return struct_add_interface(self, interface); }
 forceinline StrBuilder to_strbuilder    (CodeStruct self)                         { return struct_to_strbuilder(self); }
