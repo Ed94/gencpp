@@ -89,7 +89,7 @@ bool tok_is_end_definition(Token tok) {
 	return bitfield_is_set( u32, tok.Flags, TF_EndDefinition );
 }
 
-StrBuilder tok_to_strbuilder(Token tok);
+StrBuilder tok_to_strbuilder(AllocatorInfo ainfo, Token tok);
 
 struct TokenSlice
 {
@@ -128,6 +128,7 @@ struct LexerMessage
 
 struct LexContext
 {
+	AllocatorInfo   allocator_temp;
 	LexerMessage*   messages;
 	Str             content;
 	s32             left;

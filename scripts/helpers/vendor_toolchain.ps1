@@ -132,6 +132,7 @@ if ( $vendor -match "clang" )
 	$flag_all_c 					   = @('-x', 'c')
 	$flag_c11                          = '-std=c11'
 	$flag_all_cpp                      = '-x c++'
+	$flag_charset_utf8                 = '-utf-8'
 	$flag_compile                      = '-c'
 	$flag_color_diagnostics            = '-fcolor-diagnostics'
 	$flag_no_color_diagnostics         = '-fno-color-diagnostics'
@@ -371,6 +372,7 @@ if ( $vendor -match "msvc" )
 	$flag_all_c 					  = '/TC'
 	$flag_c11                         = '/std:c11'
 	$flag_all_cpp                     = '/TP'
+	$flag_charset_utf8                = '/utf-8'
 	$flag_compile			          = '/c'
 	$flag_debug                       = '/Zi'
 	$flag_define		              = '/D'

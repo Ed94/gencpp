@@ -4,9 +4,9 @@
 #include "gen/etoktype.hpp"
 #endif
 
-StrBuilder tok_to_strbuilder(Token tok)
+StrBuilder tok_to_strbuilder(AllocatorInfo ainfo, Token tok)
 {
-	StrBuilder result   = strbuilder_make_reserve( _ctx->Allocator_Temp, kilobytes(4) );
+	StrBuilder result   = strbuilder_make_reserve( ainfo, kilobytes(4) );
 	Str        type_str = toktype_to_str( tok.Type );
 
 	strbuilder_append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
@@ -379,7 +379,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 		if ( (* ctx->scanner) != '"' && (* ctx->scanner) != '<' )
 		{
-			StrBuilder directive_str = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%.*s", min( 80, ctx->left + preprocess_content.Text.Len ), ctx->token.Text.Ptr );
+			StrBuilder directive_str = strbuilder_fmt_buf( ctx->allocator_temp, "%.*s", min( 80, ctx->left + preprocess_content.Text.Len ), ctx->token.Text.Ptr );
 
 			log_failure( "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
 				, (* ctx->scanner)
@@ -446,8 +446,8 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 			}
 			else
 			{
-				StrBuilder directive_str = strbuilder_make_length( _ctx->Allocator_Temp, ctx->token.Text.Ptr, ctx->token.Text.Len );
-				StrBuilder content_str   = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%.*s", min( 400, ctx->left + preprocess_content.Text.Len ), preprocess_content.Text.Ptr );
+				StrBuilder directive_str = strbuilder_make_length( ctx->allocator_temp, ctx->token.Text.Ptr, ctx->token.Text.Len );
+				StrBuilder content_str   = strbuilder_fmt_buf( ctx->allocator_temp, "%.*s", min( 400, ctx->left + preprocess_content.Text.Len ), preprocess_content.Text.Ptr );
 
 				log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 							" in preprocessor directive '%s' (%d, %d)\n%s"
@@ -574,12 +574,13 @@ LexedInfo lex(Context* lib_ctx, Str content)
 	LexedInfo info = struct_zero(LexedInfo);
 
 	LexContext c = struct_zero(LexContext); LexContext* ctx = & c;
-	c.content = content;
-	c.left    = content.Len;
-	c.scanner = content.Ptr;
-	c.line    = 1;
-	c.column  = 1;
-	c.tokens  = array_init_reserve(Token, lib_ctx->Allocator_DyanmicContainers, lib_ctx->InitSize_LexerTokens );
+	c.allocator_temp = lib_ctx->Allocator_Temp;
+	c.content        = content;
+	c.left           = content.Len;
+	c.scanner        = content.Ptr;
+	c.line           = 1;
+	c.column         = 1;
+	c.tokens         = array_init_reserve(Token, lib_ctx->Allocator_DyanmicContainers, lib_ctx->InitSize_LexerTokens );
 
 	// TODO(Ed): Re-implement to new constraints:
 	// 1. Ability to continue on error
@@ -688,7 +689,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 					}
 					else
 					{
-						StrBuilder context_str = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%s", c.scanner, min( 100, c.left ) );
+						StrBuilder context_str = strbuilder_fmt_buf( lib_ctx->Allocator_Temp, "%s", c.scanner, min( 100, c.left ) );
 
 						log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 					}

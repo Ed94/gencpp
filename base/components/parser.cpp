@@ -841,7 +841,7 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 		{
 			case Tok_Statement_End: {
 				// TODO(Ed): Convert this to a general warning procedure
-				log_fmt("Dangling end statement found %SB\n", tok_to_strbuilder(currtok_noskip));
+				log_fmt("Dangling end statement found %SB\n", tok_to_strbuilder(ctx->Allocator_Temp, currtok_noskip));
 				eat( Tok_Statement_End );
 				continue;
 			}
@@ -1669,7 +1669,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 		{
 			case Tok_Comma:
 			{
-				log_failure("Dangling comma found: %SB\nContext:\n%SB", tok_to_strbuilder(currtok), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp));
+				log_failure("Dangling comma found: %SB\nContext:\n%SB", tok_to_strbuilder(ctx->Allocator_Temp, currtok), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp));
 				parser_pop( & ctx->parser);
 				return InvalidCode;
 			}
@@ -1677,7 +1677,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			case Tok_Statement_End:
 			{
 				// TODO(Ed): Convert this to a general warning procedure
-				log_fmt("Dangling end statement found %SB\n", tok_to_strbuilder(currtok_noskip));
+				log_fmt("Dangling end statement found %SB\n", tok_to_strbuilder(ctx->Allocator_Temp, currtok_noskip));
 				eat( Tok_Statement_End );
 				continue;
 			}
@@ -1935,7 +1935,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 
 		if ( member == Code_Invalid )
 		{
-			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_strbuilder(currtok_noskip), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
+			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_strbuilder(ctx->Allocator_Temp, currtok_noskip), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;
 		}
