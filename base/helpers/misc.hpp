@@ -48,7 +48,11 @@ void refactor_file( char const* path, char const* refactor_script )
 	GEN_ASSERT_NOT_NULL(path);
 	GEN_ASSERT_NOT_NULL(refactor_script);
 
-	StrBuilder command = strbuilder_make_str(_ctx->Allocator_Temp, txt("refactor "));
+	Str refactor_exe = GEN_SYSTEM_WINDOWS ? 
+		txt("\"..\\scripts\\helpers\\refactor.exe\" ")
+	:	txt("../scripts/helpers/refactor ");
+
+	StrBuilder command = strbuilder_make_str(_ctx->Allocator_Temp, refactor_exe);
 	// strbuilder_append_str( & command, txt("-debug ") );
 	strbuilder_append_str( & command, txt("-num=1 ") );
 	strbuilder_append_fmt( & command, "-src=%s ", path );
