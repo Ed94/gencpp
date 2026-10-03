@@ -37,7 +37,11 @@ void clang_format_file( char const* path, char const* style_path )
 	strbuilder_append_str( & command, cf_verbose );
 	strbuilder_append_string( & command, style_arg );
 	strbuilder_append_string( & command, resolved_path );
-	system( command );
+	int command_result = system( command );
+	if ( command_result != 0 ) {
+		log_fmt( "clang-format failed with status %d\n", command_result );
+		process_exit( 1 );
+	}
 }
 
 // Will refactor a file with the given script at the provided path.
@@ -57,7 +61,11 @@ void refactor_file( char const* path, char const* refactor_script )
 	strbuilder_append_str( & command, txt("-num=1 ") );
 	strbuilder_append_fmt( & command, "-src=%s ", path );
 	strbuilder_append_fmt( & command,"-spec=%s ", refactor_script );
-	system(command);
+	int command_result = system( command );
+	if ( command_result != 0 ) {
+		log_fmt( "refactor failed with status %d\n", command_result );
+		process_exit( 1 );
+	}
 	log_fmt("\n");
 }
 

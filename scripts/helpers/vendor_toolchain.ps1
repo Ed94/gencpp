@@ -3,7 +3,7 @@
 
   import-module $target_arch
 
-if ($IsWindows) {
+if ($is_windows) {
 	# This HandmadeHero implementation is only designed for 64-bit systems
     & $devshell -arch amd64
 }
@@ -26,6 +26,12 @@ if ( $dev ) {
 function run-archiver
 {
     param( $archiver, $library, $lib_args )
+
+    if (-not (Get-Command $archiver -ErrorAction SilentlyContinue)) {
+        Write-Host "FAILED: archiver launch $archiver" -ForegroundColor Red
+        return $false
+    }
+    Write-Host ("ARCHIVER_ARGV: " + ($lib_args -join " "))
 
     write-host "`Creating library $library"
     if ( $verbose ) {
@@ -60,9 +66,15 @@ function run-compiler
 {
 	param( $compiler, $unit, $compiler_args )
 
+	if (-not (Get-Command $compiler -ErrorAction SilentlyContinue)) {
+		Write-Host "FAILED: compiler launch $compiler" -ForegroundColor Red
+		return $false
+	}
+
 	if ( $analysis ) {
 		$compiler_args += $flag_syntax_only
 	}
+	Write-Host ("COMPILER_ARGV: " + ($compiler_args -join " "))
 
 	write-host "`Compiling $unit"
 	if ( $verbose ) {
@@ -96,6 +108,12 @@ function run-compiler
 function run-linker
 {
 	param( $linker, $binary, $linker_args )
+
+	if (-not (Get-Command $linker -ErrorAction SilentlyContinue)) {
+		Write-Host "FAILED: linker launch $linker" -ForegroundColor Red
+		return $false
+	}
+	Write-Host ("LINKER_ARGV: " + ($linker_args -join " "))
 
 	write-host "`Linking $binary"
 	if ( $verbose ) {
@@ -147,12 +165,12 @@ if ( $vendor -match "clang" )
 	$flag_library					   = '-l'
 	$flag_library_path				   = '-L'
 	$flag_linker                       = '-Wl,'
-	if ( $IsWindows ) {
+	if ( $is_windows ) {
 		$flag_link_dll                 = '/DLL'
 		$flag_link_mapfile 		       = '/MAP:'
 		$flag_link_optimize_references = '/OPT:REF'
 	}
-	if ( $IsLinux ) {
+	if ( $is_linux ) {
 		$flag_link_mapfile              = '--Map='
 		$flag_link_optimize_references  = '--gc-sections'
 	}
@@ -191,7 +209,7 @@ if ( $vendor -match "clang" )
 	)
 
 	# https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170
-	if ( $IsWindows ) {
+	if ( $is_windows ) {
 		$libraries = @(
 			'Kernel32' # For Windows API
 			# 'msvcrt', # For the C Runtime (Dynamically Linked)

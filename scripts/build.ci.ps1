@@ -10,7 +10,57 @@ $vendor_toolchain   = Join-Path $PSScriptRoot 'helpers/vendor_toolchain.ps1'
 
 Import-Module $misc
 
-$path_root = Get-ScriptRepoRoot
+function stop-stage {
+    param([string]$stage, [int]$code_exit = 1)
+    Write-Host "FAILED: $stage" -ForegroundColor Red
+    exit $code_exit
+}
+
+function invoke-stageTool {
+    param(
+        [string]$stage,
+        [bool]$compiled,
+        [string]$executable,
+        [string]$path_work
+    )
+    if (-not $compiled) {
+        stop-stage "$stage compile/link"
+    }
+    if (-not (Test-Path -LiteralPath $executable)) {
+        stop-stage "$stage missing output $executable"
+    }
+    $code_exit = 1
+    push-location $path_work
+    try {
+        & $executable
+        $code_exit = $LASTEXITCODE
+    }
+    finally {
+        pop-location
+    }
+    if ($code_exit -ne 0) {
+        stop-stage "$stage run" $code_exit
+    }
+    Write-Host "PASSED: $stage"
+}
+
+if ($env:GENCPP_SOURCE_ROOT) {
+    $path_root = (Resolve-Path -LiteralPath $env:GENCPP_SOURCE_ROOT).Path
+    $probe = Join-Path $path_root "base\base.cpp"
+    if (-not (Test-Path -LiteralPath $probe)) {
+        stop-stage "GENCPP_SOURCE_ROOT is not a gencpp tree: $path_root"
+    }
+}
+else {
+    $path_root = Get-ScriptRepoRoot
+}
+Write-Host "SOURCE_ROOT: $path_root"
+if ($null -eq $is_windows) {
+    $is_windows = [System.Environment]::OSVersion.Platform -eq 'Win32NT'
+}
+if ($null -eq $is_linux) {
+    $is_linux = [System.Environment]::OSVersion.Platform -eq 'Unix'
+}
 
 Push-Location $path_root
 
@@ -50,7 +100,7 @@ if ( $args ) { $args | ForEach-Object {
 #endregion Arguments
 
 #region Configuration
-if ($IsWindows) {
+if ($is_windows) {
 	# This library was really designed to only run on 64-bit systems.
 	# (Its a development tool after all)
     & $devshell -arch amd64
@@ -81,7 +131,7 @@ $cannot_build = $cannot_build -and  $c_lib_dyn    -eq $false
 $cannot_build = $cannot_build -and  $unreal       -eq $false
 $cannot_build = $cannot_build -and  $test         -eq $false
 if ( $cannot_build ) {
-	throw "No build target specified. One must be specified, this script will not assume one"
+	Stop-stage "No build target specified"
 }
 
 . $vendor_toolchain
@@ -125,18 +175,7 @@ if ( $base )
 	$executable = join-path $path_build "base.exe"
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_base
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning base"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nbase completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+	invoke-stageTool -stage "base" -compiled $result -executable $executable -path_work $path_base
 }
 
 if ( $segmented )
@@ -163,18 +202,7 @@ if ( $segmented )
 	$executable = join-path $path_build     "segmented.exe"
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_segmented
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning segmented"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nSegmented completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+	invoke-stageTool -stage "segmented" -compiled $result -executable $executable -path_work $path_segmented
 }
 
 if ( $singleheader )
@@ -201,18 +229,7 @@ if ( $singleheader )
 	)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_singleheader
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning singleheader generator"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nSingleheader generator completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+	invoke-stageTool -stage "singleheader" -compiled $result -executable $executable -path_work $path_singleheader
 }
 
 if ( $c_lib -or $c_lib_static -or $c_lib_dyn )
@@ -239,18 +256,7 @@ if ( $c_lib -or $c_lib_static -or $c_lib_dyn )
 	)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_c_library
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning c_library generator"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+	invoke-stageTool -stage "c_lib" -compiled $result -executable $executable -path_work $path_c_library
 }
 
 if ( $c_lib_static )
@@ -267,6 +273,7 @@ if ( $c_lib_static )
 
 	$linker_args = @()
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $path_lib
+	if (-not $result) { Stop-stage "c_lib_static compile/link" }
 }
 
 if ( $c_lib_dyn )
@@ -285,6 +292,7 @@ if ( $c_lib_dyn )
  
 	$linker_args = @()
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $path_dll
+	if (-not $result) { Stop-stage "c_lib_dyn compile/link" }
 }
 
 if ( $unreal )
@@ -311,23 +319,27 @@ if ( $unreal )
 	)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_unreal
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning unreal variant generator"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`n Unreal variant generator completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+	invoke-stageTool -stage "unreal" -compiled $result -executable $executable -path_work $path_unreal
 
 	. $refactor_unreal
 }
 
 # C Library testing
+if ($test) {
+    $consumer_headers = @(
+        (Join-Path $path_c_library 'gen\gen_singleheader.h'),
+        (Join-Path $path_singleheader 'gen\gen.hpp')
+    )
+    $header_hashes_before = @{}
+    foreach ($header in $consumer_headers) {
+        if (-not (Test-Path -LiteralPath $header -PathType Leaf)) {
+            Stop-stage "test missing generated header $header"
+        }
+        $header_hashes_before[$header] = (Get-FileHash -LiteralPath $header -Algorithm SHA256).Hash
+        Write-Host "HEADER_SHA256_GENERATED: $($header_hashes_before[$header]) $header"
+    }
+}
+
 if ( $test -and $true )
 {
 	$path_test_c = join-path $path_test   c_library
@@ -350,24 +362,14 @@ if ( $test -and $true )
 	$compiler_args += $flag_all_c
 	$compiler_args += $flag_updated_cpp_macro
 	$compiler_args += $flag_c11
+	$compiler_args += "-H"
 
 	$linker_args   = @(
 		$flag_link_win_subsystem_console
 	)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_test_c
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning c_library test"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+	invoke-stageTool -stage "test-c11" -compiled $result -executable $executable -path_work $path_test_c
 }
 
 if ( $test -and $false )
@@ -398,30 +400,18 @@ if ( $test -and $false )
 	)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_test_c
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning c_library test"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
 }
 
-if ($test -and $false)
+if ($test)
 {
 	$path_test_cpp = join-path $path_test     cpp_library
 	$path_build    = join-path $path_test_cpp build
 	$path_gen      = join-path $path_test_cpp gen
 	if ( -not(Test-Path($path_build) )) {
-		New-Item -ItemType Directory -Path $path_build
+		new-item -ItemType Directory -Path $path_build
 	}
 	if ( -not(Test-Path($path_gen) )) {
-		New-Item -ItemType Directory -Path $path_gen
+		new-item -ItemType Directory -Path $path_gen
 	}
 
 	$path_singleheader_include = join-path $path_singleheader gen
@@ -431,25 +421,29 @@ if ($test -and $false)
 
 	$compiler_args = @()
 	$compiler_args += ( $flag_define + 'GEN_TIME' )
+	$compiler_args += @("-x", "c++")
+	$compiler_args += "-std=c++17"
+	$compiler_args += ($flag_define + "GEN_BUILD_DEBUG=1")
+	$compiler_args += "-H"
 
 	$linker_args   = @(
 		$flag_link_win_subsystem_console
 	)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
-
-	Push-Location $path_test_cpp
-		if ( Test-Path( $executable ) ) {
-			write-host "`nRunning cpp_library test"
-			$time_taken = Measure-Command { & $executable
-					| ForEach-Object {
-						write-host `t $_ -ForegroundColor Green
-					}
-				}
-			write-host "`nc_library generator completed in $($time_taken.TotalMilliseconds) ms"
-		}
-	Pop-Location
+	invoke-stageTool -stage "test-cpp" -compiled $result -executable $executable -path_work $path_test_cpp
+}
+if ($test) {
+    foreach ($header in $consumer_headers) {
+        $hash = (Get-FileHash -LiteralPath $header -Algorithm SHA256).Hash
+        write-host "HEADER_SHA256_CONSUMED: $hash $header"
+        if ($hash -ne $header_hashes_before[$header]) {
+            Stop-stage "test header changed after generation $header"
+        }
+    }
 }
 #endregion Building
 
-Pop-Location # $path_root
+pop-location # $path_root
+write-host "PASSED: build.ci.ps1"
+exit 0
