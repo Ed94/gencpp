@@ -4,11 +4,9 @@
 #include "gen/etoktype.hpp"
 #endif
 
-StrBuilder tok_to_strbuilder(AllocatorInfo ainfo, Token tok)
-{
+StrBuilder tok_to_strbuilder(AllocatorInfo ainfo, Token tok) {
 	StrBuilder result   = strbuilder_make_reserve( ainfo, kilobytes(4) );
 	Str        type_str = toktype_to_str( tok.Type );
-
 	strbuilder_append_fmt( & result, "Line: %d Column: %d, Type: %.*s Content: %.*s"
 		, tok.Line, tok.Column
 		, type_str.Len, type_str.Ptr
@@ -19,57 +17,68 @@ StrBuilder tok_to_strbuilder(AllocatorInfo ainfo, Token tok)
 
 bool lex__eat(Context* ctx, ParseContext* self, TokType type );
 
-Token* lex_current(ParseContext* self, bool skip_formatting )
-{
-	if ( skip_formatting )
-	{
-		while ( self->tokens.ptr[self->token_id].Type == Tok_NewLine || self->tokens.ptr[self->token_id].Type == Tok_Comment  )
-			self->token_id++;
-	}
-	return & self->tokens.ptr[self->token_id];
+forceinline
+b32 lex_index_in_range(ParseContext const* self, s32 idx) {
+	return self->tokens.ptr != nullptr
+		&& idx >= 0
+		&& idx < self->tokens.num;
 }
 
-Token* lex_peek(ParseContext const* self, bool skip_formatting)
-{
-	s32 idx = self->token_id;
-	if ( skip_formatting )
-	{
-		while ( self->tokens.ptr[idx].Type == Tok_NewLine )
-			idx++;
+forceinline
+Token* lex_token_at(ParseContext const* self, s32 idx) {
+	Token* result = & NullToken;
+	if (lex_index_in_range(self, idx)) result = & self->tokens.ptr[idx];
+	return result;
+}
 
-		return & self->tokens.ptr[idx];
+Token* lex_current(ParseContext* self, bool skip_formatting) {
+	if (skip_formatting) while (lex_index_in_range(self, self->token_id)) {
+		TokType type = self->tokens.ptr[self->token_id].Type;
+		if (type != Tok_NewLine && type != Tok_Comment) break;
+		++ self->token_id;
 	}
-	return & self->tokens.ptr[idx];
+	return lex_token_at(self, self->token_id);
+}
+
+Token* lex_peek(ParseContext const* self, bool skip_formatting) {
+	s32 idx = self->token_id;
+	if (skip_formatting) {
+		while (lex_index_in_range(self, idx) && self->tokens.ptr[idx].Type == Tok_NewLine)
+			++ idx;
+	}
+	return lex_token_at(self, idx);
 }
 
 Token* lex_previous(ParseContext const* self, bool skip_formatting)
 {
-	s32 idx = self->token_id;
-	if ( skip_formatting )
+	Token* result = & NullToken;
+	s32    idx    = self->token_id;
+	if (skip_formatting) 
 	{
-		while ( self->tokens.ptr[idx].Type == Tok_NewLine )
-			idx --;
-
-		return & self->tokens.ptr[idx];
+		if (self->tokens.num > 0 && idx >= self->tokens.num)
+			idx = self->tokens.num - 1;
+		while (lex_index_in_range(self, idx) && self->tokens.ptr[idx].Type == Tok_NewLine && idx > 0)
+			-- idx;
+		if (lex_index_in_range(self, idx) && self->tokens.ptr[idx].Type != Tok_NewLine)
+			result = &self->tokens.ptr[idx];
+		goto done;
 	}
-	return & self->tokens.ptr[idx - 1];
+	if (self->tokens.num > 0 && idx >= self->tokens.num) result = lex_token_at(self, self->tokens.num - 1);
+	else                                                 result = lex_token_at(self, idx              - 1);
+done:
+	return result;
 }
 
-Token* lex_next(ParseContext const* self, bool skip_formatting)
-{
+Token* lex_next(ParseContext const* self, bool skip_formatting) {
 	s32 idx = self->token_id;
-	if ( skip_formatting )
-	{
-		while ( self->tokens.ptr[idx].Type == Tok_NewLine )
-			idx++;
-
-		return & self->tokens.ptr[idx + 1];
+	if (skip_formatting) {
+		while (lex_index_in_range(self, idx) && self->tokens.ptr[idx].Type == Tok_NewLine)
+			-- idx;
 	}
-	return & self->tokens.ptr[idx + 1];
+	return lex_token_at(self, idx + 1);
 }
 
-enum
-{
+enum {
 	Lex_Continue,
 	Lex_ReturnNull,
 };
@@ -90,19 +99,16 @@ void lexer_move_forward( LexContext* ctx )
 #define move_forward() lexer_move_forward(ctx)
 
 forceinline
-void lexer_skip_whitespace( LexContext* ctx )
-{
+void lexer_skip_whitespace( LexContext* ctx ) {
 	while ( ctx->left && char_is_space( * ctx->scanner ) )
 		move_forward();
 }
 #define skip_whitespace() lexer_skip_whitespace(ctx)
 
 forceinline
-void lexer_end_line( LexContext* ctx )
-{
+void lexer_end_line( LexContext* ctx ) {
 	while ( ctx->left && (* ctx->scanner) == ' ' )
 		move_forward();
-
 	if ( ctx->left && (* ctx->scanner) == '\r' ) {
 		move_forward();
 		move_forward();
@@ -113,7 +119,9 @@ void lexer_end_line( LexContext* ctx )
 #define end_line() lexer_end_line(ctx)
 
 // TODO(Ed): We need to to attempt to recover from a lex failure?
-s32 lex_preprocessor_define( LexContext* ctx )
+internal void lexer_record_failure_fmt(Context* lib_ctx, LexContext* ctx, char const* fmt, ...);
+
+s32 lex_preprocessor_define(Context* lib_ctx, LexContext* ctx)
 {
 	Token name = { { ctx->scanner, 1 }, Tok_Identifier, ctx->line, ctx->column, TF_Preprocess };
 	move_forward();
@@ -178,7 +186,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 				}
 				if (* ctx->scanner != ')' )
 				{
-					log_failure("lex_preprocessor_define(%d, %d): Expected a ')' after '...' (varaidc macro param) %S\n"
+					lexer_record_failure_fmt(lib_ctx, ctx, "lex_preprocessor_define(%d, %d): Expected a ')' after '...' (varaidc macro param) %S\n"
 						, ctx->line
 						, ctx->column
 						, name.Text
@@ -207,7 +215,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 				last_parameter = parameter;
 			}
 			else {
-				log_failure("lex_preprocessor_define(%d, %d): Expected a '_' or alpha character for a parameter name for %S\n"
+				lexer_record_failure_fmt(lib_ctx, ctx, "lex_preprocessor_define(%d, %d): Expected a '_' or alpha character for a parameter name for %S\n"
 					, ctx->line
 					, ctx->column
 					, name.Text
@@ -220,7 +228,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 
 			// There should be a comma
 			if ( * ctx->scanner != ',' ) {
-				log_failure("lex_preprocessor_define(%d, %d): Expected a comma after parameter %S for %S\n"
+				lexer_record_failure_fmt(lib_ctx, ctx, "lex_preprocessor_define(%d, %d): Expected a comma after parameter %S for %S\n"
 					, ctx->line
 					, ctx->column
 					, last_parameter.Text
@@ -234,7 +242,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 		}
 		
 		if ( * ctx->scanner != ')' ) {
-			log_failure("lex_preprocessor_define(%d, %d): Expected a ')' after last_parameter %S for %S (ran out of characters...)\n"
+			lexer_record_failure_fmt(lib_ctx, ctx, "lex_preprocessor_define(%d, %d): Expected a ')' after last_parameter %S for %S (ran out of characters...)\n"
 				, ctx->line
 				, ctx->column
 				, last_parameter.Text
@@ -264,7 +272,7 @@ s32 lex_preprocessor_define( LexContext* ctx )
 }
 
 // TODO(Ed): We need to to attempt to recover from a lex failure?
-s32 lex_preprocessor_directive( LexContext* ctx )
+s32 lex_preprocessor_directive(Context* lib_ctx, LexContext* ctx)
 {
 	char const* hash = ctx->scanner;
 	Token hash_tok = { { hash, 1 }, Tok_Preprocess_Hash, ctx->line, ctx->column, TF_Preprocess };
@@ -317,11 +325,11 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 				}
 				else
 				{
-					log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
+					lexer_record_failure_fmt(lib_ctx, ctx, "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 								" in preprocessor directive (%d, %d)\n%.100s"
 						, (* ctx->scanner), ctx->line, ctx->column
 						, ctx->token.Line, ctx->token.Column, ctx->token.Text );
-					break;
+					return Lex_ReturnNull;
 				}
 			}
 
@@ -366,7 +374,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 
 	if ( ctx->token.Type == Tok_Preprocess_Define )
 	{
-		u32 result = lex_preprocessor_define(ctx); // handles: #define <name>( <params> ) - define's content handled later on within this scope.
+		u32 result = lex_preprocessor_define(lib_ctx, ctx); // handles: #define <name>( <params> ) - define's content handled later on within this scope.
 		if (result != Lex_Continue)
 			return Lex_ReturnNull;
 	}
@@ -381,7 +389,7 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 		{
 			StrBuilder directive_str = strbuilder_fmt_buf( ctx->allocator_temp, "%.*s", min( 80, ctx->left + preprocess_content.Text.Len ), ctx->token.Text.Ptr );
 
-			log_failure( "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
+			lexer_record_failure_fmt(lib_ctx, ctx, "gen::Parser::lex: Expected '\"' or '<' after #include, not '%c' (%d, %d)\n%s"
 				, (* ctx->scanner)
 				, preprocess_content.Line
 				, preprocess_content.Column
@@ -449,13 +457,12 @@ s32 lex_preprocessor_directive( LexContext* ctx )
 				StrBuilder directive_str = strbuilder_make_length( ctx->allocator_temp, ctx->token.Text.Ptr, ctx->token.Text.Len );
 				StrBuilder content_str   = strbuilder_fmt_buf( ctx->allocator_temp, "%.*s", min( 400, ctx->left + preprocess_content.Text.Len ), preprocess_content.Text.Ptr );
 
-				log_failure( "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
+				lexer_record_failure_fmt(lib_ctx, ctx, "gen::Parser::lex: Invalid escape sequence '\\%c' (%d, %d)"
 							" in preprocessor directive '%s' (%d, %d)\n%s"
 					, (* ctx->scanner), ctx->line, ctx->column
 					, directive_str, preprocess_content.Line, preprocess_content.Column
 					, content_str );
 				return Lex_ReturnNull;
-				break;
 			}
 		}
 
@@ -568,6 +575,29 @@ void lex_found_token( LexContext* ctx )
 
 // TODO(Ed): We need to to attempt to recover from a lex failure?
 
+internal
+void lexer_record_failure(Context* lib_ctx, LexContext* ctx, Str text) {
+	LexerMessage* msg = rcast(LexerMessage*, alloc(lib_ctx->Allocator_DyanmicContainers, size_of(LexerMessage)));
+	if (msg == nullptr) GEN_FATAL("lexer_record_failure: allocation failed");
+	msg->next     = ctx->messages;
+	msg->content  = cache_str(text);
+	msg->level    = LL_Error;
+	ctx->messages = msg;
+}
+
+internal
+void lexer_record_failure_fmt(Context* lib_ctx, LexContext* ctx, char const* fmt, ...) {
+	va_list va;
+	char* buf;
+	Str text;
+	va_start(va, fmt);
+	buf = c_str_fmt_buf_va(fmt, va);
+	va_end(va);
+	text.Ptr = buf;
+	text.Len = c_str_len(buf);
+	lexer_record_failure(lib_ctx, ctx, text);
+}
+
 neverinline
 LexedInfo lex(Context* lib_ctx, Str content)
 {
@@ -586,13 +616,14 @@ LexedInfo lex(Context* lib_ctx, Str content)
 	// 1. Ability to continue on error
 	// 2. Return a lexed info.
 
+	b32 preprocess_args = true;
+
 	skip_whitespace();
 	if ( c.left <= 0 ) {
-		log_failure( "gen::lex: no tokens found (only whitespace provided)" );
-		return info;
+		lexer_record_failure(lib_ctx, ctx, txt("gen::lex: no tokens found (only whitespace provided)"));
+		info.messages = c.messages;
+		goto Lex_Done;
 	}
-
-	b32 preprocess_args = true;
 
 	while (c.left )
 	{
@@ -630,7 +661,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 		{
 			case '#':
 			{
-				s32 result = lex_preprocessor_directive( ctx );
+				s32 result = lex_preprocessor_directive(lib_ctx, ctx);
 				switch ( result )
 				{
 					case Lex_Continue:
@@ -662,6 +693,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 
 					case Lex_ReturnNull:
 					{
+						info.messages = c.messages;
 						return info;
 					}
 				}
@@ -691,7 +723,9 @@ LexedInfo lex(Context* lib_ctx, Str content)
 					{
 						StrBuilder context_str = strbuilder_fmt_buf( lib_ctx->Allocator_Temp, "%s", c.scanner, min( 100, c.left ) );
 
-						log_failure( "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
+						lexer_record_failure_fmt(lib_ctx, ctx, "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
+						info.messages = c.messages;
+						return info;
 					}
 				}
 
@@ -1245,13 +1279,10 @@ LexedInfo lex(Context* lib_ctx, Str content)
 				);
 			}
 
-			StrBuilder context_str = strbuilder_fmt_buf( _ctx->Allocator_Temp, "%.*s", min( 100, c.left ), c.scanner );
-			log_failure( "Failed to lex token '%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
-
-			// Skip to next whitespace since we can't know if anything else is valid until then.
-			while ( c.left && ! char_is_space( (* ctx->scanner) ) ) {
-				move_forward();
-			}
+			StrBuilder context_str = strbuilder_fmt_buf( lib_ctx->Allocator_Temp, "%.*s", min( 100, c.left ), c.scanner );
+			lexer_record_failure_fmt(lib_ctx, ctx, "Failed to lex token '%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
+			info.messages = c.messages;
+			return info;
 		}
 
 		FoundToken:
@@ -1280,13 +1311,15 @@ LexedInfo lex(Context* lib_ctx, Str content)
 	}
 
 	if ( array_num(c.tokens) == 0 ) {
-		log_failure( "Failed to lex any tokens" );
-		return info;
+		lexer_record_failure(lib_ctx, ctx, txt("gen::lex: failed to lex any tokens"));
+		info.messages = c.messages;
+		goto Lex_Done;
 	}
 	
 	info.messages = c.messages;
 	info.text     = content;
 	info.tokens   = struct_init(TokenSlice) { pcast(Token*, c.tokens), scast(s32, array_num(c.tokens)) };
+Lex_Done:
 	return info;
 }
 

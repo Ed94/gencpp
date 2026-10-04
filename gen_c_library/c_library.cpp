@@ -767,20 +767,7 @@ do                          \
 		break;
 
 		case CT_Variable:
-		{
-			CodeVar var = cast(CodeVar, entry);
-			if (var->Specs && var->Specs.has(Spec_Constexpr)) {
-				Code define_ver = untyped_str(token_fmt(
-						"name",  var->Name
-					,	"value", var->Value->Content
-					,	"type",  var->ValueType.to_strbuilder().to_str()
-					,	"#define <name> (<type>) <value>\n"
-				));
-				parser_types.append(define_ver);
-				continue;
-			}
 			parser_types.append(entry);
-		}
 		break;
 
 		default:

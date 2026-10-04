@@ -31,70 +31,96 @@ void parser_pop(ParseContext* ctx)
 
 StrBuilder parser_to_strbuilder(ParseContext const* ctx, AllocatorInfo temp)
 {
-	StrBuilder result = strbuilder_make_reserve( temp, kilobytes(4) );
-
-	Token scope_start = * ctx->scope->start;
-	Token last_valid  = (ctx->token_id >= ctx->tokens.num) ? ctx->tokens.ptr[ctx->tokens.num -1] : (* lex_peek(ctx, true));
-
-	sptr        length  = scope_start.Text.Len;
-	char const* current = scope_start.Text.Ptr + length;
-	while ( current <= ctx->tokens.ptr[ctx->tokens.num - 1].Text.Ptr && (* current) != '\n' && length < 74 )
-	{
-		current++;
-		length++;
+	StrBuilder result;
+	b32 empty_slice = ctx->tokens.ptr == nullptr || ctx->tokens.num <= 0;
+	if (empty_slice == false)
+		empty_slice = ctx->scope->start == nullptr || ctx->scope->start->Text.Ptr == nullptr;
+	// empty_scope
+	if (empty_slice) {
+		result = strbuilder_make_reserve(temp, 64);
+		strbuilder_append_fmt(&result, "\tScope    : <empty>\n");
+		goto done;
 	}
-
-	Str scope_str = { scope_start.Text.Ptr, length };
-	StrBuilder line = strbuilder_make_str( temp, scope_str );
-	strbuilder_append_fmt( & result, "\tScope    : %s\n", line );
-	strbuilder_free(& line);
-
-	sptr   dist            = (sptr)last_valid.Text.Ptr - (sptr)scope_start.Text.Ptr + 2;
-	sptr   length_from_err = dist;
-
-	Str        err_str       = { last_valid.Text.Ptr, length_from_err };
-	StrBuilder line_from_err = strbuilder_make_str( temp, err_str );
-
-	if ( length_from_err < 100 )
-		strbuilder_append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
-	else
-		strbuilder_append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
-
-	ParseStackNode* curr_scope = ctx->scope;
-	s32 level = 0;
-	do
+	// non_empty
 	{
-		if ( curr_scope->name.Ptr ) {
-			strbuilder_append_fmt(& result, "\t%d: %S, AST Name: %S\n", level, curr_scope->proc_name, curr_scope->name );
-		}
-		else {
-			strbuilder_append_fmt(& result, "\t%d: %S\n", level, curr_scope->proc_name );
+		result = strbuilder_make_reserve( temp, kilobytes(4) );
+
+		Token scope_start = * ctx->scope->start;
+		Token last_valid = (ctx->token_id >= ctx->tokens.num)
+			? ctx->tokens.ptr[ctx->tokens.num - 1]
+			: (*lex_peek(ctx, true));
+
+		sptr        length  = scope_start.Text.Len;
+		char const* current = scope_start.Text.Ptr + length;
+		while ( current <= ctx->tokens.ptr[ctx->tokens.num - 1].Text.Ptr && (* current) != '\n' && length < 74 )
+		{
+			current++;
+			length++;
 		}
 
-		curr_scope = curr_scope->prev;
-		level++;
+		Str scope_str = { scope_start.Text.Ptr, length };
+		StrBuilder line = strbuilder_make_str( temp, scope_str );
+		strbuilder_append_fmt( & result, "\tScope    : %s\n", line );
+		strbuilder_free(& line);
+
+		sptr   dist            = (sptr)last_valid.Text.Ptr - (sptr)scope_start.Text.Ptr + 2;
+		sptr   length_from_err = dist;
+
+		Str        err_str       = { last_valid.Text.Ptr, length_from_err };
+		StrBuilder line_from_err = strbuilder_make_str( temp, err_str );
+
+		if ( length_from_err < 100 )
+			strbuilder_append_fmt(& result, "\t(%d, %d):%*c\n", last_valid.Line, last_valid.Column, length_from_err, '^' );
+		else
+			strbuilder_append_fmt(& result, "\t(%d, %d)\n", last_valid.Line, last_valid.Column );
+
+		ParseStackNode* curr_scope = ctx->scope;
+		s32 level = 0;
+		do
+		{
+			if ( curr_scope->name.Ptr ) {
+				strbuilder_append_fmt(& result, "\t%d: %S, AST Name: %S\n", level, curr_scope->proc_name, curr_scope->name );
+			}
+			else {
+				strbuilder_append_fmt(& result, "\t%d: %S\n", level, curr_scope->proc_name );
+			}
+
+			curr_scope = curr_scope->prev;
+			level++;
+		}
+		while ( curr_scope );
 	}
-	while ( curr_scope );
+done:
 	return result;
+}
+
+void parser_record_failure(Context* ctx, Str text) {
+	ParseMessage* msg = rcast(ParseMessage*, alloc(ctx->Allocator_DyanmicContainers, size_of(ParseMessage)));
+	if (msg == nullptr) GEN_FATAL("parser_record_failure: allocation failed");
+	msg->Next    = ctx->parser.messages;
+	msg->Scope   = nullptr;
+	msg->Content = cache_str(text);
+	msg->Level   = LL_Error;
+	ctx->parser.messages = msg;
 }
 
 bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 {
-	if ( parser->tokens.num - parser->token_id <= 0 ) {
-		log_failure( "No tokens left.\n%SB", parser_to_strbuilder(parser, ctx->Allocator_Temp) );
-		return false;
-	}
+	b32   ate = false;
+	Token at_idx;
+	b32   not_accepted;
+	b32   is_identifier;
+	if (parser->tokens.num - parser->token_id <= 0)
+		goto done;
 
-	Token at_idx = parser->tokens.ptr[ parser->token_id ];
-
+	at_idx = parser->tokens.ptr[ parser->token_id ];
 	if ( ( at_idx.Type == Tok_NewLine && type != Tok_NewLine )
-	||   ( at_idx.Type == Tok_Comment && type != Tok_Comment ) )
-	{
+	||   ( at_idx.Type == Tok_Comment && type != Tok_Comment ) ) {
 		parser->token_id ++;
 	}
 
-	b32 not_accepted  = at_idx.Type != type;
-	b32 is_identifier = at_idx.Type == Tok_Identifier;
+	not_accepted  = at_idx.Type != type;
+	is_identifier = at_idx.Type == Tok_Identifier;
 	if ( not_accepted )
 	{
 		Macro* macro = lookup_macro(at_idx.Text);
@@ -112,7 +138,7 @@ bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 			, parser_to_strbuilder(parser, ctx->Allocator_Temp)
 		);
 		GEN_DEBUG_TRAP();
-		return false;
+		goto done;
 	}
 
 #if 0 && GEN_BUILD_DEBUG
@@ -120,7 +146,9 @@ bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 #endif
 
 	parser->token_id ++;
-	return true;
+	ate = true;
+done:
+	return ate;
 }
 
 internal
@@ -135,22 +163,40 @@ void parser_deinit(Context* ctx)
 
 #pragma region Helper Macros
 
-#define check_parse_args( def ) _check_parse_args(& ctx->parser, def, stringize(_func_) )
-bool _check_parse_args(ParseContext* parser, Str def, char const* func_name )
+b32 parser_slice_is_formatting_only(ParseContext const* parser)
 {
-	if ( def.Len <= 0 )
+	b32 formatting_only = true;
+	if (parser->tokens.ptr == nullptr || parser->tokens.num <= 0)
+		goto done;
+	for (s32 idx = 0; idx < parser->tokens.num; ++idx)
 	{
-		log_failure( c_str_fmt_buf("gen::%s: length must greater than 0", func_name) );
-		parser_pop(parser);
-		return false;
+		TokType type = parser->tokens.ptr[idx].Type;
+		if (type != Tok_NewLine && type != Tok_Comment) {
+			formatting_only = false;
+			goto done;
+		}
 	}
-	if ( def.Ptr == nullptr )
-	{
-		log_failure( c_str_fmt_buf("gen::%s: def was null", func_name) );
-		parser_pop(parser);
-		return false;
+done:
+	return formatting_only;
+}
+
+#define check_parse_args( def ) _check_parse_args(ctx, def, __func__)
+bool _check_parse_args(Context* ctx, Str def, char const* func_name ) 
+{
+	b32 ok = true;
+	char const* text;
+	if ( def.Len <= 0 ) {
+		text = c_str_fmt_buf("gen::%s: length must greater than 0", func_name);
+		parser_record_failure(ctx, to_str_from_c_str(text));
+		ok = false; goto done;
 	}
-	return true;
+	if ( def.Ptr == nullptr ) {
+		text = c_str_fmt_buf("gen::%s: def was null", func_name);
+		parser_record_failure(ctx, to_str_from_c_str(text));
+		ok = false; goto done;
+	}
+done:
+	return ok;
 }
 
 #	define currtok_noskip (* lex_current( &  ctx->parser, lex_dont_skip_formatting ))
@@ -2455,9 +2501,12 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 				was_new_or_delete = true;
 
 				s32 idx = ctx->parser.token_id + 1;
-				{
-					while ( ctx->parser.tokens.ptr[ idx ].Type == Tok_NewLine )
-						idx++;
+				while (idx < ctx->parser.tokens.num && ctx->parser.tokens.ptr[idx].Type == Tok_NewLine)
+					idx++;
+				if (idx >= ctx->parser.tokens.num) {
+					parser_record_failure(ctx, txt("parse: operator new/delete ended at slice end"));
+					parser_pop(&ctx->parser);
+					return InvalidCode;
 				}
 				Token next = ctx->parser.tokens.ptr[idx];
 				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text.Ptr, "[]", 2) == 0)
@@ -2479,9 +2528,12 @@ CodeOperator parse_operator_after_ret_type(Context* ctx
 				was_new_or_delete = true;
 
 				s32 idx = ctx->parser.token_id + 1;
-				{
-					while ( ctx->parser.tokens.ptr[ idx ].Type == Tok_NewLine )
-						idx++;
+				while (idx < ctx->parser.tokens.num && ctx->parser.tokens.ptr[idx].Type == Tok_NewLine)
+					idx++;
+				if (idx >= ctx->parser.tokens.num) {
+					parser_record_failure(ctx, txt("parse: operator new/delete ended at slice end"));
+					parser_pop(&ctx->parser);
+					return InvalidCode;
 				}
 				Token next = ctx->parser.tokens.ptr[idx];
 				if ( currtok.Type == Tok_Operator && c_str_compare_len(currtok.Text.Ptr, "[]", 2) == 0)
@@ -2673,7 +2725,9 @@ Code parse_operator_function_or_variable(Context* ctx, bool expects_function, Co
 		//                  (         350.0f    ,         <---  Could be the scenario
 		// Example : <Capture_Start> <Value> <Comma>
 		//                 idx         +1      +2
-		bool detected_comma = ctx->parser.tokens.ptr[ ctx->parser.token_id + 2 ].Type == Tok_Comma;
+		b32 detected_comma = false;
+		if (ctx->parser.token_id + 2 < ctx->parser.tokens.num)
+			detected_comma = ctx->parser.tokens.ptr[ctx->parser.token_id + 2].Type == Tok_Comma;
 
 		b32   detected_non_varadic_unpaired_param = detected_comma && nexttok.Type != Tok_Varadic_Argument;
 		if (! detected_non_varadic_unpaired_param && nexttok.Type ==  Tok_Preprocess_Macro_Expr) for( s32 break_scope = 0; break_scope == 0; ++ break_scope)
@@ -2701,7 +2755,7 @@ Code parse_operator_function_or_variable(Context* ctx, bool expects_function, Co
 			}
 			++ idx; // Will incremnt to possible comma position
 
-			if ( ctx->parser.tokens.ptr[ idx ].Type != Tok_Comma )
+			if (idx >= ctx->parser.tokens.num || ctx->parser.tokens.ptr[idx].Type != Tok_Comma)
 				break;
 
 			detected_non_varadic_unpaired_param = true;

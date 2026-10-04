@@ -38,6 +38,16 @@
 #ifndef local_persist
 #define local_persist static    // Local Persisting variables
 #endif
+#ifndef read_only
+#	if GEN_COMPILER_MSVC || ( defined(GEN_COMPILER_CLANG) && GEN_COMPILER_CLANG && GEN_SYSTEM_WINDOWS )
+#		pragma section(".rdata$", read)
+#		define read_only __declspec(allocate(".rdata$"))
+#	elif defined(GEN_COMPILER_CLANG) && GEN_COMPILER_CLANG
+#		define read_only __attribute__((section(".rodata")))
+#	else
+#		define read_only
+#	endif
+#endif
 
 #ifndef bit
 #define bit( Value )                         ( 1 << Value )
@@ -98,9 +108,9 @@
 #define src_line_str stringize(__LINE__)
 
 #ifndef do_once
-#define do_once()                                                                            \
-	local_persist int __do_once_counter_##src_line_str  = 0;                                 \
-    for(;      __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1 ) \
+#define do_once()                                                                    \
+	local_persist int __do_once_counter_##src_line_str  = 0;                            \
+    for(; __do_once_counter_##src_line_str != 1; __do_once_counter_##src_line_str = 1 ) \
 
 #define do_once_defer( expression )                                                                 \
     local_persist int __do_once_counter_##src_line_str  = 0;                                        \

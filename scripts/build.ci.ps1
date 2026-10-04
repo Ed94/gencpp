@@ -74,8 +74,10 @@ Push-Location $path_root
 [bool] $c_lib        = $false
 [bool] $c_lib_static = $false
 [bool] $c_lib_dyn    = $false
-[bool] $unreal       = $false
-[bool] $test         = $false
+[bool] $unreal          = $false
+[bool] $test            = $false
+[bool] $parser_bounds   = $false
+[bool] $lexer_failures  = $false
 
 [array] $vendors = @( "clang", "msvc" )
 
@@ -93,8 +95,10 @@ if ( $args ) { $args | ForEach-Object {
 		"c_lib"               { $c_lib        = $true }
 		"c_lib_static"        { $c_lib_static = $true }
 		"c_lib_dyn"           { $c_lib_dyn    = $true }
-		"unreal"              { $unreal       = $true }
-		"test"                { $test         = $true }
+		"unreal"              { $unreal          = $true }
+		"test"                { $test            = $true }
+		"parser_bounds"       { $parser_bounds   = $true }
+		"lexer_failures"      { $lexer_failures  = $true }
 	}
 }}
 #endregion Arguments
@@ -114,6 +118,7 @@ if ( $vendor -eq $null ) {
 if ( $release -eq $null ) {
 	write-host "No build type specified, assuming debug"
 	$release = $false
+	$debug = $true
 }
 elseif ( $release -eq $false ) {
 	$debug = $true
@@ -129,7 +134,9 @@ $cannot_build = $cannot_build -and  $c_lib        -eq $false
 $cannot_build = $cannot_build -and  $c_lib_static -eq $false
 $cannot_build = $cannot_build -and  $c_lib_dyn    -eq $false
 $cannot_build = $cannot_build -and  $unreal       -eq $false
-$cannot_build = $cannot_build -and  $test         -eq $false
+$cannot_build = $cannot_build -and  $test            -eq $false
+$cannot_build = $cannot_build -and  $parser_bounds  -eq $false
+$cannot_build = $cannot_build -and  $lexer_failures -eq $false
 if ( $cannot_build ) {
 	Stop-stage "No build target specified"
 }
@@ -362,7 +369,6 @@ if ( $test -and $true )
 	$compiler_args += $flag_all_c
 	$compiler_args += $flag_updated_cpp_macro
 	$compiler_args += $flag_c11
-	$compiler_args += "-H"
 
 	$linker_args   = @(
 		$flag_link_win_subsystem_console
@@ -421,10 +427,9 @@ if ($test)
 
 	$compiler_args = @()
 	$compiler_args += ( $flag_define + 'GEN_TIME' )
-	$compiler_args += @("-x", "c++")
-	$compiler_args += "-std=c++17"
+	$compiler_args += $flag_all_cpp
+	$compiler_args += $flag_cpp17
 	$compiler_args += ($flag_define + "GEN_BUILD_DEBUG=1")
-	$compiler_args += "-H"
 
 	$linker_args   = @(
 		$flag_link_win_subsystem_console
@@ -441,6 +446,54 @@ if ($test) {
             Stop-stage "test header changed after generation $header"
         }
     }
+}
+
+if ($parser_bounds)
+{
+	$path_probe = join-path $path_test parser_bounds
+	$path_build = join-path $path_probe build
+	if ( -not(Test-Path($path_build) )) {
+		new-item -ItemType Directory -Path $path_build | Out-Null
+	}
+
+	$includes   = @( $path_base )
+	$unit       = join-path $path_probe "test.cpp"
+	$executable = join-path $path_build "parser_bounds.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+	$compiler_args += $flag_cpp17
+
+	$linker_args = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	invoke-stageTool -stage "parser_bounds" -compiled $result -executable $executable -path_work $path_probe
+}
+
+if ($lexer_failures)
+{
+	$path_probe = join-path $path_test lexer_failures
+	$path_build = join-path $path_probe build
+	if ( -not(Test-Path($path_build) )) {
+		new-item -ItemType Directory -Path $path_build | Out-Null
+	}
+
+	$includes   = @( $path_base )
+	$unit       = join-path $path_probe "test.cpp"
+	$executable = join-path $path_build "lexer_failures.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+	$compiler_args += $flag_cpp17
+
+	$linker_args = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	invoke-stageTool -stage "lexer_failures" -compiled $result -executable $executable -path_work $path_probe
 }
 #endregion Building
 

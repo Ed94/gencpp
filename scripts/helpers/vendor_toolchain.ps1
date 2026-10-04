@@ -149,7 +149,8 @@ if ( $vendor -match "clang" )
 	# https://clang.llvm.org/docs/ClangCommandLineReference.html
 	$flag_all_c 					   = @('-x', 'c')
 	$flag_c11                          = '-std=c11'
-	$flag_all_cpp                      = '-x c++'
+	$flag_cpp17                        = '-std=c++17'
+	$flag_all_cpp                      = @('-x', 'c++')
 	$flag_charset_utf8                 = '-utf-8'
 	$flag_compile                      = '-c'
 	$flag_color_diagnostics            = '-fcolor-diagnostics'
@@ -389,6 +390,7 @@ if ( $vendor -match "msvc" )
 	# https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170
 	$flag_all_c 					  = '/TC'
 	$flag_c11                         = '/std:c11'
+	$flag_cpp17                       = '/std:c++17'
 	$flag_all_cpp                     = '/TP'
 	$flag_charset_utf8                = '/utf-8'
 	$flag_compile			          = '/c'

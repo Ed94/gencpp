@@ -19,6 +19,8 @@ $path_unreal_gen         = Join-Path $path_unreal       gen
 $path_test               = Join-Path $path_root         test
 $path_test_build         = Join-Path $path_test         build
 $path_test_gen           = Join-Path $path_test         gen
+$path_parser_bounds_build = Join-Path $path_test        "parser_bounds\build"
+$path_lexer_failures_build = Join-Path $path_test       "lexer_failures\build"
 $path_x64				 = Join-Path $path_root         x64
 $path_release			 = Join-Path $path_root         release
 
@@ -57,6 +59,12 @@ if ( Test-Path $path_test_build ) {
 }
 if ( Test-Path $path_test_gen ) {
 	Remove-Item $path_test_gen -Recurse -Verbose
+}
+if ( Test-Path $path_parser_bounds_build ) {
+	Remove-Item $path_parser_bounds_build -Recurse -Verbose
+}
+if ( Test-Path $path_lexer_failures_build ) {
+	Remove-Item $path_lexer_failures_build -Recurse -Verbose
 }
 if ( Test-Path $path_x64) {
 	Remove-Item $path_x64 -Recurse -Verbose

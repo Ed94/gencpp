@@ -8,6 +8,8 @@ GEN_API global Context* _ctx;
 GEN_API global u32      context_counter;
 
 #pragma region Constants
+GEN_API read_only global Token NullToken = { { 0, 0 }, Tok_Invalid, 0, 0, TF_Null };
+
 GEN_API global Macro enum_underlying_macro;
 
 GEN_API global Code Code_Global;

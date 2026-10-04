@@ -25,6 +25,9 @@ args:
     segmented
     singleheader
     unreal
+    test
+    parser_bounds
+    lexer_failures
     clang
     msvc    : By default this project builds with clang, specifying msvc will build with MSVC.
     debug

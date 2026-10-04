@@ -12,12 +12,16 @@ ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
+	ParseInfo info = struct_zero(ParseInfo);
 
 	if (lexed.tokens.num == 0 && lexed.tokens.ptr == nullptr) {
-		check_parse_args(lexed.text);
+		ctx->parser = struct_zero(ParseContext);
+		if (check_parse_args(lexed.text) == false) {
+			info.messages = ctx->parser.messages;
+			goto done;
+		}
 		lexed = lex(ctx, lexed.text);
 	}
-	ParseInfo info = struct_zero(ParseInfo);
 	info.lexed = lexed;
 
 	// TODO(Ed): ParseInfo should be set to the parser context.
@@ -25,12 +29,16 @@ ParseInfo wip_parse_str(LexedInfo lexed, ParseOpts* opts)
 	ctx->parser = struct_zero(ParseContext);
 	ctx->parser.tokens = lexed.tokens;
 
+	{
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
 
 	CodeBody result = parse_global_nspace(ctx,CT_Global_Body);
+	(void)result;
 
 	parser_pop(& ctx->parser);
+	}
+done:
 	return info;
 }
 
@@ -38,20 +46,30 @@ CodeClass parse_class( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeClass result = InvalidCode;
+	LexedInfo lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
+	{
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-	CodeClass result = (CodeClass) parse_class_struct( ctx, Tok_Decl_Class, parser_not_inplace_def );
+	result = (CodeClass) parse_class_struct( ctx, Tok_Decl_Class, parser_not_inplace_def );
 	parser_pop(& ctx->parser);
+	}
+done:
 	return result;
 }
 
@@ -59,16 +77,24 @@ CodeConstructor parse_constructor(Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeConstructor result = InvalidCode;
+	LexedInfo lexed = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
+	{
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
 
@@ -100,7 +126,7 @@ CodeConstructor parse_constructor(Str def )
 			default :
 				log_failure( "Invalid specifier %s for variable\n%S", spec_to_str( spec ), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
 				parser_pop(& ctx->parser);
-				return InvalidCode;
+				goto done;
 		}
 
 		// Every specifier after would be considered part of the type type signature
@@ -117,8 +143,10 @@ CodeConstructor parse_constructor(Str def )
 		// <specifiers> ...
 	}
 
-	CodeConstructor result = parser_parse_constructor(ctx, specifiers);
+	result = parser_parse_constructor(ctx, specifiers);
 	parser_pop(& ctx->parser);
+	}
+done:
 	return result;
 }
 
@@ -126,20 +154,30 @@ CodeDefine parse_define( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-	
-	check_parse_args( def );
+	CodeDefine result = InvalidCode;
+	LexedInfo  lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
+	{
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-	CodeDefine result = parser_parse_define(ctx);
+	result = parser_parse_define(ctx);
 	parser_pop(& ctx->parser);
+	}
+done:
 	return result;
 }
 
@@ -147,20 +185,28 @@ CodeDestructor parse_destructor( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeDestructor result = InvalidCode;
+	LexedInfo      lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
 	// TODO(Ed): Destructors can have prefix attributes
 	// TODO(Ed): Destructors can have virtual
 
-	CodeDestructor result = parser_parse_destructor(ctx, NullCode);
+	result = parser_parse_destructor(ctx, NullCode);
+done:
 	return result;
 }
 
@@ -168,106 +214,160 @@ CodeEnum parse_enum( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeEnum result = InvalidCode;
+	LexedInfo lexed = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr ) {
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
 	}
 
-	return parser_parse_enum(ctx, parser_not_inplace_def);
+	result = parser_parse_enum(ctx, parser_not_inplace_def);
+done:
+	return result;
 }
 
 CodeBody parse_export_body( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeBody result = InvalidCode;
+	LexedInfo lexed = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_export_body(ctx);
+	result = parser_parse_export_body(ctx);
+done:
+	return result;
 }
 
 CodeExtern parse_extern_link( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeExtern result = InvalidCode;
+	LexedInfo  lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_extern_link(ctx);
+	result = parser_parse_extern_link(ctx);
+done:
+	return result;
 }
 
 CodeFriend parse_friend( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeFriend result = InvalidCode;
+	LexedInfo  lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_friend(ctx);
+	result = parser_parse_friend(ctx);
+done:
+	return result;
 }
 
 CodeFn parse_function( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeFn    result = InvalidCode;
+	LexedInfo lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return (CodeFn) parser_parse_function(ctx);
+	result = (CodeFn) parser_parse_function(ctx);
+done:
+	return result;
 }
 
 CodeBody parse_global_body( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeBody  result = InvalidCode;
+	LexedInfo lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
+	{
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-	CodeBody result = parse_global_nspace(ctx, CT_Global_Body );
+	result = parse_global_nspace(ctx, CT_Global_Body );
 	parser_pop(& ctx->parser);
+	}
+done:
 	return result;
 }
 
@@ -275,71 +375,108 @@ CodeNS parse_namespace( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeNS    result = InvalidCode;
+	LexedInfo lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_namespace(ctx);
+	result = parser_parse_namespace(ctx);
+done:
+	return result;
 }
 
 CodeOperator parse_operator( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeOperator result = InvalidCode;
+	LexedInfo    lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return (CodeOperator) parser_parse_operator(ctx);
+	result = (CodeOperator) parser_parse_operator(ctx);
+done:
+	return result;
 }
 
 CodeOpCast parse_operator_cast( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeOpCast result = InvalidCode;
+	LexedInfo  lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_operator_cast(ctx, NullCode);
+	result = parser_parse_operator_cast(ctx, NullCode);
+done:
+	return result;
 }
 
 CodeStruct parse_struct( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeStruct result = InvalidCode;
+	LexedInfo  lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
+	{
 	ParseStackNode scope = NullScope;
 	parser_push(& ctx->parser, & scope);
-	CodeStruct result = (CodeStruct) parse_class_struct( ctx, Tok_Decl_Struct, parser_not_inplace_def );
+	result = (CodeStruct) parse_class_struct( ctx, Tok_Decl_Struct, parser_not_inplace_def );
 	parser_pop(& ctx->parser);
+	}
+done:
 	return result;
 }
 
@@ -347,102 +484,160 @@ CodeTemplate parse_template( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeTemplate result = InvalidCode;
+	LexedInfo    lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_template(ctx);
+	result = parser_parse_template(ctx);
+done:
+	return result;
 }
 
 CodeTypename parse_type( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeTypename result = InvalidCode;
+	LexedInfo    lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_type( ctx, parser_not_from_template, nullptr);
+	result = parser_parse_type( ctx, parser_not_from_template, nullptr);
+done:
+	return result;
 }
 
 CodeTypedef parse_typedef( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeTypedef result = InvalidCode;
+	LexedInfo   lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_typedef(ctx);
+	result = parser_parse_typedef(ctx);
+done:
+	return result;
 }
 
 CodeUnion parse_union( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeUnion result = InvalidCode;
+	LexedInfo lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_union(ctx, parser_not_inplace_def);
+	result = parser_parse_union(ctx, parser_not_inplace_def);
+done:
+	return result;
 }
 
 CodeUsing parse_using( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeUsing result = InvalidCode;
+	LexedInfo lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
 
-	return parser_parse_using(ctx);
+	result = parser_parse_using(ctx);
+done:
+	return result;
 }
 
 CodeVar parse_variable( Str def )
 {
 	// TODO(Ed): Lift this.
 	Context* ctx = _ctx;
-
-	check_parse_args( def );
+	CodeVar   result = InvalidCode;
+	LexedInfo lexed  = struct_zero(LexedInfo);
 
 	ctx->parser = struct_zero(ParseContext);
+	if (check_parse_args(def) == false)
+		goto done;
 
-	LexedInfo lexed = lex(ctx, def);
+	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if ( ctx->parser.tokens.ptr == nullptr )
-		return InvalidCode;
+	if (ctx->parser.tokens.ptr == nullptr) {
+		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
+			parser_record_failure(ctx, lexed.messages->content);
+		else
+			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
+		goto done;
+	}
+	if (parser_slice_is_formatting_only(&ctx->parser)) {
+		parser_record_failure(ctx, txt("parse_variable: only formatting tokens"));
+		goto done;
+	}
 
-	return parser_parse_variable(ctx);
+	result = parser_parse_variable(ctx);
+done:
+	return result;
 }
 
 // Undef helper macros

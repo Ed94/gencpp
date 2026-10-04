@@ -6,6 +6,8 @@
 #pragma region Constants
 // Predefined typename codes. Are set to readonly and are setup during gen::init()
 
+GEN_API extern Token NullToken;
+
 GEN_API extern Macro enum_underlying_macro;
 
 GEN_API extern Code access_public;

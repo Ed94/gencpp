@@ -37,8 +37,6 @@ struct Token
 	u32     Flags;
 };
 
-constexpr Token NullToken { {}, Tok_Invalid, 0, 0, TF_Null };
-
 forceinline
 AccessSpec tok_to_access_specifier(Token tok) {
 	return scast(AccessSpec, tok.Type);
