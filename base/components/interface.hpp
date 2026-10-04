@@ -15,6 +15,13 @@
   \▓▓▓▓▓▓  \▓▓▓▓▓▓▓\▓▓   \▓▓     \▓▓▓▓▓▓\▓▓   \▓▓   \▓▓▓▓  \▓▓▓▓▓▓▓\▓▓      \▓▓       \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓
 */
 
+struct ParseInfo
+{
+	ParseMessage* messages;
+	LexedInfo     lexed;
+	Code          result;
+};
+
 // Note(Ed): This is subject to heavily change 
 // with upcoming changes to the library's fallback (default) allocations strategy;
 // and major changes to lexer/parser context usage.
@@ -80,6 +87,7 @@ struct Context
 
 	// TODO(Ed): Active parse context vs a parse result need to be separated conceptually
 	ParseContext parser;
+	ParseInfo    parse_info;
 
 	// TODO(Ed): Formatting - This will eventually be in a separate struct when in the process of serialization of the builder.
 	s32 temp_serialize_indent;
@@ -363,13 +371,6 @@ struct ParseStackNode
 	// TODO(Ed): When an error occurs, the parse stack is not released and instead the scope is left dangling.
 };
 
-struct ParseInfo
-{
-	ParseMessage* messages;
-	LexedInfo     lexed;
-	Code          result;
-};
-
 struct ParseOpts
 {
 	AllocatorInfo backing_msgs;
@@ -388,7 +389,15 @@ GEN_API CodeBody        parse_export_body  ( Str export_def      );
 GEN_API CodeExtern      parse_extern_link  ( Str exten_link_def  );
 GEN_API CodeFriend      parse_friend       ( Str friend_def      );
 GEN_API CodeFn          parse_function     ( Str fn_def          );
-GEN_API CodeBody        parse_global_body  ( Str body_def        );
+
+struct Opts_parse_global_body
+{
+	Context*   ctx;
+	ParseInfo* info;
+};
+GEN_API void     parse_global_body_base( Context* ctx, Str body_def, ParseInfo* info );
+GEN_API CodeBody parse_global_body( Str body_def, Opts_parse_global_body opts GEN_PARAM_DEFAULT );
+
 GEN_API CodeNS          parse_namespace    ( Str namespace_def   );
 GEN_API CodeOperator    parse_operator     ( Str operator_def    );
 GEN_API CodeOpCast      parse_operator_cast( Str operator_def    );

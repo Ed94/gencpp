@@ -65,19 +65,20 @@ if ($null -eq $is_linux) {
 Push-Location $path_root
 
 #region Arguments
-       $vendor       = $null
-       $release      = $null
-[bool] $verbose      = $false
-[bool] $base         = $false
-[bool] $segmented    = $false
-[bool] $singleheader = $false
-[bool] $c_lib        = $false
-[bool] $c_lib_static = $false
-[bool] $c_lib_dyn    = $false
-[bool] $unreal          = $false
-[bool] $test            = $false
-[bool] $parser_bounds   = $false
-[bool] $lexer_failures  = $false
+       $vendor               = $null
+       $release              = $null
+[bool] $verbose              = $false
+[bool] $base                 = $false
+[bool] $segmented            = $false
+[bool] $singleheader         = $false
+[bool] $c_lib                = $false
+[bool] $c_lib_static         = $false
+[bool] $c_lib_dyn            = $false
+[bool] $unreal               = $false
+[bool] $test                 = $false
+[bool] $parser_bounds        = $false
+[bool] $lexer_failures       = $false
+[bool] $parse_body_messages  = $false
 
 [array] $vendors = @( "clang", "msvc" )
 
@@ -85,20 +86,21 @@ Push-Location $path_root
 
 if ( $args ) { $args | ForEach-Object {
 	switch ($_){
-		{ $_ -in $vendors }   { $vendor       = $_; break }
-		"verbose"			  { $verbose      = $true }
-		"release"             { $release      = $true }
-		"debug"               { $release      = $false }
-		"base"                { $base         = $true }
-		"segmented"           { $segmented    = $true }
-		"singleheader"        { $singleheader = $true }
-		"c_lib"               { $c_lib        = $true }
-		"c_lib_static"        { $c_lib_static = $true }
-		"c_lib_dyn"           { $c_lib_dyn    = $true }
-		"unreal"              { $unreal          = $true }
-		"test"                { $test            = $true }
-		"parser_bounds"       { $parser_bounds   = $true }
-		"lexer_failures"      { $lexer_failures  = $true }
+		{ $_ -in $vendors }   { $vendor               = $_; break }
+		"verbose"			  { $verbose              = $true }
+		"release"             { $release              = $true }
+		"debug"               { $release              = $false }
+		"base"                { $base                 = $true }
+		"segmented"           { $segmented            = $true }
+		"singleheader"        { $singleheader         = $true }
+		"c_lib"               { $c_lib                = $true }
+		"c_lib_static"        { $c_lib_static         = $true }
+		"c_lib_dyn"           { $c_lib_dyn            = $true }
+		"unreal"              { $unreal               = $true }
+		"test"                { $test                 = $true }
+		"parser_bounds"       { $parser_bounds        = $true }
+		"lexer_failures"      { $lexer_failures       = $true }
+		"parse_body_messages" { $parse_body_messages  = $true }
 	}
 }}
 #endregion Arguments
@@ -127,16 +129,17 @@ else {
 	$optimize = $true
 }
 
-$cannot_build =                     $base         -eq $false
-$cannot_build = $cannot_build -and  $segmented    -eq $false
-$cannot_build = $cannot_build -and  $singleheader -eq $false
-$cannot_build = $cannot_build -and  $c_lib        -eq $false
-$cannot_build = $cannot_build -and  $c_lib_static -eq $false
-$cannot_build = $cannot_build -and  $c_lib_dyn    -eq $false
-$cannot_build = $cannot_build -and  $unreal       -eq $false
-$cannot_build = $cannot_build -and  $test            -eq $false
-$cannot_build = $cannot_build -and  $parser_bounds  -eq $false
-$cannot_build = $cannot_build -and  $lexer_failures -eq $false
+$cannot_build =                     $base                -eq $false
+$cannot_build = $cannot_build -and  $segmented           -eq $false
+$cannot_build = $cannot_build -and  $singleheader        -eq $false
+$cannot_build = $cannot_build -and  $c_lib               -eq $false
+$cannot_build = $cannot_build -and  $c_lib_static        -eq $false
+$cannot_build = $cannot_build -and  $c_lib_dyn           -eq $false
+$cannot_build = $cannot_build -and  $unreal              -eq $false
+$cannot_build = $cannot_build -and  $test                -eq $false
+$cannot_build = $cannot_build -and  $parser_bounds       -eq $false
+$cannot_build = $cannot_build -and  $lexer_failures      -eq $false
+$cannot_build = $cannot_build -and  $parse_body_messages -eq $false
 if ( $cannot_build ) {
 	Stop-stage "No build target specified"
 }
@@ -494,6 +497,30 @@ if ($lexer_failures)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 	invoke-stageTool -stage "lexer_failures" -compiled $result -executable $executable -path_work $path_probe
+}
+
+if ($parse_body_messages)
+{
+	$path_probe = join-path $path_test parse_body_messages
+	$path_build = join-path $path_probe build
+	if ( -not(Test-Path($path_build) )) {
+		new-item -ItemType Directory -Path $path_build | Out-Null
+	}
+
+	$includes   = @( $path_base )
+	$unit       = join-path $path_probe "test.cpp"
+	$executable = join-path $path_build "parse_body_messages.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+	$compiler_args += $flag_cpp17
+
+	$linker_args = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	invoke-stageTool -stage "parse_body_messages" -compiled $result -executable $executable -path_work $path_probe
 }
 #endregion Building
 

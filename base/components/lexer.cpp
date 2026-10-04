@@ -694,7 +694,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 					case Lex_ReturnNull:
 					{
 						info.messages = c.messages;
-						return info;
+						goto Lex_Done;
 					}
 				}
 			}
@@ -725,7 +725,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 
 						lexer_record_failure_fmt(lib_ctx, ctx, "gen::lex: invalid varadic argument, expected '...' got '..%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 						info.messages = c.messages;
-						return info;
+						goto Lex_Done;
 					}
 				}
 
@@ -1282,7 +1282,7 @@ LexedInfo lex(Context* lib_ctx, Str content)
 			StrBuilder context_str = strbuilder_fmt_buf( lib_ctx->Allocator_Temp, "%.*s", min( 100, c.left ), c.scanner );
 			lexer_record_failure_fmt(lib_ctx, ctx, "Failed to lex token '%c' (%d, %d)\n%s", (* ctx->scanner), c.line, c.column, context_str );
 			info.messages = c.messages;
-			return info;
+			goto Lex_Done;
 		}
 
 		FoundToken:
@@ -1318,8 +1318,8 @@ LexedInfo lex(Context* lib_ctx, Str content)
 	
 	info.messages = c.messages;
 	info.text     = content;
-	info.tokens   = struct_init(TokenSlice) { pcast(Token*, c.tokens), scast(s32, array_num(c.tokens)) };
 Lex_Done:
+	info.tokens   = struct_init(TokenSlice) { pcast(Token*, c.tokens), scast(s32, array_num(c.tokens)) };
 	return info;
 }
 

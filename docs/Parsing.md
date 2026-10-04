@@ -15,6 +15,9 @@ You can think of this parser as *frontend parser* vs a *semantic parser*. Its in
 User exposed interface:
 
 ```cpp
+CodeBody        parse_global_body     ( Str body_def, Opts_parse_global_body opts );
+void            parse_global_body_base( Context* ctx, Str body_def, ParseInfo* info );
+
 CodeClass       parse_class        ( Str class_def       );
 CodeConstructor parse_constructor  ( Str constructor_def );
 CodeDefine      parse_define       ( Str define_def      );
@@ -24,7 +27,6 @@ CodeBody        parse_export_body  ( Str export_def      );
 CodeExtern      parse_extern_link  ( Str exten_link_def  );
 CodeFriend      parse_friend       ( Str friend_def      );
 CodeFn          parse_function     ( Str fn_def          );
-CodeBody        parse_global_body  ( Str body_def        );
 CodeNS          parse_namespace    ( Str namespace_def   );
 CodeOperator    parse_operator     ( Str operator_def    );
 CodeOpCast      parse_operator_cast( Str operator_def    );
@@ -155,5 +157,3 @@ typedef HashTable(Macro) MacroTable;
   * typedefs have attributes with the type (`parse_type`)
 * Parsing attributes can be extended to support user defined macros by defining `GEN_DEFINE_ATTRIBUTE_TOKENS` (see `gen.hpp` for the formatting)
   * This is useful for example: parsing Unreal `Module_API` macros.
-
-**The lexer & parser do not gracefully attempt to continue when it comes across incorrect code, and doesn't properly track errors into a listing (yet).**

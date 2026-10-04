@@ -11,8 +11,7 @@ internal void expect(int condition, Str label) {
 	if (condition == false) { log_fmt("FAIL %S\n", label); ++g_failures; }
 }
 
-internal void expect_public(Str def, Str needle, Str label)
-{
+internal void expect_public(Str def, Str needle, Str label) {
 	Context ctx = {}; init(&ctx);
 	CodeVar parsed = parse_variable(def); expect(cast(Code, parsed) == Code_Invalid, label);
 	expect(_ctx->parser.messages              != nullptr, label);
@@ -31,7 +30,7 @@ internal void expect_public(Str def, Str needle, Str label)
 internal void expect_lex_fail(Str def, Str needle, Str label) {
 	Context ctx = {}; init(&ctx);
 	LexedInfo lexed = lex(&ctx, def);
-	expect(lexed.tokens.ptr == nullptr, label);
+	expect(lexed.tokens.ptr != nullptr, label);
 	expect(lexed.messages   != nullptr, label);
 	if (lexed.messages != nullptr) expect(str_contains(lexed.messages->content, needle), label);
 	deinit(&ctx);

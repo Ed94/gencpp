@@ -1,28 +1,29 @@
 $misc = Join-Path $PSScriptRoot 'helpers/misc.psm1'
 Import-Module $misc
 
-$path_root               = Get-ScriptRepoRoot
-$path_base               = Join-Path $path_root         base
-$path_base_build         = Join-Path $path_base         build
-$path_c_library          = Join-Path $path_root         gen_c_library
-$path_c_library_build    = Join-Path $path_c_library    build
-$path_c_library_gen      = Join-Path $path_c_library    gen
-$path_segmented          = Join-Path $path_root         gen_segmented
-$path_segmented_build    = Join-Path $path_segmented    build
-$path_segmented_gen      = Join-Path $path_segmented    gen
-$path_singleheader       = Join-Path $path_root         gen_singleheader
-$path_singleheader_build = Join-Path $path_singleheader build
-$path_singleheader_gen	 = Join-Path $path_singleheader gen
-$path_unreal             = Join-Path $path_root         gen_unreal_engine
-$path_unreal_build       = Join-Path $path_unreal       build
-$path_unreal_gen         = Join-Path $path_unreal       gen
-$path_test               = Join-Path $path_root         test
-$path_test_build         = Join-Path $path_test         build
-$path_test_gen           = Join-Path $path_test         gen
-$path_parser_bounds_build = Join-Path $path_test        "parser_bounds\build"
-$path_lexer_failures_build = Join-Path $path_test       "lexer_failures\build"
-$path_x64				 = Join-Path $path_root         x64
-$path_release			 = Join-Path $path_root         release
+$path_root                 = Get-ScriptRepoRoot
+$path_base                 = Join-Path $path_root         base
+$path_base_build           = Join-Path $path_base         build
+$path_c_library            = Join-Path $path_root         gen_c_library
+$path_c_library_build      = Join-Path $path_c_library    build
+$path_c_library_gen        = Join-Path $path_c_library    gen
+$path_segmented            = Join-Path $path_root         gen_segmented
+$path_segmented_build      = Join-Path $path_segmented    build
+$path_segmented_gen        = Join-Path $path_segmented    gen
+$path_singleheader         = Join-Path $path_root         gen_singleheader
+$path_singleheader_build   = Join-Path $path_singleheader build
+$path_singleheader_gen	   = Join-Path $path_singleheader gen
+$path_unreal               = Join-Path $path_root         gen_unreal_engine
+$path_unreal_build         = Join-Path $path_unreal       build
+$path_unreal_gen           = Join-Path $path_unreal       gen
+$path_test                 = Join-Path $path_root         test
+$path_test_build           = Join-Path $path_test         build
+$path_test_gen             = Join-Path $path_test         gen
+$path_parser_bounds_build  = Join-Path $path_test        "parser_bounds\build"
+$path_lexer_failures_build = Join-Path $path_test        "lexer_failures\build"
+$path_parse_body_messages_build = Join-Path $path_test   "parse_body_messages\build"
+$path_x64				   = Join-Path $path_root         x64
+$path_release			   = Join-Path $path_root         release
 
 if ( Test-Path $path_base_build) {
 	Remove-Item $path_base_build -Recurse -Verbose
@@ -65,6 +66,9 @@ if ( Test-Path $path_parser_bounds_build ) {
 }
 if ( Test-Path $path_lexer_failures_build ) {
 	Remove-Item $path_lexer_failures_build -Recurse -Verbose
+}
+if ( Test-Path $path_parse_body_messages_build ) {
+	Remove-Item $path_parse_body_messages_build -Recurse -Verbose
 }
 if ( Test-Path $path_x64) {
 	Remove-Item $path_x64 -Recurse -Verbose

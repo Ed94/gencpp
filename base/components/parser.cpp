@@ -1715,9 +1715,9 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 		{
 			case Tok_Comma:
 			{
-				log_failure("Dangling comma found: %SB\nContext:\n%SB", tok_to_strbuilder(ctx->Allocator_Temp, currtok), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp));
+				parser_record_failure(ctx, txt("Dangling comma"));
 				parser_pop( & ctx->parser);
-				return InvalidCode;
+				return result;
 			}
 			break;
 			case Tok_Statement_End:

@@ -28,6 +28,7 @@ args:
     test
     parser_bounds
     lexer_failures
+    parse_body_messages
     clang
     msvc    : By default this project builds with clang, specifying msvc will build with MSVC.
     debug

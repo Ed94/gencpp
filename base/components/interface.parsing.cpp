@@ -55,7 +55,7 @@ CodeClass parse_class( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -86,7 +86,7 @@ CodeConstructor parse_constructor(Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -163,7 +163,7 @@ CodeDefine parse_define( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -194,7 +194,7 @@ CodeDestructor parse_destructor( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -223,7 +223,7 @@ CodeEnum parse_enum( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -249,7 +249,7 @@ CodeBody parse_export_body( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -275,7 +275,7 @@ CodeExtern parse_extern_link( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -301,7 +301,7 @@ CodeFriend parse_friend( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -327,7 +327,7 @@ CodeFn parse_function( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -340,35 +340,55 @@ done:
 	return result;
 }
 
-CodeBody parse_global_body( Str def )
+void parse_global_body_base( Context* ctx, Str def, ParseInfo* info )
 {
-	// TODO(Ed): Lift this.
-	Context* ctx = _ctx;
-	CodeBody  result = InvalidCode;
-	LexedInfo lexed  = struct_zero(LexedInfo);
+	LexedInfo lexed;
+	CodeBody  body;
 
-	ctx->parser = struct_zero(ParseContext);
-	if (check_parse_args(def) == false)
-		goto done;
+	if ( ctx == nullptr || info == nullptr )
+		GEN_FATAL( "parse_global_body_base: null context or info" );
 
-	lexed = lex(ctx, def);
-	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
-		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
-			parser_record_failure(ctx, lexed.messages->content);
-		else
-			parser_record_failure(ctx, txt("parse: lex produced no tokens"));
-		goto done;
+	info[0] = struct_zero( ParseInfo );
+	lexed   = struct_zero( LexedInfo );
+	body    = (CodeBody) make_code();
+	body->Type = CT_Global_Body;
+
+	ctx->parser = struct_zero( ParseContext );
+	if ( check_parse_args( def ) == false ) {
+		info->result   = cast( Code, body );
+		info->messages = ctx->parser.messages;
+		return;
 	}
 
-	{
-	ParseStackNode scope = NullScope;
-	parser_push(& ctx->parser, & scope);
-	result = parse_global_nspace(ctx, CT_Global_Body );
-	parser_pop(& ctx->parser);
+	lexed       = lex( ctx, def );
+	info->lexed = lexed;
+	if ( lexed.tokens.num == 0 ) {
+		info->result   = cast( Code, body );
+		info->messages = ctx->parser.messages;
+		return;
 	}
-done:
-	return result;
+
+	ctx->parser.tokens = lexed.tokens; {
+		ParseStackNode scope = NullScope;
+		parser_push( & ctx->parser, & scope );
+		body = parse_global_nspace( ctx, CT_Global_Body );
+		parser_pop( & ctx->parser );
+	}
+	info->result   = cast( Code, body );
+	info->messages = ctx->parser.messages;
+}
+
+CodeBody parse_global_body( Str def, Opts_parse_global_body opts ) {
+	Opts_parse_global_body resolved = get_optional( opts );
+	Context*               ctx      = resolved.ctx;
+	ParseInfo*             info;
+
+	if ( ctx == nullptr ) ctx = _ctx;
+	if ( ctx == nullptr ) GEN_FATAL( "parse_global_body: no context" );
+	info = resolved.info; if ( info == nullptr ) info = & ctx->parse_info;
+
+	parse_global_body_base( ctx, def, info );
+	return cast( CodeBody, info->result );
 }
 
 CodeNS parse_namespace( Str def )
@@ -384,7 +404,7 @@ CodeNS parse_namespace( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -410,7 +430,7 @@ CodeOperator parse_operator( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -436,7 +456,7 @@ CodeOpCast parse_operator_cast( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -462,7 +482,7 @@ CodeStruct parse_struct( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -493,7 +513,7 @@ CodeTemplate parse_template( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -519,7 +539,7 @@ CodeTypename parse_type( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -545,7 +565,7 @@ CodeTypedef parse_typedef( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -571,7 +591,7 @@ CodeUnion parse_union( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -597,7 +617,7 @@ CodeUsing parse_using( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else
@@ -623,7 +643,7 @@ CodeVar parse_variable( Str def )
 
 	lexed = lex(ctx, def);
 	ctx->parser.tokens = lexed.tokens;
-	if (ctx->parser.tokens.ptr == nullptr) {
+	if (lexed.messages != nullptr || ctx->parser.tokens.num == 0) {
 		if (lexed.messages != nullptr && lexed.messages->content.Ptr != nullptr)
 			parser_record_failure(ctx, lexed.messages->content);
 		else

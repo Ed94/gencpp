@@ -739,10 +739,10 @@ do                          \
 					{
 						// pop the array entry
 						array_token->NumEntries -= 1;
-						Code next                   = array_entry->Next;
-						Code prev                   = array_entry->Prev;
-						next->Prev                  = array_entry->Prev;
-						prev->Next                  = next;
+						Code next                = array_entry->Next;
+						Code prev                = array_entry->Prev;
+						next->Prev               = array_entry->Prev;
+						prev->Next               = next;
 						if ( array_token->Front == array_entry )
 							array_token->Front = next;
 
@@ -1142,6 +1142,27 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
 				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
+				if ( fn->Name.is_equal( txt("parse_global_body") ) )
+				{
+					Str new_name = txt("parse_global_body_opts");
+					char const* tmpl_fn_macro = "#define <def_name>( <params> ... ) <def__name>( <params> & (<opts_type>) { __VA_ARGS__ } )\n";
+					Code fn_macro;
+
+					opt_param->ValueType->Specs = def_specifier( Spec_Ptr );
+					fn_macro = untyped_str( token_fmt(
+						"def_name",  fn->Name
+					,	"def__name", new_name
+					,	"params",    txt("def, ")
+					,	"opts_type", opt_param->ValueType->Name
+					,	tmpl_fn_macro
+					));
+					fn->Name = cache_str( new_name );
+					interface.append( fn );
+					interface.append( fn_macro );
+					handled = true;
+					break;
+				}
+
 				Str prefix      = txt("def_");
 				Str actual_name = { fn->Name.Ptr + prefix.Len, fn->Name.Len  - prefix.Len };
 				Str new_name    = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "def__%S", actual_name ).to_str();
@@ -1409,6 +1430,29 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code src_code_serialization = scan_file( path_base "components/code_serialization.cpp" );
 
 	Code src_parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
+	{
+		Str needle  = txt("CodeBody parse_global_body( Str def, Opts_parse_global_body opts )");
+		Str scanned = src_parsing_interface->Content;
+		ssize signature_at = -1;
+		ssize scan_offset;
+		ssize last_offset = scanned.Len - needle.Len;
+		for ( scan_offset = 0; scan_offset <= last_offset; ++ scan_offset )
+		{
+			if ( c_str_compare_len( scanned.Ptr + scan_offset, needle.Ptr, needle.Len ) == 0 ) {
+				signature_at = scan_offset;
+				break;
+			}
+		}
+		if ( signature_at < 0 ) GEN_FATAL( "c_library: parse_global_body signature missing from scanned interface.parsing.cpp" );
+		/*Resolved replacement*/ {
+			Str replacement    = txt("CodeBody parse_global_body_opts( Str def, Opts_parse_global_body* opts )");
+			StrBuilder rebuilt = strbuilder_make_reserve( _ctx->Allocator_Temp, scanned.Len + replacement.Len );
+			strbuilder_append_str( & rebuilt, Str { scanned.Ptr, signature_at } );
+			strbuilder_append_str( & rebuilt, replacement );
+			strbuilder_append_str( & rebuilt, Str { scanned.Ptr + signature_at + needle.Len, scanned.Len - signature_at - needle.Len } );
+			src_parsing_interface = untyped_str( strbuilder_to_str( rebuilt ) );
+		}
+	}
 	Code src_untyped            = scan_file( path_base "components/interface.untyped.cpp" );
 	Code src_parser_case_macros = scan_file( path_base "components/parser_case_macros.cpp" );
 
