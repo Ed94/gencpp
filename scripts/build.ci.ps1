@@ -79,6 +79,7 @@ Push-Location $path_root
 [bool] $parser_bounds        = $false
 [bool] $lexer_failures       = $false
 [bool] $parse_body_messages  = $false
+[bool] $dogfood_parse        = $false
 
 [array] $vendors = @( "clang", "msvc" )
 
@@ -101,6 +102,7 @@ if ( $args ) { $args | ForEach-Object {
 		"parser_bounds"       { $parser_bounds        = $true }
 		"lexer_failures"      { $lexer_failures       = $true }
 		"parse_body_messages" { $parse_body_messages  = $true }
+		"dogfood_parse"       { $dogfood_parse        = $true }
 	}
 }}
 #endregion Arguments
@@ -140,6 +142,7 @@ $cannot_build = $cannot_build -and  $test                -eq $false
 $cannot_build = $cannot_build -and  $parser_bounds       -eq $false
 $cannot_build = $cannot_build -and  $lexer_failures      -eq $false
 $cannot_build = $cannot_build -and  $parse_body_messages -eq $false
+$cannot_build = $cannot_build -and  $dogfood_parse       -eq $false
 if ( $cannot_build ) {
 	Stop-stage "No build target specified"
 }
@@ -521,6 +524,30 @@ if ($parse_body_messages)
 
 	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
 	invoke-stageTool -stage "parse_body_messages" -compiled $result -executable $executable -path_work $path_probe
+}
+
+if ($dogfood_parse)
+{
+	$path_probe = join-path $path_test dogfood_parse
+	$path_build = join-path $path_probe build
+	if ( -not(Test-Path($path_build) )) {
+		new-item -ItemType Directory -Path $path_build | Out-Null
+	}
+
+	$includes   = @( $path_base )
+	$unit       = join-path $path_probe "test.cpp"
+	$executable = join-path $path_build "dogfood_parse.exe"
+
+	$compiler_args = @()
+	$compiler_args += ( $flag_define + 'GEN_TIME' )
+	$compiler_args += $flag_cpp17
+
+	$linker_args = @(
+		$flag_link_win_subsystem_console
+	)
+
+	$result = build-simple $path_build $includes $compiler_args $linker_args $unit $executable
+	invoke-stageTool -stage "dogfood_parse" -compiled $result -executable $executable -path_work $path_probe
 }
 #endregion Building
 

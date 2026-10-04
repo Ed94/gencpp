@@ -22,6 +22,7 @@ $path_test_gen             = Join-Path $path_test         gen
 $path_parser_bounds_build  = Join-Path $path_test        "parser_bounds\build"
 $path_lexer_failures_build = Join-Path $path_test        "lexer_failures\build"
 $path_parse_body_messages_build = Join-Path $path_test   "parse_body_messages\build"
+$path_dogfood_parse_build  = Join-Path $path_test        "dogfood_parse\build"
 $path_x64				   = Join-Path $path_root         x64
 $path_release			   = Join-Path $path_root         release
 
@@ -69,6 +70,9 @@ if ( Test-Path $path_lexer_failures_build ) {
 }
 if ( Test-Path $path_parse_body_messages_build ) {
 	Remove-Item $path_parse_body_messages_build -Recurse -Verbose
+}
+if ( Test-Path $path_dogfood_parse_build ) {
+	Remove-Item $path_dogfood_parse_build -Recurse -Verbose
 }
 if ( Test-Path $path_x64) {
 	Remove-Item $path_x64 -Recurse -Verbose

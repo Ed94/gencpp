@@ -29,6 +29,7 @@ args:
     parser_bounds
     lexer_failures
     parse_body_messages
+    dogfood_parse
     clang
     msvc    : By default this project builds with clang, specifying msvc will build with MSVC.
     debug
