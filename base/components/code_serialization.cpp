@@ -158,7 +158,7 @@ void class_to_strbuilder_def( CodeClass self, StrBuilder* result )
 	if ( self->ParentType )
 	{
 		Str access_level = access_spec_to_str( self->ParentAccess );
-		strbuilder_append_fmt( result, " : %S %SB", self->Name, access_level, typename_to_strbuilder(self->ParentType) );
+		strbuilder_append_fmt( result, " : %S %SB", access_level, typename_to_strbuilder(self->ParentType) );
 
 		CodeTypename interface = cast(CodeTypename, self->ParentType->Next);
 		if ( interface )
@@ -1020,6 +1020,9 @@ void typedef_to_strbuilder_ref(CodeTypedef self, StrBuilder* result )
 	GEN_ASSERT(result);
 	if ( bitfield_is_set( u32, self->ModuleFlags, ModuleFlag_Export ))
 		strbuilder_append_str( result, txt("export ") );
+
+	if ( self->Attributes )
+		strbuilder_append_fmt( result, "%SB ", attributes_to_strbuilder(self->Attributes) );
 
 	strbuilder_append_str( result, txt("typedef "));
 

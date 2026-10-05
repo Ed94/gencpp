@@ -129,7 +129,8 @@ int gen_main()
 		(Macro { txt("GEN_FILE_WRITE_AT_PROC"),       MT_Statement,  MF_Functional | MF_Expects_Body }),
 		(Macro { txt("GEN_FILE_SEEK_PROC"),           MT_Statement,  MF_Functional | MF_Expects_Body }),
 		(Macro { txt("GEN_FILE_CLOSE_PROC"),          MT_Statement,  MF_Functional | MF_Expects_Body }),
-		(Macro { txt("log_failure"),                  MT_Expression, MF_Null       }),
+		(Macro { txt("log_failure"),                  MT_Statement,  MF_Functional }),
+		(Macro { txt("NullScope"),                    MT_Expression, MF_Null       }),
 		(Macro { txt("operator"),                     MT_Expression, MF_Null       }),
 		(Macro { txt("InvalidCode"),                  MT_Expression, MF_Null       }),
 		(Macro { txt("NullCode"),                     MT_Expression, MF_Null       }),
@@ -137,8 +138,8 @@ int gen_main()
 		(Macro { txt("gen_main"),                     MT_Statement,  MF_Null       })
 	));
 	register_macros( args(
-		(Macro { txt("name"),                         MT_Expression, MF_Functional }),
-		(Macro { txt("code"),                         MT_Expression, MF_Functional }),
+		(Macro { txt("name"),                         MT_Expression, MF_Functional | MF_Allow_As_Identifier }),
+		(Macro { txt("code"),                         MT_Expression, MF_Functional | MF_Allow_As_Identifier }),
 		(Macro { txt("args"),                         MT_Expression, MF_Functional }),
 		(Macro { txt("code_str"),                     MT_Expression, MF_Functional }),
 		(Macro { txt("code_fmt"),                     MT_Expression, MF_Functional }),
@@ -494,10 +495,10 @@ do                          \
 		case CT_Union_Fwd:
 		{
 			Str type_str      = codetype_to_keyword_str(entry->Type);
-			Str formated_tmpl = token_fmt_impl( 3,
-				"type", type_str
-			,	"name", entry->Name,
-			stringize(
+			Str formated_tmpl = token_fmt_impl( 3
+			, "type", type_str
+			,	"name", entry->Name
+			, stringize(
 				typedef <type> <name> <name>;
 			));
 			CodeTypedef tdef = parse_typedef(formated_tmpl);
@@ -597,10 +598,10 @@ do                          \
 			}
 
 			Str type_str      = codetype_to_keyword_str(entry->Type);
-			Str formated_tmpl = token_fmt_impl( 3,
-				"type", type_str
-			,	"name", entry->Name,
-			stringize(
+			Str formated_tmpl = token_fmt_impl( 3
+			, "type", type_str
+			,	"name", entry->Name
+			, stringize(
 				typedef <type> <name> <name>;
 			));
 			CodeTypedef tdef = parse_typedef(formated_tmpl);

@@ -1077,7 +1077,8 @@ struct AST_Typedef
 		struct
 		{
 			CodeComment    InlineCmt;
-			char           _PAD_PROPERTIES_[ sizeof(AST*) * 2 ];
+			CodeAttributes Attributes;
+			char           _PAD_PROPERTIES_[ sizeof(AST*) ];
 			Code           UnderlyingType;
 			char           _PAD_PROPERTIES_2_[ sizeof(AST*) * 3 ];
 		};

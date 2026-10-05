@@ -541,11 +541,16 @@ void lex_found_token( LexContext* ctx )
 		ctx->token.Type   = macrotype_to_toktype(macro->Type);
 		b32 is_functional = macro_is_functional(* macro);
 		resolved_to_macro = has_args ? is_functional : ! is_functional;
-		if ( ! resolved_to_macro && GEN_BUILD_DEBUG ) {
-			log_fmt("Info(%d, %d): %S identified as a macro but usage here does not resolve to one (interpreting as identifier)\n"
+		if ( ! resolved_to_macro && GEN_BUILD_DEBUG && ! bitfield_is_set(MacroFlags, macro->Flags, MF_Allow_As_Identifier) ) {
+			log_fmt("Info(%d, %d): %S identified as a macro but usage here does not resolve to one (functional=%d, has_args=%d, flags=%u, next='%.*s')\n"
 				, ctx->token.Line
-				, ctx->token.Line
+				, ctx->token.Column
 				, macro->Name
+				, is_functional
+				, has_args
+				, macro->Flags
+				, min(16, ctx->left)
+				, ctx->scanner
 			);
 		}
 	}

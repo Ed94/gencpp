@@ -1158,7 +1158,7 @@ CodeTypename def_type( Str name, Opts_def_type opt )
 		return InvalidCode;
 	}
 	if ( p.array_expr && p.array_expr->Type != CT_Untyped ) {
-		log_failure( "gen::def_type: arrayexpr is not of untyped type - %s", code_debug_str((Code)p.array_expr) );
+		log_failure( "gen::def_type: arrayexpr is not of untyped type - %S", code_debug_str((Code)p.array_expr) );
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
@@ -1218,6 +1218,7 @@ CodeTypedef def_typedef( Str name, Code type, Opts_def_typedef opt )
 	result                 = (CodeTypedef) make_code();
 	result->Type           = CT_Typedef;
 	result->ModuleFlags    = p.mflags;
+	result->Attributes     = p.attributes;
 	result->UnderlyingType = type;
 
 	if ( name.Len <= 0  )
@@ -1271,7 +1272,7 @@ CodeUsing def_using( Str name, CodeTypename type, Opts_def_using opt )
 {
 	Opts_def_using p = get_optional(opt);
 
-	if ( ! name_check( def_using, name ) || null_check( def_using, type ) ) {
+	if ( ! name_check( def_using, name ) || ! null_check( def_using, type ) ) {
 		GEN_DEBUG_TRAP();
 		return InvalidCode;
 	}
