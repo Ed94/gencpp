@@ -33,6 +33,15 @@ word stringize,                    gen_stringize
 word do_once,                      gen_do_once
 word do_once_start,                gen_do_once_start
 word do_once_end,                  gen_do_once_end
+word each_iter,                    gen_each_iter
+word index_iter,                   gen_index_iter
+word range_iter,                   gen_range_iter
+word defer,                        gen_defer
+word defer_rewind,                 gen_defer_rewind
+word defer_info,                   gen_defer_info
+word scope,                        gen_scope
+word scope_info,                   gen_scope_info
+word do_while,                     gen_do_while
 word labeled_scope_start,          gen_labeled_scope_start
 word labeled_scope_end,            gen_labeled_scope_end
 word compiler_decorated_func_name, gen_compiler_decorated_func_name

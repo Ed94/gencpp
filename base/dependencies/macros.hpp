@@ -350,4 +350,51 @@
 #	endif
 #endif
 
+#ifndef each_iter
+#define each_iter( type, iter, end ) \
+	for ( type iter = 0; iter < (end); ++ iter )
+#endif
+
+#ifndef index_iter
+#define index_iter( type, iter, begin, op, end ) \
+	for ( type iter = (begin); iter op (end); ( (begin) < (end) ? ++ iter : -- iter ) )
+#endif
+
+#ifndef range_iter
+#define range_iter( iter, op, range ) \
+	for ( typeof( (range).p0 ) iter = (range).p0; iter op (range).p1; ( (range).p0 < (range).p1 ? ++ iter : -- iter ) )
+#endif
+
+#ifndef defer
+#define defer( expr ) \
+	for ( u32 once = 0; once != 1; ++ once, (expr) )
+#endif
+
+#ifndef defer_rewind
+#define defer_rewind( cursor ) \
+	for ( struct { typeof( cursor ) sp; u32 once; } defer_state = { (cursor), 0 }; \
+		defer_state.once != 1; \
+		++ defer_state.once, (cursor) = defer_state.sp )
+#endif
+
+#ifndef defer_info
+#define defer_info( type, expr, ... ) \
+	for ( type info = { __VA_ARGS__ }; info.once != 1; ++ info.once, (expr) )
+#endif
+
+#ifndef scope
+#define scope( begin, end ) \
+	for ( u32 once = ( (begin), 0 ); once != 1; ++ once, (end) )
+#endif
+
+#ifndef scope_info
+#define scope_info( type, begin, end ) \
+	for ( type info = (begin); info.once != 1; ++ info.once, (end) )
+#endif
+
+#ifndef do_while
+#define do_while( cond ) \
+	for ( u32 once = 0; once != 1 || (cond); once = 1 )
+#endif
+
 #pragma endregion Macros
