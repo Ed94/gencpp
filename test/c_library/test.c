@@ -117,10 +117,14 @@ int main()
 		expect((gen_Code)option_class->Specs            == (gen_Code)class_specifiers,    gen_txt("c11 class specifiers"));
 		expect(          option_class->ModuleFlags      == ModuleFlag_Export,             gen_txt("c11 class module flags"));
 		gen_Str class_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)option_class));
-		expect(gen_str_contains(class_text, gen_txt("ClassOption")),     gen_txt("c11 class name serialization"));
-		expect(gen_str_contains(class_text, gen_txt("ClassOptionBase")), gen_txt("c11 class parent serialization"));
-		expect(gen_str_contains(class_text, gen_txt("IClassOption")),    gen_txt("c11 class interface serialization"));
-		expect(gen_str_contains(class_text, gen_txt("public")),          gen_txt("c11 class access serialization"));
+		expect(gen_str_contains(class_text, gen_txt("ClassOption")),         gen_txt("c11 class name serialization"));
+		expect(gen_str_contains(class_text, gen_txt("ClassOptionBase")),     gen_txt("c11 class parent serialization"));
+		expect(gen_str_contains(class_text, gen_txt("IClassOption")),        gen_txt("c11 class interface serialization"));
+		expect(gen_str_contains(class_text, gen_txt("public")),              gen_txt("c11 class access serialization"));
+		expect(gen_str_contains(class_text, gen_txt("class_option_member")), gen_txt("c11 class body serialization"));
+		expect(gen_str_contains(class_text, gen_txt("[[maybe_unused]]")),    gen_txt("c11 class attribute serialization"));
+		expect(gen_str_contains(class_text, gen_txt("final")),               gen_txt("c11 class final specifier serialization"));
+		expect(gen_str_contains(class_text, gen_txt("export")),              gen_txt("c11 class module flag serialization"));
 	}
 
 	gen_CodeVar        struct_member       = gen_def_variable(gen_def_type(name(u32)), name(struct_option_member));
@@ -149,10 +153,14 @@ int main()
 		expect((gen_Code)option_struct->Specs            == (gen_Code)struct_specifiers,    gen_txt("c11 struct specifiers"));
 		expect(          option_struct->ModuleFlags      == ModuleFlag_Export,              gen_txt("c11 struct module flags"));
 		gen_Str struct_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)option_struct));
-		expect(gen_str_contains(struct_text, gen_txt("StructOption")),     gen_txt("c11 struct name serialization"));
-		expect(gen_str_contains(struct_text, gen_txt("StructOptionBase")), gen_txt("c11 struct parent serialization"));
-		expect(gen_str_contains(struct_text, gen_txt("IStructOption")),    gen_txt("c11 struct interface serialization"));
-		expect(gen_str_contains(struct_text, gen_txt("public")),           gen_txt("c11 struct access serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("StructOption")),         gen_txt("c11 struct name serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("StructOptionBase")),     gen_txt("c11 struct parent serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("IStructOption")),        gen_txt("c11 struct interface serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("public")),               gen_txt("c11 struct access serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("struct_option_member")), gen_txt("c11 struct body serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("[[maybe_unused]]")),     gen_txt("c11 struct attribute serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("final")),                gen_txt("c11 struct final specifier serialization"));
+		expect(gen_str_contains(struct_text, gen_txt("export")),               gen_txt("c11 struct module flag serialization"));
 	}
 
 	gen_CodeBody       enum_body       = gen_def_enum_body(1, code_pod((gen_Code)gen_untyped_str(gen_txt("Option_None"))));
@@ -173,10 +181,11 @@ int main()
 		expect((gen_Code)option_enum->Attributes     == (gen_Code)enum_attributes, gen_txt("c11 enum attributes"));
 		expect(          option_enum->ModuleFlags    == ModuleFlag_Export,         gen_txt("c11 enum module flags"));
 		gen_Str enum_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)option_enum));
-		expect(gen_str_contains(enum_text, gen_txt("export")),      gen_txt("c11 enum module flag serialization"));
-		expect(gen_str_contains(enum_text, gen_txt("enum class")),  gen_txt("c11 enum specifier serialization"));
-		expect(gen_str_contains(enum_text, gen_txt("u32")),         gen_txt("c11 enum type serialization"));
-		expect(gen_str_contains(enum_text, gen_txt("Option_None")), gen_txt("c11 enum body serialization"));
+		expect(gen_str_contains(enum_text, gen_txt("export")),           gen_txt("c11 enum module flag serialization"));
+		expect(gen_str_contains(enum_text, gen_txt("enum class")),       gen_txt("c11 enum specifier serialization"));
+		expect(gen_str_contains(enum_text, gen_txt("[[maybe_unused]]")), gen_txt("c11 enum attribute serialization"));
+		expect(gen_str_contains(enum_text, gen_txt("u32")),              gen_txt("c11 enum type serialization"));
+		expect(gen_str_contains(enum_text, gen_txt("Option_None")),      gen_txt("c11 enum body serialization"));
 	}
 
 	gen_Code     enum_macro = gen_untyped_str(gen_txt("ENUM_BASE_TYPE"));
@@ -273,8 +282,9 @@ int main()
 		expect(option_macro != 0, gen_txt("c11 define registration"));
 		if (option_macro != 0) expect(option_macro->Flags == define_flags, gen_txt("c11 define flags"));
 		gen_Str define_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)option_define));
-		expect(gen_str_contains(define_text, gen_txt("OptionMacro")), gen_txt("c11 define name serialization"));
-		expect(gen_str_contains(define_text, gen_txt("param + 1")),   gen_txt("c11 define content serialization"));
+		expect(gen_str_contains(define_text, gen_txt("OptionMacro")),         gen_txt("c11 define name serialization"));
+		expect(gen_str_contains(define_text, gen_txt("OptionMacro( param)")), gen_txt("c11 define parameters serialization"));
+		expect(gen_str_contains(define_text, gen_txt("param + 1")),           gen_txt("c11 define content serialization"));
 	}
 
 	gen_CodeDefine no_register_define = gen_def_define(name(OptionMacroNoRegister), MT_Expression,
@@ -293,6 +303,8 @@ int main()
 	expect(foreign_include != 0, gen_txt("c11 foreign include option"));
 	if (foreign_include != 0) {
 		expect(gen_str_contains(foreign_include->Content, gen_txt("<option_system.h>")), gen_txt("c11 foreign include path"));
+		gen_Str include_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)foreign_include));
+		expect(gen_str_contains(include_text, gen_txt("#include <option_system.h>")), gen_txt("c11 foreign include directive serialization"));
 	}
 
 	gen_CodeModule option_module = gen_def_module(name(OptionModule), .mflags = ModuleFlag_Export);
@@ -309,7 +321,7 @@ int main()
 	if (option_namespace != 0) {
 		expect((gen_Code)option_namespace->Body        == (gen_Code)namespace_body, gen_txt("c11 namespace body"));
 		expect(          option_namespace->ModuleFlags == ModuleFlag_Export,        gen_txt("c11 namespace flags"));
-		gen_Str namespace_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Csode)option_namespace));
+		gen_Str namespace_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)option_namespace));
 		expect(gen_str_contains(namespace_text, gen_txt("OptionNamespace")),        gen_txt("c11 namespace name serialization"));
 		expect(gen_str_contains(namespace_text, gen_txt("namespace_option_value")), gen_txt("c11 namespace body serialization"));
 		expect(gen_str_contains(namespace_text, gen_txt("export")),                 gen_txt("c11 namespace serialization"));
@@ -325,7 +337,7 @@ int main()
 	}
 
 	gen_CodeParams     function_params     = gen_def_param(gen_def_type(name(u32)), name(function_option_arg));
-	gen_CodeTypename   function_return     = gen_def_type(name(u32));
+	gen_CodeTypename   function_return     = gen_def_type(name(FunctionOptionReturn));
 	gen_CodeBody       function_body       = gen_def_function_body(1, code_pod((gen_Code)gen_untyped_str(gen_txt("return function_option_arg;"))));
 	gen_CodeAttributes function_attributes = gen_def_attributes(gen_txt("[[maybe_unused]]"));
 	gen_CodeSpecifiers function_specs      = gen_def_specifier(Spec_Inline);
@@ -346,12 +358,13 @@ int main()
 		expect((gen_Code)option_function->Attributes  == (gen_Code)function_attributes, gen_txt("c11 function attributes"));
 		expect(          option_function->ModuleFlags == ModuleFlag_Export, gen_txt("c11 function module flags"));
 		gen_Str function_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)option_function));
-		expect(gen_str_contains(function_text, gen_txt("OptionFunction")),             gen_txt("c11 function name serialization"));
-		expect(gen_str_contains(function_text, gen_txt("function_option_arg")),        gen_txt("c11 function parameters serialization"));
-		expect(gen_str_contains(function_text, gen_txt("return function_option_arg")), gen_txt("c11 function body serialization"));
-		expect(gen_str_contains(function_text, gen_txt("inline")),                     gen_txt("c11 function specifier serialization"));
-		expect(gen_str_contains(function_text, gen_txt("[[maybe_unused]]")),           gen_txt("c11 function attribute serialization"));
-		expect(gen_str_contains(function_text, gen_txt("export")),                     gen_txt("c11 function module flag serialization"));
+		expect(gen_str_contains(function_text, gen_txt("OptionFunction")),                       gen_txt("c11 function name serialization"));
+		expect(gen_str_contains(function_text, gen_txt("FunctionOptionReturn OptionFunction(")), gen_txt("c11 function return type serialization"));
+		expect(gen_str_contains(function_text, gen_txt("function_option_arg")),                  gen_txt("c11 function parameters serialization"));
+		expect(gen_str_contains(function_text, gen_txt("return function_option_arg")),           gen_txt("c11 function body serialization"));
+		expect(gen_str_contains(function_text, gen_txt("inline")),                               gen_txt("c11 function specifier serialization"));
+		expect(gen_str_contains(function_text, gen_txt("[[maybe_unused]]")),                     gen_txt("c11 function attribute serialization"));
+		expect(gen_str_contains(function_text, gen_txt("export")),                               gen_txt("c11 function module flag serialization"));
 	}
 
 	gen_CodeParams constructor_params = gen_def_param(gen_def_type(name(u32)), name(constructor_option_arg));
@@ -375,9 +388,10 @@ int main()
 	expect(constructor_class != 0, gen_txt("c11 constructor serialization parent"));
 	if (constructor_class != 0) {
 		gen_Str constructor_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)constructor_class));
-		expect(gen_str_contains(constructor_text, gen_txt("ConstructorOptions(")),    gen_txt("c11 constructor name serialization"));
-		expect(gen_str_contains(constructor_text, gen_txt("option_member( 0 )")),     gen_txt("c11 constructor initializer serialization"));
-		expect(gen_str_contains(constructor_text, gen_txt("constructor_option_arg")), gen_txt("c11 constructor body serialization"));
+		expect(gen_str_contains(constructor_text, gen_txt("ConstructorOptions(")),        gen_txt("c11 constructor name serialization"));
+		expect(gen_str_contains(constructor_text, gen_txt("u32 constructor_option_arg")), gen_txt("c11 constructor parameter serialization"));
+		expect(gen_str_contains(constructor_text, gen_txt("option_member( 0 )")),         gen_txt("c11 constructor initializer serialization"));
+		expect(gen_str_contains(constructor_text, gen_txt("constructor_option_arg")),     gen_txt("c11 constructor body serialization"));
 	}
 
 	gen_Code           destructor_body   = gen_untyped_str(gen_txt("release_option_resource();"));
@@ -390,19 +404,29 @@ int main()
 	if (option_destructor != 0) {
 		expect(option_destructor->Body == destructor_body, gen_txt("c11 destructor body"));
 		expect((gen_Code)option_destructor->Specs == (gen_Code)destructor_specs, gen_txt("c11 destructor specifiers"));
+		gen_Code_POD destructor_pod = code_pod((gen_Code)option_destructor);
+		gen_CodeBody destructor_class_body = gen_def_class_body(1, destructor_pod);
+		gen_CodeClass destructor_class = gen_def_class(name(DestructorOptions), .body = destructor_class_body);
+		expect(destructor_class != 0, gen_txt("c11 destructor serialization parent"));
+		if (destructor_class != 0) {
+			gen_Str destructor_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)destructor_class));
+			if (gen_str_contains(destructor_text, gen_txt("virtual ~DestructorOptions()")) == false)   gen_log_fmt("%S\n", destructor_text);
+			expect(gen_str_contains(destructor_text, gen_txt("virtual ~DestructorOptions()")), gen_txt("c11 destructor signature serialization"));
+			expect(gen_str_contains(destructor_text, gen_txt("release_option_resource();")),   gen_txt("c11 destructor body serialization"));
+		}
 	}
 
-	gen_CodeTypename   operator_type           = gen_def_type(name(OperatorOptionType));
-	gen_CodeParams     operator_lhs            = gen_def_param(operator_type, name(operator_option_lhs));
-	gen_CodeParams     operator_rhs            = gen_def_param(operator_type, name(operator_option_rhs));
-	gen_CodeParams     operator_params_array[] = { operator_lhs, operator_rhs };
-	gen_CodeParams     operator_params         = gen_def_params_arr(2, operator_params_array);
-	gen_CodeBody       operator_body           = gen_def_function_body(1, code_pod((gen_Code)gen_untyped_str(gen_txt("return operator_option_lhs;"))));
-	gen_CodeSpecifiers operator_specs          = gen_def_specifier(Spec_Inline);
-	gen_CodeAttributes operator_attributes     = gen_def_attributes(gen_txt("[[maybe_unused]]"));
+	gen_CodeTypename   operator_type       = gen_def_type(name(OperatorOptionType));
+	gen_CodeTypename   operator_return     = gen_def_type(name(OperatorOptionReturn));
+	gen_CodeParams     operator_lhs        = gen_def_param(operator_type, name(operator_option_lhs));
+	gen_CodeParams     operator_rhs        = gen_def_param(operator_type, name(operator_option_rhs));
+	gen_CodeParams     operator_params     = gen_def_params(2, code_pod((gen_Code)operator_lhs), code_pod((gen_Code)operator_rhs));
+	gen_CodeBody       operator_body       = gen_def_function_body(1, code_pod((gen_Code)gen_untyped_str(gen_txt("return operator_option_lhs;"))));
+	gen_CodeSpecifiers operator_specs      = gen_def_specifier(Spec_Inline);
+	gen_CodeAttributes operator_attributes = gen_def_attributes(gen_txt("[[maybe_unused]]"));
 	gen_CodeOperator option_operator = gen_def_operator(Op_Add, gen_txt(""),
 		.params     = operator_params,
-		.ret_type   = operator_type,
+		.ret_type   = operator_return,
 		.body       = operator_body,
 		.specifiers = operator_specs,
 		.attributes = operator_attributes,
@@ -411,18 +435,22 @@ int main()
 	expect(option_operator != 0, gen_txt("c11 operator options"));
 	if (option_operator != 0) {
 		expect((gen_Code)option_operator->Params      == (gen_Code)operator_params,     gen_txt("c11 operator parameters"));
-		expect((gen_Code)option_operator->ReturnType  == (gen_Code)operator_type,       gen_txt("c11 operator return type"));
+		expect((gen_Code)option_operator->ReturnType  == (gen_Code)operator_return,     gen_txt("c11 operator return type"));
 		expect((gen_Code)option_operator->Body        == (gen_Code)operator_body,       gen_txt("c11 operator body"));
 		expect((gen_Code)option_operator->Specs       == (gen_Code)operator_specs,      gen_txt("c11 operator specifiers"));
 		expect((gen_Code)option_operator->Attributes  == (gen_Code)operator_attributes, gen_txt("c11 operator attributes"));
 		expect(          option_operator->ModuleFlags == ModuleFlag_Export,             gen_txt("c11 operator module flags"));
 		gen_Str operator_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)option_operator));
+		expect(gen_str_contains(operator_text, gen_txt("OperatorOptionReturn")),       gen_txt("c11 operator return type serialization"));
 		expect(gen_str_contains(operator_text, gen_txt("operator +")),                 gen_txt("c11 operator name serialization"));
 		expect(gen_str_contains(operator_text, gen_txt("operator_option_lhs")),        gen_txt("c11 operator parameters serialization"));
+		expect(gen_str_contains(operator_text, gen_txt("operator_option_rhs")),        gen_txt("c11 operator second parameter serialization"));
 		expect(gen_str_contains(operator_text, gen_txt("return operator_option_lhs")), gen_txt("c11 operator body serialization"));
 		expect(gen_str_contains(operator_text, gen_txt("inline")),                     gen_txt("c11 operator specifier serialization"));
 		expect(gen_str_contains(operator_text, gen_txt("[[maybe_unused]]")),           gen_txt("c11 operator attribute serialization"));
 		expect(gen_str_contains(operator_text, gen_txt("export")),                     gen_txt("c11 operator module flag serialization"));
+		if (gen_str_starts_with(operator_text, gen_txt("export [[maybe_unused]]  inline\nOperatorOptionReturn")) == false) gen_log_fmt("%S\n", operator_text);
+		expect(gen_str_starts_with(operator_text, gen_txt("export [[maybe_unused]]  inline\nOperatorOptionReturn")), gen_txt("c11 operator one-attribute prefix serialization"));
 	}
 
 	gen_CodeTypename   cast_type  = gen_def_type(name(s32));

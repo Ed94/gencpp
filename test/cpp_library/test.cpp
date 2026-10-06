@@ -113,10 +113,14 @@ int main()
 		expect(option_class->Specs.ast            == class_options.specifiers.ast,    txt("cpp class specifiers"));
 		expect(option_class->ModuleFlags          == ModuleFlag_Export,               txt("cpp class module flags"));
 		Str class_text = strbuilder_to_str(code_to_strbuilder((Code)option_class));
-		expect(str_contains(class_text, txt("ClassOption")),     txt("cpp class name serialization"));
-		expect(str_contains(class_text, txt("ClassOptionBase")), txt("cpp class parent serialization"));
-		expect(str_contains(class_text, txt("IClassOption")),    txt("cpp class interface serialization"));
-		expect(str_contains(class_text, txt("public")),          txt("cpp class access serialization"));
+		expect(str_contains(class_text, txt("ClassOption")),         txt("cpp class name serialization"));
+		expect(str_contains(class_text, txt("ClassOptionBase")),     txt("cpp class parent serialization"));
+		expect(str_contains(class_text, txt("IClassOption")),        txt("cpp class interface serialization"));
+		expect(str_contains(class_text, txt("public")),              txt("cpp class access serialization"));
+		expect(str_contains(class_text, txt("class_option_member")), txt("cpp class body serialization"));
+		expect(str_contains(class_text, txt("[[maybe_unused]]")),    txt("cpp class attribute serialization"));
+		expect(str_contains(class_text, txt("final")),               txt("cpp class final specifier serialization"));
+		expect(str_contains(class_text, txt("export")),              txt("cpp class module flag serialization"));
 	}
 
 	CodeVar      struct_member       = def_variable(def_type(name(u32)), name(struct_option_member));
@@ -143,10 +147,14 @@ int main()
 		expect(option_struct->Specs.ast            == struct_options.specifiers.ast,    txt("cpp struct specifiers"));
 		expect(option_struct->ModuleFlags          == ModuleFlag_Export,                txt("cpp struct module flags"));
 		Str struct_text = strbuilder_to_str(code_to_strbuilder((Code)option_struct));
-		expect(str_contains(struct_text, txt("StructOption")),     txt("cpp struct name serialization"));
-		expect(str_contains(struct_text, txt("StructOptionBase")), txt("cpp struct parent serialization"));
-		expect(str_contains(struct_text, txt("IStructOption")),    txt("cpp struct interface serialization"));
-		expect(str_contains(struct_text, txt("public")),           txt("cpp struct access serialization"));
+		expect(str_contains(struct_text, txt("StructOption")),         txt("cpp struct name serialization"));
+		expect(str_contains(struct_text, txt("StructOptionBase")),     txt("cpp struct parent serialization"));
+		expect(str_contains(struct_text, txt("IStructOption")),        txt("cpp struct interface serialization"));
+		expect(str_contains(struct_text, txt("public")),               txt("cpp struct access serialization"));
+		expect(str_contains(struct_text, txt("struct_option_member")), txt("cpp struct body serialization"));
+		expect(str_contains(struct_text, txt("[[maybe_unused]]")),     txt("cpp struct attribute serialization"));
+		expect(str_contains(struct_text, txt("final")),                txt("cpp struct final specifier serialization"));
+		expect(str_contains(struct_text, txt("export")),               txt("cpp struct module flag serialization"));
 	}
 
 	CodeBody enum_body = def_enum_body(args(untyped_str(txt("Option_None"))));
@@ -165,10 +173,11 @@ int main()
 		expect(option_enum->Attributes.ast     == enum_options.attributes.ast, txt("cpp enum attributes"));
 		expect(option_enum->ModuleFlags        == ModuleFlag_Export,           txt("cpp enum module flags"));
 		Str enum_text = strbuilder_to_str(code_to_strbuilder((Code)option_enum));
-		expect(str_contains(enum_text, txt("export")),      txt("cpp enum module flag serialization"));
-		expect(str_contains(enum_text, txt("enum class")),  txt("cpp enum specifier serialization"));
-		expect(str_contains(enum_text, txt("u32")),         txt("cpp enum type serialization"));
-		expect(str_contains(enum_text, txt("Option_None")), txt("cpp enum body serialization"));
+		expect(str_contains(enum_text, txt("export")),           txt("cpp enum module flag serialization"));
+		expect(str_contains(enum_text, txt("enum class")),       txt("cpp enum specifier serialization"));
+		expect(str_contains(enum_text, txt("[[maybe_unused]]")), txt("cpp enum attribute serialization"));
+		expect(str_contains(enum_text, txt("u32")),              txt("cpp enum type serialization"));
+		expect(str_contains(enum_text, txt("Option_None")),      txt("cpp enum body serialization"));
 	}
 	Code           enum_macro = untyped_str(txt("ENUM_BASE_TYPE"));
 	CodeEnum macro_enum = def_enum(name(MacroOptionEnum), {
@@ -262,8 +271,9 @@ int main()
 		expect(option_macro != nullptr, txt("cpp define registration"));
 		if (option_macro != nullptr) expect(option_macro->Flags == define_options.flags, txt("cpp define flags"));
 		Str define_text = strbuilder_to_str(code_to_strbuilder((Code)option_define));
-		expect(str_contains(define_text, txt("OptionMacro")), txt("cpp define name serialization"));
-		expect(str_contains(define_text, txt("param + 1")),   txt("cpp define content serialization"));
+		expect(str_contains(define_text, txt("OptionMacro")),            txt("cpp define name serialization"));
+		expect(str_contains(define_text, txt("OptionMacro( param)")),    txt("cpp define parameters serialization"));
+		expect(str_contains(define_text, txt("param + 1")),              txt("cpp define content serialization"));
 	}
 	Opts_def_define no_register_options = {};
 	no_register_options.dont_register_to_preprocess_macros = true;
@@ -282,6 +292,8 @@ int main()
 	expect(foreign_include.ast != nullptr, txt("cpp foreign include option"));
 	if (foreign_include.ast != nullptr) {
 		expect(str_contains(foreign_include->Content, txt("<option_system.h>")), txt("cpp foreign include path"));
+		Str include_text = strbuilder_to_str(code_to_strbuilder((Code)foreign_include));
+		expect(str_contains(include_text, txt("#include <option_system.h>")), txt("cpp foreign include directive serialization"));
 	}
 
 	CodeModule option_module = def_module(name(OptionModule), { .mflags = ModuleFlag_Export });
@@ -315,7 +327,7 @@ int main()
 	}
 
 	CodeParams   function_params = def_param(def_type(name(u32)), name(function_option_arg));
-	CodeTypename function_return = def_type(name(u32));
+	CodeTypename function_return = def_type(name(FunctionOptionReturn));
 	CodeBody     function_body   = def_function_body(args(untyped_str(txt("return function_option_arg;"))));
 	Opts_def_function function_options = {};
 	function_options.params   = function_params;
@@ -335,6 +347,7 @@ int main()
 		expect(option_function->ModuleFlags    == ModuleFlag_Export,          txt("cpp function module flags"));
 		Str function_text = strbuilder_to_str(code_to_strbuilder((Code)option_function));
 		expect(str_contains(function_text, txt("OptionFunction")),             txt("cpp function name serialization"));
+		expect(str_contains(function_text, txt("FunctionOptionReturn OptionFunction(")), txt("cpp function return type serialization"));
 		expect(str_contains(function_text, txt("function_option_arg")),        txt("cpp function parameters serialization"));
 		expect(str_contains(function_text, txt("return function_option_arg")), txt("cpp function body serialization"));
 		expect(str_contains(function_text, txt("inline")),                     txt("cpp function specifier serialization"));
@@ -361,11 +374,12 @@ int main()
 	expect(constructor_class.ast != nullptr, txt("cpp constructor serialization parent"));
 	if (constructor_class.ast != nullptr) {
 		Str constructor_text = strbuilder_to_str(code_to_strbuilder((Code)constructor_class));
-		expect(str_contains(constructor_text, txt("ConstructorOptions(")),    txt("cpp constructor name serialization"));
-		expect(str_contains(constructor_text, txt("option_member( 0 )")),     txt("cpp constructor initializer serialization"));
-		expect(str_contains(constructor_text, txt("constructor_option_arg")), txt("cpp constructor body serialization"));
+		expect(str_contains(constructor_text, txt("ConstructorOptions(")),        txt("cpp constructor name serialization"));
+		expect(str_contains(constructor_text, txt("u32 constructor_option_arg")), txt("cpp constructor parameter serialization"));
+		expect(str_contains(constructor_text, txt("option_member( 0 )")),         txt("cpp constructor initializer serialization"));
+		expect(str_contains(constructor_text, txt("constructor_option_arg")),     txt("cpp constructor body serialization"));
 	}
-	Code           destructor_body = untyped_str(txt("release_option_resource();"));
+	Code           destructor_body  = untyped_str(txt("release_option_resource();"));
 	CodeSpecifiers destructor_specs = def_specifier(Spec_Virtual);
 	Opts_def_destructor destructor_options = {};
 	destructor_options.body       = destructor_body;
@@ -373,18 +387,27 @@ int main()
 	CodeDestructor option_destructor = def_destructor(destructor_options);
 	expect(option_destructor.ast != nullptr, txt("cpp destructor options"));
 	if (option_destructor.ast != nullptr) {
-		expect(option_destructor->Body.ast  == destructor_body.ast, txt("cpp destructor body"));
+		expect(option_destructor->Body.ast  == destructor_body.ast,  txt("cpp destructor body"));
 		expect(option_destructor->Specs.ast == destructor_specs.ast, txt("cpp destructor specifiers"));
+		CodeBody destructor_class_body = def_class_body(args(option_destructor));
+		CodeClass destructor_class = def_class(name(DestructorOptions), { .body = destructor_class_body });
+		expect(destructor_class.ast != nullptr, txt("cpp destructor serialization parent"));
+		if (destructor_class.ast != nullptr) {
+			Str destructor_text = strbuilder_to_str(code_to_strbuilder((Code)destructor_class));
+			expect(str_contains(destructor_text, txt("virtual ~DestructorOptions()")), txt("cpp destructor signature serialization"));
+			expect(str_contains(destructor_text, txt("release_option_resource();")),   txt("cpp destructor body serialization"));
+		}
 	}
 
-	CodeTypename operator_type = def_type(name(OperatorOptionType));
-	CodeParams operator_lhs    = def_param(operator_type, name(operator_option_lhs));
-	CodeParams operator_rhs    = def_param(operator_type, name(operator_option_rhs));
-	CodeParams operator_params = def_params(args(operator_lhs, operator_rhs));
-	CodeBody   operator_body   = def_function_body(args(untyped_str(txt("return operator_option_lhs;"))));
+	CodeTypename operator_type   = def_type(name(OperatorOptionType));
+	CodeTypename operator_return = def_type(name(OperatorOptionReturn));
+	CodeParams operator_lhs      = def_param(operator_type, name(operator_option_lhs));
+	CodeParams operator_rhs      = def_param(operator_type, name(operator_option_rhs));
+	CodeParams operator_params   = def_params(args(operator_lhs, operator_rhs));
+	CodeBody   operator_body     = def_function_body(args(untyped_str(txt("return operator_option_lhs;"))));
 	Opts_def_operator operator_options = {};
 	operator_options.params     = operator_params;
-	operator_options.ret_type   = operator_type;
+	operator_options.ret_type   = operator_return;
 	operator_options.body       = operator_body;
 	operator_options.specifiers = def_specifier(Spec_Inline);
 	operator_options.attributes = def_attributes(txt("[[maybe_unused]]"));
@@ -393,18 +416,22 @@ int main()
 	expect(option_operator.ast != nullptr, txt("cpp operator options"));
 	if (option_operator.ast != nullptr) {
 		expect(option_operator->Params.ast     == operator_params.ast,             txt("cpp operator parameters"));
-		expect(option_operator->ReturnType.ast == operator_type.ast,               txt("cpp operator return type"));
+		expect(option_operator->ReturnType.ast == operator_return.ast,             txt("cpp operator return type"));
 		expect(option_operator->Body.ast       == operator_body.ast,               txt("cpp operator body"));
 		expect(option_operator->Specs.ast      == operator_options.specifiers.ast, txt("cpp operator specifiers"));
 		expect(option_operator->Attributes.ast == operator_options.attributes.ast, txt("cpp operator attributes"));
 		expect(option_operator->ModuleFlags    == ModuleFlag_Export,               txt("cpp operator module flags"));
 		Str operator_text = strbuilder_to_str(code_to_strbuilder((Code)option_operator));
+		expect(str_contains(operator_text, txt("OperatorOptionReturn")),       txt("cpp operator return type serialization"));
 		expect(str_contains(operator_text, txt("operator +")),                 txt("cpp operator name serialization"));
 		expect(str_contains(operator_text, txt("operator_option_lhs")),        txt("cpp operator parameters serialization"));
+		expect(str_contains(operator_text, txt("operator_option_rhs")),        txt("cpp operator second parameter serialization"));
 		expect(str_contains(operator_text, txt("return operator_option_lhs")), txt("cpp operator body serialization"));
 		expect(str_contains(operator_text, txt("inline")),                     txt("cpp operator specifier serialization"));
 		expect(str_contains(operator_text, txt("[[maybe_unused]]")),           txt("cpp operator attribute serialization"));
 		expect(str_contains(operator_text, txt("export")),                     txt("cpp operator module flag serialization"));
+		if (!str_starts_with(operator_text, txt("export [[maybe_unused]]  inline\nOperatorOptionReturn"))) log_fmt("%S\n", operator_text);
+		expect(str_starts_with(operator_text, txt("export [[maybe_unused]]  inline\nOperatorOptionReturn")), txt("cpp operator one-attribute prefix serialization"));
 	}
 
 	CodeTypename   cast_type  = def_type(name(s32));

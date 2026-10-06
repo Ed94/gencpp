@@ -263,12 +263,12 @@ void destructor_to_strbuilder_def(CodeDestructor self, StrBuilder* result )
 	else if ( self->Specs )
 	{
 		if ( specifiers_has(self->Specs, Spec_Virtual ) )
-			strbuilder_append_fmt( result, "virtual ~%S()", self->Parent->Name );
+			strbuilder_append_fmt( result, "virtual ~%S()", self->Parent->Parent->Name );
 		else
-			strbuilder_append_fmt( result, "~%S()", self->Parent->Name );
+			strbuilder_append_fmt( result, "~%S()", self->Parent->Parent->Name );
 	}
 	else
-		strbuilder_append_fmt( result, "~%S()", self->Parent->Name );
+		strbuilder_append_fmt( result, "~%S()", self->Parent->Parent->Name );
 
 	strbuilder_append_fmt( result, "\n{\n%SB\n}\n", code_to_strbuilder(self->Body) );
 }
@@ -629,9 +629,6 @@ void code_op_to_strbuilder_def(CodeOperator self, StrBuilder* result )
 	if ( self->Attributes )
 		strbuilder_append_fmt( result, "%SB ", attributes_to_strbuilder(self->Attributes) );
 
-	if ( self->Attributes )
-		strbuilder_append_fmt( result, "%SB ", attributes_to_strbuilder(self->Attributes) );
-
 	if ( self->Specs )
 	{
 		for ( Specifier* spec = begin_CodeSpecifiers(self->Specs); spec != end_CodeSpecifiers(self->Specs); spec = next_CodeSpecifiers(self->Specs, spec) )
@@ -644,8 +641,7 @@ void code_op_to_strbuilder_def(CodeOperator self, StrBuilder* result )
 		}
 	}
 
-	if ( self->Attributes || self->Specs )
-	{
+	if ( self->Attributes || self->Specs ) {
 		strbuilder_append_str( result, txt("\n") );
 	}
 
