@@ -104,14 +104,49 @@ void parser_record_failure(Context* ctx, Str text) {
 	ctx->parser.messages = msg;
 }
 
+internal b32 parser_is_recoverable_body(ParseContext* parser) {
+	ParseStackNode* scope = parser->scope;
+	b32  in_function_body = false;
+	while ( scope )
+	{
+		if ( scope->code_rel )
+		{
+			CodeType type = scope->code_rel->Type;
+			if ( type == CT_Function_Body ) {
+				in_function_body = true;
+				scope            = scope->prev;
+				continue;
+			}
+			if ( in_function_body && type != CT_Global_Body )
+				return false;
+			return type == CT_Global_Body || type == CT_Namespace_Body || type == CT_Class_Body || type == CT_Struct_Body;
+		}
+		scope = scope->prev;
+	}
+	return false;
+}
+
 bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 {
 	b32   ate = false;
 	Token at_idx;
 	b32   not_accepted;
 	b32   is_identifier;
-	if (parser->tokens.num - parser->token_id <= 0)
+	s32   start_id = parser->token_id;
+	if ( parser->token_mismatch )
 		goto done;
+	if (parser->tokens.num - parser->token_id <= 0)
+	{
+		if ( parser_is_recoverable_body(parser) ) {
+			StrBuilder message = strbuilder_fmt_buf(ctx->Allocator_Temp, "Parse Error, TokArray::eat, Expected: ' %S ' at end of token slice\n%SB"
+				, toktype_to_str(type)
+				, parser_to_strbuilder(parser, ctx->Allocator_Temp)
+			);
+			parser_record_failure(ctx, strbuilder_to_str(message));
+			parser->token_mismatch = true;
+		}
+		goto done;
+	}
 
 	at_idx = parser->tokens.ptr[ parser->token_id ];
 	if ( ( at_idx.Type == Tok_NewLine && type != Tok_NewLine )
@@ -129,15 +164,26 @@ bool lex__eat(Context* ctx, ParseContext* parser, TokType type)
 	}
 	if ( not_accepted )
 	{
-		Token tok = * lex_current( parser, lex_skip_formatting );
-		log_failure( "Parse Error, TokArray::eat, Expected: ' %S ' not ' %S ' (%d, %d)`\n%SB"
+		parser->token_id   = start_id;
+		Token      tok     = * lex_current( parser, lex_skip_formatting );
+		StrBuilder message = strbuilder_fmt_buf(ctx->Allocator_Temp, "Parse Error, TokArray::eat, Expected: ' %S ' not ' %S ' (%d, %d)`\n%SB"
 			, toktype_to_str(type)
 			, at_idx.Text
 			, tok.Line
 			, tok.Column
 			, parser_to_strbuilder(parser, ctx->Allocator_Temp)
 		);
-		GEN_DEBUG_TRAP();
+		Str message_text = strbuilder_to_str(message);
+		if ( parser_is_recoverable_body(parser) ) {
+			parser_record_failure(ctx, message_text);
+			parser->token_mismatch = true;
+		}
+		else if ( parser->lexed_messages )
+			parser_record_failure(ctx, message_text);
+		else {
+			log_failure("%S", message_text);
+			GEN_DEBUG_TRAP();
+		}
 		goto done;
 	}
 
@@ -206,7 +252,7 @@ done:
 #	define nexttok		  (* lex_next( & ctx->parser, lex_skip_formatting ))
 #	define nexttok_noskip (* lex_next( & ctx->parser, lex_dont_skip_formatting))
 #	define eat( Type_ )   lex__eat(ctx, & ctx->parser, Type_ )
-#	define left           ( ctx->parser.tokens.num - ctx->parser.token_id )
+#	define left           ( ! ctx->parser.token_mismatch && ctx->parser.tokens.num - ctx->parser.token_id )
 
 #if GEN_COMPILER_CPP
 #	define def_assign( ... ) { __VA_ARGS__ }
@@ -232,6 +278,8 @@ done:
 #pragma endregion Helper Macros
 
 // Procedure Forwards ( Entire parser internal parser interface )
+
+internal void parser_recover_body_member(Context* ctx, CodeBody body, Token member_start_token, s32 member_start_id, b32 allow_comma);
 
 internal Code               parse_array_decl                   (Context* ctx);
 internal CodeAttributes     parse_attributes                   (Context* ctx);
@@ -533,8 +581,7 @@ StrBuilder parser_strip_formatting(Context* ctx, Str raw_text, bool preserve_new
 	return content;
 }
 
-StrBuilder parser_strip_formatting_2(TokenSlice tokens)
-{
+StrBuilder parser_strip_formatting_2(TokenSlice tokens) {
 	// TODO(Ed): Use this to produce strings for validation purposes. We shouldn't serialize down from tokens once we start storing token slices for content.
 	StrBuilder result = struct_zero(StrBuilder);
 	return result;
@@ -870,8 +917,14 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 	else
 		result->Type = CT_Struct_Body;
 
+	scope.code_rel = cast(Code, result);
+
 	while ( left && currtok_noskip.Type != Tok_BraceCurly_Close )
 	{
+		ParseMessage* messages_before_member = ctx->parser.messages;
+		s32           member_start_id        = ctx->parser.token_id;
+		Token         member_start_token     = currtok_noskip;
+
 		Code           member     = Code_Invalid;
 		CodeAttributes attributes = { nullptr };
 		CodeSpecifiers specifiers = { nullptr };
@@ -1180,11 +1233,26 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 			break;
 		}
 
-		if ( member == Code_Invalid )
+		b32 member_is_nested_scope = member != Code_Invalid && (member->Type == CT_Class || member->Type == CT_Struct);
+		b32 member_failed          = ctx->parser.token_mismatch || (ctx->parser.messages != messages_before_member && member_is_nested_scope == false);
+		if (member_failed) {
+			if ( ctx->parser.messages != messages_before_member ) ctx->parser.messages->Next = messages_before_member;
+			ctx->parser.token_id       = member_start_id;
+			ctx->parser.token_mismatch = false;
+			member = Code_Invalid;
+		}
+
+		if (member == Code_Invalid)
 		{
-			log_failure( "Failed to parse member\n%SB", parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
-			parser_pop(& ctx->parser);
-			return InvalidCode;
+			if ( member_failed == false ) {
+				log_failure( "Failed to parse member\n%SB", parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
+				parser_pop(& ctx->parser);
+				return InvalidCode;
+			}
+			ctx->parser.token_id       = member_start_id;
+			ctx->parser.token_mismatch = false;
+			parser_recover_body_member(ctx, result, member_start_token, member_start_id, false);
+			continue;
 		}
 		body_append(result, member );
 	}
@@ -1196,10 +1264,8 @@ CodeBody parse_class_struct_body(Context* ctx, TokType which, Token name)
 }
 
 internal
-CodeComment parse_comment(Context* ctx)
-{	
-	ParseStackNode scope = NullScope;
-	parser_push(& ctx->parser, & scope );
+CodeComment parse_comment(Context* ctx) {	
+	ParseStackNode scope = NullScope; parser_push(& ctx->parser, & scope );
 
 	CodeComment
 	result          = (CodeComment) make_code();
@@ -1215,8 +1281,7 @@ CodeComment parse_comment(Context* ctx)
 internal
 Code parse_complicated_definition(Context* ctx, TokType which)
 {
-	ParseStackNode scope = NullScope;
-	parser_push(& ctx->parser, & scope );
+	ParseStackNode scope = NullScope; parser_push(& ctx->parser, & scope );
 
 	b32 is_inplace = false;
 	b32 is_fn_def  = false;
@@ -1399,8 +1464,7 @@ Code parse_complicated_definition(Context* ctx, TokType which)
 internal inline
 Code parse_assignment_expression(Context* ctx)
 {
-	ParseStackNode scope = NullScope;
-	parser_push(& ctx->parser, & scope );
+	ParseStackNode scope = NullScope; parser_push(& ctx->parser, & scope );
 
 	Code expr = { nullptr };
 
@@ -1445,7 +1509,6 @@ internal inline
 Code parse_forward_or_definition(Context* ctx, TokType which, bool is_inplace )
 {
 	Code result = InvalidCode;
-
 	switch ( which )
 	{
 		case Tok_Decl_Class:
@@ -1483,8 +1546,7 @@ CodeFn parse_function_after_name(Context* ctx
 	, Token          name
 )
 {
-	ParseStackNode scope = NullScope;
-	parser_push(& ctx->parser, & scope );
+	ParseStackNode scope = NullScope; parser_push(& ctx->parser, & scope );
 
 	CodeParams params = parse_params(ctx, parser_use_parenthesis);
 	// <Attributes> <Specifiers> <ReturnType> <Name> ( <Parameters> )
@@ -1639,14 +1701,14 @@ CodeFn parse_function_after_name(Context* ctx
 internal
 Code parse_function_body(Context* ctx)
 {
-	ParseStackNode scope = NullScope;
-	parser_push(& ctx->parser, & scope );
+	ParseStackNode scope = NullScope; parser_push(& ctx->parser, & scope );
 
 	eat( Tok_BraceCurly_Open );
 
 	CodeBody
 	result = (CodeBody) make_code();
 	result->Type = CT_Function_Body;
+	scope.code_rel = cast(Code, result);
 
 	// TODO : Support actual parsing of function body
 	Token start = currtok_noskip;
@@ -1667,8 +1729,7 @@ Code parse_function_body(Context* ctx)
 
 	s32 len = ( (sptr)prevtok.Text.Ptr + prevtok.Text.Len ) - (sptr)start.Text.Ptr;
 
-	if ( len > 0 )
-	{
+	if ( len > 0 ) {
 		Str str = { start.Text.Ptr, len };
 		body_append( result, cast(Code, def_execution( str )) );
 	}
@@ -1677,6 +1738,294 @@ Code parse_function_body(Context* ctx)
 
 	parser_pop(& ctx->parser);
 	return cast(Code, result);
+}
+
+internal 
+s32 parser_recovery_scope_close_id(ParseContext const* parser, s32 member_start_id, b32* nested_body, b32* has_scope_close)
+{
+	nested_body[0]     = false;
+	has_scope_close[0] = false;
+	ParseStackNode* scope = parser->scope;
+	while ( scope != nullptr )
+	{
+		b32 scope_has_code = scope->code_rel != nullptr;
+		if (scope_has_code)
+		{
+			CodeType type = scope->code_rel->Type;
+
+			b32 is_nested_scope_body = false;
+			is_nested_scope_body |= type == CT_Namespace_Body;
+			is_nested_scope_body |= type == CT_Class_Body;
+			is_nested_scope_body |= type == CT_Struct_Body;
+
+			// Function-body frames have their own brace owner; inspect the enclosing body frame.
+			if ( type == CT_Function_Body ) { scope = scope->prev; continue; }
+
+			b32 nothing_to_recover = type == CT_Global_Body || is_nested_scope_body == false;
+			// Global recovery uses the full token slice. Other unsupported scope types have no nested boundary.
+			if (nothing_to_recover) return parser->tokens.num; // TODO(Ed): Drain to single return.
+
+			// Nested recovery needs the active body's closing brace as a hard delimiter boundary.
+			nested_body[0] = true;
+
+			s32 scope_start_id  = parser->tokens.num;
+			b32 scope_has_start = scope->start != nullptr;
+			if (scope_has_start) scope_start_id = scast(s32, scope->start - parser->tokens.ptr);
+
+			// Scope start may point at formatting before the body's opening brace.
+			s32 body_open_id = scope_start_id;
+			while ( body_open_id < parser->tokens.num ) {
+				b32 token_opens_body = parser->tokens.ptr[body_open_id].Type == Tok_BraceCurly_Open;
+				if (token_opens_body == true) break;
+				++ body_open_id;
+			}
+
+			b32 found_body_open = body_open_id < parser->tokens.num;
+			if (found_body_open == false) return parser->tokens.num;
+
+			// A depth-zero close belongs to this body; nested closes only reduce depth.
+			s32 body_depth = 0;
+			for (s32 idx = body_open_id; idx < parser->tokens.num; ++ idx)
+			{
+				TokType token_type         = parser->tokens.ptr[idx].Type;
+				if (token_type == Tok_BraceCurly_Open)
+					++ body_depth;
+				else if (token_type == Tok_BraceCurly_Close)
+				{
+					if (body_depth > 0) // inside nested brace
+					{
+						-- body_depth;
+						if (body_depth == 0) { // found owner close
+							has_scope_close[0] = true;
+							// TODO(Ed): Drain to single return.
+							return idx;
+						}
+					}
+				}
+			}
+
+			s32 fallback_close_id = parser->tokens.num;
+			if (type == CT_Class_Body || type == CT_Struct_Body)
+			{
+				// A malformed member opener can keep the brace-depth scan from reaching the owner close.
+				// Direct typed entries scan to their last candidate; nested bodies stop at the first candidate.
+				b32 has_parent_body = false;
+				for (ParseStackNode* parent = scope->prev; parent != nullptr; parent = parent->prev)
+				{
+					b32 parent_has_code = parent->code_rel != nullptr;
+					if (parent_has_code == false) continue;
+
+					b32 parent_is_function_body = parent->code_rel->Type == CT_Function_Body;
+					if (parent_is_function_body) continue;
+
+					CodeType parent_type = parent->code_rel->Type;
+					b32 parent_owns_body = false;
+					parent_owns_body |= parent_type == CT_Global_Body;
+					parent_owns_body |= parent_type == CT_Namespace_Body;
+					parent_owns_body |= parent_type == CT_Class_Body;
+					parent_owns_body |= parent_type == CT_Struct_Body;
+					has_parent_body   = parent_owns_body;
+					break;
+				}
+				for (s32 idx = member_start_id; idx < parser->tokens.num; ++ idx)
+				{
+					if (parser->tokens.ptr[idx].Type != Tok_BraceCurly_Close) continue;
+
+					s32    next_id = idx + 1;
+					while (next_id < parser->tokens.num) {
+						TokType next_type          = parser->tokens.ptr[next_id].Type;
+						b32     next_is_formatting = next_type == Tok_NewLine || next_type == Tok_Comment;
+						if (next_is_formatting == false) break;
+						++ next_id;
+					}
+
+					b32 next_ends_statement    = false;
+					b32 close_ends_declaration = false;
+					b32 next_in_slice = next_id < parser->tokens.num;
+					if (next_in_slice) {
+						next_ends_statement    = parser->tokens.ptr[next_id].Type == Tok_Statement_End;
+						close_ends_declaration = next_ends_statement;
+					}
+					if (close_ends_declaration) {
+						fallback_close_id = idx;
+						if (has_parent_body) break;
+					}
+				}
+			}
+			else
+			{
+				// A namespace close follows a member terminator, unlike a nested type close followed by `;`.
+				for (s32 idx = member_start_id; idx < parser->tokens.num; ++ idx)
+				{
+					if (parser->tokens.ptr[idx].Type != Tok_BraceCurly_Close) continue;
+
+					s32 prev_id = idx - 1;
+					while (prev_id >= body_open_id) {
+						TokType prev_type          = parser->tokens.ptr[prev_id].Type;
+						b32     prev_is_formatting = prev_type == Tok_NewLine || prev_type == Tok_Comment;
+						if ( prev_is_formatting == false ) break;
+						-- prev_id;
+					}
+
+					s32 next_id = idx + 1;
+					while (next_id < parser->tokens.num) {
+						TokType next_type          = parser->tokens.ptr[next_id].Type;
+						b32     next_is_formatting = next_type == Tok_NewLine || next_type == Tok_Comment;
+						if ( next_is_formatting == false ) break;
+						++ next_id;
+					}
+
+					b32 prev_in_body     = prev_id >= body_open_id;
+					b32 prev_ends_member = false;
+					if (prev_in_body) prev_ends_member = parser->tokens.ptr[prev_id].Type == Tok_Statement_End;
+
+					b32 next_ends_declaration   = false;
+					b32 next_past_slice         = next_id >= parser->tokens.num;
+					if (next_past_slice == false) next_ends_declaration = parser->tokens.ptr[next_id].Type == Tok_Statement_End;
+
+					b32 member_ended_before_close     = false;
+					b32 close_starts_next_declaration = false;
+					b32 namespace_owner_close         = false;
+					if (prev_in_body              && prev_ends_member)                       member_ended_before_close     = true;
+					if (next_past_slice == false  && next_ends_declaration)                  close_starts_next_declaration = true;
+					if (member_ended_before_close && close_starts_next_declaration == false) namespace_owner_close         = true;
+					if (namespace_owner_close) {
+						fallback_close_id = idx;
+						break;
+					}
+				}
+			}
+
+			if (fallback_close_id < parser->tokens.num) { // found fallback close
+				has_scope_close[0] = true;
+				return fallback_close_id;
+			}
+			return parser->tokens.num;
+		}
+		scope = scope->prev;
+	}
+	return parser->tokens.num;
+}
+
+internal 
+b32 parser_recovery_delimiter_is_balanced(ParseContext const* parser
+	, s32     start_id
+	, TokType open_type
+	, TokType close_type
+	, s32     scope_close_id
+	, b32     nested_body
+	, b32     has_scope_close
+){
+	// Inner delimiters shield semicolons only when their close precedes the owning body close.
+	if ( open_type == Tok_BraceCurly_Open && nested_body && has_scope_close == false ) return false;
+	s32 delimiter_depth = 0;
+	s32 curly_depth     = 0;
+	for ( s32 idx = start_id; idx < scope_close_id; ++ idx )
+	{
+		TokType type = parser->tokens.ptr[idx].Type;
+		if ( type == Tok_BraceCurly_Open )
+			++ curly_depth;
+		else if ( type == Tok_BraceCurly_Close )
+		{
+			if ( curly_depth == 0 ) return false;
+			-- curly_depth;
+		}
+
+		if ( type == open_type )
+			++ delimiter_depth;
+		else if ( type == close_type && delimiter_depth > 0 )
+		{
+			-- delimiter_depth;
+			if ( delimiter_depth == 0 ) return true;
+		}
+	}
+	return false;
+}
+
+internal
+void parser_recover_body_member(Context* ctx, CodeBody body, Token member_start_token, s32 member_start_id, b32 allow_comma)
+{
+	// Keep the original member start for the untyped source span.
+	Token recovery_end_token  = member_start_token;
+	b32   has_recovery_tokens = false;
+	s32   paren_depth         = 0;
+	s32   square_depth        = 0;
+	s32   curly_depth         = 0;
+	b32   nested_body         = false;
+	b32   has_scope_close     = false;
+	// Bound delimiter matches before scanning the rejected member.
+	s32   scope_close_id      = parser_recovery_scope_close_id(& ctx->parser, member_start_id, &nested_body, &has_scope_close);
+	while ( left )
+	{
+		Token token = currtok_noskip;
+		// Leave the active body's close for its owner.
+		b32 is_scope_close = token.Type == Tok_BraceCurly_Close && curly_depth == 0;
+		if (is_scope_close) break;
+
+		b32 at_member_start         = ctx->parser.token_id == member_start_id;
+		b32 at_delimiter_depth_zero = paren_depth == 0 && square_depth == 0 && curly_depth == 0;
+		b32 sync_at_comma           = allow_comma && at_member_start && at_delimiter_depth_zero && token.Type == Tok_Comma;
+		b32 sync_at_statement_end   = token.Type == Tok_Statement_End && at_delimiter_depth_zero;
+		b32 sync_at_member_boundary = sync_at_comma || sync_at_statement_end;
+		// Semicolons sync at depth zero; only global recovery accepts a leading comma.
+		if (sync_at_member_boundary)
+		{
+			TokType sync_type = Tok_Statement_End;
+			if (sync_at_comma) sync_type = Tok_Comma;
+			if (eat( sync_type )) {
+				recovery_end_token  = token;
+				has_recovery_tokens = true;
+			}
+			break;
+		}
+
+		// Add delimiter depth only when its matching close precedes scope_close_id.
+		switch ( token.Type ) { default: break;
+		case Tok_Paren_Open: {
+			b32 res = parser_recovery_delimiter_is_balanced(& ctx->parser, ctx->parser.token_id
+				, Tok_Paren_Open, Tok_Paren_Close
+				, scope_close_id, nested_body, has_scope_close);
+			if (res) ++ paren_depth;
+			break;
+		}
+
+		case Tok_Paren_Close:
+			if ( paren_depth > 0 ) -- paren_depth;
+		break;
+
+		case Tok_BraceSquare_Open: {
+			b32 res = parser_recovery_delimiter_is_balanced(& ctx->parser, ctx->parser.token_id
+				, Tok_BraceSquare_Open, Tok_BraceSquare_Close
+				, scope_close_id, nested_body, has_scope_close);
+			if (res) ++ square_depth;
+			break;
+		}
+
+		case Tok_BraceSquare_Close:
+			if ( square_depth > 0 ) -- square_depth;
+		break;
+
+		case Tok_BraceCurly_Open: {
+			b32 res = parser_recovery_delimiter_is_balanced(& ctx->parser, ctx->parser.token_id
+				, Tok_BraceCurly_Open, Tok_BraceCurly_Close
+				, scope_close_id, nested_body, has_scope_close);
+			if (res) ++ curly_depth;
+			break;
+		}
+
+		case Tok_BraceCurly_Close:
+			if ( curly_depth > 0 ) -- curly_depth;
+		break;
+		}
+
+		if (eat( token.Type )) {
+			recovery_end_token  = token;
+			has_recovery_tokens = true;
+		}
+	}
+
+	// Retain the failed source through its synchronization token as untyped code.
+	if (has_recovery_tokens) body_append(body, untyped_str(token_range_to_str(member_start_token, recovery_end_token)));
 }
 
 internal neverinline
@@ -1695,9 +2044,13 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 	CodeBody
 	result = (CodeBody) make_code();
 	result->Type = which;
+	scope.code_rel = cast(Code, result);
 
 	while ( left && currtok_noskip.Type != Tok_BraceCurly_Close )
 	{
+		ParseMessage* messages_before_member = ctx->parser.messages;
+		s32           member_start_id       = ctx->parser.token_id;
+		Token         member_start_token    = currtok_noskip;
 		Code           member     = Code_Invalid;
 		CodeAttributes attributes = { nullptr };
 		CodeSpecifiers specifiers = { nullptr };
@@ -1716,8 +2069,12 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			case Tok_Comma:
 			{
 				parser_record_failure(ctx, txt("Dangling comma"));
-				parser_pop( & ctx->parser);
-				return result;
+				if ( which != CT_Global_Body )
+				{
+					parser_pop( & ctx->parser);
+					return result;
+				}
+				member = Code_Invalid;
 			}
 			break;
 			case Tok_Statement_End:
@@ -1849,6 +2206,12 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 
 			case Tok_Module_Import: {
 				// import ...
+				if ( which == CT_Global_Body )
+				{
+					parser_record_failure(ctx, txt("Module import parsing is not implemented"));
+					member = Code_Invalid;
+					break;
+				}
 				log_failure( "gen::%s: This function is not implemented" );
 				return InvalidCode;
 			}
@@ -1858,6 +2221,12 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			{
 				if ( ! tok_is_attribute(currtok))
 				{
+					if ( which == CT_Global_Body )
+					{
+						parser_record_failure(ctx, txt("Unbounded macro expression in global body"));
+						member = Code_Invalid;
+						break;
+					}
 					log_failure("Unbounded macro expression residing in class/struct body\n%SB", parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp));
 					return InvalidCode;
 				}
@@ -1878,6 +2247,7 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			{
 				Specifier specs_found[16] = { Spec_NumSpecifiers };
 				s32        NumSpecifiers = 0;
+				b32        invalid_global_specifier = false;
 
 				while ( left && tok_is_specifier(currtok) )
 				{
@@ -1900,11 +2270,22 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 
 						default:
 							Str spec_str = spec_to_str(spec);
-
+							if ( which == CT_Global_Body )
+							{
+								StrBuilder message = strbuilder_fmt_buf(ctx->Allocator_Temp, "Invalid specifier %S for variable\n%SB"
+									, spec_str
+									, parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp)
+								);
+								parser_record_failure(ctx, strbuilder_to_str(message));
+								invalid_global_specifier = true;
+								break;
+							}
 							log_failure( "Invalid specifier %S for variable\n%S", spec_str, strbuilder_to_str( parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp)) );
 							parser_pop(& ctx->parser);
 							return InvalidCode;
 					}
+					if ( invalid_global_specifier )
+						break;
 
 					if (ignore_spec)
 						break;
@@ -1912,6 +2293,11 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 					specs_found[NumSpecifiers] = spec;
 					NumSpecifiers++;
 					eat( currtok.Type );
+				}
+				if ( invalid_global_specifier )
+				{
+					member = Code_Invalid;
+					break;
 				}
 
 				if ( NumSpecifiers )
@@ -1979,8 +2365,32 @@ CodeBody parse_global_nspace(Context* ctx, CodeType which)
 			}
 		}
 
+		b32 member_is_nested_scope = member != Code_Invalid && (member->Type == CT_Class || member->Type == CT_Struct || member->Type == CT_Namespace);
+		b32 member_failed          = ctx->parser.token_mismatch || (ctx->parser.messages != messages_before_member && ! member_is_nested_scope);
+		b32 can_recover_member     = which == CT_Global_Body || which == CT_Namespace_Body;
+		if (can_recover_member && member_failed) {
+			if (ctx->parser.messages != messages_before_member) ctx->parser.messages->Next = messages_before_member;
+			ctx->parser.token_id       = member_start_id;
+			ctx->parser.token_mismatch = false;
+			member = Code_Invalid;
+		}
+
 		if ( member == Code_Invalid )
 		{
+			if ( which == CT_Global_Body || (which == CT_Namespace_Body && member_failed) )
+			{
+				if ( ctx->parser.messages == messages_before_member )
+				{
+					StrBuilder message = strbuilder_fmt_buf(ctx->Allocator_Temp, "Failed to parse member\nToken: %SB\nContext:\n%SB"
+						, tok_to_strbuilder(ctx->Allocator_Temp, currtok_noskip)
+						, parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp)
+					);
+					parser_record_failure(ctx, strbuilder_to_str(message));
+				}
+				parser_recover_body_member(ctx, result, member_start_token, member_start_id, which == CT_Global_Body);
+				continue;
+			}
+
 			log_failure( "Failed to parse member\nToken: %SB\nContext:\n%SB", tok_to_strbuilder(ctx->Allocator_Temp, currtok_noskip), parser_to_strbuilder(& ctx->parser, ctx->Allocator_Temp) );
 			parser_pop(& ctx->parser);
 			return InvalidCode;

@@ -12,14 +12,16 @@ internal void expect(int condition, Str label) {
 }
 
 internal void expect_public(Str def, Str needle, Str label) {
-	Context ctx = {}; init(&ctx);
-	CodeVar parsed = parse_variable(def); expect(cast(Code, parsed) == Code_Invalid, label);
-	expect(_ctx->parser.messages              != nullptr, label);
-	expect(_ctx->parser.messages->Scope       == nullptr, label);
-	expect(_ctx->parser.messages->Content.Ptr != nullptr, label);
-	expect(str_contains(_ctx->parser.messages->Content, needle), label);
+	Context ctx = {}; init(& ctx);
+	ParseInfo info = {}; Opts_parse options = { & ctx, & info };
+	Code parsed = parse_variable(def, options);
+	expect(info.result.ast == parsed.ast, label);
+	expect(info.lexed.messages != nullptr, label);
+	if (info.lexed.messages   != nullptr) expect(str_contains(info.lexed.messages->content, needle), label);
+	if (info.lexed.tokens.num == 0)       expect(parsed == Code_Invalid, label);
 
-	CodeVar again = parse_variable(txt("char const* baseline_message = \"GENCPP_BASELINE\";")); expect(again.ast != nullptr, label);
+	CodeVar again = parse_variable(txt("char const* baseline_message = \"GENCPP_BASELINE\";"), options); expect(again.ast != nullptr, label);
+	expect(info.lexed.messages == nullptr && info.messages == nullptr, label);
 	if (again.ast != nullptr) {
 		expect(again->Type == CT_Variable, label);
 		expect(str_contains(again->Name, txt("baseline_message")), label);

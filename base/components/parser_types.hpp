@@ -162,6 +162,8 @@ struct ParseContext
 	// TokArray       Tokens;
 	TokenSlice      tokens;
 	s32             token_id;
+	LexerMessage*   lexed_messages;
+	b32             token_mismatch;
 };
 
 enum MacroType : u16

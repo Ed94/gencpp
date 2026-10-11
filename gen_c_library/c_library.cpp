@@ -57,6 +57,68 @@ Code refactor_and_format( Code code ) {
 	return code_refactor_and_format(code, scratch_file, path_refactor_script, path_format_style );
 }
 
+internal Code rewrite_parse_wrapper_signature(Code source, Str function_name)
+{
+	Str   scanned      = source->Content;
+	Str   needle       = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%S(", function_name).to_str();
+	Str   option_param = txt("Opts_parse opts");
+	ssize function_at  = -1;
+	ssize option_at    = -1;
+	ssize last_offset  = scanned.Len - needle.Len;
+	for (ssize scan_offset = 0; scan_offset <= last_offset; ++ scan_offset) {
+		char const* scan_at = scanned.Ptr + scan_offset;
+		if (c_str_compare_len(scan_at, needle.Ptr, needle.Len) == 0) {
+			if (scan_offset > 0) {
+				ssize prev_at = scan_offset - 1;
+				if (scanned.Ptr[prev_at] == '_') continue;
+			}
+			function_at = scan_offset;
+			break;
+		}
+	}
+	if (function_at < 0) GEN_FATAL("c_library: parser wrapper signature missing");
+
+	for (ssize params_end = function_at + needle.Len; 
+		params_end < scanned.Len && scanned.Ptr[params_end] != ')'; 
+		++ params_end
+	) {
+		ssize option_fit_end = params_end + option_param.Len;
+		if (option_fit_end > scanned.Len) break;
+		char const* params_at = scanned.Ptr + params_end;
+		if (c_str_compare_len(params_at, option_param.Ptr, option_param.Len) == 0) {
+			option_at = params_end;
+			break;
+		}
+	}
+	if (option_at < 0) GEN_FATAL("c_library: parser wrapper options parameter missing for %S", function_name);
+
+	Str new_name      = StrBuilder::fmt_buf(_ctx->Allocator_Temp, "%S_opts", function_name).to_str();
+	Str pointer_param = txt("Opts_parse* opts");
+
+	ssize       name_end        = function_at + function_name.Len;
+	char const* before_opts_ptr = scanned.Ptr + name_end;
+	ssize       before_opts_len = option_at - name_end;
+	Str         before_name     = { scanned.Ptr, function_at };
+	Str         before_opts     = { before_opts_ptr, before_opts_len };
+
+	ssize       after_opts_at  = option_at + option_param.Len;
+	char const* after_opts_ptr = scanned.Ptr + after_opts_at;
+	ssize       after_opts_len = scanned.Len - after_opts_at;
+	Str         after_opts     = { after_opts_ptr, after_opts_len };
+
+	ssize opts_star_len = 1;
+	ssize rebuilt_cap   = scanned.Len;
+	rebuilt_cap += new_name.Len;
+	rebuilt_cap += opts_star_len;
+	StrBuilder rebuilt = StrBuilder::make_reserve(_ctx->Allocator_Temp, rebuilt_cap);
+	strbuilder_append_str(& rebuilt, before_name);
+	strbuilder_append_str(& rebuilt, new_name);
+	strbuilder_append_str(& rebuilt, before_opts);
+	strbuilder_append_str(& rebuilt, pointer_param);
+	strbuilder_append_str(& rebuilt, after_opts);
+	return untyped_str(strbuilder_to_str(rebuilt));
+}
+
 constexpr bool helper_use_c_definition = true;
 
 int gen_main()
@@ -962,6 +1024,18 @@ R"(#define AST_ArrSpecs_Cap \
 		txt("CodeUsing"),
 		txt("CodeVar"),
 	};
+	// append, entry, and validate_body. Code is the untyped handle. CodeBody is the list / body pod.
+	Str code_body_slots[] = {
+		txt("Code"),
+		txt("CodeBody"),
+	};
+	// has_entries reads NumEntries. These pods keep that word as an entry count.
+	Str code_has_entries_slots[] = {
+		txt("Code"),
+		txt("CodeBody"),
+		txt("CodeParams"),
+		txt("CodeDefineParams"),
+	};
 
 	CodeBody parsed_code_types = parse_file( path_base "components/code_types.hpp" );
 	CodeBody code_types        = def_body(CT_Global_Body);
@@ -1034,9 +1108,18 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 					, tmpl_def_start
 				));
 
-				// Append slots
-				for(Str type : code_typenames ) {
-					generic_selector.append_fmt("%S : %S,\\\n", type, fn->Name );
+				// Append slots. Restricted procedures omit static types that cannot call them.
+				if (actual_name.is_equal(txt("append")) || actual_name.is_equal(txt("entry")) || actual_name.is_equal(txt("validate_body"))) {
+					for (Str type : code_body_slots)
+						generic_selector.append_fmt("%S : %S,\\\n", type, fn->Name);
+				}
+				else if (actual_name.is_equal(txt("has_entries"))) {
+					for (Str type : code_has_entries_slots)
+						generic_selector.append_fmt("%S : %S,\\\n", type, fn->Name);
+				}
+				else {
+					for (Str type : code_typenames)
+						generic_selector.append_fmt("%S : %S,\\\n", type, fn->Name);
 				}
 				generic_selector.append(txt("default: gen_generic_selection_fail \\\n"));
 
@@ -1152,19 +1235,22 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			for ( CodeParams opt_param : fn->Params ) if (opt_param->ValueType->Name.starts_with(txt("Opts_")))
 			{
 				// Convert the definition to use a default struct: https://vxtwitter.com/vkrajacic/status/1749816169736073295
-				if ( fn->Name.is_equal( txt("parse_global_body") ) )
+				if (fn->Name.starts_with(txt("parse_")))
 				{
-					Str new_name = txt("parse_global_body_opts");
-					char const* tmpl_fn_macro = "#define <def_name>( <params> ... ) <def__name>( <params> & (<opts_type>) { __VA_ARGS__ } )\n";
-					Code fn_macro;
+					Str        new_name   = StrBuilder::fmt_buf     (_ctx->Allocator_Temp, "%S_opts", fn->Name).to_str();
+					StrBuilder params_str = StrBuilder::make_reserve(_ctx->Allocator_Temp, 32);
+					for (CodeParams other_param : fn->Params) {
+						if (other_param == opt_param) break;
+						params_str.append_fmt("%S, ", other_param->Name);
+					}
 
 					opt_param->ValueType->Specs = def_specifier( Spec_Ptr );
-					fn_macro = untyped_str( token_fmt(
+					Code fn_macro = untyped_str( token_fmt(
 						"def_name",  fn->Name
 					,	"def__name", new_name
-					,	"params",    txt("def, ")
+					,	"params",    params_str.to_str()
 					,	"opts_type", opt_param->ValueType->Name
-					,	tmpl_fn_macro
+					,	"#define <def_name>( <params> ... ) <def__name>( <params> & (<opts_type>) { __VA_ARGS__ } )\n"
 					));
 					fn->Name = cache_str( new_name );
 					interface.append( fn );
@@ -1441,27 +1527,30 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 
 	Code src_parsing_interface  = scan_file( path_base "components/interface.parsing.cpp" );
 	{
-		Str needle  = txt("CodeBody parse_global_body( Str def, Opts_parse_global_body opts )");
-		Str scanned = src_parsing_interface->Content;
-		ssize signature_at = -1;
-		ssize scan_offset;
-		ssize last_offset = scanned.Len - needle.Len;
-		for ( scan_offset = 0; scan_offset <= last_offset; ++ scan_offset )
-		{
-			if ( c_str_compare_len( scanned.Ptr + scan_offset, needle.Ptr, needle.Len ) == 0 ) {
-				signature_at = scan_offset;
-				break;
-			}
-		}
-		if ( signature_at < 0 ) GEN_FATAL( "c_library: parse_global_body signature missing from scanned interface.parsing.cpp" );
-		/*Resolved replacement*/ {
-			Str replacement    = txt("CodeBody parse_global_body_opts( Str def, Opts_parse_global_body* opts )");
-			StrBuilder rebuilt = strbuilder_make_reserve( _ctx->Allocator_Temp, scanned.Len + replacement.Len );
-			strbuilder_append_str( & rebuilt, Str { scanned.Ptr, signature_at } );
-			strbuilder_append_str( & rebuilt, replacement );
-			strbuilder_append_str( & rebuilt, Str { scanned.Ptr + signature_at + needle.Len, scanned.Len - signature_at - needle.Len } );
-			src_parsing_interface = untyped_str( strbuilder_to_str( rebuilt ) );
-		}
+		Str parser_names[] = {
+			txt("parse_class"),
+			txt("parse_constructor"),
+			txt("parse_define"),
+			txt("parse_destructor"),
+			txt("parse_enum"),
+			txt("parse_export_body"),
+			txt("parse_extern_link"),
+			txt("parse_friend"),
+			txt("parse_function"),
+			txt("parse_global_body"),
+			txt("parse_namespace"),
+			txt("parse_operator"),
+			txt("parse_operator_cast"),
+			txt("parse_struct"),
+			txt("parse_template"),
+			txt("parse_type"),
+			txt("parse_typedef"),
+			txt("parse_union"),
+			txt("parse_using"),
+			txt("parse_variable"),
+		};
+		for (s32 idx = 0; idx < (s32)(sizeof(parser_names) / sizeof(parser_names[0])); ++idx)
+			src_parsing_interface = rewrite_parse_wrapper_signature(src_parsing_interface, parser_names[idx]);
 	}
 	Code src_untyped            = scan_file( path_base "components/interface.untyped.cpp" );
 	Code src_parser_case_macros = scan_file( path_base "components/parser_case_macros.cpp" );

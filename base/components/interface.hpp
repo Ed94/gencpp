@@ -371,8 +371,7 @@ struct ParseStackNode
 	// TODO(Ed): When an error occurs, the parse stack is not released and instead the scope is left dangling.
 };
 
-struct ParseOpts
-{
+struct ParseOpts {
 	AllocatorInfo backing_msgs;
 	AllocatorInfo backing_tokens;
 	AllocatorInfo backing_ast;
@@ -380,34 +379,53 @@ struct ParseOpts
 
 ParseInfo wip_parse_str( LexedInfo lexed, ParseOpts* opts GEN_PARAM_DEFAULT );
 
-GEN_API CodeClass       parse_class        ( Str class_def       );
-GEN_API CodeConstructor parse_constructor  ( Str constructor_def );
-GEN_API CodeDefine      parse_define       ( Str define_def      );
-GEN_API CodeDestructor  parse_destructor   ( Str destructor_def  );
-GEN_API CodeEnum        parse_enum         ( Str enum_def        );
-GEN_API CodeBody        parse_export_body  ( Str export_def      );
-GEN_API CodeExtern      parse_extern_link  ( Str exten_link_def  );
-GEN_API CodeFriend      parse_friend       ( Str friend_def      );
-GEN_API CodeFn          parse_function     ( Str fn_def          );
-
-struct Opts_parse_global_body
-{
+struct Opts_parse {
 	Context*   ctx;
 	ParseInfo* info;
 };
-GEN_API void     parse_global_body_base( Context* ctx, Str body_def, ParseInfo* info );
-GEN_API CodeBody parse_global_body( Str body_def, Opts_parse_global_body opts GEN_PARAM_DEFAULT );
+typedef Opts_parse Opts_parse_global_body;
 
-GEN_API CodeNS          parse_namespace    ( Str namespace_def   );
-GEN_API CodeOperator    parse_operator     ( Str operator_def    );
-GEN_API CodeOpCast      parse_operator_cast( Str operator_def    );
-GEN_API CodeStruct      parse_struct       ( Str struct_def      );
-GEN_API CodeTemplate    parse_template     ( Str template_def    );
-GEN_API CodeTypename    parse_type         ( Str type_def        );
-GEN_API CodeTypedef     parse_typedef      ( Str typedef_def     );
-GEN_API CodeUnion       parse_union        ( Str union_def       );
-GEN_API CodeUsing       parse_using        ( Str using_def       );
-GEN_API CodeVar         parse_variable     ( Str var_def         );
+GEN_API void parse_class_base        (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_constructor_base  (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_define_base       (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_destructor_base   (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_enum_base         (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_export_body_base  (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_extern_link_base  (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_friend_base       (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_function_base     (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_global_body_base  (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_namespace_base    (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_operator_base     (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_operator_cast_base(Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_struct_base       (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_template_base     (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_type_base         (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_typedef_base      (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_union_base        (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_using_base        (Context* ctx, Str def, ParseInfo* info);
+GEN_API void parse_variable_base     (Context* ctx, Str def, ParseInfo* info);
+
+GEN_API CodeClass       parse_class        (Str class_def,       Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeConstructor parse_constructor  (Str constructor_def, Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeDefine      parse_define       (Str define_def,      Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeDestructor  parse_destructor   (Str destructor_def,  Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeEnum        parse_enum         (Str enum_def,        Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeBody        parse_export_body  (Str export_def,      Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeExtern      parse_extern_link  (Str exten_link_def,  Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeFriend      parse_friend       (Str friend_def,      Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeFn          parse_function     (Str fn_def,          Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeBody        parse_global_body  (Str body_def,        Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeNS          parse_namespace    (Str namespace_def,   Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeOperator    parse_operator     (Str operator_def,    Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeOpCast      parse_operator_cast(Str operator_def,    Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeStruct      parse_struct       (Str struct_def,      Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeTemplate    parse_template     (Str template_def,    Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeTypename    parse_type         (Str type_def,        Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeTypedef     parse_typedef      (Str typedef_def,     Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeUnion       parse_union        (Str union_def,       Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeUsing       parse_using        (Str using_def,       Opts_parse opts GEN_PARAM_DEFAULT);
+GEN_API CodeVar         parse_variable     (Str var_def,         Opts_parse opts GEN_PARAM_DEFAULT);
 
 #pragma endregion Parsing
 

@@ -125,13 +125,13 @@ internal void expect_skip_end(Str label)
 	Token storage[5] = {}; plant(storage, 2, newlines, 2);
 
 	ParseContext parser = {}; bind(& parser, storage, 2, 0);
-	Token* got = lex_current(&parser, lex_skip_formatting);
+	Token* got = lex_current(& parser, lex_skip_formatting);
 	expect(got->Type       == Tok_Invalid, label);
 	expect(parser.token_id == 2,           label);
 	expect(canaries_intact(storage, 2),    label);
 	expect(points_at_canary(got, storage, 2) == false, label);
 
-	bind(& parser, storage, 2, 0); got = lex_peek(&parser, lex_skip_formatting);
+	bind(& parser, storage, 2, 0); got = lex_peek(& parser, lex_skip_formatting);
 	expect(parser.token_id == 0,           label);
 	expect(got->Type       == Tok_Invalid, label);
 	expect(canaries_intact(storage, 2),    label);
@@ -139,29 +139,40 @@ internal void expect_skip_end(Str label)
 	Token comments[1] = { NullToken };
 	comments[0].Type = Tok_Comment; comments[0].Text = txt("// note");
 	plant(storage, 1, comments, 1); bind(& parser, storage, 1, 0);
-	got = lex_current(&parser, lex_skip_formatting);
+	got = lex_current(& parser, lex_skip_formatting);
 	expect(got->Type       == Tok_Invalid, label);
 	expect(parser.token_id == 1,           label);
 	expect(canaries_intact(storage, 1),    label);
 	expect(points_at_canary(got, storage, 1) == false, label);
 }
 
-internal void expect_boundary(Str def, Str label, Str mark) {
-	Context ctx = {};
-	init(&ctx);
+internal void expect_boundary(Str def, Str label, Str mark, b32 expect_lexer_message) {
+	Context ctx = {}; init(& ctx);
 	CodeVar parsed = parse_variable(def);
 	expect(cast(Code, parsed) == Code_Invalid, label);
-	expect(_ctx->parser.messages != nullptr, label);
-	expect(_ctx->parser.messages->Scope == nullptr, label);
-	expect(_ctx->parser.messages->Content.Ptr != nullptr && _ctx->parser.messages->Content.Len > 0, label);
-	expect(str_contains(_ctx->parser.messages->Content, mark), label);
+	ParseMessage* parse_message = _ctx->parse_info.messages;
+	LexerMessage* lexer_message = _ctx->parse_info.lexed.messages;
+	if (expect_lexer_message) {
+		expect(lexer_message != nullptr, label);
+		expect(parse_message == nullptr, label);
+		if (lexer_message != nullptr) expect(str_contains(lexer_message->content, mark), label);
+	}
+	else {
+		expect(parse_message != nullptr, label);
+		expect(lexer_message == nullptr, label);
+	}
+	if (expect_lexer_message == false && parse_message != nullptr) {
+		expect(parse_message->Scope == nullptr, label);
+		expect(parse_message->Content.Ptr != nullptr && parse_message->Content.Len > 0, label);
+		expect(str_contains(parse_message->Content, mark), label);
+	}
 	CodeVar again = parse_variable(txt("char const* baseline_message = \"GENCPP_BASELINE\";"));
 	expect(again.ast != nullptr, label);
 	if (again.ast != nullptr) {
 		expect(again->Type == CT_Variable, label);
 		expect(str_contains(again->Name, txt("baseline_message")), label);
 	}
-	deinit(&ctx);
+	deinit(& ctx);
 }
 
 internal void expect_eat_end(Str label) {
@@ -222,11 +233,11 @@ int main()
 
 	Str null_def = { nullptr, 0 };
 	Str null_ptr = { nullptr, 4 };
-	expect_boundary(null_def,         txt("null-len"),    txt("gen::parse_variable: length must greater than 0"));
-	expect_boundary(null_ptr,         txt("null-ptr"),    txt("gen::parse_variable: def was null"));
-	expect_boundary(txt(""),          txt("zero-len"),    txt("gen::parse_variable: length must greater than 0"));
-	expect_boundary(txt(" \n\t"),     txt("whitespace"),  txt("no tokens found"));
-	expect_boundary(txt("// note\n"), txt("comment"),     txt("only formatting tokens"));
+	expect_boundary(null_def,         txt("null-len"),   txt("gen::parse_variable: length must greater than 0"), false);
+	expect_boundary(null_ptr,         txt("null-ptr"),   txt("gen::parse_variable: def was null"), false);
+	expect_boundary(txt(""),          txt("zero-len"),   txt("gen::parse_variable: length must greater than 0"), false);
+	expect_boundary(txt(" \n\t"),     txt("whitespace"), txt("no tokens found"), true);
+	expect_boundary(txt("// note\n"), txt("comment"),    txt("only formatting tokens"), false);
 	expect_eat_end (txt("eat"));
 	expect_direct  (txt("direct"));
 

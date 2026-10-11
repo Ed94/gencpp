@@ -34,6 +34,14 @@ gen_internal gen_Code_POD code_pod(gen_Code code) {
 	return result;
 }
 
+gen_internal void expect_parse_info(void* result, ParseInfo* info, gen_Str label) {
+	expect(result != 0, label);
+	void* info_result = info->result;
+	expect(info_result == result, label);
+	expect(info->lexed.tokens.num > 0, label);
+	expect(info->lexed.messages == 0 && info->messages == 0, label);
+}
+
 int main()
 {
 	gen_Context ctx = {0}; gen_init(&ctx);
@@ -475,24 +483,574 @@ int main()
 	expect(untyped != 0, gen_txt("c11 untyped"));
 
 	gen_Str untyped_text = gen_strbuilder_to_str(gen_code_to_strbuilder(untyped));
-	expect_fragments(untyped_text, gen_txt("c11 untyped content"));
+	expect_fragments(untyped_text,                    gen_txt("c11 untyped content"));
 	expect_variable(gen_parse_variable(untyped_text), gen_txt("c11 untyped reparsed"));
 
 	gen_CodeVar parsed = gen_parse_variable(code(char const* baseline_message = "GENCPP_BASELINE"; ));
-	expect_variable(parsed, gen_txt("c11 parsed"));
+	expect_variable(parsed,                                                 gen_txt("c11 parsed"));
 	expect_fragments(gen_strbuilder_to_str(gen_code_to_strbuilder(parsed)), gen_txt("c11 parsed serialized"));
 
+	gen_CodeClass       parser_class         = gen_parse_class(gen_txt("class ParseClass {};"));
+	gen_CodeConstructor parser_constructor   = gen_parse_constructor(gen_txt("ParseClass() {}"));
+	gen_CodeDefine      parser_define        = gen_parse_define(gen_txt("#define PARSE_DEFINE 1"));
+	gen_CodeDestructor  parser_destructor    = gen_parse_destructor(gen_txt("~ParseClass();"));
+	gen_CodeEnum        parser_enum          = gen_parse_enum(gen_txt("enum ParseEnum { ParseValue };"));
+	gen_CodeBody        parser_export_body   = gen_parse_export_body(gen_txt("{ int export_value; }"));
+	gen_CodeExtern      parser_extern        = gen_parse_extern_link(gen_txt("extern \"C\" { int extern_value; }"));
+	gen_CodeFriend      parser_friend        = gen_parse_friend(gen_txt("friend int parse_friend_function();"));
+	gen_CodeFn          parser_function      = gen_parse_function(gen_txt("int parse_function();"));
+	gen_CodeBody        parser_global_body   = gen_parse_global_body(gen_txt("struct ParseGlobal { int value; };"));
+	gen_CodeNS          parser_namespace     = gen_parse_namespace(gen_txt("namespace ParseNamespace {}"));
+	gen_CodeOperator    parser_operator      = gen_parse_operator(gen_txt("s32 operator +(s32 lhs, s32 rhs);"));
+	gen_CodeOpCast      parser_operator_cast = gen_parse_operator_cast(gen_txt("operator s32() const;"));
+	gen_CodeStruct      parser_struct        = gen_parse_struct(gen_txt("struct ParseStruct {};"));
+	gen_CodeTemplate    parser_template      = gen_parse_template(gen_txt("template<class T> struct ParseTemplate {};"));
+	gen_CodeTypename    parser_type          = gen_parse_type(gen_txt("const s32*"));
+	gen_CodeTypedef     parser_typedef       = gen_parse_typedef(gen_txt("typedef s32 ParseTypedef;"));
+	gen_CodeUnion       parser_union         = gen_parse_union(gen_txt("union ParseUnion { s32 value; };"));
+	gen_CodeUsing       parser_using         = gen_parse_using(gen_txt("using ParseUsing = s32;"));
+	gen_CodeVar         parser_variable      = gen_parse_variable(gen_txt("s32 parse_variable;"));
+
+	expect(parser_class         != 0 && parser_class->Type         == CT_Class,             gen_txt("c11 parse class fixture"));
+	expect(parser_constructor   != 0 && parser_constructor->Type   == CT_Constructor,       gen_txt("c11 parse constructor fixture"));
+	expect(parser_define        != 0 && parser_define->Type        == CT_Preprocess_Define, gen_txt("c11 parse define fixture"));
+	expect(parser_destructor    != 0 && parser_destructor->Type    == CT_Destructor_Fwd,    gen_txt("c11 parse destructor fixture"));
+	expect(parser_enum          != 0 && parser_enum->Type          == CT_Enum,              gen_txt("c11 parse enum fixture"));
+	expect(parser_export_body   != 0 && parser_export_body->Type   == CT_Export_Body,       gen_txt("c11 parse export body fixture"));
+	expect(parser_extern        != 0 && parser_extern->Type        == CT_Extern_Linkage,    gen_txt("c11 parse extern fixture"));
+	expect(parser_friend        != 0 && parser_friend->Type        == CT_Friend,            gen_txt("c11 parse friend fixture"));
+	expect(parser_function      != 0 && parser_function->Type      == CT_Function_Fwd,      gen_txt("c11 parse function fixture"));
+	expect(parser_global_body   != 0 && parser_global_body->Type   == CT_Global_Body,       gen_txt("c11 parse global body fixture"));
+	expect(parser_namespace     != 0 && parser_namespace->Type     == CT_Namespace,         gen_txt("c11 parse namespace fixture"));
+	expect(parser_operator      != 0 && parser_operator->Type      == CT_Operator_Fwd,      gen_txt("c11 parse operator fixture"));
+	expect(parser_operator_cast != 0 && parser_operator_cast->Type == CT_Operator_Cast_Fwd, gen_txt("c11 parse operator cast fixture"));
+	expect(parser_struct        != 0 && parser_struct->Type        == CT_Struct,            gen_txt("c11 parse struct fixture"));
+	expect(parser_template      != 0 && parser_template->Type      == CT_Template,          gen_txt("c11 parse template fixture"));
+	expect(parser_type          != 0 && parser_type->Type          == CT_Typename,          gen_txt("c11 parse type fixture"));
+	expect(parser_typedef       != 0 && parser_typedef->Type       == CT_Typedef,           gen_txt("c11 parse typedef fixture"));
+	expect(parser_union         != 0 && parser_union->Type         == CT_Union,             gen_txt("c11 parse union fixture"));
+	expect(parser_using         != 0 && parser_using->Type         == CT_Using,             gen_txt("c11 parse using fixture"));
+	expect(parser_variable      != 0 && parser_variable->Type      == CT_Variable,          gen_txt("c11 parse variable fixture"));
+
+	gen_CodeBody parsed_global_options = gen_parse_global_body(gen_txt("struct ParseGlobalOptions { s32 value; };"));
+	expect(parsed_global_options != 0, gen_txt("c11 default parse global body options"));
+	void* default_result      = parsed_global_options;
+	void* default_info_result = ctx.gen_parse_info.result;
+	expect(default_info_result == default_result,                                       gen_txt("c11 default parse info result"));
+	expect(ctx.gen_parse_info.lexed.tokens.num > 0,                                     gen_txt("c11 default parse info tokens"));
+	expect(ctx.gen_parse_info.lexed.messages  == 0 && ctx.gen_parse_info.messages == 0, gen_txt("c11 default parse info messages"));
+
+	ParseInfo caller_info = {0};
+	gen_CodeBody parsed_explicit_global = gen_parse_global_body(gen_txt("struct ParseExplicitOptions { s32 value; };"), .ctx = & ctx, .info = & caller_info);
+	expect(parsed_explicit_global != 0, gen_txt("c11 explicit parse global body options"));
+	void* explicit_result      = parsed_explicit_global;
+	void* explicit_info_result = caller_info.result;
+	expect(explicit_info_result == explicit_result, gen_txt("c11 explicit parse info result"));
+	expect(caller_info.lexed.tokens.num > 0,        gen_txt("c11 explicit parse info tokens"));
+
+	ParseInfo variable_info = {0};
+	gen_CodeVar parsed_option_variable = gen_parse_variable(gen_txt("s32 parsed_option_variable;"), .ctx = & ctx, .info = & variable_info);
+	expect(parsed_option_variable != 0 && parsed_option_variable->Type == CT_Variable,        gen_txt("c11 explicit parse variable options"));
+	expect(gen_str_contains(parsed_option_variable->Name, gen_txt("parsed_option_variable")), gen_txt("c11 explicit parse variable name"));
+	void* variable_result      = parsed_option_variable;
+	void* variable_info_result = variable_info.result;
+	expect(variable_info_result == variable_result, gen_txt("c11 explicit parse variable info result"));
+
+	ParseInfo lexer_info = {0};
+	gen_CodeVar parsed_lexer_prefix = gen_parse_variable(gen_txt("s32 parsed_lexer_prefix;@"), .ctx = & ctx, .info = & lexer_info);
+	expect(parsed_lexer_prefix != 0 && parsed_lexer_prefix->Type == CT_Variable, gen_txt("c11 parse lexer prefix result"));
+	void* lexer_result      = parsed_lexer_prefix;
+	void* lexer_info_result = lexer_info.result;
+	expect(lexer_info_result == lexer_result, gen_txt("c11 parse lexer prefix info result"));
+	expect(lexer_info.lexed.tokens.num > 0,   gen_txt("c11 parse lexer prefix retained tokens"));
+	expect(lexer_info.lexed.messages  != 0,   gen_txt("c11 parse lexer prefix diagnostic"));
+
+	ParseInfo matrix_info = {0};
+	gen_Opts_parse_global_body legacy_parse_options = { .ctx = & ctx, .info = & matrix_info };
+	gen_CodeBody matrix_global_body = gen_parse_global_body(gen_txt("struct ParseGlobal { int value; };"), .ctx = legacy_parse_options.ctx, .info = legacy_parse_options.info);
+	expect(matrix_global_body != 0 && matrix_global_body->Type == CT_Global_Body, gen_txt("c11 global body options matrix"));
+	expect_parse_info(matrix_global_body, & matrix_info, gen_txt("c11 global body ParseInfo matrix"));
+
+	gen_CodeClass matrix_class = gen_parse_class(gen_txt("class ParseClass {};"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_class != 0 && matrix_class->Type == CT_Class, gen_txt("c11 class options matrix"));
+	expect_parse_info(matrix_class, & matrix_info, gen_txt("c11 class ParseInfo matrix"));
+
+	gen_CodeConstructor matrix_constructor = gen_parse_constructor(gen_txt("ParseClass() {}"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_constructor != 0 && matrix_constructor->Type == CT_Constructor, gen_txt("c11 constructor options matrix"));
+	expect_parse_info(matrix_constructor, & matrix_info, gen_txt("c11 constructor ParseInfo matrix"));
+
+	gen_CodeDefine matrix_define = gen_parse_define(gen_txt("#define PARSE_DEFINE 1"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_define != 0 && matrix_define->Type == CT_Preprocess_Define, gen_txt("c11 define options matrix"));
+	expect_parse_info(matrix_define, & matrix_info, gen_txt("c11 define ParseInfo matrix"));
+
+	gen_CodeDestructor matrix_destructor = gen_parse_destructor(gen_txt("~ParseClass();"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_destructor != 0 && matrix_destructor->Type == CT_Destructor_Fwd, gen_txt("c11 destructor options matrix"));
+	expect_parse_info(matrix_destructor, & matrix_info, gen_txt("c11 destructor ParseInfo matrix"));
+
+	gen_CodeEnum matrix_enum = gen_parse_enum(gen_txt("enum ParseEnum { ParseValue };"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_enum != 0 && matrix_enum->Type == CT_Enum, gen_txt("c11 enum options matrix"));
+	expect_parse_info(matrix_enum, & matrix_info, gen_txt("c11 enum ParseInfo matrix"));
+
+	gen_CodeBody matrix_export_body = gen_parse_export_body(gen_txt("{ int export_value; }"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_export_body != 0 && matrix_export_body->Type == CT_Export_Body, gen_txt("c11 export body options matrix"));
+	expect_parse_info(matrix_export_body, & matrix_info, gen_txt("c11 export body ParseInfo matrix"));
+
+	gen_CodeExtern matrix_extern = gen_parse_extern_link(gen_txt("extern \"C\" { int extern_value; }"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_extern != 0 && matrix_extern->Type == CT_Extern_Linkage, gen_txt("c11 extern options matrix"));
+	expect_parse_info(matrix_extern, & matrix_info, gen_txt("c11 extern ParseInfo matrix"));
+
+	gen_CodeFriend matrix_friend = gen_parse_friend(gen_txt("friend int parse_friend_function();"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_friend != 0 && matrix_friend->Type == CT_Friend, gen_txt("c11 friend options matrix"));
+	expect_parse_info(matrix_friend, & matrix_info, gen_txt("c11 friend ParseInfo matrix"));
+
+	gen_CodeFn matrix_function = gen_parse_function(gen_txt("int parse_function();"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_function != 0 && matrix_function->Type == CT_Function_Fwd, gen_txt("c11 function options matrix"));
+	expect_parse_info(matrix_function, & matrix_info, gen_txt("c11 function ParseInfo matrix"));
+
+	gen_CodeNS matrix_namespace = gen_parse_namespace(gen_txt("namespace ParseNamespace {}"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_namespace != 0 && matrix_namespace->Type == CT_Namespace, gen_txt("c11 namespace options matrix"));
+	expect_parse_info(matrix_namespace, & matrix_info, gen_txt("c11 namespace ParseInfo matrix"));
+
+	gen_CodeOperator matrix_operator = gen_parse_operator(gen_txt("s32 operator +(s32 lhs, s32 rhs);"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_operator != 0 && matrix_operator->Type == CT_Operator_Fwd, gen_txt("c11 operator options matrix"));
+	expect_parse_info(matrix_operator, & matrix_info, gen_txt("c11 operator ParseInfo matrix"));
+
+	gen_CodeOpCast matrix_operator_cast = gen_parse_operator_cast(gen_txt("operator s32() const;"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_operator_cast != 0 && matrix_operator_cast->Type == CT_Operator_Cast_Fwd, gen_txt("c11 operator cast options matrix"));
+	expect_parse_info(matrix_operator_cast, & matrix_info, gen_txt("c11 operator cast ParseInfo matrix"));
+
+	gen_CodeStruct matrix_struct = gen_parse_struct(gen_txt("struct ParseStruct {};"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_struct != 0 && matrix_struct->Type == CT_Struct, gen_txt("c11 struct options matrix"));
+	expect_parse_info(matrix_struct, & matrix_info, gen_txt("c11 struct ParseInfo matrix"));
+
+	gen_CodeTemplate matrix_template = gen_parse_template(gen_txt("template<class T> struct ParseTemplate {};"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_template != 0 && matrix_template->Type == CT_Template, gen_txt("c11 template options matrix"));
+	expect_parse_info(matrix_template, & matrix_info, gen_txt("c11 template ParseInfo matrix"));
+
+	gen_CodeTypename matrix_type = gen_parse_type(gen_txt("const s32*"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_type != 0 && matrix_type->Type == CT_Typename, gen_txt("c11 type options matrix"));
+	expect_parse_info(matrix_type, & matrix_info, gen_txt("c11 type ParseInfo matrix"));
+
+	gen_CodeTypedef matrix_typedef = gen_parse_typedef(gen_txt("typedef s32 ParseTypedef;"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_typedef != 0 && matrix_typedef->Type == CT_Typedef, gen_txt("c11 typedef options matrix"));
+	expect_parse_info(matrix_typedef, & matrix_info, gen_txt("c11 typedef ParseInfo matrix"));
+
+	gen_CodeUnion matrix_union = gen_parse_union(gen_txt("union ParseUnion { s32 value; };"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_union != 0 && matrix_union->Type == CT_Union, gen_txt("c11 union options matrix"));
+	expect_parse_info(matrix_union, & matrix_info, gen_txt("c11 union ParseInfo matrix"));
+
+	gen_CodeUsing matrix_using = gen_parse_using(gen_txt("using ParseUsing = s32;"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_using != 0 && matrix_using->Type == CT_Using, gen_txt("c11 using options matrix"));
+	expect_parse_info(matrix_using, & matrix_info, gen_txt("c11 using ParseInfo matrix"));
+
+	gen_CodeVar matrix_variable = gen_parse_variable(gen_txt("s32 parse_variable;"), .ctx = & ctx, .info = & matrix_info);
+	expect(matrix_variable != 0 && matrix_variable->Type == CT_Variable, gen_txt("c11 variable options matrix"));
+	expect_parse_info(matrix_variable, & matrix_info, gen_txt("c11 variable ParseInfo matrix"));
+
+	ParseInfo    comma_info        = {0};
+	gen_CodeBody parsed_comma_body = gen_parse_global_body(gen_txt("struct ParseComma { s32 value; };\n,"), .ctx = & ctx, .info = & comma_info);
+	expect(parsed_comma_body != 0 && parsed_comma_body->Type == CT_Global_Body, gen_txt("c11 comma parser result"));
+	void* comma_result      = parsed_comma_body;
+	void* comma_info_result = comma_info.result;
+	expect(comma_info_result          == comma_result,                        gen_txt("c11 comma ParseInfo result"));
+	expect(comma_info.lexed.tokens.num > 0 && comma_info.lexed.messages == 0, gen_txt("c11 comma retained tokens"));
+	expect(comma_info.messages        != 0,                                   gen_txt("c11 comma parser diagnostic"));
+	if (comma_info.messages != 0)
+		expect(gen_str_contains(comma_info.messages->Content, gen_txt("Dangling comma")), gen_txt("c11 comma diagnostic content"));
+
+	ParseInfo    recovery_info  = {0};
+	gen_CodeBody recovered_body = gen_parse_global_body(gen_txt("s32 before; s32 broken(s32 value; s32 after;"), .ctx = &ctx, .info = &recovery_info);
+	gen_Str      recovery_text  = {0};
+	if (recovered_body != 0) recovery_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)recovered_body));
+	expect(recovered_body != 0 && recovered_body->Type == CT_Global_Body, gen_txt("c11 file-scope recovery body"));
+
+	void* recovered_result = recovered_body;
+	expect(recovery_info.result   == recovered_result, gen_txt("c11 file-scope recovery ParseInfo result"));
+	expect(recovery_info.messages != 0,                gen_txt("c11 file-scope recovery diagnostic"));
+	if (recovery_info.messages != 0) {
+		expect(gen_str_contains(recovery_info.messages->Content, gen_txt("Expected")), gen_txt("c11 file-scope recovery mismatch text"));
+		expect(recovery_info.messages->Next == 0,                                      gen_txt("c11 file-scope recovery single diagnostic"));
+	}
+	expect(gen_str_contains(recovery_text, gen_txt("before")), gen_txt("c11 file-scope recovery keeps preceding member"));
+	expect(gen_str_contains(recovery_text, gen_txt("after")), gen_txt("c11 file-scope recovery keeps following member"));
+	gen_Code recovered_member = 0;
+	if (recovered_body != 0) recovered_member = recovered_body->Front;
+	gen_Code recovered_before = recovered_member;
+	expect(recovered_before != 0 && recovered_before->Type == CT_Variable, gen_txt("c11 mismatch recovery keeps preceding member typed"));
+	if (recovered_before != 0)
+		expect(gen_str_are_equal(recovered_before->Name, gen_txt("before")), gen_txt("c11 mismatch recovery preceding member name"));
+	if (recovered_member != 0) recovered_member = recovered_member->Next;
+	expect(recovered_member != 0 && recovered_member->Type == CT_Untyped, gen_txt("c11 file-scope recovery stores malformed member as untyped"));
+	if (recovered_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(recovered_member)), gen_txt("s32 broken(s32 value;")), gen_txt("c11 file-scope recovery retains exact mismatch span"));
+	gen_Code recovered_after = recovered_member != 0 ? recovered_member->Next : 0;
+	expect(recovered_after != 0 && recovered_after->Type == CT_Variable, gen_txt("c11 file-scope recovery keeps following member typed"));
+	if (recovered_after != 0)
+		expect(gen_str_are_equal(recovered_after->Name, gen_txt("after")), gen_txt("c11 file-scope recovery following member name"));
+
+	ParseInfo    invalid_member_info = {0};
+	gen_CodeBody invalid_member_body = gen_parse_global_body(gen_txt("s32 before; = { 1; 2 }; s32 after;"), .ctx = &ctx, .info = &invalid_member_info);
+	gen_Str      invalid_member_text = {0};
+	if (invalid_member_body != 0)
+		invalid_member_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)invalid_member_body));
+	expect(invalid_member_body != 0 && invalid_member_body->Type == CT_Global_Body, gen_txt("c11 invalid member recovery body"));
+	void* invalid_member_result = invalid_member_body;
+	expect(invalid_member_info.result == invalid_member_result, gen_txt("c11 invalid member recovery ParseInfo result"));
+	expect(invalid_member_info.messages != 0, gen_txt("c11 invalid member recovery diagnostic"));
+	if (invalid_member_info.messages != 0) {
+		expect(gen_str_contains(invalid_member_info.messages->Content, gen_txt("Failed to parse member")), gen_txt("c11 invalid member recovery diagnostic text"));
+		expect(invalid_member_info.messages->Next == 0,                                                    gen_txt("c11 invalid member recovery single diagnostic"));
+	}
+	expect(gen_str_contains(invalid_member_text, gen_txt("before")), gen_txt("c11 invalid member recovery keeps preceding member"));
+	expect(gen_str_contains(invalid_member_text, gen_txt("after")),  gen_txt("c11 invalid member recovery keeps following member"));
+	gen_Code invalid_member_node = 0;
+	if (invalid_member_body != 0) invalid_member_node = invalid_member_body->Front;
+	gen_Code invalid_member_before = invalid_member_node;
+	expect(invalid_member_before != 0 && invalid_member_before->Type == CT_Variable, gen_txt("c11 invalid member keeps preceding member typed"));
+	if (invalid_member_before != 0)
+		expect(gen_str_are_equal(invalid_member_before->Name, gen_txt("before")), gen_txt("c11 invalid member preceding member name"));
+	if (invalid_member_node != 0) invalid_member_node = invalid_member_node->Next;
+	expect(invalid_member_node != 0 && invalid_member_node->Type == CT_Untyped, gen_txt("c11 invalid member recovery stores member as untyped"));
+	if (invalid_member_node != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(invalid_member_node)), gen_txt("= { 1; 2 };")), gen_txt("c11 invalid member recovery retains exact source span"));
+	gen_Code invalid_member_after = invalid_member_node != 0 ? invalid_member_node->Next : 0;
+	expect(invalid_member_after != 0 && invalid_member_after->Type == CT_Variable, gen_txt("c11 invalid member recovery keeps following member typed"));
+	if (invalid_member_after != 0)
+		expect(gen_str_are_equal(invalid_member_after->Name, gen_txt("after")), gen_txt("c11 invalid member recovery following member name"));
+
+	ParseInfo      import_recovery_info    = {0};
+	gen_Opts_parse import_recovery_options = { .ctx = &ctx, .info = &import_recovery_info };
+	gen_CodeBody   import_recovery_body    = gen_parse_global_body(gen_txt("s32 before; import foo; s32 after;"), .ctx = import_recovery_options.ctx, .info = import_recovery_options.info);
+	gen_Code       import_recovery_node    = 0;
+	if (import_recovery_body != 0) import_recovery_node = import_recovery_body->Front;
+	gen_Code import_recovery_before = import_recovery_node;
+	expect(import_recovery_before != 0 && import_recovery_before->Type == CT_Variable, gen_txt("c11 import recovery keeps preceding member typed"));
+	if (import_recovery_before != 0)
+		expect(gen_str_are_equal(import_recovery_before->Name, gen_txt("before")), gen_txt("c11 import recovery preceding member name"));
+	if (import_recovery_node != 0) import_recovery_node = import_recovery_node->Next;
+	expect(import_recovery_body != 0 && import_recovery_body->Type == CT_Global_Body, gen_txt("c11 import recovery body"));
+	expect(import_recovery_info.messages != 0, gen_txt("c11 import recovery diagnostic"));
+	if (import_recovery_info.messages != 0)
+		expect(import_recovery_info.messages->Next == 0, gen_txt("c11 import recovery single diagnostic"));
+	expect(import_recovery_node != 0 && import_recovery_node->Type == CT_Untyped, gen_txt("c11 import recovery preserves member as untyped"));
+	if (import_recovery_node != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(import_recovery_node)), gen_txt("import foo;")), gen_txt("c11 import recovery exact source span"));
+	gen_Code import_recovery_after = import_recovery_node != 0 ? import_recovery_node->Next : 0;
+	expect(import_recovery_after != 0 && import_recovery_after->Type == CT_Variable, gen_txt("c11 import recovery keeps following member typed"));
+	if (import_recovery_after != 0)
+		expect(gen_str_are_equal(import_recovery_after->Name, gen_txt("after")), gen_txt("c11 import recovery following member name"));
+
+	gen_Macro unbounded_macro = { gen_txt("UnboundedRecoveryMacro"), MT_Expression, MF_Null };
+	gen_register_macro(unbounded_macro);
+	ParseInfo      macro_recovery_info    = {0};
+	gen_Opts_parse macro_recovery_options = { .ctx = &ctx, .info = &macro_recovery_info };
+	gen_CodeBody   macro_recovery_body    = gen_parse_global_body(gen_txt("s32 before; UnboundedRecoveryMacro; s32 after;"), .ctx = macro_recovery_options.ctx, .info = macro_recovery_options.info);
+	gen_Code       macro_recovery_node    = 0;
+	if (macro_recovery_body != 0) macro_recovery_node = macro_recovery_body->Front;
+	gen_Code macro_recovery_before = macro_recovery_node;
+	expect(macro_recovery_before != 0 && macro_recovery_before->Type == CT_Variable, gen_txt("c11 macro recovery keeps preceding member typed"));
+	if (macro_recovery_before != 0)
+		expect(gen_str_are_equal(macro_recovery_before->Name, gen_txt("before")), gen_txt("c11 macro recovery preceding member name"));
+	if (macro_recovery_node != 0) macro_recovery_node = macro_recovery_node->Next;
+	expect(macro_recovery_body          != 0 && macro_recovery_body->Type == CT_Global_Body, gen_txt("c11 unbounded macro recovery body"));
+	expect(macro_recovery_info.messages != 0,                                                gen_txt("c11 unbounded macro recovery diagnostic"));
+	if (macro_recovery_info.messages != 0)
+		expect(macro_recovery_info.messages->Next == 0, gen_txt("c11 unbounded macro recovery single diagnostic"));
+	expect(macro_recovery_node != 0 && macro_recovery_node->Type == CT_Untyped, gen_txt("c11 unbounded macro recovery preserves member as untyped"));
+	if (macro_recovery_node != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(macro_recovery_node)), gen_txt("UnboundedRecoveryMacro;")), gen_txt("c11 unbounded macro recovery exact source span"));
+	gen_Code macro_recovery_after = macro_recovery_node != 0 ? macro_recovery_node->Next : 0;
+	expect(macro_recovery_after != 0 && macro_recovery_after->Type == CT_Variable, gen_txt("c11 unbounded macro recovery keeps following member typed"));
+	if (macro_recovery_after != 0)
+		expect(gen_str_are_equal(macro_recovery_after->Name, gen_txt("after")), gen_txt("c11 unbounded macro recovery following member name"));
+
+	ParseInfo    eof_recovery_info = {0};
+	gen_CodeBody eof_recovery_body = gen_parse_global_body(gen_txt("s32 before; s32 broken(s32 value"), .ctx = &ctx, .info = &eof_recovery_info);
+	gen_Code     eof_recovery_node = 0;
+	if (eof_recovery_body != 0) eof_recovery_node = eof_recovery_body->Front;
+	gen_Code eof_recovery_before = eof_recovery_node;
+	expect(eof_recovery_before != 0 && eof_recovery_before->Type == CT_Variable, gen_txt("c11 EOF recovery keeps preceding member typed"));
+	if (eof_recovery_before != 0)
+		expect(gen_str_are_equal(eof_recovery_before->Name, gen_txt("before")), gen_txt("c11 EOF recovery preceding member name"));
+	if (eof_recovery_node != 0) eof_recovery_node = eof_recovery_node->Next;
+	expect(eof_recovery_body          != 0 && eof_recovery_body->Type == CT_Global_Body, gen_txt("c11 end-of-slice recovery body"));
+	expect(eof_recovery_info.messages != 0,                                              gen_txt("c11 end-of-slice recovery diagnostic"));
+	if (eof_recovery_info.messages != 0)
+		expect(eof_recovery_info.messages->Next == 0, gen_txt("c11 end-of-slice recovery single diagnostic"));
+	expect(eof_recovery_node != 0 && eof_recovery_node->Type == CT_Untyped, gen_txt("c11 end-of-slice member is untyped"));
+	if (eof_recovery_node != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(eof_recovery_node)), gen_txt("s32 broken(s32 value")), gen_txt("c11 end-of-slice recovery exact source span"));
+	if (eof_recovery_node != 0)
+		expect(eof_recovery_node->Next == 0, gen_txt("c11 end-of-slice recovery has no following node"));
+
+	ParseInfo    comma_recovery_info = {0};
+	gen_CodeBody comma_recovery_body = gen_parse_global_body(gen_txt("s32 before; , s32 after;"), .ctx = &ctx, .info = &comma_recovery_info);
+	gen_Code     comma_recovery_node = 0;
+	if (comma_recovery_body != 0) comma_recovery_node = comma_recovery_body->Front;
+	gen_Code comma_recovery_before = comma_recovery_node;
+	expect(comma_recovery_before != 0 && comma_recovery_before->Type == CT_Variable, gen_txt("c11 comma recovery keeps preceding member typed"));
+	if (comma_recovery_before != 0)
+		expect(gen_str_are_equal(comma_recovery_before->Name, gen_txt("before")), gen_txt("c11 comma recovery preceding member name"));
+	if (comma_recovery_node != 0) comma_recovery_node = comma_recovery_node->Next;
+	expect(comma_recovery_body          != 0 && comma_recovery_body->Type == CT_Global_Body, gen_txt("c11 comma recovery body"));
+	expect(comma_recovery_info.messages != 0,                                                gen_txt("c11 comma recovery diagnostic"));
+	if (comma_recovery_info.messages != 0) {
+		expect(gen_str_contains(comma_recovery_info.messages->Content, gen_txt("Dangling comma")), gen_txt("c11 comma recovery diagnostic text"));
+		expect(comma_recovery_info.messages->Next == 0,                                            gen_txt("c11 comma recovery single diagnostic"));
+	}
+	expect(comma_recovery_node != 0 && comma_recovery_node->Type == CT_Untyped, gen_txt("c11 comma recovery preserves token as untyped"));
+	if (comma_recovery_node != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(comma_recovery_node)), gen_txt(",")), gen_txt("c11 comma recovery exact source span"));
+	gen_Code comma_recovery_after = comma_recovery_node != 0 ? comma_recovery_node->Next : 0;
+	expect(comma_recovery_after != 0 && comma_recovery_after->Type == CT_Variable, gen_txt("c11 comma recovery keeps following member typed"));
+	if (comma_recovery_after != 0)
+		expect(gen_str_are_equal(comma_recovery_after->Name, gen_txt("after")), gen_txt("c11 comma recovery following member name"));
+
+	gen_CodeBody recovery_reuse = gen_parse_global_body(gen_txt("s32 reused_after_recovery;"), .ctx = &ctx, .info = &recovery_info);
+	gen_Str recovery_reuse_text = {0};
+	if (recovery_reuse != 0)
+		recovery_reuse_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)recovery_reuse));
+	expect(recovery_reuse         != 0 && recovery_reuse->Type == CT_Global_Body,   gen_txt("c11 parser context reuse after recovery"));
+	expect(recovery_info.messages == 0,                                             gen_txt("c11 parser context reuse clears prior diagnostics"));
+	expect(gen_str_contains(recovery_reuse_text, gen_txt("reused_after_recovery")), gen_txt("c11 parser context reuse parses later input"));
+
+	ParseInfo      nested_struct_info    = {0};
+	gen_Opts_parse nested_struct_options = { .ctx = &ctx, .info = &nested_struct_info };
+	gen_CodeStruct nested_struct         = gen_parse_struct(gen_txt("struct NestedRecovery { s32 before; s32 broken(s32 value; s32 after; };"), .ctx = nested_struct_options.ctx, .info = nested_struct_options.info);
+	expect(nested_struct != 0 && nested_struct->Type == CT_Struct, gen_txt("c11 nested struct recovery result"));
+	void* nested_struct_result      = nested_struct;
+	void* nested_struct_info_result = nested_struct_info.result;
+	expect(nested_struct_info_result   == nested_struct_result, gen_txt("c11 nested struct recovery ParseInfo result"));
+	expect(nested_struct_info.messages != 0,                    gen_txt("c11 nested struct recovery diagnostic"));
+	if (nested_struct_info.messages != 0)
+		expect(gen_str_contains(nested_struct_info.messages->Content, gen_txt("Expected")), gen_txt("c11 nested struct recovery diagnostic text"));
+	gen_Code nested_struct_member = nested_struct != 0 && nested_struct->Body != 0 ? nested_struct->Body->Front : 0;
+	expect(nested_struct_member != 0 && nested_struct_member->Type == CT_Variable, gen_txt("c11 nested struct recovery keeps preceding member typed"));
+	if (nested_struct_member != 0)
+		expect(gen_str_are_equal(nested_struct_member->Name, gen_txt("before")), gen_txt("c11 nested struct recovery preceding member name"));
+	if (nested_struct_member != 0) nested_struct_member = nested_struct_member->Next;
+	expect(nested_struct_member != 0 && nested_struct_member->Type == CT_Untyped, gen_txt("c11 nested struct recovery retains failed member"));
+	if (nested_struct_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(nested_struct_member)), gen_txt("s32 broken(s32 value;")), gen_txt("c11 nested struct recovery exact failed span"));
+	gen_Code nested_struct_after = nested_struct_member != 0 ? nested_struct_member->Next : 0;
+	expect(nested_struct_after != 0 && nested_struct_after->Type == CT_Variable, gen_txt("c11 nested struct recovery keeps following member typed"));
+	if (nested_struct_after != 0)
+		expect(gen_str_are_equal(nested_struct_after->Name, gen_txt("after")), gen_txt("c11 nested struct recovery following member name"));
+	gen_Str nested_struct_text = {0};
+	if (nested_struct != 0)
+		nested_struct_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)nested_struct));
+	expect(gen_str_contains(nested_struct_text, gen_txt("s32 after")), gen_txt("c11 nested struct recovery serializes following member"));
+
+	ParseInfo      nested_namespace_info    = {0};
+	gen_Opts_parse nested_namespace_options = { .ctx = &ctx, .info = &nested_namespace_info };
+	gen_CodeNS     nested_namespace         = gen_parse_namespace(gen_txt("namespace NestedRecovery { s32 before; s32 broken(s32 value; s32 after; }"), .ctx = nested_namespace_options.ctx, .info = nested_namespace_options.info);
+	expect(nested_namespace != 0 && nested_namespace->Type == CT_Namespace, gen_txt("c11 nested namespace recovery result"));
+	void* nested_namespace_result      = nested_namespace;
+	void* nested_namespace_info_result = nested_namespace_info.result;
+	expect(nested_namespace_info_result == nested_namespace_result, gen_txt("c11 nested namespace recovery ParseInfo result"));
+	expect(nested_namespace_info.messages != 0,                     gen_txt("c11 nested namespace recovery diagnostic"));
+	if (nested_namespace_info.messages != 0)
+		expect(gen_str_contains(nested_namespace_info.messages->Content, gen_txt("Expected")), gen_txt("c11 nested namespace recovery diagnostic text"));
+	gen_Code nested_namespace_member = nested_namespace != 0 && nested_namespace->Body != 0 ? nested_namespace->Body->Front : 0;
+	expect(nested_namespace_member != 0 && nested_namespace_member->Type == CT_Variable, gen_txt("c11 nested namespace recovery keeps preceding member typed"));
+	if (nested_namespace_member != 0)
+		expect(gen_str_are_equal(nested_namespace_member->Name, gen_txt("before")), gen_txt("c11 nested namespace recovery preceding member name"));
+	if (nested_namespace_member != 0) nested_namespace_member = nested_namespace_member->Next;
+	expect(nested_namespace_member != 0 && nested_namespace_member->Type == CT_Untyped, gen_txt("c11 nested namespace recovery retains failed member"));
+	if (nested_namespace_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(nested_namespace_member)), gen_txt("s32 broken(s32 value;")), gen_txt("c11 nested namespace recovery exact failed span"));
+	gen_Code nested_namespace_after = nested_namespace_member != 0 ? nested_namespace_member->Next : 0;
+	expect(nested_namespace_after != 0 && nested_namespace_after->Type == CT_Variable, gen_txt("c11 nested namespace recovery keeps following member typed"));
+	if (nested_namespace_after != 0)
+		expect(gen_str_are_equal(nested_namespace_after->Name, gen_txt("after")), gen_txt("c11 nested namespace recovery following member name"));
+	gen_Str nested_namespace_text = {0};
+	if (nested_namespace != 0)
+		nested_namespace_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)nested_namespace));
+	expect(gen_str_contains(nested_namespace_text, gen_txt("s32 after")), gen_txt("c11 nested namespace recovery serializes following member"));
+
+	ParseInfo      nested_brace_info    = {0};
+	gen_Opts_parse nested_brace_options = { .ctx = &ctx, .info = &nested_brace_info };
+	gen_CodeStruct nested_brace_struct  = gen_parse_struct(gen_txt("struct NestedBraceRecovery { s32 before; s32 broken(s32 { 1; s32 after; };"), .ctx = nested_brace_options.ctx, .info = nested_brace_options.info);
+	expect(nested_brace_struct != 0 && nested_brace_struct->Type == CT_Struct, gen_txt("c11 nested brace recovery result"));
+	void* nested_brace_result      = nested_brace_struct;
+	void* nested_brace_info_result = nested_brace_info.result;
+	expect(nested_brace_info_result == nested_brace_result, gen_txt("c11 nested brace recovery ParseInfo result"));
+	expect(nested_brace_info.messages != 0, gen_txt("c11 nested brace recovery diagnostic"));
+	gen_Code nested_brace_member = nested_brace_struct != 0 && nested_brace_struct->Body != 0 ? nested_brace_struct->Body->Front : 0;
+	expect(nested_brace_member != 0 && nested_brace_member->Type == CT_Variable, gen_txt("c11 nested brace recovery keeps preceding member typed"));
+	if (nested_brace_member != 0) nested_brace_member = nested_brace_member->Next;
+	expect(nested_brace_member != 0 && nested_brace_member->Type == CT_Untyped, gen_txt("c11 nested brace recovery retains failed member"));
+	if (nested_brace_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(nested_brace_member)), gen_txt("s32 broken(s32 { 1;")), gen_txt("c11 nested brace recovery exact failed span"));
+	gen_Code nested_brace_after = nested_brace_member != 0 ? nested_brace_member->Next : 0;
+	expect(nested_brace_after != 0 && nested_brace_after->Type == CT_Variable, gen_txt("c11 nested brace recovery keeps following member typed"));
+	if (nested_brace_after != 0)
+		expect(gen_str_are_equal(nested_brace_after->Name, gen_txt("after")), gen_txt("c11 nested brace recovery following member name"));
+	gen_Str nested_brace_text = {0};
+	if (nested_brace_struct != 0)
+		nested_brace_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)nested_brace_struct));
+	expect(gen_str_contains(nested_brace_text, gen_txt("s32 after")), gen_txt("c11 nested brace recovery serializes following member"));
+
+	ParseInfo      nested_namespace_brace_info    = {0};
+	gen_Opts_parse nested_namespace_brace_options = { .ctx = &ctx, .info = &nested_namespace_brace_info };
+	gen_CodeNS     nested_namespace_brace         = gen_parse_namespace(gen_txt("namespace NestedBraceRecovery { s32 before; s32 broken(s32 { 1; s32 after; }"), .ctx = nested_namespace_brace_options.ctx, .info = nested_namespace_brace_options.info);
+	expect(nested_namespace_brace != 0 && nested_namespace_brace->Type == CT_Namespace, gen_txt("c11 nested namespace brace recovery result"));
+	void* nested_namespace_brace_result      = nested_namespace_brace;
+	void* nested_namespace_brace_info_result = nested_namespace_brace_info.result;
+	expect(nested_namespace_brace_info_result == nested_namespace_brace_result, gen_txt("c11 nested namespace brace recovery ParseInfo result"));
+	gen_Code nested_namespace_brace_member = nested_namespace_brace != 0 && nested_namespace_brace->Body != 0 ? nested_namespace_brace->Body->Front : 0;
+	expect(nested_namespace_brace_member != 0 && nested_namespace_brace_member->Type == CT_Variable, gen_txt("c11 nested namespace brace recovery keeps preceding member typed"));
+	if (nested_namespace_brace_member != 0) nested_namespace_brace_member = nested_namespace_brace_member->Next;
+	expect(nested_namespace_brace_member != 0 && nested_namespace_brace_member->Type == CT_Untyped, gen_txt("c11 nested namespace brace recovery retains failed member"));
+	if (nested_namespace_brace_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(nested_namespace_brace_member)), gen_txt("s32 broken(s32 { 1;")), gen_txt("c11 nested namespace brace recovery exact failed span"));
+	gen_Code nested_namespace_brace_after = nested_namespace_brace_member != 0 ? nested_namespace_brace_member->Next : 0;
+	expect(nested_namespace_brace_after != 0 && nested_namespace_brace_after->Type == CT_Variable, gen_txt("c11 nested namespace brace recovery keeps following member typed"));
+	if (nested_namespace_brace_after != 0)
+		expect(gen_str_are_equal(nested_namespace_brace_after->Name, gen_txt("after")), gen_txt("c11 nested namespace brace recovery following member name"));
+	gen_Str nested_namespace_brace_text = {0};
+	if (nested_namespace_brace != 0)
+		nested_namespace_brace_text = gen_strbuilder_to_str(gen_code_to_strbuilder((gen_Code)nested_namespace_brace));
+	expect(gen_str_contains(nested_namespace_brace_text, gen_txt("s32 after")), gen_txt("c11 nested namespace brace recovery serializes following member"));
+
+	ParseInfo      nested_brace_tail_info    = {0};
+	gen_Opts_parse nested_brace_tail_options = { .ctx = &ctx, .info = &nested_brace_tail_info };
+	gen_CodeStruct nested_brace_tail_struct  = gen_parse_struct(gen_txt("struct NestedBraceTailRecovery { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; };"), .ctx = nested_brace_tail_options.ctx, .info = nested_brace_tail_options.info);
+	expect(nested_brace_tail_struct != 0 && nested_brace_tail_struct->Type == CT_Struct, gen_txt("c11 nested brace tail recovery result"));
+	gen_Code nested_brace_tail_member = nested_brace_tail_struct != 0 && nested_brace_tail_struct->Body != 0 ? nested_brace_tail_struct->Body->Front : 0;
+	if (nested_brace_tail_member != 0) nested_brace_tail_member = nested_brace_tail_member->Next;
+	expect(nested_brace_tail_member != 0 && nested_brace_tail_member->Type == CT_Untyped, gen_txt("c11 nested brace tail recovery retains failed member"));
+	if (nested_brace_tail_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(nested_brace_tail_member)), gen_txt("s32 broken(s32 { 1; 2 } foo{ 3;")), gen_txt("c11 nested brace tail recovery exact failed span"));
+	gen_Code nested_brace_tail_after = nested_brace_tail_member != 0 ? nested_brace_tail_member->Next : 0;
+	expect(nested_brace_tail_after != 0 && nested_brace_tail_after->Type == CT_Variable, gen_txt("c11 nested brace tail recovery keeps following member typed"));
+	if (nested_brace_tail_after != 0)
+		expect(gen_str_are_equal(nested_brace_tail_after->Name, gen_txt("after")), gen_txt("c11 nested brace tail recovery following member name"));
+
+	ParseInfo      nested_namespace_tail_info    = {0};
+	gen_Opts_parse nested_namespace_tail_options = { .ctx = &ctx, .info = &nested_namespace_tail_info };
+	gen_CodeNS     nested_namespace_tail         = gen_parse_namespace(gen_txt("namespace NestedBraceTailRecovery { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; }"), .ctx = nested_namespace_tail_options.ctx, .info = nested_namespace_tail_options.info);
+	expect(nested_namespace_tail != 0 && nested_namespace_tail->Type == CT_Namespace, gen_txt("c11 nested namespace brace tail recovery result"));
+	void* nested_namespace_tail_result      = nested_namespace_tail;
+	void* nested_namespace_tail_info_result = nested_namespace_tail_info.result;
+	expect(nested_namespace_tail_info_result == nested_namespace_tail_result, gen_txt("c11 nested namespace brace tail recovery ParseInfo result"));
+	gen_Code nested_namespace_tail_member = nested_namespace_tail != 0 && nested_namespace_tail->Body != 0 ? nested_namespace_tail->Body->Front : 0;
+	if (nested_namespace_tail_member != 0) nested_namespace_tail_member = nested_namespace_tail_member->Next;
+	expect(nested_namespace_tail_member != 0 && nested_namespace_tail_member->Type == CT_Untyped, gen_txt("c11 nested namespace brace tail recovery retains failed member"));
+	if (nested_namespace_tail_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(nested_namespace_tail_member)), gen_txt("s32 broken(s32 { 1; 2 } foo{ 3;")), gen_txt("c11 nested namespace brace tail recovery exact failed span"));
+	gen_Code nested_namespace_tail_after = nested_namespace_tail_member != 0 ? nested_namespace_tail_member->Next : 0;
+	expect(nested_namespace_tail_after != 0 && nested_namespace_tail_after->Type == CT_Variable, gen_txt("c11 nested namespace brace tail recovery keeps following member typed"));
+	if (nested_namespace_tail_after != 0)
+		expect(gen_str_are_equal(nested_namespace_tail_after->Name, gen_txt("after")), gen_txt("c11 nested namespace brace tail recovery following member name"));
+
+	ParseInfo      nested_inner_close_info    = {0};
+	gen_Opts_parse nested_inner_close_options = { .ctx = &ctx, .info = &nested_inner_close_info };
+	gen_CodeStruct nested_inner_close_struct  = gen_parse_struct(gen_txt("struct NestedInnerCloseRecovery { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; struct Inner { s32 x; }; s32 tail; };"), .ctx = nested_inner_close_options.ctx, .info = nested_inner_close_options.info);
+	expect(nested_inner_close_struct != 0 && nested_inner_close_struct->Type == CT_Struct, gen_txt("c11 nested inner-close recovery result"));
+	gen_Code nested_inner_close_member = nested_inner_close_struct != 0 && nested_inner_close_struct->Body != 0 ? nested_inner_close_struct->Body->Front : 0;
+	if (nested_inner_close_member != 0) nested_inner_close_member = nested_inner_close_member->Next;
+	expect(nested_inner_close_member != 0 && nested_inner_close_member->Type == CT_Untyped, gen_txt("c11 nested inner-close recovery retains failed member"));
+	if (nested_inner_close_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(nested_inner_close_member)), gen_txt("s32 broken(s32 { 1; 2 } foo{ 3;")), gen_txt("c11 nested inner-close recovery exact failed span"));
+	gen_Code nested_inner_close_after = nested_inner_close_member != 0 ? nested_inner_close_member->Next : 0;
+	expect(nested_inner_close_after != 0 && nested_inner_close_after->Type == CT_Variable, gen_txt("c11 nested inner-close recovery keeps following member typed"));
+	if (nested_inner_close_after != 0)
+		expect(gen_str_are_equal(nested_inner_close_after->Name, gen_txt("after")), gen_txt("c11 nested inner-close recovery following member name"));
+	gen_Code nested_inner_close_inner = nested_inner_close_after != 0 ? nested_inner_close_after->Next : 0;
+	expect(nested_inner_close_inner != 0 && nested_inner_close_inner->Type == CT_Struct, gen_txt("c11 nested inner-close recovery parses nested struct"));
+	gen_Code nested_inner_close_tail = nested_inner_close_inner != 0 ? nested_inner_close_inner->Next : 0;
+	expect(nested_inner_close_tail != 0 && nested_inner_close_tail->Type == CT_Variable, gen_txt("c11 nested inner-close recovery parses trailing member"));
+
+	ParseInfo      inner_before_sync_info    = {0};
+	gen_Opts_parse inner_before_sync_options = { .ctx = &ctx, .info = &inner_before_sync_info };
+	gen_CodeStruct inner_before_sync         = gen_parse_struct(gen_txt("struct NestedInnerBeforeSync { s32 before; s32 broken(foo{ struct Inner { s32 x; }; s32 after; };"), .ctx = inner_before_sync_options.ctx, .info = inner_before_sync_options.info);
+	expect(inner_before_sync != 0 && inner_before_sync->Type == CT_Struct, gen_txt("c11 inner-before-sync recovery result"));
+	gen_Code inner_before_sync_member = inner_before_sync != 0 && inner_before_sync->Body != 0 ? inner_before_sync->Body->Front : 0;
+	expect(inner_before_sync_member != 0 && inner_before_sync_member->Type == CT_Variable, gen_txt("c11 inner-before-sync recovery keeps preceding member typed"));
+	if (inner_before_sync_member != 0) inner_before_sync_member = inner_before_sync_member->Next;
+	expect(inner_before_sync_member != 0 && inner_before_sync_member->Type == CT_Untyped, gen_txt("c11 inner-before-sync recovery retains failed member"));
+	if (inner_before_sync_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(inner_before_sync_member)), gen_txt("s32 broken(foo{ struct Inner { s32 x; };")), gen_txt("c11 inner-before-sync recovery exact failed span"));
+	gen_Code inner_before_sync_after = inner_before_sync_member != 0 ? inner_before_sync_member->Next : 0;
+	expect(inner_before_sync_after != 0 && inner_before_sync_after->Type == CT_Variable, gen_txt("c11 inner-before-sync recovery keeps following member typed"));
+	if (inner_before_sync_after != 0)
+		expect(gen_str_are_equal(inner_before_sync_after->Name, gen_txt("after")), gen_txt("c11 inner-before-sync recovery following member name"));
+
+	ParseInfo      global_namespace_recovery_info = {0};
+	gen_Opts_parse global_namespace_recovery_options = { .ctx = &ctx, .info = &global_namespace_recovery_info };
+	gen_CodeBody   global_namespace_recovery         = gen_parse_global_body(gen_txt("namespace NestedScopeInGlobal { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; } struct Later { s32 value; };"), .ctx = global_namespace_recovery_options.ctx, .info = global_namespace_recovery_options.info);
+	expect(global_namespace_recovery != 0 && global_namespace_recovery->Type == CT_Global_Body, gen_txt("c11 global namespace recovery body"));
+	void* global_namespace_recovery_result      = global_namespace_recovery;
+	void* global_namespace_recovery_info_result = global_namespace_recovery_info.result;
+	expect(global_namespace_recovery_info_result == global_namespace_recovery_result, gen_txt("c11 global namespace recovery ParseInfo result"));
+	gen_Code global_namespace_node = global_namespace_recovery != 0 ? global_namespace_recovery->Front : 0;
+	expect(global_namespace_node != 0 && global_namespace_node->Type == CT_Namespace, gen_txt("c11 global namespace recovery preserves namespace"));
+	gen_Code global_namespace_member = global_namespace_node != 0 && global_namespace_node->Body != 0 ? global_namespace_node->Body->Front : 0;
+	if (global_namespace_member != 0) global_namespace_member = global_namespace_member->Next;
+	expect(global_namespace_member != 0 && global_namespace_member->Type == CT_Untyped, gen_txt("c11 global namespace recovery retains failed member"));
+	if (global_namespace_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(global_namespace_member)), gen_txt("s32 broken(s32 { 1; 2 } foo{ 3;")), gen_txt("c11 global namespace recovery exact failed span"));
+	gen_Code global_namespace_after = global_namespace_member != 0 ? global_namespace_member->Next : 0;
+	expect(global_namespace_after != 0 && global_namespace_after->Type == CT_Variable, gen_txt("c11 global namespace recovery keeps following member typed"));
+	if (global_namespace_after != 0)
+		expect(gen_str_are_equal(global_namespace_after->Name, gen_txt("after")), gen_txt("c11 global namespace recovery following member name"));
+	gen_Code global_later_struct = global_namespace_node != 0 ? global_namespace_node->Next : 0;
+	expect(global_later_struct != 0 && global_later_struct->Type == CT_Struct, gen_txt("c11 global namespace recovery preserves following global struct"));
+	if (global_later_struct != 0)
+		expect(gen_str_are_equal(global_later_struct->Name, gen_txt("Later")), gen_txt("c11 global namespace recovery following global name"));
+
+	ParseInfo      global_struct_recovery_info    = {0};
+	gen_Opts_parse global_struct_recovery_options = { .ctx = &ctx, .info = &global_struct_recovery_info };
+	gen_CodeBody   global_struct_recovery         = gen_parse_global_body(gen_txt("struct GlobalNestedRecovery { s32 before; s32 broken(s32 value; s32 after; }; struct LaterGlobal { s32 value; };"), .ctx = global_struct_recovery_options.ctx, .info = global_struct_recovery_options.info);
+	expect(global_struct_recovery != 0 && global_struct_recovery->Type == CT_Global_Body, gen_txt("c11 global struct recovery body"));
+	gen_Code global_struct_node   = global_struct_recovery != 0                                  ? global_struct_recovery->Front : 0;
+	gen_Code global_struct_before = global_struct_node     != 0 && global_struct_node->Body != 0 ? global_struct_node->Body->Front : 0;
+	gen_Code global_struct_member = global_struct_before   != 0                                  ? global_struct_before->Next : 0;
+	gen_Code global_struct_after  = global_struct_member   != 0                                  ? global_struct_member->Next : 0;
+	gen_Code global_later_class   = global_struct_node     != 0                                  ? global_struct_node->Next   : 0;
+	expect(global_struct_node   != 0 && global_struct_node->Type   == CT_Struct,   gen_txt("c11 global struct recovery preserves partial struct"));
+	expect(global_struct_member != 0 && global_struct_member->Type == CT_Untyped,  gen_txt("c11 global struct recovery retains failed member"));
+	if (global_struct_member != 0)
+		expect(gen_str_are_equal(gen_strbuilder_to_str(gen_code_to_strbuilder(global_struct_member)), gen_txt("s32 broken(s32 value;")), gen_txt("c11 global struct recovery exact failed span"));
+	expect(global_struct_after != 0 && global_struct_after->Type == CT_Variable, gen_txt("c11 global struct recovery keeps following member"));
+	if (global_struct_after != 0)
+		expect(gen_str_are_equal(global_struct_after->Name, gen_txt("after")), gen_txt("c11 global struct recovery following member name"));
+	expect(global_later_class != 0 && global_later_class->Type == CT_Struct, gen_txt("c11 global struct recovery keeps following global struct"));
+
+	ParseInfo      nested_owner_info    = {0};
+	gen_Opts_parse nested_owner_options = { .ctx = & ctx, .info = & nested_owner_info };
+	gen_CodeStruct nested_owner         = gen_parse_struct(gen_txt("struct NestedOwner { s32 before; struct InnerRecovery { s32 inner_before; s32 broken(s32 value; s32 inner_after; }; s32 after; };"), .ctx = nested_owner_options.ctx, .info = nested_owner_options.info);
+	expect(nested_owner != 0 && nested_owner->Type == CT_Struct, gen_txt("c11 nested owner recovery result"));
+	void* nested_owner_result      = nested_owner;
+	void* nested_owner_info_result = nested_owner_info.result;
+	expect(nested_owner_info_result   == nested_owner_result, gen_txt("c11 nested owner recovery ParseInfo result"));
+	expect(nested_owner_info.messages != 0,                   gen_txt("c11 nested owner recovery diagnostic"));
+
+	gen_Code nested_owner_before       = nested_owner != 0 && nested_owner->Body != 0 ? nested_owner->Body->Front : 0;
+	gen_Code nested_owner_inner        = nested_owner_before != 0 ? nested_owner_before->Next : 0;
+	gen_Code nested_owner_after        = nested_owner_inner  != 0 ? nested_owner_inner->Next  : 0;
+	gen_Code nested_owner_inner_before = nested_owner_inner != 0 && nested_owner_inner->Body != 0 ? nested_owner_inner->Body->Front : 0;
+	gen_Code nested_owner_inner_failed = nested_owner_inner_before != 0 ? nested_owner_inner_before->Next : 0;
+	gen_Code nested_owner_inner_after  = nested_owner_inner_failed != 0 ? nested_owner_inner_failed->Next : 0;
+	expect(nested_owner_before       != 0 && nested_owner_before->Type       == CT_Variable, gen_txt("c11 nested owner keeps preceding member typed"));
+	expect(nested_owner_inner        != 0 && nested_owner_inner->Type        == CT_Struct,   gen_txt("c11 nested owner retains inner struct AST"));
+	expect(nested_owner_inner_before != 0 && nested_owner_inner_before->Type == CT_Variable, gen_txt("c11 nested inner recovery keeps preceding member typed"));
+	expect(nested_owner_inner_failed != 0 && nested_owner_inner_failed->Type == CT_Untyped,  gen_txt("c11 nested inner recovery retains failed member"));
+	expect(nested_owner_inner_after  != 0 && nested_owner_inner_after->Type  == CT_Variable, gen_txt("c11 nested inner recovery keeps following member typed"));
+	expect(nested_owner_after        != 0 && nested_owner_after->Type        == CT_Variable, gen_txt("c11 nested owner keeps following member typed"));
+
 #if ! GEN_BUILD_DEBUG
-	gen_CodeVar wrong_array_value = gen_def_variable(gen_def_type(name(u32)), name(invalid_array_expr));
+	gen_CodeVar      wrong_array_value  = gen_def_variable(gen_def_type(name(u32)), name(invalid_array_expr));
 	gen_CodeTypename invalid_array_type = gen_def_type(name(InvalidArrayOption), .gen_array_expr = (gen_Code)wrong_array_value);
 	expect((gen_Code)invalid_array_type == gen_Code_Invalid, gen_txt("c11 wrong type invalid code"));
 
-	gen_CodeBody missing_union_body = 0;
-	gen_CodeUnion missing_union = gen_def_union(name(MissingUnionBody), missing_union_body);
+	gen_CodeBody  missing_union_body = 0;
+	gen_CodeUnion missing_union      = gen_def_union(name(MissingUnionBody), missing_union_body);
 	expect((gen_Code)missing_union == gen_Code_Invalid, gen_txt("c11 missing body invalid code"));
 #endif
 
-	gen_deinit(&ctx);
+	gen_deinit(& ctx);
 	if (g_failures != 0) { gen_log_fmt("c11 baseline smoke failed: %d\n", g_failures); return 1; }
 	gen_log_fmt("c11 baseline smoke passed\n");
 	return 0;

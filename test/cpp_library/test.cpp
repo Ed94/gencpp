@@ -30,6 +30,14 @@ internal void expect_variable(gen::CodeVar var, gen::Str label) {
 	}
 }
 
+internal void expect_parse_result(gen::Code result, gen::ParseInfo* info, gen::CodeType expected, gen::Str label) {
+	expect(result.ast != nullptr, label);
+	if (result.ast != nullptr) expect(result->Type == expected, label);
+	expect(info->result.ast == result.ast, label);
+	expect(info->lexed.tokens.num > 0, label);
+	expect(info->lexed.messages == nullptr && info->messages == nullptr, label);
+}
+
 int main()
 {
 	using namespace gen;
@@ -401,10 +409,10 @@ int main()
 
 	CodeTypename operator_type   = def_type(name(OperatorOptionType));
 	CodeTypename operator_return = def_type(name(OperatorOptionReturn));
-	CodeParams operator_lhs      = def_param(operator_type, name(operator_option_lhs));
-	CodeParams operator_rhs      = def_param(operator_type, name(operator_option_rhs));
-	CodeParams operator_params   = def_params(args(operator_lhs, operator_rhs));
-	CodeBody   operator_body     = def_function_body(args(untyped_str(txt("return operator_option_lhs;"))));
+	CodeParams   operator_lhs    = def_param(operator_type, name(operator_option_lhs));
+	CodeParams   operator_rhs    = def_param(operator_type, name(operator_option_rhs));
+	CodeParams   operator_params = def_params(args(operator_lhs, operator_rhs));
+	CodeBody     operator_body   = def_function_body(args(untyped_str(txt("return operator_option_lhs;"))));
 	Opts_def_operator operator_options = {};
 	operator_options.params     = operator_params;
 	operator_options.ret_type   = operator_return;
@@ -452,19 +460,491 @@ int main()
 		expect(str_contains(cast_text, txt("return 0")),     txt("cpp operator cast body serialization"));
 	}
 
-	Code    untyped        = code_str(char const* baseline_message = "GENCPP_BASELINE";); expect(untyped.ast != nullptr,  txt("cpp untyped"));
-	Str     untyped_text   = strbuilder_to_str(code_to_strbuilder(untyped));              expect_fragments(untyped_text,  txt("cpp untyped content"));
-	CodeVar parsed_untyped = parse_variable(untyped_text);                                expect_variable(parsed_untyped, txt("cpp untyped reparsed"));
+	Code    untyped        = code_str(char const* baseline_message = "GENCPP_BASELINE";);
+	Str     untyped_text   = strbuilder_to_str(code_to_strbuilder(untyped));
+	CodeVar parsed_untyped = parse_variable(untyped_text);
+	expect(untyped.ast != nullptr,  txt("cpp untyped"));
+	expect_fragments(untyped_text,  txt("cpp untyped content"));
+	expect_variable(parsed_untyped, txt("cpp untyped reparsed"));
 
 	CodeVar parsed = parse_variable(code(char const* baseline_message = "GENCPP_BASELINE"; ));
 	expect_variable(parsed, txt("cpp parsed"));
 	expect_fragments(strbuilder_to_str(code_to_strbuilder((Code)parsed)), txt("cpp parsed serialized"));
 
+	CodeClass       parser_class         = parse_class(txt("class ParseClass {};"));
+	CodeConstructor parser_constructor   = parse_constructor(txt("ParseClass() {}"));
+	CodeDefine      parser_define        = parse_define(txt("#define PARSE_DEFINE 1"));
+	CodeDestructor  parser_destructor    = parse_destructor(txt("~ParseClass();"));
+	CodeEnum        parser_enum          = parse_enum(txt("enum ParseEnum { ParseValue };"));
+	CodeBody        parser_export_body   = parse_export_body(txt("{ int export_value; }"));
+	CodeExtern      parser_extern        = parse_extern_link(txt("extern \"C\" { int extern_value; }"));
+	CodeFriend      parser_friend        = parse_friend(txt("friend int parse_friend_function();"));
+	CodeFn          parser_function      = parse_function(txt("int parse_function();"));
+	CodeBody        parser_global_body   = parse_global_body(txt("struct ParseGlobal { int value; };"));
+	CodeNS          parser_namespace     = parse_namespace(txt("namespace ParseNamespace {}"));
+	CodeOperator    parser_operator      = parse_operator(txt("s32 operator +(s32 lhs, s32 rhs);"));
+	CodeOpCast      parser_operator_cast = parse_operator_cast(txt("operator s32() const;"));
+	CodeStruct      parser_struct        = parse_struct(txt("struct ParseStruct {};"));
+	CodeTemplate    parser_template      = parse_template(txt("template<class T> struct ParseTemplate {};"));
+	CodeTypename    parser_type          = parse_type(txt("const s32*"));
+	CodeTypedef     parser_typedef       = parse_typedef(txt("typedef s32 ParseTypedef;"));
+	CodeUnion       parser_union         = parse_union(txt("union ParseUnion { s32 value; };"));
+	CodeUsing       parser_using         = parse_using(txt("using ParseUsing = s32;"));
+	CodeVar         parser_variable      = parse_variable(txt("s32 parse_variable;"));
+
+	expect(parser_class.ast         != nullptr && parser_class->Type         == CT_Class,             txt("cpp parse class fixture"));
+	expect(parser_constructor.ast   != nullptr && parser_constructor->Type   == CT_Constructor,       txt("cpp parse constructor fixture"));
+	expect(parser_define.ast        != nullptr && parser_define->Type        == CT_Preprocess_Define, txt("cpp parse define fixture"));
+	expect(parser_destructor.ast    != nullptr && parser_destructor->Type    == CT_Destructor_Fwd,    txt("cpp parse destructor fixture"));
+	expect(parser_enum.ast          != nullptr && parser_enum->Type          == CT_Enum,              txt("cpp parse enum fixture"));
+	expect(parser_export_body.ast   != nullptr && parser_export_body->Type   == CT_Export_Body,       txt("cpp parse export body fixture"));
+	expect(parser_extern.ast        != nullptr && parser_extern->Type        == CT_Extern_Linkage,    txt("cpp parse extern fixture"));
+	expect(parser_friend.ast        != nullptr && parser_friend->Type        == CT_Friend,            txt("cpp parse friend fixture"));
+	expect(parser_function.ast      != nullptr && parser_function->Type      == CT_Function_Fwd,      txt("cpp parse function fixture"));
+	expect(parser_global_body.ast   != nullptr && parser_global_body->Type   == CT_Global_Body,       txt("cpp parse global body fixture"));
+	expect(parser_namespace.ast     != nullptr && parser_namespace->Type     == CT_Namespace,         txt("cpp parse namespace fixture"));
+	expect(parser_operator.ast      != nullptr && parser_operator->Type      == CT_Operator_Fwd,      txt("cpp parse operator fixture"));
+	expect(parser_operator_cast.ast != nullptr && parser_operator_cast->Type == CT_Operator_Cast_Fwd, txt("cpp parse operator cast fixture"));
+	expect(parser_struct.ast        != nullptr && parser_struct->Type        == CT_Struct,            txt("cpp parse struct fixture"));
+	expect(parser_template.ast      != nullptr && parser_template->Type      == CT_Template,          txt("cpp parse template fixture"));
+	expect(parser_type.ast          != nullptr && parser_type->Type          == CT_Typename,          txt("cpp parse type fixture"));
+	expect(parser_typedef.ast       != nullptr && parser_typedef->Type       == CT_Typedef,           txt("cpp parse typedef fixture"));
+	expect(parser_union.ast         != nullptr && parser_union->Type         == CT_Union,             txt("cpp parse union fixture"));
+	expect(parser_using.ast         != nullptr && parser_using->Type         == CT_Using,             txt("cpp parse using fixture"));
+	expect(parser_variable.ast      != nullptr && parser_variable->Type      == CT_Variable,          txt("cpp parse variable fixture"));
+
+	CodeBody parsed_global_options = parse_global_body(txt("struct ParseGlobalOptions { s32 value; };"));
+	Code     global_options_code   = parsed_global_options;
+	expect(parsed_global_options.ast != nullptr,                                           txt("cpp parse global body options"));
+	expect(ctx.parse_info.result.ast == global_options_code.ast,                           txt("cpp default parse info result"));
+	expect(ctx.parse_info.lexed.tokens.num > 0,                                            txt("cpp default parse info tokens"));
+	expect(ctx.parse_info.lexed.messages == nullptr && ctx.parse_info.messages == nullptr, txt("cpp default parse info messages"));
+
+	ParseInfo  caller_info   = {};
+	Opts_parse parse_options = { & ctx, & caller_info };
+	CodeVar parsed_option_variable = parse_variable(txt("s32 parsed_option_variable;"), parse_options);
+	Code    parsed_option_code     = parsed_option_variable;
+	expect(parsed_option_variable.ast != nullptr && parsed_option_variable->Type == CT_Variable, txt("cpp explicit parse variable options"));
+	expect(str_contains(parsed_option_variable->Name, txt("parsed_option_variable")),            txt("cpp explicit parse variable name"));
+	expect(caller_info.result.ast == parsed_option_code.ast,                                     txt("cpp explicit parse info result"));
+	expect(caller_info.lexed.tokens.num > 0,                                                     txt("cpp explicit parse info tokens"));
+
+	ParseInfo  lexer_info    = {};
+	Opts_parse lexer_options = { & ctx, & lexer_info };
+	CodeVar parsed_lexer_prefix = parse_variable(txt("s32 parsed_lexer_prefix;@"), lexer_options);
+	Code    parsed_lexer_code   = parsed_lexer_prefix;
+	expect(parsed_lexer_prefix.ast != nullptr && parsed_lexer_prefix->Type == CT_Variable, txt("cpp parse lexer prefix result"));
+	expect(lexer_info.result.ast == parsed_lexer_code.ast,                                 txt("cpp parse lexer prefix info result"));
+	expect(lexer_info.lexed.tokens.num > 0,                                                txt("cpp parse lexer prefix retained tokens"));
+	expect(lexer_info.lexed.messages != nullptr,                                           txt("cpp parse lexer prefix diagnostic"));
+
+	expect_parse_result(parse_class        (txt("class ParseClass {};"), parse_options), & caller_info, CT_Class, txt("cpp class options matrix"));
+	expect_parse_result(parse_constructor  (txt("ParseClass() {}"), parse_options), & caller_info, CT_Constructor, txt("cpp constructor options matrix"));
+	expect_parse_result(parse_define       (txt("#define PARSE_DEFINE 1"), parse_options), & caller_info, CT_Preprocess_Define, txt("cpp define options matrix"));
+	expect_parse_result(parse_destructor   (txt("~ParseClass();"), parse_options), & caller_info, CT_Destructor_Fwd, txt("cpp destructor options matrix"));
+	expect_parse_result(parse_enum         (txt("enum ParseEnum { ParseValue };"), parse_options), & caller_info, CT_Enum, txt("cpp enum options matrix"));
+	expect_parse_result(parse_export_body  (txt("{ int export_value; }"), parse_options), & caller_info, CT_Export_Body, txt("cpp export body options matrix"));
+	expect_parse_result(parse_extern_link  (txt("extern \"C\" { int extern_value; }"), parse_options), & caller_info, CT_Extern_Linkage, txt("cpp extern options matrix"));
+	expect_parse_result(parse_friend       (txt("friend int parse_friend_function();"), parse_options), & caller_info, CT_Friend, txt("cpp friend options matrix"));
+	expect_parse_result(parse_function     (txt("int parse_function();"), parse_options), & caller_info, CT_Function_Fwd, txt("cpp function options matrix"));
+	expect_parse_result(parse_global_body  (txt("struct ParseGlobal { int value; };"), parse_options), & caller_info, CT_Global_Body, txt("cpp global body options matrix"));
+	expect_parse_result(parse_namespace    (txt("namespace ParseNamespace {}"), parse_options), & caller_info, CT_Namespace, txt("cpp namespace options matrix"));
+	expect_parse_result(parse_operator     (txt("s32 operator +(s32 lhs, s32 rhs);"), parse_options), & caller_info, CT_Operator_Fwd, txt("cpp operator options matrix"));
+	expect_parse_result(parse_operator_cast(txt("operator s32() const;"), parse_options), & caller_info, CT_Operator_Cast_Fwd, txt("cpp operator cast options matrix"));
+	expect_parse_result(parse_struct       (txt("struct ParseStruct {};"), parse_options), & caller_info, CT_Struct, txt("cpp struct options matrix"));
+	expect_parse_result(parse_template     (txt("template<class T> struct ParseTemplate {};"), parse_options), & caller_info, CT_Template, txt("cpp template options matrix"));
+	expect_parse_result(parse_type         (txt("const s32*"), parse_options), & caller_info, CT_Typename, txt("cpp type options matrix"));
+	expect_parse_result(parse_typedef      (txt("typedef s32 ParseTypedef;"), parse_options),        & caller_info, CT_Typedef,  txt("cpp typedef options matrix"));
+	expect_parse_result(parse_union        (txt("union ParseUnion { s32 value; };"), parse_options), & caller_info, CT_Union,    txt("cpp union options matrix"));
+	expect_parse_result(parse_using        (txt("using ParseUsing = s32;"), parse_options),          & caller_info, CT_Using,    txt("cpp using options matrix"));
+	expect_parse_result(parse_variable     (txt("s32 parse_variable;"), parse_options),              & caller_info, CT_Variable, txt("cpp variable options matrix"));
+
+	ParseInfo  comma_info        = {};
+	Opts_parse comma_options     = { &ctx, &comma_info };
+	CodeBody   parsed_comma_body = parse_global_body(txt("struct ParseComma { s32 value; };\n,"), comma_options);
+	Code       parsed_comma_code = parsed_comma_body;
+	expect(parsed_comma_body.ast != nullptr && parsed_comma_body->Type == CT_Global_Body, txt("cpp comma parser result"));
+	expect(comma_info.result.ast == parsed_comma_code.ast,                                txt("cpp comma ParseInfo result"));
+	expect(comma_info.lexed.tokens.num > 0 && comma_info.lexed.messages == nullptr,       txt("cpp comma retained tokens"));
+	expect(comma_info.messages != nullptr,                                                txt("cpp comma parser diagnostic"));
+	if (comma_info.messages != nullptr)
+		expect(str_contains(comma_info.messages->Content, txt("Dangling comma")), txt("cpp comma diagnostic content"));
+
+	ParseInfo  recovery_info    = {};
+	Opts_parse recovery_options = { &ctx, &recovery_info };
+	CodeBody   recovered_body   = parse_global_body(txt("s32 before; s32 broken(s32 value; s32 after;"), recovery_options);
+	Str recovery_text = { nullptr, 0 };
+	if (recovered_body.ast != nullptr)
+		recovery_text = strbuilder_to_str(code_to_strbuilder((Code)recovered_body));
+	expect(recovered_body.ast       != nullptr && recovered_body->Type == CT_Global_Body, txt("cpp file-scope recovery body"));
+	expect(recovery_info.result.ast == ((Code)recovered_body).ast,                        txt("cpp file-scope recovery ParseInfo result"));
+	expect(recovery_info.messages   != nullptr,                                           txt("cpp file-scope recovery diagnostic"));
+	if (recovery_info.messages != nullptr)
+		expect(str_contains(recovery_info.messages->Content, txt("Expected")), txt("cpp file-scope recovery mismatch text"));
+	if (recovery_info.messages != nullptr)
+		expect(recovery_info.messages->Next == nullptr, txt("cpp file-scope recovery single diagnostic"));
+	expect(str_contains(recovery_text, txt("before")), txt("cpp file-scope recovery keeps preceding member"));
+	expect(str_contains(recovery_text, txt("after")),  txt("cpp file-scope recovery keeps following member"));
+	Code recovered_member = { nullptr };
+	if (recovered_body.ast != nullptr) recovered_member = recovered_body->Front;
+	Code recovered_before = recovered_member;
+	expect(recovered_before != nullptr && recovered_before->Type == CT_Variable, txt("cpp mismatch recovery keeps preceding member typed"));
+	if (recovered_before)
+		expect(str_are_equal(recovered_before->Name, txt("before")), txt("cpp mismatch recovery preceding member name"));
+	if (recovered_member) recovered_member = recovered_member->Next;
+	expect(recovered_member != nullptr && recovered_member->Type == CT_Untyped, txt("cpp file-scope recovery stores malformed member as untyped"));
+	if (recovered_member)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(recovered_member)), txt("s32 broken(s32 value;")), txt("cpp file-scope recovery retains exact mismatch span"));
+	Code recovered_after = recovered_member ? recovered_member->Next : Code{ nullptr };
+	expect(recovered_after != nullptr && recovered_after->Type == CT_Variable, txt("cpp file-scope recovery keeps following member typed"));
+	if (recovered_after)
+		expect(str_are_equal(recovered_after->Name, txt("after")), txt("cpp file-scope recovery following member name"));
+
+	ParseInfo  invalid_member_info    = {};
+	Opts_parse invalid_member_options = { &ctx, &invalid_member_info };
+	CodeBody   invalid_member_body    = parse_global_body(txt("s32 before; = { 1; 2 }; s32 after;"), invalid_member_options);
+	Str invalid_member_text = { nullptr, 0 };
+	if (invalid_member_body.ast != nullptr)
+		invalid_member_text = strbuilder_to_str(code_to_strbuilder((Code)invalid_member_body));
+	expect(invalid_member_body.ast        != nullptr && invalid_member_body->Type == CT_Global_Body, txt("cpp invalid member recovery body"));
+	expect(invalid_member_info.result.ast == ((Code)invalid_member_body).ast,                        txt("cpp invalid member recovery ParseInfo result"));
+	expect(invalid_member_info.messages   != nullptr,                                                txt("cpp invalid member recovery diagnostic"));
+	if (invalid_member_info.messages != nullptr) {
+		expect(str_contains(invalid_member_info.messages->Content, txt("Failed to parse member")), txt("cpp invalid member recovery diagnostic text"));
+		expect(invalid_member_info.messages->Next == nullptr,                                      txt("cpp invalid member recovery single diagnostic"));
+	}
+	expect(str_contains(invalid_member_text, txt("before")), txt("cpp invalid member recovery keeps preceding member"));
+	expect(str_contains(invalid_member_text, txt("after")),  txt("cpp invalid member recovery keeps following member"));
+	Code invalid_member_node = { nullptr };
+	if  (invalid_member_body.ast != nullptr) invalid_member_node = invalid_member_body->Front;
+	Code invalid_member_before = invalid_member_node;
+	expect(invalid_member_before != nullptr && invalid_member_before->Type == CT_Variable, txt("cpp invalid member keeps preceding member typed"));
+	if (invalid_member_before)
+		expect(str_are_equal(invalid_member_before->Name, txt("before")), txt("cpp invalid member preceding member name"));
+	if (invalid_member_node) invalid_member_node = invalid_member_node->Next;
+	expect(invalid_member_node != nullptr && invalid_member_node->Type == CT_Untyped, txt("cpp invalid member recovery stores member as untyped"));
+	if (invalid_member_node)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(invalid_member_node)), txt("= { 1; 2 };")), txt("cpp invalid member recovery retains exact source span"));
+	Code   invalid_member_after = invalid_member_node ? invalid_member_node->Next : Code{ nullptr };
+	expect(invalid_member_after != nullptr && invalid_member_after->Type == CT_Variable, txt("cpp invalid member recovery keeps following member typed"));
+	if (invalid_member_after)
+		expect(str_are_equal(invalid_member_after->Name, txt("after")), txt("cpp invalid member recovery following member name"));
+
+	ParseInfo  import_recovery_info    = {};
+	Opts_parse import_recovery_options = { &ctx, &import_recovery_info };
+	CodeBody   import_recovery_body    = parse_global_body(txt("s32 before; import foo; s32 after;"), import_recovery_options);
+	Code import_recovery_node = { nullptr };
+	if  (import_recovery_body.ast != nullptr) import_recovery_node = import_recovery_body->Front;
+	Code import_recovery_before = import_recovery_node;
+	expect(import_recovery_before != nullptr && import_recovery_before->Type == CT_Variable, txt("cpp import recovery keeps preceding member typed"));
+	if (import_recovery_before)
+		expect(str_are_equal(import_recovery_before->Name, txt("before")), txt("cpp import recovery preceding member name"));
+	if (import_recovery_node) import_recovery_node = import_recovery_node->Next;
+	expect(import_recovery_body.ast != nullptr && import_recovery_body->Type == CT_Global_Body, txt("cpp import recovery body"));
+	expect(import_recovery_info.messages != nullptr, txt("cpp import recovery diagnostic"));
+	if (import_recovery_info.messages != nullptr)
+		expect(import_recovery_info.messages->Next == nullptr, txt("cpp import recovery single diagnostic"));
+	expect(import_recovery_node != nullptr && import_recovery_node->Type == CT_Untyped, txt("cpp import recovery preserves member as untyped"));
+	if (import_recovery_node)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(import_recovery_node)), txt("import foo;")), txt("cpp import recovery exact source span"));
+	Code import_recovery_after = import_recovery_node ? import_recovery_node->Next : Code{ nullptr };
+	expect(import_recovery_after != nullptr && import_recovery_after->Type == CT_Variable, txt("cpp import recovery keeps following member typed"));
+	if (import_recovery_after)
+		expect(str_are_equal(import_recovery_after->Name, txt("after")), txt("cpp import recovery following member name"));
+
+	Macro unbounded_macro = { txt("UnboundedRecoveryMacro"), MT_Expression, MF_Null };
+	register_macro(unbounded_macro);
+	ParseInfo  macro_recovery_info    = {};
+	Opts_parse macro_recovery_options = { &ctx, &macro_recovery_info };
+	CodeBody   macro_recovery_body    = parse_global_body(txt("s32 before; UnboundedRecoveryMacro; s32 after;"), macro_recovery_options);
+	Code macro_recovery_node = { nullptr };
+	if  (macro_recovery_body.ast != nullptr) macro_recovery_node = macro_recovery_body->Front;
+	Code macro_recovery_before = macro_recovery_node;
+	expect(macro_recovery_before != nullptr && macro_recovery_before->Type == CT_Variable, txt("cpp macro recovery keeps preceding member typed"));
+	if (macro_recovery_before)
+		expect(str_are_equal(macro_recovery_before->Name, txt("before")), txt("cpp macro recovery preceding member name"));
+	if (macro_recovery_node) macro_recovery_node = macro_recovery_node->Next;
+	expect(macro_recovery_body.ast != nullptr && macro_recovery_body->Type == CT_Global_Body, txt("cpp unbounded macro recovery body"));
+	expect(macro_recovery_info.messages != nullptr, txt("cpp unbounded macro recovery diagnostic"));
+	if (macro_recovery_info.messages != nullptr)
+		expect(macro_recovery_info.messages->Next == nullptr, txt("cpp unbounded macro recovery single diagnostic"));
+	expect(macro_recovery_node != nullptr && macro_recovery_node->Type == CT_Untyped, txt("cpp unbounded macro recovery preserves member as untyped"));
+	if (macro_recovery_node)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(macro_recovery_node)), txt("UnboundedRecoveryMacro;")), txt("cpp unbounded macro recovery exact source span"));
+	Code macro_recovery_after = macro_recovery_node ? macro_recovery_node->Next : Code{ nullptr };
+	expect(macro_recovery_after != nullptr && macro_recovery_after->Type == CT_Variable, txt("cpp unbounded macro recovery keeps following member typed"));
+	if (macro_recovery_after)
+		expect(str_are_equal(macro_recovery_after->Name, txt("after")), txt("cpp unbounded macro recovery following member name"));
+
+	ParseInfo  eof_recovery_info    = {};
+	Opts_parse eof_recovery_options = { &ctx, &eof_recovery_info };
+	CodeBody   eof_recovery_body    = parse_global_body(txt("s32 before; s32 broken(s32 value"), eof_recovery_options);
+	Code eof_recovery_node = { nullptr };
+	if  (eof_recovery_body.ast != nullptr) eof_recovery_node = eof_recovery_body->Front;
+	Code eof_recovery_before = eof_recovery_node;
+	expect(eof_recovery_before != nullptr && eof_recovery_before->Type == CT_Variable, txt("cpp EOF recovery keeps preceding member typed"));
+	if (eof_recovery_before)
+		expect(str_are_equal(eof_recovery_before->Name, txt("before")), txt("cpp EOF recovery preceding member name"));
+	if (eof_recovery_node) eof_recovery_node = eof_recovery_node->Next;
+	expect(eof_recovery_body.ast != nullptr && eof_recovery_body->Type == CT_Global_Body, txt("cpp end-of-slice recovery body"));
+	expect(eof_recovery_info.messages != nullptr, txt("cpp end-of-slice recovery diagnostic"));
+	if (eof_recovery_info.messages != nullptr)
+		expect(eof_recovery_info.messages->Next == nullptr, txt("cpp end-of-slice recovery single diagnostic"));
+	expect(eof_recovery_node != nullptr && eof_recovery_node->Type == CT_Untyped, txt("cpp end-of-slice member is untyped"));
+	if (eof_recovery_node)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(eof_recovery_node)), txt("s32 broken(s32 value")), txt("cpp end-of-slice recovery exact source span"));
+	if (eof_recovery_node)
+		expect(eof_recovery_node->Next == nullptr, txt("cpp end-of-slice recovery has no following node"));
+
+	ParseInfo  comma_recovery_info    = {};
+	Opts_parse comma_recovery_options = { &ctx, &comma_recovery_info };
+	CodeBody   comma_recovery_body    = parse_global_body(txt("s32 before; , s32 after;"), comma_recovery_options);
+	Code comma_recovery_node = { nullptr };
+	if  (comma_recovery_body.ast != nullptr) comma_recovery_node = comma_recovery_body->Front;
+	Code comma_recovery_before = comma_recovery_node;
+	expect(comma_recovery_before != nullptr && comma_recovery_before->Type == CT_Variable, txt("cpp comma recovery keeps preceding member typed"));
+	if (comma_recovery_before)
+		expect(str_are_equal(comma_recovery_before->Name, txt("before")), txt("cpp comma recovery preceding member name"));
+	if (comma_recovery_node) comma_recovery_node = comma_recovery_node->Next;
+	expect(comma_recovery_body.ast != nullptr && comma_recovery_body->Type == CT_Global_Body, txt("cpp comma recovery body"));
+	expect(comma_recovery_info.messages != nullptr, txt("cpp comma recovery diagnostic"));
+	if (comma_recovery_info.messages != nullptr) {
+		expect(str_contains(comma_recovery_info.messages->Content, txt("Dangling comma")), txt("cpp comma recovery diagnostic text"));
+		expect(comma_recovery_info.messages->Next == nullptr, txt("cpp comma recovery single diagnostic"));
+	}
+	expect(comma_recovery_node != nullptr && comma_recovery_node->Type == CT_Untyped, txt("cpp comma recovery preserves token as untyped"));
+	if (comma_recovery_node)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(comma_recovery_node)), txt(",")), txt("cpp comma recovery exact source span"));
+	Code comma_recovery_after = comma_recovery_node ? comma_recovery_node->Next : Code{ nullptr };
+	expect(comma_recovery_after != nullptr && comma_recovery_after->Type == CT_Variable, txt("cpp comma recovery keeps following member typed"));
+	if (comma_recovery_after)
+		expect(str_are_equal(comma_recovery_after->Name, txt("after")), txt("cpp comma recovery following member name"));
+
+	CodeBody recovery_reuse = parse_global_body(txt("s32 reused_after_recovery;"), recovery_options);
+	Str recovery_reuse_text = { nullptr, 0 };
+	if (recovery_reuse.ast != nullptr)
+		recovery_reuse_text = strbuilder_to_str(code_to_strbuilder((Code)recovery_reuse));
+	expect(recovery_reuse.ast != nullptr && recovery_reuse->Type == CT_Global_Body, txt("cpp parser context reuse after recovery"));
+	expect(recovery_info.messages == nullptr, txt("cpp parser context reuse clears prior diagnostics"));
+	expect(str_contains(recovery_reuse_text, txt("reused_after_recovery")), txt("cpp parser context reuse parses later input"));
+
+	ParseInfo  nested_struct_info    = {};
+	Opts_parse nested_struct_options = { &ctx, &nested_struct_info };
+	CodeStruct nested_struct         = parse_struct(txt("struct NestedRecovery { s32 before; s32 broken(s32 value; s32 after; };"), nested_struct_options);
+	expect(nested_struct.ast != nullptr && nested_struct->Type == CT_Struct, txt("cpp nested struct recovery result"));
+	expect(nested_struct_info.result.ast == ((Code)nested_struct).ast, txt("cpp nested struct recovery ParseInfo result"));
+	expect(nested_struct_info.messages != nullptr, txt("cpp nested struct recovery diagnostic"));
+	if (nested_struct_info.messages != nullptr)
+		expect(str_contains(nested_struct_info.messages->Content, txt("Expected")), txt("cpp nested struct recovery diagnostic text"));
+	Code nested_struct_member = nested_struct.ast != nullptr && nested_struct->Body.ast != nullptr ? nested_struct->Body->Front : Code{ nullptr };
+	expect(nested_struct_member != nullptr && nested_struct_member->Type == CT_Variable, txt("cpp nested struct recovery keeps preceding member typed"));
+	if (nested_struct_member != nullptr)
+		expect(str_are_equal(nested_struct_member->Name, txt("before")), txt("cpp nested struct recovery preceding member name"));
+	if (nested_struct_member != nullptr) nested_struct_member = nested_struct_member->Next;
+	expect(nested_struct_member != nullptr && nested_struct_member->Type == CT_Untyped, txt("cpp nested struct recovery retains failed member"));
+	if (nested_struct_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(nested_struct_member)), txt("s32 broken(s32 value;")), txt("cpp nested struct recovery exact failed span"));
+	Code nested_struct_after = nested_struct_member != nullptr ? nested_struct_member->Next : Code{ nullptr };
+	expect(nested_struct_after != nullptr && nested_struct_after->Type == CT_Variable, txt("cpp nested struct recovery keeps following member typed"));
+	if (nested_struct_after != nullptr)
+		expect(str_are_equal(nested_struct_after->Name, txt("after")), txt("cpp nested struct recovery following member name"));
+	Str nested_struct_text = { nullptr, 0 };
+	if (nested_struct.ast != nullptr)
+		nested_struct_text = strbuilder_to_str(code_to_strbuilder((Code)nested_struct));
+	expect(str_contains(nested_struct_text, txt("s32 after")), txt("cpp nested struct recovery serializes following member"));
+
+	ParseInfo  nested_namespace_info    = {};
+	Opts_parse nested_namespace_options = { &ctx, &nested_namespace_info };
+	CodeNS     nested_namespace         = parse_namespace(txt("namespace NestedRecovery { s32 before; s32 broken(s32 value; s32 after; }"), nested_namespace_options);
+	expect(nested_namespace.ast != nullptr && nested_namespace->Type == CT_Namespace, txt("cpp nested namespace recovery result"));
+	expect(nested_namespace_info.result.ast == ((Code)nested_namespace).ast, txt("cpp nested namespace recovery ParseInfo result"));
+	expect(nested_namespace_info.messages != nullptr, txt("cpp nested namespace recovery diagnostic"));
+	if (nested_namespace_info.messages != nullptr)
+		expect(str_contains(nested_namespace_info.messages->Content, txt("Expected")), txt("cpp nested namespace recovery diagnostic text"));
+	Code nested_namespace_member = nested_namespace.ast != nullptr && nested_namespace->Body.ast != nullptr ? nested_namespace->Body->Front : Code{ nullptr };
+	expect(nested_namespace_member != nullptr && nested_namespace_member->Type == CT_Variable, txt("cpp nested namespace recovery keeps preceding member typed"));
+	if (nested_namespace_member != nullptr)
+		expect(str_are_equal(nested_namespace_member->Name, txt("before")), txt("cpp nested namespace recovery preceding member name"));
+	if (nested_namespace_member != nullptr) nested_namespace_member = nested_namespace_member->Next;
+	expect(nested_namespace_member != nullptr && nested_namespace_member->Type == CT_Untyped, txt("cpp nested namespace recovery retains failed member"));
+	if (nested_namespace_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(nested_namespace_member)), txt("s32 broken(s32 value;")), txt("cpp nested namespace recovery exact failed span"));
+	Code nested_namespace_after = nested_namespace_member != nullptr ? nested_namespace_member->Next : Code{ nullptr };
+	expect(nested_namespace_after != nullptr && nested_namespace_after->Type == CT_Variable, txt("cpp nested namespace recovery keeps following member typed"));
+	if (nested_namespace_after != nullptr)
+		expect(str_are_equal(nested_namespace_after->Name, txt("after")), txt("cpp nested namespace recovery following member name"));
+	Str nested_namespace_text = { nullptr, 0 };
+	if (nested_namespace.ast != nullptr)
+		nested_namespace_text = strbuilder_to_str(code_to_strbuilder((Code)nested_namespace));
+	expect(str_contains(nested_namespace_text, txt("s32 after")), txt("cpp nested namespace recovery serializes following member"));
+
+	ParseInfo  nested_brace_info    = {};
+	Opts_parse nested_brace_options = { &ctx, &nested_brace_info };
+	CodeStruct nested_brace_struct  = parse_struct(txt("struct NestedBraceRecovery { s32 before; s32 broken(s32 { 1; s32 after; };"), nested_brace_options);
+	expect(nested_brace_struct.ast != nullptr && nested_brace_struct->Type == CT_Struct, txt("cpp nested brace recovery result"));
+	expect(nested_brace_info.result.ast == ((Code)nested_brace_struct).ast, txt("cpp nested brace recovery ParseInfo result"));
+	expect(nested_brace_info.messages != nullptr, txt("cpp nested brace recovery diagnostic"));
+	Code nested_brace_member = nested_brace_struct.ast != nullptr && nested_brace_struct->Body.ast != nullptr ? nested_brace_struct->Body->Front : Code{ nullptr };
+	expect(nested_brace_member != nullptr && nested_brace_member->Type == CT_Variable, txt("cpp nested brace recovery keeps preceding member typed"));
+	if (nested_brace_member != nullptr) nested_brace_member = nested_brace_member->Next;
+	expect(nested_brace_member != nullptr && nested_brace_member->Type == CT_Untyped, txt("cpp nested brace recovery retains failed member"));
+	if (nested_brace_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(nested_brace_member)), txt("s32 broken(s32 { 1;")), txt("cpp nested brace recovery exact failed span"));
+	Code nested_brace_after = nested_brace_member != nullptr ? nested_brace_member->Next : Code{ nullptr };
+	expect(nested_brace_after != nullptr && nested_brace_after->Type == CT_Variable, txt("cpp nested brace recovery keeps following member typed"));
+	if (nested_brace_after != nullptr)
+		expect(str_are_equal(nested_brace_after->Name, txt("after")), txt("cpp nested brace recovery following member name"));
+	Str nested_brace_text = { nullptr, 0 };
+	if (nested_brace_struct.ast != nullptr)
+		nested_brace_text = strbuilder_to_str(code_to_strbuilder((Code)nested_brace_struct));
+	expect(str_contains(nested_brace_text, txt("s32 after")), txt("cpp nested brace recovery serializes following member"));
+
+	ParseInfo  nested_namespace_brace_info    = {};
+	Opts_parse nested_namespace_brace_options = { &ctx, &nested_namespace_brace_info };
+	CodeNS nested_namespace_brace = parse_namespace(txt("namespace NestedBraceRecovery { s32 before; s32 broken(s32 { 1; s32 after; }"), nested_namespace_brace_options);
+	expect(nested_namespace_brace.ast != nullptr && nested_namespace_brace->Type == CT_Namespace, txt("cpp nested namespace brace recovery result"));
+	expect(nested_namespace_brace_info.result.ast == ((Code)nested_namespace_brace).ast, txt("cpp nested namespace brace recovery ParseInfo result"));
+	Code nested_namespace_brace_member = nested_namespace_brace.ast != nullptr && nested_namespace_brace->Body.ast != nullptr ? nested_namespace_brace->Body->Front : Code{ nullptr };
+	expect(nested_namespace_brace_member != nullptr && nested_namespace_brace_member->Type == CT_Variable, txt("cpp nested namespace brace recovery keeps preceding member typed"));
+	if (nested_namespace_brace_member != nullptr) nested_namespace_brace_member = nested_namespace_brace_member->Next;
+	expect(nested_namespace_brace_member != nullptr && nested_namespace_brace_member->Type == CT_Untyped, txt("cpp nested namespace brace recovery retains failed member"));
+	if (nested_namespace_brace_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(nested_namespace_brace_member)), txt("s32 broken(s32 { 1;")), txt("cpp nested namespace brace recovery exact failed span"));
+	Code nested_namespace_brace_after = nested_namespace_brace_member != nullptr ? nested_namespace_brace_member->Next : Code{ nullptr };
+	expect(nested_namespace_brace_after != nullptr && nested_namespace_brace_after->Type == CT_Variable, txt("cpp nested namespace brace recovery keeps following member typed"));
+	if (nested_namespace_brace_after != nullptr)
+		expect(str_are_equal(nested_namespace_brace_after->Name, txt("after")), txt("cpp nested namespace brace recovery following member name"));
+	Str nested_namespace_brace_text = { nullptr, 0 };
+	if (nested_namespace_brace.ast != nullptr)
+		nested_namespace_brace_text = strbuilder_to_str(code_to_strbuilder((Code)nested_namespace_brace));
+	expect(str_contains(nested_namespace_brace_text, txt("s32 after")), txt("cpp nested namespace brace recovery serializes following member"));
+
+	ParseInfo  nested_brace_tail_info    = {};
+	Opts_parse nested_brace_tail_options = { &ctx, &nested_brace_tail_info };
+	CodeStruct nested_brace_tail_struct  = parse_struct(txt("struct NestedBraceTailRecovery { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; };"), nested_brace_tail_options);
+	expect(nested_brace_tail_struct.ast != nullptr && nested_brace_tail_struct->Type == CT_Struct, txt("cpp nested brace tail recovery result"));
+	expect(nested_brace_tail_info.result.ast == ((Code)nested_brace_tail_struct).ast, txt("cpp nested brace tail recovery ParseInfo result"));
+	expect(nested_brace_tail_info.messages != nullptr, txt("cpp nested brace tail recovery diagnostic"));
+	Code nested_brace_tail_member = nested_brace_tail_struct.ast != nullptr && nested_brace_tail_struct->Body.ast != nullptr ? nested_brace_tail_struct->Body->Front : Code{ nullptr };
+	if  (nested_brace_tail_member != nullptr) nested_brace_tail_member = nested_brace_tail_member->Next;
+	expect(nested_brace_tail_member != nullptr && nested_brace_tail_member->Type == CT_Untyped, txt("cpp nested brace tail recovery retains failed member"));
+	if (nested_brace_tail_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(nested_brace_tail_member)), txt("s32 broken(s32 { 1; 2 } foo{ 3;")), txt("cpp nested brace tail recovery exact failed span"));
+	Code nested_brace_tail_after = nested_brace_tail_member != nullptr ? nested_brace_tail_member->Next : Code{ nullptr };
+	expect(nested_brace_tail_after != nullptr && nested_brace_tail_after->Type == CT_Variable, txt("cpp nested brace tail recovery keeps following member typed"));
+	if (nested_brace_tail_after != nullptr)
+		expect(str_are_equal(nested_brace_tail_after->Name, txt("after")), txt("cpp nested brace tail recovery following member name"));
+
+	ParseInfo  nested_namespace_tail_info    = {};
+	Opts_parse nested_namespace_tail_options = { &ctx, &nested_namespace_tail_info };
+	CodeNS nested_namespace_tail = parse_namespace(txt("namespace NestedBraceTailRecovery { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; }"), nested_namespace_tail_options);
+	expect(nested_namespace_tail.ast             != nullptr && nested_namespace_tail->Type == CT_Namespace, txt("cpp nested namespace brace tail recovery result"));
+	expect(nested_namespace_tail_info.result.ast == ((Code)nested_namespace_tail).ast,                      txt("cpp nested namespace brace tail recovery ParseInfo result"));
+	Code nested_namespace_tail_member = nested_namespace_tail.ast != nullptr && nested_namespace_tail->Body.ast != nullptr ? nested_namespace_tail->Body->Front : Code{ nullptr };
+	if  (nested_namespace_tail_member != nullptr) nested_namespace_tail_member = nested_namespace_tail_member->Next;
+	expect(nested_namespace_tail_member != nullptr && nested_namespace_tail_member->Type == CT_Untyped, txt("cpp nested namespace brace tail recovery retains failed member"));
+	if (nested_namespace_tail_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(nested_namespace_tail_member)), txt("s32 broken(s32 { 1; 2 } foo{ 3;")), txt("cpp nested namespace brace tail recovery exact failed span"));
+	Code nested_namespace_tail_after = nested_namespace_tail_member != nullptr ? nested_namespace_tail_member->Next : Code{ nullptr };
+	expect(nested_namespace_tail_after != nullptr && nested_namespace_tail_after->Type == CT_Variable, txt("cpp nested namespace brace tail recovery keeps following member typed"));
+	if (nested_namespace_tail_after != nullptr)
+		expect(str_are_equal(nested_namespace_tail_after->Name, txt("after")), txt("cpp nested namespace brace tail recovery following member name"));
+
+	ParseInfo  nested_inner_close_info    = {};
+	Opts_parse nested_inner_close_options = { &ctx, &nested_inner_close_info };
+	CodeStruct nested_inner_close_struct  = parse_struct(txt("struct NestedInnerCloseRecovery { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; struct Inner { s32 x; }; s32 tail; };"), nested_inner_close_options);
+	expect(nested_inner_close_struct.ast != nullptr && nested_inner_close_struct->Type == CT_Struct, txt("cpp nested inner-close recovery result"));
+	Code   nested_inner_close_member = nested_inner_close_struct.ast != nullptr && nested_inner_close_struct->Body.ast != nullptr ? nested_inner_close_struct->Body->Front : Code{ nullptr };
+	if    (nested_inner_close_member != nullptr) nested_inner_close_member = nested_inner_close_member->Next;
+	expect(nested_inner_close_member != nullptr && nested_inner_close_member->Type == CT_Untyped, txt("cpp nested inner-close recovery retains failed member"));
+	if    (nested_inner_close_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(nested_inner_close_member)), txt("s32 broken(s32 { 1; 2 } foo{ 3;")), txt("cpp nested inner-close recovery exact failed span"));
+	Code   nested_inner_close_after = nested_inner_close_member != nullptr ? nested_inner_close_member->Next : Code{ nullptr };
+	expect(nested_inner_close_after != nullptr && nested_inner_close_after->Type == CT_Variable, txt("cpp nested inner-close recovery keeps following member typed"));
+	if (nested_inner_close_after != nullptr)
+		expect(str_are_equal(nested_inner_close_after->Name, txt("after")), txt("cpp nested inner-close recovery following member name"));
+	Code   nested_inner_close_inner = nested_inner_close_after != nullptr ? nested_inner_close_after->Next : Code{ nullptr };
+	expect(nested_inner_close_inner != nullptr && nested_inner_close_inner->Type == CT_Struct, txt("cpp nested inner-close recovery parses nested struct"));
+	Code   nested_inner_close_tail = nested_inner_close_inner != nullptr ? nested_inner_close_inner->Next : Code{ nullptr };
+	expect(nested_inner_close_tail != nullptr && nested_inner_close_tail->Type == CT_Variable, txt("cpp nested inner-close recovery parses trailing member"));
+
+	ParseInfo  inner_before_sync_info    = {};
+	Opts_parse inner_before_sync_options = { &ctx, &inner_before_sync_info };
+	CodeStruct inner_before_sync         = parse_struct(txt("struct NestedInnerBeforeSync { s32 before; s32 broken(foo{ struct Inner { s32 x; }; s32 after; };"), inner_before_sync_options);
+	expect(inner_before_sync.ast != nullptr && inner_before_sync->Type == CT_Struct, txt("cpp inner-before-sync recovery result"));
+	Code inner_before_sync_member = inner_before_sync.ast != nullptr && inner_before_sync->Body.ast != nullptr ? inner_before_sync->Body->Front : Code{ nullptr };
+	if  (inner_before_sync_member != nullptr) inner_before_sync_member = inner_before_sync_member->Next;
+	expect(inner_before_sync_member != nullptr && inner_before_sync_member->Type == CT_Untyped, txt("cpp inner-before-sync recovery retains failed member"));
+	if (inner_before_sync_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(inner_before_sync_member)), txt("s32 broken(foo{ struct Inner { s32 x; };")), txt("cpp inner-before-sync recovery exact failed span"));
+	Code   inner_before_sync_after = inner_before_sync_member != nullptr ? inner_before_sync_member->Next : Code{ nullptr };
+	expect(inner_before_sync_after != nullptr && inner_before_sync_after->Type == CT_Variable, txt("cpp inner-before-sync recovery keeps following member typed"));
+	if (inner_before_sync_after != nullptr)
+		expect(str_are_equal(inner_before_sync_after->Name, txt("after")), txt("cpp inner-before-sync recovery following member name"));
+
+	ParseInfo  global_namespace_recovery_info    = {};
+	Opts_parse global_namespace_recovery_options = { &ctx, &global_namespace_recovery_info };
+	CodeBody   global_namespace_recovery         = parse_global_body(txt("namespace NestedScopeInGlobal { s32 before; s32 broken(s32 { 1; 2 } foo{ 3; s32 after; } struct Later { s32 value; };"), global_namespace_recovery_options);
+	expect(global_namespace_recovery.ast             != nullptr && global_namespace_recovery->Type == CT_Global_Body, txt("cpp global namespace recovery body"));
+	expect(global_namespace_recovery_info.result.ast == ((Code)global_namespace_recovery).ast,                        txt("cpp global namespace recovery ParseInfo result"));
+	Code   global_namespace_node = global_namespace_recovery.ast != nullptr ? global_namespace_recovery->Front : Code{ nullptr };
+	expect(global_namespace_node != nullptr && global_namespace_node->Type == CT_Namespace, txt("cpp global namespace recovery preserves namespace"));
+	Code global_namespace_member = global_namespace_node != nullptr && global_namespace_node->Body.ast != nullptr ? global_namespace_node->Body->Front : Code{ nullptr };
+	if  (global_namespace_member != nullptr) global_namespace_member = global_namespace_member->Next;
+	expect(global_namespace_member != nullptr && global_namespace_member->Type == CT_Untyped, txt("cpp global namespace recovery retains failed member"));
+	if (global_namespace_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(global_namespace_member)), txt("s32 broken(s32 { 1; 2 } foo{ 3;")), txt("cpp global namespace recovery exact failed span"));
+	Code   global_namespace_after = global_namespace_member != nullptr ? global_namespace_member->Next : Code{ nullptr };
+	expect(global_namespace_after != nullptr && global_namespace_after->Type == CT_Variable, txt("cpp global namespace recovery keeps following member typed"));
+	if (global_namespace_after != nullptr)
+		expect(str_are_equal(global_namespace_after->Name, txt("after")), txt("cpp global namespace recovery following member name"));
+	Code   global_later_struct = global_namespace_node != nullptr ? global_namespace_node->Next : Code{ nullptr };
+	expect(global_later_struct != nullptr && global_later_struct->Type == CT_Struct, txt("cpp global namespace recovery preserves following global struct"));
+	if (global_later_struct != nullptr)
+		expect(str_are_equal(global_later_struct->Name, txt("Later")), txt("cpp global namespace recovery following global name"));
+
+	ParseInfo  global_struct_recovery_info    = {};
+	Opts_parse global_struct_recovery_options = { &ctx, &global_struct_recovery_info };
+	CodeBody   global_struct_recovery         = parse_global_body(txt("struct GlobalNestedRecovery { s32 before; s32 broken(s32 value; s32 after; }; struct LaterGlobal { s32 value; };"), global_struct_recovery_options);
+	expect(global_struct_recovery.ast != nullptr && global_struct_recovery->Type == CT_Global_Body, txt("cpp global struct recovery body"));
+	Code global_struct_node   = global_struct_recovery.ast != nullptr                                            ? global_struct_recovery->Front   : Code{ nullptr };
+	Code global_struct_before = global_struct_node         != nullptr && global_struct_node->Body.ast != nullptr ? global_struct_node->Body->Front : Code{ nullptr };
+	Code global_struct_member = global_struct_before       != nullptr                                            ? global_struct_before->Next      : Code{ nullptr };
+	Code global_struct_after  = global_struct_member       != nullptr                                            ? global_struct_member->Next      : Code{ nullptr };
+	Code global_later_class   = global_struct_node         != nullptr                                            ? global_struct_node->Next        : Code{ nullptr };
+	expect(global_struct_node   != nullptr && global_struct_node->Type   == CT_Struct,  txt("cpp global struct recovery preserves partial struct"));
+	expect(global_struct_member != nullptr && global_struct_member->Type == CT_Untyped, txt("cpp global struct recovery retains failed member"));
+	if (global_struct_member != nullptr)
+		expect(str_are_equal(strbuilder_to_str(code_to_strbuilder(global_struct_member)), txt("s32 broken(s32 value;")), txt("cpp global struct recovery exact failed span"));
+	expect(global_struct_after != nullptr && global_struct_after->Type == CT_Variable, txt("cpp global struct recovery keeps following member"));
+	if (global_struct_after != nullptr)
+		expect(str_are_equal(global_struct_after->Name, txt("after")), txt("cpp global struct recovery following member name"));
+	expect(global_later_class != nullptr && global_later_class->Type == CT_Struct, txt("cpp global struct recovery keeps following global struct"));
+
+	ParseInfo  nested_owner_info    = {};
+	Opts_parse nested_owner_options = { &ctx, &nested_owner_info };
+	CodeStruct nested_owner         = parse_struct(txt("struct NestedOwner { s32 before; struct InnerRecovery { s32 inner_before; s32 broken(s32 value; s32 inner_after; }; s32 after; };"), nested_owner_options);
+	expect(nested_owner.ast             != nullptr && nested_owner->Type == CT_Struct, txt("cpp nested owner recovery result"));
+	expect(nested_owner_info.result.ast == ((Code)nested_owner).ast,                   txt("cpp nested owner recovery ParseInfo result"));
+	expect(nested_owner_info.messages   != nullptr,                                    txt("cpp nested owner recovery diagnostic"));
+	Code nested_owner_before       = nested_owner.ast          != nullptr && nested_owner->Body.ast != nullptr       ? nested_owner->Body->Front       : Code{ nullptr };
+	Code nested_owner_inner        = nested_owner_before       != nullptr                                            ? nested_owner_before->Next       : Code{ nullptr };
+	Code nested_owner_after        = nested_owner_inner        != nullptr                                            ? nested_owner_inner->Next        : Code{ nullptr };
+	Code nested_owner_inner_before = nested_owner_inner        != nullptr && nested_owner_inner->Body.ast != nullptr ? nested_owner_inner->Body->Front : Code{ nullptr };
+	Code nested_owner_inner_failed = nested_owner_inner_before != nullptr                                            ? nested_owner_inner_before->Next : Code{ nullptr };
+	Code nested_owner_inner_after  = nested_owner_inner_failed != nullptr                                            ? nested_owner_inner_failed->Next : Code{ nullptr };
+	expect(nested_owner_before       != nullptr && nested_owner_before->Type       == CT_Variable, txt("cpp nested owner keeps preceding member typed"));
+	expect(nested_owner_inner        != nullptr && nested_owner_inner->Type        == CT_Struct,   txt("cpp nested owner retains inner struct AST"));
+	expect(nested_owner_inner_before != nullptr && nested_owner_inner_before->Type == CT_Variable, txt("cpp nested inner recovery keeps preceding member typed"));
+	expect(nested_owner_inner_failed != nullptr && nested_owner_inner_failed->Type == CT_Untyped,  txt("cpp nested inner recovery retains failed member"));
+	expect(nested_owner_inner_after  != nullptr && nested_owner_inner_after->Type  == CT_Variable, txt("cpp nested inner recovery keeps following member typed"));
+	expect(nested_owner_after        != nullptr && nested_owner_after->Type        == CT_Variable, txt("cpp nested owner keeps following member typed"));
+
 #if ! GEN_BUILD_DEBUG
 	CodeVar       wrong_array_value   = def_variable(def_type(name(u32)), name(invalid_array_expr));
 	Opts_def_type wrong_array_options = {};
 	wrong_array_options.array_expr  = (Code)wrong_array_value;
-	CodeTypename invalid_array_type = def_type(name(InvalidArrayOption), wrong_array_options);
+	CodeTypename  invalid_array_type = def_type(name(InvalidArrayOption), wrong_array_options);
 	expect(((Code)invalid_array_type).ast == Code_Invalid.ast, txt("cpp wrong type invalid code"));
 
 	CodeBody missing_union_body = {};
