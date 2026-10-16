@@ -195,6 +195,9 @@ int gen_main()
 		(Macro { txt("cast_to_str"),                  MT_Expression, MF_Functional }),
 		(Macro { txt("current"),                      MT_Expression, MF_Null       }),
 		(Macro { txt("txt"),                          MT_Expression, MF_Functional }),
+		(Macro { txt("strtmpl_slot"),                 MT_Expression, MF_Functional }),
+		(Macro { txt("strtmpl_slots"),                MT_Expression, MF_Functional }),
+		(Macro { txt("strtmpl_append"),               MT_Statement,  MF_Functional }),
 		(Macro { txt("GEN_FILE_OPEN_PROC"),           MT_Statement,  MF_Functional | MF_Expects_Body }),
 		(Macro { txt("GEN_FILE_READ_AT_PROC"),        MT_Statement,  MF_Functional | MF_Expects_Body }),
 		(Macro { txt("GEN_FILE_WRITE_AT_PROC"),       MT_Statement,  MF_Functional | MF_Expects_Body }),
@@ -268,6 +271,7 @@ int gen_main()
 	Code header_debug          = scan_file( path_base "dependencies/debug.hpp" );
 	Code header_string_ops     = scan_file( path_base "dependencies/string_ops.hpp" );
 	Code header_hashing        = scan_file( path_base "dependencies/hashing.hpp" );
+	Code header_simd           = scan_file( path_base "dependencies/simd.hpp" );
 	Code header_timing         = scan_file( path_base "dependencies/timing.hpp" );
 
 	CodeBody parsed_header_memory = parse_file( path_base "dependencies/memory.hpp" );
@@ -1443,7 +1447,17 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 			);
 			// Append slots
 			for(Str type : code_typenames ) {
-				generic_selector.append_fmt("%S : %S,\\\n", type, fn->Name );
+				bool appended = false;
+				strtmpl_append(& generic_selector, appended, strtmpl_slots(
+						strtmpl_slot("type", type),
+						strtmpl_slot("fn", fn->Name)
+					),
+					code(<type> : <fn>,\\\n)
+				);
+				if (appended == false) {
+					GEN_FATAL("builder_print selector template failed");
+					return 1;
+				}
 			}
 			generic_selector.append(txt("default: gen_generic_selection_fail \\\n"));
 			generic_selector.append(txt("\t)\tGEN_RESOLVED_FUNCTION_CALL( builder, (Code)code )"));
@@ -1791,6 +1805,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 	Code r_header_string_ops   = refactor(header_string_ops);
 	Code rf_containers         = refactor_and_format(containers);
 	Code r_header_hashing      = refactor(header_hashing);
+	Code r_header_simd         = refactor(header_simd);
 	Code rf_header_strings     = refactor_and_format(header_strings);
 	Code rf_header_filesystem  = refactor_and_format(header_filesystem);
 	Code r_header_timing       = refactor(header_timing);
@@ -1877,6 +1892,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( fmt_newline);
 		header.print( rf_containers);
 		header.print( r_header_hashing );
+		header.print( r_header_simd );
 		header.print( rf_header_strings);
 		header.print( rf_header_filesystem);
 		header.print( r_header_timing );
@@ -2026,6 +2042,7 @@ R"(#define <interface_name>( code ) _Generic( (code), \
 		header.print( fmt_newline);
 		header.print( rf_containers);
 		header.print( r_header_hashing );
+		header.print( r_header_simd );
 		header.print( rf_header_strings);
 		header.print( rf_header_filesystem);
 		header.print( r_header_timing );

@@ -68,10 +68,12 @@ word txt,                          gen_txt
 // Basic Types
 
 word u8,               gen_u8
+word u8x16,            gen_u8x16
 word s8,               gen_s8
 word u16,              gen_u16
 word s16,              gen_s16
 word u32,              gen_u32
+word u32x4,            gen_u32x4
 word s32,              gen_s32
 word u64,              gen_u64
 word s64,              gen_s64
@@ -90,6 +92,13 @@ word to_uptr,          gen_to_uptr
 word to_sptr,          gen_to_sptr
 word to_mem_ptr,       gen_to_mem_ptr
 word to_mem_ptr_const, gen_to_mem_ptr_const
+
+// SIMD
+
+namespace u8x16_,      gen_u8x16_
+namespace u32x4_,      gen_u32x4_
+
+word u32_mask_first_set, gen_u32_mask_first_set
 
 // Debug
 
@@ -230,10 +239,13 @@ namespace str_, gen_str_
 
 word cast_to_str, gen_cast_to_str
 
-word StrBuilderHeader, gen_StrBuilderHeader
-word StrBuilder,       gen_StrBuilder
+word StrBuilderHeader,    gen_StrBuilderHeader
+word StrBuilder,          gen_StrBuilder
+word StrTemplateSlot,       gen_StrTemplateSlot
+word Slice_StrTemplateSlot, gen_Slice_StrTemplateSlot
 
 namespace strbuilder_, gen_strbuilder_
+namespace strtmpl_,    gen_strtmpl_
 
 word StrCached, gen_StrCached
 

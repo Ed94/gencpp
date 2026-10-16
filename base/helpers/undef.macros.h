@@ -141,6 +141,7 @@
 #undef GEN_ASSERT
 #undef GEN_ASSERT_MSG
 #undef GEN_ASSERT_NOT_NULL
+#undef GEN_ASSERT_SLICE
 #undef GEN_PANIC
 #undef GEN_FATAL
 
@@ -165,6 +166,9 @@
 #undef get_hashtable_underlying_type
 
 #undef txt
+#undef strtmpl_slot
+#undef strtmpl_slots
+#undef strtmpl_append
 
 #undef NOMINMAX
 #undef VC_EXTRALEAN

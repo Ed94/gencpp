@@ -1,5 +1,6 @@
 #ifdef INTELLISENSE_DIRECTIVES
 #	pragma once
+#	include "simd.hpp"
 #	include "hashing.cpp"
 #endif
 
@@ -171,6 +172,155 @@ StrBuilder strbuilder_visualize_whitespace(StrBuilder const str)
 		break;
 	}
 
+	return result;
+}
+
+#if defined(GEN_SYSTEM_WINDOWS) && (defined(_M_X64) || defined(__x86_64__))
+internal
+ssize strbuilder_find_template_byte(char const* text, ssize length, char needle)
+{
+	ssize idx = 0;
+	for (; (length - idx) >= 16; )
+	{
+		char const* at = text + idx;
+		u8x16 chunk = u8x16_load(at);
+		u8x16 splat = u8x16_splat(scast(u8, needle));
+		u16   mask  = u8x16_mask(u8x16_equal(chunk, splat));
+		if (mask != 0) {
+			s32 bit_index = u32_mask_first_set(mask);
+			return idx + scast(ssize, bit_index);
+		}
+		idx += 16;
+	}
+	for (; (length - idx) >= 8; )
+	{
+		char const* at = text + idx;
+		u8x16 chunk = u8x16_load8(at);
+		u8x16 splat = u8x16_splat(scast(u8, needle));
+		u16   mask  = u8x16_mask(u8x16_equal(chunk, splat)) & 0xFF;
+		if (mask != 0) {
+			s32 bit_index = u32_mask_first_set(mask);
+			return idx + scast(ssize, bit_index);
+		}
+		idx += 8;
+	}
+	for (; idx < length; ++ idx) {
+		if (text[idx] == needle) return idx;
+	}
+	return length;
+}
+#else
+internal
+ssize strbuilder_find_template_byte(char const* text, ssize length, char needle) {
+	for (ssize idx = 0; idx < length; ++ idx)
+	{
+		if (text[idx] == needle)
+			return idx;
+	}
+	return length;
+}
+#endif
+
+#if defined(GEN_SYSTEM_WINDOWS) && (defined(_M_X64) || defined(__x86_64__))
+internal
+StrTemplateSlot* strbuilder_find_template_slot(Slice_StrTemplateSlot slots, Str key)
+{
+	u32 key_hash = crc32(key.Ptr, key.Len);
+	ssize idx = 0;
+	for (; (slots.Len - idx) >= 4; idx += 4)
+	{
+		u32 packed[4];
+		packed[0] = crc32(slots.Ptr[idx + 0].Key.Ptr, slots.Ptr[idx + 0].Key.Len);
+		packed[1] = crc32(slots.Ptr[idx + 1].Key.Ptr, slots.Ptr[idx + 1].Key.Len);
+		packed[2] = crc32(slots.Ptr[idx + 2].Key.Ptr, slots.Ptr[idx + 2].Key.Len);
+		packed[3] = crc32(slots.Ptr[idx + 3].Key.Ptr, slots.Ptr[idx + 3].Key.Len);
+
+		u32x4 packed_vec = u32x4_load(packed);
+		u32x4 want_vec   = u32x4_splat(key_hash);
+		u8    mask       = u32x4_mask(u32x4_equal(packed_vec, want_vec));
+
+		for (s32 lane = 0; lane < 4; ++ lane)
+		{
+			if ((mask & (1u << lane)) != 0) {
+				StrTemplateSlot* slot = & slots.Ptr[idx + lane];
+				if (str_are_equal(slot[0].Key, key)) return slot;
+			}
+		}
+	}
+	for (; idx < slots.Len; ++ idx)
+	{
+		StrTemplateSlot* slot = & slots.Ptr[idx];
+		u32 slot_hash = crc32(slot[0].Key.Ptr, slot[0].Key.Len);
+		if (slot_hash == key_hash) {
+			if (str_are_equal(slot[0].Key, key)) return slot;
+		}
+	}
+	return nullptr;
+}
+#else
+internal
+StrTemplateSlot* strbuilder_find_template_slot(Slice_StrTemplateSlot slots, Str key) {
+	u32 key_hash = crc32(key.Ptr, key.Len);
+	for (ssize idx = 0; idx < slots.Len; ++ idx)
+	{
+		StrTemplateSlot* slot = & slots.Ptr[idx];
+		u32 slot_hash = crc32(slot[0].Key.Ptr, slot[0].Key.Len);
+		if (slot_hash == key_hash && str_are_equal(slot[0].Key, key))
+			return slot;
+	}
+	return nullptr;
+}
+#endif
+
+bool strbuilder_append_template(StrBuilder* output, Slice_StrTemplateSlot slots, Str format)
+{
+	GEN_ASSERT(output != nullptr && output[0] != nullptr);
+	StrBuilderHeader* header = strbuilder_get_header(output[0]);
+	GEN_ASSERT((header[0].Length >= 0) & (header[0].Capacity >= header[0].Length));
+	GEN_ASSERT_SLICE(format);
+	GEN_ASSERT_SLICE(slots);
+	for (ssize slot_idx = 0; slot_idx < slots.Len; ++ slot_idx) {
+		GEN_ASSERT_SLICE(slots.Ptr[slot_idx].Key);
+		GEN_ASSERT_SLICE(slots.Ptr[slot_idx].Value);
+	}
+
+	bool result = false;
+	if (format.Len == 0) {
+		result = true;
+		goto finish;
+	}
+
+	for (ssize cursor = 0; cursor < format.Len;)
+	{
+		if (format.Ptr[cursor] == '<')
+		{
+			ssize key_at  = cursor + 1;
+			ssize key_max = format.Len - key_at;
+			ssize key_len = strbuilder_find_template_byte(format.Ptr + key_at, key_max, '>');
+			if (key_len == key_max) goto finish;
+
+			Str              key  = { format.Ptr + key_at, key_len };
+			StrTemplateSlot* slot = strbuilder_find_template_slot(slots, key);
+			if (slot == nullptr) goto finish;
+
+			if (slot[0].Value.Len > 0) {
+				bool appended = strbuilder_append_c_str_len(output, slot[0].Value.Ptr, slot[0].Value.Len);
+				if (appended == false) goto finish;
+			}
+			cursor = key_at + key_len + 1;
+			continue;
+		}
+
+		ssize literal_max = format.Len - cursor;
+		ssize literal_len = strbuilder_find_template_byte(format.Ptr + cursor, literal_max, '<');
+		if (literal_len > 0) {
+			bool appended = strbuilder_append_c_str_len(output, format.Ptr + cursor, literal_len);
+			if (appended == false) goto finish;
+		}
+		cursor += literal_len;
+	}
+	result = true;
+finish:
 	return result;
 }
 

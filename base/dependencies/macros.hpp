@@ -57,6 +57,11 @@
 #define bitfield_is_set( Type, Field, Mask ) ( (scast(Type, Mask) & scast(Type, Field)) == scast(Type, Mask) )
 #endif
 
+#ifndef GEN_ASSERT_SLICE
+#define GEN_ASSERT_SLICE( slice ) \
+	GEN_ASSERT( ((slice).Len >= 0) & (((slice).Len == 0) | ((slice).Ptr != nullptr)) )
+#endif
+
 // Mainly intended for forcing the base library to utilize only C-valid constructs or type coercion
 #ifndef GEN_C_LIKE_CPP
 #define GEN_C_LIKE_CPP 0

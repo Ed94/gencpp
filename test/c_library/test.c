@@ -23,16 +23,13 @@ gen_internal void expect_variable(gen_CodeVar var, gen_Str label) {
 	expect(var->Type == CT_Variable, label);
 	expect(gen_str_contains(var->Name, gen_txt("baseline_message")), label);
 	expect(var->ValueType != 0, label);
-	expect(var->Value != 0, label);
+	expect(var->Value     != 0, label);
 	if (var->Value != 0) {
 		expect(gen_str_contains(var->Value->Content, gen_txt("GENCPP_BASELINE")), label);
 	}
 }
 
-gen_internal gen_Code_POD code_pod(gen_Code code) {
-	gen_Code_POD result = { (gen_AST*)code };
-	return result;
-}
+gen_internal gen_Code_POD code_pod(gen_Code code) { gen_Code_POD result = { (gen_AST*)code }; return result; }
 
 gen_internal void expect_parse_info(void* result, ParseInfo* info, gen_Str label) {
 	expect(result != 0, label);
@@ -42,9 +39,14 @@ gen_internal void expect_parse_info(void* result, ParseInfo* info, gen_Str label
 	expect(info->lexed.messages == 0 && info->messages == 0, label);
 }
 
+#include "dependencies/strings.c"
+#include "dependencies/simd.c"
+
 int main()
 {
 	gen_Context ctx = {0}; gen_init(&ctx);
+	expect_text_template(GEN_PRINTF_MAXLEN);
+	expect_simd_lanes();
 
 	gen_CodeTypename type    = gen_def_type(name(char), .specifiers = gen_def_specifiers(2, Spec_Const, Spec_Ptr) );
 	gen_CodeVar      upfront = gen_def_variable(type, name(baseline_message), 

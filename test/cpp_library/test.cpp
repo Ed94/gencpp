@@ -38,10 +38,15 @@ internal void expect_parse_result(gen::Code result, gen::ParseInfo* info, gen::C
 	expect(info->lexed.messages == nullptr && info->messages == nullptr, label);
 }
 
+#include "dependencies/strings.cpp"
+#include "dependencies/simd.cpp"
+
 int main()
 {
 	using namespace gen;
 	Context ctx = {}; init(&ctx);
+	expect_text_template(GEN_PRINTF_MAXLEN);
+	expect_simd_lanes();
 
 	Opts_def_type type_opts = {};
 	type_opts.specifiers = def_specifiers(args(Spec_Const, Spec_Ptr));

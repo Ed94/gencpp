@@ -50,6 +50,7 @@ int gen_main()
 		Code printing     = scan_file( path_base "dependencies/printing.hpp" );
 		Code containers   = scan_file( path_base "dependencies/containers.hpp" );
 		Code hashing 	  = scan_file( path_base "dependencies/hashing.hpp" );
+		Code simd         = scan_file( path_base "dependencies/simd.hpp" );
 		Code strings      = scan_file( path_base "dependencies/strings.hpp" );
 		Code filesystem   = scan_file( path_base "dependencies/filesystem.hpp" );
 		Code timing       = scan_file( path_base "dependencies/timing.hpp" );
@@ -70,6 +71,7 @@ int gen_main()
 		builder_print( header, printing );
 		builder_print( header, containers );
 		builder_print( header, hashing );
+		builder_print( header, simd );
 		builder_print( header, strings );
 		builder_print( header, filesystem );
 		builder_print( header, timing );

@@ -113,6 +113,8 @@ Str to_str_from_c_str( char const* bad_str ) {
 // I kept it for simplicty of porting but its not necessary to keep it that way.
 #pragma region StrBuilder
 struct StrBuilderHeader;
+struct StrTemplateSlot;
+struct Slice_StrTemplateSlot;
 
 #if GEN_COMPILER_C
 typedef char* StrBuilder;
@@ -122,12 +124,39 @@ struct StrBuilder;
 
 forceinline usize strbuilder_grow_formula(usize value);
 
-GEN_API StrBuilder        strbuilder_make_reserve        (AllocatorInfo allocator, ssize        capacity);
-GEN_API StrBuilder        strbuilder_make_length         (AllocatorInfo allocator, char const*  str,   ssize length);
-GEN_API bool              strbuilder_make_space_for      (StrBuilder* str, char const* to_append,       ssize add_len);
-GEN_API bool              strbuilder_append_c_str_len    (StrBuilder* str, char const* c_str_to_append, ssize length);
-GEN_API void              strbuilder_trim                (StrBuilder  str, char const* cut_set);
-GEN_API StrBuilder        strbuilder_visualize_whitespace(StrBuilder const str);
+GEN_API StrBuilder        strbuilder_make_reserve    (AllocatorInfo allocator, ssize        capacity);
+GEN_API StrBuilder        strbuilder_make_length     (AllocatorInfo allocator, char const*  str,   ssize length);
+GEN_API bool              strbuilder_make_space_for  (StrBuilder* str, char const* to_append,       ssize add_len);
+GEN_API bool              strbuilder_append_c_str_len(StrBuilder* str, char const* c_str_to_append, ssize length);
+
+struct StrTemplateSlot       { Str Key;              Str   Value; };
+struct Slice_StrTemplateSlot { StrTemplateSlot* Ptr; ssize Len;   };
+
+// format and slot slices must not alias output. output may reallocate.
+GEN_API bool strbuilder_append_template(StrBuilder* output, Slice_StrTemplateSlot slots, Str format);
+
+#ifndef strtmpl_slot
+#	if GEN_COMPILER_C
+#		define strtmpl_slot(key, value) (GEN_NS StrTemplateSlot){ txt(key), (value) }
+#	else
+#		define strtmpl_slot(key, value) GEN_NS StrTemplateSlot{ txt(key), (value) }
+#	endif
+#endif
+
+#ifndef    strtmpl_slots
+#	define strtmpl_slots( ... ) __VA_ARGS__
+#endif
+
+#ifndef strtmpl_append
+#define strtmpl_append( output, result, entries, format ) do {                                                              \
+		GEN_NS StrTemplateSlot       gencpp_tmpl_slot_array[] = { entries };                                                \
+		GEN_NS Slice_StrTemplateSlot gencpp_tmpl_slot_slice = { gencpp_tmpl_slot_array, count_of(gencpp_tmpl_slot_array) }; \
+		(result) = GEN_NS strbuilder_append_template((output), gencpp_tmpl_slot_slice, (format));                           \
+	} while ( 0 )
+#endif
+
+GEN_API void       strbuilder_trim                (StrBuilder  str, char const* cut_set);
+GEN_API StrBuilder strbuilder_visualize_whitespace(StrBuilder const str);
 
 StrBuilder        strbuilder_make_c_str          (AllocatorInfo allocator, char const*  str);
 StrBuilder        strbuilder_make_str            (AllocatorInfo allocator, Str         str);
