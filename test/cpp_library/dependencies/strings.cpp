@@ -442,12 +442,12 @@ internal void expect_template_wrapper() {
 	expect(strbuilder_append_str(& output, txt("KEEP")), txt("wrapper prefix"));
 
 	bool appended = false;
-	strtmpl_append(& output, appended
+	strtmpl_append(& output, appended,
 		strtmpl_slots(
 			strtmpl_slot("name", txt("world")),
 			strtmpl_slot("tail", txt("!"))
 		),
-		txt("(hello <name>\n<name><tail>)")
+		txt("hello <name>\n<name><tail>")
 	);
 	expect(appended, txt("wrapper multiline result"));
 
